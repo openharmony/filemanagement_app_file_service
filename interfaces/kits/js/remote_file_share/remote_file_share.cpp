@@ -36,6 +36,7 @@ const int HMDFS_CID_SIZE = 64;
 const int DEFAULT_PROMISE_ARGC = 2;
 const int DEFAULT_ASYNC_ARGC = 3;
 const int DEFAULT_AYSNC_CALLBACK_ARGC = 2;
+const int ERR_BUF_SIZE = 256;
 
 enum NUM {
     ZERO = 0,
@@ -44,7 +45,7 @@ enum NUM {
 };
 
 struct hmdfs_share_control {
-    uint32_t src_fd;
+    int32_t src_fd;
     char cid[HMDFS_CID_SIZE];
 };
 
@@ -99,6 +100,7 @@ void WorkComplete(napi_env env, napi_status status, void *data)
     struct AddonData *addonData = (struct AddonData *)data;
     napi_value path, callback, global;
     napi_value argv[DEFAULT_AYSNC_CALLBACK_ARGC], result[DEFAULT_AYSNC_CALLBACK_ARGC];
+    char errBuf[ERR_BUF_SIZE] = {0};
 
     if (status != napi_ok) {
         return;
@@ -113,7 +115,8 @@ void WorkComplete(napi_env env, napi_status status, void *data)
                 NAPI_AUTO_LENGTH, &argv[NUM::ONE]);
             napi_call_function(env, global, callback, NUM::TWO, argv, result);
         } else {
-            napi_create_string_utf8(env, strerror(addonData->err), NAPI_AUTO_LENGTH, &argv[NUM::ZERO]);
+            strerror_r(addonData->err, errBuf, ERR_BUF_SIZE);
+            napi_create_string_utf8(env, errBuf, NAPI_AUTO_LENGTH, &argv[NUM::ZERO]);
             napi_get_null(env, &argv[NUM::ONE]);
             napi_call_function(env, global, callback, NUM::TWO, argv, result);
         }
@@ -124,7 +127,8 @@ void WorkComplete(napi_env env, napi_status status, void *data)
                             NAPI_AUTO_LENGTH, &path);
             napi_resolve_deferred(env, addonData->deferred, path);
         } else {
-            napi_create_string_utf8(env, strerror(addonData->err), NAPI_AUTO_LENGTH, &path);
+            strerror_r(addonData->err, errBuf, ERR_BUF_SIZE);
+            napi_create_string_utf8(env, errBuf, NAPI_AUTO_LENGTH, &path);
             napi_reject_deferred(env, addonData->deferred, path);
         }
     }
@@ -172,6 +176,11 @@ static napi_value CreateSharePath(napi_env env, napi_callback_info info)
         addonData->status = 0;
     }
     addonData->cid = (char *)malloc(sizeof(char) * (copysize + 1));
+    if (addonData->cid == nullptr) {
+        napi_throw_error(env, NULL, "malloc failed");
+        delete addonData;
+        return NULL;
+    }
     addonData->cid[copysize] = '\0';
     napi_get_value_string_utf8(env, args[NUM::ONE], addonData->cid, copysize + 1, &copysize);
 
