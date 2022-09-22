@@ -41,7 +41,8 @@
                 }
             ],
             "test": [
-                "//foundation/filemanagement/app_file_service/test/fuzztest:fuzztest"
+                "//foundation/filemanagement/app_file_service/test/fuzztest:fuzztest",
+                "//foundation/filemanagement/app_file_service/test/unittest:unittest"
             ]
         }
     }
