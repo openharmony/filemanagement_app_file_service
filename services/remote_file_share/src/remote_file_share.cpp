@@ -77,7 +77,7 @@ static std::string GetFileName(const int &fd)
     }
 
     std::string fileName = filePath;
-    int firstSlash = fileName.rfind("/");
+    std::size_t firstSlash = fileName.rfind("/");
     if (firstSlash == fileName.npos) {
         LOGE("RemoteFileShare::GetFileName, get error path with %{public}s", fileName.c_str());
         return "";
