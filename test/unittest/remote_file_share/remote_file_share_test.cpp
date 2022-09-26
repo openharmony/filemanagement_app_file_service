@@ -49,8 +49,9 @@ namespace {
     HWTEST_F(RemoteFileShareTest, Remote_file_share_RemoteFileShare_0000, testing::ext::TestSize.Level1)
     {
         GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_RemoteFileShare_0000";
-        std::shared_ptr<RemoteFileShare> service = OHOS::DelayedSingleton<RemoteFileShare>::GetInstance();
-        ASSERT_TRUE(service != nullptr) << "RemoteFileShare Construct Failed!";
+        RemoteFileShare* test = new RemoteFileShare;
+        ASSERT_TRUE(test != nullptr) << "RemoteFileShare Construct Failed!";
+        delete test;
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_RemoteFileShare_0000";
     }
 
