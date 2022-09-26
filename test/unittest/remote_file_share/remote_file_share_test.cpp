@@ -125,7 +125,7 @@ namespace {
     HWTEST_F(RemoteFileShareTest, Remote_file_share_CreateSharePath_0004, testing::ext::TestSize.Level1)
     {
         GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_CreateSharePath_0004";
-        const string fileStr = "/mnt/hmdfs/100/account/merge_view/services/remote_file_share_test.txt";
+        const string fileStr = "/data/test/remote_file_share_test.txt";
         int fd = open(fileStr.c_str(), O_RDWR);
         ASSERT_TRUE(fd != -1) << "RemoteFileShareTest Create File Failed!";
         const int userId = 100;

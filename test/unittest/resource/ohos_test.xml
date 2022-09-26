@@ -16,7 +16,7 @@
 <configuration ver="2.0">
     <target name="remote_file_share_test">
         <preparer>
-            <option name="push" value="remote_file_share_test.txt -> /mnt/hmdfs/100/account/merge_view/services" src="res"/>
+            <option name="push" value="remote_file_share_test.txt -> /data/test" src="res"/>
         </preparer>
     </target>
 </configuration>
