@@ -17,6 +17,7 @@ ohos_shared_library("remotefileshare") {
   include_dirs = [
     "//foundation/arkui/napi/interfaces/kits",
     "//third_party/bounds_checking_function/include",
+    "//foundation/filemanagement/file_api/utils/filemgmt_libn/include",
   ]
 
   sources = [
@@ -25,8 +26,49 @@ ohos_shared_library("remotefileshare") {
   ]
 
   deps = [
-    "//foundation/distributeddatamgr/distributedfile/utils/filemgmt_libn",
+    "//foundation/filemanagement/file_api/utils/filemgmt_libn:filemgmt_libn",
     "//third_party/bounds_checking_function:libsec_shared",
+  ]
+
+  relative_install_dir = "module"
+
+  part_name = "app_file_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_shared_library("fileshare") {
+  include_dirs = [
+    "//foundation/filemanagement/app_file_service/interfaces/kits/js",
+    "//foundation/filemanagement/file_api/utils/filemgmt_libn/include",
+    "//foundation/filemanagement/app_file_service/interfaces/kits/js/common",
+  ]
+
+  sources = [
+    "//foundation/filemanagement/app_file_service/interfaces/kits/js/file_share/fileshare_n_exporter.cpp",
+    "//foundation/filemanagement/app_file_service/interfaces/kits/js/file_share/grant_uri_permission.cpp",
+  ]
+
+  deps = [
+    "//foundation/filemanagement/file_api/utils/filemgmt_libn:filemgmt_libn",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:napi_base_context",
+    "ability_runtime:static_subscriber_extension",
+    "c_utils:utils",
+    "data_share:datashare_common",
+    "data_share:datashare_consumer",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  defines = [
+    "FILE_SHARE_LOG_TAG=\"FileShare\"",
+    "LOG_DOMAIN=0xD004313",
   ]
 
   relative_install_dir = "module"

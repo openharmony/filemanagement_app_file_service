@@ -1,0 +1,158 @@
+/*
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "grant_uri_permission.h"
+#include "file_share_log.h"
+#include "datashare_helper.h"
+#include "datashare_values_bucket.h"
+#include "napi_base_context.h"
+#include "ability.h"
+
+using namespace OHOS::DataShare;
+using namespace OHOS::FileManagement::LibN;
+
+namespace OHOS {
+namespace AppFileService {
+namespace ModuleFileShare {
+
+    static bool IsAllDigits(string idStr)
+    {
+        for (size_t i = 0; i < idStr.size(); i++) {
+            if (!isdigit(idStr[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static string GetIdFromUri(string uri)
+    {
+        string rowNum = "";
+        size_t pos = uri.rfind('/');
+        if (pos != string::npos) {
+            rowNum = uri.substr(pos + 1);
+            if (!IsAllDigits(rowNum)) {
+                rowNum = "";
+            }
+        }
+        return rowNum;
+    }
+
+    static napi_value GetJSArgs(napi_env env, const NFuncArg &funcArg,
+                                DataShareValuesBucket &valuesBucket)
+    {
+        napi_value result = nullptr;
+        auto [succPath, path, lenPath] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
+        if (!succPath) {
+            LOGE("FileShare::GetJSArgs get path parameter failed!");
+            NError(EINVAL).ThrowErr(env);
+            return nullptr;
+        }
+
+        auto [succBundleName, bundleName, lenBundleName] = NVal(env, funcArg[NARG_POS::SECOND]).ToUTF8String();
+        if (!succBundleName) {
+            LOGE("FileShare::GetJSArgs get bundleName parameter failed!");
+            NError(EINVAL).ThrowErr(env);
+            return nullptr;
+        }
+
+        auto [succMode, mode, lenMode] = NVal(env, funcArg[NARG_POS::THIRD]).ToUTF8String();
+        if (!succMode) {
+            LOGE("FileShare::GetJSArgs get mode parameter failed!");
+            NError(EINVAL).ThrowErr(env);
+            return nullptr;
+        }
+
+        string idStr = GetIdFromUri(string(path.get()));
+        if (idStr == "") {
+            LOGE("FileShare::GetJSArgs get fileId parameter failed!");
+            NError(EINVAL).ThrowErr(env);
+            return nullptr;
+        }
+
+        int32_t fileId = stoi(idStr);
+        valuesBucket.Put(PERMISSION_FILE_ID, fileId);
+        valuesBucket.Put(PERMISSION_BUNDLE_NAME, string(bundleName.get()));
+        valuesBucket.Put(PERMISSION_MODE, string(mode.get()));
+
+        napi_get_boolean(env, true, &result);
+        return result;
+    }
+
+    static int InsertByDatashare(napi_env env, const DataShareValuesBucket &valuesBucket)
+    {
+        int ret = -1;
+        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = nullptr;
+        sptr<FileShareGrantToken> remote = new IRemoteStub<FileShareGrantToken>();
+        if (remote == nullptr) {
+            LOGE("FileShare::InsertByDatashare get remoteObject failed!");
+            return ret;
+        }
+
+        dataShareHelper = DataShare::DataShareHelper::Creator(remote->AsObject(), MEDIALIBRARY_DATA_URI);
+        Uri uri(MEDIA_GRANT_URI_PERMISSION);
+        ret = dataShareHelper->Insert(uri, valuesBucket);
+        if (ret < 0) {
+            LOGE("FileShare::InsertByDatashare insert failed with error code %{public}d!", ret);
+            return ret;
+        }
+        return ret;
+    }
+
+    napi_value GrantUriPermission::Async(napi_env env, napi_callback_info info)
+    {
+        LOGI("GrantUriPermission Begin!");
+        NFuncArg funcArg(env, info);
+        if (!funcArg.InitArgs(NARG_CNT::THREE, NARG_CNT::FOUR)) {
+            NError(EINVAL).ThrowErr(env);
+            return nullptr;
+        }
+
+        OHOS::DataShare::DataShareValuesBucket valuesBucket;
+        bool result = GetJSArgs(env, funcArg, valuesBucket);
+        if (!result) {
+            LOGE("FileShare::GrantUriPermission GetJSArgsForGrantUriPermission failed!");
+            NError(EINVAL).ThrowErr(env);
+            return nullptr;
+        }
+
+        auto cbExec = [valuesBucket, env]() -> NError {
+            int ret = InsertByDatashare(env, valuesBucket);
+            LOGI("FileShare::GrantUriPermission InsertByDatashare return value is %{public}d", ret);
+            if (ret < 0) {
+                LOGE("FileShare::GrantUriPermission InsertByDatashare failed!");
+                return NError(-ret);
+            }
+            return NError(ERRNO_NOERR);
+        };
+
+        auto cbCompl = [](napi_env env, NError err) -> NVal {
+            if (err) {
+                return { env, err.GetNapiErr(env) };
+            }
+            LOGI("GrantUriPermission Success!");
+            return NVal::CreateUndefined(env);
+        };
+
+        NVal thisVar(env, funcArg.GetThisVar());
+        if (funcArg.GetArgc() == NARG_CNT::THREE) {
+            return NAsyncWorkPromise(env, thisVar).Schedule(GRANT_URI_NAME, cbExec, cbCompl).val_;
+        } else {
+            NVal cb(env, funcArg[NARG_POS::FOURTH]);
+            return NAsyncWorkCallback(env, thisVar, cb).Schedule(GRANT_URI_NAME, cbExec, cbCompl).val_;
+        }
+    }
+} // namespace ModuleFileShare
+} // namespace AppFileService
+} // namespace OHOS
