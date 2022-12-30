@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 #include "grant_uri_permission.h"
-#include "file_share_log.h"
+
+#include "ability.h"
 #include "datashare_helper.h"
 #include "datashare_values_bucket.h"
-#include "napi_base_context.h"
-#include "ability.h"
+#include "ipc_skeleton.h"
+#include "log.h"
+#include "remote_uri.h"
+#include "want.h"
 
 using namespace OHOS::DataShare;
 using namespace OHOS::FileManagement::LibN;
@@ -49,6 +52,18 @@ namespace ModuleFileShare {
         return rowNum;
     }
 
+    static string GetModeFromFlag(int flag)
+    {
+        string mode = "";
+        if (flag & OHOS::AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION) {
+            mode += "r";
+        }
+        if (flag & OHOS::AAFwk::Want::FLAG_AUTH_WRITE_URI_PERMISSION) {
+            mode += "w";
+        }
+        return mode;
+    }
+
     static napi_value GetJSArgs(napi_env env, const NFuncArg &funcArg,
                                 DataShareValuesBucket &valuesBucket)
     {
@@ -60,6 +75,12 @@ namespace ModuleFileShare {
             return nullptr;
         }
 
+        if (!DistributedFS::ModuleRemoteUri::RemoteUri::IsMediaUri(path.get())) {
+            LOGE("FileShare::GetJSArgs path parameter format error!");
+            NError(EINVAL).ThrowErr(env);
+            return nullptr;
+        }
+
         auto [succBundleName, bundleName, lenBundleName] = NVal(env, funcArg[NARG_POS::SECOND]).ToUTF8String();
         if (!succBundleName) {
             LOGE("FileShare::GetJSArgs get bundleName parameter failed!");
@@ -67,9 +88,15 @@ namespace ModuleFileShare {
             return nullptr;
         }
 
-        auto [succMode, mode, lenMode] = NVal(env, funcArg[NARG_POS::THIRD]).ToUTF8String();
-        if (!succMode) {
-            LOGE("FileShare::GetJSArgs get mode parameter failed!");
+        string mode;
+        if (NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_number)) {
+            auto [succFlag, flag] = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
+            mode = GetModeFromFlag(flag);
+        } else if (NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_string)) {
+            auto [succFlag, flag, lenFlag] = NVal(env, funcArg[NARG_POS::THIRD]).ToUTF8String();
+            mode = string(flag.get());
+        } else {
+            LOGE("FileShare::GetJSArgs get flag parameter failed!");
             NError(EINVAL).ThrowErr(env);
             return nullptr;
         }
@@ -84,7 +111,7 @@ namespace ModuleFileShare {
         int32_t fileId = stoi(idStr);
         valuesBucket.Put(PERMISSION_FILE_ID, fileId);
         valuesBucket.Put(PERMISSION_BUNDLE_NAME, string(bundleName.get()));
-        valuesBucket.Put(PERMISSION_MODE, string(mode.get()));
+        valuesBucket.Put(PERMISSION_MODE, mode);
 
         napi_get_boolean(env, true, &result);
         return result;
@@ -112,9 +139,9 @@ namespace ModuleFileShare {
 
     napi_value GrantUriPermission::Async(napi_env env, napi_callback_info info)
     {
-        LOGI("GrantUriPermission Begin!");
         NFuncArg funcArg(env, info);
         if (!funcArg.InitArgs(NARG_CNT::THREE, NARG_CNT::FOUR)) {
+            LOGE("FileShare::GrantUriPermission GetJSArgsForGrantUriPermission Number of arguments unmatched!");
             NError(EINVAL).ThrowErr(env);
             return nullptr;
         }
@@ -129,7 +156,6 @@ namespace ModuleFileShare {
 
         auto cbExec = [valuesBucket, env]() -> NError {
             int ret = InsertByDatashare(env, valuesBucket);
-            LOGI("FileShare::GrantUriPermission InsertByDatashare return value is %{public}d", ret);
             if (ret < 0) {
                 LOGE("FileShare::GrantUriPermission InsertByDatashare failed!");
                 return NError(-ret);
@@ -141,7 +167,6 @@ namespace ModuleFileShare {
             if (err) {
                 return { env, err.GetNapiErr(env) };
             }
-            LOGI("GrantUriPermission Success!");
             return NVal::CreateUndefined(env);
         };
 

@@ -55,23 +55,41 @@ ohos_shared_library("fileshare") {
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
-    "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
-    "ability_runtime:napi_base_context",
-    "ability_runtime:static_subscriber_extension",
     "c_utils:utils",
     "data_share:datashare_common",
     "data_share:datashare_consumer",
+    "file_api:remote_uri_native",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
   ]
 
-  defines = [
-    "FILE_SHARE_LOG_TAG=\"FileShare\"",
-    "LOG_DOMAIN=0xD004313",
+  relative_install_dir = "module"
+
+  part_name = "app_file_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_shared_library("fileuri") {
+  include_dirs = [
+    "//foundation/filemanagement/app_file_service/interfaces/kits/js",
+    "//foundation/filemanagement/file_api/utils/filemgmt_libn/include",
+    "//foundation/filemanagement/app_file_service/interfaces/kits/js/common",
   ]
 
-  relative_install_dir = "module"
+  sources = [
+    "//foundation/filemanagement/app_file_service/interfaces/kits/js/file_uri/file_uri_n_exporter.cpp",
+    "//foundation/filemanagement/app_file_service/interfaces/kits/js/file_uri/get_uri_from_path.cpp",
+  ]
+
+  deps = [
+    "//foundation/bundlemanager/bundle_framework/interfaces/kits/native/bundle:bundle_ndk",
+    "//foundation/filemanagement/file_api/utils/filemgmt_libn:filemgmt_libn",
+  ]
+
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  relative_install_dir = "module/file"
 
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
