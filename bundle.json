@@ -26,7 +26,8 @@
                 "base_group": [],
                 "fwk_group": [
                     "//foundation/filemanagement/app_file_service:libremotefileshare",
-                    "//foundation/filemanagement/app_file_service/interfaces/kits/js:fileshare"
+                    "//foundation/filemanagement/app_file_service/interfaces/kits/js:fileshare",
+                    "//foundation/filemanagement/app_file_service/interfaces/kits/js:fileuri"
                 ],
                 "service_group": []
             },

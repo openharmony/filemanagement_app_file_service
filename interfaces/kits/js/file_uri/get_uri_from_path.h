@@ -12,24 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef REMOTE_FILE_SHARE_LOG_H
-#define REMOTE_FILE_SHARE_LOG_H
 
-#include "hilog/log.h"
+#ifndef GET_URI_FROM_PATH_H
+#define GET_URI_FROM_PATH_H
+
+#include <string>
+#include "filemgmt_libn.h"
 
 namespace OHOS {
 namespace AppFileService {
-static constexpr OHOS::HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, LOG_DOMAIN, REMOTE_SHARE_FILE_LOG_TAG};
+namespace ModuleFileUri {
+using namespace std;
 
-#define PRINT_LOG(Level, fmt, ...) \
-    OHOS::HiviewDFX::HiLog::Level(OHOS::AppFileService::LOG_LABEL, "[%{public}s:%{public}d] " fmt, \
-                            __FUNCTION__, __LINE__, ##__VA_ARGS__)
+const string SCHEME = "file";
+const char SCHEME_SEPARATOR = ':';
+const string PATH_SYMBOLS = "//";
+const string FRAGMENT_SYMBOLS = "#";
 
-#define LOGI(fmt, ...) PRINT_LOG(Info, fmt, ##__VA_ARGS__)
-#define LOGW(fmt, ...) PRINT_LOG(Warn, fmt, ##__VA_ARGS__)
-#define LOGE(fmt, ...) PRINT_LOG(Error, fmt, ##__VA_ARGS__)
-#define LOGF(fmt, ...) PRINT_LOG(Fatal, fmt, ##__VA_ARGS__)
+class GetUriFromPath final {
+public:
+    static napi_value Sync(napi_env env, napi_callback_info info);
+};
+} // namespace ModuleFileUri
 } // namespace AppFileService
 } // namespace OHOS
 
-#endif // REMOTE_FILE_SHARE_LOG_H
+#endif // GET_URI_FROM_PATH_H
