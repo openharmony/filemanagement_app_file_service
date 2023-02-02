@@ -83,11 +83,17 @@ ohos_shared_library("fileuri") {
   ]
 
   deps = [
-    "//foundation/bundlemanager/bundle_framework/interfaces/kits/native/bundle:bundle_ndk",
     "//foundation/filemanagement/file_api/utils/filemgmt_libn:filemgmt_libn",
   ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "ability_runtime:abilitykit_native",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
 
   relative_install_dir = "module/file"
 

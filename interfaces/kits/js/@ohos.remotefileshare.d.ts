@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+* Copyright (C) 2021-2023 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -18,7 +18,7 @@ import {AsyncCallback, Callback} from "./basic";
 /**
  * Provides remote file share APIs
  *
- * @since 8
+ * @since 10
  * @sysCap N/A
  * @devices phone, tablet
  */
@@ -26,7 +26,7 @@ declare namespace Remotefileshare {
   /**
    * Create the remote share path of src share file.
    *
-   * @since 8
+   * @since 10
    */
   function createSharePath(fd: number, cid: string, callback: AsyncCallback<string>): void;
   function createSharePath(fd: number, cid: string): Promise<string>;
