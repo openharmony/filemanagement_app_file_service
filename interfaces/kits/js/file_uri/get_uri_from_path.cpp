@@ -13,18 +13,56 @@
  * limitations under the License.
  */
 #include "get_uri_from_path.h"
+
+#include "bundle_mgr_proxy.h"
+#include "ipc_skeleton.h"
+#include "iservice_registry.h"
 #include "log.h"
-#include "native_interface_bundle.h"
+#include "status_receiver_host.h"
+#include "system_ability_definition.h"
 
 namespace OHOS {
 namespace AppFileService {
 namespace ModuleFileUri {
 using namespace OHOS::FileManagement::LibN;
+using namespace OHOS::AppExecFwk;
+
+static sptr<BundleMgrProxy> GetBundleMgrProxy()
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        LOGE("fail to get system ability mgr.");
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (!remoteObject) {
+        LOGE("fail to get bundle manager proxy.");
+        return nullptr;
+    }
+
+    return iface_cast<BundleMgrProxy>(remoteObject);
+}
 
 static string GetBundleName()
 {
-    OH_NativeBundle_ApplicationInfo nativeApplicationInfo = OH_NativeBundle_GetCurrentApplicationInfo();
-    return nativeApplicationInfo.bundleName;
+    int uid = -1;
+    uid = IPCSkeleton::GetCallingUid();
+    
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        LOGE("GetBundleName: bundle mgr proxy is nullptr.");
+        return nullptr;
+    }
+
+    string bundleName;
+    if (!bundleMgrProxy->GetBundleNameForUid(uid, bundleName)) {
+        LOGE("GetBundleName: bundleName get fail. uid is %{public}d", uid);
+        return nullptr;
+    }
+
+    return bundleName;
 }
 
 napi_value GetUriFromPath::Sync(napi_env env, napi_callback_info info)

@@ -25,6 +25,7 @@
 
 using namespace OHOS::DataShare;
 using namespace OHOS::FileManagement::LibN;
+using namespace OHOS::DistributedFS::ModuleRemoteUri;
 
 namespace OHOS {
 namespace AppFileService {
@@ -59,7 +60,7 @@ namespace ModuleFileShare {
         return rowNum;
     }
 
-    static string GetModeFromFlag(int flag)
+    static string GetModeFromFlag(unsigned int flag)
     {
         string mode = "";
         if (flag & OHOS::AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION) {
