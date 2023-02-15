@@ -414,15 +414,15 @@ string SvcSessionManager::GetBackupExtName(const string &bundleName)
 sptr<AppExecFwk::IBundleMgr> SvcSessionManager::GetBundleManager()
 {
     auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if(saMgr == nullptr) {
+    if (saMgr == nullptr) {
         HILOGE("SystemAbilityManager is nullptr.");
         return nullptr;
     }
 
     auto bundleObj = saMgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if(bundleObj == nullptr) {
+    if (bundleObj == nullptr) {
         HILOGE("Failed to get bundle manager service.");
-        return nullptr; 
+        return nullptr;
     }
     
     return iface_cast<AppExecFwk::IBundleMgr>(bundleObj);

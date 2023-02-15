@@ -33,7 +33,6 @@ BSessionRestore::~BSessionRestore()
     }
     auto remoteObject = proxy->AsObject();
     if (remoteObject != nullptr) {
-        HILOGI("remoteObject died. Died remote obj = %{public}p", remoteObject.GetRefPtr());
         remoteObject->RemoveDeathRecipient(deathRecipient_);
     }
     deathRecipient_ = nullptr;
@@ -111,7 +110,6 @@ void BSessionRestore::RegisterBackupServiceDied(std::function<void()> functor)
     }
 
     auto callback = [functor](const wptr<IRemoteObject> &obj) {
-        HILOGI("service died. Died remote obj = %{public}p", obj.GetRefPtr());
         functor();
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(callback));
