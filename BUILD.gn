@@ -15,6 +15,7 @@ import("//build/ohos.gni")
 
 group("libremotefileshare") {
   deps = [
+    "interfaces/innerkits/native/file_share:fileshare_native",
     "//foundation/filemanagement/app_file_service/interfaces/innerkits/remote_file_share/native:remote_file_share_native",
     "//foundation/filemanagement/app_file_service/interfaces/kits/js:remotefileshare",
   ]
