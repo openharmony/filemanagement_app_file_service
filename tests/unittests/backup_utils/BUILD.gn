@@ -81,8 +81,9 @@ ohos_unittest("b_tarball_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
-    "${path_base}:utils",
   ]
+
+  external_deps = [ "c_utils:utils" ]
 
   use_exceptions = true
 }
@@ -100,10 +101,9 @@ ohos_unittest("b_tarball_cmdline_test") {
     "${path_backup}/utils/include",
   ]
 
-  deps = [
-    "${path_backup}/tests/utils:backup_test_utils",
-    "${path_base}:utils",
-  ]
+  deps = [ "${path_backup}/tests/utils:backup_test_utils" ]
+
+  external_deps = [ "c_utils:utils" ]
 
   use_exceptions = true
 }
@@ -121,10 +121,9 @@ ohos_unittest("b_tarball_factory_test") {
     "${path_backup}/utils/include",
   ]
 
-  deps = [
-    "${path_backup}/tests/utils:backup_test_utils",
-    "${path_base}:utils",
-  ]
+  deps = [ "${path_backup}/tests/utils:backup_test_utils" ]
+
+  external_deps = [ "c_utils:utils" ]
 
   use_exceptions = true
 }
@@ -142,8 +141,9 @@ ohos_unittest("b_process_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
-    "${path_base}:utils",
   ]
+
+  external_deps = [ "c_utils:utils" ]
 
   use_exceptions = true
 }

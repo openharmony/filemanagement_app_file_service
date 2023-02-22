@@ -49,15 +49,15 @@ ohos_shared_library("backup_kit_inner") {
   public_configs = [ ":public_config" ]
 
   external_deps = [
+    "c_utils:utils",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 
   public_deps = [
     "${path_backup}/utils:backup_utils",
-    "${path_base}:utils",
     "${path_ipc}/interfaces/innerkits/ipc_core:ipc_core",
-    "${path_samgr}/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
 
   use_exceptions = true
