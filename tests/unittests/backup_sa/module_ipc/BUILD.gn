@@ -32,17 +32,17 @@ ohos_unittest("module_ipc_test") {
   ]
 
   deps = [
+    "${path_ability_runtime}/interfaces/inner_api/ability_manager:ability_manager",
     "${path_backup}/services/backup_sa:backup_sa",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
+    "${path_base}:utils",
     "//third_party/googletest:gmock_main",
   ]
 
   external_deps = [
     "ability_base:want",
-    "ability_runtime:ability_manager",
     "app_file_service:backup_kit_inner",
-    "c_utils:utils",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -70,6 +70,7 @@ ohos_unittest("backup_service_test") {
   ]
 
   deps = [
+    "${path_ability_runtime}/interfaces/inner_api/ability_manager:ability_manager",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -77,7 +78,6 @@ ohos_unittest("backup_service_test") {
 
   external_deps = [
     "ability_base:want",
-    "ability_runtime:ability_manager",
     "app_file_service:backup_kit_inner",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
@@ -109,18 +109,18 @@ ohos_unittest("backup_service_session_test") {
   ]
 
   deps = [
+    "${path_ability_runtime}/interfaces/inner_api/ability_manager:ability_manager",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
+    "${path_base}:utils",
     "${path_googletest}:gmock_main",
   ]
 
   external_deps = [
     "ability_base:want",
-    "ability_runtime:ability_manager",
     "app_file_service:backup_kit_inner",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
-    "c_utils:utils",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -147,6 +147,7 @@ ohos_unittest("backup_service_scheduler_test") {
   ]
 
   deps = [
+    "${path_ability_runtime}/interfaces/inner_api/ability_manager:ability_manager",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -154,7 +155,6 @@ ohos_unittest("backup_service_scheduler_test") {
 
   external_deps = [
     "ability_base:want",
-    "ability_runtime:ability_manager",
     "app_file_service:backup_kit_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

@@ -54,10 +54,7 @@ ohos_shared_library("backup_utils") {
   configs = [ ":utils_private_config" ]
   public_configs = [ ":utils_public_config" ]
 
-  external_deps = [
-    "faultloggerd:lib_dfx_dump_catcher",
-    "init:libbegetutil",
-  ]
+  external_deps = [ "faultloggerd:lib_dfx_dump_catcher" ]
 
   public_deps = [
     "${path_base}:utils",
@@ -69,6 +66,8 @@ ohos_shared_library("backup_utils") {
     "${path_init}/interfaces/innerkits/include/syspara",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
   ]
+
+  deps = [ "${path_init}/interfaces/innerkits:libbegetutil" ]
 
   use_exceptions = true
   part_name = "app_file_service"
