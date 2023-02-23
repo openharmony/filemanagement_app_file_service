@@ -197,14 +197,6 @@ int RemoteFileShare::CreateSharePath(const int &fd, std::string &sharePath,
         return errno;
     }
 
-    if (CreateShareFile(shareControl, realPath, deviceId) != 0) {
-        LOGE("RemoteFileShare::CreateSharePath, create share file failed with %{public}d", errno);
-        /* When the file is exist, we should not delete the dictionary */
-        if (errno != EEXIST)
-            DeleteShareDir(PACKAGE_PATH, LOWER_SHARE_PATH);
-        return errno;
-    }
-
     std::string file_name = GetFileName(shareControl.fd);
     if (file_name == "") {
         LOGE("RemoteFileShare::CreateSharePath, get error file name");
@@ -212,6 +204,18 @@ int RemoteFileShare::CreateSharePath(const int &fd, std::string &sharePath,
         return EBADF;
     }
     sharePath = SHARE_PATH + "/" + file_name;
+
+    if (CreateShareFile(shareControl, realPath, deviceId) != 0) {
+        LOGE("RemoteFileShare::CreateSharePath, create share file failed with %{public}d", errno);
+        /* When the file is exist, we should not delete the dictionary */
+        if (errno == EEXIST) {
+            return 0;
+        }
+        sharePath = "";
+        DeleteShareDir(PACKAGE_PATH, LOWER_SHARE_PATH);
+        return errno;
+    }
+
     LOGI("RemoteFileShare::CreateSharePath, create %{public}s successfully", sharePath.c_str());
     return 0;
 }
