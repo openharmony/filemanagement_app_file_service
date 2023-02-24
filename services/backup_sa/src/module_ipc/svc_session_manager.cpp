@@ -27,10 +27,9 @@
 #include "b_resources/b_constants.h"
 #include "bundle_mgr_client.h"
 #include "filemgmt_libhilog.h"
-#include "module_ipc/service.h"
 #include "iservice_registry.h"
+#include "module_ipc/service.h"
 #include "system_ability_definition.h"
-
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -50,7 +49,7 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
 void SvcSessionManager::Active(Impl newImpl)
 {
     unique_lock<shared_mutex> lock(lock_);
-    Impl &oldImpl = impl_;
+    const Impl &oldImpl = impl_;
     if (oldImpl.clientToken) {
         throw BError(BError::Codes::SA_REFUSED_ACT, "Already have an active session");
     }
@@ -224,7 +223,7 @@ UniqueFd SvcSessionManager::OnBunleExtManageInfo(const string &bundleName, Uniqu
 
 void SvcSessionManager::RemoveExtInfo(const string &bundleName)
 {
-    HILOGE("begin");
+    HILOGI("Begin");
     unique_lock<shared_mutex> lock(lock_);
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
@@ -236,7 +235,7 @@ void SvcSessionManager::RemoveExtInfo(const string &bundleName)
 
 wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &bundleName)
 {
-    HILOGE("begin");
+    HILOGI("Begin");
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -252,7 +251,7 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
 
 void SvcSessionManager::InitExtConn(std::map<BundleName, BackupExtInfo> &backupExtNameMap)
 {
-    HILOGE("begin");
+    HILOGI("Begin");
     if (backupExtNameMap.empty()) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No app was selected");
     }
@@ -320,7 +319,7 @@ void SvcSessionManager::InitClient(Impl &newImpl)
 
 void SvcSessionManager::SetExtFileNameRequest(const string &bundleName, const string &fileName)
 {
-    HILOGE("begin");
+    HILOGI("Begin");
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -332,7 +331,7 @@ void SvcSessionManager::SetExtFileNameRequest(const string &bundleName, const st
 
 std::set<std::string> SvcSessionManager::GetExtFileNameRequest(const std::string &bundleName)
 {
-    HILOGE("start");
+    HILOGI("Begin");
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -358,14 +357,13 @@ map<BundleName, BackupExtInfo>::iterator SvcSessionManager::GetBackupExtNameMap(
 
 bool SvcSessionManager::GetSchedBundleName(string &bundleName)
 {
-    HILOGE("start");
+    HILOGI("Begin");
     shared_lock<shared_mutex> lock(lock_);
     if (extConnectNum_ >= BConstants::EXT_CONNECT_MAX_COUNT) {
         return false;
     }
-    HILOGE("extConnectNum_ %{public}d", extConnectNum_);
+
     for (auto &&it : impl_.backupExtNameMap) {
-        HILOGE("schedAction %{public}d", it.second.schedAction);
         if (it.second.schedAction == BConstants::ServiceSchedAction::WAIT) {
             bundleName = it.first;
             return true;
@@ -376,7 +374,7 @@ bool SvcSessionManager::GetSchedBundleName(string &bundleName)
 
 BConstants::ServiceSchedAction SvcSessionManager::GetServiceSchedAction(const std::string &bundleName)
 {
-    HILOGE("start");
+    HILOGI("Begin");
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -387,7 +385,7 @@ BConstants::ServiceSchedAction SvcSessionManager::GetServiceSchedAction(const st
 
 void SvcSessionManager::SetServiceSchedAction(const string &bundleName, BConstants::ServiceSchedAction action)
 {
-    HILOGE("start");
+    HILOGI("Begin");
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -402,7 +400,7 @@ void SvcSessionManager::SetServiceSchedAction(const string &bundleName, BConstan
 
 string SvcSessionManager::GetBackupExtName(const string &bundleName)
 {
-    HILOGE("start");
+    HILOGI("Begin");
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -415,16 +413,16 @@ sptr<AppExecFwk::IBundleMgr> SvcSessionManager::GetBundleManager()
 {
     auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saMgr == nullptr) {
-        HILOGE("SystemAbilityManager is nullptr.");
+        HILOGI("SystemAbilityManager is nullptr.");
         return nullptr;
     }
 
     auto bundleObj = saMgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     if (bundleObj == nullptr) {
-        HILOGE("Failed to get bundle manager service.");
+        HILOGI("Failed to get bundle manager service.");
         return nullptr;
     }
-    
+
     return iface_cast<AppExecFwk::IBundleMgr>(bundleObj);
 }
 } // namespace OHOS::FileManagement::Backup

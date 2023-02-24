@@ -54,7 +54,7 @@ void SvcExtensionProxyTest::TearDown()
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetFileHandle_0100, testing::ext::TestSize.Level1)
 {
@@ -79,7 +79,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetFileHandle_0100, test
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleClear_0100, testing::ext::TestSize.Level1)
 {
@@ -103,7 +103,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleClear_0100, testin
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleBackup_0100, testing::ext::TestSize.Level1)
 {
@@ -127,7 +127,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleBackup_0100, testi
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_PublishFile_0100, testing::ext::TestSize.Level1)
 {

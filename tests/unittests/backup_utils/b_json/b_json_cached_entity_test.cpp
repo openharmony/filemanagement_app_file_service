@@ -19,11 +19,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "test_manager.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_caps.h"
 #include "directory_ex.h"
 #include "file_ex.h"
+#include "test_manager.h"
 
 namespace OHOS::FileManagement::Backup {
 class BJsonCachedEntityTest : public testing::Test {
@@ -41,7 +41,7 @@ public:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonCachedEntityTest, b_json_construction_0100, testing::ext::TestSize.Level0)
 {
@@ -66,7 +66,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_construction_0100, testing::ext::TestSize
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonCachedEntityTest, b_json_Structuralize_0100, testing::ext::TestSize.Level0)
 {
@@ -92,7 +92,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_Structuralize_0100, testing::ext::TestSiz
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonCachedEntityTest, b_json_Persist_0100, testing::ext::TestSize.Level0)
 {
@@ -123,7 +123,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_Persist_0100, testing::ext::TestSize.Leve
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonCachedEntityTest, b_json_GetFd_0100, testing::ext::TestSize.Level0)
 {

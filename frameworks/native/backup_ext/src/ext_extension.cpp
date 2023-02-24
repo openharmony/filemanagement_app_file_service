@@ -19,10 +19,14 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <vector>
+
 #include <sys/stat.h>
 #include <unistd.h>
 #include <utime.h>
-#include <vector>
+
+#include <directory_ex.h>
+#include <unique_fd.h>
 
 #include "accesstoken_kit.h"
 #include "b_error/b_error.h"
@@ -33,12 +37,10 @@
 #include "b_resources/b_constants.h"
 #include "b_tarball/b_tarball_factory.h"
 #include "bundle_mgr_client.h"
-#include "directory_ex.h"
 #include "errors.h"
 #include "filemgmt_libhilog.h"
 #include "ipc_skeleton.h"
 #include "service_proxy.h"
-#include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -48,22 +50,23 @@ void BackupExtExtension::VerifyCaller()
     HILOGI("begin");
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
     int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
-    if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_HAP) {
-        throw BError(BError::Codes::EXT_BROKEN_IPC, "Calling tokenType is error");
-    } else if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        if (IPCSkeleton::GetCallingUid() != BConstants::BACKUP_UID) {
-            throw BError(BError::Codes::EXT_BROKEN_IPC, "Calling uid is invalid");
-        }
+    if (tokenType != Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        throw BError(BError::Codes::EXT_BROKEN_IPC,
+                     string("Calling tokenType is error, token type is ").append(to_string(tokenType)));
+    }
+    if (IPCSkeleton::GetCallingUid() != BConstants::BACKUP_UID) {
+        throw BError(BError::Codes::EXT_BROKEN_IPC,
+                     string("Calling uid is invalid, calling uid is ").append(to_string(IPCSkeleton::GetCallingUid())));
     }
 }
 
 UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
 {
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
+        HILOGI("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
         return UniqueFd(-1);
     }
 
-    HILOGI("fileName is %{public}s", fileName.data());
     VerifyCaller();
 
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
@@ -127,7 +130,7 @@ ErrCode IndexFileReady(const map<string, pair<string, struct stat>> &pkgInfo, sp
     ErrCode ret =
         proxy->AppFileReady(string(BConstants::EXT_BACKUP_MANAGE), UniqueFd(open(indexFile.data(), O_RDONLY)));
     if (SUCCEEDED(ret)) {
-        HILOGI("The application is packaged successfully, index json file name is %{public}s", indexFile.c_str());
+        HILOGI("The application is packaged successfully");
     } else {
         HILOGI(
             "The application is packaged successfully but the AppFileReady interface fails to be invoked: "
@@ -425,7 +428,7 @@ static void RestoreBigFiles()
         auto [filePath, sta] = item.second;
 
         if (access(fileName.data(), F_OK) != 0) {
-            HILOGI("file dose not exist. %{public}s", fileName.c_str());
+            HILOGI("file dose not exist");
             continue;
         }
         if (filePath.empty()) {
@@ -433,13 +436,12 @@ static void RestoreBigFiles()
             continue;
         }
         if (rename(fileName.data(), filePath.data()) != 0) {
-            HILOGE("failed to rename the file, try to copy it. %{public}s , %{public}d", fileName.c_str(), errno);
+            HILOGE("failed to rename the file, try to copy it. err = %{public}d", errno);
             if (!BFile::CopyFile(fileName, filePath)) {
-                HILOGE("failed to copy the file. from %{public}s to %{public}s", fileName.c_str(), filePath.c_str());
+                HILOGE("failed to copy the file. err = %{public}d", errno);
                 continue;
             }
-            HILOGI("succeed to rename or copy the file. from %{public}s to %{public}s", fileName.c_str(),
-                   filePath.c_str());
+            HILOGI("succeed to rename or copy the file");
         }
         set<string> lks = cache.GetHardLinkInfo(item.first);
         for (const auto &lksPath : lks) {

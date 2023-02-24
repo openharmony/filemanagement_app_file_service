@@ -49,4 +49,19 @@ string BError::WrapMessageWithExtraInfos(const char *fileName,
     HiviewDFX::HiLog::Error(FILEMGMT_LOG_LABEL, "%{public}s", res.c_str());
     return res;
 }
+
+ErrCode BError::ExceptionCatcherLocked(std::function<ErrCode(void)> callBack)
+{
+    try {
+        return callBack();
+    } catch (const BError &e) {
+        return e.GetCode();
+    } catch (const exception &e) {
+        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        return EPERM;
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        return EPERM;
+    }
+}
 } // namespace OHOS::FileManagement::Backup

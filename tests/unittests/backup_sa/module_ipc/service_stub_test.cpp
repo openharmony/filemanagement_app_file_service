@@ -80,7 +80,7 @@ public:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitRestoreSession_0100, testing::ext::TestSize.Level0)
 {
@@ -116,7 +116,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitRestoreSession_0100, tes
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitBackupSession_0100, testing::ext::TestSize.Level0)
 {
@@ -163,7 +163,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitBackupSession_0100, test
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Start_0100, testing::ext::TestSize.Level0)
 {
@@ -191,7 +191,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Start_0100, testing::ext::Te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0377
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetLocalCapabilities_0100, testing::ext::TestSize.Level0)
 {
@@ -232,7 +232,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetLocalCapabilities_0100, t
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_PublishFile_0100, testing::ext::TestSize.Level0)
 {
@@ -263,7 +263,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_PublishFile_0100, testing::e
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0380
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0100, testing::ext::TestSize.Level0)
 {
@@ -304,7 +304,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0100, testing::
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0380
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppDone_0100, testing::ext::TestSize.Level0)
 {
@@ -334,7 +334,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppDone_0100, testing::ext::
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetExtFileName_0100, testing::ext::TestSize.Level0)
 {

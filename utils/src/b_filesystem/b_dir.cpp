@@ -71,7 +71,7 @@ pair<ErrCode, map<string, struct stat>> GetDirFilesDetail(const string &path, bo
             if (sta.st_size < size) {
                 continue;
             }
-            HILOGI("%{public}s is big file", fileName.c_str());
+            HILOGI("Find big file");
             files.try_emplace(fileName, sta);
         }
     }

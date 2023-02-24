@@ -64,7 +64,7 @@ void ServiceReverseProxyTest::TearDown()
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_0100, testing::ext::TestSize.Level1)
 {
@@ -92,7 +92,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleStarted_0100, testing::ext::TestSize.Level1)
 {
@@ -116,7 +116,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleStarted
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleFinished_0100, testing::ext::TestSize.Level1)
 {
@@ -140,7 +140,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleFinishe
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseProxyTest,
          SUB_ServiceReverse_proxy_BackupOnAllBundlesFinished_0100,
@@ -166,7 +166,7 @@ HWTEST_F(ServiceReverseProxyTest,
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnBundleStarted_0100, testing::ext::TestSize.Level1)
 {
@@ -190,7 +190,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnBundleStarte
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnBundleFinished_0100, testing::ext::TestSize.Level1)
 {
@@ -214,7 +214,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnBundleFinish
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseProxyTest,
          SUB_ServiceReverse_proxy_RestoreOnAllBundlesFinished_0100,
@@ -240,7 +240,7 @@ HWTEST_F(ServiceReverseProxyTest,
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnFileReady_0100, testing::ext::TestSize.Level1)
 {

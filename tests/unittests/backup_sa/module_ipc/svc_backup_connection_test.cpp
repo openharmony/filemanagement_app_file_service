@@ -68,7 +68,7 @@ void SvcBackupConnectionTest::TearDown()
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityConnectDone_0100, testing::ext::TestSize.Level1)
 {
@@ -93,7 +93,7 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityConnectDone_0100
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityDisconnectDone_0100, testing::ext::TestSize.Level1)
 {
@@ -115,7 +115,7 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityDisconnectDone_0
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_GetBackupExtProxy_0100, testing::ext::TestSize.Level1)
 {
@@ -132,7 +132,7 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_GetBackupExtProxy_0100, t
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_ConnectBackupExtAbility_0100, testing::ext::TestSize.Level1)
 {
@@ -158,7 +158,7 @@ static void CallBack(sptr<SvcBackupConnection> backupCon)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_DisconnectBackupExtAbility_0100, testing::ext::TestSize.Level1)
 {

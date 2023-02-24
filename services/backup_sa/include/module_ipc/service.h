@@ -95,6 +95,19 @@ public:
 
 private:
     /**
+     * @brief 验证调用者
+     * 
+     */
+    void VerifyCaller();
+
+    /**
+     * @brief 验证调用者
+     * 
+     * @param scenario Scenario状态
+     */
+    void VerifyCaller(IServiceReverse::Scenario scenario);
+
+    /**
      * @brief 验证调用者并返回名称
      *
      * @return std::string

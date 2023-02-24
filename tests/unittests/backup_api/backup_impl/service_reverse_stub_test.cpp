@@ -64,7 +64,7 @@ public:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_BackupOnFileReady_0100, testing::ext::TestSize.Level1)
 {
@@ -100,7 +100,7 @@ HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_BackupOnFileReady
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseStubTest,
          SUB_backup_ServiceReverseStub_BackupOnBundleStarted_0100,
@@ -134,7 +134,7 @@ HWTEST_F(ServiceReverseStubTest,
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseStubTest,
          SUB_backup_ServiceReverseStub_BackupOnBundleFinished_0100,
@@ -168,7 +168,7 @@ HWTEST_F(ServiceReverseStubTest,
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseStubTest,
          SUB_backup_ServiceReverseStub_BackupOnAllBundlesFinished_0100,
@@ -201,7 +201,7 @@ HWTEST_F(ServiceReverseStubTest,
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseStubTest,
          SUB_backup_ServiceReverseStub_RestoreOnBundleStarted_0100,
@@ -235,7 +235,7 @@ HWTEST_F(ServiceReverseStubTest,
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseStubTest,
          SUB_backup_ServiceReverseStub_RestoreOnBundleFinished_0100,
@@ -269,7 +269,7 @@ HWTEST_F(ServiceReverseStubTest,
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseStubTest,
          SUB_backup_ServiceReverseStub_RestoreOnAllBundlesFinished_0100,
@@ -302,7 +302,7 @@ HWTEST_F(ServiceReverseStubTest,
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_RestoreOnFileReady_0100, testing::ext::TestSize.Level1)
 {
@@ -339,7 +339,7 @@ HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_RestoreOnFileRead
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_error_0100, testing::ext::TestSize.Level1)
 {

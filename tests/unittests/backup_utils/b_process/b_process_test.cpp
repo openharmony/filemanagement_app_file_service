@@ -49,7 +49,7 @@ static bool DetectFatalLog(string_view output)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0377
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0100, testing::ext::TestSize.Level0)
 {

@@ -38,7 +38,7 @@ public:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0382
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ToolsOpTest, SUB_backup_tools_op_0100, testing::ext::TestSize.Level1)
 {
@@ -74,7 +74,7 @@ HWTEST_F(ToolsOpTest, SUB_backup_tools_op_0100, testing::ext::TestSize.Level1)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0382
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ToolsOpTest, SUB_backup_tools_op_0200, testing::ext::TestSize.Level1)
 {

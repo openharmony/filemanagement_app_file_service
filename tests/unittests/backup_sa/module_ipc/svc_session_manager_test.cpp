@@ -94,7 +94,7 @@ void SvcSessionManagerTest::Init(IServiceReverse::Scenario scenario)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_VerifyCallerAndScenario_0100, testing::ext::TestSize.Level1)
 {
@@ -116,7 +116,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_VerifyCallerAndScenario_01
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_VerifyBundleName_0100, testing::ext::TestSize.Level1)
 {
@@ -138,7 +138,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_VerifyBundleName_0100, tes
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceReverseProxy_0100, testing::ext::TestSize.Level1)
 {
@@ -160,7 +160,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceReverseProxy_010
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_getscenario_0100, testing::ext::TestSize.Level1)
 {
@@ -182,7 +182,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_getscenario_0100, testing:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_onbunlefileready_0100, testing::ext::TestSize.Level1)
 {
@@ -204,7 +204,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_onbunlefileready_0100, tes
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0100, testing::ext::TestSize.Level1)
 {
@@ -229,7 +229,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0100
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtConnection_0100, testing::ext::TestSize.Level1)
 {
@@ -254,7 +254,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtConnection_0100, tes
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_DumpInfo_0100, testing::ext::TestSize.Level1)
 {
@@ -278,7 +278,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_DumpInfo_0100, testing::ex
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSchedBundleName_0100, testing::ext::TestSize.Level1)
 {
@@ -312,7 +312,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSchedBundleName_0100, t
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceSchedAction_0100, testing::ext::TestSize.Level1)
 {
@@ -340,7 +340,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceSchedAction_0100
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupExtName_0100, testing::ext::TestSize.Level1)
 {
@@ -362,7 +362,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupExtName_0100, tes
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_removeextinfo_0100, testing::ext::TestSize.Level1)
 {
@@ -385,7 +385,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_removeextinfo_0100, testin
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Deactive_0100, testing::ext::TestSize.Level1)
 {
@@ -414,7 +414,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Deactive_0100, testing::ex
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBunleExtManageInfo_0100, testing::ext::TestSize.Level1)
 {
@@ -456,7 +456,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBunleExtManageInfo_0100,
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBunleFileReady_0200, testing::ext::TestSize.Level1)
 {

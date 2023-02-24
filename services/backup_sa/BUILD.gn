@@ -32,14 +32,12 @@ ohos_shared_library("backup_sa") {
 
   include_dirs = [ "include" ]
 
-  deps = [
-    "${path_ability_runtime}/interfaces/inner_api/ability_manager:ability_manager",
-    "${path_access_token}/interfaces/innerkits/accesstoken:libaccesstoken_sdk",
-    "${path_backup}/utils:backup_utils",
-  ]
+  deps = [ "${path_backup}/utils:backup_utils" ]
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_manager",
+    "access_token:libaccesstoken_sdk",
     "app_file_service:backup_kit_inner",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",

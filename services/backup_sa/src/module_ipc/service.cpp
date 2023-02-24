@@ -26,11 +26,14 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <fcntl.h>
 #include <regex>
+
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/vfs.h>
+
+#include <directory_ex.h>
 
 #include "ability_manager_client.h"
 #include "accesstoken_kit.h"
@@ -42,7 +45,6 @@
 #include "b_process/b_process.h"
 #include "b_resources/b_constants.h"
 #include "bundle_mgr_client.h"
-#include "directory_ex.h"
 #include "filemgmt_libhilog.h"
 #include "ipc_skeleton.h"
 #include "module_ipc/svc_backup_connection.h"
@@ -72,6 +74,7 @@ void Service::OnStop()
 UniqueFd Service::GetLocalCapabilities()
 {
     try {
+        VerifyCaller();
         struct statfs fsInfo = {};
         if (statfs(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR.data(), &fsInfo) == -1) {
             throw BError(errno);
@@ -89,10 +92,10 @@ UniqueFd Service::GetLocalCapabilities()
     } catch (const BError &e) {
         return UniqueFd(-e.GetCode());
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return UniqueFd(-EPERM);
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return UniqueFd(-EPERM);
     }
 }
@@ -104,40 +107,67 @@ void Service::StopAll(const wptr<IRemoteObject> &obj, bool force)
 
 string Service::VerifyCallerAndGetCallerName()
 {
-    try {
-        uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
-        int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
-        if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_HAP) {
-            Security::AccessToken::HapTokenInfo hapTokenInfo;
-            if (Security::AccessToken::AccessTokenKit::GetHapTokenInfo(tokenCaller, hapTokenInfo) != 0) {
-                throw BError(BError::Codes::SA_INVAL_ARG, "Get hap token info failed");
-            }
-            session_->VerifyBundleName(hapTokenInfo.bundleName);
-            return hapTokenInfo.bundleName;
-        } else {
-            throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
+    uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
+    int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
+    if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_HAP) {
+        const string permission = "ohos.permission.BACKUP";
+        int ret = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission);
+        if (ret == Security::AccessToken::TypePermissionState::PERMISSION_DENIED) {
+            throw BError(BError::Codes::SA_INVAL_ARG,
+                         string("Permission denied, token type is ").append(to_string(tokenType)));
         }
-    } catch (const BError &e) {
-        return "";
-    } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
-        return "";
-    } catch (...) {
-        HILOGE("Unexpected exception");
-        return "";
+        Security::AccessToken::HapTokenInfo hapTokenInfo;
+        if (Security::AccessToken::AccessTokenKit::GetHapTokenInfo(tokenCaller, hapTokenInfo) != 0) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "Get hap token info failed");
+        }
+        session_->VerifyBundleName(hapTokenInfo.bundleName);
+        return hapTokenInfo.bundleName;
+    } else {
+        throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
     }
+}
+
+void Service::VerifyCaller()
+{
+    uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
+    int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
+    const string permission = "ohos.permission.BACKUP";
+    switch (tokenType) {
+        case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP:
+            if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
+                Security::AccessToken::TypePermissionState::PERMISSION_DENIED) {
+                throw BError(BError::Codes::SA_INVAL_ARG,
+                             string("Permission denied, token type is ").append(to_string(tokenType)));
+            }
+            break;
+        case Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL:
+            if (IPCSkeleton::GetCallingUid() != BConstants::SYSTEM_UID) {
+                throw BError(BError::Codes::SA_INVAL_ARG, "Calling uid is invalid");
+            }
+            break;
+        default:
+            throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
+            break;
+    }
+}
+
+void Service::VerifyCaller(IServiceReverse::Scenario scenario)
+{
+    session_->VerifyCallerAndScenario(IPCSkeleton::GetCallingTokenID(), scenario);
+    VerifyCaller();
 }
 
 ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, const vector<BundleName> &bundleNames)
 {
     try {
+        VerifyCaller();
         map<BundleName, BackupExtInfo> backupExtNameMap;
-        auto setbackupExtNameMap = [](const BundleName &bundleName) {
+        auto setBackupExtNameMap = [](const BundleName &bundleName) {
             BackupExtInfo info {};
             return make_pair(bundleName, info);
         };
         transform(bundleNames.begin(), bundleNames.end(), inserter(backupExtNameMap, backupExtNameMap.end()),
-                  setbackupExtNameMap);
+                  setBackupExtNameMap);
         session_->Active({
             .clientToken = IPCSkeleton::GetCallingTokenID(),
             .scenario = IServiceReverse::Scenario::RESTORE,
@@ -149,10 +179,10 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, const vector<B
         StopAll(nullptr, true);
         return e.GetCode();
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return EPERM;
     }
 }
@@ -160,13 +190,14 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, const vector<B
 ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, UniqueFd fd, const vector<BundleName> &bundleNames)
 {
     try {
+        VerifyCaller();
         map<BundleName, BackupExtInfo> backupExtNameMap;
-        auto setbackupExtNameMap = [](const BundleName &bundleName) {
+        auto setBackupExtNameMap = [](const BundleName &bundleName) {
             BackupExtInfo info {};
             return make_pair(bundleName, info);
         };
         transform(bundleNames.begin(), bundleNames.end(), inserter(backupExtNameMap, backupExtNameMap.end()),
-                  setbackupExtNameMap);
+                  setBackupExtNameMap);
         session_->Active({
             .clientToken = IPCSkeleton::GetCallingTokenID(),
             .scenario = IServiceReverse::Scenario::BACKUP,
@@ -190,7 +221,8 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, UniqueFd fd, co
 ErrCode Service::Start()
 {
     try {
-        HILOGE("begin");
+        HILOGI("Begin");
+        VerifyCaller(session_->GetScenario());
         for (int num = 0; num < BConstants::EXT_CONNECT_MAX_COUNT; num++) {
             sched_->Sched();
         }
@@ -198,10 +230,10 @@ ErrCode Service::Start()
     } catch (const BError &e) {
         return e.GetCode();
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return EPERM;
     }
 }
@@ -209,8 +241,8 @@ ErrCode Service::Start()
 ErrCode Service::PublishFile(const BFileInfo &fileInfo)
 {
     try {
-        HILOGE("begin");
-        session_->VerifyCallerAndScenario(IPCSkeleton::GetCallingTokenID(), IServiceReverse::Scenario::RESTORE);
+        HILOGI("Begin");
+        VerifyCaller(IServiceReverse::Scenario::RESTORE);
 
         if (!regex_match(fileInfo.fileName, regex("^[0-9a-zA-Z_.]+$"))) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not alphanumeric");
@@ -231,10 +263,10 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
     } catch (const BError &e) {
         return e.GetCode();
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return EPERM;
     }
 }
@@ -271,10 +303,10 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd)
     } catch (const BError &e) {
         return e.GetCode(); // 任意异常产生，终止监听该任务
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return EPERM;
     }
 }
@@ -282,7 +314,7 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd)
 ErrCode Service::AppDone(ErrCode errCode)
 {
     try {
-        HILOGE("begin");
+        HILOGI("Begin");
         string callerName = VerifyCallerAndGetCallerName();
         if (session_->OnBunleFileReady(callerName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
@@ -304,10 +336,10 @@ ErrCode Service::AppDone(ErrCode errCode)
     } catch (const BError &e) {
         return e.GetCode(); // 任意异常产生，终止监听该任务
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return EPERM;
     }
 }
@@ -337,10 +369,10 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
     } catch (const BError &e) {
         return e.GetCode();
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return EPERM;
     }
 }
@@ -349,16 +381,16 @@ ErrCode Service::GetExtFileName(string &bundleName, string &fileName)
 {
     try {
         HILOGE("begin");
-        session_->VerifyCallerAndScenario(IPCSkeleton::GetCallingTokenID(), IServiceReverse::Scenario::RESTORE);
+        VerifyCaller(IServiceReverse::Scenario::RESTORE);
         session_->SetExtFileNameRequest(bundleName, fileName);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         return e.GetCode();
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return EPERM;
     }
 }
@@ -383,10 +415,10 @@ void Service::OnBackupExtensionDied(const string &&bundleName, ErrCode ret)
     } catch (const BError &e) {
         return;
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return;
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return;
     }
 }
@@ -427,10 +459,10 @@ void Service::ExtStart(const string &bundleName)
     } catch (const BError &e) {
         return;
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return;
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return;
     }
 }
@@ -461,10 +493,10 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
     } catch (const BError &e) {
         return;
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return;
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return;
     }
 }
@@ -478,10 +510,10 @@ void Service::ExtConnectDone(string bundleName)
     } catch (const BError &e) {
         return;
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return;
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return;
     }
 }
@@ -495,10 +527,10 @@ void Service::ClearSessionAndSchedInfo(const string &bundleName)
     } catch (const BError &e) {
         return;
     } catch (const exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return;
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGI("Unexpected exception");
         return;
     }
 }

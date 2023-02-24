@@ -50,12 +50,12 @@ int32_t ExtExtensionStub::OnRemoteRequest(uint32_t code,
         return BError(BError::Codes::EXT_INVAL_ARG, "Invalid remote descriptor");
     }
 
-    return (this->*(interfaceIndex->second))(data, reply);
+    return BError::ExceptionCatcherLocked([&]() { return ErrCode((this->*(interfaceIndex->second))(data, reply)); });
 }
 
 ErrCode ExtExtensionStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGE("Begin");
+    HILOGI("Begin");
     string fileName;
     if (!data.ReadString(fileName)) {
         return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive fileName").GetCode();
@@ -65,13 +65,12 @@ ErrCode ExtExtensionStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &r
     if (!reply.WriteFileDescriptor(fd)) {
         return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the file").GetCode();
     }
-
     return BError(BError::Codes::OK);
 }
 
 ErrCode ExtExtensionStub::CmdHandleClear(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGE("Begin");
+    HILOGI("Begin");
     ErrCode res = HandleClear();
     if (!reply.WriteInt32(res)) {
         stringstream ss;
@@ -83,7 +82,7 @@ ErrCode ExtExtensionStub::CmdHandleClear(MessageParcel &data, MessageParcel &rep
 
 ErrCode ExtExtensionStub::CmdHandleBackup(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGE("Begin");
+    HILOGI("Begin");
     ErrCode res = HandleBackup();
     if (!reply.WriteInt32(res)) {
         stringstream ss;
@@ -95,7 +94,7 @@ ErrCode ExtExtensionStub::CmdHandleBackup(MessageParcel &data, MessageParcel &re
 
 ErrCode ExtExtensionStub::CmdPublishFile(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGE("Begin");
+    HILOGI("Begin");
     string fileName;
     if (!data.ReadString(fileName)) {
         return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive fileName");

@@ -123,7 +123,7 @@ void ServiceReverseTest::Init(IServiceReverse::Scenario scenario, int nType)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnFileReady_0100, testing::ext::TestSize.Level1)
 {
@@ -146,7 +146,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnFileReady_0100, t
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnBundleStarted_0100, testing::ext::TestSize.Level1)
 {
@@ -169,7 +169,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnBundleStarted_010
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnBundleFinished_0100, testing::ext::TestSize.Level1)
 {
@@ -192,7 +192,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnBundleFinished_01
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnAllBundlesFinished_0100, testing::ext::TestSize.Level1)
 {
@@ -215,7 +215,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnAllBundlesFinishe
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnFileReady_0100, testing::ext::TestSize.Level1)
 {
@@ -238,7 +238,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnFileReady_0100, 
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnBundleStarted_0100, testing::ext::TestSize.Level1)
 {
@@ -261,7 +261,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnBundleStarted_01
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnBundleFinished_0100, testing::ext::TestSize.Level1)
 {
@@ -284,7 +284,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnBundleFinished_0
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnAllBundlesFinished_0100, testing::ext::TestSize.Level1)
 {
@@ -307,7 +307,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnAllBundlesFinish
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_0200, testing::ext::TestSize.Level1)
 {
@@ -332,7 +332,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_0200, testing::ext::TestS
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_0300, testing::ext::TestSize.Level1)
 {
