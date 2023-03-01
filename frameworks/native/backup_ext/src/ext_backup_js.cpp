@@ -35,7 +35,7 @@ using namespace std;
 
 void ExtBackupJs::OnStart(const AAFwk::Want &want)
 {
-    HILOGI("Boot 9# BackupExtensionAbility(JS) was started");
+    HILOGI("BackupExtensionAbility(JS) was started");
     Extension::OnStart(want);
 }
 
@@ -57,7 +57,7 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
                        shared_ptr<AppExecFwk::AbilityHandler> &handler,
                        const sptr<IRemoteObject> &token)
 {
-    HILOGI("Boot 6# Init the BackupExtensionAbility(JS)");
+    HILOGI("Init the BackupExtensionAbility(JS)");
     try {
         ExtBackup::Init(record, application, handler, token);
 
@@ -71,7 +71,7 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
         string moduleName(info.moduleName + "::" + info.name);
         string modulePath = GetSrcPath(info);
         int moduleType = static_cast<int>(info.type);
-        HILOGI("Boot 10# Try to load %{public}s's %{public}s(type %{public}d) from %{public}s", bundleName.c_str(),
+        HILOGI("Try to load %{public}s's %{public}s(type %{public}d) from %{public}s", bundleName.c_str(),
                moduleName.c_str(), moduleType, modulePath.c_str());
 
         // 加载用户扩展 BackupExtensionAbility 到 JS 引擎，并将之暂存在 jsObj_ 中。注意，允许加载失败，往后执行默认逻辑
@@ -123,7 +123,7 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
 
 void ExtBackupJs::OnCommand(const AAFwk::Want &want, bool restart, int startId)
 {
-    HILOGI("Main 9# BackupExtensionAbility(JS) was invoked. restart=%{public}d, startId=%{public}d", restart, startId);
+    HILOGI("BackupExtensionAbility(JS) was invoked. restart=%{public}d, startId=%{public}d", restart, startId);
 
     // REM: 处理返回结果 ret
     // REM: 通过杀死进程实现 Stop
@@ -131,7 +131,7 @@ void ExtBackupJs::OnCommand(const AAFwk::Want &want, bool restart, int startId)
 
 ExtBackupJs *ExtBackupJs::Create(const unique_ptr<AbilityRuntime::Runtime> &runtime)
 {
-    HILOGI("Boot 5# Create as an BackupExtensionAbility(JS)");
+    HILOGI("Create as an BackupExtensionAbility(JS)");
     return new ExtBackupJs(static_cast<AbilityRuntime::JsRuntime &>(*runtime));
 }
 
@@ -163,7 +163,8 @@ BConstants::ExtensionAction ExtBackupJs::GetExtensionAction() const
     return extAction_;
 }
 
-static BConstants::ExtensionAction VerifyAndGetAction(const AAFwk::Want &want, std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo)
+static BConstants::ExtensionAction VerifyAndGetAction(const AAFwk::Want &want,
+                                                      std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo)
 {
     if (!abilityInfo) {
         string pendingMsg = "Received an empty ability. You must missed the init proc";

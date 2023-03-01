@@ -25,13 +25,13 @@ void ExtBackup::Init(const shared_ptr<AbilityRuntime::AbilityLocalRecord> &recor
                      shared_ptr<AbilityRuntime::AbilityHandler> &handler,
                      const sptr<IRemoteObject> &token)
 {
-    HILOGI("Boot 7# Init the BackupExtensionAbility(Base)");
+    HILOGI("Init the BackupExtensionAbility(Base)");
     AbilityRuntime::ExtensionBase<ExtBackupContext>::Init(record, application, handler, token);
 }
 
 ExtBackup *ExtBackup::Create(const unique_ptr<AbilityRuntime::Runtime> &runtime)
 {
-    HILOGI("Boot 4# Create as an BackupExtensionAbility(Base)");
+    HILOGI("Create as an BackupExtensionAbility(Base)");
     if (!runtime) {
         return new ExtBackup();
     }
