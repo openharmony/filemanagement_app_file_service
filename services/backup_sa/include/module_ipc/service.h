@@ -96,13 +96,13 @@ public:
 private:
     /**
      * @brief 验证调用者
-     * 
+     *
      */
     void VerifyCaller();
 
     /**
      * @brief 验证调用者
-     * 
+     *
      * @param scenario Scenario状态
      */
     void VerifyCaller(IServiceReverse::Scenario scenario);

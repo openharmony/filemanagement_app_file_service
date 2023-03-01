@@ -117,9 +117,9 @@ ErrCode BackupExtExtension::HandleClear()
 
 ErrCode IndexFileReady(const map<string, pair<string, struct stat>> &pkgInfo, sptr<IService> proxy)
 {
-    string indexFile = string(BConstants::PATH_BUNDLE_BACKUP_HOME)
-                           .append(BConstants::SA_BUNDLE_BACKUP_BACKUP)
-                           .append(BConstants::EXT_BACKUP_MANAGE);
+    string indexFile = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
+                            append(BConstants::SA_BUNDLE_BACKUP_BACKUP).
+                            append(BConstants::EXT_BACKUP_MANAGE);
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(
         UniqueFd(open(indexFile.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)));
     auto cache = cachedEntity.Structuralize();
@@ -142,9 +142,9 @@ ErrCode IndexFileReady(const map<string, pair<string, struct stat>> &pkgInfo, sp
 
 ErrCode BigFileReady(sptr<IService> proxy)
 {
-    string indexFile = string(BConstants::PATH_BUNDLE_BACKUP_HOME)
-                           .append(BConstants::SA_BUNDLE_BACKUP_BACKUP)
-                           .append(BConstants::EXT_BACKUP_MANAGE);
+    string indexFile = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
+                            append(BConstants::SA_BUNDLE_BACKUP_BACKUP).
+                            append(BConstants::EXT_BACKUP_MANAGE);
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(indexFile.data(), O_RDONLY)));
     auto cache = cachedEntity.Structuralize();
     map<string, pair<string, struct stat>> pkgInfo = cache.GetExtManageInfo();
