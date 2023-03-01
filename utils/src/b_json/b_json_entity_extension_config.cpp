@@ -119,10 +119,10 @@ string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, 
     } catch (const bad_any_cast &e) {
         throw BError(BError::Codes::SA_INVAL_ARG, e.what());
     }
-    string jsonFilePath = string(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR)
-                              .append(bundleName)
-                              .append("/")
-                              .append(BConstants::BACKUP_CONFIG_JSON);
+    string jsonFilePath = string(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR).
+                                append(bundleName).
+                                append("/").
+                                append(BConstants::BACKUP_CONFIG_JSON);
     return BFile::ReadFile(UniqueFd(open(jsonFilePath.c_str(), O_RDONLY))).get();
 }
 } // namespace OHOS::FileManagement::Backup
