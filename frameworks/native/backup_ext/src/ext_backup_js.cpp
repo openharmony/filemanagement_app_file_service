@@ -49,8 +49,6 @@ static string GetSrcPath(const AppExecFwk::AbilityInfo &info)
         ss << info.moduleName << '/' << string(info.srcEntrance, 0, info.srcEntrance.rfind(".")) << ".abc";
         return ss.str();
     }
-
-    // REM: 否则?????
     return "";
 }
 
@@ -165,32 +163,22 @@ BConstants::ExtensionAction ExtBackupJs::GetExtensionAction() const
     return extAction_;
 }
 
-static BConstants::ExtensionAction Verify(const AAFwk::Want &want, std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo)
+static BConstants::ExtensionAction VerifyAndGetAction(const AAFwk::Want &want, std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo)
 {
-    try {
-        if (!abilityInfo) {
-            string pendingMsg = "Received an empty ability. You must missed the init proc";
-            throw BError(BError::Codes::EXT_INVAL_ARG, pendingMsg);
-        }
-
-        using namespace BConstants;
-        ExtensionAction extAction {want.GetIntParam(EXTENSION_ACTION_PARA, static_cast<int>(ExtensionAction::INVALID))};
-        if (extAction == ExtensionAction::INVALID) {
-            int extActionInt = static_cast<int>(extAction);
-            string pendingMsg = string("Want must specify a valid action instead of ").append(to_string(extActionInt));
-            throw BError(BError::Codes::EXT_INVAL_ARG, pendingMsg);
-        }
-
-        return extAction;
-    } catch (const BError &e) {
-        HILOGE("%{public}s", e.what());
-    } catch (const exception &e) {
-        HILOGE("%{public}s", e.what());
-    } catch (...) {
-        HILOGE("");
+    if (!abilityInfo) {
+        string pendingMsg = "Received an empty ability. You must missed the init proc";
+        throw BError(BError::Codes::EXT_INVAL_ARG, pendingMsg);
     }
 
-    return BConstants::ExtensionAction::INVALID;
+    using namespace BConstants;
+    ExtensionAction extAction {want.GetIntParam(EXTENSION_ACTION_PARA, static_cast<int>(ExtensionAction::INVALID))};
+    if (extAction == ExtensionAction::INVALID) {
+        int extActionInt = static_cast<int>(extAction);
+        string pendingMsg = string("Want must specify a valid action instead of ").append(to_string(extActionInt));
+        throw BError(BError::Codes::EXT_INVAL_ARG, pendingMsg);
+    }
+
+    return extAction;
 }
 
 sptr<IRemoteObject> ExtBackupJs::OnConnect(const AAFwk::Want &want)
@@ -198,7 +186,7 @@ sptr<IRemoteObject> ExtBackupJs::OnConnect(const AAFwk::Want &want)
     try {
         HILOGI("begin");
         // 发起者必须是备份服务
-        auto extAction = Verify(want, abilityInfo_);
+        auto extAction = VerifyAndGetAction(want, abilityInfo_);
         if (extAction_ != BConstants::ExtensionAction::INVALID && extAction == BConstants::ExtensionAction::INVALID &&
             extAction_ != extAction) {
             HILOGI("Verification failed.");
