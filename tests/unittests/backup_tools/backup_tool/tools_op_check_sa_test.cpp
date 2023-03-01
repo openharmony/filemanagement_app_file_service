@@ -38,7 +38,7 @@ public:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0382
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ToolsOpCheckSaTest, SUB_backup_tools_op_check_sa_0100, testing::ext::TestSize.Level1)
 {

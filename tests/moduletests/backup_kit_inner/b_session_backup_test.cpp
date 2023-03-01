@@ -91,7 +91,7 @@ void BSessionBackupTest::Init()
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0100, testing::ext::TestSize.Level1)
 {
@@ -118,7 +118,7 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0100, testing::ext::Tes
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0200, testing::ext::TestSize.Level1)
 {
@@ -145,7 +145,7 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0200, testing::ext::Tes
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0300, testing::ext::TestSize.Level1)
 {
@@ -181,7 +181,7 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0300, testing::ext::Tes
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0400, testing::ext::TestSize.Level1)
 {
@@ -207,7 +207,7 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0400, testing::ext::Tes
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0500, testing::ext::TestSize.Level1)
 {

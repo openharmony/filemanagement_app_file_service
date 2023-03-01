@@ -26,4 +26,9 @@ int AccessTokenKit::GetHapTokenInfo(AccessTokenID callerToken, HapTokenInfo &hap
     hapTokenInfoRes.bundleName = "com.example.app2backup";
     return 0;
 }
+
+int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string &permissionName)
+{
+    return 0;
+}
 } // namespace OHOS::Security::AccessToken

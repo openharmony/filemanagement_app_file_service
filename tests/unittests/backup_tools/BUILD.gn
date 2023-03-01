@@ -40,12 +40,14 @@ ohos_unittest("backup_tool_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_base}:utils",
-    "${path_ipc}/interfaces/innerkits/ipc_core:ipc_core",
-    "${path_samgr}/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
 
-  external_deps = [ "hitrace_native:hitrace_meter" ]
+  external_deps = [
+    "c_utils:utils",
+    "hitrace_native:hitrace_meter",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
   use_exceptions = true
 }
 
@@ -72,12 +74,14 @@ ohos_unittest("backup_tool_restore_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_base}:utils",
-    "${path_ipc}/interfaces/innerkits/ipc_core:ipc_core",
-    "${path_samgr}/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
 
-  external_deps = [ "hitrace_native:hitrace_meter" ]
+  external_deps = [
+    "c_utils:utils",
+    "hitrace_native:hitrace_meter",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
   use_exceptions = true
 }
 

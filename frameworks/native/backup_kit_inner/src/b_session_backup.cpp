@@ -26,6 +26,7 @@ using namespace std;
 BSessionBackup::~BSessionBackup()
 {
     if (!deathRecipient_) {
+        HILOGI("Death Recipient is nullptr");
         return;
     }
     auto proxy = ServiceProxy::GetInstance();
@@ -47,6 +48,7 @@ unique_ptr<BSessionBackup> BSessionBackup::Init(UniqueFd remoteCap,
         auto backup = make_unique<BSessionBackup>();
         auto proxy = ServiceProxy::GetInstance();
         if (proxy == nullptr) {
+            HILOGI("Failed to get backup service");
             return nullptr;
         }
 
@@ -76,6 +78,7 @@ void BSessionBackup::RegisterBackupServiceDied(std::function<void()> functor)
     }
 
     auto callback = [functor](const wptr<IRemoteObject> &obj) {
+        HILOGI("Backup service died");
         functor();
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(callback));
@@ -86,7 +89,7 @@ ErrCode BSessionBackup::Start()
 {
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        return ErrCode(BError::Codes::SDK_BROKEN_IPC);
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to proxy because of is empty").GetCode();
     }
 
     return proxy->Start();

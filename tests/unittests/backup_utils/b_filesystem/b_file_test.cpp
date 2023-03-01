@@ -58,7 +58,7 @@ static tuple<string, string> GetTestFile(const TestManager &tm)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BFileTest, b_file_ReadFile_0100, testing::ext::TestSize.Level1)
 {
@@ -84,7 +84,7 @@ HWTEST_F(BFileTest, b_file_ReadFile_0100, testing::ext::TestSize.Level1)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BFileTest, b_file_SendFile_0100, testing::ext::TestSize.Level1)
 {
@@ -110,7 +110,7 @@ HWTEST_F(BFileTest, b_file_SendFile_0100, testing::ext::TestSize.Level1)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BFileTest, b_file_CopyFile_0100, testing::ext::TestSize.Level1)
 {

@@ -42,7 +42,7 @@ public:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BFileInfoTest, SUB_BFile_Info_Marshalling_0100, testing::ext::TestSize.Level1)
 {
@@ -64,7 +64,7 @@ HWTEST_F(BFileInfoTest, SUB_BFile_Info_Marshalling_0100, testing::ext::TestSize.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BFileInfoTest, SUB_BFile_Info_ReadFromParcel_0100, testing::ext::TestSize.Level1)
 {
@@ -87,7 +87,7 @@ HWTEST_F(BFileInfoTest, SUB_BFile_Info_ReadFromParcel_0100, testing::ext::TestSi
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BFileInfoTest, SUB_BFile_Info_Unmarshalling_0100, testing::ext::TestSize.Level1)
 {
@@ -110,7 +110,7 @@ HWTEST_F(BFileInfoTest, SUB_BFile_Info_Unmarshalling_0100, testing::ext::TestSiz
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BFileInfoTest, SUB_BFile_Info_0200, testing::ext::TestSize.Level1)
 {

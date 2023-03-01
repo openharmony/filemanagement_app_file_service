@@ -61,7 +61,7 @@ static vector<string> DEFAULT_EXCLUDE_DIR = {};
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0100, testing::ext::TestSize.Level0)
 {
@@ -93,7 +93,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0100, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0200, testing::ext::TestSize.Level0)
 {
@@ -124,7 +124,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0200, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0300, testing::ext::TestSize.Level0)
 {
@@ -155,7 +155,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0300, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0400, testing::ext::TestSize.Level0)
 {
@@ -189,7 +189,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0400, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0500, testing::ext::TestSize.Level2)
 {
@@ -223,7 +223,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0500, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0600, testing::ext::TestSize.Level2)
 {
@@ -255,7 +255,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0600, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0700, testing::ext::TestSize.Level2)
 {
@@ -287,7 +287,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0700, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0800, testing::ext::TestSize.Level2)
 {
@@ -321,7 +321,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0800, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0900, testing::ext::TestSize.Level2)
 {
@@ -353,7 +353,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0900, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1000, testing::ext::TestSize.Level2)
 {
@@ -390,7 +390,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1000, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1100, testing::ext::TestSize.Level2)
 {
@@ -416,7 +416,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1100, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1200, testing::ext::TestSize.Level2)
 {
@@ -441,7 +441,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1200, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1300, testing::ext::TestSize.Level2)
 {
@@ -466,7 +466,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1300, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1400, testing::ext::TestSize.Level2)
 {
@@ -491,7 +491,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1400, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1500, testing::ext::TestSize.Level2)
 {
@@ -516,7 +516,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1500, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1600, testing::ext::TestSize.Level2)
 {
@@ -539,7 +539,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1600, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1700, testing::ext::TestSize.Level2)
 {
@@ -563,7 +563,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1700, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1800, testing::ext::TestSize.Level2)
 {

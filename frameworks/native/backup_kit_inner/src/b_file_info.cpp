@@ -14,6 +14,7 @@
  */
 
 #include "b_file_info.h"
+
 #include "filemgmt_libhilog.h"
 
 namespace OHOS {

@@ -21,7 +21,7 @@
 namespace OHOS::FileManagement::Backup {
 class BErrorTest : public testing::Test {
 public:
-    static void SetUpTestCase(void){};
+    static void SetUpTestCase(void) {};
     static void TearDownTestCase() {};
     void SetUp() {};
     void TearDown() {};
@@ -34,7 +34,7 @@ public:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorTest, b_error_construction_0100, testing::ext::TestSize.Level0)
 {
@@ -55,7 +55,7 @@ HWTEST_F(BErrorTest, b_error_construction_0100, testing::ext::TestSize.Level0)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorTest, b_error_construction_0300, testing::ext::TestSize.Level0)
 {
@@ -77,7 +77,7 @@ HWTEST_F(BErrorTest, b_error_construction_0300, testing::ext::TestSize.Level0)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorTest, b_error_construction_0500, testing::ext::TestSize.Level0)
 {
@@ -85,7 +85,8 @@ HWTEST_F(BErrorTest, b_error_construction_0500, testing::ext::TestSize.Level0)
     try {
         throw BError(BError::Codes::UTILS_INVAL_JSON_ENTITY);
         EXPECT_TRUE(false);
-    } catch (const BError &e) {} catch (...) {
+    } catch (const BError &e) {
+    } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BErrorTest-an exception occurred by construction.";
     }
@@ -99,7 +100,7 @@ HWTEST_F(BErrorTest, b_error_construction_0500, testing::ext::TestSize.Level0)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorTest, b_error_GetCode_0100, testing::ext::TestSize.Level0)
 {
@@ -117,7 +118,7 @@ HWTEST_F(BErrorTest, b_error_GetCode_0100, testing::ext::TestSize.Level0)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorTest, b_error_GetRawCode_0100, testing::ext::TestSize.Level0)
 {
@@ -135,7 +136,7 @@ HWTEST_F(BErrorTest, b_error_GetRawCode_0100, testing::ext::TestSize.Level0)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorTest, b_error_what_0100, testing::ext::TestSize.Level0)
 {
@@ -153,7 +154,7 @@ HWTEST_F(BErrorTest, b_error_what_0100, testing::ext::TestSize.Level0)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorTest, b_error_bool_0100, testing::ext::TestSize.Level0)
 {
@@ -170,7 +171,7 @@ HWTEST_F(BErrorTest, b_error_bool_0100, testing::ext::TestSize.Level0)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorTest, b_error_int_0100, testing::ext::TestSize.Level0)
 {

@@ -99,4 +99,8 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
 void Service::ExtConnectDone(string bundleName) {}
 
 void Service::ClearSessionAndSchedInfo(const string &bundleName) {}
+
+void Service::VerifyCaller() {}
+
+void Service::VerifyCaller(IServiceReverse::Scenario scenario) {}
 } // namespace OHOS::FileManagement::Backup

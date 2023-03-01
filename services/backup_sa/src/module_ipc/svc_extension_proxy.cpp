@@ -44,7 +44,7 @@ UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
 
     HILOGI("Successful");
     UniqueFd fd(reply.ReadFileDescriptor());
-    return fd;
+    return UniqueFd(fd.Release());
 }
 
 ErrCode SvcExtensionProxy::HandleClear()

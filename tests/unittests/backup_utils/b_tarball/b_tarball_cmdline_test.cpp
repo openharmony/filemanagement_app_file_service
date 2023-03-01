@@ -47,7 +47,7 @@ public:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BTarballCmdlineTest, b_tarball_cmdline_0100, testing::ext::TestSize.Level1)
 {
@@ -73,7 +73,7 @@ HWTEST_F(BTarballCmdlineTest, b_tarball_cmdline_0100, testing::ext::TestSize.Lev
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BTarballCmdlineTest, b_tarball_cmdline_0200, testing::ext::TestSize.Level1)
 {
@@ -120,7 +120,7 @@ HWTEST_F(BTarballCmdlineTest, b_tarball_cmdline_0200, testing::ext::TestSize.Lev
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BTarballCmdlineTest, b_tarball_cmdline_0300, testing::ext::TestSize.Level1)
 {

@@ -125,7 +125,7 @@ UniqueFd ServiceProxy::GetLocalCapabilities()
 
     HILOGI("Successful");
     UniqueFd fd(reply.ReadFileDescriptor());
-    return fd;
+    return UniqueFd(fd.Release());
 }
 
 ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)

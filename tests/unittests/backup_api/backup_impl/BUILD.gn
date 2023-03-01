@@ -64,6 +64,7 @@ ohos_unittest("backup_sa_impl_test") {
   external_deps = [
     "app_file_service:backup_kit_inner",
     "ipc:ipc_core",
+    "samgr:samgr_proxy",
   ]
 
   use_exceptions = true

@@ -46,7 +46,7 @@ static void CallBack(const wptr<IRemoteObject> &obj)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SvcDeathRecipientTest, SUB_backup_sa_deathecipient_OnRemoteDied_0100, testing::ext::TestSize.Level1)
 {

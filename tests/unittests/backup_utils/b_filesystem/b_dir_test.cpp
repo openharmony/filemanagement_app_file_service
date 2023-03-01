@@ -45,7 +45,7 @@ public:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BDirTest, b_dir_GetDirFiles_0100, testing::ext::TestSize.Level0)
 {
@@ -83,7 +83,7 @@ HWTEST_F(BDirTest, b_dir_GetDirFiles_0100, testing::ext::TestSize.Level0)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BDirTest, b_dir_GetBigFiles_0100, testing::ext::TestSize.Level1)
 {
@@ -122,7 +122,7 @@ HWTEST_F(BDirTest, b_dir_GetBigFiles_0100, testing::ext::TestSize.Level1)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BDirTest, b_dir_GetBigFiles_0200, testing::ext::TestSize.Level1)
 {
@@ -146,7 +146,7 @@ HWTEST_F(BDirTest, b_dir_GetBigFiles_0200, testing::ext::TestSize.Level1)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BDirTest, b_dir_GetBigFiles_0300, testing::ext::TestSize.Level1)
 {

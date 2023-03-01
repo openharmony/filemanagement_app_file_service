@@ -92,7 +92,7 @@ void SchedSchedulerTest::Init(IServiceReverse::Scenario scenario)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SchedSchedulerTest, SUB_Service_Sched_0100, testing::ext::TestSize.Level1)
 {
@@ -126,7 +126,7 @@ HWTEST_F(SchedSchedulerTest, SUB_Service_Sched_0100, testing::ext::TestSize.Leve
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SchedSchedulerTest, SUB_Service_ExecutingQueueTasks_0100, testing::ext::TestSize.Level1)
 {
@@ -150,7 +150,7 @@ HWTEST_F(SchedSchedulerTest, SUB_Service_ExecutingQueueTasks_0100, testing::ext:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(SchedSchedulerTest, SUB_Service_RemoveExtConn_0100, testing::ext::TestSize.Level1)
 {

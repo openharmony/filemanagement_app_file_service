@@ -14,6 +14,7 @@
  */
 
 #include "b_session_restore.h"
+
 #include "b_error/b_error.h"
 #include "filemgmt_libhilog.h"
 #include "service_proxy.h"
@@ -25,6 +26,7 @@ using namespace std;
 BSessionRestore::~BSessionRestore()
 {
     if (!deathRecipient_) {
+        HILOGI("Death Recipient is nullptr");
         return;
     }
     auto proxy = ServiceProxy::GetInstance();
@@ -44,6 +46,7 @@ unique_ptr<BSessionRestore> BSessionRestore::Init(std::vector<BundleName> bundle
         auto restore = make_unique<BSessionRestore>();
         auto proxy = ServiceProxy::GetInstance();
         if (proxy == nullptr) {
+            HILOGI("Failed to get backup service");
             return nullptr;
         }
         int32_t res = proxy->InitRestoreSession(new ServiceReverse(callbacks), bundlesToRestore);
@@ -64,6 +67,7 @@ UniqueFd BSessionRestore::GetLocalCapabilities()
 {
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
+        HILOGI("Failed to proxy because of is empty");
         return UniqueFd(-1);
     }
     return UniqueFd(proxy->GetLocalCapabilities());
@@ -73,7 +77,7 @@ ErrCode BSessionRestore::PublishFile(BFileInfo fileInfo)
 {
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        return ErrCode(BError::Codes::SDK_BROKEN_IPC);
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to proxy because of is empty").GetCode();
     }
     return proxy->PublishFile(fileInfo);
 }
@@ -82,7 +86,7 @@ ErrCode BSessionRestore::Start()
 {
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        return BError(BError::Codes::SDK_BROKEN_IPC);
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to proxy because of is empty").GetCode();
     }
 
     return proxy->Start();
@@ -110,6 +114,7 @@ void BSessionRestore::RegisterBackupServiceDied(std::function<void()> functor)
     }
 
     auto callback = [functor](const wptr<IRemoteObject> &obj) {
+        HILOGI("Backup service died");
         functor();
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(callback));

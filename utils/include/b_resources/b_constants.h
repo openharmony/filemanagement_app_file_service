@@ -44,7 +44,7 @@ enum EntryKey {
 };
 
 constexpr int SPAN_USERID_UID = 20000000;
-constexpr int SYSTEM_UID = 1000;
+constexpr int SYSTEM_UID = 0;
 constexpr int BACKUP_UID = 1089;
 constexpr int EXTENSION_THREAD_POOL_COUNT = 1;
 constexpr int BACKUP_LOADSA_TIMEOUT_MS = 4000;

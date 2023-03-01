@@ -40,7 +40,7 @@ public:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BTarballFactoryTest, b_tarball_factory_0100, testing::ext::TestSize.Level1)
 {

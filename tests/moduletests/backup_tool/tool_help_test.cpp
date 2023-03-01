@@ -33,7 +33,7 @@ public:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0377
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ToolsTest, tool_help_0100, testing::ext::TestSize.Level0)
 {
@@ -58,7 +58,7 @@ HWTEST_F(ToolsTest, tool_help_0100, testing::ext::TestSize.Level0)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0377
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ToolsTest, tool_help_0200, testing::ext::TestSize.Level0)
 {

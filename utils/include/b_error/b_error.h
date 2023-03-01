@@ -22,13 +22,13 @@
 #ifndef OHOS_FILEMGMT_BACKUP_B_ERROR_H
 #define OHOS_FILEMGMT_BACKUP_B_ERROR_H
 
+#include <errors.h>
+#include <functional>
 #include <map>
 #include <string>
 #include <string_view>
 #include <system_error>
 #include <vector>
-
-#include "errors.h"
 
 #if __has_builtin(__builtin_FILE) && __has_builtin(__builtin_LINE) && __has_builtin(__builtin_FUNCTION)
 #define DEFINE_SOURCE_LOCATION                                              \
@@ -113,6 +113,14 @@ public:
     {
         return msg_.c_str();
     }
+
+    /**
+     * @brief 异常捕获
+     *
+     * @param callBack 回调
+     * @return ErrCode 错误码
+     */
+    static ErrCode ExceptionCatcherLocked(std::function<ErrCode()> callBack);
 
 public:
     /**

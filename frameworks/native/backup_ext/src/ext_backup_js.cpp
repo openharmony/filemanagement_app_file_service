@@ -215,12 +215,6 @@ sptr<IRemoteObject> ExtBackupJs::OnConnect(const AAFwk::Want &want)
 
         auto remoteObject =
             sptr<BackupExtExtension>(new BackupExtExtension(std::static_pointer_cast<ExtBackupJs>(shared_from_this())));
-        // REM:经过测试remoteObject返回为空 OnConnect也是连接成功的
-        if (remoteObject == nullptr) {
-            HILOGI("%{public}s No memory allocated for BackupExtExtension", __func__);
-            return nullptr;
-        }
-
         HILOGI("end");
         return remoteObject->AsObject();
     } catch (const BError &e) {

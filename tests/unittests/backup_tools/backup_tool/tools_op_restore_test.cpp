@@ -46,7 +46,7 @@ public:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0382
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0100, testing::ext::TestSize.Level1)
 {
@@ -102,7 +102,7 @@ HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0100, testing::ext::Tes
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0382
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0200, testing::ext::TestSize.Level1)
 {

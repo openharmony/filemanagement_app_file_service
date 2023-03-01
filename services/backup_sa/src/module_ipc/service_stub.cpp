@@ -63,7 +63,7 @@ int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Message
 
 int32_t ServiceStub::CmdInitRestoreSession(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGE("Begin");
+    HILOGI("Begin");
     auto remote = data.ReadRemoteObject();
     if (!remote) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the reverse stub");
@@ -89,7 +89,7 @@ int32_t ServiceStub::CmdInitRestoreSession(MessageParcel &data, MessageParcel &r
 
 int32_t ServiceStub::CmdInitBackupSession(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGE("Begin");
+    HILOGI("Begin");
     auto remote = data.ReadRemoteObject();
     if (!remote) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the reverse stub");
@@ -131,7 +131,7 @@ int32_t ServiceStub::CmdStart(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdGetLocalCapabilities(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGE("Begin");
+    HILOGI("Begin");
     UniqueFd fd(GetLocalCapabilities());
     if (!reply.WriteFileDescriptor(fd)) {
         return BError(BError::Codes::SA_BROKEN_IPC, "Failed to send out the file");
@@ -141,7 +141,7 @@ int32_t ServiceStub::CmdGetLocalCapabilities(MessageParcel &data, MessageParcel 
 
 int32_t ServiceStub::CmdPublishFile(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGE("Begin");
+    HILOGI("Begin");
     unique_ptr<BFileInfo> fileInfo(data.ReadParcelable<BFileInfo>());
     if (!fileInfo) {
         return BError(BError::Codes::SA_BROKEN_IPC, "Failed to receive fileInfo");
@@ -157,7 +157,7 @@ int32_t ServiceStub::CmdPublishFile(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdAppFileReady(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGE("Begin");
+    HILOGI("Begin");
     string fileName;
     if (!data.ReadString(fileName)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fileName");
@@ -178,7 +178,7 @@ int32_t ServiceStub::CmdAppFileReady(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGE("Begin");
+    HILOGI("Begin");
     bool success;
     if (!data.ReadBool(success)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bool flag");
@@ -194,7 +194,7 @@ int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdGetExtFileName(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGE("Begin");
+    HILOGI("Begin");
     string bundleName;
     if (!data.ReadString(bundleName)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleName").GetCode();

@@ -69,7 +69,7 @@ void ServiceProxyTest::TearDown()
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H037V
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitRestoreSession_0100, testing::ext::TestSize.Level1)
 {
@@ -96,7 +96,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitRestoreSession_0100, testing::e
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitBackupSession_0100, testing::ext::TestSize.Level1)
 {
@@ -129,7 +129,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitBackupSession_0100, testing::ex
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_Start_0100, testing::ext::TestSize.Level1)
 {
@@ -153,7 +153,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_Start_0100, testing::ext::TestSize.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0377
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetLocalCapabilities_0100, testing::ext::TestSize.Level1)
 {
@@ -177,7 +177,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetLocalCapabilities_0100, testing:
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishFile_0100, testing::ext::TestSize.Level1)
 {
@@ -204,7 +204,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishFile_0100, testing::ext::Tes
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0380
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppFileReady_0100, testing::ext::TestSize.Level1)
 {
@@ -238,7 +238,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppFileReady_0100, testing::ext::Te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0380
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppDone_0100, testing::ext::TestSize.Level1)
 {
@@ -262,7 +262,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppDone_0100, testing::ext::TestSiz
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetExtFileName_0100, testing::ext::TestSize.Level1)
 {
@@ -288,7 +288,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetExtFileName_0100, testing::ext::
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilitySuccess_0100, testing::ext::TestSize.Level1)
 {
@@ -307,7 +307,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilitySuccess_0100, te
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilityFail_0100, testing::ext::TestSize.Level1)
 {
@@ -326,7 +326,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilityFail_0100, testi
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: SR000H0378
+ * @tc.require: I6F3GV
  */
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetInstance_0100, testing::ext::TestSize.Level1)
 {

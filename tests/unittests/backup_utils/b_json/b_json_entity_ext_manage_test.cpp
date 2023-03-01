@@ -106,7 +106,7 @@ struct stat GetFileStat(const string &pathTestFile)
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0100, testing::ext::TestSize.Level0)
 {
@@ -149,7 +149,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0100, testing::ext::
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0200, testing::ext::TestSize.Level0)
 {
@@ -202,7 +202,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0200, testing::ext::
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0300, testing::ext::TestSize.Level0)
 {
@@ -266,7 +266,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0300, testing::ext::
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0400, testing::ext::TestSize.Level0)
 {
@@ -348,7 +348,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0400, testing::ext::
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0500, testing::ext::TestSize.Level0)
 {
@@ -419,7 +419,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0500, testing::ext::
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0600, testing::ext::TestSize.Level0)
 {
@@ -451,7 +451,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0600, testing::ext::
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0700, testing::ext::TestSize.Level0)
 {
@@ -476,7 +476,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0700, testing::ext::
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0800, testing::ext::TestSize.Level0)
 {
@@ -501,7 +501,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0800, testing::ext::
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
- * @tc.require: SR000H0379
+ * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0900, testing::ext::TestSize.Level0)
 {
