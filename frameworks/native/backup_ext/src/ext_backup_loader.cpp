@@ -26,13 +26,13 @@ ExtBackupLoader::~ExtBackupLoader() = default;
 
 AbilityRuntime::Extension *ExtBackupLoader::Create(const unique_ptr<AbilityRuntime::Runtime> &runtime) const
 {
-    HILOGI("Boot 3# Create as an BackupExtensionAbility(Loader)");
+    HILOGI("Create as an BackupExtensionAbility(Loader)");
     return ExtBackup::Create(runtime);
 }
 
 map<string, string> ExtBackupLoader::GetParams()
 {
-    HILOGI("Boot 2# Register as an extension ability");
+    HILOGI("Register as an extension ability");
     return {
         // Type 即为 Extension 类型，定义在 ExtensionAbilityType 这一枚举类中。具体位置见 extension_ability_info.h
         {"type", "9"},
@@ -42,7 +42,7 @@ map<string, string> ExtBackupLoader::GetParams()
 
 extern "C" __attribute__((visibility("default"))) void *OHOS_EXTENSION_GetExtensionModule()
 {
-    HILOGI("Boot 1# Load as a library");
+    HILOGI("Load as a library");
     return &ExtBackupLoader::GetInstance();
 }
 } // namespace OHOS::FileManagement::Backup
