@@ -38,8 +38,6 @@ ohos_shared_library("remote_file_share_native") {
     "LOG_DOMAIN=0xD004312",
   ]
 
-  relative_install_dir = "module"
-
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
 }
