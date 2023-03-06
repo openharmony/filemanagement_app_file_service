@@ -12,12 +12,12 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 
 ohos_shared_library("remotefileshare") {
   include_dirs = [
     "//foundation/arkui/napi/interfaces/kits",
     "//third_party/bounds_checking_function/include",
-    "//foundation/filemanagement/file_api/utils/filemgmt_libn/include",
   ]
 
   sources = [
@@ -25,10 +25,9 @@ ohos_shared_library("remotefileshare") {
     "remote_file_share/remotefileshare_napi.cpp",
   ]
 
-  deps = [
-    "//foundation/filemanagement/file_api/utils/filemgmt_libn:filemgmt_libn",
-    "//third_party/bounds_checking_function:libsec_shared",
-  ]
+  deps = [ "${third_party_path}/bounds_checking_function:libsec_shared" ]
+
+  external_deps = [ "file_api:filemgmt_libn" ]
 
   relative_install_dir = "module"
 
@@ -39,17 +38,12 @@ ohos_shared_library("remotefileshare") {
 ohos_shared_library("fileshare") {
   include_dirs = [
     "//foundation/filemanagement/app_file_service/interfaces/kits/js",
-    "//foundation/filemanagement/file_api/utils/filemgmt_libn/include",
     "//foundation/filemanagement/app_file_service/interfaces/kits/js/common",
   ]
 
   sources = [
     "//foundation/filemanagement/app_file_service/interfaces/kits/js/file_share/fileshare_n_exporter.cpp",
     "//foundation/filemanagement/app_file_service/interfaces/kits/js/file_share/grant_uri_permission.cpp",
-  ]
-
-  deps = [
-    "//foundation/filemanagement/file_api/utils/filemgmt_libn:filemgmt_libn",
   ]
 
   external_deps = [
@@ -60,6 +54,7 @@ ohos_shared_library("fileshare") {
     "c_utils:utils",
     "data_share:datashare_common",
     "data_share:datashare_consumer",
+    "file_api:filemgmt_libn",
     "file_api:remote_uri_native",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
@@ -74,7 +69,6 @@ ohos_shared_library("fileshare") {
 ohos_shared_library("fileuri") {
   include_dirs = [
     "//foundation/filemanagement/app_file_service/interfaces/kits/js",
-    "//foundation/filemanagement/file_api/utils/filemgmt_libn/include",
     "//foundation/filemanagement/app_file_service/interfaces/kits/js/common",
   ]
 
@@ -83,14 +77,11 @@ ohos_shared_library("fileuri") {
     "//foundation/filemanagement/app_file_service/interfaces/kits/js/file_uri/get_uri_from_path.cpp",
   ]
 
-  deps = [
-    "//foundation/filemanagement/file_api/utils/filemgmt_libn:filemgmt_libn",
-  ]
-
   external_deps = [
     "ability_runtime:abilitykit_native",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "file_api:filemgmt_libn",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
