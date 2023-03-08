@@ -42,13 +42,6 @@ ohos_shared_library("backup_utils") {
     "src/b_process/b_process.cpp",
     "src/b_tarball/b_tarball_cmdline.cpp",
     "src/b_tarball/b_tarball_factory.cpp",
-    "src/b_tarball/b_tarball_posix/b_tarball_posix_extended_data.cpp",
-    "src/b_tarball/b_tarball_posix/b_tarball_posix_extended_entry.cpp",
-    "src/b_tarball/b_tarball_posix/b_tarball_posix_extended_header.cpp",
-    "src/b_tarball/b_tarball_posix/b_tarball_posix_file.cpp",
-    "src/b_tarball/b_tarball_posix/b_tarball_posix_file_data.cpp",
-    "src/b_tarball/b_tarball_posix/b_tarball_posix_pax_header.cpp",
-    "src/b_tarball/b_tarball_posix/b_tarball_posix_tarball.cpp",
   ]
 
   configs = [ ":utils_private_config" ]
