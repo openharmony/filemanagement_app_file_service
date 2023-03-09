@@ -1,0 +1,136 @@
+# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/filemanagement/app_file_service/backup.gni")
+
+ohos_unittest("b_error_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [ "b_error/b_error_test.cpp" ]
+
+  deps = [
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("b_file_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "b_filesystem/b_dir_test.cpp",
+    "b_filesystem/b_file_test.cpp",
+  ]
+
+  deps = [
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("b_json_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/utils/src/b_json/b_json_entity_extension_config.cpp",
+    "b_json/b_json_cached_entity_test.cpp",
+    "b_json/b_json_entity_ext_manage_test.cpp",
+    "b_json/b_json_entity_extension_config_test.cpp",
+  ]
+  sources += backup_mock_parameter_src
+
+  include_dirs = [ "${path_base}/include" ]
+  include_dirs += backup_mock_parameter_include_dirs
+
+  deps = [
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+    "${path_googletest}:gmock_main",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("b_tarball_cmdline_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup_mock}/b_process/b_process_mock.cpp",
+    "b_tarball/b_tarball_cmdline_test.cpp",
+  ]
+
+  include_dirs = [
+    "${path_base}/include",
+    "${path_backup}/utils/include",
+  ]
+
+  deps = [ "${path_backup}/tests/utils:backup_test_utils" ]
+  external_deps = [ "c_utils:utils" ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("b_tarball_factory_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup_mock}/b_tarball/b_tarball_cmdline_mock.cpp",
+    "b_tarball/b_tarball_factory_test.cpp",
+  ]
+
+  include_dirs = [
+    "${path_base}/include",
+    "${path_backup}/utils/include",
+  ]
+
+  deps = [ "${path_backup}/tests/utils:backup_test_utils" ]
+  external_deps = [ "c_utils:utils" ]
+  use_exceptions = true
+}
+
+ohos_unittest("b_process_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [ "b_process/b_process_test.cpp" ]
+
+  include_dirs = [
+    "${path_base}/include",
+    "${path_backup}/utils/include",
+  ]
+
+  deps = [
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+  ]
+  external_deps = [ "c_utils:utils" ]
+
+  use_exceptions = true
+}
+
+group("backup_test") {
+  testonly = true
+
+  deps = [
+    ":b_error_test",
+    ":b_file_test",
+    ":b_json_test",
+    ":b_process_test",
+    ":b_tarball_cmdline_test",
+    ":b_tarball_factory_test",
+  ]
+}

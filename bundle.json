@@ -14,7 +14,8 @@
         "name": "app_file_service",
         "subsystem": "filemanagement",
         "syscap": [
-            "SystemCapability.FileManagement.RemoteFileShare"
+            "SystemCapability.FileManagement.RemoteFileShare",
+            "SystemCapability.FileManagement.StorageService.Backup"
         ],
         "adapted_system_type": [
             "standard"
@@ -31,6 +32,12 @@
                 ],
                 "service_group": []
             },
+            "sub_component": [
+                "//foundation/filemanagement/app_file_service:tgt_backup_extension",
+                "//foundation/filemanagement/app_file_service:tgt_backup_kit_inner",
+                "//foundation/filemanagement/app_file_service:tgt_backup_sa",
+                "//foundation/filemanagement/app_file_service:tgt_backup_tool"
+            ],
             "inner_kits": [
                 {
                     "name": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native/file_share:fileshare_native",
@@ -49,11 +56,27 @@
                       ],
                       "header_base": "//foundation/filemanagement/app_file_service/interfaces/innerkits/remote_file_share/native"
                     }
+                },
+                {
+                    "name": "//foundation/filemanagement/app_file_service/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+                    "header": {
+                        "header_base": "//foundation/filemanagement/app_file_service/interfaces/inner_api/native/backup_kit_inner",
+                        "header_files": [
+                            "backup_kit_inner.h",
+                            "impl/b_session_restore.h",
+                            "impl/b_file_info.h",
+                            "impl/service_proxy.h",
+                            "impl/b_session_backup.h",
+                            "impl/i_service.h",
+                            "impl/i_service_reverse.h"
+                        ]
+                    }
                 }
             ],
             "test": [
                 "//foundation/filemanagement/app_file_service/test/fuzztest:fuzztest",
-                "//foundation/filemanagement/app_file_service/test/unittest:unittest"
+                "//foundation/filemanagement/app_file_service/test/unittest:unittest",
+                "//foundation/filemanagement/app_file_service:tgt_backup_tests"
             ]
         }
     }
