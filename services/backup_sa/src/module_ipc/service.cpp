@@ -131,15 +131,22 @@ void Service::VerifyCaller()
 {
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
     int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
-    const string permission = "ohos.permission.BACKUP";
     switch (tokenType) {
-        case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP:
+        case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP: {
+            auto multiuser = BMultiuser::ParseUid(IPCSkeleton::GetCallingUid());
+            if (multiuser.userId != BConstants::DEFAULT_USER_ID) {
+                throw BError(BError::Codes::SA_INVAL_ARG, string("Calling user is ")
+                                                              .append(to_string(multiuser.userId))
+                                                              .append(", which is currently not supported"));
+            }
+            const string permission = "ohos.permission.BACKUP";
             if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
                 Security::AccessToken::TypePermissionState::PERMISSION_DENIED) {
                 throw BError(BError::Codes::SA_INVAL_ARG,
                              string("Permission denied, token type is ").append(to_string(tokenType)));
             }
             break;
+        }
         case Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL:
             if (IPCSkeleton::GetCallingUid() != BConstants::SYSTEM_UID) {
                 throw BError(BError::Codes::SA_INVAL_ARG, "Calling uid is invalid");

@@ -67,6 +67,7 @@ ohos_unittest("backup_service_test") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/tests/unittests/backup_api/backup_impl/include",
     "${path_access_token}/interfaces/innerkits/accesstoken/include",
+    "${path_backup_mock}/b_process/",
   ]
 
   deps = [
