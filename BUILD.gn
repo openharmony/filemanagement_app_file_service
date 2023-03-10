@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -18,38 +18,5 @@ group("libremotefileshare") {
     "interfaces/innerkits/native/file_share:fileshare_native",
     "//foundation/filemanagement/app_file_service/interfaces/innerkits/remote_file_share/native:remote_file_share_native",
     "//foundation/filemanagement/app_file_service/interfaces/kits/js:remotefileshare",
-  ]
-}
-
-group("tgt_backup_extension") {
-  deps = [
-    "frameworks/native/backup_ext:backup_extension_ability_native",
-    "interfaces/api/js/napi/backup_ext:backupextensionability_napi",
-  ]
-}
-
-group("tgt_backup_kit_inner") {
-  deps = [ "interfaces/inner_api/native/backup_kit_inner" ]
-}
-
-group("tgt_backup_sa") {
-  deps = [
-    "services:backup_para_etc",
-    "services:backup_sa_etc",
-    "services:backup_sa_profile",
-    "services/backup_sa",
-  ]
-}
-
-group("tgt_backup_tool") {
-  deps = [ "tools/backup_tool" ]
-}
-
-group("tgt_backup_tests") {
-  testonly = true
-
-  deps = [
-    "tests/moduletests",
-    "tests/unittests",
   ]
 }
