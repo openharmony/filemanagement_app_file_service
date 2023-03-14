@@ -114,14 +114,6 @@ public:
         return msg_.c_str();
     }
 
-    /**
-     * @brief 异常捕获
-     *
-     * @param callBack 回调
-     * @return ErrCode 错误码
-     */
-    static ErrCode ExceptionCatcherLocked(std::function<ErrCode()> callBack);
-
 public:
     /**
      * @brief 重载bool操作符，判断当前错误是否是错误
