@@ -33,6 +33,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+using namespace BExcepUltils;
 
 void ExtBackupJs::OnStart(const AAFwk::Want &want)
 {
@@ -61,8 +62,7 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
     HILOGI("Init the BackupExtensionAbility(JS)");
     try {
         ExtBackup::Init(record, application, handler, token);
-        BExcepUltils::CheckValidAbilityInfo<std::shared_ptr<OHOS::AppExecFwk::AbilityInfo>>(
-            abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
+        BAssert(abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
         // 获取应用扩展的 BackupExtensionAbility 的路径
         const AppExecFwk::AbilityInfo &info = *abilityInfo_;
         string bundleName = info.bundleName;
@@ -137,8 +137,7 @@ string ExtBackupJs::GetUsrConfig() const
 {
     vector<string> config;
     AppExecFwk::BundleMgrClient client;
-    BExcepUltils::CheckValidAbilityInfo<std::shared_ptr<OHOS::AppExecFwk::AbilityInfo>>(
-        abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
+    BAssert(abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
     const AppExecFwk::AbilityInfo &info = *abilityInfo_;
     if (!client.GetProfileFromAbility(info, "ohos.extension.backup", config)) {
         throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to invoke the GetProfileFromAbility method.");
@@ -167,13 +166,12 @@ static BConstants::ExtensionAction VerifyAndGetAction(const AAFwk::Want &want,
                                                       std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo)
 {
     string pendingMsg = "Received an empty ability. You must missed the init proc";
-    BExcepUltils::CheckValidAbilityInfo<std::shared_ptr<OHOS::AppExecFwk::AbilityInfo>>(
-        abilityInfo, BError::Codes::EXT_INVAL_ARG, pendingMsg);
+    BAssert(abilityInfo, BError::Codes::EXT_INVAL_ARG, pendingMsg);
     using namespace BConstants;
     ExtensionAction extAction {want.GetIntParam(EXTENSION_ACTION_PARA, static_cast<int>(ExtensionAction::INVALID))};
     if (extAction == ExtensionAction::INVALID) {
         int extActionInt = static_cast<int>(extAction);
-        string pendingMsg = string("Want must specify a valid action instead of ").append(to_string(extActionInt));
+        pendingMsg = string("Want must specify a valid action instead of ").append(to_string(extActionInt));
         throw BError(BError::Codes::EXT_INVAL_ARG, pendingMsg);
     }
 
@@ -184,8 +182,7 @@ sptr<IRemoteObject> ExtBackupJs::OnConnect(const AAFwk::Want &want)
 {
     try {
         HILOGI("begin");
-        BExcepUltils::CheckValidAbilityInfo<std::shared_ptr<OHOS::AppExecFwk::AbilityInfo>>(
-            abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
+        BAssert(abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
         // 发起者必须是备份服务
         auto extAction = VerifyAndGetAction(want, abilityInfo_);
         if (extAction_ != BConstants::ExtensionAction::INVALID && extAction == BConstants::ExtensionAction::INVALID &&

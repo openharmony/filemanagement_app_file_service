@@ -24,6 +24,8 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+using namespace BExcepUltils;
+
 ExtExtensionStub::ExtExtensionStub()
 {
     opToInterfaceMap_[CMD_GET_FILE_HANDLE] = &ExtExtensionStub::CmdGetFileHandle;
@@ -51,8 +53,7 @@ int32_t ExtExtensionStub::OnRemoteRequest(uint32_t code,
         return BError(BError::Codes::EXT_INVAL_ARG, "Invalid remote descriptor");
     }
 
-    return BExcepUltils::ExceptionCatcherLocked(
-        [&]() { return ErrCode((this->*(interfaceIndex->second))(data, reply)); });
+    return ExceptionCatcherLocked([&]() { return ErrCode((this->*(interfaceIndex->second))(data, reply)); });
 }
 
 ErrCode ExtExtensionStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)
