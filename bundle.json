@@ -30,14 +30,13 @@
                     "//foundation/filemanagement/app_file_service/interfaces/kits/js:fileshare",
                     "//foundation/filemanagement/app_file_service/interfaces/kits/js:fileuri"
                 ],
-                "service_group": []
+                "service_group": [
+                    "//foundation/filemanagement/app_file_service:tgt_backup_extension",
+                    "//foundation/filemanagement/app_file_service:tgt_backup_kit_inner",
+                    "//foundation/filemanagement/app_file_service:tgt_backup_sa",
+                    "//foundation/filemanagement/app_file_service:tgt_backup_tool"
+                ]
             },
-            "sub_component": [
-                "//foundation/filemanagement/app_file_service:tgt_backup_extension",
-                "//foundation/filemanagement/app_file_service:tgt_backup_kit_inner",
-                "//foundation/filemanagement/app_file_service:tgt_backup_sa",
-                "//foundation/filemanagement/app_file_service:tgt_backup_tool"
-            ],
             "inner_kits": [
                 {
                     "name": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native/file_share:fileshare_native",
