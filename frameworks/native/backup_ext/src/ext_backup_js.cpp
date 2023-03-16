@@ -21,6 +21,7 @@
 #include <sys/types.h>
 
 #include "b_error/b_error.h"
+#include "b_error/b_excep_utils.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_resources/b_constants.h"
@@ -32,6 +33,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+using namespace BExcepUltils;
 
 void ExtBackupJs::OnStart(const AAFwk::Want &want)
 {
@@ -60,11 +62,7 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
     HILOGI("Init the BackupExtensionAbility(JS)");
     try {
         ExtBackup::Init(record, application, handler, token);
-
-        if (!abilityInfo_) {
-            throw BError(BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
-        }
-
+        BAssert(abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
         // 获取应用扩展的 BackupExtensionAbility 的路径
         const AppExecFwk::AbilityInfo &info = *abilityInfo_;
         string bundleName = info.bundleName;
@@ -139,6 +137,7 @@ string ExtBackupJs::GetUsrConfig() const
 {
     vector<string> config;
     AppExecFwk::BundleMgrClient client;
+    BAssert(abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
     const AppExecFwk::AbilityInfo &info = *abilityInfo_;
     if (!client.GetProfileFromAbility(info, "ohos.extension.backup", config)) {
         throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to invoke the GetProfileFromAbility method.");
@@ -166,16 +165,13 @@ BConstants::ExtensionAction ExtBackupJs::GetExtensionAction() const
 static BConstants::ExtensionAction VerifyAndGetAction(const AAFwk::Want &want,
                                                       std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo)
 {
-    if (!abilityInfo) {
-        string pendingMsg = "Received an empty ability. You must missed the init proc";
-        throw BError(BError::Codes::EXT_INVAL_ARG, pendingMsg);
-    }
-
+    string pendingMsg = "Received an empty ability. You must missed the init proc";
+    BAssert(abilityInfo, BError::Codes::EXT_INVAL_ARG, pendingMsg);
     using namespace BConstants;
     ExtensionAction extAction {want.GetIntParam(EXTENSION_ACTION_PARA, static_cast<int>(ExtensionAction::INVALID))};
     if (extAction == ExtensionAction::INVALID) {
         int extActionInt = static_cast<int>(extAction);
-        string pendingMsg = string("Want must specify a valid action instead of ").append(to_string(extActionInt));
+        pendingMsg = string("Want must specify a valid action instead of ").append(to_string(extActionInt));
         throw BError(BError::Codes::EXT_INVAL_ARG, pendingMsg);
     }
 
@@ -186,6 +182,7 @@ sptr<IRemoteObject> ExtBackupJs::OnConnect(const AAFwk::Want &want)
 {
     try {
         HILOGI("begin");
+        BAssert(abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
         // 发起者必须是备份服务
         auto extAction = VerifyAndGetAction(want, abilityInfo_);
         if (extAction_ != BConstants::ExtensionAction::INVALID && extAction == BConstants::ExtensionAction::INVALID &&
