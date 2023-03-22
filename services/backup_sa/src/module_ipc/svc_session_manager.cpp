@@ -85,8 +85,7 @@ void SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool
     }
 
     deathRecipient_ = nullptr;
-    HILOGI("Succeed to deactive a session. Client token = %{public}u, client proxy = 0x%{private}p", impl_.clientToken,
-           impl_.clientProxy.GetRefPtr());
+    HILOGI("Succeed to deactive a session");
     impl_ = {};
     extConnectNum_ = 0;
 }
@@ -299,7 +298,7 @@ void SvcSessionManager::InitClient(Impl &newImpl)
     }
 
     auto callback = [revPtr {reversePtr_}](const wptr<IRemoteObject> &obj) {
-        HILOGI("Client died. Died remote obj = %{private}p", obj.GetRefPtr());
+        HILOGI("Client died.");
 
         auto revPtrStrong = revPtr.promote();
         if (!revPtrStrong) {
@@ -311,10 +310,7 @@ void SvcSessionManager::InitClient(Impl &newImpl)
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(callback));
     remoteObj->AddDeathRecipient(deathRecipient_);
-    HILOGI(
-        "Succeed to active a session."
-        "Client token = %{public}u, client proxy = 0x%{private}p, remote obj = 0x%{private}p",
-        impl_.clientToken, impl_.clientProxy.GetRefPtr(), remoteObj.GetRefPtr());
+    HILOGI("Succeed to active a session");
 }
 
 void SvcSessionManager::SetExtFileNameRequest(const string &bundleName, const string &fileName)
