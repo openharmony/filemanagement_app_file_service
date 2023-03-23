@@ -29,20 +29,18 @@ int32_t ServiceReverseStub::OnRemoteRequest(uint32_t code,
                                             MessageParcel &reply,
                                             MessageOption &option)
 {
-    HILOGI("Begin to call procedure indexed %{public}u", code);
-    auto interfaceIndex = opToInterfaceMap_.find(code);
-    if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {
-        stringstream ss;
-        ss << "Cannot response request " << code << ": unknown procedure";
-        return BError(BError::Codes::SA_INVAL_ARG, ss.str());
-    }
-
     const std::u16string descriptor = ServiceReverseStub::GetDescriptor();
     const std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
         return BError(BError::Codes::SA_INVAL_ARG, "Invalid remote descriptor");
     }
 
+    HILOGI("Begin to call procedure indexed %{public}u", code);
+    auto interfaceIndex = opToInterfaceMap_.find(code);
+    if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {
+        HILOGE("Cannot response request %{public}d : unknown procedure", code);
+        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
     return (this->*(interfaceIndex->second))(data, reply);
 }
 
