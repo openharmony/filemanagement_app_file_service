@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -69,6 +70,10 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
 
     VerifyCaller();
 
+    if (!regex_match(fileName, regex("^[0-9a-zA-Z_.]+$"))) {
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Filename is not alphanumeric");
+    }
+
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
         stringstream ss;
@@ -78,6 +83,9 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
     }
 
     string tarName = path + fileName;
+    if (access(tarName.c_str(), F_OK) == 0) {
+        throw BError(BError::Codes::EXT_INVAL_ARG, string("The file already exists"));
+    }
     return UniqueFd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
 }
 
