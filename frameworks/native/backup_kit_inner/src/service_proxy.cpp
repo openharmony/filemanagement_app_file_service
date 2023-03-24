@@ -15,10 +15,8 @@
 
 #include "service_proxy.h"
 
-#include <cstddef>
-#include <sstream>
-
 #include "b_error/b_error.h"
+#include "b_error/b_excep_utils.h"
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
 #include "iservice_registry.h"
@@ -26,12 +24,16 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+using namespace BExcepUltils;
 
 int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote, const std::vector<BundleName> &bundleNames)
 {
-    HILOGI("Start");
+    HILOGI("Begin");
+    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
     MessageParcel reply;
     MessageOption option;
 
@@ -48,11 +50,9 @@ int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote, const std
 
     int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_INIT_RESTORE_SESSION, data, reply, option);
     if (ret != NO_ERROR) {
-        stringstream ss;
-        ss << "Failed to send out the request for " << ret;
-        return BError(BError::Codes::SDK_INVAL_ARG, ss.str()).GetCode();
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
-    HILOGI("Successful");
     return reply.ReadInt32();
 }
 
@@ -60,9 +60,12 @@ int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote,
                                         UniqueFd fd,
                                         const std::vector<BundleName> &bundleNames)
 {
-    HILOGI("Start");
+    HILOGI("Begin");
+    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
     MessageParcel reply;
     MessageOption option;
 
@@ -82,38 +85,40 @@ int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote,
 
     int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_INIT_BACKUP_SESSION, data, reply, option);
     if (ret != NO_ERROR) {
-        stringstream ss;
-        ss << "Failed to send out the request because of " << ret;
-        return BError(BError::Codes::SDK_INVAL_ARG, ss.str()).GetCode();
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
-    HILOGI("Successful");
     return reply.ReadInt32();
 }
 
 ErrCode ServiceProxy::Start()
 {
-    HILOGI("Start");
+    HILOGI("Begin");
+    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
 
     MessageParcel reply;
     MessageOption option;
     int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_START, data, reply, option);
     if (ret != NO_ERROR) {
-        stringstream ss;
-        ss << "Failed to send out the request because of " << ret;
-        return BError(BError::Codes::SDK_INVAL_ARG, ss.str()).GetCode();
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
-
-    HILOGI("Successful");
     return reply.ReadInt32();
 }
 
 UniqueFd ServiceProxy::GetLocalCapabilities()
 {
-    HILOGI("Start");
+    HILOGI("Begin");
+    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        HILOGE("Failed to write descriptor");
+        return UniqueFd(-EPERM);
+    }
 
     MessageParcel reply;
     MessageOption option;
@@ -122,17 +127,18 @@ UniqueFd ServiceProxy::GetLocalCapabilities()
         HILOGE("Received error %{public}d when doing IPC", ret);
         return UniqueFd(-ret);
     }
-
-    HILOGI("Successful");
     UniqueFd fd(reply.ReadFileDescriptor());
     return UniqueFd(fd.Release());
 }
 
 ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
 {
-    HILOGI("Start");
+    HILOGI("Begin");
+    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
 
     if (!data.WriteParcelable(&fileInfo)) {
         HILOGE("Failed to send the fileInfo");
@@ -143,20 +149,20 @@ ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
     MessageOption option;
     int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_PUBLISH_FILE, data, reply, option);
     if (ret != NO_ERROR) {
-        stringstream ss;
-        ss << "Failed to send out the request because of " << ret;
-        return BError(BError::Codes::SDK_INVAL_ARG, ss.str()).GetCode();
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
-
-    HILOGI("Successful");
     return reply.ReadInt32();
 }
 
 ErrCode ServiceProxy::AppFileReady(const string &fileName, UniqueFd fd)
 {
-    HILOGI("Start");
+    HILOGI("Begin");
+    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
 
     if (!data.WriteString(fileName)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the filename").GetCode();
@@ -169,19 +175,20 @@ ErrCode ServiceProxy::AppFileReady(const string &fileName, UniqueFd fd)
     MessageOption option;
     int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_APP_FILE_READY, data, reply, option);
     if (ret != NO_ERROR) {
-        stringstream ss;
-        ss << "Failed to send out the request because of " << ret;
-        return BError(BError::Codes::SDK_INVAL_ARG, ss.str()).GetCode();
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
-    HILOGI("Successful");
     return reply.ReadInt32();
 }
 
 ErrCode ServiceProxy::AppDone(ErrCode errCode)
 {
-    HILOGI("Start");
+    HILOGI("Begin");
+    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
 
     if (!data.WriteInt32(errCode)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the errCode").GetCode();
@@ -191,19 +198,20 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
     MessageOption option;
     int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_APP_DONE, data, reply, option);
     if (ret != NO_ERROR) {
-        stringstream ss;
-        ss << "Failed to send out the request because of " << ret;
-        return BError(BError::Codes::SDK_INVAL_ARG, ss.str()).GetCode();
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
-    HILOGI("Successful");
     return reply.ReadInt32();
 }
 
 ErrCode ServiceProxy::GetExtFileName(string &bundleName, string &fileName)
 {
-    HILOGI("Start");
+    HILOGI("Begin");
+    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
 
     if (!data.WriteString(bundleName)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the bundleName").GetCode();
@@ -217,12 +225,78 @@ ErrCode ServiceProxy::GetExtFileName(string &bundleName, string &fileName)
     option.SetFlags(MessageOption::TF_ASYNC);
     int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_GET_EXT_FILE_NAME, data, reply, option);
     if (ret != NO_ERROR) {
-        stringstream ss;
-        ss << "Failed to send out the request because of " << ret;
-        BError(BError::Codes::SDK_INVAL_ARG, ss.str());
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
-    HILOGI("Successful");
     return ret;
+}
+
+ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames)
+{
+    HILOGI("Begin");
+    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteFileDescriptor(fd)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the fd").GetCode();
+    }
+    if (!data.WriteStringVector(bundleNames)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();
+    }
+
+    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION, data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
+{
+    HILOGI("Begin");
+    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteStringVector(bundleNames)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();
+    }
+
+    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION, data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode ServiceProxy::Finish()
+{
+    HILOGI("Begin");
+    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_FINISH, data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    return reply.ReadInt32();
 }
 
 sptr<IService> ServiceProxy::GetInstance()

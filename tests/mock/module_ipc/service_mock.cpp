@@ -72,6 +72,21 @@ ErrCode Service::AppDone(ErrCode errCode)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::Finish()
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
 {
     return BError(BError::Codes::OK);

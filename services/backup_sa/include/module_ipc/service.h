@@ -42,6 +42,9 @@ public:
     ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) override;
     ErrCode AppDone(ErrCode errCode) override;
     ErrCode GetExtFileName(std::string &bundleName, std::string &fileName) override;
+    ErrCode AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames) override;
+    ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
+    ErrCode Finish() override;
 
     // 以下都是非IPC接口
 public:

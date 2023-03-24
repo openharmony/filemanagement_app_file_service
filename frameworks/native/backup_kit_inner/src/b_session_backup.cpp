@@ -89,9 +89,29 @@ ErrCode BSessionBackup::Start()
 {
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to proxy because of is empty").GetCode();
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
     return proxy->Start();
+}
+
+ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+
+    return proxy->AppendBundlesBackupSession(bundlesToBackup);
+}
+
+ErrCode BSessionBackup::Finish()
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+
+    return proxy->Finish();
 }
 } // namespace OHOS::FileManagement::Backup

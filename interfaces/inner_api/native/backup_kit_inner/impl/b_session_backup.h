@@ -49,6 +49,21 @@ public:
                                                 Callbacks callbacks);
 
     /**
+     * @brief 用于追加应用，现阶段仅支持在Start之前调用
+     *
+     * @param bundlesToBackup 待备份的应用清单
+     * @return ErrCode 规范错误码
+     */
+    ErrCode AppendBundles(std::vector<BundleName> bundlesToBackup);
+
+    /**
+     * @brief 用于结束追加应用，结束后不可在调用AppendBundles
+     *
+     * @return ErrCode 规范错误码
+     */
+    ErrCode Finish();
+
+    /**
      * @brief 用于启动备份流程
      *
      * @return ErrCode 规范错误码

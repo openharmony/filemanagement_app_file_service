@@ -67,7 +67,7 @@ UniqueFd BSessionRestore::GetLocalCapabilities()
 {
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        HILOGI("Failed to proxy because of is empty");
+        HILOGI("Failed to get backup service");
         return UniqueFd(-1);
     }
     return UniqueFd(proxy->GetLocalCapabilities());
@@ -77,7 +77,7 @@ ErrCode BSessionRestore::PublishFile(BFileInfo fileInfo)
 {
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to proxy because of is empty").GetCode();
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
     return proxy->PublishFile(fileInfo);
 }
@@ -86,7 +86,7 @@ ErrCode BSessionRestore::Start()
 {
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to proxy because of is empty").GetCode();
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
     return proxy->Start();
@@ -96,10 +96,30 @@ ErrCode BSessionRestore::GetExtFileName(string &bundleName, string &fileName)
 {
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to proxy because of is empty").GetCode();
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
     return proxy->GetExtFileName(bundleName, fileName);
+}
+
+ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+
+    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore);
+}
+
+ErrCode BSessionRestore::Finish()
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+
+    return proxy->Finish();
 }
 
 void BSessionRestore::RegisterBackupServiceDied(std::function<void()> functor)

@@ -245,6 +245,34 @@ ErrCode Service::Start()
     }
 }
 
+ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames)
+{
+    HILOGI("Begin");
+    VerifyCaller(session_->GetScenario());
+    BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
+    auto cache = cachedEntity.Structuralize();
+    uint64_t size = cache.GetFreeDiskSpace();
+    if (size == 0) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "Invalid field FreeDiskSpace or unsufficient space");
+    }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
+{
+    HILOGI("Begin");
+    VerifyCaller(session_->GetScenario());
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::Finish()
+{
+    HILOGI("Begin");
+    VerifyCaller(session_->GetScenario());
+    session_->Finish();
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::PublishFile(const BFileInfo &fileInfo)
 {
     try {
@@ -281,7 +309,7 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
 ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd)
 {
     try {
-        HILOGE("begin %{public}s", fileName.data());
+        HILOGI("Begin");
         string callerName = VerifyCallerAndGetCallerName();
         if (!regex_match(fileName, regex("^[0-9a-zA-Z_.]+$"))) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not alphanumeric");

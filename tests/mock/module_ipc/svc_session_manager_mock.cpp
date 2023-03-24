@@ -196,4 +196,6 @@ string SvcSessionManager::GetBackupExtName(const string &bundleName)
     GTEST_LOG_(INFO) << "GetBackupExtName " << bundleName;
     return "";
 }
+
+void SvcSessionManager::Finish() {}
 } // namespace OHOS::FileManagement::Backup

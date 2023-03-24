@@ -24,11 +24,13 @@
 #include <sstream>
 
 #include "b_error/b_error.h"
+#include "b_error/b_excep_utils.h"
 #include "filemgmt_libhilog.h"
 #include "module_ipc/service_reverse_proxy.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+using namespace BExcepUltils;
 
 ServiceStub::ServiceStub()
 {
@@ -40,6 +42,9 @@ ServiceStub::ServiceStub()
     opToInterfaceMap_[SERVICE_CMD_APP_DONE] = &ServiceStub::CmdAppDone;
     opToInterfaceMap_[SERVICE_CMD_START] = &ServiceStub::CmdStart;
     opToInterfaceMap_[SERVICE_CMD_GET_EXT_FILE_NAME] = &ServiceStub::CmdGetExtFileName;
+    opToInterfaceMap_[SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION] = &ServiceStub::CmdAppendBundlesRestoreSession;
+    opToInterfaceMap_[SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION] = &ServiceStub::CmdAppendBundlesBackupSession;
+    opToInterfaceMap_[SERVICE_CMD_FINISH] = &ServiceStub::CmdFinish;
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -57,7 +62,7 @@ int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Message
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
 
-    return (this->*(interfaceIndex->second))(data, reply);
+    return ExceptionCatcherLocked([&]() { return ErrCode((this->*(interfaceIndex->second))(data, reply)); });
 }
 
 int32_t ServiceStub::CmdInitRestoreSession(MessageParcel &data, MessageParcel &reply)
@@ -94,7 +99,7 @@ int32_t ServiceStub::CmdInitBackupSession(MessageParcel &data, MessageParcel &re
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the reverse stub");
     }
     auto iremote = iface_cast<IServiceReverse>(remote);
-    if (!remote) {
+    if (!iremote) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the reverse stub");
     }
 
@@ -204,5 +209,50 @@ int32_t ServiceStub::CmdGetExtFileName(MessageParcel &data, MessageParcel &reply
     }
 
     return GetExtFileName(bundleName, fileName);
+}
+
+int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("Begin");
+    UniqueFd fd(data.ReadFileDescriptor());
+    if (fd < 0) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
+    }
+
+    vector<string> bundleNames;
+    if (!data.ReadStringVector(&bundleNames)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
+    }
+
+    int res = AppendBundlesRestoreSession(move(fd), bundleNames);
+    if (!reply.WriteInt32(res)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
+    }
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdAppendBundlesBackupSession(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("Begin");
+    vector<string> bundleNames;
+    if (!data.ReadStringVector(&bundleNames)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
+    }
+
+    int32_t res = AppendBundlesBackupSession(bundleNames);
+    if (!reply.WriteInt32(res)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
+    }
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdFinish(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("Begin");
+    int res = Finish();
+    if (!reply.WriteInt32(res)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
+    }
+    return BError(BError::Codes::OK);
 }
 } // namespace OHOS::FileManagement::Backup

@@ -94,6 +94,21 @@ public:
     {
         return BError(BError::Codes::OK);
     }
+
+    ErrCode AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode Finish() override
+    {
+        return BError(BError::Codes::OK);
+    }
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // MOCK_I_SERVICE_MOCK_H
