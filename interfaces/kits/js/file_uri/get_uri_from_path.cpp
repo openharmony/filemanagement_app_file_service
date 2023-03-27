@@ -14,6 +14,7 @@
  */
 #include "get_uri_from_path.h"
 
+#include "bundle_info.h"
 #include "bundle_mgr_proxy.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
@@ -56,13 +57,14 @@ static string GetBundleName()
         return nullptr;
     }
 
-    string bundleName;
-    if (!bundleMgrProxy->GetBundleNameForUid(uid, bundleName)) {
+    BundleInfo bundleInfo;
+    auto ret = bundleMgrProxy->GetBundleInfoForSelf(uid, bundleInfo);
+    if (ret != ERR_OK) {
         LOGE("GetBundleName: bundleName get fail. uid is %{public}d", uid);
         return nullptr;
     }
 
-    return bundleName;
+    return bundleInfo.name;
 }
 
 napi_value GetUriFromPath::Sync(napi_env env, napi_callback_info info)

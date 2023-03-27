@@ -20,7 +20,7 @@ namespace OHOS {
 namespace AppFileService {
 const unsigned int APP_LOG_DOMAIN = 0xD004313;
 const char APP_LOG_TAG[] = "AppFileService";
-static constexpr OHOS::HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, APP_LOG_DOMAIN, APP_LOG_TAG};
+static constexpr OHOS::HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, APP_LOG_DOMAIN, APP_LOG_TAG };
 
 #define PRINT_LOG(Level, fmt, ...) \
     OHOS::HiviewDFX::HiLog::Level(OHOS::AppFileService::LOG_LABEL, "[%{public}s:%{public}d] " fmt, \
