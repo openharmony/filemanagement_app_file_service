@@ -389,6 +389,9 @@ ErrCode Service::GetExtFileName(string &bundleName, string &fileName)
     try {
         HILOGE("begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
+        if (!regex_match(fileName, regex("^[0-9a-zA-Z_.]+$"))) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not alphanumeric");
+        }
         session_->SetExtFileNameRequest(bundleName, fileName);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
