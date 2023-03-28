@@ -24,9 +24,10 @@
 
 #include <map>
 #include <memory>
-#include <refbase.h>
 #include <shared_mutex>
 #include <vector>
+
+#include <refbase.h>
 
 #include "b_file_info.h"
 #include "b_resources/b_constants.h"
@@ -53,6 +54,7 @@ public:
         IServiceReverse::Scenario scenario {IServiceReverse::Scenario::UNDEFINED};
         std::map<BundleName, BackupExtInfo> backupExtNameMap;
         sptr<IServiceReverse> clientProxy;
+        bool isAppendFinish {false};
     };
 
 public:
@@ -197,6 +199,13 @@ public:
      */
     std::string GetBackupExtName(const std::string &bundleName);
 
+    /**
+     * @brief 结束追加应用
+     *
+     * @return ErrCode
+     */
+    void Finish();
+
 private:
     /**
      * @brief 校验BundleName和ability type 并补全Impl.backupExtNameMap信息
@@ -240,7 +249,7 @@ public:
 
 private:
     sptr<AppExecFwk::IBundleMgr> GetBundleManager();
-    
+
     mutable std::shared_mutex lock_;
     wptr<Service> reversePtr_;
     sptr<SvcDeathRecipient> deathRecipient_;

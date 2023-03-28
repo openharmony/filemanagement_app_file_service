@@ -49,6 +49,9 @@ public:
     MOCK_METHOD2(AppFileReady, ErrCode(const string &fileName, UniqueFd fd));
     MOCK_METHOD1(AppDone, ErrCode(ErrCode errCode));
     MOCK_METHOD2(GetExtFileName, ErrCode(string &bundleName, string &fileName));
+    MOCK_METHOD2(AppendBundlesRestoreSession, ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames));
+    MOCK_METHOD1(AppendBundlesBackupSession, ErrCode(const std::vector<BundleName> &bundleNames));
+    MOCK_METHOD0(Finish, ErrCode());
     UniqueFd InvokeGetLocalCapabilities()
     {
         if (bCapabilities_) {

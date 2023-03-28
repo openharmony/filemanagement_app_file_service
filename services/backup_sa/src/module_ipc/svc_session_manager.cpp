@@ -421,4 +421,14 @@ sptr<AppExecFwk::IBundleMgr> SvcSessionManager::GetBundleManager()
 
     return iface_cast<AppExecFwk::IBundleMgr>(bundleObj);
 }
+
+void SvcSessionManager::Finish()
+{
+    HILOGI("Begin");
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    impl_.isAppendFinish = true;
+}
 } // namespace OHOS::FileManagement::Backup

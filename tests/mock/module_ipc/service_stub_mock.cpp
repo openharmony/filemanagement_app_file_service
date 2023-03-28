@@ -33,6 +33,9 @@ ServiceStub::ServiceStub()
     opToInterfaceMap_[SERVICE_CMD_APP_DONE] = &ServiceStub::CmdAppDone;
     opToInterfaceMap_[SERVICE_CMD_START] = &ServiceStub::CmdStart;
     opToInterfaceMap_[SERVICE_CMD_GET_EXT_FILE_NAME] = &ServiceStub::CmdGetExtFileName;
+    opToInterfaceMap_[SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION] = &ServiceStub::CmdAppendBundlesRestoreSession;
+    opToInterfaceMap_[SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION] = &ServiceStub::CmdAppendBundlesBackupSession;
+    opToInterfaceMap_[SERVICE_CMD_FINISH] = &ServiceStub::CmdFinish;
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -126,5 +129,49 @@ int32_t ServiceStub::CmdGetExtFileName(MessageParcel &data, MessageParcel &reply
     data.ReadString(fileName);
 
     return GetExtFileName(bundleName, fileName);
+}
+
+int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, MessageParcel &reply)
+{
+    UniqueFd fd(data.ReadFileDescriptor());
+    if (fd < 0) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
+    }
+    std::vector<string> bundleNames;
+    if (!data.ReadStringVector(&bundleNames)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
+    }
+
+    int res = AppendBundlesRestoreSession(move(fd), bundleNames);
+    if (!reply.WriteInt32(res)) {
+        string str = "Failed to send the result " + to_string(res);
+        return BError(BError::Codes::SA_INVAL_ARG, str.data()).GetCode();
+    }
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdAppendBundlesBackupSession(MessageParcel &data, MessageParcel &reply)
+{
+    std::vector<string> bundleNames;
+    if (!data.ReadStringVector(&bundleNames)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
+    }
+
+    int res = AppendBundlesBackupSession(bundleNames);
+    if (!reply.WriteInt32(res)) {
+        string str = "Failed to send the result " + to_string(res);
+        return BError(BError::Codes::SA_INVAL_ARG, str.data()).GetCode();
+    }
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdFinish(MessageParcel &data, MessageParcel &reply)
+{
+    int res = Finish();
+    if (!reply.WriteInt32(res)) {
+        string str = "Failed to send the result " + to_string(res);
+        return BError(BError::Codes::SA_INVAL_ARG, str.data()).GetCode();
+    }
+    return BError(BError::Codes::OK);
 }
 } // namespace OHOS::FileManagement::Backup

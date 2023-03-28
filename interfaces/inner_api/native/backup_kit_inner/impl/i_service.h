@@ -19,10 +19,11 @@
 #include <string>
 #include <tuple>
 
+#include <unique_fd.h>
+
 #include "b_file_info.h"
 #include "i_service_reverse.h"
 #include "iremote_broker.h"
-#include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
 class IService : public IRemoteBroker {
@@ -36,6 +37,9 @@ public:
         SERVICE_CMD_APP_DONE,
         SERVICE_CMD_START,
         SERVICE_CMD_GET_EXT_FILE_NAME,
+        SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION,
+        SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION,
+        SERVICE_CMD_FINISH,
     };
 
     virtual ErrCode InitRestoreSession(sptr<IServiceReverse> remote, const std::vector<BundleName> &bundleNames) = 0;
@@ -48,6 +52,9 @@ public:
     virtual ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) = 0;
     virtual ErrCode AppDone(ErrCode errCode) = 0;
     virtual ErrCode GetExtFileName(std::string &bundleName, std::string &fileName) = 0;
+    virtual ErrCode AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames) = 0;
+    virtual ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) = 0;
+    virtual ErrCode Finish() = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Backup.IService")
 };

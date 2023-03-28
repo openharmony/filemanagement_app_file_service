@@ -82,6 +82,21 @@ ErrCode ServiceProxy::GetExtFileName(string &bundleName, string &fileName)
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::Finish()
+{
+    return BError(BError::Codes::OK);
+}
+
 sptr<IService> ServiceProxy::GetInstance()
 {
     if (!GetMockGetInstance()) {
