@@ -79,7 +79,10 @@ ohos_unittest("b_tarball_cmdline_test") {
     "${path_backup}/utils/include",
   ]
 
-  deps = [ "${path_backup}/tests/utils:backup_test_utils" ]
+  deps = [
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+  ]
   external_deps = [ "c_utils:utils" ]
 
   use_exceptions = true

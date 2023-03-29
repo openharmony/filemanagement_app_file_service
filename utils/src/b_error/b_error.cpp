@@ -15,6 +15,7 @@
 
 #include "b_error/b_error.h"
 
+#include <algorithm>
 #include <sstream>
 #include <sys/syscall.h>
 
@@ -48,5 +49,19 @@ string BError::WrapMessageWithExtraInfos(const char *fileName,
     string res = ss.str();
     HiviewDFX::HiLog::Error(FILEMGMT_LOG_LABEL, "%{public}s", res.c_str());
     return res;
+}
+
+int BError::GetCode() const
+{
+    int code = static_cast<int>(GetRawCode());
+    if (LibN::errCodeTable.find(code) != LibN::errCodeTable.end()) {
+        auto [err, msg] = LibN::errCodeTable.at(code);
+        return err;
+    }
+    if (errCodeTable_.find(code) != errCodeTable_.end()) {
+        return errCodeTable_.at(code);
+    }
+    HILOGE("Unknown code : %{public}d", code);
+    return LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR;
 }
 } // namespace OHOS::FileManagement::Backup
