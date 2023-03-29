@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,26 +13,22 @@
  * limitations under the License.
  */
 
-#include "module_sched/sched_scheduler.h"
+#include "module_external/inner_receiver_impl.h"
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include "module_ipc/service.h"
 #include "module_ipc/svc_session_manager.h"
-
-#include <cstdint>
-#include <cstdio>
+#include "module_sched/sched_scheduler.h"
 
 namespace OHOS::FileManagement::Backup {
-using namespace std;
+void InnerReceiverImpl::OnStatusNotify(const int progress) {}
 
-void SchedScheduler::Sched(string bundleName) {}
+void InnerReceiverImpl::OnFinished(const int32_t resultCode, const std::string &resultMsg) {}
 
-void SchedScheduler::ExecutingQueueTasks(const string &bundleName) {}
-
-void SchedScheduler::RemoveExtConn(const string &bundleName) {}
-
-void SchedScheduler::InstallingState(const string &bundleName) {}
-
-void SchedScheduler::UnloadServiceTimer() {}
-
-void SchedScheduler::InstallSuccess(const std::string &bundleName, const int32_t resultCode) {}
-}; // namespace OHOS::FileManagement::Backup
+std::string InnerReceiverImpl::GetBundleName()
+{
+    return bundleName_;
+}
+} // namespace OHOS::FileManagement::Backup

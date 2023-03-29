@@ -42,12 +42,12 @@ string Service::VerifyCallerAndGetCallerName()
     return "";
 }
 
-ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, const vector<BundleName> &bundleNames)
+ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, UniqueFd fd, const vector<BundleName> &bundleNames)
+ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
 {
     return BError(BError::Codes::OK);
 }
@@ -92,7 +92,7 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::GetExtFileName(string &bundleName, string &fileName)
+ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 {
     return BError(BError::Codes::OK);
 }
@@ -118,4 +118,8 @@ void Service::ClearSessionAndSchedInfo(const string &bundleName) {}
 void Service::VerifyCaller() {}
 
 void Service::VerifyCaller(IServiceReverse::Scenario scenario) {}
+
+void Service::OnAllBundlesFinished(ErrCode errCode) {}
+
+void Service::OnStartSched() {}
 } // namespace OHOS::FileManagement::Backup

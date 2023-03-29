@@ -35,33 +35,16 @@ static vector<BundleName> bundlesToRestore_ = {};
 
 BSessionRestore::~BSessionRestore() {}
 
-unique_ptr<BSessionRestore> BSessionRestore::Init(vector<BundleName> bundlesToRestore, Callbacks callbacks)
+unique_ptr<BSessionRestore> BSessionRestore::Init(Callbacks callbacks)
 {
     try {
         callbacks_ = move(callbacks);
-        bundlesToRestore_ = move(bundlesToRestore);
         auto restore = make_unique<BSessionRestore>();
         return restore;
     } catch (const exception &e) {
         return nullptr;
     }
     return nullptr;
-}
-
-UniqueFd BSessionRestore::GetLocalCapabilities()
-{
-    string bundleName = "test";
-    auto iter = find_if(bundlesToRestore_.begin(), bundlesToRestore_.end(), [&bundleName](auto &obj) {
-        const auto &bName = obj;
-        return bName == bundleName;
-    });
-    if (iter != bundlesToRestore_.end()) {
-        return UniqueFd(-1);
-    }
-    TestManager tm("BSessionRestoreMock_GetFd_0100");
-    string filePath = tm.GetRootDirCurTest().append("tmp");
-    UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
-    return fd;
 }
 
 ErrCode BSessionRestore::PublishFile(BFileInfo fileInfo)
@@ -97,7 +80,18 @@ ErrCode BSessionRestore::Start()
     return BError(BError::Codes::OK);
 }
 
-ErrCode BSessionRestore::GetExtFileName(string &bundleName, string &fileName)
+ErrCode BSessionRestore::GetFileHandle(const string &bundleName, const string &fileName)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)
+{
+    Start();
+    return BError(BError::Codes::OK);
+}
+
+ErrCode BSessionRestore::Finish()
 {
     return BError(BError::Codes::OK);
 }

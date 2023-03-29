@@ -31,7 +31,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote, const vector<BundleName> &bundleNames)
+int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
 {
     if (!GetMockInitBackupOrRestoreSession()) {
         return 1;
@@ -39,9 +39,7 @@ int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote, const vec
     return 0;
 }
 
-int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote,
-                                        UniqueFd fd,
-                                        const vector<BundleName> &bundleNames)
+int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
 {
     if (!GetMockInitBackupOrRestoreSession()) {
         return 1;
@@ -77,7 +75,7 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::GetExtFileName(string &bundleName, string &fileName)
+ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &fileName)
 {
     return BError(BError::Codes::OK);
 }

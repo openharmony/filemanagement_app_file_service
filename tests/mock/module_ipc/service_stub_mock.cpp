@@ -32,7 +32,7 @@ ServiceStub::ServiceStub()
     opToInterfaceMap_[SERVICE_CMD_APP_FILE_READY] = &ServiceStub::CmdAppFileReady;
     opToInterfaceMap_[SERVICE_CMD_APP_DONE] = &ServiceStub::CmdAppDone;
     opToInterfaceMap_[SERVICE_CMD_START] = &ServiceStub::CmdStart;
-    opToInterfaceMap_[SERVICE_CMD_GET_EXT_FILE_NAME] = &ServiceStub::CmdGetExtFileName;
+    opToInterfaceMap_[SERVICE_CMD_GET_FILE_NAME] = &ServiceStub::CmdGetFileHandle;
     opToInterfaceMap_[SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION] = &ServiceStub::CmdAppendBundlesRestoreSession;
     opToInterfaceMap_[SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION] = &ServiceStub::CmdAppendBundlesBackupSession;
     opToInterfaceMap_[SERVICE_CMD_FINISH] = &ServiceStub::CmdFinish;
@@ -58,9 +58,7 @@ int32_t ServiceStub::CmdInitRestoreSession(MessageParcel &data, MessageParcel &r
     auto remote = data.ReadRemoteObject();
     auto iremote = iface_cast<IServiceReverse>(remote);
 
-    std::vector<string> bundleNames;
-    data.ReadStringVector(&bundleNames);
-    int32_t res = InitRestoreSession(iremote, bundleNames);
+    int32_t res = InitRestoreSession(iremote);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }
@@ -70,12 +68,7 @@ int32_t ServiceStub::CmdInitBackupSession(MessageParcel &data, MessageParcel &re
     auto remote = data.ReadRemoteObject();
     auto iremote = iface_cast<IServiceReverse>(remote);
 
-    UniqueFd fd(data.ReadFileDescriptor());
-
-    std::vector<string> bundleNames;
-    data.ReadStringVector(&bundleNames);
-
-    int res = InitBackupSession(iremote, move(fd), bundleNames);
+    int res = InitBackupSession(iremote);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }
@@ -121,57 +114,41 @@ int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
     return BError(BError::Codes::OK);
 }
 
-int32_t ServiceStub::CmdGetExtFileName(MessageParcel &data, MessageParcel &reply)
+int32_t ServiceStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)
 {
     string bundleName;
     data.ReadString(bundleName);
     string fileName;
     data.ReadString(fileName);
 
-    return GetExtFileName(bundleName, fileName);
+    return GetFileHandle(bundleName, fileName);
 }
 
 int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, MessageParcel &reply)
 {
     UniqueFd fd(data.ReadFileDescriptor());
-    if (fd < 0) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
-    }
     std::vector<string> bundleNames;
-    if (!data.ReadStringVector(&bundleNames)) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
-    }
+    data.ReadStringVector(&bundleNames);
 
     int res = AppendBundlesRestoreSession(move(fd), bundleNames);
-    if (!reply.WriteInt32(res)) {
-        string str = "Failed to send the result " + to_string(res);
-        return BError(BError::Codes::SA_INVAL_ARG, str.data()).GetCode();
-    }
+    reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }
 
 int32_t ServiceStub::CmdAppendBundlesBackupSession(MessageParcel &data, MessageParcel &reply)
 {
     std::vector<string> bundleNames;
-    if (!data.ReadStringVector(&bundleNames)) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
-    }
+    data.ReadStringVector(&bundleNames);
 
     int res = AppendBundlesBackupSession(bundleNames);
-    if (!reply.WriteInt32(res)) {
-        string str = "Failed to send the result " + to_string(res);
-        return BError(BError::Codes::SA_INVAL_ARG, str.data()).GetCode();
-    }
+    reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }
 
 int32_t ServiceStub::CmdFinish(MessageParcel &data, MessageParcel &reply)
 {
     int res = Finish();
-    if (!reply.WriteInt32(res)) {
-        string str = "Failed to send the result " + to_string(res);
-        return BError(BError::Codes::SA_INVAL_ARG, str.data()).GetCode();
-    }
+    reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }
 } // namespace OHOS::FileManagement::Backup
