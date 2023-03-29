@@ -70,7 +70,7 @@ public:
         if (flag == true) {
             ready_ = true;
             cv_.notify_all();
-        } else if (bundleStatusMap_.size() == 0 && cnt_ == 0) {
+        } else if (bundleStatusMap_.size() == 0 && cnt_ == 0 && isAllBundelsFinished.load()) {
             ready_ = true;
             cv_.notify_all();
         }
@@ -113,6 +113,9 @@ private:
     mutex lock_;
     bool ready_ = false;
     uint32_t cnt_ {0};
+
+public:
+    std::atomic<bool> isAllBundelsFinished {false};
 };
 
 static string GenHelpMsg()
@@ -161,18 +164,23 @@ static void OnBundleFinished(shared_ptr<Session> ctx, ErrCode err, const BundleN
     printf("BundleFinished errCode = %d, BundleName = %s\n", err, name.c_str());
     ctx->UpdateBundleFinishedCount();
     if (err != 0) {
+        ctx->isAllBundelsFinished.store(true);
         ctx->ClearBundleOfMap(name);
     }
     ctx->TryNotify();
 }
 
-static void OnAllBundlesFinished(ErrCode err)
+static void OnAllBundlesFinished(shared_ptr<Session> ctx, ErrCode err)
 {
+    ctx->isAllBundelsFinished.store(true);
     if (err == 0) {
         printf("Restore successful\n");
     } else {
         printf("Failed to Unplanned Abort error: %d\n", err);
+        ctx->TryNotify(true);
+        return;
     }
+    ctx->TryNotify();
 }
 
 static void OnBackupServiceDied(shared_ptr<Session> ctx)
@@ -201,61 +209,49 @@ static void RestoreApp(shared_ptr<Session> restore, vector<BundleName> &bundleNa
         }
         for (auto &filePath : filePaths) {
             string fileName = filePath.substr(filePath.rfind("/") + 1);
-            restore->session_->GetExtFileName(bundleName, fileName);
+            restore->session_->GetFileHandle(bundleName, fileName);
             restore->UpdateBundleSendFiles(bundleName, fileName);
         }
     }
     FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
 }
 
-static int32_t Init(const string &pathCapFile, vector<string> bundleNames)
+static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleNames)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "Init");
+
+    UniqueFd fd(open(pathCapFile.data(), O_RDWR | O_CREAT, S_IRWXU));
+    if (fd < 0) {
+        fprintf(stderr, "Failed to open file error: %d %s\n", errno, strerror(errno));
+        FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
+        return -errno;
+    }
+    auto proxy = ServiceProxy::GetInstance();
+    if (!proxy) {
+        fprintf(stderr, "Get an empty backup sa proxy\n");
+        return -EFAULT;
+    }
+    BFile::SendFile(fd, proxy->GetLocalCapabilities());
+
     auto ctx = make_shared<Session>();
     ctx->session_ = BSessionRestore::Init(
-        bundleNames,
         BSessionRestore::Callbacks {.onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2),
                                     .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
                                     .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
-                                    .onAllBundlesFinished = OnAllBundlesFinished,
+                                    .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
                                     .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init restore");
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
         return -EPERM;
     }
-    UniqueFd fdRemote(ctx->session_->GetLocalCapabilities());
-    if (fdRemote < 0) {
-        printf("Failed to receive fd");
-        FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
-        return fdRemote;
-    }
-    if (lseek(fdRemote, 0, SEEK_SET) == -1) {
-        FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
-        return -errno;
-    }
-    struct stat stat = {};
-    if (fstat(fdRemote, &stat) == -1) {
-        FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
-        return -errno;
-    }
-    UniqueFd fdLocal(open(pathCapFile.data(), O_WRONLY | O_CREAT, S_IRWXU));
-    if (fdLocal < 0) {
-        fprintf(stderr, "Failed to open file. error: %d %s\n", errno, strerror(errno));
-        FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
-        return -errno;
-    }
-    if (sendfile(fdLocal, fdRemote, nullptr, stat.st_size) == -1) {
-        fprintf(stderr, "Failed to Copy file. error: %d %s\n", errno, strerror(errno));
-        FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
-        return -errno;
+    int ret = ctx->session_->AppendBundles(move(fd), bundleNames);
+    if (ret != 0) {
+        printf("restore append bundles error: %d", ret);
+        throw BError(BError::Codes::TOOL_INVAL_ARG, "restore append bundles error");
     }
     ctx->SetBundleFinishedCount(bundleNames.size());
     RestoreApp(ctx, bundleNames);
-    int ret = ctx->session_->Start();
-    if (ret != 0) {
-        throw BError(BError::Codes::TOOL_INVAL_ARG, "restore start error");
-    }
     ctx->Wait();
     return 0;
 }
@@ -265,7 +261,7 @@ static int Exec(map<string, vector<string>> &mapArgToVal)
     if (mapArgToVal.find("pathCapFile") == mapArgToVal.end() || mapArgToVal.find("bundles") == mapArgToVal.end()) {
         return -EPERM;
     }
-    return Init(*(mapArgToVal["pathCapFile"].begin()), mapArgToVal["bundles"]);
+    return InitPathCapFile(*(mapArgToVal["pathCapFile"].begin()), mapArgToVal["bundles"]);
 }
 
 /**

@@ -16,6 +16,8 @@ import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ohos_shared_library("backup_sa") {
   sources = [
+    "src/module_external/bms_adapter.cpp",
+    "src/module_external/sms_adapter.cpp",
     "src/module_ipc/service.cpp",
     "src/module_ipc/service_reverse_proxy.cpp",
     "src/module_ipc/service_stub.cpp",
@@ -45,6 +47,7 @@ ohos_shared_library("backup_sa") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   use_exceptions = true

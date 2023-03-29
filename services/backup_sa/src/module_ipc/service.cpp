@@ -42,11 +42,11 @@
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_caps.h"
 #include "b_process/b_multiuser.h"
-#include "b_process/b_process.h"
 #include "b_resources/b_constants.h"
 #include "bundle_mgr_client.h"
 #include "filemgmt_libhilog.h"
 #include "ipc_skeleton.h"
+#include "module_external/bms_adapter.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "parameter.h"
 #include "system_ability_definition.h"
@@ -83,8 +83,6 @@ UniqueFd Service::GetLocalCapabilities()
         BJsonCachedEntity<BJsonEntityCaps> cachedEntity(
             UniqueFd(open(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR.data(), O_TMPFILE | O_RDWR, 0600)));
         auto cache = cachedEntity.Structuralize();
-        cache.SetFreeDiskSpace(fsInfo.f_bfree);
-        cache.SetOSFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
         cachedEntity.Persist();
 
@@ -134,7 +132,7 @@ void Service::VerifyCaller()
     switch (tokenType) {
         case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP: {
             auto multiuser = BMultiuser::ParseUid(IPCSkeleton::GetCallingUid());
-            if (multiuser.userId != BConstants::DEFAULT_USER_ID) {
+            if ((multiuser.userId != BConstants::DEFAULT_USER_ID) && (multiuser.userId != BConstants::XTS_UID)) {
                 throw BError(BError::Codes::SA_INVAL_ARG, string("Calling user is ")
                                                               .append(to_string(multiuser.userId))
                                                               .append(", which is currently not supported"));
@@ -164,21 +162,13 @@ void Service::VerifyCaller(IServiceReverse::Scenario scenario)
     VerifyCaller();
 }
 
-ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, const vector<BundleName> &bundleNames)
+ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
 {
     try {
         VerifyCaller();
-        map<BundleName, BackupExtInfo> backupExtNameMap;
-        auto setBackupExtNameMap = [](const BundleName &bundleName) {
-            BackupExtInfo info {};
-            return make_pair(bundleName, info);
-        };
-        transform(bundleNames.begin(), bundleNames.end(), inserter(backupExtNameMap, backupExtNameMap.end()),
-                  setBackupExtNameMap);
         session_->Active({
             .clientToken = IPCSkeleton::GetCallingTokenID(),
             .scenario = IServiceReverse::Scenario::RESTORE,
-            .backupExtNameMap = move(backupExtNameMap),
             .clientProxy = remote,
         });
         return BError(BError::Codes::OK);
@@ -194,30 +184,15 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, const vector<B
     }
 }
 
-ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, UniqueFd fd, const vector<BundleName> &bundleNames)
+ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
 {
     try {
         VerifyCaller();
-        map<BundleName, BackupExtInfo> backupExtNameMap;
-        auto setBackupExtNameMap = [](const BundleName &bundleName) {
-            BackupExtInfo info {};
-            return make_pair(bundleName, info);
-        };
-        transform(bundleNames.begin(), bundleNames.end(), inserter(backupExtNameMap, backupExtNameMap.end()),
-                  setBackupExtNameMap);
         session_->Active({
             .clientToken = IPCSkeleton::GetCallingTokenID(),
             .scenario = IServiceReverse::Scenario::BACKUP,
-            .backupExtNameMap = move(backupExtNameMap),
             .clientProxy = remote,
         });
-
-        BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
-        auto cache = cachedEntity.Structuralize();
-        uint64_t size = cache.GetFreeDiskSpace();
-        if (size == 0) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Invalid field FreeDiskSpace or unsufficient space");
-        }
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         StopAll(nullptr, true);
@@ -227,34 +202,21 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, UniqueFd fd, co
 
 ErrCode Service::Start()
 {
-    try {
-        HILOGI("Begin");
-        VerifyCaller(session_->GetScenario());
-        for (int num = 0; num < BConstants::EXT_CONNECT_MAX_COUNT; num++) {
-            sched_->Sched();
-        }
-        return BError(BError::Codes::OK);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
-    } catch (...) {
-        HILOGI("Unexpected exception");
-        return EPERM;
-    }
+    HILOGI("Begin");
+    VerifyCaller(session_->GetScenario());
+    session_->Start();
+    OnStartSched();
+    return BError(BError::Codes::OK);
 }
 
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames)
 {
     HILOGI("Begin");
     VerifyCaller(session_->GetScenario());
-    BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
-    auto cache = cachedEntity.Structuralize();
-    uint64_t size = cache.GetFreeDiskSpace();
-    if (size == 0) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Invalid field FreeDiskSpace or unsufficient space");
-    }
+    session_->AppendBundles(bundleNames);
+    Start();
+    Finish();
+    OnStartSched();
     return BError(BError::Codes::OK);
 }
 
@@ -262,6 +224,10 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
 {
     HILOGI("Begin");
     VerifyCaller(session_->GetScenario());
+    session_->AppendBundles(bundleNames);
+    Start();
+    Finish();
+    OnStartSched();
     return BError(BError::Codes::OK);
 }
 
@@ -270,6 +236,7 @@ ErrCode Service::Finish()
     HILOGI("Begin");
     VerifyCaller(session_->GetScenario());
     session_->Finish();
+    OnAllBundlesFinished(BError(BError::Codes::OK));
     return BError(BError::Codes::OK);
 }
 
@@ -294,7 +261,7 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
             HILOGE("Failed to publish file for backup extension");
         }
 
-        return BError(BError::Codes::OK);
+        return res;
     } catch (const BError &e) {
         return e.GetCode();
     } catch (const exception &e) {
@@ -334,6 +301,7 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd)
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
         }
+        OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         return e.GetCode(); // 任意异常产生，终止监听该任务
@@ -367,6 +335,7 @@ ErrCode Service::AppDone(ErrCode errCode)
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
         }
+        OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         return e.GetCode(); // 任意异常产生，终止监听该任务
@@ -412,15 +381,17 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
     }
 }
 
-ErrCode Service::GetExtFileName(string &bundleName, string &fileName)
+ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 {
     try {
-        HILOGE("begin");
+        HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
-        if (!regex_match(fileName, regex("^[0-9a-zA-Z_.]+$"))) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not alphanumeric");
-        }
         session_->SetExtFileNameRequest(bundleName, fileName);
+        auto action = session_->GetServiceSchedAction(bundleName);
+        if (action == BConstants::ServiceSchedAction::RUNNING) {
+            sched_->Sched(bundleName);
+            return BError(BError::Codes::OK);
+        }
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         return e.GetCode();
@@ -570,6 +541,27 @@ void Service::ClearSessionAndSchedInfo(const string &bundleName)
     } catch (...) {
         HILOGI("Unexpected exception");
         return;
+    }
+}
+
+void Service::OnAllBundlesFinished(ErrCode errCode)
+{
+    if (session_->IsOnAllBundlesFinished()) {
+        IServiceReverse::Scenario scenario = session_->GetScenario();
+        if (scenario == IServiceReverse::Scenario::BACKUP) {
+            session_->GetServiceReverseProxy()->BackupOnAllBundlesFinished(errCode);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+            session_->GetServiceReverseProxy()->RestoreOnAllBundlesFinished(errCode);
+        }
+    }
+}
+
+void Service::OnStartSched()
+{
+    if (session_->IsOnOnStartSched()) {
+        for (int num = 0; num < BConstants::EXT_CONNECT_MAX_COUNT; num++) {
+            sched_->Sched();
+        }
     }
 }
 } // namespace OHOS::FileManagement::Backup

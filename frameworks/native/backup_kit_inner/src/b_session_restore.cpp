@@ -40,7 +40,7 @@ BSessionRestore::~BSessionRestore()
     deathRecipient_ = nullptr;
 }
 
-unique_ptr<BSessionRestore> BSessionRestore::Init(std::vector<BundleName> bundlesToRestore, Callbacks callbacks)
+unique_ptr<BSessionRestore> BSessionRestore::Init(Callbacks callbacks)
 {
     try {
         auto restore = make_unique<BSessionRestore>();
@@ -49,7 +49,7 @@ unique_ptr<BSessionRestore> BSessionRestore::Init(std::vector<BundleName> bundle
             HILOGI("Failed to get backup service");
             return nullptr;
         }
-        int32_t res = proxy->InitRestoreSession(new ServiceReverse(callbacks), bundlesToRestore);
+        int32_t res = proxy->InitRestoreSession(new ServiceReverse(callbacks));
         if (res != 0) {
             HILOGE("Failed to Restore because of %{public}d", res);
             return nullptr;
@@ -61,16 +61,6 @@ unique_ptr<BSessionRestore> BSessionRestore::Init(std::vector<BundleName> bundle
         HILOGE("Failed to Restore because of %{public}s", e.what());
     }
     return nullptr;
-}
-
-UniqueFd BSessionRestore::GetLocalCapabilities()
-{
-    auto proxy = ServiceProxy::GetInstance();
-    if (proxy == nullptr) {
-        HILOGI("Failed to get backup service");
-        return UniqueFd(-1);
-    }
-    return UniqueFd(proxy->GetLocalCapabilities());
 }
 
 ErrCode BSessionRestore::PublishFile(BFileInfo fileInfo)
@@ -92,14 +82,14 @@ ErrCode BSessionRestore::Start()
     return proxy->Start();
 }
 
-ErrCode BSessionRestore::GetExtFileName(string &bundleName, string &fileName)
+ErrCode BSessionRestore::GetFileHandle(const string &bundleName, const string &fileName)
 {
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
-    return proxy->GetExtFileName(bundleName, fileName);
+    return proxy->GetFileHandle(bundleName, fileName);
 }
 
 ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)

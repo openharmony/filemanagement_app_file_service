@@ -26,7 +26,7 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace BExcepUltils;
 
-int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote, const std::vector<BundleName> &bundleNames)
+ErrCode ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
 {
     HILOGI("Begin");
     BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
@@ -42,10 +42,6 @@ int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote, const std
     }
     if (!data.WriteRemoteObject(remote->AsObject().GetRefPtr())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the reverse stub").GetCode();
-    }
-
-    if (!data.WriteStringVector(bundleNames)) {
-        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();
     }
 
     int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_INIT_RESTORE_SESSION, data, reply, option);
@@ -56,9 +52,7 @@ int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote, const std
     return reply.ReadInt32();
 }
 
-int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote,
-                                        UniqueFd fd,
-                                        const std::vector<BundleName> &bundleNames)
+ErrCode ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
 {
     HILOGI("Begin");
     BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
@@ -74,13 +68,6 @@ int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote,
     }
     if (!data.WriteRemoteObject(remote->AsObject().GetRefPtr())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the reverse stub").GetCode();
-    }
-
-    if (!data.WriteFileDescriptor(fd)) {
-        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the fd").GetCode();
-    }
-    if (!data.WriteStringVector(bundleNames)) {
-        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();
     }
 
     int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_INIT_BACKUP_SESSION, data, reply, option);
@@ -204,7 +191,7 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
     return reply.ReadInt32();
 }
 
-ErrCode ServiceProxy::GetExtFileName(string &bundleName, string &fileName)
+ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &fileName)
 {
     HILOGI("Begin");
     BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
@@ -223,7 +210,7 @@ ErrCode ServiceProxy::GetExtFileName(string &bundleName, string &fileName)
     MessageParcel reply;
     MessageOption option;
     option.SetFlags(MessageOption::TF_ASYNC);
-    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_GET_EXT_FILE_NAME, data, reply, option);
+    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_GET_FILE_NAME, data, reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();

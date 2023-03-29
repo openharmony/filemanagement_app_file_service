@@ -22,6 +22,16 @@
 namespace OHOS::FileManagement::Backup {
 class BJsonEntityCaps : public BJsonEntity {
 public:
+    struct BundleInfo {
+        std::string name;
+        uint32_t versionCode;
+        std::string versionName;
+        int64_t spaceOccupied;
+        bool allToBackup;
+        std::string extensionName;
+    };
+
+public:
     uint64_t GetFreeDiskSpace()
     {
         if (!obj_ || !obj_.isMember("freeDiskSpace") || !obj_["freeDiskSpace"].isUInt64()) {

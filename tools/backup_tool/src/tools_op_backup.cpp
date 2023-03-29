@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <atomic>
 #include <cerrno>
 #include <condition_variable>
 #include <cstdint>
@@ -66,7 +67,7 @@ public:
         if (flag == true) {
             ready_ = true;
             cv_.notify_all();
-        } else if (bundleStatusMap_.size() == 0 && cnt_ == 0) {
+        } else if (bundleStatusMap_.size() == 0 && cnt_ == 0 && isAllBundelsFinished.load()) {
             ready_ = true;
             cv_.notify_all();
         }
@@ -109,6 +110,9 @@ private:
     mutex lock_;
     bool ready_ = false;
     uint32_t cnt_ {0};
+
+public:
+    std::atomic<bool> isAllBundelsFinished {false};
 };
 
 static string GenHelpMsg()
@@ -147,6 +151,7 @@ static void OnBundleStarted(shared_ptr<Session> ctx, ErrCode err, const BundleNa
 {
     printf("BundleStarted errCode = %d, BundleName = %s\n", err, name.c_str());
     if (err != 0) {
+        ctx->isAllBundelsFinished.store(true);
         ctx->UpdateBundleFinishedCount();
         ctx->TryNotify();
     }
@@ -161,6 +166,7 @@ static void OnBundleFinished(shared_ptr<Session> ctx, ErrCode err, const BundleN
 
 static void OnAllBundlesFinished(shared_ptr<Session> ctx, ErrCode err)
 {
+    ctx->isAllBundelsFinished.store(true);
     if (err == 0) {
         printf("backup successful\n");
     } else {
@@ -206,26 +212,11 @@ static void BackupToolDirSoftlinkToBackupDir()
     }
 }
 
-static int32_t InitPathCapFile(const string &isLocal, const string &pathCapFile, vector<string> bundleNames)
+static int32_t InitPathCapFile(vector<string> bundleNames)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "InitPathCapFile");
     // SELinux backup_tool工具/data/文件夹下创建文件夹 SA服务因root用户的自定义标签无写入权限 此处调整为软链接形式
     BackupToolDirSoftlinkToBackupDir();
-
-    UniqueFd fd(open(pathCapFile.data(), O_RDWR | O_CREAT, S_IRWXU));
-    if (fd < 0) {
-        fprintf(stderr, "Failed to open file error: %d %s\n", errno, strerror(errno));
-        FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
-        return -errno;
-    }
-    if (isLocal == "true") {
-        auto proxy = ServiceProxy::GetInstance();
-        if (!proxy) {
-            fprintf(stderr, "Get an empty backup sa proxy\n");
-            return -EFAULT;
-        }
-        BFile::SendFile(fd, proxy->GetLocalCapabilities());
-    }
 
     if (access((BConstants::BACKUP_TOOL_RECEIVE_DIR).data(), F_OK) != 0 &&
         mkdir((BConstants::BACKUP_TOOL_RECEIVE_DIR).data(), S_IRWXU) != 0) {
@@ -233,7 +224,6 @@ static int32_t InitPathCapFile(const string &isLocal, const string &pathCapFile,
     }
     auto ctx = make_shared<Session>();
     ctx->session_ = BSessionBackup::Init(
-        move(fd), bundleNames,
         BSessionBackup::Callbacks {.onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2),
                                    .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
                                    .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
@@ -244,11 +234,13 @@ static int32_t InitPathCapFile(const string &isLocal, const string &pathCapFile,
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
         return -EPERM;
     }
-    ctx->SetBundleFinishedCount(bundleNames.size());
-    int ret = ctx->session_->Start();
+    int ret = ctx->session_->AppendBundles(bundleNames);
     if (ret != 0) {
-        throw BError(BError::Codes::TOOL_INVAL_ARG, "backup start error");
+        printf("backup append bundles error: %d", ret);
+        throw BError(BError::Codes::TOOL_INVAL_ARG, "backup append bundles error");
     }
+
+    ctx->SetBundleFinishedCount(bundleNames.size());
     ctx->Wait();
     FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
     return 0;
@@ -260,8 +252,7 @@ static int Exec(map<string, vector<string>> &mapArgToVal)
         mapArgToVal.find("isLocal") == mapArgToVal.end()) {
         return -EPERM;
     }
-    return InitPathCapFile(*(mapArgToVal["isLocal"].begin()), *(mapArgToVal["pathCapFile"].begin()),
-                           mapArgToVal["bundles"]);
+    return InitPathCapFile(mapArgToVal["bundles"]);
 }
 
 /**
