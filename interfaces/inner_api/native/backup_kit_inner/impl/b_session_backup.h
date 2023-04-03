@@ -40,13 +40,10 @@ public:
     /**
      * @brief 获取一个用于控制备份流程的会话
      *
-     * @param remoteCap 已打开的保存远端设备能力的Json文件。可使用BRestoreSession的GetLocalCapabilities方法获取
-     * @param bundlesToBackup 待备份应用清单
+     * @param callbacks 注册回调
      * @return std::unique_ptr<BSessionBackup> 指向会话的智能指针。失败时为空指针
      */
-    static std::unique_ptr<BSessionBackup> Init(UniqueFd remoteCap,
-                                                std::vector<BundleName> bundlesToBackup,
-                                                Callbacks callbacks);
+    static std::unique_ptr<BSessionBackup> Init(Callbacks callbacks);
 
     /**
      * @brief 用于追加应用，现阶段仅支持在Start之前调用

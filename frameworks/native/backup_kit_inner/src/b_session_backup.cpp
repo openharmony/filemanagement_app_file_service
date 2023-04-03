@@ -40,9 +40,7 @@ BSessionBackup::~BSessionBackup()
     deathRecipient_ = nullptr;
 }
 
-unique_ptr<BSessionBackup> BSessionBackup::Init(UniqueFd remoteCap,
-                                                vector<BundleName> bundlesToBackup,
-                                                Callbacks callbacks)
+unique_ptr<BSessionBackup> BSessionBackup::Init(Callbacks callbacks)
 {
     try {
         auto backup = make_unique<BSessionBackup>();
@@ -52,7 +50,7 @@ unique_ptr<BSessionBackup> BSessionBackup::Init(UniqueFd remoteCap,
             return nullptr;
         }
 
-        int32_t res = proxy->InitBackupSession(sptr(new ServiceReverse(callbacks)), move(remoteCap), bundlesToBackup);
+        int32_t res = proxy->InitBackupSession(sptr(new ServiceReverse(callbacks)));
         if (res != 0) {
             HILOGE("Failed to Backup because of %{public}d", res);
             return nullptr;

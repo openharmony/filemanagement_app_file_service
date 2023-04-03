@@ -45,6 +45,7 @@ enum EntryKey {
 
 constexpr int SPAN_USERID_UID = 20000000;
 constexpr int SYSTEM_UID = 0;
+constexpr int XTS_UID = 1;
 constexpr int DEFAULT_USER_ID = 100;
 constexpr int BACKUP_UID = 1089;
 constexpr int EXTENSION_THREAD_POOL_COUNT = 1;

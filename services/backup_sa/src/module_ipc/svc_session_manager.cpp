@@ -23,13 +23,10 @@
 
 #include "b_error/b_error.h"
 #include "b_json/b_json_entity_ext_manage.h"
-#include "b_json/b_json_entity_extension_config.h"
 #include "b_resources/b_constants.h"
-#include "bundle_mgr_client.h"
 #include "filemgmt_libhilog.h"
-#include "iservice_registry.h"
+#include "module_external/bms_adapter.h"
 #include "module_ipc/service.h"
-#include "system_ability_definition.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -60,10 +57,6 @@ void SvcSessionManager::Active(Impl newImpl)
     if (newImpl.scenario == IServiceReverse::Scenario::UNDEFINED) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No scenario was specified");
     }
-
-    GetBundleExtNames(newImpl.backupExtNameMap);
-
-    InitExtConn(newImpl.backupExtNameMap);
 
     InitClient(newImpl);
     impl_ = newImpl;
@@ -123,46 +116,6 @@ IServiceReverse::Scenario SvcSessionManager::GetScenario()
     return impl_.scenario;
 }
 
-void SvcSessionManager::GetBundleExtNames(map<BundleName, BackupExtInfo> &backupExtNameMap)
-{
-    if (backupExtNameMap.empty()) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No app was selected");
-    }
-
-    auto bms = GetBundleManager();
-    if (!bms) {
-        throw BError(BError::Codes::SA_BROKEN_IPC, "Bms is invalid");
-    }
-
-    for (auto &&it : backupExtNameMap) {
-        AppExecFwk::BundleInfo installedBundle;
-        if (!bms->GetBundleInfo(it.first, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle,
-                                AppExecFwk::Constants::START_USERID)) {
-            throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get the info of bundle " + it.first);
-        }
-        for (auto &&ext : installedBundle.extensionInfos) {
-            if (ext.type == AppExecFwk::ExtensionAbilityType::BACKUP) {
-                if (ext.name.empty()) {
-                    throw BError(BError::Codes::SA_INVAL_ARG, "Failed to get ext name of bundle " + it.first);
-                }
-                vector<string> out;
-                AppExecFwk::BundleMgrClient client;
-                if (!client.GetResConfigFile(ext, "ohos.extension.backup", out) || out.size() == 0) {
-                    throw BError(BError::Codes::SA_INVAL_ARG, "Failed to get resconfigfile of bundle " + it.first);
-                }
-                BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(out[0], it.first);
-                auto cache = cachedEntity.Structuralize();
-                if (cache.GetAllowToBackupRestore()) {
-                    it.second.backupExtName = ext.name;
-                } else {
-                    throw BError(BError::Codes::SA_INVAL_ARG,
-                                 "Permission denied to get allowToBackupRestore of bundle " + it.first);
-                }
-            }
-        }
-    }
-}
-
 bool SvcSessionManager::OnBunleFileReady(const string &bundleName, const string &fileName)
 {
     unique_lock<shared_mutex> lock(lock_);
@@ -179,6 +132,7 @@ bool SvcSessionManager::OnBunleFileReady(const string &bundleName, const string 
 
     // 判断是否结束 通知EXTENTION清理资源  TOOL应用完成备份
     if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
+        it->second.isBundleFinished = true;
         return true;
     } else if (impl_.scenario == IServiceReverse::Scenario::BACKUP) {
         if (!fileName.empty() && fileName != BConstants::EXT_BACKUP_MANAGE) {
@@ -190,6 +144,7 @@ bool SvcSessionManager::OnBunleFileReady(const string &bundleName, const string 
             it->second.receExtAppDone = true;
         }
         if (it->second.receExtManageJson && it->second.fileNameInfo.empty() && it->second.receExtAppDone) {
+            it->second.isBundleFinished = true;
             return true;
         }
     }
@@ -248,37 +203,30 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
     return wptr(it->second.backUpConnection);
 }
 
-void SvcSessionManager::InitExtConn(std::map<BundleName, BackupExtInfo> &backupExtNameMap)
+sptr<SvcBackupConnection> SvcSessionManager::GetBackupExtAbility(const string &bundleName)
 {
     HILOGI("Begin");
-    if (backupExtNameMap.empty()) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No app was selected");
-    }
+    auto callDied = [revPtr {reversePtr_}](const string &&bundleName) {
+        auto revPtrStrong = revPtr.promote();
+        if (!revPtrStrong) {
+            // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
+            HILOGW("It's curious that the backup sa dies before the backup client");
+            return;
+        }
+        revPtrStrong->OnBackupExtensionDied(move(bundleName), ESRCH);
+    };
 
-    for (auto &&it : backupExtNameMap) {
-        auto callDied = [revPtr {reversePtr_}](const string &&bundleName) {
-            auto revPtrStrong = revPtr.promote();
-            if (!revPtrStrong) {
-                // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
-                HILOGW("It's curious that the backup sa dies before the backup client");
-                return;
-            }
-            revPtrStrong->OnBackupExtensionDied(move(bundleName), ESRCH);
-        };
+    auto callConnDone = [revPtr {reversePtr_}](const string &&bundleName) {
+        auto revPtrStrong = revPtr.promote();
+        if (!revPtrStrong) {
+            // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
+            HILOGW("It's curious that the backup sa dies before the backup client");
+            return;
+        }
+        revPtrStrong->ExtConnectDone(move(bundleName));
+    };
 
-        auto callConnDone = [revPtr {reversePtr_}](const string &&bundleName) {
-            auto revPtrStrong = revPtr.promote();
-            if (!revPtrStrong) {
-                // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
-                HILOGW("It's curious that the backup sa dies before the backup client");
-                return;
-            }
-            revPtrStrong->ExtConnectDone(move(bundleName));
-        };
-
-        auto backUpConnection = sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnDone));
-        it.second.backUpConnection = backUpConnection;
-    }
+    return sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnDone));
 }
 
 void SvcSessionManager::DumpInfo(const int fd, const std::vector<std::u16string> &args)
@@ -328,7 +276,7 @@ void SvcSessionManager::SetExtFileNameRequest(const string &bundleName, const st
 std::set<std::string> SvcSessionManager::GetExtFileNameRequest(const std::string &bundleName)
 {
     HILOGI("Begin");
-    shared_lock<shared_mutex> lock(lock_);
+    unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
@@ -337,7 +285,9 @@ std::set<std::string> SvcSessionManager::GetExtFileNameRequest(const std::string
         throw BError(BError::Codes::SA_INVAL_ARG, "Invalid Scenario");
     }
     auto it = GetBackupExtNameMap(bundleName);
-    return it->second.fileNameInfo;
+    set<string> fileNameInfo = it->second.fileNameInfo;
+    it->second.fileNameInfo.clear();
+    return fileNameInfo;
 }
 
 map<BundleName, BackupExtInfo>::iterator SvcSessionManager::GetBackupExtNameMap(const string &bundleName)
@@ -405,21 +355,36 @@ string SvcSessionManager::GetBackupExtName(const string &bundleName)
     return it->second.backupExtName;
 }
 
-sptr<AppExecFwk::IBundleMgr> SvcSessionManager::GetBundleManager()
+void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
 {
-    auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (saMgr == nullptr) {
-        HILOGI("SystemAbilityManager is nullptr.");
-        return nullptr;
+    HILOGI("Begin");
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
 
-    auto bundleObj = saMgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (bundleObj == nullptr) {
-        HILOGI("Failed to get bundle manager service.");
-        return nullptr;
-    }
+    auto bundleInfos = BundleMgrAdapter::GetBundleInfos(bundleNames);
+    for (auto &&bundleInfo : bundleInfos) {
+        if (!bundleInfo.allToBackup || bundleInfo.extensionName.empty()) {
+            throw BError(BError::Codes::SA_INVAL_ARG,
+                         string(bundleInfo.name).append(" is not allow to backup or extension name is empty"));
+        }
+        BackupExtInfo info {};
+        info.backupExtName = bundleInfo.extensionName;
+        info.backUpConnection = GetBackupExtAbility(bundleInfo.name);
 
-    return iface_cast<AppExecFwk::IBundleMgr>(bundleObj);
+        impl_.backupExtNameMap.insert(make_pair(bundleInfo.name, info));
+    }
+}
+
+void SvcSessionManager::Start()
+{
+    HILOGI("Begin");
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    impl_.isBackupStart = true;
 }
 
 void SvcSessionManager::Finish()
@@ -430,5 +395,32 @@ void SvcSessionManager::Finish()
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
     impl_.isAppendFinish = true;
+}
+
+bool SvcSessionManager::IsOnAllBundlesFinished()
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    auto iter = find_if(impl_.backupExtNameMap.begin(), impl_.backupExtNameMap.end(),
+                        [](auto &it) { return it.second.isBundleFinished == false; });
+    if (iter == impl_.backupExtNameMap.end() && impl_.isAppendFinish) {
+        return true;
+    }
+    return false;
+}
+
+bool SvcSessionManager::IsOnOnStartSched()
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    if (impl_.isBackupStart && impl_.backupExtNameMap.size()) {
+        return true;
+    }
+
+    return false;
 }
 } // namespace OHOS::FileManagement::Backup

@@ -41,7 +41,7 @@ ServiceStub::ServiceStub()
     opToInterfaceMap_[SERVICE_CMD_APP_FILE_READY] = &ServiceStub::CmdAppFileReady;
     opToInterfaceMap_[SERVICE_CMD_APP_DONE] = &ServiceStub::CmdAppDone;
     opToInterfaceMap_[SERVICE_CMD_START] = &ServiceStub::CmdStart;
-    opToInterfaceMap_[SERVICE_CMD_GET_EXT_FILE_NAME] = &ServiceStub::CmdGetExtFileName;
+    opToInterfaceMap_[SERVICE_CMD_GET_FILE_NAME] = &ServiceStub::CmdGetFileHandle;
     opToInterfaceMap_[SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION] = &ServiceStub::CmdAppendBundlesRestoreSession;
     opToInterfaceMap_[SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION] = &ServiceStub::CmdAppendBundlesBackupSession;
     opToInterfaceMap_[SERVICE_CMD_FINISH] = &ServiceStub::CmdFinish;
@@ -77,12 +77,7 @@ int32_t ServiceStub::CmdInitRestoreSession(MessageParcel &data, MessageParcel &r
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the reverse stub");
     }
 
-    std::vector<string> bundleNames;
-    if (!data.ReadStringVector(&bundleNames)) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
-    }
-
-    int32_t res = InitRestoreSession(iremote, bundleNames);
+    int32_t res = InitRestoreSession(iremote);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;
@@ -103,17 +98,7 @@ int32_t ServiceStub::CmdInitBackupSession(MessageParcel &data, MessageParcel &re
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the reverse stub");
     }
 
-    UniqueFd fd(data.ReadFileDescriptor());
-    if (fd < 0) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
-    }
-
-    std::vector<string> bundleNames;
-    if (!data.ReadStringVector(&bundleNames)) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
-    }
-
-    int res = InitBackupSession(iremote, move(fd), bundleNames);
+    int res = InitBackupSession(iremote);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;
@@ -196,7 +181,7 @@ int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
     return BError(BError::Codes::OK);
 }
 
-int32_t ServiceStub::CmdGetExtFileName(MessageParcel &data, MessageParcel &reply)
+int32_t ServiceStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)
 {
     HILOGI("Begin");
     string bundleName;
@@ -208,7 +193,7 @@ int32_t ServiceStub::CmdGetExtFileName(MessageParcel &data, MessageParcel &reply
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fileName").GetCode();
     }
 
-    return GetExtFileName(bundleName, fileName);
+    return GetFileHandle(bundleName, fileName);
 }
 
 int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, MessageParcel &reply)

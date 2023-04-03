@@ -31,7 +31,6 @@
 
 #include "b_file_info.h"
 #include "b_resources/b_constants.h"
-#include "bundlemgr/bundle_mgr_interface.h"
 #include "i_service_reverse.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "svc_death_recipient.h"
@@ -40,6 +39,7 @@ namespace OHOS::FileManagement::Backup {
 struct BackupExtInfo {
     bool receExtManageJson {false};
     bool receExtAppDone {false};
+    bool isBundleFinished {false};
     std::string backupExtName;
     sptr<SvcBackupConnection> backUpConnection;
     std::set<std::string> fileNameInfo;
@@ -54,6 +54,7 @@ public:
         IServiceReverse::Scenario scenario {IServiceReverse::Scenario::UNDEFINED};
         std::map<BundleName, BackupExtInfo> backupExtNameMap;
         sptr<IServiceReverse> clientProxy;
+        bool isBackupStart {false};
         bool isAppendFinish {false};
     };
 
@@ -200,35 +201,56 @@ public:
     std::string GetBackupExtName(const std::string &bundleName);
 
     /**
+     * @brief 追加应用
+     *
+     * @param bundleNames 应用名称
+     */
+    void AppendBundles(const std::vector<std::string> &bundleNames);
+
+    /**
+     * @brief 开始备份
+     *
+     * @return ErrCode
+     */
+    void Start();
+
+    /**
      * @brief 结束追加应用
      *
      * @return ErrCode
      */
     void Finish();
 
-private:
     /**
-     * @brief 校验BundleName和ability type 并补全Impl.backupExtNameMap信息
+     * @brief 整个备份恢复流程是否结束
      *
-     * @param backupExtNameMap 客户端信息
-     * @throw BError::Codes::SA_INVAL_ARG 客户端信息异常
-     * @throw BError::Codes::SA_BROKEN_IPC
+     * @return true 备份恢复流程结束
+     * @return false 备份恢复流程未结束
      */
-    virtual void GetBundleExtNames(std::map<BundleName, BackupExtInfo> &backupExtNameMap);
+    bool IsOnAllBundlesFinished();
 
     /**
-     * @brief 初始化 extension backUpConnection
+     * @brief 是否启动调度器
      *
-     * @param backupExtNameMap
+     * @return true 启动调度器
+     * @return false 不启动调度器
      */
-    virtual void InitExtConn(std::map<BundleName, BackupExtInfo> &backupExtNameMap);
+    bool IsOnOnStartSched();
+
+private:
+    /**
+     * @brief 获取backup extension ability
+     *
+     * @param bundleName 应用名称
+     */
+    sptr<SvcBackupConnection> GetBackupExtAbility(const std::string &bundleName);
 
     /**
      * @brief 初始化 clientProxy
      *
      * @param newImpl
      */
-    virtual void InitClient(Impl &newImpl);
+    void InitClient(Impl &newImpl);
 
     /**
      * @brief 获取BackupExtNameMap iterator
@@ -248,8 +270,6 @@ public:
     ~SvcSessionManager() override = default;
 
 private:
-    sptr<AppExecFwk::IBundleMgr> GetBundleManager();
-
     mutable std::shared_mutex lock_;
     wptr<Service> reversePtr_;
     sptr<SvcDeathRecipient> deathRecipient_;

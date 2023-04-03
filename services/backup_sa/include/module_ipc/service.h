@@ -32,16 +32,14 @@ class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
 
     // 以下都是IPC接口
 public:
-    ErrCode InitRestoreSession(sptr<IServiceReverse> remote, const std::vector<BundleName> &bundleNames) override;
-    ErrCode InitBackupSession(sptr<IServiceReverse> remote,
-                              UniqueFd fd,
-                              const std::vector<BundleName> &bundleNames) override;
+    ErrCode InitRestoreSession(sptr<IServiceReverse> remote) override;
+    ErrCode InitBackupSession(sptr<IServiceReverse> remote) override;
     ErrCode Start() override;
     UniqueFd GetLocalCapabilities() override;
     ErrCode PublishFile(const BFileInfo &fileInfo) override;
     ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) override;
     ErrCode AppDone(ErrCode errCode) override;
-    ErrCode GetExtFileName(std::string &bundleName, std::string &fileName) override;
+    ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames) override;
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
     ErrCode Finish() override;
@@ -123,6 +121,19 @@ private:
      * @param bundleName 应用名称
      */
     void ClearSessionAndSchedInfo(const std::string &bundleName);
+
+    /**
+     * @brief 整个备份恢复流程结束
+     *
+     * @param errCode 错误码
+     */
+    void OnAllBundlesFinished(ErrCode errCode);
+
+    /**
+     * @brief 执行调度器
+     *
+     */
+    void OnStartSched();
 
 private:
     static sptr<Service> instance_;

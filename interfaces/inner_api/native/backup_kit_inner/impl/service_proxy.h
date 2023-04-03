@@ -28,16 +28,14 @@
 namespace OHOS::FileManagement::Backup {
 class ServiceProxy : public IRemoteProxy<IService> {
 public:
-    ErrCode InitRestoreSession(sptr<IServiceReverse> remote, const std::vector<BundleName> &bundleNames) override;
-    ErrCode InitBackupSession(sptr<IServiceReverse> remote,
-                              UniqueFd fd,
-                              const std::vector<BundleName> &bundleNames) override;
+    ErrCode InitRestoreSession(sptr<IServiceReverse> remote) override;
+    ErrCode InitBackupSession(sptr<IServiceReverse> remote) override;
     ErrCode Start() override;
     UniqueFd GetLocalCapabilities() override;
     ErrCode PublishFile(const BFileInfo &fileInfo) override;
     ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) override;
     ErrCode AppDone(ErrCode errCode) override;
-    ErrCode GetExtFileName(std::string &bundleName, std::string &fileName) override;
+    ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames) override;
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
     ErrCode Finish() override;

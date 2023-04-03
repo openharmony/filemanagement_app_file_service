@@ -40,25 +40,17 @@ public:
     /**
      * @brief 获取一个用于控制恢复流程的会话
      *
-     * @param bundlesToRestore 待恢复应用清单
      * @param callbacks 注册的回调函数
      * @return std::unique_ptr<BRestoreSession> 指向BRestoreSession的智能指针。失败时为空指针
      */
-    static std::unique_ptr<BSessionRestore> Init(std::vector<BundleName> bundlesToRestore, Callbacks callbacks);
-
-    /**
-     * @brief 获取用于描述本端能力的Json文件
-     *
-     * @return UniqueFd 文件描述符
-     */
-    UniqueFd GetLocalCapabilities();
+    static std::unique_ptr<BSessionRestore> Init(Callbacks callbacks);
 
     /**
      * @brief 通知备份服务文件内容已就绪
      *
      * @param fileInfo 文件描述信息
      * @return ErrCode 规范错误码
-     * @see GetExtFileName
+     * @see GetFileHandle
      */
     ErrCode PublishFile(BFileInfo fileInfo);
 
@@ -68,7 +60,7 @@ public:
      * @param bundleName 应用名称
      * @param fileName   文件名称
      */
-    ErrCode GetExtFileName(std::string &bundleName, std::string &fileName);
+    ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName);
 
     /**
      * @brief 用于追加应用，现阶段仅支持在Start之前调用

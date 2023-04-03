@@ -36,22 +36,20 @@ public:
         SERVICE_CMD_APP_FILE_READY,
         SERVICE_CMD_APP_DONE,
         SERVICE_CMD_START,
-        SERVICE_CMD_GET_EXT_FILE_NAME,
+        SERVICE_CMD_GET_FILE_NAME,
         SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION,
         SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION,
         SERVICE_CMD_FINISH,
     };
 
-    virtual ErrCode InitRestoreSession(sptr<IServiceReverse> remote, const std::vector<BundleName> &bundleNames) = 0;
-    virtual ErrCode InitBackupSession(sptr<IServiceReverse> remote,
-                                      UniqueFd fd,
-                                      const std::vector<BundleName> &bundleNames) = 0;
+    virtual ErrCode InitRestoreSession(sptr<IServiceReverse> remote) = 0;
+    virtual ErrCode InitBackupSession(sptr<IServiceReverse> remote) = 0;
     virtual ErrCode Start() = 0;
     virtual UniqueFd GetLocalCapabilities() = 0;
     virtual ErrCode PublishFile(const BFileInfo &fileInfo) = 0;
     virtual ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) = 0;
     virtual ErrCode AppDone(ErrCode errCode) = 0;
-    virtual ErrCode GetExtFileName(std::string &bundleName, std::string &fileName) = 0;
+    virtual ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) = 0;
     virtual ErrCode AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames) = 0;
     virtual ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) = 0;
     virtual ErrCode Finish() = 0;
