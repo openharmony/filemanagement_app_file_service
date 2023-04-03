@@ -18,10 +18,13 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <regex>
 #include <sstream>
 #include <string>
 
 #include "b_error/b_error.h"
+#include "b_file_info.h"
+#include "b_json/b_json_entity_caps.h"
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
@@ -339,7 +342,7 @@ void SvcSessionManager::SetServiceSchedAction(const string &bundleName, BConstan
 
     auto it = GetBackupExtNameMap(bundleName);
     it->second.schedAction = action;
-    if (it->second.schedAction == BConstants::ServiceSchedAction::START) {
+    if (it->second.schedAction == BConstants::ServiceSchedAction::INSTALLING) {
         extConnectNum_++;
     }
 }
@@ -351,8 +354,19 @@ string SvcSessionManager::GetBackupExtName(const string &bundleName)
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-    auto it = GetBackupExtNameMap(bundleName);
-    return it->second.backupExtName;
+    string name = bundleName;
+    VerifyBundleName(name);
+    auto bundleInfos = BundleMgrAdapter::GetBundleInfos({bundleName});
+    for (auto &&bundleInfo : bundleInfos) {
+        if (!bundleInfo.allToBackup || bundleInfo.extensionName.empty()) {
+            throw BError(BError::Codes::SA_INVAL_ARG,
+                         string(bundleInfo.name).append(" is not allow to backup or extension name is empty"));
+        }
+        if (bundleInfo.name == bundleName) {
+            return bundleInfo.extensionName;
+        }
+    }
+    throw BError(BError::Codes::SA_INVAL_ARG, "Could not find the extension name");
 }
 
 void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
@@ -362,18 +376,11 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-
-    auto bundleInfos = BundleMgrAdapter::GetBundleInfos(bundleNames);
-    for (auto &&bundleInfo : bundleInfos) {
-        if (!bundleInfo.allToBackup || bundleInfo.extensionName.empty()) {
-            throw BError(BError::Codes::SA_INVAL_ARG,
-                         string(bundleInfo.name).append(" is not allow to backup or extension name is empty"));
-        }
+    
+    for (auto &&bundleName : bundleNames) {
         BackupExtInfo info {};
-        info.backupExtName = bundleInfo.extensionName;
-        info.backUpConnection = GetBackupExtAbility(bundleInfo.name);
-
-        impl_.backupExtNameMap.insert(make_pair(bundleInfo.name, info));
+        info.backUpConnection = GetBackupExtAbility(bundleName);
+        impl_.backupExtNameMap.insert(make_pair(bundleName, info));
     }
 }
 
@@ -422,5 +429,53 @@ bool SvcSessionManager::IsOnOnStartSched()
     }
 
     return false;
+}
+
+void SvcSessionManager::SetInstallState(const string &bundleName, const string &state)
+{
+    HILOGI("Begin");
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    it->second.installState = state;
+}
+
+string SvcSessionManager::GetInstallState(const string &bundleName)
+{
+    HILOGI("Begin");
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    return it->second.installState;
+}
+
+void SvcSessionManager::SetNeedToInstall(const std::string &bundleName, bool needToInstall)
+{
+    HILOGI("Begin");
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    it->second.bNeedToInstall = needToInstall;
+}
+
+bool SvcSessionManager::GetNeedToInstall(const std::string &bundleName)
+{
+    HILOGI("Begin");
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    return it->second.bNeedToInstall;
 }
 } // namespace OHOS::FileManagement::Backup

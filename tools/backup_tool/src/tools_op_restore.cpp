@@ -33,6 +33,7 @@
 #include "b_error/b_error.h"
 #include "b_filesystem/b_dir.h"
 #include "b_filesystem/b_file.h"
+#include "b_json/b_json_entity_caps.h"
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_resources/b_constants.h"
 #include "backup_kit_inner.h"
@@ -129,10 +130,17 @@ static void OnFileReady(shared_ptr<Session> ctx, const BFileInfo &fileInfo, Uniq
 {
     printf("FileReady owner = %s, fileName = %s, sn = %u, fd = %d\n", fileInfo.owner.c_str(), fileInfo.fileName.c_str(),
            fileInfo.sn, fd.Get());
-    if (!regex_match(fileInfo.fileName, regex("^[0-9a-zA-Z_.]+$"))) {
+    if (!regex_match(fileInfo.fileName, regex("^[0-9a-zA-Z_.]+$")) &&
+        fileInfo.fileName != BConstants::RESTORE_INSTALL_PATH) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, "Filename is not alphanumeric");
     }
-    string tmpPath = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + fileInfo.owner + "/" + fileInfo.fileName;
+    string tmpPath;
+    if (fileInfo.fileName == BConstants::RESTORE_INSTALL_PATH) {
+        printf("OnFileReady bundle hap\n");
+        tmpPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + fileInfo.owner + ".hap";
+    } else {
+        tmpPath = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + fileInfo.owner + "/" + fileInfo.fileName;
+    }
     if (access(tmpPath.data(), F_OK) != 0) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
@@ -145,7 +153,9 @@ static void OnFileReady(shared_ptr<Session> ctx, const BFileInfo &fileInfo, Uniq
     if (ret != 0) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, "PublishFile error");
     }
-    ctx->UpdateBundleSentFiles(fileInfo.owner, fileInfo.fileName);
+    if (fileInfo.fileName != BConstants::RESTORE_INSTALL_PATH) {
+        ctx->UpdateBundleSentFiles(fileInfo.owner, fileInfo.fileName);
+    }
     ctx->TryNotify();
 }
 
@@ -207,6 +217,12 @@ static void RestoreApp(shared_ptr<Session> restore, vector<BundleName> &bundleNa
         if (err != 0) {
             throw BError(BError::Codes::TOOL_INVAL_ARG, "error path");
         }
+        // install bundle.hap
+        string installPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + bundleName + ".hap";
+        if (access(installPath.data(), F_OK) == 0) {
+            printf("install bundle hap %s\n", installPath.c_str());
+            restore->session_->GetFileHandle(bundleName, string(BConstants::RESTORE_INSTALL_PATH));
+        }
         for (auto &filePath : filePaths) {
             string fileName = filePath.substr(filePath.rfind("/") + 1);
             restore->session_->GetFileHandle(bundleName, fileName);
@@ -220,18 +236,26 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "Init");
 
-    UniqueFd fd(open(pathCapFile.data(), O_RDWR | O_CREAT, S_IRWXU));
+    UniqueFd fd(open(pathCapFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU));
     if (fd < 0) {
         fprintf(stderr, "Failed to open file error: %d %s\n", errno, strerror(errno));
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
         return -errno;
     }
-    auto proxy = ServiceProxy::GetInstance();
-    if (!proxy) {
-        fprintf(stderr, "Get an empty backup sa proxy\n");
-        return -EFAULT;
+
+    BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
+    auto cache = cachedEntity.Structuralize();
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    for (auto name : bundleNames) {
+        string installPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + name + ".hap";
+        bool needToInstall = false;
+        if (access(installPath.data(), F_OK) == 0) {
+            needToInstall = true;
+        }
+        bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {.name = name, .needToInstall = needToInstall});
     }
-    BFile::SendFile(fd, proxy->GetLocalCapabilities());
+    cache.SetBundleInfos(bundleInfos);
+    cachedEntity.Persist();
 
     auto ctx = make_shared<Session>();
     ctx->session_ = BSessionRestore::Init(
@@ -245,7 +269,7 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
         return -EPERM;
     }
-    int ret = ctx->session_->AppendBundles(move(fd), bundleNames);
+    int ret = ctx->session_->AppendBundles(move(cachedEntity.GetFd()), bundleNames);
     if (ret != 0) {
         printf("restore append bundles error: %d", ret);
         throw BError(BError::Codes::TOOL_INVAL_ARG, "restore append bundles error");

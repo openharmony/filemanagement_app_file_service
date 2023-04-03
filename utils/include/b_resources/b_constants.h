@@ -32,9 +32,10 @@ enum class ExtensionAction {
 
 enum ServiceSchedAction {
     WAIT = 0,
-    START = 1,
-    RUNNING = 2,
-    FINISH = 3,
+    INSTALLING = 1,
+    START,
+    RUNNING,
+    FINISH,
 };
 
 enum EntryKey {
@@ -111,6 +112,7 @@ static inline std::string_view BACKUP_TOOL_RECEIVE_DIR = "/data/backup/received/
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/backup";
 static inline std::string_view SA_BUNDLE_BACKUP_TOOL_DIR = "/data/service/el2/100/backup/backup_tool/";
 static inline std::string_view BACKUP_TOOL_LINK_DIR = "/data/backup";
+static inline std::string_view BACKUP_TOOL_INSTALL_DIR = "/data/backup/install/";
 
 // 备份恢复配置文件暂存路径
 static inline std::string_view BACKUP_CONFIG_EXTENSION_PATH = "/data/storage/el2/base/temp/";
@@ -120,6 +122,9 @@ static inline std::string_view EXT_BACKUP_MANAGE = "manage.json";
 
 // 包管理元数据配置文件
 static inline std::string_view BACKUP_CONFIG_JSON = "backup_config.json";
+
+// 恢复应用安装包路径
+static inline std::string_view RESTORE_INSTALL_PATH = "/data/storage/el2/restore/bundle.hap";
 
 // 应用默认备份的目录，其均为相对根路径的路径。为避免模糊匹配，务必以斜线为结尾。
 static inline std::array<std::string_view, 6> PATHES_TO_BACKUP = {
