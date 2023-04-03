@@ -74,16 +74,16 @@ void Service::OnStop()
 UniqueFd Service::GetLocalCapabilities()
 {
     try {
+        HILOGI("Begin");
         VerifyCaller();
-        struct statfs fsInfo = {};
-        if (statfs(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR.data(), &fsInfo) == -1) {
-            throw BError(errno);
-        }
-
         BJsonCachedEntity<BJsonEntityCaps> cachedEntity(
             UniqueFd(open(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR.data(), O_TMPFILE | O_RDWR, 0600)));
         auto cache = cachedEntity.Structuralize();
+
+        cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
+        auto bundleInfos = BundleMgrAdapter::GetBundleInfos();
+        cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
 
         return move(cachedEntity.GetFd());
@@ -213,7 +213,21 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
 {
     HILOGI("Begin");
     VerifyCaller(session_->GetScenario());
+    BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
+    auto cache = cachedEntity.Structuralize();
+    auto bundleInfos = cache.GetBundleInfos();
+    if (!bundleInfos.size()) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
+    }
     session_->AppendBundles(bundleNames);
+    for (auto bundleName : bundleNames) {
+        for (auto &&bundleInfo : bundleInfos) {
+            if (bundleInfo.name != bundleName) {
+                continue;
+            }
+            session_->SetNeedToInstall(bundleInfo.name, bundleInfo.needToInstall);
+        }
+    }
     Start();
     Finish();
     OnStartSched();
@@ -246,6 +260,11 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
         HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
 
+        if (fileInfo.fileName == BConstants::RESTORE_INSTALL_PATH) {
+            session_->SetInstallState(fileInfo.owner, "OK");
+            sched_->Sched(fileInfo.owner);
+            return BError(BError::Codes::OK);
+        }
         if (!regex_match(fileInfo.fileName, regex("^[0-9a-zA-Z_.]+$"))) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not alphanumeric");
         }
@@ -386,11 +405,21 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
     try {
         HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
+        if (fileName == BConstants::RESTORE_INSTALL_PATH && regex_match(bundleName, regex("^[0-9a-zA-Z_.]+$"))) {
+            session_->SetInstallState(bundleName, string(BConstants::RESTORE_INSTALL_PATH));
+            auto action = session_->GetServiceSchedAction(bundleName);
+            if (action == BConstants::ServiceSchedAction::INSTALLING) {
+                sched_->Sched(bundleName);
+            }
+            return BError(BError::Codes::OK);
+        }
+        if (!regex_match(fileName, regex("^[0-9a-zA-Z_.]+$"))) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not alphanumeric");
+        }
         session_->SetExtFileNameRequest(bundleName, fileName);
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {
             sched_->Sched(bundleName);
-            return BError(BError::Codes::OK);
         }
         return BError(BError::Codes::OK);
     } catch (const BError &e) {

@@ -41,6 +41,14 @@ public:
      * @return std::vector<BJsonEntityCaps::BundleInfo>
      */
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfos(const std::vector<std::string> &bundleNames);
+
+    /**
+     * @brief Install bundle
+     *
+     * @param bundleName bundle name
+     * @param bundleFilePath bundle file path
+     */
+    static ErrCode Install(wptr<InnerReceiverImpl> statusReceiver, const std::string &bundleFilePath);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_BUNDLE_MGR_ADAPTER_H

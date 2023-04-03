@@ -44,6 +44,8 @@ struct BackupExtInfo {
     sptr<SvcBackupConnection> backUpConnection;
     std::set<std::string> fileNameInfo;
     BConstants::ServiceSchedAction schedAction {BConstants::ServiceSchedAction::WAIT};
+    bool bNeedToInstall {false};
+    std::string installState;
 };
 
 class Service;
@@ -236,6 +238,39 @@ public:
      * @return false 不启动调度器
      */
     bool IsOnOnStartSched();
+
+    /**
+     * @brief Set the Install State object
+     *
+     * @param bundleName
+     * @param state
+     */
+    void SetInstallState(const std::string &bundleName, const std::string &state);
+
+    /**
+     * @brief Get the Install State object
+     *
+     * @param bundleName
+     * @return std::string
+     */
+    std::string GetInstallState(const std::string &bundleName);
+
+    /**
+     * @brief Set the Need To Install object
+     *
+     * @param bundleName
+     * @param needToInstall
+     */
+    void SetNeedToInstall(const std::string &bundleName, bool needToInstall);
+
+    /**
+     * @brief Get the Need To Install object
+     *
+     * @param bundleName
+     * @return true
+     * @return false
+     */
+    bool GetNeedToInstall(const std::string &bundleName);
 
 private:
     /**

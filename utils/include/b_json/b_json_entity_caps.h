@@ -29,27 +29,13 @@ public:
         int64_t spaceOccupied;
         bool allToBackup;
         std::string extensionName;
+        bool needToInstall {false};
     };
 
 public:
-    uint64_t GetFreeDiskSpace()
+    void SetSystemFullName(std::string systemFullName)
     {
-        if (!obj_ || !obj_.isMember("freeDiskSpace") || !obj_["freeDiskSpace"].isUInt64()) {
-            HILOGE("Failed to init field FreeDiskSpace");
-            return 0;
-        }
-
-        return obj_["freeDiskSpace"].asUInt64();
-    }
-
-    void SetFreeDiskSpace(uint64_t freeDiskSpace)
-    {
-        obj_["freeDiskSpace"] = freeDiskSpace;
-    }
-
-    void SetOSFullName(std::string osFullName)
-    {
-        obj_["OSFullName"] = osFullName;
+        obj_["systemFullName"] = systemFullName;
     }
 
     void SetDeviceType(std::string deviceType)
@@ -57,24 +43,64 @@ public:
         obj_["deviceType"] = deviceType;
     }
 
-    std::string GetOSFullName()
+    void SetBundleInfos(std::vector<BundleInfo> bundleInfos)
     {
-        if (!obj_ || !obj_.isMember("OSFullName") || !obj_["OSFullName"].isString()) {
-            HILOGE("Failed to get field OSFullName");
+        if (obj_.isMember("bundleInfos")) {
+            obj_["bundleInfos"].clear();
+        }
+        for (const auto &item : bundleInfos) {
+            Json::Value arrObj;
+            arrObj["name"] = item.name;
+            arrObj["versionCode"] = item.versionCode;
+            arrObj["versionName"] = item.versionName;
+            arrObj["spaceOccupied"] = item.spaceOccupied;
+            arrObj["allToBackup"] = item.allToBackup;
+            arrObj["extensionName"] = item.extensionName;
+            arrObj["needToInstall"] = item.needToInstall;
+            obj_["bundleInfos"].append(arrObj);
+        }
+    }
+
+    std::string GetSystemFullName()
+    {
+        if (!obj_ || !obj_.isMember("systemFullName") || !obj_["systemFullName"].isString()) {
+            HILOGI("Failed to get field systemFullName");
             return "";
         }
 
-        return obj_["OSFullName"].asString();
+        return obj_["systemFullName"].asString();
     }
 
     std::string GetDeviceType()
     {
         if (!obj_ || !obj_.isMember("deviceType") || !obj_["deviceType"].isString()) {
-            HILOGE("Failed to get field deviceType");
+            HILOGI("Failed to get field deviceType");
             return "";
         }
 
         return obj_["deviceType"].asString();
+    }
+
+    std::vector<BundleInfo> GetBundleInfos()
+    {
+        if (!obj_ || !obj_.isMember("bundleInfos") || !obj_["bundleInfos"].isArray()) {
+            HILOGI("Failed to get field get bundleInfos");
+            return {};
+        }
+        std::vector<BundleInfo> bundleInfos;
+        for (const auto &item : obj_["bundleInfos"]) {
+            if (!item || !item["name"].isString() || !item["versionCode"].isUInt() || !item["versionName"].isString() ||
+                !item["spaceOccupied"].isInt64() || !item["allToBackup"].isBool() ||
+                !item["extensionName"].isString() || !item["needToInstall"].isBool()) {
+                HILOGI("Failed to get field bundleInfos, type error");
+                return {};
+            }
+            bundleInfos.emplace_back(BundleInfo {item["name"].asString(), item["versionCode"].asUInt(),
+                                                 item["versionName"].asString(), item["spaceOccupied"].asInt64(),
+                                                 item["allToBackup"].asBool(), item["extensionName"].asString(),
+                                                 item["needToInstall"].asBool()});
+        }
+        return bundleInfos;
     }
 
 public:
@@ -86,7 +112,7 @@ public:
      */
     explicit BJsonEntityCaps(Json::Value &obj, std::any option = std::any()) : BJsonEntity(obj, option)
     {
-        SetFreeDiskSpace(GetFreeDiskSpace());
+        SetBundleInfos(GetBundleInfos());
     }
 
     BJsonEntityCaps() = delete;

@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_BACKUP_SCHED_SCHEDULER_H
 #define OHOS_FILEMGMT_BACKUP_SCHED_SCHEDULER_H
 
+#include <cstdint>
 #include <refbase.h>
 #include <set>
 #include <shared_mutex>
@@ -53,6 +54,14 @@ public:
      */
     void RemoveExtConn(const std::string &bundleName);
 
+    /**
+     * @brief install success
+     *
+     * @param bundleName
+     * @param resultCode
+     */
+    void InstallSuccess(const std::string &bundleName, const int32_t resultCode);
+
     void StartTimer()
     {
         extTime_.Setup();
@@ -72,6 +81,14 @@ public:
         sessionPtr_ = nullptr;
         bundleTimeVec_.clear();
     }
+
+private:
+    /**
+     * @brief install state
+     *
+     * @param bundleName
+     */
+    void InstallingState(const std::string &bundleName);
 
 private:
     mutable std::shared_mutex lock_;

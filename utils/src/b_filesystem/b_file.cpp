@@ -73,6 +73,10 @@ void BFile::SendFile(int outFd, int inFd)
     if (ret == -1) {
         throw BError(errno);
     }
+    ret = ftruncate(outFd, offset);
+    if (ret == -1) {
+        throw BError(errno);
+    }
 }
 
 void BFile::Write(const UniqueFd &fd, const string &str)

@@ -18,7 +18,9 @@
 #include <tuple>
 #include <vector>
 
+#include "b_error/b_error.h"
 #include "b_json/b_json_entity_ext_manage.h"
+#include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
 #include "json/value.h"
 
@@ -91,6 +93,9 @@ void BJsonEntityExtManage::SetExtManage(const map<string, pair<string, struct st
 
         Json::Value value;
         value["fileName"] = item->first;
+        if (item->second.first == BConstants::RESTORE_INSTALL_PATH) {
+            throw BError(BError::Codes::UTILS_INVAL_JSON_ENTITY, "Failed to set ext manage, invalid path");
+        }
         value["information"]["path"] = item->second.first;
         value["information"]["stat"] = Stat2JsonValue(item->second.second);
         set<string> lks = FindLinks(item, index);
@@ -142,6 +147,9 @@ map<string, pair<string, struct stat>> BJsonEntityExtManage::GetExtManageInfo() 
 
         struct stat sta = {};
         string path = item["information"].isMember("path") ? item["information"]["path"].asString() : "";
+        if (path == BConstants::RESTORE_INSTALL_PATH) {
+            throw BError(BError::Codes::UTILS_INVAL_JSON_ENTITY, "Failed to get ext manage info, invalid path");
+        }
         if (item["information"].isMember("stat")) {
             sta = JsonValue2Stat(item["information"]["stat"]);
         }
