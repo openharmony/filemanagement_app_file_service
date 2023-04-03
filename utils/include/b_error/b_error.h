@@ -30,6 +30,8 @@
 #include <system_error>
 #include <vector>
 
+#include "n_error.h"
+
 #if __has_builtin(__builtin_FILE) && __has_builtin(__builtin_LINE) && __has_builtin(__builtin_FUNCTION)
 #define DEFINE_SOURCE_LOCATION                                              \
     int lineNo = __builtin_LINE(), const char *fileName = __builtin_FILE(), \
@@ -39,6 +41,8 @@
 #endif
 
 namespace OHOS::FileManagement::Backup {
+using ErrCode = int;
+
 class BError : public std::exception {
 public:
     /**
@@ -85,14 +89,7 @@ public:
      *
      * @return int 标注错误码
      */
-    int GetCode() const
-    {
-        if (code_ == Codes::OK) {
-            return 0;
-        } else {
-            return -1 * (static_cast<int>(code_) | ErrCodeOffset(SUBSYS_FILEMANAGEMENT, codeSubsystem_));
-        }
-    }
+    int GetCode() const;
 
     /**
      * @brief 返回原始错误码
@@ -200,8 +197,38 @@ private:
         {Codes::EXT_BROKEN_IPC, "Extension failed to do IPC"},
     };
 
+    static inline const std::map<int, int> errCodeTable_ {
+        {static_cast<int>(Codes::OK), static_cast<int>(Codes::OK)},
+        {static_cast<int>(Codes::UTILS_INVAL_JSON_ENTITY),
+         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_INVAL},
+        {static_cast<int>(Codes::UTILS_INVAL_FILE_HANDLE),
+         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_INVAL},
+        {static_cast<int>(Codes::UTILS_INVAL_TARBALL_ARG),
+         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR},
+        {static_cast<int>(Codes::UTILS_INVAL_PROCESS_ARG),
+         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR},
+        {static_cast<int>(Codes::UTILS_INTERRUPTED_PROCESS),
+         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR},
+        {static_cast<int>(Codes::TOOL_INVAL_ARG), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR},
+        {static_cast<int>(Codes::SA_INVAL_ARG), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_INVAL},
+        {static_cast<int>(Codes::SA_BROKEN_IPC),
+         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfStorageService::E_IPCSS},
+        {static_cast<int>(Codes::SA_REFUSED_ACT), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_PERM},
+        {static_cast<int>(Codes::SA_BROKEN_ROOT_DIR), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR},
+        {static_cast<int>(Codes::SDK_INVAL_ARG), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_INVAL},
+        {static_cast<int>(Codes::SDK_BROKEN_IPC),
+         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfStorageService::E_IPCSS},
+        {static_cast<int>(Codes::SDK_MIXED_SCENARIO), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_INVAL},
+        {static_cast<int>(Codes::EXT_INVAL_ARG), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_INVAL},
+        {static_cast<int>(Codes::EXT_BROKEN_FRAMEWORK),
+         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR},
+        {static_cast<int>(Codes::EXT_BROKEN_BACKUP_SA),
+         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfStorageService::E_IPCSS},
+        {static_cast<int>(Codes::EXT_BROKEN_IPC),
+         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfStorageService::E_IPCSS},
+    };
+
 private:
-    const int codeSubsystem_ {1};
     Codes code_ {Codes::OK};
     std::string msg_;
 
