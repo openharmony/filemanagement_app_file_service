@@ -17,6 +17,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <fcntl.h>
 #include <tuple>
 #include <utility>
 
