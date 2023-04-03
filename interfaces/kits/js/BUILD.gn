@@ -13,6 +13,7 @@
 
 import("//build/ohos.gni")
 import("//foundation/filemanagement/app_file_service/app_file_service.gni")
+import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ohos_shared_library("remotefileshare") {
   include_dirs = [
@@ -92,4 +93,29 @@ ohos_shared_library("fileuri") {
 
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
+}
+
+ohos_shared_library("backup") {
+  relative_install_dir = "module"
+  subsystem_name = "filemanagement"
+  part_name = "app_file_service"
+
+  include_dirs = [ "${path_napi}/interfaces/kits" ]
+
+  sources = [
+    "${path_backup_js}/backup/local_capabilities.cpp",
+    "${path_backup_js}/backup/module.cpp",
+    "${path_backup_js}/backup/prop_n_exporter.cpp",
+    "${path_backup_js}/backup/session_backup_n_exporter.cpp",
+    "${path_backup_js}/backup/session_restore_n_exporter.cpp",
+  ]
+
+  deps = [
+    "${path_file_api}/utils/filemgmt_libn:filemgmt_libn",
+    "${path_napi}:ace_napi",
+  ]
+
+  external_deps = [ "app_file_service:backup_kit_inner" ]
+
+  public_deps = [ "${path_file_api}/utils/filemgmt_libhilog:filemgmt_libhilog" ]
 }
