@@ -376,7 +376,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-    
+
     for (auto &&bundleName : bundleNames) {
         BackupExtInfo info {};
         info.backUpConnection = GetBackupExtAbility(bundleName);
@@ -477,5 +477,14 @@ bool SvcSessionManager::GetNeedToInstall(const std::string &bundleName)
 
     auto it = GetBackupExtNameMap(bundleName);
     return it->second.bNeedToInstall;
+}
+
+bool SvcSessionManager::NeedToUnloadService()
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken || !impl_.clientToken || !impl_.clientProxy || !impl_.backupExtNameMap.size()) {
+        return true;
+    }
+    return false;
 }
 } // namespace OHOS::FileManagement::Backup
