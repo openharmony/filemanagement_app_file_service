@@ -96,7 +96,7 @@ ohos_shared_library("fileuri") {
 }
 
 ohos_shared_library("backup") {
-  relative_install_dir = "module"
+  relative_install_dir = "module/file"
   subsystem_name = "filemanagement"
   part_name = "app_file_service"
 
