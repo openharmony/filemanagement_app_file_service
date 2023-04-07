@@ -65,6 +65,7 @@ public:
     void StartTimer()
     {
         extTime_.Setup();
+        UnloadServiceTimer();
     }
 
 public:
@@ -89,6 +90,12 @@ private:
      * @param bundleName
      */
     void InstallingState(const std::string &bundleName);
+
+    /**
+     * @brief unload service timer
+     *
+     */
+    void UnloadServiceTimer();
 
 private:
     mutable std::shared_mutex lock_;

@@ -272,6 +272,14 @@ public:
      */
     bool GetNeedToInstall(const std::string &bundleName);
 
+    /**
+     * @brief Whether to unload the service
+     *
+     * @return true
+     * @return false
+     */
+    bool NeedToUnloadService();
+
 private:
     /**
      * @brief 获取backup extension ability

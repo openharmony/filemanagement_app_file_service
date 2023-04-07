@@ -28,10 +28,12 @@
 
 #include "b_error/b_error.h"
 #include "filemgmt_libhilog.h"
+#include "iservice_registry.h"
 #include "module_external/bms_adapter.h"
 #include "module_external/inner_receiver_impl.h"
 #include "module_ipc/service.h"
 #include "module_ipc/svc_session_manager.h"
+#include "system_ability_definition.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -146,6 +148,30 @@ void SchedScheduler::InstallingState(const string &bundleName)
             }
         }
     }
+}
+
+void SchedScheduler::UnloadServiceTimer()
+{
+    auto tryUnload = [sessionPtr {sessionPtr_}]() {
+        auto ptr = sessionPtr.promote();
+        if (ptr && !ptr->NeedToUnloadService()) {
+            return;
+        }
+        HILOGI("Unload system ability");
+        sptr<ISystemAbilityManager> saManager =
+            OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (saManager == nullptr) {
+            HILOGE("UnloadSA, GetSystemAbilityManager is null.");
+            return;
+        }
+        int32_t result = saManager->UnloadSystemAbility(FILEMANAGEMENT_BACKUP_SERVICE_SA_ID);
+        if (result != ERR_OK) {
+            HILOGE("UnloadSA, UnloadSystemAbility result: %{public}d", result);
+            return;
+        }
+    };
+    int checkingIntervalInMs = 30000;
+    extTime_.Register(tryUnload, checkingIntervalInMs);
 }
 
 void SchedScheduler::InstallSuccess(const std::string &bundleName, const int32_t resultCode)
