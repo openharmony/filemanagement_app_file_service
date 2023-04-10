@@ -125,10 +125,14 @@ namespace ModuleFileShare {
         sptr<FileShareGrantToken> remote = new IRemoteStub<FileShareGrantToken>();
         if (remote == nullptr) {
             LOGE("FileShare::InsertByDatashare get remoteObject failed!");
-            return ret;
+            return -ENOMEM;
         }
 
         dataShareHelper = DataShare::DataShareHelper::Creator(remote->AsObject(), MEDIALIBRARY_DATA_URI);
+        if (!dataShareHelper) {
+            LOGE("FileShare::InsertByDatashare connect to datashare failed!");
+            return -E_PERMISSION;
+        }
         Uri uri(MEDIA_GRANT_URI_PERMISSION);
         ret = dataShareHelper->Insert(uri, valuesBucket);
         if (ret < 0) {
