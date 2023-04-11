@@ -45,6 +45,7 @@ ohos_unittest("module_ipc_test") {
     "c_utils:utils",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   use_exceptions = true
@@ -61,6 +62,7 @@ ohos_unittest("backup_service_test") {
   sources += backup_mock_src
   sources += backup_mock_session_manager_src
   sources += backup_mock_scheduler_src
+  sources += backup_mock_module_external_src
 
   include_dirs = [
     "${path_backup}/services/backup_sa/include",
@@ -83,6 +85,7 @@ ohos_unittest("backup_service_test") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   use_exceptions = true
@@ -100,6 +103,7 @@ ohos_unittest("backup_service_session_test") {
   sources += backup_mock_src
   sources += backup_mock_scheduler_src
   sources += backup_mock_service_src
+  sources += backup_mock_module_external_src
 
   include_dirs = [
     "${path_backup}/services/backup_sa/include",
@@ -124,6 +128,7 @@ ohos_unittest("backup_service_session_test") {
     "c_utils:utils",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   use_exceptions = true
@@ -140,6 +145,7 @@ ohos_unittest("backup_service_scheduler_test") {
   sources += backup_mock_src
   sources += backup_mock_service_src
   sources += backup_mock_session_manager_src
+  sources += backup_mock_module_external_src
 
   include_dirs = [
     "${path_backup}/services/backup_sa/include",
@@ -157,8 +163,11 @@ ohos_unittest("backup_service_scheduler_test") {
     "ability_base:want",
     "ability_runtime:ability_manager",
     "app_file_service:backup_kit_inner",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   use_exceptions = true

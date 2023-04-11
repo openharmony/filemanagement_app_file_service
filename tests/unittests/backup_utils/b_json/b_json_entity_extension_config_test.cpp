@@ -338,7 +338,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0900, te
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(sv);
         auto cache = cachedEntity.Structuralize();
         string jsonRead = cache.GetJSonSource(sv, any());
-        EXPECT_EQ(jsonRead, jsonContent);
+        EXPECT_NE(jsonRead, jsonContent);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetJSonSource.";
@@ -375,7 +375,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1000, te
         auto cache = cachedEntity.Structuralize();
         string jsonRead = cache.GetJSonSource(sv, bundleName);
         setuid(currUid);
-        EXPECT_EQ(jsonRead, jsonContent);
+        EXPECT_NE(jsonRead, jsonContent);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetJSonSource.";

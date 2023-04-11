@@ -36,7 +36,7 @@ ohos_unittest("b_file_info_test") {
 }
 
 ohos_unittest("backup_sa_impl_test") {
-  module_out_path = "filemanagement/backup"
+  module_out_path = path_module_out_tests
 
   sources = [
     "${path_backup_mock}/system_ability_manager/service_registry_mock.cpp",

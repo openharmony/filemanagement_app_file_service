@@ -154,53 +154,25 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0300, testing::ext::T
     try {
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
-        vector<string> bundlesToBackup;
-        auto restorePtr = BSessionRestore::Init(bundlesToBackup, {});
+        vector<string> bundlesToRestore;
+        auto restorePtr = BSessionRestore::Init({});
         EXPECT_EQ(restorePtr, nullptr);
         GTEST_LOG_(INFO) << "GetInstance is true";
         GTEST_LOG_(INFO) << "InitBackupSession is false";
         SetMockGetInstance(true);
         SetMockInitBackupOrRestoreSession(false);
-        restorePtr = BSessionRestore::Init(bundlesToBackup, {});
+        restorePtr = BSessionRestore::Init({});
         EXPECT_EQ(restorePtr, nullptr);
         GTEST_LOG_(INFO) << "InitBackupSession is true";
         SetMockInitBackupOrRestoreSession(true);
         Init();
-        restorePtr = BSessionRestore::Init(bundlesToBackup, callbacks_);
+        restorePtr = BSessionRestore::Init(callbacks_);
         EXPECT_NE(restorePtr, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BSessionRestoreTest-an exception occurred by Init.";
     }
     GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_0300";
-}
-
-/**
- * @tc.number: SUB_backup_b_session_restore_0400
- * @tc.name: SUB_backup_b_session_restore_0400
- * @tc.desc: 测试GetLocalCapabilities接口
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0400, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0400";
-    try {
-        GTEST_LOG_(INFO) << "GetInstance is false";
-        SetMockGetInstance(false);
-        auto fd = restorePtr_->GetLocalCapabilities();
-        EXPECT_NE(fd, 0);
-        GTEST_LOG_(INFO) << "GetInstance is true";
-        SetMockGetInstance(true);
-        fd = restorePtr_->GetLocalCapabilities();
-        EXPECT_NE(fd, 0);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BSessionRestoreTest-an exception occurred by GetLocalCapabilities.";
-    }
-    GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_0400";
 }
 
 /**
@@ -235,7 +207,7 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0500, testing::ext::T
 /**
  * @tc.number: SUB_backup_b_session_restore_0600
  * @tc.name: SUB_backup_b_session_restore_0600
- * @tc.desc: 测试GetExtFileName接口
+ * @tc.desc: 测试GetFileHandle接口
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -249,15 +221,15 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0600, testing::ext::T
         SetMockGetInstance(false);
         string bundleName = "";
         string fileName = "";
-        auto ret = restorePtr_->GetExtFileName(bundleName, fileName);
+        auto ret = restorePtr_->GetFileHandle(bundleName, fileName);
         EXPECT_NE(ret, ErrCode(BError::Codes::OK));
         GTEST_LOG_(INFO) << "GetInstance is true";
         SetMockGetInstance(true);
-        ret = restorePtr_->GetExtFileName(bundleName, fileName);
+        ret = restorePtr_->GetFileHandle(bundleName, fileName);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BSessionRestoreTest-an exception occurred by GetExtFileName.";
+        GTEST_LOG_(INFO) << "BSessionRestoreTest-an exception occurred by GetFileHandle.";
     }
     GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_0600";
 }
@@ -301,11 +273,10 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0800, testing::ext::T
 {
     GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0800";
     try {
-        vector<string> bundlesToBackup;
         SetMockGetInstance(true);
         SetMockLoadSystemAbility(true);
         Init();
-        auto restorePtr = BSessionRestore::Init(bundlesToBackup, callbacks_);
+        auto restorePtr = BSessionRestore::Init(callbacks_);
         EXPECT_NE(restorePtr, nullptr);
 
         GTEST_LOG_(INFO) << "GetInstance is false";
@@ -314,7 +285,7 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0800, testing::ext::T
 
         SetMockGetInstance(true);
         SetMockLoadSystemAbility(true);
-        restorePtr = BSessionRestore::Init(bundlesToBackup, callbacks_);
+        restorePtr = BSessionRestore::Init(callbacks_);
         EXPECT_NE(restorePtr, nullptr);
 
         GTEST_LOG_(INFO) << "LoadSystemAbility is false";

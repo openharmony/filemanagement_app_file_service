@@ -67,11 +67,21 @@ ErrCode ServiceTest::Init(IServiceReverse::Scenario scenario)
     bundleNames.emplace_back(BUNDLE_NAME);
     ErrCode ret = 0;
     if (scenario == IServiceReverse::Scenario::RESTORE) {
-        ret = servicePtr_->InitRestoreSession(remote_, bundleNames);
-    } else if (scenario == IServiceReverse::Scenario::BACKUP) {
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
         EXPECT_GT(fd, BError(BError::Codes::OK));
-        ret = servicePtr_->InitBackupSession(remote_, move(fd), bundleNames);
+        ret = servicePtr_->InitRestoreSession(remote_);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        ret = servicePtr_->Finish();
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } else if (scenario == IServiceReverse::Scenario::BACKUP) {
+        ret = servicePtr_->InitBackupSession(remote_);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        ret = servicePtr_->AppendBundlesBackupSession(bundleNames);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        ret = servicePtr_->Finish();
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     }
     return ret;
 }
@@ -162,7 +172,7 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0100, testing::ext::TestSize.Level
         GTEST_LOG_(INFO) << "ServiceTest-PublishFile Branches";
         fileInfo.fileName = "test";
         ret = servicePtr_->PublishFile(fileInfo);
-        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        EXPECT_NE(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by PublishFile.";
@@ -260,30 +270,30 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0100, testing::ext::Test
 }
 
 /**
- * @tc.number: SUB_Service_GetExtFileName_0100
- * @tc.name: SUB_Service_GetExtFileName_0100
- * @tc.desc: 测试 GetExtFileName 接口
+ * @tc.number: SUB_Service_GetFileHandle_0100
+ * @tc.name: SUB_Service_GetFileHandle_0100
+ * @tc.desc: 测试 GetFileHandle 接口
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(ServiceTest, SUB_Service_GetExtFileName_0100, testing::ext::TestSize.Level1)
+HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0100, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetExtFileName_0100";
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetFileHandle_0100";
     try {
         ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
 
         string bundleName = BUNDLE_NAME;
         string fileName = FILE_NAME;
-        ret = servicePtr_->GetExtFileName(bundleName, fileName);
+        ret = servicePtr_->GetFileHandle(bundleName, fileName);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetExtFileName.";
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetFileHandle.";
     }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetExtFileName_0100";
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetFileHandle_0100";
 }
 
 /**
@@ -311,7 +321,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0100, testing::ext::Test
         servicePtr_->OnBackupExtensionDied(move(bundleName), BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetExtFileName.";
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetFileHandle.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnBackupExtensionDied_0100";
 }

@@ -40,15 +40,14 @@ const string FILE_NAME = "1.tar";
 
 class MockService final : public ServiceStub {
 public:
-    MOCK_METHOD2(InitRestoreSession, ErrCode(sptr<IServiceReverse> remote, const vector<BundleName> &bundleNames));
-    MOCK_METHOD3(InitBackupSession,
-                 ErrCode(sptr<IServiceReverse> remote, UniqueFd fd, const vector<BundleName> &bundleNames));
+    MOCK_METHOD1(InitRestoreSession, ErrCode(sptr<IServiceReverse> remote));
+    MOCK_METHOD1(InitBackupSession, ErrCode(sptr<IServiceReverse> remote));
     MOCK_METHOD0(Start, ErrCode());
     MOCK_METHOD0(GetLocalCapabilities, UniqueFd());
     MOCK_METHOD1(PublishFile, ErrCode(const BFileInfo &fileInfo));
     MOCK_METHOD2(AppFileReady, ErrCode(const string &fileName, UniqueFd fd));
     MOCK_METHOD1(AppDone, ErrCode(ErrCode errCode));
-    MOCK_METHOD2(GetExtFileName, ErrCode(string &bundleName, string &fileName));
+    MOCK_METHOD2(GetFileHandle, ErrCode(const string &bundleName, const string &fileName));
     MOCK_METHOD2(AppendBundlesRestoreSession, ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames));
     MOCK_METHOD1(AppendBundlesBackupSession, ErrCode(const std::vector<BundleName> &bundleNames));
     MOCK_METHOD0(Finish, ErrCode());
@@ -90,7 +89,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitRestoreSession_0100, tes
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_InitRestoreSession_0100";
     try {
         MockService service;
-        EXPECT_CALL(service, InitRestoreSession(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(service, InitRestoreSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -98,9 +97,6 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitRestoreSession_0100, tes
         EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
         sptr<ServiceReverseMock> remote = sptr(new ServiceReverseMock());
         EXPECT_TRUE(data.WriteRemoteObject(remote->AsObject().GetRefPtr()));
-        vector<BundleName> bundleNames;
-        bundleNames.push_back(BUNDLE_NAME);
-        EXPECT_TRUE(data.WriteStringVector(bundleNames));
 
         EXPECT_EQ(BError(BError::Codes::OK),
                   service.OnRemoteRequest(IService::SERVICE_CMD_INIT_RESTORE_SESSION, data, reply, option));
@@ -126,31 +122,17 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitBackupSession_0100, test
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_InitBackupSession_0100";
     try {
         MockService service;
-        EXPECT_CALL(service, InitBackupSession(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(service, InitBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
-
-        vector<BundleName> bundleNames;
-        bundleNames.push_back(BUNDLE_NAME);
         sptr<ServiceReverseMock> remote = sptr(new ServiceReverseMock());
-        TestManager tm("ServiceStub_GetFd_0100");
-        std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
-        UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
 
         EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
         EXPECT_TRUE(data.WriteRemoteObject(remote->AsObject().GetRefPtr()));
-        EXPECT_TRUE(data.WriteFileDescriptor(fd));
-        EXPECT_TRUE(data.WriteStringVector(bundleNames));
 
         EXPECT_EQ(BError(BError::Codes::OK),
                   service.OnRemoteRequest(IService::SERVICE_CMD_INIT_BACKUP_SESSION, data, reply, option));
-        GTEST_LOG_(INFO) << "ServiceStubTest-CmdInitBackupSession Brances";
-        MessageParcel brances;
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_TRUE(data.WriteRemoteObject(remote->AsObject().GetRefPtr()));
-        EXPECT_NE(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IService::SERVICE_CMD_INIT_BACKUP_SESSION, brances, reply, option));
         remote = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
@@ -331,20 +313,20 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppDone_0100, testing::ext::
 }
 
 /**
- * @tc.number: SUB_backup_sa_ServiceStub_GetExtFileName_0100
- * @tc.name: SUB_backup_sa_ServiceStub_GetExtFileName_0100
- * @tc.desc: Test function of GetExtFileName interface for SUCCESS.
+ * @tc.number: SUB_backup_sa_ServiceStub_GetFileHandle_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_GetFileHandle_0100
+ * @tc.desc: Test function of GetFileHandle interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetExtFileName_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetFileHandle_0100, testing::ext::TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_GetExtFileName_0100";
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_GetFileHandle_0100";
     try {
         MockService service;
-        EXPECT_CALL(service, GetExtFileName(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(service, GetFileHandle(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -354,12 +336,111 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetExtFileName_0100, testing
         EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
         EXPECT_TRUE(data.WriteString(FILE_NAME));
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IService::SERVICE_CMD_GET_EXT_FILE_NAME, data, reply, option));
+                  service.OnRemoteRequest(IService::SERVICE_CMD_GET_FILE_NAME, data, reply, option));
         EXPECT_NE(BError(BError::Codes::OK), service.OnRemoteRequest(3333, data, reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by GetExtFileName.";
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by GetFileHandle.";
     }
-    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_GetExtFileName_0100";
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_GetFileHandle_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100
+ * @tc.desc: Test function of AppendBundlesRestoreSession interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100";
+    try {
+        MockService service;
+        EXPECT_CALL(service, AppendBundlesRestoreSession(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        vector<BundleName> bundleNames;
+        bundleNames.push_back(BUNDLE_NAME);
+        TestManager tm("ServiceStub_GetFd_0300");
+        std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
+        UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
+        EXPECT_TRUE(data.WriteFileDescriptor(fd));
+        EXPECT_TRUE(data.WriteStringVector(bundleNames));
+        EXPECT_EQ(BError(BError::Codes::OK),
+                  service.OnRemoteRequest(IService::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION, data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesRestoreSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_AppendBundlesBackupSession_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_AppendBundlesBackupSession_0100
+ * @tc.desc: Test function of AppendBundlesBackupSession interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesBackupSession_0100, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesBackupSession_0100";
+    try {
+        MockService service;
+        EXPECT_CALL(service, AppendBundlesBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        vector<BundleName> bundleNames;
+        bundleNames.push_back(BUNDLE_NAME);
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
+        EXPECT_TRUE(data.WriteStringVector(bundleNames));
+        EXPECT_EQ(BError(BError::Codes::OK),
+                  service.OnRemoteRequest(IService::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION, data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesBackupSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppendBundlesBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_Finish_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_Finish_0100
+ * @tc.desc: Test function of AppendBundlesBackupSession interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Finish_0100, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_Finish_0100";
+    try {
+        MockService service;
+        EXPECT_CALL(service, Finish()).WillOnce(Return(BError(BError::Codes::OK)));
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
+        EXPECT_EQ(BError(BError::Codes::OK),
+                  service.OnRemoteRequest(IService::SERVICE_CMD_FINISH, data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by Finish.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_Finish_0100";
 }
 } // namespace OHOS::FileManagement::Backup

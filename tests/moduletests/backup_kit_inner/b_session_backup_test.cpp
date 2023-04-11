@@ -153,19 +153,18 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0300, testing::ext::Tes
     try {
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
-        vector<string> bundlesToBackup;
-        auto backupPtr = BSessionBackup::Init(UniqueFd(-1), bundlesToBackup, BSessionBackup::Callbacks {});
+        auto backupPtr = BSessionBackup::Init(BSessionBackup::Callbacks {});
         EXPECT_EQ(backupPtr, nullptr);
         GTEST_LOG_(INFO) << "GetInstance is true";
         GTEST_LOG_(INFO) << "InitBackupSession is false";
         SetMockGetInstance(true);
         SetMockInitBackupOrRestoreSession(false);
-        backupPtr = BSessionBackup::Init(UniqueFd(-1), bundlesToBackup, BSessionBackup::Callbacks {});
+        backupPtr = BSessionBackup::Init(BSessionBackup::Callbacks {});
         EXPECT_EQ(backupPtr, nullptr);
         GTEST_LOG_(INFO) << "InitBackupSession is true";
         SetMockInitBackupOrRestoreSession(true);
         Init();
-        backupPtr = BSessionBackup::Init(UniqueFd(-1), bundlesToBackup, callbacks_);
+        backupPtr = BSessionBackup::Init(callbacks_);
         EXPECT_NE(backupPtr, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -215,9 +214,8 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0500, testing::ext::Tes
     try {
         SetMockGetInstance(true);
         SetMockLoadSystemAbility(true);
-        vector<string> bundlesToBackup;
         Init();
-        auto backupPtr = BSessionBackup::Init(UniqueFd(-1), bundlesToBackup, callbacks_);
+        auto backupPtr = BSessionBackup::Init(callbacks_);
         EXPECT_NE(backupPtr, nullptr);
 
         GTEST_LOG_(INFO) << "GetInstance is false";
@@ -226,7 +224,7 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0500, testing::ext::Tes
 
         SetMockGetInstance(true);
         SetMockLoadSystemAbility(true);
-        backupPtr = BSessionBackup::Init(UniqueFd(-1), bundlesToBackup, callbacks_);
+        backupPtr = BSessionBackup::Init(callbacks_);
         EXPECT_NE(backupPtr, nullptr);
 
         GTEST_LOG_(INFO) << "LoadSystemAbility is false";
