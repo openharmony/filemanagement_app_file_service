@@ -56,6 +56,10 @@ public:
                                int32_t flags,
                                BundleInfo &bundleInfo,
                                int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual bool GetApplicationInfos(const ApplicationFlag flag,
+                                     int userId,
+                                     std::vector<ApplicationInfo> &appInfos) override;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -33,6 +33,7 @@ namespace {
 constexpr int SCHED_NUM = 1;
 constexpr int FILE_NUM = 2;
 static int32_t g_nFileReadyNum = 0;
+static int32_t g_nAllBundlesFinished = 0;
 } // namespace
 
 void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const
@@ -67,11 +68,6 @@ IServiceReverse::Scenario SvcSessionManager::GetScenario()
 {
     GTEST_LOG_(INFO) << "GetScenario";
     return impl_.scenario;
-}
-
-void SvcSessionManager::GetBundleExtNames(map<BundleName, BackupExtInfo> &backupExtNameMap)
-{
-    GTEST_LOG_(INFO) << "GetBundleExtNames";
 }
 
 bool SvcSessionManager::OnBunleFileReady(const string &bundleName, const string &fileName)
@@ -114,9 +110,10 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
     return wptr(it->second.backUpConnection);
 }
 
-void SvcSessionManager::InitExtConn(std::map<BundleName, BackupExtInfo> &backupExtNameMap)
+sptr<SvcBackupConnection> SvcSessionManager::GetBackupExtAbility(const string &bundleName)
 {
-    GTEST_LOG_(INFO) << "InitExtConn";
+    GTEST_LOG_(INFO) << "GetBackupExtAbility";
+    return nullptr;
 }
 
 void SvcSessionManager::DumpInfo(const int fd, const std::vector<std::u16string> &args)
@@ -194,8 +191,54 @@ void SvcSessionManager::SetServiceSchedAction(const string &bundleName, BConstan
 string SvcSessionManager::GetBackupExtName(const string &bundleName)
 {
     GTEST_LOG_(INFO) << "GetBackupExtName " << bundleName;
-    return "";
+    return "com.example.app2backup";
 }
 
+void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
+{
+    GTEST_LOG_(INFO) << "AppendBundles";
+    BackupExtInfo info {};
+    info.backupExtName = "com.example.app2backup";
+    impl_.backupExtNameMap.insert(make_pair("com.example.app2backup", info));
+}
+
+void SvcSessionManager::Start() {}
+
 void SvcSessionManager::Finish() {}
+
+bool SvcSessionManager::IsOnAllBundlesFinished()
+{
+    GTEST_LOG_(INFO) << "IsOnAllBundlesFinished";
+    g_nAllBundlesFinished++;
+    if (g_nAllBundlesFinished % FILE_NUM == SCHED_NUM) {
+        GTEST_LOG_(INFO) << "IsOnAllBundlesFinished is true";
+        return true;
+    }
+    GTEST_LOG_(INFO) << "IsOnAllBundlesFinished is false";
+    return false;
+}
+
+bool SvcSessionManager::IsOnOnStartSched()
+{
+    return true;
+}
+
+void SvcSessionManager::SetInstallState(const string &bundleName, const string &state) {}
+
+string SvcSessionManager::GetInstallState(const string &bundleName)
+{
+    return "OK";
+}
+
+void SvcSessionManager::SetNeedToInstall(const std::string &bundleName, bool needToInstall) {}
+
+bool SvcSessionManager::GetNeedToInstall(const std::string &bundleName)
+{
+    return false;
+}
+
+bool SvcSessionManager::NeedToUnloadService()
+{
+    return false;
+}
 } // namespace OHOS::FileManagement::Backup

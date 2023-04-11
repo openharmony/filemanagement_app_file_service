@@ -70,6 +70,16 @@ bool BundleMgrStub::GetBundleInfo(const string &bundleName, int32_t flags, Bundl
     return true;
 }
 
+bool BundleMgrStub::GetApplicationInfos(const ApplicationFlag flag, int userId, vector<ApplicationInfo> &appInfos)
+{
+    GTEST_LOG_(INFO) << "GetApplicationInfos is ok";
+    ApplicationInfo appInfo {};
+    appInfo.bundleName = "com.example.app2backup";
+    appInfo.versionName = "1.0.0";
+    appInfos.push_back(appInfo);
+    return true;
+}
+
 BundleMgrClient::BundleMgrClient() {}
 
 BundleMgrClient::~BundleMgrClient() {}

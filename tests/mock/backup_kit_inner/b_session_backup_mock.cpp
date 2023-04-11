@@ -34,9 +34,7 @@ static BSessionBackup::Callbacks callbacks_ = {};
 
 BSessionBackup::~BSessionBackup() {}
 
-unique_ptr<BSessionBackup> BSessionBackup::Init(UniqueFd remoteCap,
-                                                vector<BundleName> bundlesToBackup,
-                                                Callbacks callbacks)
+unique_ptr<BSessionBackup> BSessionBackup::Init(Callbacks callbacks)
 {
     try {
         callbacks_ = callbacks;
@@ -81,6 +79,17 @@ ErrCode BSessionBackup::Start()
     callbacks_.onFileReady(bFileInfo, move(fdFile));
 
     callbacks_.onBackupServiceDied();
+    return BError(BError::Codes::OK);
+}
+
+ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup)
+{
+    Start();
+    return BError(BError::Codes::OK);
+}
+
+ErrCode BSessionBackup::Finish()
+{
     return BError(BError::Codes::OK);
 }
 } // namespace OHOS::FileManagement::Backup
