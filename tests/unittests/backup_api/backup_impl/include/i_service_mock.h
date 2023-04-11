@@ -53,14 +53,12 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode InitRestoreSession(sptr<IServiceReverse> remote, const std::vector<BundleName> &bundleNames) override
+    ErrCode InitRestoreSession(sptr<IServiceReverse> remote) override
     {
         return BError(BError::Codes::OK);
     }
 
-    ErrCode InitBackupSession(sptr<IServiceReverse> remote,
-                              UniqueFd fd,
-                              const std::vector<BundleName> &bundleNames) override
+    ErrCode InitBackupSession(sptr<IServiceReverse> remote) override
     {
         return BError(BError::Codes::OK);
     }
@@ -90,7 +88,7 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode GetExtFileName(std::string &bundleName, std::string &fileName) override
+    ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override
     {
         return BError(BError::Codes::OK);
     }

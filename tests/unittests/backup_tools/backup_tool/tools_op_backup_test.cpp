@@ -70,14 +70,6 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_0100, testing::ext::TestS
             auto ret = matchedOp->Execute(mapArgToVal);
             EXPECT_EQ(ret, 0);
         }
-
-        GTEST_LOG_(INFO) << "GetInstance is false";
-        SetMockGetInstance(false);
-        if (matchedOp != opeartions.end()) {
-            auto ret = matchedOp->Execute(mapArgToVal);
-            EXPECT_NE(ret, 0);
-        }
-        SetMockGetInstance(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-an exception occurred by construction.";

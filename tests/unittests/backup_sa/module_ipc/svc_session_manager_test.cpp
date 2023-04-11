@@ -72,19 +72,12 @@ void SvcSessionManagerTest::Init(IServiceReverse::Scenario scenario)
     vector<string> bundleNames;
     map<string, BackupExtInfo> backupExtNameMap;
     bundleNames.emplace_back(BUNDLE_NAME);
-    auto setBackupExtNameMap = [](const string &bundleName) {
-        BackupExtInfo info {};
-        info.backupExtName = BUNDLE_NAME;
-        info.receExtManageJson = false;
-        info.receExtAppDone = false;
-        return make_pair(bundleName, info);
-    };
-    transform(bundleNames.begin(), bundleNames.end(), inserter(backupExtNameMap, backupExtNameMap.end()),
-              setBackupExtNameMap);
-    sessionManagerPtr_->Active({.clientToken = CLIENT_TOKEN_ID,
-                                .scenario = scenario,
-                                .backupExtNameMap = move(backupExtNameMap),
-                                .clientProxy = remote_});
+    sessionManagerPtr_->Active(
+        {.clientToken = CLIENT_TOKEN_ID, .scenario = scenario, .backupExtNameMap = {}, .clientProxy = remote_});
+    sessionManagerPtr_->IsOnAllBundlesFinished();
+    sessionManagerPtr_->AppendBundles(bundleNames);
+    sessionManagerPtr_->Finish();
+    sessionManagerPtr_->IsOnAllBundlesFinished();
 }
 
 /**

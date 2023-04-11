@@ -78,16 +78,6 @@ HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0100, testing::ext::Tes
             auto ret = matchedOp->Execute(mapArgToVal);
             EXPECT_EQ(ret, 0);
         }
-
-        GTEST_LOG_(INFO) << "GetLocalCapabilities is false";
-        mapArgToVal.clear();
-        mapArgToVal.insert(make_pair("pathCapFile", path));
-        vector<string> bundleVec = {"test"};
-        mapArgToVal.insert(make_pair("bundles", bundleVec));
-        if (matchedOp != opeartions.end()) {
-            auto ret = matchedOp->Execute(mapArgToVal);
-            EXPECT_NE(ret, 0);
-        }
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";

@@ -45,6 +45,11 @@ backup_mock_session_manager_src =
     [ "$path_backup_mock/module_ipc/svc_session_manager_mock.cpp" ]
 backup_mock_scheduler_src =
     [ "$path_backup_mock/module_sched/sched_scheduler_mock.cpp" ]
+backup_mock_module_external_src = [
+  "$path_backup_mock/module_external/bms_adapter_mock.cpp",
+  "$path_backup_mock/module_external/inner_receiver_impl_mock.cpp",
+  "$path_backup_mock/module_external/sms_adapter_mock.cpp",
+]
 backup_mock_service_src = [ "$path_backup_mock/module_ipc/service_mock.cpp" ]
 backup_mock_utils_include = [ "$path_backup_mock/utils_mock/include" ]
 backup_mock_proxy_src = [

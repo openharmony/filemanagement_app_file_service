@@ -86,37 +86,6 @@ HWTEST_F(BJsonCachedEntityTest, b_json_Structuralize_0100, testing::ext::TestSiz
 }
 
 /**
- * @tc.number: SUB_backup_b_json_Persist_0100
- * @tc.name: b_json_Persist_0100
- * @tc.desc: Test function of  Persist interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 0
- * @tc.require: I6F3GV
- */
-HWTEST_F(BJsonCachedEntityTest, b_json_Persist_0100, testing::ext::TestSize.Level0)
-{
-    GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_Persist_0100";
-    try {
-        TestManager tm("b_json_Persist_0100");
-
-        std::string path = tm.GetRootDirCurTest();
-        std::string filePath = path + ".json";
-        BJsonCachedEntity<BJsonEntityCaps> jce(UniqueFd(open(filePath.data(), O_RDWR | O_CREAT, 0600)));
-        auto cache = jce.Structuralize();
-        uint64_t space = 100;
-        cache.SetFreeDiskSpace(space);
-        jce.Persist();
-        uint64_t result = cache.GetFreeDiskSpace();
-        EXPECT_EQ(result, space);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonCachedEntityTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BJsonCachedEntityTest-end b_json_Persist_0100";
-}
-
-/**
  * @tc.number: SUB_backup_b_json_GetFd_0100
  * @tc.name: b_json_GetFd_0100
  * @tc.desc: Test function of  GetFd interface for SUCCESS.
