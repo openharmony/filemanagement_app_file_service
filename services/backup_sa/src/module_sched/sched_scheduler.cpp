@@ -15,6 +15,7 @@
 
 #include "module_sched/sched_scheduler.h"
 
+#include <atomic>
 #include <cstdint>
 #include <cstdio>
 #include <tuple>
@@ -149,7 +150,7 @@ void SchedScheduler::InstallingState(const string &bundleName)
     }
 }
 
-void SchedScheduler::UnloadServiceTimer()
+void SchedScheduler::TryUnloadServiceTimer(bool force)
 {
     auto tryUnload = [sessionPtr {sessionPtr_}]() {
         auto ptr = sessionPtr.promote();
@@ -169,8 +170,27 @@ void SchedScheduler::UnloadServiceTimer()
             return;
         }
     };
-    int checkingIntervalInMs = 30000;
-    extTime_.Register(tryUnload, checkingIntervalInMs);
+
+    static atomic<uint32_t> timerEventId;
+    // When force is false, only one timer is allowed to be registered.
+    if (!force) {
+        if (timerEventId != 0) {
+            return;
+        }
+        constexpr int checkingIntervalInMs = 30000;
+        auto tmpTimerEventId = extTime_.Register(tryUnload, checkingIntervalInMs);
+        uint32_t tmp = 0;
+        if (timerEventId.compare_exchange_strong(tmp, tmpTimerEventId)) {
+            return;
+        }
+        extTime_.Unregister(tmpTimerEventId);
+    }
+
+    // When force is true, the timer is unregistered immediately and then try to unload the service.
+    if (auto tmp = timerEventId.exchange(0); tmp != 0) {
+        extTime_.Unregister(tmp);
+    }
+    tryUnload();
 }
 
 void SchedScheduler::InstallSuccess(const std::string &bundleName, const int32_t resultCode)

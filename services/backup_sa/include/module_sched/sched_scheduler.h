@@ -62,10 +62,16 @@ public:
      */
     void InstallSuccess(const std::string &bundleName, const int32_t resultCode);
 
+    /**
+     * @brief try unload service timer
+     *
+     */
+    void TryUnloadServiceTimer(bool force = false);
+
     void StartTimer()
     {
         extTime_.Setup();
-        UnloadServiceTimer();
+        TryUnloadServiceTimer();
     }
 
 public:
@@ -90,12 +96,6 @@ private:
      * @param bundleName
      */
     void InstallingState(const std::string &bundleName);
-
-    /**
-     * @brief unload service timer
-     *
-     */
-    void UnloadServiceTimer();
 
 private:
     mutable std::shared_mutex lock_;
