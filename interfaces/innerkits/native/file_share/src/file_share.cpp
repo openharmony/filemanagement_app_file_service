@@ -41,7 +41,7 @@ struct FileShareInfo {
     SHARE_FILE_TYPE type_;
 };
 
-static int32_t GetTargetInfo(int32_t tokenId, string &bundleName, string &currentUid)
+static int32_t GetTargetInfo(uint32_t tokenId, string &bundleName, string &currentUid)
 {
     Security::AccessToken::HapTokenInfo hapInfo;
     int32_t result = Security::AccessToken::AccessTokenKit::GetHapTokenInfo(tokenId, hapInfo);
@@ -99,7 +99,7 @@ static int32_t GetLowerPath(string &lowerPathHead, const string &lowerPathTail, 
     return 0;
 }
 
-static int32_t GetProviderPath(const string &uriStr, int32_t tokenId, FileShareInfo &info)
+static int32_t GetProviderPath(const string &uriStr, FileShareInfo &info)
 {
     Uri uri(uriStr);
     string pathInProvider = uri.GetPath();
@@ -107,7 +107,7 @@ static int32_t GetProviderPath(const string &uriStr, int32_t tokenId, FileShareI
     if (pos == string::npos) {
         return -EINVAL;
     }
-    
+
     size_t num = SANDBOX_PATH.size();
     string lowerPathTail = "", lowerPathHead = "";
     for (size_t i = 0; i < num; i++) {
@@ -120,18 +120,18 @@ static int32_t GetProviderPath(const string &uriStr, int32_t tokenId, FileShareI
             }
         }
     }
-    
+
     int32_t ret = GetLowerPath(lowerPathHead, lowerPathTail, info);
     if (ret != 0) {
         LOGE("Get lower path failed with %{public}d", ret);
         return ret;
     }
-    
+
     info.providerSandboxPath_ = pathInProvider;
     return 0;
 }
 
-static void GetSharePath(FileShareInfo &info, int32_t flag)
+static void GetSharePath(FileShareInfo &info, uint32_t flag)
 {
     string shareRPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH +info.targetBundleName_ +
                         SHARE_R_PATH + info.providerBundleName_ + info.providerSandboxPath_;
@@ -160,7 +160,7 @@ static int32_t GetShareFileType(FileShareInfo &info)
     return -ENOENT;
 }
 
-static int32_t GetFileShareInfo(const string &uri, int32_t tokenId, int32_t flag, FileShareInfo &info)
+static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t flag, FileShareInfo &info)
 {
     int32_t ret = 0;
     ret = GetTargetInfo(tokenId, info.targetBundleName_, info.currentUid_);
@@ -168,9 +168,9 @@ static int32_t GetFileShareInfo(const string &uri, int32_t tokenId, int32_t flag
         LOGE("Failed to get target info %{public}d", ret);
         return ret;
     }
-    
+
     GetProviderBundleName(uri, info.providerBundleName_);
-    ret = GetProviderPath(uri, tokenId, info);
+    ret = GetProviderPath(uri, info);
     if (ret != 0) {
         LOGE("Failed to get lower path %{public}d", ret);
         return ret;
@@ -240,7 +240,7 @@ static bool RemoveDir(const string& path)
         }
         delDirs.pop();
     }
-    
+
     return true;
 }
 
@@ -271,7 +271,7 @@ static int32_t PreparePreShareDir(FileShareInfo &info)
     return 0;
 }
 
-int32_t FileShare::CreateShareFile(const string &uri, int32_t tokenId, int32_t flag)
+int32_t FileShare::CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
 {
     FileShareInfo info;
     int32_t ret = GetFileShareInfo(uri, tokenId, flag, info);
@@ -334,7 +334,7 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
     }
 }
 
-int32_t FileShare::DeleteShareFile(int32_t tokenId, vector<string> sharePathList)
+int32_t FileShare::DeleteShareFile(uint32_t tokenId, vector<string> sharePathList)
 {
     string bundleName, currentUid;
     int32_t ret = GetTargetInfo(tokenId, bundleName, currentUid);
@@ -349,7 +349,7 @@ int32_t FileShare::DeleteShareFile(int32_t tokenId, vector<string> sharePathList
         LOGE("Delete dir failed with %{public}d", errno);
         return -errno;
     }
-    
+
     LOGI("Delete Share File Successfully!");
     return 0;
 }

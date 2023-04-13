@@ -49,7 +49,7 @@ static string GetBundleName()
 {
     int uid = -1;
     uid = IPCSkeleton::GetCallingUid();
-    
+
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         LOGE("GetBundleName: bundle mgr proxy is nullptr.");
