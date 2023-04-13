@@ -63,7 +63,7 @@ namespace {
         string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
 
         string bundleNameB = "com.ohos.systemui";
-        int32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
+        uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
 
         int32_t flag = 3;
         int32_t ret = FileShare::CreateShareFile(uri, tokenId, flag);
@@ -93,7 +93,7 @@ namespace {
         string uri = "file://" + bundleNameA + "/data/test/el2/base/files/test.txt";
 
         string bundleNameB = "com.ohos.systemui";
-        int32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
+        uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
 
         int32_t flag = 3;
         int32_t ret = FileShare::CreateShareFile(uri, tokenId, flag);
@@ -120,7 +120,7 @@ namespace {
         int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
         ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
         string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
-        int32_t tokenId = 100;
+        uint32_t tokenId = 100;
 
         int32_t flag = 3;
         int32_t ret = FileShare::CreateShareFile(uri, tokenId, flag);
@@ -149,7 +149,7 @@ namespace {
         string uri = "";
 
         string bundleNameB = "com.ohos.systemui";
-        int32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
+        uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
 
         int32_t flag = 3;
         int32_t ret = FileShare::CreateShareFile(uri, tokenId, flag);
@@ -178,7 +178,7 @@ namespace {
         string uri = "";
 
         string bundleNameB = "com.ohos.systemui";
-        int32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
+        uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
 
         int32_t flag = 4;
         int32_t ret = FileShare::CreateShareFile(uri, tokenId, flag);
@@ -201,7 +201,7 @@ namespace {
         uid = OHOS::IPCSkeleton::GetCallingUid();
 
         string bundleNameB = "com.ohos.systemui";
-        int32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
+        uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
         vector<string> sharePathList;
         string bundleNameA = "com.ohos.settingsdata";
         string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
@@ -222,7 +222,7 @@ namespace {
     HWTEST_F(FileShareTest, File_share_DeleteShareFile_0006, testing::ext::TestSize.Level1)
     {
         GTEST_LOG_(INFO) << "FileShareTest-begin File_share_DeleteShareFile_0006";
-        int32_t tokenId = 104;
+        uint32_t tokenId = 104;
         vector<string> sharePathList;
         string bundleNameA = "com.ohos.settingsdata";
         string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
