@@ -411,7 +411,7 @@ bool SvcSessionManager::IsOnAllBundlesFinished()
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
     auto iter = find_if(impl_.backupExtNameMap.begin(), impl_.backupExtNameMap.end(),
-                        [](auto &it) { return it.second.isBundleFinished == false; });
+                        [](const auto &it) { return it.second.isBundleFinished == false; });
     if (iter == impl_.backupExtNameMap.end() && impl_.isAppendFinish) {
         return true;
     }
@@ -482,7 +482,7 @@ bool SvcSessionManager::GetNeedToInstall(const std::string &bundleName)
 bool SvcSessionManager::NeedToUnloadService()
 {
     unique_lock<shared_mutex> lock(lock_);
-    if (!impl_.clientToken || !impl_.clientToken || !impl_.clientProxy || !impl_.backupExtNameMap.size()) {
+    if (!impl_.clientToken || !impl_.clientProxy || !impl_.backupExtNameMap.size()) {
         return true;
     }
     return false;
