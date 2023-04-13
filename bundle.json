@@ -75,8 +75,7 @@
             ],
             "test": [
                 "//foundation/filemanagement/app_file_service/test/fuzztest:fuzztest",
-                "//foundation/filemanagement/app_file_service/test/unittest:unittest",
-                "//foundation/filemanagement/app_file_service:tgt_backup_tests"
+                "//foundation/filemanagement/app_file_service/test/unittest:unittest"
             ]
         }
     }
