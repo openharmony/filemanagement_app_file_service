@@ -582,6 +582,7 @@ void Service::OnAllBundlesFinished(ErrCode errCode)
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->RestoreOnAllBundlesFinished(errCode);
         }
+        sched_->TryUnloadServiceTimer(true);
     }
 }
 
