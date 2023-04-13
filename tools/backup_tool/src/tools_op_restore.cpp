@@ -164,6 +164,7 @@ static void OnBundleStarted(shared_ptr<Session> ctx, ErrCode err, const BundleNa
     printf("BundleStarted errCode = %d, BundleName = %s\n", err, name.c_str());
     if (err != 0) {
         ctx->UpdateBundleFinishedCount();
+        ctx->isAllBundelsFinished.store(true);
         ctx->ClearBundleOfMap(name);
         ctx->TryNotify();
     }
@@ -235,28 +236,31 @@ static void RestoreApp(shared_ptr<Session> restore, vector<BundleName> &bundleNa
 static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleNames)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "Init");
+    if (access(pathCapFile.data(), F_OK) != 0) {
+        return -errno;
+    }
 
-    UniqueFd fd(open(pathCapFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU));
+    UniqueFd fd(open(pathCapFile.data(), O_RDWR, S_IRWXU));
     if (fd < 0) {
         fprintf(stderr, "Failed to open file error: %d %s\n", errno, strerror(errno));
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
         return -errno;
     }
-
-    BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
-    auto cache = cachedEntity.Structuralize();
-    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
-    for (auto name : bundleNames) {
-        string installPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + name + ".hap";
-        bool needToInstall = false;
-        if (access(installPath.data(), F_OK) == 0) {
-            needToInstall = true;
+    if (access(BConstants::BACKUP_TOOL_INSTALL_DIR.data(), F_OK) == 0) {
+        BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
+        auto cache = cachedEntity.Structuralize();
+        vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+        for (auto name : bundleNames) {
+            string installPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + name + ".hap";
+            if (access(installPath.data(), F_OK) == 0) {
+                bool needToInstall = true;
+                bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {.name = name, .needToInstall = needToInstall});
+            }
         }
-        bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {.name = name, .needToInstall = needToInstall});
+        cache.SetBundleInfos(bundleInfos);
+        cachedEntity.Persist();
+        fd = move(cachedEntity.GetFd());
     }
-    cache.SetBundleInfos(bundleInfos);
-    cachedEntity.Persist();
-
     auto ctx = make_shared<Session>();
     ctx->session_ = BSessionRestore::Init(
         BSessionRestore::Callbacks {.onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2),
@@ -265,14 +269,14 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
                                     .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
                                     .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
     if (ctx->session_ == nullptr) {
-        printf("Failed to init restore");
+        printf("Failed to init restore\n");
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
         return -EPERM;
     }
-    int ret = ctx->session_->AppendBundles(move(cachedEntity.GetFd()), bundleNames);
+    int ret = ctx->session_->AppendBundles(move(fd), bundleNames);
     if (ret != 0) {
-        printf("restore append bundles error: %d", ret);
-        throw BError(BError::Codes::TOOL_INVAL_ARG, "restore append bundles error");
+        printf("restore append bundles error: %d\n", ret);
+        return -ret;
     }
     ctx->SetBundleFinishedCount(bundleNames.size());
     RestoreApp(ctx, bundleNames);
