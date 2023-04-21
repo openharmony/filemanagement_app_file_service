@@ -93,9 +93,11 @@ HWTEST_F(BFileTest, b_file_SendFile_0100, testing::ext::TestSize.Level1)
         TestManager tm(__func__);
         const auto [filePath, content] = GetTestFile(tm);
         TestManager tmInFile("b_file_GetFd_0100");
-        string fileInPath = tmInFile.GetRootDirCurTest().append("1.tar");
-        BFile::SendFile(UniqueFd(open(filePath.data(), O_RDWR)),
-                        UniqueFd(open(fileInPath.data(), O_RDWR | O_CREAT, S_IRWXU)));
+        string fileOutPath = tmInFile.GetRootDirCurTest().append("1.tar");
+        BFile::SendFile(UniqueFd(open(fileOutPath.data(), O_RDWR)),
+                        UniqueFd(open(filePath.data(), O_RDWR | O_CREAT, S_IRWXU)));
+        string contentTmp = BFile::ReadFile(UniqueFd(open(fileOutPath.c_str(), O_RDONLY))).get();
+        EXPECT_EQ(contentTmp, content);
     } catch (const exception &e) {
         GTEST_LOG_(INFO) << "BFileTest-an exception occurred by SendFile.";
         e.what();

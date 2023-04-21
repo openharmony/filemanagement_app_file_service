@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 
+#include <condition_variable>
 #include <cstdio>
+
 #include <gtest/gtest.h>
 
 #include "iservice_registry.h"
@@ -25,6 +27,8 @@ using namespace std;
 using namespace testing;
 
 const string FILE_NAME = "temp.json";
+static condition_variable g_cv;
+static atomic<bool> g_serviceDie = false;
 
 class SvcDeathRecipientTest : public testing::Test {
 public:
@@ -32,10 +36,15 @@ public:
     static void TearDownTestCase() {};
     void SetUp() override {};
     void TearDown() override {};
+
+public:
+    mutex lock_;
 };
 
 static void CallBack(const wptr<IRemoteObject> &obj)
 {
+    g_serviceDie.store(true);
+    g_cv.notify_all();
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-CallBack success";
 }
 
@@ -57,6 +66,9 @@ HWTEST_F(SvcDeathRecipientTest, SUB_backup_sa_deathecipient_OnRemoteDied_0100, t
     deathRecipient->OnRemoteDied(remote);
     remote = nullptr;
     deathRecipient = nullptr;
+    unique_lock<mutex> lk(lock_);
+    g_cv.wait(lk, [&] { return true; });
+    ASSERT_TRUE(g_serviceDie);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_deathecipient_OnRemoteDied_0100";
 }
 } // namespace OHOS::FileManagement::Backup
