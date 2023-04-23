@@ -47,8 +47,28 @@ namespace ModuleFileShare {
         return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
     }
 
+    static string DealWithUriWithName(string str)
+    {
+        static uint32_t MEET_COUNT = 6;
+        uint32_t count = 0;
+        uint32_t index;
+        for (index = 0; index < str.length(); index++) {
+            if (str[index] == '/') {
+                count++;
+            }
+            if (count == MEET_COUNT) {
+                break;
+            }
+        }
+        if (count == MEET_COUNT) {
+            str = str.substr(0, index);
+        }
+        return str;
+    }
+
     static string GetIdFromUri(string uri)
     {
+        uri = DealWithUriWithName(uri);
         string rowNum = "";
         size_t pos = uri.rfind('/');
         if (pos != string::npos) {
