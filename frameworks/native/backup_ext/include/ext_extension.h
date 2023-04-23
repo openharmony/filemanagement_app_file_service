@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_BACKUP_BACKUP_EXT_EXTENSION_H
 #define OHOS_FILEMGMT_BACKUP_BACKUP_EXT_EXTENSION_H
 
+#include <shared_mutex>
 #include <string>
 #include <vector>
 
@@ -80,6 +81,7 @@ private:
     void AsyncTaskRestore();
 
 private:
+    std::shared_mutex lock_;
     std::shared_ptr<ExtBackupJs> extension_;
     std::vector<std::string> tars_;
     OHOS::ThreadPool threadPool_;
