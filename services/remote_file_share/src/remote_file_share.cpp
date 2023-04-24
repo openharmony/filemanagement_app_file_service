@@ -173,7 +173,7 @@ int RemoteFileShare::CreateSharePath(const int &fd, std::string &sharePath,
         LOGE("RemoteFileShare::CreateSharePath, invalid argument with %{public}d", EINVAL);
         return EINVAL;
     }
-    
+
     const std::string processName = GetProcessName();
     if (processName == "") {
         LOGE("RemoteFileShare::CreateSharePath, GetProcessName failed with %{public}d", errno);

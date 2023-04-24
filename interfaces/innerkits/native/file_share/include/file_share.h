@@ -67,8 +67,8 @@ const vector<string> LOWER_PATH = {
 class FileShare {
 public:
     FileShare() {}
-    static int32_t CreateShareFile(const string &uri, int32_t tokenId, int32_t flag);
-    static int32_t DeleteShareFile(int32_t tokenId, vector<string> sharePathList);
+    static int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag);
+    static int32_t DeleteShareFile(uint32_t tokenId, vector<string> sharePathList);
     ~FileShare() {}
 };
 } // namespace AppFileService
