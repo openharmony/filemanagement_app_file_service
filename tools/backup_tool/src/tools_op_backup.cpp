@@ -212,7 +212,7 @@ static void BackupToolDirSoftlinkToBackupDir()
     }
 }
 
-static int32_t InitPathCapFile(vector<string> bundleNames)
+static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleNames)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "InitPathCapFile");
     // SELinux backup_tool工具/data/文件夹下创建文件夹 SA服务因root用户的自定义标签无写入权限 此处调整为软链接形式
@@ -222,6 +222,19 @@ static int32_t InitPathCapFile(vector<string> bundleNames)
         mkdir((BConstants::BACKUP_TOOL_RECEIVE_DIR).data(), S_IRWXU) != 0) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
+
+    UniqueFd fdLocal(open(pathCapFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU));
+    if (fdLocal < 0) {
+        fprintf(stderr, "Failed to open file. error: %d %s\n", errno, strerror(errno));
+        return -EPERM;
+    }
+    auto proxy = ServiceProxy::GetInstance();
+    if (!proxy) {
+        fprintf(stderr, "Get an empty backup sa proxy\n");
+        return -EPERM;
+    }
+    BFile::SendFile(fdLocal, proxy->GetLocalCapabilities());
+
     auto ctx = make_shared<Session>();
     ctx->session_ = BSessionBackup::Init(
         BSessionBackup::Callbacks {.onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2),
@@ -230,13 +243,13 @@ static int32_t InitPathCapFile(vector<string> bundleNames)
                                    .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
                                    .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
     if (ctx->session_ == nullptr) {
-        printf("Failed to init backup");
+        printf("Failed to init backup\n");
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
         return -EPERM;
     }
     int ret = ctx->session_->AppendBundles(bundleNames);
     if (ret != 0) {
-        printf("backup append bundles error: %d", ret);
+        printf("backup append bundles error: %d\n", ret);
         throw BError(BError::Codes::TOOL_INVAL_ARG, "backup append bundles error");
     }
 
@@ -252,7 +265,7 @@ static int Exec(map<string, vector<string>> &mapArgToVal)
         mapArgToVal.find("isLocal") == mapArgToVal.end()) {
         return -EPERM;
     }
-    return InitPathCapFile(mapArgToVal["bundles"]);
+    return InitPathCapFile(*(mapArgToVal["pathCapFile"].begin()), mapArgToVal["bundles"]);
 }
 
 /**

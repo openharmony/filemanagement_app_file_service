@@ -19,6 +19,7 @@
 
 #include <gtest/gtest.h>
 
+#include "b_resources/b_constants.h"
 #include "tools_op.h"
 #include "utils_mock_global_variable.h"
 
@@ -48,16 +49,13 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_0100, testing::ext::TestS
         SetMockGetInstance(true);
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-info";
         map<string, vector<string>> mapArgToVal;
-        vector<string> path = {"/data/backup/tmp"};
+        string localCap = string(BConstants::SA_BUNDLE_BACKUP_TOOL_DIR.data()) + "/tmp";
+        vector<string> path = {localCap.data()};
         mapArgToVal.insert(make_pair("pathCapFile", path));
         vector<string> bundles = {"com.example.app2backup"};
         mapArgToVal.insert(make_pair("bundles", bundles));
         vector<string> local = {"true"};
         mapArgToVal.insert(make_pair("isLocal", local));
-
-        // 创建测试路径
-        string strPath = "/data/backup";
-        mkdir(strPath.data(), S_IRWXU);
 
         // 尝试匹配当前命令，成功后执行
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-backup";

@@ -54,7 +54,8 @@ HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0100, testing::ext::Tes
     try {
         GTEST_LOG_(INFO) << "ToolsOpRestoreTest-info";
         map<string, vector<string>> mapArgToVal;
-        vector<string> path = {"/data/backup/tmp"};
+        string localCap = string(BConstants::SA_BUNDLE_BACKUP_TOOL_DIR.data()) + "/tmp";
+        vector<string> path = {localCap.data()};
         mapArgToVal.insert(make_pair("pathCapFile", path));
         vector<string> bundles = {"com.example.app2backup"};
         mapArgToVal.insert(make_pair("bundles", bundles));
@@ -62,10 +63,14 @@ HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0100, testing::ext::Tes
         // 创建测试路径以及测试环境
         string cmdMkdir = string("mkdir -p ") + BConstants::BACKUP_TOOL_RECEIVE_DIR.data() + BUNDLE_NAME;
         system(cmdMkdir.c_str());
+        string cmdTool = string("mkdir -p ") + BConstants::SA_BUNDLE_BACKUP_TOOL_DIR.data();
+        system(cmdTool.c_str());
         string touchTar = string("touch ") + BConstants::BACKUP_TOOL_RECEIVE_DIR.data() + BUNDLE_NAME + FILE_NAME;
         system(touchTar.c_str());
         string touchManage = string("touch ") + BConstants::BACKUP_TOOL_RECEIVE_DIR.data() + BUNDLE_NAME + MANAGE_JSON;
         system(touchManage.c_str());
+        string touchTmp = string("touch ") + localCap;
+        system(touchTmp.c_str());
 
         // 尝试匹配当前命令，成功后执行
         GTEST_LOG_(INFO) << "ToolsOpRestoreTest-restore";
