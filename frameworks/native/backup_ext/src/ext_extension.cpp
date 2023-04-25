@@ -108,7 +108,7 @@ ErrCode BackupExtExtension::HandleClear()
         if (!ForceRemoveDirectory(restoreCache)) {
             HILOGI("Failed to delete the restore cache %{public}s", restoreCache.c_str());
         }
-
+        unique_lock<shared_mutex> lock(lock_);
         tars_.clear();
     } catch (const BError &e) {
         return e.GetCode();
@@ -193,10 +193,13 @@ ErrCode BackupExtExtension::PublishFile(const string &fileName)
 
         string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         string tarName = path + fileName;
-        if (find(tars_.begin(), tars_.end(), fileName) != tars_.end() || access(tarName.data(), F_OK) != 0) {
-            return BError(-EPERM);
+        {
+            unique_lock<shared_mutex> lock(lock_);
+            if (find(tars_.begin(), tars_.end(), fileName) != tars_.end() || access(tarName.data(), F_OK) != 0) {
+                return BError(-EPERM);
+            }
+            tars_.push_back(fileName);
         }
-        tars_.push_back(fileName);
 
         // 异步执行解压操作
         if (extension_->AllowToBackupRestore()) {
