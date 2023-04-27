@@ -127,7 +127,10 @@ public:
 
 public:
     explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
-    ~ExtBackupJs() override = default;
+    ~ExtBackupJs()
+    {
+        jsRuntime_.FreeNativeReference(std::move(jsObj_));
+    }
 
 private:
     std::tuple<ErrCode, NativeValue *> CallObjectMethod(std::string_view name,
