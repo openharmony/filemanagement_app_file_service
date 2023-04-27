@@ -30,6 +30,7 @@ path_samgr = "//foundation/systemabilitymgr/samgr"
 path_init = "//base/startup/init"
 path_filemgmt_libn = "//foundation/filemanagement/file_api/utils/filemgmt_libn"
 path_backup_mock = "//foundation/filemanagement/app_file_service/tests/mock"
+path_utils_system_safwk = "//utils/system/safwk"
 
 backup_mock_parcel_include_dirs = [ "$path_backup_mock/parcel/include" ]
 backup_mock_parcel_src = [ "$path_backup_mock/parcel/src/parcel.cpp" ]

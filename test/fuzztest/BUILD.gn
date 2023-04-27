@@ -17,6 +17,6 @@ group("fuzztest") {
 
   deps += [
     # deps file
-    "//foundation/filemanagement/app_file_service/test/fuzztest/remotefileshare_fuzzer:RemoteFileShareFuzzTest",
+    "remotefileshare_fuzzer:RemoteFileShareFuzzTest",
   ]
 }

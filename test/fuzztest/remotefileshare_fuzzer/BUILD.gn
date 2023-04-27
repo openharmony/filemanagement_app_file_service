@@ -19,7 +19,6 @@ import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 ##############################fuzztest##########################################
 ohos_fuzztest("RemoteFileShareFuzzTest") {
   module_out_path = "filemanagement/app_file_service"
-  fuzz_config_file = "//foundation/filemanagement/app_file_service/test/fuzztest/remotefileshare_fuzzer"
   include_dirs = []
   cflags = [
     "-g",
