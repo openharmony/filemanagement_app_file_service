@@ -17,6 +17,7 @@
             "SystemCapability.FileManagement.AppFileService",
             "SystemCapability.FileManagement.StorageService.Backup"
         ],
+        "deps": {},
         "adapted_system_type": [
             "standard"
         ],
@@ -42,19 +43,19 @@
                 {
                     "name": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native/file_share:fileshare_native",
                     "header": {
-                      "header_files": [
-                        "file_share.h"
-                      ],
-                      "header_base": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native/file_share/include"
+                        "header_files": [
+                            "file_share.h"
+                        ],
+                        "header_base": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native/file_share/include"
                     }
                 },
                 {
                     "name": "//foundation/filemanagement/app_file_service/interfaces/innerkits/remote_file_share/native:remote_file_share_native",
                     "header": {
-                      "header_files": [
-                        "remote_file_share.h"
-                      ],
-                      "header_base": "//foundation/filemanagement/app_file_service/interfaces/innerkits/remote_file_share/native"
+                        "header_files": [
+                            "remote_file_share.h"
+                        ],
+                        "header_base": "//foundation/filemanagement/app_file_service/interfaces/innerkits/remote_file_share/native"
                     }
                 },
                 {
