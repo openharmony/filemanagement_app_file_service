@@ -12,12 +12,12 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/filemanagement/app_file_service/backup.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 config("remote_file_share_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "${path_utils_system_safwk}/native/include",
+    "${utils_system_safwk_path}/native/include",
     "${path_base}/include",
     ".",
   ]

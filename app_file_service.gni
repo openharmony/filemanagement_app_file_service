@@ -12,3 +12,4 @@
 # limitations under the License.
 
 third_party_path = "//third_party"
+utils_system_safwk_path = "//utils/system/safwk"
