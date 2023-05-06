@@ -17,7 +17,7 @@ import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ohos_shared_library("remotefileshare") {
   include_dirs = [
-    "//foundation/arkui/napi/interfaces/kits",
+    "${path_napi}/interfaces/kits",
     "//third_party/bounds_checking_function/include",
   ]
 
@@ -38,13 +38,13 @@ ohos_shared_library("remotefileshare") {
 
 ohos_shared_library("fileshare") {
   include_dirs = [
-    "//foundation/filemanagement/app_file_service/interfaces/kits/js",
-    "//foundation/filemanagement/app_file_service/interfaces/kits/js/common",
+    ".",
+    "common",
   ]
 
   sources = [
-    "//foundation/filemanagement/app_file_service/interfaces/kits/js/file_share/fileshare_n_exporter.cpp",
-    "//foundation/filemanagement/app_file_service/interfaces/kits/js/file_share/grant_uri_permission.cpp",
+    "file_share/fileshare_n_exporter.cpp",
+    "file_share/grant_uri_permission.cpp",
   ]
 
   external_deps = [
@@ -70,13 +70,13 @@ ohos_shared_library("fileshare") {
 
 ohos_shared_library("fileuri") {
   include_dirs = [
-    "//foundation/filemanagement/app_file_service/interfaces/kits/js",
-    "//foundation/filemanagement/app_file_service/interfaces/kits/js/common",
+    ".",
+    "common",
   ]
 
   sources = [
-    "//foundation/filemanagement/app_file_service/interfaces/kits/js/file_uri/file_uri_n_exporter.cpp",
-    "//foundation/filemanagement/app_file_service/interfaces/kits/js/file_uri/get_uri_from_path.cpp",
+    "file_uri/file_uri_n_exporter.cpp",
+    "file_uri/get_uri_from_path.cpp",
   ]
 
   external_deps = [

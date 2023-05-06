@@ -12,10 +12,12 @@
 # limitations under the License.
 
 import("//build/test.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 
 ohos_unittest("remote_file_share_test") {
   module_out_path = "filemanagement/app_file_service"
-
+  fuzz_config_file =
+      "${app_file_service_path}/test/fuzztest/remotefileshare_fuzzer"
   resource_config_file = "../resource/ohos_test.xml"
 
   sources = [ "remote_file_share_test.cpp" ]
@@ -23,8 +25,8 @@ ohos_unittest("remote_file_share_test") {
   include_dirs = [
     "include",
     "../../../interfaces/innerkits/remote_file_share/native",
-    "//utils/system/safwk/native/include",
-    "//commonlibrary/c_utils/base/include",
+    "${utils_system_safwk_path}/native/include",
+    "${path_base}/include",
   ]
 
   deps = [
