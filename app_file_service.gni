@@ -16,3 +16,5 @@ utils_system_safwk_path = "//utils/system/safwk"
 path_base = "//commonlibrary/c_utils/base"
 path_napi = "//foundation/arkui/napi"
 app_file_service_path = "//foundation/filemanagement/app_file_service"
+app_file_service_fuzztest =
+    "//foundation/filemanagement/app_file_service/test/fuzztest"
