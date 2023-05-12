@@ -103,13 +103,9 @@ static int32_t GetProviderPath(const string &uriStr, FileShareInfo &info)
 {
     Uri uri(uriStr);
     string pathInProvider = uri.GetPath();
-    string::size_type pos = pathInProvider.find(DATA_STORAGE_PATH);
-    if (pos == string::npos) {
-        return -EINVAL;
-    }
-
     size_t num = SANDBOX_PATH.size();
     string lowerPathTail = "", lowerPathHead = "";
+
     for (size_t i = 0; i < num; i++) {
         if (pathInProvider.length() >= SANDBOX_PATH[i].length()) {
             string sandboxPathTemp = pathInProvider.substr(0, SANDBOX_PATH[i].length());

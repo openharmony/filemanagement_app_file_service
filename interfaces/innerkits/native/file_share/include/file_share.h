@@ -48,7 +48,9 @@ const vector<string> SANDBOX_PATH = {
     "/data/storage/el2/database",
     "/data/storage/el1/base",
     "/data/storage/ark-cache",
-    "/data/storage/ark-profile"
+    "/data/storage/ark-profile",
+    "/data/storage/el2/distributedfiles",
+    "/data/fuse"
 };
 
 const vector<string> LOWER_PATH = {
@@ -58,7 +60,9 @@ const vector<string> LOWER_PATH = {
     "/data/app/el2/<currentUserId>/database/<PackageName>",
     "/data/app/el1/<currentUserId>/base/<PackageName>",
     "/data/local/ark-cache/<PackageName>",
-    "/data/local/ark-profile/<currentUserId>/<PackageName>"
+    "/data/local/ark-profile/<currentUserId>/<PackageName>",
+    "/mnt/hmdfs/<currentUserId>/account/merge_view/data/<PackageName>",
+    "/mnt/sandbox/<PackageName>/data/fuse"
 };
 }
 
