@@ -79,6 +79,20 @@ static bool IsExistFile(const string &path)
     return S_ISREG(buf.st_mode);
 }
 
+static string GetPidFromProcessName(const string &processName)
+{
+    FILE *fp;
+    const int32_t bufLen = 100;
+    char buf[bufLen] = {'\0'};
+    string cmd = CMD_GET_PID + processName;
+    if((fp = popen(cmd.c_str(), "r")) != NULL) {
+        if(fgets(buf, bufLen, fp) != NULL) {
+            return string(buf);
+        }
+    }
+    return "";
+}
+
 static int32_t GetLowerPath(string &lowerPathHead, const string &lowerPathTail, FileShareInfo &info)
 {
     if (lowerPathHead.empty()) {
@@ -93,6 +107,18 @@ static int32_t GetLowerPath(string &lowerPathHead, const string &lowerPathTail, 
     if (lowerPathHead.find(PACKAGE_NAME_FLAG) != string::npos) {
         lowerPathHead = lowerPathHead.replace(lowerPathHead.find(PACKAGE_NAME_FLAG),
                                               PACKAGE_NAME_FLAG.length(), info.providerBundleName_);
+    }
+
+    if (info.providerBundleName_ == DLP_MANAGER_BUNDLE_NAME) {
+        string pid = GetPidFromProcessName(DLP_MANAGER_BUNDLE_NAME);
+        if (pid.empty()) {
+            LOGE("Failed to get id from process name");
+            return -EINVAL;
+        }
+        if (lowerPathHead.find(PID_FLAG) != string::npos) {
+            lowerPathHead = lowerPathHead.replace(lowerPathHead.find(PID_FLAG),
+                                                  PID_FLAG.length(), pid);
+        }
     }
 
     info.providerLowerPath_ = lowerPathHead + lowerPathTail;
