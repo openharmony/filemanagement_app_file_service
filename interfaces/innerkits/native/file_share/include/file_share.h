@@ -33,13 +33,15 @@ enum SHARE_FILE_TYPE { DIR_TYPE = 0, FILE_TYPE };
 
 namespace {
 const string FILE_SCHEME = "file";
-const string DATA_STORAGE_PATH = "/data/storage/";
+const string CMD_GET_PID = "pidof "; 
+const string PID_FLAG = "<Pid>";
 const string PACKAGE_NAME_FLAG = "<PackageName>";
 const string CURRENT_USER_ID_FLAG = "<currentUserId>";
 const string DATA_APP_EL2_PATH = "/data/service/el2/";
 const string SHARE_R_PATH = "/r/";
 const string SHARE_RW_PATH = "/rw/";
 const string SHARE_PATH = "/share/";
+const string DLP_MANAGER_BUNDLE_NAME = "com.ohos.dlpmanager";
 
 const vector<string> SANDBOX_PATH = {
     "/data/storage/el1/bundle",
@@ -62,7 +64,7 @@ const vector<string> LOWER_PATH = {
     "/data/local/ark-cache/<PackageName>",
     "/data/local/ark-profile/<currentUserId>/<PackageName>",
     "/mnt/hmdfs/<currentUserId>/account/merge_view/data/<PackageName>",
-    "/mnt/sandbox/<PackageName>/data/fuse"
+    "/proc/<Pid>/root/data/fuse"
 };
 }
 
