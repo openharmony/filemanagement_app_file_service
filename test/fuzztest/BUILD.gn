@@ -11,14 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//foundation/filemanagement/app_file_service/app_file_service.gni")
-
 group("fuzztest") {
   testonly = true
   deps = []
 
   deps += [
     # deps file
-    "${app_file_service_fuzztest}/remotefileshare_fuzzer:RemoteFileShareFuzzTest",
+    "remotefileshare_fuzzer:RemoteFileShareFuzzTest",
   ]
 }
