@@ -16,52 +16,62 @@
 #ifndef OHOS_FILEMGMT_BACKUP_B_EXCEP_UTILES_H
 #define OHOS_FILEMGMT_BACKUP_B_EXCEP_UTILES_H
 
-#include "b_error/b_error.h"
-
 #include <exception>
 
+#include "b_error/b_error.h"
 #include "filemgmt_libhilog.h"
 
-namespace OHOS::FileManagement::Backup::BExcepUltils {
-/**
- * @brief 异常捕获
- *
- * @param callBack 回调
- * @return ErrCode 错误码
- */
-[[maybe_unused]] static ErrCode ExceptionCatcherLocked(std::function<ErrCode(void)> callBack)
-{
-    try {
-        return callBack();
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (const std::exception &e) {
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
-    } catch (...) {
-        HILOGE("Unexpected exception");
-        return EPERM;
-    }
-}
-
-/**
- * @brief 检查 AbilityInfo 是否有效
- *
- * @param AbilityInfo
- * @param code 错误码
- * @param msg 错误信息
- * @return 无
- */
-template <class T>
-[[maybe_unused]] static void BAssert(const T &t, const BError::Codes &code, const std::string_view msg = "")
-{
-    if (!t) {
-        if (msg.empty()) {
-            throw BError(code);
-        } else {
-            throw BError(code, msg);
+namespace OHOS::FileManagement::Backup {
+class BExcepUltils {
+public:
+    /**
+     * @brief 异常捕获
+     *
+     * @param callBack 回调
+     * @return ErrCode 错误码
+     */
+    static ErrCode ExceptionCatcherLocked(std::function<ErrCode(void)> callBack)
+    {
+        try {
+            return callBack();
+        } catch (const BError &e) {
+            return e.GetCode();
+        } catch (const std::exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            return EPERM;
+        } catch (...) {
+            HILOGE("Unexpected exception");
+            return EPERM;
         }
     }
-}
-} // namespace OHOS::FileManagement::Backup::BExcepUltils
+
+    /**
+     * @brief 检查 AbilityInfo 是否有效
+     *
+     * @param AbilityInfo
+     * @param code 错误码
+     * @param msg 错误信息
+     * @return 无
+     */
+    template <class T>
+    static void BAssert(const T &t, const BError::Codes &code, const std::string_view msg = "")
+    {
+        if (!t) {
+            if (msg.empty()) {
+                throw BError(code);
+            } else {
+                throw BError(code, msg);
+            }
+        }
+    }
+
+    /**
+     * @brief 校验路径
+     *
+     * @param path
+     * @param isExtension
+     */
+    static void VerifyPath(const std::string_view &path, bool isExtension = false);
+};
+} // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_B_EXCEP_UTILES_H

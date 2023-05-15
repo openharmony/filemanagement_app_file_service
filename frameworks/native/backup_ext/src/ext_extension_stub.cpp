@@ -24,7 +24,6 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
-using namespace BExcepUltils;
 
 ExtExtensionStub::ExtExtensionStub()
 {
@@ -52,7 +51,8 @@ int32_t ExtExtensionStub::OnRemoteRequest(uint32_t code,
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
 
-    return ExceptionCatcherLocked([&]() { return ErrCode((this->*(interfaceIndex->second))(data, reply)); });
+    return BExcepUltils::ExceptionCatcherLocked(
+        [&]() { return ErrCode((this->*(interfaceIndex->second))(data, reply)); });
 }
 
 ErrCode ExtExtensionStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)

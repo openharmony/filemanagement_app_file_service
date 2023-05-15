@@ -24,12 +24,11 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
-using namespace BExcepUltils;
 
 ErrCode ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
 {
     HILOGI("Begin");
-    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
@@ -55,7 +54,7 @@ ErrCode ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
 ErrCode ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
 {
     HILOGI("Begin");
-    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
@@ -81,7 +80,7 @@ ErrCode ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
 ErrCode ServiceProxy::Start()
 {
     HILOGI("Begin");
-    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
@@ -100,7 +99,7 @@ ErrCode ServiceProxy::Start()
 UniqueFd ServiceProxy::GetLocalCapabilities()
 {
     HILOGI("Begin");
-    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         HILOGE("Failed to write descriptor");
@@ -121,7 +120,7 @@ UniqueFd ServiceProxy::GetLocalCapabilities()
 ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
 {
     HILOGI("Begin");
-    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
@@ -145,7 +144,7 @@ ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
 ErrCode ServiceProxy::AppFileReady(const string &fileName, UniqueFd fd)
 {
     HILOGI("Begin");
-    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
@@ -171,7 +170,7 @@ ErrCode ServiceProxy::AppFileReady(const string &fileName, UniqueFd fd)
 ErrCode ServiceProxy::AppDone(ErrCode errCode)
 {
     HILOGI("Begin");
-    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
@@ -194,7 +193,7 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
 ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &fileName)
 {
     HILOGI("Begin");
-    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
@@ -221,7 +220,7 @@ ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &file
 ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames)
 {
     HILOGI("Begin");
-    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
@@ -247,7 +246,7 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<Bund
 ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
     HILOGI("Begin");
-    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
@@ -270,7 +269,7 @@ ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundl
 ErrCode ServiceProxy::Finish()
 {
     HILOGI("Begin");
-    BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
