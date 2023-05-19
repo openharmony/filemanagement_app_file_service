@@ -30,7 +30,6 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
-using namespace BExcepUltils;
 
 ServiceStub::ServiceStub()
 {
@@ -62,7 +61,8 @@ int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Message
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
 
-    return ExceptionCatcherLocked([&]() { return ErrCode((this->*(interfaceIndex->second))(data, reply)); });
+    return BExcepUltils::ExceptionCatcherLocked(
+        [&]() { return ErrCode((this->*(interfaceIndex->second))(data, reply)); });
 }
 
 int32_t ServiceStub::CmdInitRestoreSession(MessageParcel &data, MessageParcel &reply)

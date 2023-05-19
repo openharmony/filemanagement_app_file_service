@@ -31,6 +31,7 @@
 
 #include "accesstoken_kit.h"
 #include "b_error/b_error.h"
+#include "b_error/b_excep_utils.h"
 #include "b_filesystem/b_dir.h"
 #include "b_filesystem/b_file.h"
 #include "b_json/b_json_cached_entity.h"
@@ -194,6 +195,7 @@ ErrCode BackupExtExtension::PublishFile(const string &fileName)
         string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         string tarName = path + fileName;
         {
+            BExcepUltils::VerifyPath(tarName, true);
             unique_lock<shared_mutex> lock(lock_);
             if (find(tars_.begin(), tars_.end(), fileName) != tars_.end() || access(tarName.data(), F_OK) != 0) {
                 return BError(-EPERM);
