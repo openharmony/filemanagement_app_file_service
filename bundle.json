@@ -17,7 +17,28 @@
             "SystemCapability.FileManagement.AppFileService",
             "SystemCapability.FileManagement.StorageService.Backup"
         ],
-        "deps": {},
+        "deps": {
+            "components": [
+                "bundle_framework",
+                "hitrace_native",
+                "file_api",
+                "c_utils",
+                "ipc",
+                "init",
+                "bounds_checking_function",
+                "hiviewdfx_hilog_native",
+                "access_token",
+                "faultloggerd",
+                "common_event_service",
+                "ability_runtime",
+                "ability_base",
+                "storage_service",
+                "samgr",
+                "napi",
+                "safwk",
+                "data_share"
+            ]
+        },
         "adapted_system_type": [
             "standard"
         ],
