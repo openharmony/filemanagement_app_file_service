@@ -119,7 +119,7 @@ void SchedScheduler::RemoveExtConn(const string &bundleName)
     }
 }
 
-bool GetRealPath(string &path)
+static bool GetRealPath(string &path)
 {
     unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);
     if (realpath(path.c_str(), absPath.get()) == nullptr) {
