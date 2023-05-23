@@ -233,16 +233,25 @@ static void RestoreApp(shared_ptr<Session> restore, vector<BundleName> &bundleNa
     FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
 }
 
+static bool GetRealPath(string &path)
+{
+    unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);
+    if (realpath(path.c_str(), absPath.get()) == nullptr) {
+        return false;
+    }
+    path = absPath.get();
+    return true;
+}
+
 static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleNames)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "Init");
-    char tmpPath[PATH_MAX] = {0};
-    if (realpath(pathCapFile.c_str(), tmpPath) == nullptr) {
+    string realPath = pathCapFile;
+    if (!GetRealPath(realPath)) {
         fprintf(stderr, "path to realpath error");
         return -errno;
     }
 
-    string realPath = tmpPath;
     if (access(realPath.data(), F_OK) != 0) {
         return -errno;
     }
