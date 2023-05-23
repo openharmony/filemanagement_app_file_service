@@ -116,6 +116,7 @@ static int32_t GetLowerPath(string &lowerPathHead, const string &lowerPathTail, 
             return -EINVAL;
         }
         if (lowerPathHead.find(PID_FLAG) != string::npos) {
+            pid.erase(pid.size() - 1);
             lowerPathHead = lowerPathHead.replace(lowerPathHead.find(PID_FLAG),
                                                   PID_FLAG.length(), pid);
         }
@@ -230,50 +231,6 @@ static bool MakeDir(const string &path)
     return true;
 }
 
-static bool RemoveDir(const string& path)
-{
-    stack<string> dirs, delDirs;
-    dirs.push(path);
-    while (dirs.size() > 0) {
-        string curPath = dirs.top();
-        dirs.pop();
-        DIR *curDir = opendir(curPath.c_str());
-        struct dirent *ptr = readdir(curDir);
-        while (ptr != nullptr) {
-            string subPath = curPath + "/" + string(ptr->d_name);
-            if (ptr->d_type == DT_DIR && strcmp(ptr->d_name, ".") != 0 &&
-                strcmp(ptr->d_name, "..") != 0) {
-                dirs.push(subPath);
-                delDirs.push(subPath);
-            } else if (ptr->d_type != DT_DIR && remove(subPath.c_str()) != 0) {
-                umount2(subPath.c_str(), MNT_DETACH);
-                remove(subPath.c_str());
-                LOGE("Failed to remove dir with %{public}d", errno);
-            }
-            ptr = readdir(curDir);
-        }
-        closedir(curDir);
-    }
-
-    while (delDirs.size() > 0) {
-        string curPath = delDirs.top();
-        if (remove(curPath.c_str()) != 0) {
-            LOGE("Failed to remove dir with %{public}d", errno);
-        }
-        delDirs.pop();
-    }
-
-    return true;
-}
-
-static bool DeleteDir(const string &path)
-{
-    if (IsExistDir(path)) {
-        return RemoveDir(path);
-    }
-    return false;
-}
-
 static int32_t PreparePreShareDir(FileShareInfo &info)
 {
     for (size_t i = 0; i < info.sharePath_.size(); i++) {
@@ -347,11 +304,13 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
             if (umount2(delRPath.c_str(), MNT_DETACH) != 0) {
                 LOGE("UmountdelRPath, umount failed with %{public}d", errno);
             }
+            remove(delRPath.c_str());
         }
         if (access(delRWPath.c_str(), F_OK) == 0) {
             if (umount2(delRWPath.c_str(), MNT_DETACH) != 0) {
                 LOGE("UmountdelRWPath, umount failed with %{public}d", errno);
             }
+            remove(delRWPath.c_str());
         }
     }
 }
@@ -365,12 +324,6 @@ int32_t DeleteShareFile(uint32_t tokenId, vector<string> sharePathList)
         return -EINVAL;
     }
     UmountDelUris(sharePathList, currentUid, bundleName);
-
-    string sharePath = DATA_APP_EL2_PATH + currentUid + SHARE_PATH + bundleName;
-    if ((access(sharePath.c_str(), F_OK) == 0) && !DeleteDir(sharePath)) {
-        LOGE("Delete dir failed with %{public}d", errno);
-        return -errno;
-    }
 
     LOGI("Delete Share File Successfully!");
     return 0;
