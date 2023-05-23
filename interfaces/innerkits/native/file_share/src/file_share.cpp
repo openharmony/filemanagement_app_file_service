@@ -85,8 +85,8 @@ static string GetPidFromProcessName(const string &processName)
     const int32_t bufLen = 100;
     char buf[bufLen] = {'\0'};
     string cmd = CMD_GET_PID + processName;
-    if((fp = popen(cmd.c_str(), "r")) != NULL) {
-        if(fgets(buf, bufLen, fp) != NULL) {
+    if ((fp = popen(cmd.c_str(), "r")) != NULL) {
+        if (fgets(buf, bufLen, fp) != NULL) {
             return string(buf);
         }
     }

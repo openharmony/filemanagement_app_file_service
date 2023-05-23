@@ -254,6 +254,27 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
     }
 }
 
+static std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> ParseFileMeta(napi_env env,
+    const NVal &fileMeta)
+{
+    bool succ = false;
+    std::unique_ptr<char[]> bundleName = nullptr;
+    tie(succ, bundleName, ignore) = fileMeta.GetProp("bundleName").ToUTF8String();
+    if (!succ) {
+        HILOGE("First argument is not have property bundle name.");
+        return { false, nullptr, nullptr };
+    }
+
+    std::unique_ptr<char[]> fileName = nullptr;
+    tie(succ, fileName, ignore) = fileMeta.GetProp("uri").ToUTF8String();
+    if (!succ) {
+        HILOGE("First argument is not have property file name.");
+        return { false, nullptr, nullptr };
+    }
+
+    return { true, move(bundleName), move(fileName) };
+}
+
 napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info cbinfo)
 {
     HILOGI("called SessionRestore::PublishFile begin");
@@ -271,17 +292,9 @@ napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info
         return nullptr;
     }
 
-    auto [succ, bundleName, size] = fileMeta.GetProp("bundleName").ToUTF8String();
+    auto [succ, bundleName, fileName] = ParseFileMeta(env, fileMeta);
     if (!succ) {
-        HILOGE("First argument is not have property bundle name.");
-        NError(EINVAL).ThrowErr(env);
-        return nullptr;
-    }
-
-    std::unique_ptr<char[]> fileName = nullptr;
-    tie(succ, fileName, ignore) = fileMeta.GetProp("uri").ToUTF8String();
-    if (!succ) {
-        HILOGE("First argument is not have property file name.");
+        HILOGE("ParseFileMeta failed.");
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
@@ -333,17 +346,9 @@ napi_value SessionRestoreNExporter::GetFileHandle(napi_env env, napi_callback_in
         return nullptr;
     }
 
-    auto [succ, bundleName, ignore] = fileMeta.GetProp("bundleName").ToUTF8String();
+    auto [succ, bundleName, fileName] = ParseFileMeta(env, fileMeta);
     if (!succ) {
-        HILOGE("First argument is not have property bundle name.");
-        NError(EINVAL).ThrowErr(env);
-        return nullptr;
-    }
-
-    std::unique_ptr<char[]> fileName = nullptr;
-    tie(succ, fileName, ignore) = fileMeta.GetProp("uri").ToUTF8String();
-    if (!succ) {
-        HILOGE("First argument is not have property file name.");
+        HILOGE("ParseFileMeta failed.");
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }

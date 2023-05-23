@@ -33,7 +33,7 @@ enum SHARE_FILE_TYPE { DIR_TYPE = 0, FILE_TYPE };
 
 namespace {
 const string FILE_SCHEME = "file";
-const string CMD_GET_PID = "pidof "; 
+const string CMD_GET_PID = "pidof ";
 const string PID_FLAG = "<Pid>";
 const string PACKAGE_NAME_FLAG = "<PackageName>";
 const string CURRENT_USER_ID_FLAG = "<currentUserId>";
