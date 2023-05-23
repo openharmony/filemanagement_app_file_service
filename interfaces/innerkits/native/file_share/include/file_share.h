@@ -68,13 +68,18 @@ const vector<string> LOWER_PATH = {
 };
 }
 
-class FileShare {
-public:
-    FileShare() {}
-    static int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag);
-    static int32_t DeleteShareFile(uint32_t tokenId, vector<string> sharePathList);
-    ~FileShare() {}
-};
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif /* End of #ifdef __cplusplus */
+    int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag);
+    int32_t DeleteShareFile(uint32_t tokenId, vector<string> sharePathList);
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif /* End of #ifdef __cplusplus */
 } // namespace AppFileService
 } // namespace OHOS
 

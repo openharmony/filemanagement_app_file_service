@@ -66,7 +66,7 @@ namespace {
         uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
 
         int32_t flag = 3;
-        int32_t ret = FileShare::CreateShareFile(uri, tokenId, flag);
+        int32_t ret = CreateShareFile(uri, tokenId, flag);
         EXPECT_EQ(ret, E_OK);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0000";
     }
@@ -96,7 +96,7 @@ namespace {
         uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
 
         int32_t flag = 3;
-        int32_t ret = FileShare::CreateShareFile(uri, tokenId, flag);
+        int32_t ret = CreateShareFile(uri, tokenId, flag);
         EXPECT_EQ(ret, -EINVAL);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0001";
     }
@@ -123,7 +123,7 @@ namespace {
         uint32_t tokenId = 100;
 
         int32_t flag = 3;
-        int32_t ret = FileShare::CreateShareFile(uri, tokenId, flag);
+        int32_t ret = CreateShareFile(uri, tokenId, flag);
         EXPECT_EQ(ret, E_INVALID_ARGUMENT);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0002";
     }
@@ -152,7 +152,7 @@ namespace {
         uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
 
         int32_t flag = 3;
-        int32_t ret = FileShare::CreateShareFile(uri, tokenId, flag);
+        int32_t ret = CreateShareFile(uri, tokenId, flag);
         EXPECT_EQ(ret, -EINVAL);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0003";
     }
@@ -181,7 +181,7 @@ namespace {
         uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
 
         int32_t flag = 4;
-        int32_t ret = FileShare::CreateShareFile(uri, tokenId, flag);
+        int32_t ret = CreateShareFile(uri, tokenId, flag);
         EXPECT_EQ(ret, -EINVAL);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0004";
     }
@@ -206,7 +206,7 @@ namespace {
         string bundleNameA = "com.ohos.settingsdata";
         string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
         sharePathList.push_back(uri);
-        int32_t ret = FileShare::DeleteShareFile(tokenId, sharePathList);
+        int32_t ret = DeleteShareFile(tokenId, sharePathList);
         EXPECT_EQ(ret, E_OK);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_DeleteShareFile_0005";
     }
@@ -227,7 +227,7 @@ namespace {
         string bundleNameA = "com.ohos.settingsdata";
         string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
         sharePathList.push_back(uri);
-        int32_t ret = FileShare::DeleteShareFile(tokenId, sharePathList);
+        int32_t ret = DeleteShareFile(tokenId, sharePathList);
         EXPECT_EQ(ret, -EINVAL);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_DeleteShareFile_0006";
     }

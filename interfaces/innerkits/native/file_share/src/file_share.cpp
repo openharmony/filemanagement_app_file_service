@@ -293,7 +293,7 @@ static int32_t PreparePreShareDir(FileShareInfo &info)
     return 0;
 }
 
-int32_t FileShare::CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
+int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
 {
     FileShareInfo info;
     int32_t ret = GetFileShareInfo(uri, tokenId, flag, info);
@@ -356,7 +356,7 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
     }
 }
 
-int32_t FileShare::DeleteShareFile(uint32_t tokenId, vector<string> sharePathList)
+int32_t DeleteShareFile(uint32_t tokenId, vector<string> sharePathList)
 {
     string bundleName, currentUid;
     int32_t ret = GetTargetInfo(tokenId, bundleName, currentUid);
