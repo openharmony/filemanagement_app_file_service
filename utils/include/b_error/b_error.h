@@ -30,8 +30,6 @@
 #include <system_error>
 #include <vector>
 
-#include "n_error.h"
-
 #if __has_builtin(__builtin_FILE) && __has_builtin(__builtin_LINE) && __has_builtin(__builtin_FUNCTION)
 #define DEFINE_SOURCE_LOCATION                                              \
     int lineNo = __builtin_LINE(), const char *fileName = __builtin_FILE(), \
@@ -81,6 +79,16 @@ public:
         EXT_BROKEN_FRAMEWORK = 0x5001,
         EXT_BROKEN_BACKUP_SA = 0x5002,
         EXT_BROKEN_IPC = 0x5003,
+    };
+
+    enum BackupErrorCode {
+        E_IPCSS = 13600001,
+        E_PERM = 13900001,
+        E_IO = 13900005,
+        E_NOMEM = 13900011,
+        E_INVAL = 13900020,
+        E_NOSPC = 13900025,
+        E_UKERR = 13900042,
     };
 
 public:
@@ -199,33 +207,30 @@ private:
 
     static inline const std::map<int, int> errCodeTable_ {
         {static_cast<int>(Codes::OK), static_cast<int>(Codes::OK)},
-        {static_cast<int>(Codes::UTILS_INVAL_JSON_ENTITY),
-         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_INVAL},
-        {static_cast<int>(Codes::UTILS_INVAL_FILE_HANDLE),
-         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_INVAL},
-        {static_cast<int>(Codes::UTILS_INVAL_TARBALL_ARG),
-         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR},
-        {static_cast<int>(Codes::UTILS_INVAL_PROCESS_ARG),
-         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR},
-        {static_cast<int>(Codes::UTILS_INTERRUPTED_PROCESS),
-         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR},
-        {static_cast<int>(Codes::TOOL_INVAL_ARG), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR},
-        {static_cast<int>(Codes::SA_INVAL_ARG), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_INVAL},
-        {static_cast<int>(Codes::SA_BROKEN_IPC),
-         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfStorageService::E_IPCSS},
-        {static_cast<int>(Codes::SA_REFUSED_ACT), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_PERM},
-        {static_cast<int>(Codes::SA_BROKEN_ROOT_DIR), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR},
-        {static_cast<int>(Codes::SDK_INVAL_ARG), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_INVAL},
-        {static_cast<int>(Codes::SDK_BROKEN_IPC),
-         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfStorageService::E_IPCSS},
-        {static_cast<int>(Codes::SDK_MIXED_SCENARIO), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_INVAL},
-        {static_cast<int>(Codes::EXT_INVAL_ARG), LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_INVAL},
-        {static_cast<int>(Codes::EXT_BROKEN_FRAMEWORK),
-         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR},
-        {static_cast<int>(Codes::EXT_BROKEN_BACKUP_SA),
-         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfStorageService::E_IPCSS},
-        {static_cast<int>(Codes::EXT_BROKEN_IPC),
-         LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfStorageService::E_IPCSS},
+        {static_cast<int>(Codes::UTILS_INVAL_JSON_ENTITY), BackupErrorCode::E_INVAL},
+        {static_cast<int>(Codes::UTILS_INVAL_FILE_HANDLE), BackupErrorCode::E_INVAL},
+        {static_cast<int>(Codes::UTILS_INVAL_TARBALL_ARG), BackupErrorCode::E_UKERR},
+        {static_cast<int>(Codes::UTILS_INVAL_PROCESS_ARG), BackupErrorCode::E_UKERR},
+        {static_cast<int>(Codes::UTILS_INTERRUPTED_PROCESS), BackupErrorCode::E_UKERR},
+        {static_cast<int>(Codes::TOOL_INVAL_ARG), BackupErrorCode::E_UKERR},
+        {static_cast<int>(Codes::SA_INVAL_ARG), BackupErrorCode::E_INVAL},
+        {static_cast<int>(Codes::SA_BROKEN_IPC), BackupErrorCode::E_IPCSS},
+        {static_cast<int>(Codes::SA_REFUSED_ACT), BackupErrorCode::E_PERM},
+        {static_cast<int>(Codes::SA_BROKEN_ROOT_DIR), BackupErrorCode::E_UKERR},
+        {static_cast<int>(Codes::SDK_INVAL_ARG), BackupErrorCode::E_INVAL},
+        {static_cast<int>(Codes::SDK_BROKEN_IPC), BackupErrorCode::E_IPCSS},
+        {static_cast<int>(Codes::SDK_MIXED_SCENARIO), BackupErrorCode::E_INVAL},
+        {static_cast<int>(Codes::EXT_INVAL_ARG), BackupErrorCode::E_INVAL},
+        {static_cast<int>(Codes::EXT_BROKEN_FRAMEWORK), BackupErrorCode::E_UKERR},
+        {static_cast<int>(Codes::EXT_BROKEN_BACKUP_SA), BackupErrorCode::E_IPCSS},
+        {static_cast<int>(Codes::EXT_BROKEN_IPC), BackupErrorCode::E_IPCSS},
+        {BackupErrorCode::E_IPCSS, BackupErrorCode::E_IPCSS},
+        {BackupErrorCode::E_INVAL, BackupErrorCode::E_INVAL},
+        {BackupErrorCode::E_UKERR, BackupErrorCode::E_UKERR},
+        {BackupErrorCode::E_PERM, BackupErrorCode::E_PERM},
+        {BackupErrorCode::E_NOMEM, BackupErrorCode::E_NOMEM},
+        {BackupErrorCode::E_NOSPC, BackupErrorCode::E_NOSPC},
+        {BackupErrorCode::E_IO, BackupErrorCode::E_IO},
     };
 
 private:
