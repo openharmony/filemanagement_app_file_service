@@ -119,6 +119,16 @@ void SchedScheduler::RemoveExtConn(const string &bundleName)
     }
 }
 
+static bool GetRealPath(string &path)
+{
+    unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);
+    if (realpath(path.c_str(), absPath.get()) == nullptr) {
+        return false;
+    }
+    path = absPath.get();
+    return true;
+}
+
 void SchedScheduler::InstallingState(const string &bundleName)
 {
     BConstants::ServiceSchedAction action = sessionPtr_->GetServiceSchedAction(bundleName);
@@ -131,6 +141,10 @@ void SchedScheduler::InstallingState(const string &bundleName)
         string state = sessionPtr_->GetInstallState(bundleName);
         string path = string(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR).append(bundleName);
         string filePath = path + "/bundle.hap";
+        if (!GetRealPath(filePath)) {
+            throw BError(BError::Codes::SA_INVAL_ARG, string("File path is invalid"));
+        }
+
         if (state == BConstants::RESTORE_INSTALL_PATH) {
             if (!ForceCreateDirectory(path)) {
                 throw BError(BError::Codes::SA_INVAL_ARG, string("Failed to create directory"));

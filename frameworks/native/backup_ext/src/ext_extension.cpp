@@ -307,6 +307,7 @@ int BackupExtExtension::HandleBackup(const BJsonEntityExtensionConfig &usrConfig
         ErrCode ret = ERR_OK;
         ret = IndexFileReady(bigFileInfo, proxy);
         ret = BigFileReady(proxy);
+        HILOGE("HandleBackup finish, ret = %{public}d", ret);
         return ret;
     } catch (const BError &e) {
         return e.GetCode();

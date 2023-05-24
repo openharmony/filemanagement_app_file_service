@@ -133,9 +133,8 @@ void Service::VerifyCaller()
         case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP: {
             auto multiuser = BMultiuser::ParseUid(IPCSkeleton::GetCallingUid());
             if ((multiuser.userId != BConstants::DEFAULT_USER_ID) && (multiuser.userId != BConstants::XTS_UID)) {
-                throw BError(BError::Codes::SA_INVAL_ARG, string("Calling user is ")
-                                                              .append(to_string(multiuser.userId))
-                                                              .append(", which is currently not supported"));
+                throw BError(BError::Codes::SA_INVAL_ARG, string("Calling user is ").append(
+                    to_string(multiuser.userId)).append(", which is currently not supported"));
             }
             const string permission = "ohos.permission.BACKUP";
             if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==

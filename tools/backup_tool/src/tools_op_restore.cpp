@@ -233,14 +233,30 @@ static void RestoreApp(shared_ptr<Session> restore, vector<BundleName> &bundleNa
     FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
 }
 
+static bool GetRealPath(string &path)
+{
+    unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);
+    if (realpath(path.c_str(), absPath.get()) == nullptr) {
+        return false;
+    }
+    path = absPath.get();
+    return true;
+}
+
 static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleNames)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "Init");
-    if (access(pathCapFile.data(), F_OK) != 0) {
+    string realPath = pathCapFile;
+    if (!GetRealPath(realPath)) {
+        fprintf(stderr, "path to realpath error");
         return -errno;
     }
 
-    UniqueFd fd(open(pathCapFile.data(), O_RDWR, S_IRWXU));
+    if (access(realPath.data(), F_OK) != 0) {
+        return -errno;
+    }
+
+    UniqueFd fd(open(realPath.data(), O_RDWR, S_IRWXU));
     if (fd < 0) {
         fprintf(stderr, "Failed to open file error: %d %s\n", errno, strerror(errno));
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
