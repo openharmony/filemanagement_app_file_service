@@ -141,18 +141,20 @@ void SchedScheduler::InstallingState(const string &bundleName)
         string state = sessionPtr_->GetInstallState(bundleName);
         string path = string(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR).append(bundleName);
         string filePath = path + "/bundle.hap";
-        if (!GetRealPath(filePath)) {
-            throw BError(BError::Codes::SA_INVAL_ARG, string("File path is invalid"));
-        }
 
         if (state == BConstants::RESTORE_INSTALL_PATH) {
             if (!ForceCreateDirectory(path)) {
                 throw BError(BError::Codes::SA_INVAL_ARG, string("Failed to create directory"));
             }
+            auto ret = GetRealPath(filePath);
+            HILOGE("ret = %{public}d", ret);
             sessionPtr_->GetServiceReverseProxy()->RestoreOnFileReady(
                 bundleName, state,
                 UniqueFd(open(filePath.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IROTH)));
         } else if (state == "OK") {
+            if (!GetRealPath(filePath)) {
+                throw BError(BError::Codes::SA_INVAL_ARG, string("File path is invalid"));
+            }
             if (access(filePath.data(), F_OK) != 0) {
                 throw BError(BError::Codes::SA_INVAL_ARG, string("File already exists"));
             }
