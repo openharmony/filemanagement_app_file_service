@@ -54,14 +54,10 @@ string BError::WrapMessageWithExtraInfos(const char *fileName,
 int BError::GetCode() const
 {
     int code = static_cast<int>(GetRawCode());
-    if (LibN::errCodeTable.find(code) != LibN::errCodeTable.end()) {
-        auto [err, msg] = LibN::errCodeTable.at(code);
-        return err;
-    }
     if (errCodeTable_.find(code) != errCodeTable_.end()) {
         return errCodeTable_.at(code);
     }
     HILOGE("Unknown code : %{public}d", code);
-    return LibN::FILEIO_SYS_CAP_TAG + LibN::ErrCodeSuffixOfFileIO::E_UKERR;
+    return BackupErrorCode::E_UKERR;
 }
 } // namespace OHOS::FileManagement::Backup

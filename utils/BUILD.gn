@@ -25,10 +25,6 @@ config("utils_public_config") {
   include_dirs = [
     "include",
     "${path_base}/include",
-    "${path_filemgmt_libn}/include",
-    "${path_napi}/interfaces/inner_api",
-    "${path_napi}/interfaces/kits",
-    "//third_party/node/src",
   ]
 }
 
