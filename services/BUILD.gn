@@ -19,7 +19,7 @@ group("backup_para_etc") {
 }
 
 ohos_sa_profile("backup_sa_profile") {
-  sources = [ "5203.xml" ]
+  sources = [ "5203.json" ]
   part_name = "app_file_service"
 }
 
