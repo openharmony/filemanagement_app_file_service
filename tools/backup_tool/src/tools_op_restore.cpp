@@ -239,11 +239,12 @@ static bool GetRealPath(string &path)
     if (realpath(path.c_str(), absPath.get()) == nullptr) {
         return false;
     }
-    path = absPath.get();
 
+    path = absPath.get();
     if (access(path.data(), F_OK) != 0) {
         return false;
     }
+
     return true;
 }
 
