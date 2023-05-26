@@ -239,7 +239,12 @@ static bool GetRealPath(string &path)
     if (realpath(path.c_str(), absPath.get()) == nullptr) {
         return false;
     }
+
     path = absPath.get();
+    if (access(path.data(), F_OK) != 0) {
+        return false;
+    }
+
     return true;
 }
 
@@ -249,10 +254,6 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
     string realPath = pathCapFile;
     if (!GetRealPath(realPath)) {
         fprintf(stderr, "path to realpath error");
-        return -errno;
-    }
-
-    if (access(realPath.data(), F_OK) != 0) {
         return -errno;
     }
 
