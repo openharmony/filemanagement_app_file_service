@@ -30,8 +30,8 @@ void BExcepUltils::VerifyPath(const string_view &path, bool isExtension)
         auto ret = canonicalize(path.data());
         string absPath = ret.c_str();
         if (isExtension &&
-            absPath.find(string(BConstants::PATH_BUNDLE_BACKUP_HOME)
-            .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)) == std::string::npos) {
+            !absPath.startswith(
+                string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE))) {
             throw BError(BError::Codes::EXT_INVAL_ARG, "Invalid path, not in backup restore path");
         }
     } catch (const rust::Error &e) {
