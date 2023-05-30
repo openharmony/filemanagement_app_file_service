@@ -82,15 +82,19 @@ static bool IsExistFile(const string &path)
 static string GetPidFromProcessName(const string &processName)
 {
     FILE *fp;
-    const int32_t bufLen = 100;
-    char buf[bufLen] = {'\0'};
     string cmd = CMD_GET_PID + processName;
+    string pid = "";
     if ((fp = popen(cmd.c_str(), "r")) != NULL) {
+        const int32_t bufLen = 20;
+        char buf[bufLen] = {'\0'};
         if (fgets(buf, bufLen, fp) != NULL) {
-            return string(buf);
+            pid = string(buf);
         }
+
+        pclose(fp);
+        fp = nullptr;
     }
-    return "";
+    return pid;
 }
 
 static int32_t GetLowerPath(string &lowerPathHead, const string &lowerPathTail, FileShareInfo &info)
