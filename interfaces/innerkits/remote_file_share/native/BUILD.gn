@@ -38,6 +38,7 @@ ohos_shared_library("remote_file_share_native") {
     "LOG_DOMAIN=0xD004312",
   ]
 
+  innerapi_tags = [ "platformsdk_indirect" ]
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
 }
