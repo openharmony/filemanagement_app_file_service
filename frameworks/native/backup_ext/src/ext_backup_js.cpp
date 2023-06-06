@@ -73,7 +73,8 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
 
         // 加载用户扩展 BackupExtensionAbility 到 JS 引擎，并将之暂存在 jsObj_ 中。注意，允许加载失败，往后执行默认逻辑
         AbilityRuntime::HandleScope handleScope(jsRuntime_);
-        jsObj_ = jsRuntime_.LoadModule(moduleName, modulePath, info.hapPath);
+        jsObj_ = jsRuntime_.LoadModule(moduleName, modulePath, info.hapPath,
+            abilityInfo_->compileMode == AbilityRuntime::CompileMode::ES_MODULE);
         if (jsObj_) {
             HILOGI("Wow! Here's a custsom BackupExtensionAbility");
         } else {
