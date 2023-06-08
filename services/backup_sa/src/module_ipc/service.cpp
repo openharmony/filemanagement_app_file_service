@@ -108,12 +108,6 @@ string Service::VerifyCallerAndGetCallerName()
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
     int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
     if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_HAP) {
-        const string permission = "ohos.permission.BACKUP";
-        int ret = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission);
-        if (ret == Security::AccessToken::TypePermissionState::PERMISSION_DENIED) {
-            throw BError(BError::Codes::SA_INVAL_ARG,
-                         string("Permission denied, token type is ").append(to_string(tokenType)));
-        }
         Security::AccessToken::HapTokenInfo hapTokenInfo;
         if (Security::AccessToken::AccessTokenKit::GetHapTokenInfo(tokenCaller, hapTokenInfo) != 0) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Get hap token info failed");
