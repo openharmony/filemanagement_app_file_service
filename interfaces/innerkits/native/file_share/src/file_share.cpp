@@ -41,6 +41,27 @@ struct FileShareInfo {
     SHARE_FILE_TYPE type_;
 };
 
+static void UpdateBundleNameForDlp(const string &providerPath, string &bundleName, const string &providerBundleName)
+{
+    if (providerBundleName == DLP_MANAGER_BUNDLE_NAME) {
+        size_t lastPos = providerPath.find_last_of("/");
+        if (lastPos == string::npos) {
+            return;
+        }
+        string subStr = providerPath.substr(lastPos);
+        size_t firstPos = subStr.find_first_of("_");
+        if (firstPos == string::npos) {
+            return;
+        }
+        subStr = subStr.substr(firstPos + 1);
+        size_t secondPos = subStr.find_first_of("_");
+        if (secondPos == string::npos) {
+            return;
+        }
+        bundleName += "_" + subStr.substr(0, secondPos);
+    }
+}
+
 static int32_t GetTargetInfo(uint32_t tokenId, string &bundleName, string &currentUid)
 {
     Security::AccessToken::HapTokenInfo hapInfo;
@@ -79,24 +100,6 @@ static bool IsExistFile(const string &path)
     return S_ISREG(buf.st_mode);
 }
 
-static string GetPidFromProcessName(const string &processName)
-{
-    FILE *fp;
-    string cmd = CMD_GET_PID + processName;
-    string pid = "";
-    if ((fp = popen(cmd.c_str(), "r")) != NULL) {
-        const int32_t bufLen = 20;
-        char buf[bufLen] = {'\0'};
-        if (fgets(buf, bufLen, fp) != NULL) {
-            pid = string(buf);
-        }
-
-        pclose(fp);
-        fp = nullptr;
-    }
-    return pid;
-}
-
 static int32_t GetLowerPath(string &lowerPathHead, const string &lowerPathTail, FileShareInfo &info)
 {
     if (lowerPathHead.empty()) {
@@ -113,19 +116,6 @@ static int32_t GetLowerPath(string &lowerPathHead, const string &lowerPathTail, 
                                               PACKAGE_NAME_FLAG.length(), info.providerBundleName_);
     }
 
-    if (info.providerBundleName_ == DLP_MANAGER_BUNDLE_NAME) {
-        string pid = GetPidFromProcessName(DLP_MANAGER_BUNDLE_NAME);
-        if (pid.empty()) {
-            LOGE("Failed to get id from process name");
-            return -EINVAL;
-        }
-        if (lowerPathHead.find(PID_FLAG) != string::npos) {
-            pid.erase(pid.size() - 1);
-            lowerPathHead = lowerPathHead.replace(lowerPathHead.find(PID_FLAG),
-                                                  PID_FLAG.length(), pid);
-        }
-    }
-
     info.providerLowerPath_ = lowerPathHead + lowerPathTail;
     return 0;
 }
@@ -134,6 +124,7 @@ static int32_t GetProviderPath(const string &uriStr, FileShareInfo &info)
 {
     Uri uri(uriStr);
     string pathInProvider = uri.GetPath();
+    UpdateBundleNameForDlp(pathInProvider, info.targetBundleName_, info.providerBundleName_);
     size_t num = SANDBOX_PATH.size();
     string lowerPathTail = "", lowerPathHead = "";
 
