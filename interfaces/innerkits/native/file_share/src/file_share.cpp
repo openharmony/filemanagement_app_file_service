@@ -226,8 +226,28 @@ static bool MakeDir(const string &path)
     return true;
 }
 
+static bool CheckValidPath(const string &filePath)
+{
+    if (filePath.size() >= PATH_MAX) {
+        return false;
+    }
+
+    char realPath[PATH_MAX]{'\0'};
+    if (realpath(filePath.c_str(), realPath) != nullptr &&
+        strncmp(realPath, filePath.c_str(), filePath.size()) == 0) {
+            return true;
+    } else {
+        return false;
+    }
+}
+
 static int32_t PreparePreShareDir(FileShareInfo &info)
 {
+    if (!CheckValidPath(info.providerLowerPath_)) {
+        LOGE("Invalid share path with %{private}s", info.providerLowerPath_.c_str());
+        return -EINVAL;
+    }
+
     for (size_t i = 0; i < info.sharePath_.size(); i++) {
         if (access(info.sharePath_[i].c_str(), F_OK) != 0) {
             string sharePathDir = info.sharePath_[i];
