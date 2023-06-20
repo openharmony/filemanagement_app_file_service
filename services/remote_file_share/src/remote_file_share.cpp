@@ -70,8 +70,8 @@ static std::string GetFileName(const int &fd)
         return "";
     }
 
-    ret = readlink(buf, filePath, PATH_MAX - 1);
-    if (ret < 0) {
+    ret = readlink(buf, filePath, PATH_MAX);
+    if (ret < 0 || ret >= PATH_MAX) {
         LOGE("RemoteFileShare::GetFileName, readlink failed with %{public}d", errno);
         return "";
     }
