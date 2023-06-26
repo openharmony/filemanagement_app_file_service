@@ -24,6 +24,7 @@ config("utils_private_config") {
 config("utils_public_config") {
   include_dirs = [
     "include",
+    "include/b_hilog",
     "${path_base}/include",
   ]
 }
@@ -79,8 +80,8 @@ ohos_shared_library("backup_utils") {
   external_deps = [ "faultloggerd:libdfx_dumpcatcher" ]
 
   public_deps = [
+    "${path_bas_hiviewdfx_hilog}/interfaces/native/innerkits:libhilog",
     "${path_base}:utils",
-    "${path_distributedfile}/utils/filemgmt_libhilog:filemgmt_libhilog",
     "${path_jsoncpp}:jsoncpp",
   ]
 

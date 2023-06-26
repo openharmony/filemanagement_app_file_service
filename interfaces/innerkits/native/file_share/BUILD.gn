@@ -32,7 +32,7 @@ ohos_shared_library("fileshare_native") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   part_name = "app_file_service"

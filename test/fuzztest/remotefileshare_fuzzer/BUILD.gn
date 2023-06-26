@@ -34,7 +34,7 @@ ohos_fuzztest("RemoteFileShareFuzzTest") {
 
   external_deps = [
     "file_api:filemgmt_libn",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   defines = [
