@@ -32,6 +32,7 @@ const string GRANT_URI_NAME = "file_share_grant_uri_permission";
 const string PERMISSION_BUNDLE_NAME = "bundle_name";
 const string PERMISSION_FILE_ID = "file_id";
 const string PERMISSION_MODE = "mode";
+const string PERMISSION_TABLE_TYPE = "table_type";
 
 class FileShareGrantToken : public IRemoteBroker {
 public:
