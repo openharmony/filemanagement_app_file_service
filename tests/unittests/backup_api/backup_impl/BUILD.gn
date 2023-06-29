@@ -56,13 +56,13 @@ ohos_unittest("backup_sa_impl_test") {
   include_dirs += backup_mock_utils_include
 
   deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
   ]
 
   external_deps = [
-    "app_file_service:backup_kit_inner",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]

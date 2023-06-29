@@ -58,7 +58,7 @@ ohos_shared_library("fileshare") {
     "data_share:datashare_consumer",
     "file_api:filemgmt_libn",
     "file_api:remote_uri_native",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
   ]
 
@@ -85,7 +85,7 @@ ohos_shared_library("fileuri") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "file_api:filemgmt_libn",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
@@ -112,11 +112,10 @@ ohos_shared_library("backup") {
   ]
 
   deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_file_api}/utils/filemgmt_libn:filemgmt_libn",
     "${path_napi}:ace_napi",
   ]
-
-  external_deps = [ "app_file_service:backup_kit_inner" ]
 
   public_deps = [ "${path_file_api}/utils/filemgmt_libhilog:filemgmt_libhilog" ]
 }

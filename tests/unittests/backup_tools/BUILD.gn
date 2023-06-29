@@ -44,7 +44,7 @@ ohos_unittest("backup_tool_test") {
 
   external_deps = [
     "c_utils:utils",
-    "hitrace_native:hitrace_meter",
+    "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
