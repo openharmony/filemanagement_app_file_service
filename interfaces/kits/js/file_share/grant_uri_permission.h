@@ -25,7 +25,8 @@ namespace ModuleFileShare {
 
 using namespace std;
 
-const string MEDIA_GRANT_URI_PERMISSION = "datashare:///media/file_operation/bundle_permission_insert_operation";
+const string MEDIA_GRANT_URI_PERMISSION =
+    "datashare:///media/bundle_permission_insert_operation/bundle_permission_insert_operation";
 const string MEDIALIBRARY_DATA_URI = "datashare:///media";
 const string MEDIA_FILEMODE_READONLY = "r";
 const string GRANT_URI_NAME = "file_share_grant_uri_permission";
