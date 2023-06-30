@@ -41,27 +41,6 @@ struct FileShareInfo {
     SHARE_FILE_TYPE type_;
 };
 
-static void UpdateBundleNameForDlp(const string &providerPath, string &bundleName, const string &providerBundleName)
-{
-    if (providerBundleName == DLP_MANAGER_BUNDLE_NAME) {
-        size_t lastPos = providerPath.find_last_of("/");
-        if (lastPos == string::npos) {
-            return;
-        }
-        string subStr = providerPath.substr(lastPos);
-        size_t firstPos = subStr.find_first_of("_");
-        if (firstPos == string::npos) {
-            return;
-        }
-        subStr = subStr.substr(firstPos + 1);
-        size_t secondPos = subStr.find_first_of("_");
-        if (secondPos == string::npos) {
-            return;
-        }
-        bundleName += "_" + subStr.substr(0, secondPos);
-    }
-}
-
 static int32_t GetTargetInfo(uint32_t tokenId, string &bundleName, string &currentUid)
 {
     Security::AccessToken::HapTokenInfo hapInfo;
@@ -72,6 +51,11 @@ static int32_t GetTargetInfo(uint32_t tokenId, string &bundleName, string &curre
     }
     bundleName = hapInfo.bundleName;
     currentUid = to_string(hapInfo.userID);
+
+    int index = hapInfo.instIndex;
+    if (index != 0) {
+        bundleName += "_" + to_string(index);
+    }
     return 0;
 }
 
@@ -124,7 +108,6 @@ static int32_t GetProviderPath(const string &uriStr, FileShareInfo &info)
 {
     Uri uri(uriStr);
     string pathInProvider = uri.GetPath();
-    UpdateBundleNameForDlp(pathInProvider, info.targetBundleName_, info.providerBundleName_);
     size_t num = SANDBOX_PATH.size();
     string lowerPathTail = "", lowerPathHead = "";
 
