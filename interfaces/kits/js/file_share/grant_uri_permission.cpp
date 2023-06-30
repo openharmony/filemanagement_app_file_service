@@ -137,10 +137,11 @@ namespace ModuleFileShare {
         }
 
         int32_t fileId = stoi(idStr);
+        int32_t filesType = 0;
         valuesBucket.Put(PERMISSION_FILE_ID, fileId);
         valuesBucket.Put(PERMISSION_BUNDLE_NAME, string(bundleName.get()));
         valuesBucket.Put(PERMISSION_MODE, mode);
-
+        valuesBucket.Put(PERMISSION_TABLE_TYPE, filesType);
         napi_get_boolean(env, true, &result);
         return result;
     }
