@@ -34,6 +34,12 @@ const string PERMISSION_BUNDLE_NAME = "bundle_name";
 const string PERMISSION_FILE_ID = "file_id";
 const string PERMISSION_MODE = "mode";
 const string PERMISSION_TABLE_TYPE = "table_type";
+const string MEDIA_FILE_URI_PHOTO_PREFEX = "file://media/Photo/";
+const string MEDIA_FILE_URI_AUDIO_PREFEX = "file://media/Audio/";
+const string MEDIA_FILE_URI_VIDEO_PREFEX = "file://media/video/";
+const string MEDIA_FILE_URI_IMAGE_PREFEX = "file://media/image/";
+const string MEDIA_FILE_URI_FILE_PREFEX = "file://media/file/";
+const string MEDIA_FILE_URI_Audio_PREFEX = "file://media/audio/";
 
 class FileShareGrantToken : public IRemoteBroker {
 public:

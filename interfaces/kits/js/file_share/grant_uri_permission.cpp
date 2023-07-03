@@ -30,6 +30,11 @@ using namespace OHOS::DistributedFS::ModuleRemoteUri;
 namespace OHOS {
 namespace AppFileService {
 namespace ModuleFileShare {
+    enum MediaFileTable {
+        FileTable = 0,
+        PhotoTable = 1,
+        AudioTable = 2,
+    };
 
     static bool IsAllDigits(string idStr)
     {
@@ -92,6 +97,22 @@ namespace ModuleFileShare {
         return mode;
     }
 
+    static int32_t GetMediaTypeFromUri(const std::string &uri)
+    {
+        if (uri.find(MEDIA_FILE_URI_PHOTO_PREFEX) == 0 ||
+            uri.find(MEDIA_FILE_URI_VIDEO_PREFEX) == 0 ||
+            uri.find(MEDIA_FILE_URI_IMAGE_PREFEX) == 0) {
+            return MediaFileTable::PhotoTable;
+        } else if (uri.find(MEDIA_FILE_URI_AUDIO_PREFEX) == 0 ||
+                   uri.find(MEDIA_FILE_URI_Audio_PREFEX) == 0) {
+            return MediaFileTable::AudioTable;
+        } else if (uri.find(MEDIA_FILE_URI_FILE_PREFEX) == 0) {
+            return MediaFileTable::FileTable;
+        }
+
+        return MediaFileTable::FileTable;
+    }
+
     static napi_value GetJSArgs(napi_env env, const NFuncArg &funcArg,
                                 DataShareValuesBucket &valuesBucket)
     {
@@ -137,7 +158,7 @@ namespace ModuleFileShare {
         }
 
         int32_t fileId = stoi(idStr);
-        int32_t filesType = 0;
+        int32_t filesType = GetMediaTypeFromUri(string(path.get()));
         valuesBucket.Put(PERMISSION_FILE_ID, fileId);
         valuesBucket.Put(PERMISSION_BUNDLE_NAME, string(bundleName.get()));
         valuesBucket.Put(PERMISSION_MODE, mode);
