@@ -202,7 +202,10 @@ ErrCode Service::Start()
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames)
+ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
+                                             const vector<BundleName> &bundleNames,
+                                             RestoreTpyeEnum restoreType,
+                                             int32_t userId)
 {
     HILOGI("Begin");
     VerifyCaller(session_->GetScenario());

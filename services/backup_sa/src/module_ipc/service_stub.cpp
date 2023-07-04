@@ -208,8 +208,17 @@ int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, Message
     if (!data.ReadStringVector(&bundleNames)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
     }
+    int32_t type;
+    if (!data.ReadInt32(type)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive restoreType");
+    }
+    RestoreTpyeEnum restoreType = static_cast<RestoreTpyeEnum>(type);
+    int32_t userId;
+    if (!data.ReadInt32(userId)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive userId");
+    }
 
-    int res = AppendBundlesRestoreSession(move(fd), bundleNames);
+    int res = AppendBundlesRestoreSession(move(fd), bundleNames, restoreType, userId);
     if (!reply.WriteInt32(res)) {
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
     }
