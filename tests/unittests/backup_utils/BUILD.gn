@@ -24,6 +24,8 @@ ohos_unittest("b_error_test") {
     "${path_backup}/utils/:backup_utils",
   ]
 
+  external_deps = [ "hilog:libhilog" ]
+
   use_exceptions = true
 }
 
@@ -38,6 +40,12 @@ ohos_unittest("b_file_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
+    "${path_jsoncpp}:jsoncpp",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
   ]
 
   use_exceptions = true
@@ -61,6 +69,12 @@ ohos_unittest("b_json_test") {
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
     "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
   ]
 
   use_exceptions = true
@@ -82,8 +96,13 @@ ohos_unittest("b_tarball_cmdline_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
+    "${path_googletest}:gmock_main",
   ]
-  external_deps = [ "c_utils:utils" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 
   use_exceptions = true
 }
@@ -101,7 +120,10 @@ ohos_unittest("b_tarball_factory_test") {
     "${path_backup}/utils/include",
   ]
 
-  deps = [ "${path_backup}/tests/utils:backup_test_utils" ]
+  deps = [
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_googletest}:gmock_main",
+  ]
   external_deps = [ "c_utils:utils" ]
   use_exceptions = true
 }
@@ -119,8 +141,12 @@ ohos_unittest("b_process_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
+    "${path_jsoncpp}:jsoncpp",
   ]
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 
   use_exceptions = true
 }

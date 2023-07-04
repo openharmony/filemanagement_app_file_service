@@ -43,6 +43,8 @@ ohos_unittest("module_ipc_test") {
     "ability_base:want",
     "ability_runtime:ability_manager",
     "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -77,12 +79,16 @@ ohos_unittest("backup_service_test") {
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
+    "c_utils:utils",
+    "hilog:libhilog",
     "init:libbegetutil",
+    "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -118,6 +124,7 @@ ohos_unittest("backup_service_session_test") {
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -126,6 +133,8 @@ ohos_unittest("backup_service_session_test") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -165,6 +174,9 @@ ohos_unittest("backup_service_scheduler_test") {
     "ability_runtime:ability_manager",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
