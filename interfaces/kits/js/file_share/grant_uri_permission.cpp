@@ -31,9 +31,9 @@ namespace OHOS {
 namespace AppFileService {
 namespace ModuleFileShare {
     enum MediaFileTable {
-        FileTable = 0,
-        PhotoTable = 1,
-        AudioTable = 2,
+        FILE_TABLE = 0,
+        PHOTO_TABLE = 1,
+        AUDIO_TABLE = 2,
     };
 
     static bool IsAllDigits(string idStr)
@@ -97,24 +97,28 @@ namespace ModuleFileShare {
         return mode;
     }
 
-    static int32_t GetMediaTypeFromUri(const std::string &uri)
+    static int32_t GetMediaTypeAndApiFromUri(const std::string &uri, bool &isApi10)
     {
-        if (uri.find(MEDIA_FILE_URI_PHOTO_PREFEX) == 0 ||
-            uri.find(MEDIA_FILE_URI_VIDEO_PREFEX) == 0 ||
+        if (uri.find(MEDIA_FILE_URI_PHOTO_PREFEX) == 0) {
+            isApi10 = true;
+            return MediaFileTable::PHOTO_TABLE;
+        } else if (uri.find(MEDIA_FILE_URI_VIDEO_PREFEX) == 0 ||
             uri.find(MEDIA_FILE_URI_IMAGE_PREFEX) == 0) {
-            return MediaFileTable::PhotoTable;
-        } else if (uri.find(MEDIA_FILE_URI_AUDIO_PREFEX) == 0 ||
-                   uri.find(MEDIA_FILE_URI_Audio_PREFEX) == 0) {
-            return MediaFileTable::AudioTable;
+            return MediaFileTable::PHOTO_TABLE;
+        } else if (uri.find(MEDIA_FILE_URI_AUDIO_PREFEX) == 0) {
+            isApi10 = true;
+            return MediaFileTable::AUDIO_TABLE;
+        } else if (uri.find(MEDIA_FILE_URI_Audio_PREFEX) == 0) {
+            return MediaFileTable::AUDIO_TABLE;
         } else if (uri.find(MEDIA_FILE_URI_FILE_PREFEX) == 0) {
-            return MediaFileTable::FileTable;
+            return MediaFileTable::FILE_TABLE;
         }
 
-        return MediaFileTable::FileTable;
+        return MediaFileTable::FILE_TABLE;
     }
 
     static napi_value GetJSArgs(napi_env env, const NFuncArg &funcArg,
-                                DataShareValuesBucket &valuesBucket)
+                                DataShareValuesBucket &valuesBucket, bool &isApi10)
     {
         napi_value result = nullptr;
         auto [succPath, path, lenPath] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
@@ -158,7 +162,7 @@ namespace ModuleFileShare {
         }
 
         int32_t fileId = stoi(idStr);
-        int32_t filesType = GetMediaTypeFromUri(string(path.get()));
+        int32_t filesType = GetMediaTypeAndApiFromUri(string(path.get()), isApi10);
         valuesBucket.Put(PERMISSION_FILE_ID, fileId);
         valuesBucket.Put(PERMISSION_BUNDLE_NAME, string(bundleName.get()));
         valuesBucket.Put(PERMISSION_MODE, mode);
@@ -167,7 +171,7 @@ namespace ModuleFileShare {
         return result;
     }
 
-    static int InsertByDatashare(napi_env env, const DataShareValuesBucket &valuesBucket)
+    static int InsertByDatashare(napi_env env, const DataShareValuesBucket &valuesBucket, bool isApi10)
     {
         int ret = -1;
         std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = nullptr;
@@ -182,7 +186,12 @@ namespace ModuleFileShare {
             LOGE("FileShare::InsertByDatashare connect to datashare failed!");
             return -E_PERMISSION;
         }
-        Uri uri(MEDIA_GRANT_URI_PERMISSION);
+        string uriStr = MEDIA_GRANT_URI_PERMISSION;
+        if (isApi10) {
+            uriStr +=  MEDIA_API_VERSION_10;
+        }
+
+        Uri uri(uriStr);
         ret = dataShareHelper->Insert(uri, valuesBucket);
         if (ret < 0) {
             LOGE("FileShare::InsertByDatashare insert failed with error code %{public}d!", ret);
@@ -206,15 +215,16 @@ namespace ModuleFileShare {
         }
 
         OHOS::DataShare::DataShareValuesBucket valuesBucket;
-        bool result = GetJSArgs(env, funcArg, valuesBucket);
+        bool isApi10 = false;
+        bool result = GetJSArgs(env, funcArg, valuesBucket, isApi10);
         if (!result) {
             LOGE("FileShare::GrantUriPermission GetJSArgsForGrantUriPermission failed!");
             NError(EINVAL).ThrowErr(env);
             return nullptr;
         }
 
-        auto cbExec = [valuesBucket, env]() -> NError {
-            int ret = InsertByDatashare(env, valuesBucket);
+        auto cbExec = [valuesBucket, isApi10, env]() -> NError {
+            int ret = InsertByDatashare(env, valuesBucket, isApi10);
             if (ret < 0) {
                 LOGE("FileShare::GrantUriPermission InsertByDatashare failed!");
                 return NError(-ret);
