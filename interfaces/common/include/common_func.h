@@ -13,30 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef APP_FILE_SERVICE_FILE_SHARE
-#define APP_FILE_SERVICE_FILE_SHARE
+#ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_COMMON_FUNC_H
+#define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_COMMON_FUNC_H
 
 #include <string>
-#include <vector>
-#include "want.h"
+#include <unordered_map>
 
 namespace OHOS {
 namespace AppFileService {
-using namespace std;
-
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif
-#endif /* End of #ifdef __cplusplus */
-    int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag);
-    int32_t DeleteShareFile(uint32_t tokenId, vector<string> sharePathList);
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif
-#endif /* End of #ifdef __cplusplus */
+class CommonFunc {
+    static std::unordered_map<std::string, std::string> sandboxPathMap_;
+public:
+    static bool CheckValidPath(const std::string &filePath);
+    static int32_t GetPhysicalPath(const std::string &fileUri, const std::string &userId,
+                                   std::string &physicalPath);
+};
 } // namespace AppFileService
 } // namespace OHOS
 
-#endif
+#endif // FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_COMMON_FUNC_H

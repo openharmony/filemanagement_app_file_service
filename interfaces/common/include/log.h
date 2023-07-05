@@ -12,8 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LOG_H
-#define LOG_H
+#ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_LOG_H
+#define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_LOG_H
+
 #include "hilog/log.h"
 
 namespace OHOS {
@@ -33,4 +34,4 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, APP_LOG_DOM
 } // namespace AppFileService
 } // namespace OHOS
 
-#endif // LOG_H
+#endif // FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_LOG_H

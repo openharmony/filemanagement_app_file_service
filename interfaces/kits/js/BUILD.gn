@@ -39,7 +39,7 @@ ohos_shared_library("remotefileshare") {
 ohos_shared_library("fileshare") {
   include_dirs = [
     ".",
-    "common",
+    "../../common/include",
   ]
 
   sources = [
@@ -71,7 +71,7 @@ ohos_shared_library("fileshare") {
 ohos_shared_library("fileuri") {
   include_dirs = [
     ".",
-    "common",
+    "../../common/include",
   ]
 
   sources = [
