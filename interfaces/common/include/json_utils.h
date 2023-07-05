@@ -13,30 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef APP_FILE_SERVICE_FILE_SHARE
-#define APP_FILE_SERVICE_FILE_SHARE
+#ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_COMMON_INCLUDE_JSON_UTILS_H
+#define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_COMMON_INCLUDE_JSON_UTILS_H
 
 #include <string>
 #include <vector>
-#include "want.h"
+#include <unordered_map>
+
+#include "nlohmann/json.hpp"
 
 namespace OHOS {
 namespace AppFileService {
-using namespace std;
-
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif
-#endif /* End of #ifdef __cplusplus */
-    int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag);
-    int32_t DeleteShareFile(uint32_t tokenId, vector<string> sharePathList);
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif
-#endif /* End of #ifdef __cplusplus */
-} // namespace AppFileService
-} // namespace OHOS
-
-#endif
+class JsonUtils {
+public:
+    static int32_t GetJsonObjFromPath(nlohmann::json& jsonObj, const std::string& jsonPath);
+    static int32_t GetKVFromJson(const nlohmann::json &json, const std::string &key,
+                                 std::string &value);
+};
+} // AppFileService
+} // OHOS
+#endif // FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_COMMON_INCLUDE_JSON_UTILS_H

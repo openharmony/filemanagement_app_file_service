@@ -16,13 +16,18 @@ import("//build/ohos.gni")
 config("file_share_config") {
   visibility = [ ":*" ]
   include_dirs = [
-    "include",
-    "../common",
+    "file_share/include",
+    "//third_party/json/include",
+    "../../common/include",
   ]
 }
 
 ohos_shared_library("fileshare_native") {
-  sources = [ "src/file_share.cpp" ]
+  sources = [
+    "file_share/src/file_share.cpp",
+    "../../common/src/common_func.cpp",
+    "../../common/src/json_utils.cpp",
+  ]
 
   public_configs = [ ":file_share_config" ]
 
@@ -37,4 +42,18 @@ ohos_shared_library("fileshare_native") {
 
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
+}
+
+ohos_prebuilt_etc("file_share_sandbox.json") {
+  source = "../../common/file_share_sandbox.json"
+  part_name = "app_file_service"
+  module_install_dir = "etc/app_file_service"
+}
+
+group("app_file_service_native") {
+  deps = [ ":fileshare_native" ]
+}
+
+group("etc_files") {
+  deps = [ ":file_share_sandbox.json" ]
 }

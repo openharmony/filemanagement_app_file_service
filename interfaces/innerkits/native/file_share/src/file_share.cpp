@@ -23,12 +23,30 @@
 #include <unistd.h>
 
 #include "accesstoken_kit.h"
+#include "common_func.h"
 #include "hap_token_info.h"
 #include "log.h"
 #include "uri.h"
 
 namespace OHOS {
 namespace AppFileService {
+#define DIR_MODE (S_IRWXU | S_IXGRP | S_IXOTH)
+#define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)
+#define READ_URI_PERMISSION OHOS::AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION
+#define WRITE_URI_PERMISSION OHOS::AAFwk::Want::FLAG_AUTH_WRITE_URI_PERMISSION
+
+enum ShareFileType {
+    DIR_TYPE = 0,
+    FILE_TYPE = 1,
+};
+
+namespace {
+const string FILE_SCHEME = "file";
+const string DATA_APP_EL2_PATH = "/data/service/el2/";
+const string SHARE_R_PATH = "/r/";
+const string SHARE_RW_PATH = "/rw/";
+const string SHARE_PATH = "/share/";
+}
 
 struct FileShareInfo {
     string providerBundleName_;
@@ -38,7 +56,7 @@ struct FileShareInfo {
     vector<string> sharePath_;
     vector<bool> isExist_;
     string currentUid_;
-    SHARE_FILE_TYPE type_;
+    ShareFileType type_;
 };
 
 static int32_t GetTargetInfo(uint32_t tokenId, string &bundleName, string &currentUid)
@@ -59,10 +77,11 @@ static int32_t GetTargetInfo(uint32_t tokenId, string &bundleName, string &curre
     return 0;
 }
 
-static void GetProviderBundleName(string uriStr, string &bundleName)
+static void GetProviderInfo(string uriStr, FileShareInfo &info)
 {
     Uri uri(uriStr);
-    bundleName = uri.GetAuthority();
+    info.providerBundleName_ = uri.GetAuthority();
+    info.providerSandboxPath_ = uri.GetPath();
 }
 
 static bool IsExistDir(const string &path)
@@ -82,54 +101,6 @@ static bool IsExistFile(const string &path)
         return false;
     }
     return S_ISREG(buf.st_mode);
-}
-
-static int32_t GetLowerPath(string &lowerPathHead, const string &lowerPathTail, FileShareInfo &info)
-{
-    if (lowerPathHead.empty()) {
-        return -EINVAL;
-    }
-
-    if (lowerPathHead.find(CURRENT_USER_ID_FLAG) != string::npos) {
-        lowerPathHead = lowerPathHead.replace(lowerPathHead.find(CURRENT_USER_ID_FLAG),
-                                              CURRENT_USER_ID_FLAG.length(), info.currentUid_);
-    }
-
-    if (lowerPathHead.find(PACKAGE_NAME_FLAG) != string::npos) {
-        lowerPathHead = lowerPathHead.replace(lowerPathHead.find(PACKAGE_NAME_FLAG),
-                                              PACKAGE_NAME_FLAG.length(), info.providerBundleName_);
-    }
-
-    info.providerLowerPath_ = lowerPathHead + lowerPathTail;
-    return 0;
-}
-
-static int32_t GetProviderPath(const string &uriStr, FileShareInfo &info)
-{
-    Uri uri(uriStr);
-    string pathInProvider = uri.GetPath();
-    size_t num = SANDBOX_PATH.size();
-    string lowerPathTail = "", lowerPathHead = "";
-
-    for (size_t i = 0; i < num; i++) {
-        if (pathInProvider.length() >= SANDBOX_PATH[i].length()) {
-            string sandboxPathTemp = pathInProvider.substr(0, SANDBOX_PATH[i].length());
-            if (sandboxPathTemp == SANDBOX_PATH[i]) {
-                lowerPathHead = LOWER_PATH[i];
-                lowerPathTail = pathInProvider.substr(SANDBOX_PATH[i].length());
-                break;
-            }
-        }
-    }
-
-    int32_t ret = GetLowerPath(lowerPathHead, lowerPathTail, info);
-    if (ret != 0) {
-        LOGE("Get lower path failed with %{public}d", ret);
-        return ret;
-    }
-
-    info.providerSandboxPath_ = pathInProvider;
-    return 0;
 }
 
 static void GetSharePath(FileShareInfo &info, uint32_t flag)
@@ -152,10 +123,10 @@ static void GetSharePath(FileShareInfo &info, uint32_t flag)
 static int32_t GetShareFileType(FileShareInfo &info)
 {
     if (IsExistFile(info.providerLowerPath_)) {
-        info.type_ = FILE_TYPE;
+        info.type_ = ShareFileType::FILE_TYPE;
         return 0;
     } else if (IsExistDir(info.providerLowerPath_)) {
-        info.type_ = DIR_TYPE;
+        info.type_ = ShareFileType::DIR_TYPE;
         return 0;
     }
     return -ENOENT;
@@ -170,8 +141,9 @@ static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t fl
         return ret;
     }
 
-    GetProviderBundleName(uri, info.providerBundleName_);
-    ret = GetProviderPath(uri, info);
+    GetProviderInfo(uri, info);
+
+    ret = CommonFunc::GetPhysicalPath(uri, info.currentUid_, info.providerLowerPath_);
     if (ret != 0) {
         LOGE("Failed to get lower path %{public}d", ret);
         return ret;
@@ -182,6 +154,7 @@ static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t fl
         LOGE("Failed to get share file type %{public}d", ret);
         return ret;
     }
+
     GetSharePath(info, flag);
     return 0;
 }
@@ -209,24 +182,9 @@ static bool MakeDir(const string &path)
     return true;
 }
 
-static bool CheckValidPath(const string &filePath)
-{
-    if (filePath.size() >= PATH_MAX) {
-        return false;
-    }
-
-    char realPath[PATH_MAX]{'\0'};
-    if (realpath(filePath.c_str(), realPath) != nullptr &&
-        strncmp(realPath, filePath.c_str(), filePath.size()) == 0) {
-            return true;
-    } else {
-        return false;
-    }
-}
-
 static int32_t PreparePreShareDir(FileShareInfo &info)
 {
-    if (!CheckValidPath(info.providerLowerPath_)) {
+    if (!CommonFunc::CheckValidPath(info.providerLowerPath_)) {
         LOGE("Invalid share path with %{private}s", info.providerLowerPath_.c_str());
         return -EINVAL;
     }
@@ -267,15 +225,15 @@ int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
             continue;
         }
 
-        if (info.type_ == FILE_TYPE) {
+        if (info.type_ == ShareFileType::FILE_TYPE) {
             if ((ret = creat(info.sharePath_[i].c_str(), FILE_MODE)) < 0) {
                 LOGE("Create file failed with %{public}d", errno);
                 return -errno;
             }
             close(ret);
-        } else if (mkdir(info.sharePath_[i].c_str(), DIR_MODE) != 0) {
-            LOGE("Create dir failed with %{public}d", errno);
-            return -errno;
+        } else {
+            LOGE("Invalid argument not support dir to share");
+            return -EINVAL;
         }
 
         if (mount(info.providerLowerPath_.c_str(), info.sharePath_[i].c_str(),
