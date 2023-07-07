@@ -123,7 +123,7 @@ static inline std::string_view EXT_BACKUP_MANAGE = "manage.json";
 // 包管理元数据配置文件
 static inline std::string_view BACKUP_CONFIG_JSON = "backup_config.json";
 
-// 恢复应用安装包路径
+// 恢复应用安装包URL判断
 static inline std::string_view RESTORE_INSTALL_PATH = "/data/storage/el2/restore/bundle.hap";
 
 // 应用默认备份的目录，其均为相对根路径的路径。为避免模糊匹配，务必以斜线为结尾。
@@ -132,8 +132,8 @@ static inline std::array<std::string_view, 6> PATHES_TO_BACKUP = {
     "data/storage/el2/base/files/",
     "data/storage/el2/base/preferences/",
     "data/storage/el2/base/haps/*/database/",
-    "data/storage/el2/base/haps/*/base/files/",
-    "data/storage/el2/base/haps/*/base/preferences/",
+    "data/storage/el2/base/haps/*/files/",
+    "data/storage/el2/base/haps/*/preferences/",
 };
 } // namespace OHOS::FileManagement::Backup::BConstants
 
