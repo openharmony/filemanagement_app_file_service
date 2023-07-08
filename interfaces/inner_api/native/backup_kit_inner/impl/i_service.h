@@ -22,26 +22,13 @@
 #include <unique_fd.h>
 
 #include "b_file_info.h"
+#include "i_service_ipc_interface_code.h"
 #include "i_service_reverse.h"
 #include "iremote_broker.h"
 
 namespace OHOS::FileManagement::Backup {
 class IService : public IRemoteBroker {
 public:
-    enum {
-        SERVICE_CMD_INIT_RESTORE_SESSION,
-        SERVICE_CMD_INIT_BACKUP_SESSION,
-        SERVICE_CMD_GET_LOCAL_CAPABILITIES,
-        SERVICE_CMD_PUBLISH_FILE,
-        SERVICE_CMD_APP_FILE_READY,
-        SERVICE_CMD_APP_DONE,
-        SERVICE_CMD_START,
-        SERVICE_CMD_GET_FILE_NAME,
-        SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION,
-        SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION,
-        SERVICE_CMD_FINISH,
-    };
-
     virtual ErrCode InitRestoreSession(sptr<IServiceReverse> remote) = 0;
     virtual ErrCode InitBackupSession(sptr<IServiceReverse> remote) = 0;
     virtual ErrCode Start() = 0;

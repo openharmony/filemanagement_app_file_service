@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,25 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_BACKUP_I_EXTENSION_H
-#define OHOS_FILEMGMT_BACKUP_I_EXTENSION_H
+#ifndef OHOS_FILEMGMT_BACKUP_I_EXTENSION_IPC_INTERFACE_CODE_H
+#define OHOS_FILEMGMT_BACKUP_I_EXTENSION_IPC_INTERFACE_CODE_H
 
-#include "errors.h"
-#include "i_extension_ipc_interface_code.h"
-#include "iremote_broker.h"
-#include "unique_fd.h"
-
+/*SAID: 5203*/
 namespace OHOS::FileManagement::Backup {
-class IExtension : public IRemoteBroker {
-public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.FileManagement.Backup.IExtension");
-
-public:
-    virtual UniqueFd GetFileHandle(const std::string &fileName) = 0;
-    virtual ErrCode HandleClear() = 0;
-    virtual ErrCode HandleBackup() = 0;
-    virtual ErrCode PublishFile(const std::string &fileName) = 0;
+enum class IExtensionInterfaceCode {
+    CMD_GET_FILE_HANDLE = 1,
+    CMD_HANDLE_CLAER,
+    CMD_PUBLISH_FILE,
+    CMD_HANDLE_BACKUP,
 };
 } // namespace OHOS::FileManagement::Backup
 
-#endif // OHOS_FILEMGMT_BACKUP_I_EXTENSION_H
+#endif // OHOS_FILEMGMT_BACKUP_I_EXTENSION_IPC_INTERFACE_CODE_H

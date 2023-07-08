@@ -46,15 +46,23 @@ int32_t ServiceReverseStub::OnRemoteRequest(uint32_t code,
 
 ServiceReverseStub::ServiceReverseStub()
 {
-    opToInterfaceMap_[SERVICER_BACKUP_ON_FILE_READY] = &ServiceReverseStub::CmdBackupOnFileReady;
-    opToInterfaceMap_[SERVICER_BACKUP_ON_SUB_TASK_STARTED] = &ServiceReverseStub::CmdBackupOnBundleStarted;
-    opToInterfaceMap_[SERVICER_BACKUP_ON_SUB_TASK_FINISHED] = &ServiceReverseStub::CmdBackupOnBundleFinished;
-    opToInterfaceMap_[SERVICER_BACKUP_ON_TASK_FINISHED] = &ServiceReverseStub::CmdBackupOnAllBundlesFinished;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_FILE_READY)] =
+        &ServiceReverseStub::CmdBackupOnFileReady;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_SUB_TASK_STARTED)] =
+        &ServiceReverseStub::CmdBackupOnBundleStarted;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_SUB_TASK_FINISHED)] =
+        &ServiceReverseStub::CmdBackupOnBundleFinished;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_TASK_FINISHED)] =
+        &ServiceReverseStub::CmdBackupOnAllBundlesFinished;
 
-    opToInterfaceMap_[SERVICER_RESTORE_ON_SUB_TASK_STARTED] = &ServiceReverseStub::CmdRestoreOnBundleStarted;
-    opToInterfaceMap_[SERVICER_RESTORE_ON_SUB_TASK_FINISHED] = &ServiceReverseStub::CmdRestoreOnBundleFinished;
-    opToInterfaceMap_[SERVICER_RESTORE_ON_TASK_FINISHED] = &ServiceReverseStub::CmdRestoreOnAllBundlesFinished;
-    opToInterfaceMap_[SERVICER_RESTORE_ON_FILE_READY] = &ServiceReverseStub::CmdRestoreOnFileReady;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_SUB_TASK_STARTED)] =
+        &ServiceReverseStub::CmdRestoreOnBundleStarted;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_SUB_TASK_FINISHED)] =
+        &ServiceReverseStub::CmdRestoreOnBundleFinished;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_TASK_FINISHED)] =
+        &ServiceReverseStub::CmdRestoreOnAllBundlesFinished;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_FILE_READY)] =
+        &ServiceReverseStub::CmdRestoreOnFileReady;
 }
 
 int32_t ServiceReverseStub::CmdBackupOnFileReady(MessageParcel &data, MessageParcel &reply)
