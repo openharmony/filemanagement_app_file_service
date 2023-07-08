@@ -46,6 +46,7 @@ public:
 
 public:
     static sptr<IService> GetInstance();
+    static void InvaildInstance();
 
 public:
     class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {

@@ -319,6 +319,13 @@ sptr<IService> ServiceProxy::GetInstance()
     return serviceProxy_;
 }
 
+void ServiceProxy::InvaildInstance()
+{
+    HILOGI("invalid instance");
+    unique_lock<mutex> lock(proxyMutex_);
+    serviceProxy_ = nullptr;
+}
+
 void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
                                                                         const OHOS::sptr<IRemoteObject> &remoteObject)
 {

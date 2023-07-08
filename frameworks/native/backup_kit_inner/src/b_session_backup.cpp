@@ -76,6 +76,7 @@ void BSessionBackup::RegisterBackupServiceDied(std::function<void()> functor)
     }
 
     auto callback = [functor](const wptr<IRemoteObject> &obj) {
+        ServiceProxy::InvaildInstance();
         HILOGI("Backup service died");
         functor();
     };
