@@ -98,8 +98,10 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitRestoreSession_0100, tes
         sptr<ServiceReverseMock> remote = sptr(new ServiceReverseMock());
         EXPECT_TRUE(data.WriteRemoteObject(remote->AsObject().GetRefPtr()));
 
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IService::SERVICE_CMD_INIT_RESTORE_SESSION, data, reply, option));
+        EXPECT_EQ(
+            BError(BError::Codes::OK),
+            service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_RESTORE_SESSION),
+                                    data, reply, option));
         remote = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
@@ -132,7 +134,8 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitBackupSession_0100, test
         EXPECT_TRUE(data.WriteRemoteObject(remote->AsObject().GetRefPtr()));
 
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IService::SERVICE_CMD_INIT_BACKUP_SESSION, data, reply, option));
+                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_BACKUP_SESSION),
+                                          data, reply, option));
         remote = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
@@ -161,7 +164,9 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Start_0100, testing::ext::Te
         MessageOption option;
 
         EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_EQ(BError(BError::Codes::OK), service.OnRemoteRequest(IService::SERVICE_CMD_START, data, reply, option));
+        EXPECT_EQ(BError(BError::Codes::OK),
+                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START), data, reply,
+                                          option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by Start.";
@@ -193,15 +198,19 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetLocalCapabilities_0100, t
 
         EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
 
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  serviceSptr->OnRemoteRequest(IService::SERVICE_CMD_GET_LOCAL_CAPABILITIES, data, reply, option));
+        EXPECT_EQ(
+            BError(BError::Codes::OK),
+            serviceSptr->OnRemoteRequest(
+                static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES), data, reply, option));
         UniqueFd fd(reply.ReadFileDescriptor());
         EXPECT_GT(fd, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "ServiceStubTest-CmdGetLocalCapabilities Brances";
         MessageParcel brances;
         EXPECT_TRUE(brances.WriteInterfaceToken(IService::GetDescriptor()));
         EXPECT_NE(BError(BError::Codes::OK),
-                  serviceSptr->OnRemoteRequest(IService::SERVICE_CMD_GET_LOCAL_CAPABILITIES, brances, reply, option));
+                  serviceSptr->OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES), brances, reply,
+                      option));
         serviceSptr = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
@@ -233,7 +242,8 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_PublishFile_0100, testing::e
         EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
         EXPECT_TRUE(data.WriteParcelable(&fileInfo));
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IService::SERVICE_CMD_PUBLISH_FILE, data, reply, option));
+                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_FILE), data,
+                                          reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by PublishFile.";
@@ -268,13 +278,15 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0100, testing::
         EXPECT_TRUE(data.WriteString(FILE_NAME));
         EXPECT_TRUE(data.WriteFileDescriptor(fd));
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IService::SERVICE_CMD_APP_FILE_READY, data, reply, option));
+                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY),
+                                          data, reply, option));
         GTEST_LOG_(INFO) << "ServiceStubTest-begin-CmdAppFileReady Brances";
         MessageParcel brances;
         EXPECT_TRUE(brances.WriteInterfaceToken(IService::GetDescriptor()));
         EXPECT_TRUE(brances.WriteString(FILE_NAME));
         EXPECT_NE(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IService::SERVICE_CMD_APP_FILE_READY, brances, reply, option));
+                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY),
+                                          brances, reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppFileReady.";
@@ -304,7 +316,8 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppDone_0100, testing::ext::
         EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
         EXPECT_TRUE(data.WriteInt32(BError(BError::Codes::OK)));
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IService::SERVICE_CMD_APP_DONE, data, reply, option));
+                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_DONE), data,
+                                          reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppDone.";
@@ -336,7 +349,8 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetFileHandle_0100, testing:
         EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
         EXPECT_TRUE(data.WriteString(FILE_NAME));
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IService::SERVICE_CMD_GET_FILE_NAME, data, reply, option));
+                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_FILE_NAME), data,
+                                          reply, option));
         EXPECT_NE(BError(BError::Codes::OK), service.OnRemoteRequest(3333, data, reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -374,7 +388,9 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_
         EXPECT_TRUE(data.WriteFileDescriptor(fd));
         EXPECT_TRUE(data.WriteStringVector(bundleNames));
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IService::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION, data, reply, option));
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION), data,
+                      reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesRestoreSession.";
@@ -407,7 +423,9 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesBackupSession_0
         EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
         EXPECT_TRUE(data.WriteStringVector(bundleNames));
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IService::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION, data, reply, option));
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION), data,
+                      reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesBackupSession.";
@@ -436,7 +454,8 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Finish_0100, testing::ext::T
 
         EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IService::SERVICE_CMD_FINISH, data, reply, option));
+                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_FINISH), data, reply,
+                                          option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by Finish.";
