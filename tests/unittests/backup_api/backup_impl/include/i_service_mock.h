@@ -93,7 +93,10 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames) override
+    ErrCode AppendBundlesRestoreSession(UniqueFd fd,
+                                        const std::vector<BundleName> &bundleNames,
+                                        RestoreTpyeEnum restoreType,
+                                        int32_t userId) override
     {
         return BError(BError::Codes::OK);
     }

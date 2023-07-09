@@ -225,7 +225,10 @@ ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &file
     return ret;
 }
 
-ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames)
+ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
+                                                  const vector<BundleName> &bundleNames,
+                                                  RestoreTpyeEnum restoreType,
+                                                  int32_t userId)
 {
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
@@ -241,6 +244,12 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<Bund
     }
     if (!data.WriteStringVector(bundleNames)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(restoreType))) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send restoreType").GetCode();
+    }
+    if (!data.WriteInt32(userId)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send userId").GetCode();
     }
 
     int32_t ret = Remote()->SendRequest(
