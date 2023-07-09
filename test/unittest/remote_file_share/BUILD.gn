@@ -24,13 +24,13 @@ ohos_unittest("remote_file_share_test") {
 
   include_dirs = [
     "include",
-    "../../../interfaces/innerkits/remote_file_share/native",
+    "../../../interfaces/innerkits/native/remote_file_share/include",
     "${utils_system_safwk_path}/native/include",
     "${path_base}/include",
   ]
 
   deps = [
-    "../../../interfaces/innerkits/remote_file_share/native:remote_file_share_native",
+    "../../../interfaces/innerkits/native:remote_file_share_native",
     "//third_party/googletest:gtest_main",
   ]
 }

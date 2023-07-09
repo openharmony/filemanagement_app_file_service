@@ -75,12 +75,12 @@
                     }
                 },
                 {
-                    "name": "//foundation/filemanagement/app_file_service/interfaces/innerkits/remote_file_share/native:remote_file_share_native",
+                    "name": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native:remote_file_share_native",
                     "header": {
                         "header_files": [
                             "remote_file_share.h"
                         ],
-                        "header_base": "//foundation/filemanagement/app_file_service/interfaces/innerkits/remote_file_share/native"
+                        "header_base": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native/remote_file_share/include"
                     }
                 },
                 {

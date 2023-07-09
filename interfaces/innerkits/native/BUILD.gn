@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 
 config("file_share_config") {
   visibility = [ ":*" ]
@@ -51,8 +52,46 @@ ohos_prebuilt_etc("file_share_sandbox.json") {
   module_install_dir = "etc/app_file_service"
 }
 
+config("remote_file_share_config") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "include",
+    "${utils_system_safwk_path}/native/include",
+    "remote_file_share/include",
+    "//third_party/json/include",
+    "${path_base}/include",
+    "../../common/include",
+    ".",
+  ]
+}
+
+ohos_shared_library("remote_file_share_native") {
+  sources = [
+    "../../common/src/common_func.cpp",
+    "../../common/src/json_utils.cpp",
+    "remote_file_share/src/remote_file_share.cpp",
+  ]
+
+  public_configs = [ ":remote_file_share_config" ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  innerapi_tags = [ "platformsdk_indirect" ]
+  part_name = "app_file_service"
+  subsystem_name = "filemanagement"
+}
+
 group("app_file_service_native") {
-  deps = [ ":fileshare_native" ]
+  deps = [
+    ":fileshare_native",
+    ":remote_file_share_native",
+  ]
 }
 
 group("etc_files") {
