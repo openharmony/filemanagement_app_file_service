@@ -73,8 +73,8 @@ static bool NormalizePath(string &path)
         return false;
     }
 
-    if (path[0] != '/') {
-        path.insert(0, 1, '/');
+    if (path[0] != SCHEME_PATH_BEGIN) {
+        path.insert(0, 1, SCHEME_PATH_BEGIN);
     }
 
     return true;
