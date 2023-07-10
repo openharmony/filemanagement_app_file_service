@@ -67,6 +67,19 @@ static string GetBundleName()
     return bundleInfo.name;
 }
 
+static bool NormalizePath(string &path)
+{
+    if (path.size() <= 0) {
+        return false;
+    }
+
+    if (path[0] != '/') {
+        path.insert(0, 1, '/');
+    }
+
+    return true;
+}
+
 napi_value GetUriFromPath::Sync(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -81,8 +94,16 @@ napi_value GetUriFromPath::Sync(napi_env env, napi_callback_info info)
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
+
+    string realPath = path.get();
+    if (!NormalizePath(realPath)) {
+        LOGE("GetUriFromPath::NormalizePath failed!");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+
     string packageName = GetBundleName();
-    string uri = SCHEME + SCHEME_SEPARATOR + PATH_SYMBOLS + packageName + path.get();
+    string uri = SCHEME + SCHEME_SEPARATOR + PATH_SYMBOLS + packageName + realPath;
     return NVal::CreateUTF8String(env, uri).val_;
 }
 
