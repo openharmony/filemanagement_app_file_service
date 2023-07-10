@@ -28,6 +28,7 @@ const string SCHEME = "file";
 const char SCHEME_SEPARATOR = ':';
 const string PATH_SYMBOLS = "//";
 const string FRAGMENT_SYMBOLS = "#";
+const char SCHEME_PATH_BEGIN = '/';
 
 class GetUriFromPath final {
 public:
