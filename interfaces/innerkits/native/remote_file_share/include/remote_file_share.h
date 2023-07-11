@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,11 +24,18 @@ namespace ModuleRemoteFileShare {
 namespace {
     const std::string SHARE_ALL_DEVICE = "0";
 }
+
+struct HmdfsUriInfo {
+    std::string uriStr;
+    size_t fileSize;
+};
+
 class RemoteFileShare {
 public:
     RemoteFileShare() {}
     static int CreateSharePath(const int &fd, std::string &sharePath,
-                        const int &userId, const std::string &deviceId = SHARE_ALL_DEVICE);
+                               const int &userId, const std::string &deviceId = SHARE_ALL_DEVICE);
+    static int32_t GetDfsUriFromLocal(const std::string &uriStr, const int32_t &userId, struct HmdfsUriInfo &hui);
     ~RemoteFileShare() {}
 };
 } // namespace ModuleRemoteFileShare
