@@ -50,7 +50,7 @@ public:
     MOCK_METHOD2(GetFileHandle, ErrCode(const string &bundleName, const string &fileName));
     MOCK_METHOD4(
         AppendBundlesRestoreSession,
-        ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, RestoreTpyeEnum restoreType, int32_t userId));
+        ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, RestoreTypeEnum restoreType, int32_t userId));
     MOCK_METHOD1(AppendBundlesBackupSession, ErrCode(const std::vector<BundleName> &bundleNames));
     MOCK_METHOD0(Finish, ErrCode());
     UniqueFd InvokeGetLocalCapabilities()

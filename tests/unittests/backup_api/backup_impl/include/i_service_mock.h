@@ -95,7 +95,7 @@ public:
 
     ErrCode AppendBundlesRestoreSession(UniqueFd fd,
                                         const std::vector<BundleName> &bundleNames,
-                                        RestoreTpyeEnum restoreType,
+                                        RestoreTypeEnum restoreType,
                                         int32_t userId) override
     {
         return BError(BError::Codes::OK);

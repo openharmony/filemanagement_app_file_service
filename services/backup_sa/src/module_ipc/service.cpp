@@ -204,7 +204,7 @@ ErrCode Service::Start()
 
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              const vector<BundleName> &bundleNames,
-                                             RestoreTpyeEnum restoreType,
+                                             RestoreTypeEnum restoreType,
                                              int32_t userId)
 {
     HILOGI("Begin");

@@ -29,10 +29,10 @@
 namespace OHOS::FileManagement::Backup {
 const int DEFAULT_INVAL_VALUE = -1;
 
-typedef enum TypeRestoreTpyeEnum {
+typedef enum TypeRestoreTypeEnum {
     RESTORE_DATA_WAIT_SEND = 0,
     RESTORE_DATA_READDY = 1,
-} RestoreTpyeEnum;
+} RestoreTypeEnum;
 
 class IService : public IRemoteBroker {
 public:
@@ -44,11 +44,10 @@ public:
     virtual ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) = 0;
     virtual ErrCode AppDone(ErrCode errCode) = 0;
     virtual ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) = 0;
-    virtual ErrCode AppendBundlesRestoreSession(
-        UniqueFd fd,
-        const std::vector<BundleName> &bundleNames,
-        RestoreTpyeEnum restoreType = RestoreTpyeEnum::RESTORE_DATA_WAIT_SEND,
-        int32_t userId = DEFAULT_INVAL_VALUE) = 0;
+    virtual ErrCode AppendBundlesRestoreSession(UniqueFd fd,
+                                                const std::vector<BundleName> &bundleNames,
+                                                RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
+                                                int32_t userId = DEFAULT_INVAL_VALUE) = 0;
     virtual ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) = 0;
     virtual ErrCode Finish() = 0;
 

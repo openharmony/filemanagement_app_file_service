@@ -35,6 +35,7 @@ ohos_shared_library("backup_kit_inner") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_file_info.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_backup.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore_async.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_proxy.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",

@@ -18,5 +18,6 @@
 
 #include "impl/b_session_backup.h"
 #include "impl/b_session_restore.h"
+#include "impl/b_session_restore_async.h"
 
 #endif // OHOS_FILEMGMT_BACKUP_BACKUP_KIT_INNER_H
