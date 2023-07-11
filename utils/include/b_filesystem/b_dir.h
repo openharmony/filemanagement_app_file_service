@@ -19,6 +19,7 @@
 #include <linux/stat.h>
 #include <map>
 #include <string>
+#include <string_view>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <tuple>
@@ -48,7 +49,13 @@ public:
     static std::pair<ErrCode, std::map<std::string, struct stat>> GetBigFiles(const std::vector<std::string> &includes,
                                                                               const std::vector<std::string> &excludes);
 
-private:
+    /**
+     * @brief Get the Dirs object
+     *
+     * @param paths 目录集合可带有通配符路径
+     * @return std::vector<std::string> 目录集合
+     */
+    static std::vector<std::string> GetDirs(const std::vector<std::string_view> &paths);
 };
 } // namespace OHOS::FileManagement::Backup
 

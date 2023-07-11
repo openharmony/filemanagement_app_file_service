@@ -103,7 +103,7 @@ tuple<ErrCode, vector<string>> BDir::GetDirFiles(const string &path)
     return {BError(BError::Codes::OK).GetCode(), files};
 }
 
-set<string> ExpandPathWildcard(const vector<string> &vec)
+static set<string> ExpandPathWildcard(const vector<string> &vec)
 {
     unique_ptr<glob_t, function<void(glob_t *)>> gl {new glob_t, [](glob_t *ptr) { globfree(ptr); }};
     *gl = {};
@@ -175,5 +175,13 @@ pair<ErrCode, map<string, struct stat>> BDir::GetBigFiles(const vector<string> &
     int32_t num = static_cast<int32_t>(bigFiles.size());
     HILOGI("total number of big files is %{public}d", num);
     return {ERR_OK, move(bigFiles)};
+}
+
+vector<string> BDir::GetDirs(const vector<string_view> &paths)
+{
+    vector<string> wildcardPath(paths.begin(), paths.end());
+    set<string> inc = ExpandPathWildcard(wildcardPath);
+    vector<string> dirs(inc.begin(), inc.end());
+    return dirs;
 }
 } // namespace OHOS::FileManagement::Backup
