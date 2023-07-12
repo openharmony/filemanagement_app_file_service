@@ -333,9 +333,11 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
     ret = ioctl(dirFd, HMDFS_IOC_GET_DST_PATH, &hdi);
     if (ret != 0) {
         LOGE("Ioctl failed with %{public}d", errno);
+        close(dirFd);
         return -errno;
     }
 
+    close(dirFd);
     SetHmdfsUriInfo(hui, uri, hdi.size);
     LOGD("GetDfsUriFromLocal successfully with %{public}s", hui.uriStr.c_str());
     return 0;
