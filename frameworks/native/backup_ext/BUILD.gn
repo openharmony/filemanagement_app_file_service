@@ -50,6 +50,7 @@ ohos_shared_library("backup_extension_ability_native") {
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
+    "napi:ace_napi",
   ]
 
   use_exceptions = true
