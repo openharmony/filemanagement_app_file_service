@@ -29,7 +29,7 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, APP_LOG_DOM
 
 #define LOGI(fmt, ...) PRINT_LOG(Info, fmt, ##__VA_ARGS__)
 #define LOGW(fmt, ...) PRINT_LOG(Warn, fmt, ##__VA_ARGS__)
-#define LOGD(fmt, ...) PRINT_LOG(Warn, fmt, ##__VA_ARGS__)
+#define LOGD(fmt, ...) PRINT_LOG(Debug, fmt, ##__VA_ARGS__)
 #define LOGE(fmt, ...) PRINT_LOG(Error, fmt, ##__VA_ARGS__)
 #define LOGF(fmt, ...) PRINT_LOG(Fatal, fmt, ##__VA_ARGS__)
 } // namespace AppFileService
