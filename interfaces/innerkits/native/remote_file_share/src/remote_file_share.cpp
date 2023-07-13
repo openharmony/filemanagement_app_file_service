@@ -320,8 +320,10 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
     }
 
     struct HmdfsDstInfo hdi;
-    LOGD("PhysicalPath: %{public}s DistributedPath: %{public}s", physicalPath.c_str(), distributedPath.c_str());
-    InitHmdfsInfo(hdi, physicalPath, distributedPath, uri.GetAuthority());
+    std::string bundleName = uri.GetAuthority();
+    LOGD("PhysicalPath: %{public}s DistributedPath: %{public}s BundleName: %{public}s",
+         physicalPath.c_str(), distributedPath.c_str(), bundleName.c_str());
+    InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
 
     std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + SHAER_PATH_MID;
     int32_t dirFd = open(ioctlDir.c_str(), O_RDONLY);
