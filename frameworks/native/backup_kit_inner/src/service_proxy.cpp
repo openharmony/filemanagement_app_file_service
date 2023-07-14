@@ -43,7 +43,8 @@ ErrCode ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the reverse stub").GetCode();
     }
 
-    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_INIT_RESTORE_SESSION, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_RESTORE_SESSION),
+                                        data, reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
@@ -69,7 +70,8 @@ ErrCode ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the reverse stub").GetCode();
     }
 
-    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_INIT_BACKUP_SESSION, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_BACKUP_SESSION),
+                                        data, reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
@@ -88,7 +90,8 @@ ErrCode ServiceProxy::Start()
 
     MessageParcel reply;
     MessageOption option;
-    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_START, data, reply, option);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START), data, reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
@@ -108,7 +111,8 @@ UniqueFd ServiceProxy::GetLocalCapabilities()
 
     MessageParcel reply;
     MessageOption option;
-    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_GET_LOCAL_CAPABILITIES, data, reply, option);
+    int32_t ret = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES), data, reply, option);
     if (ret != NO_ERROR) {
         HILOGE("Received error %{public}d when doing IPC", ret);
         return UniqueFd(-ret);
@@ -133,7 +137,8 @@ ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
 
     MessageParcel reply;
     MessageOption option;
-    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_PUBLISH_FILE, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_FILE), data,
+                                        reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
@@ -159,7 +164,8 @@ ErrCode ServiceProxy::AppFileReady(const string &fileName, UniqueFd fd)
 
     MessageParcel reply;
     MessageOption option;
-    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_APP_FILE_READY, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY), data,
+                                        reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
@@ -182,7 +188,8 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
 
     MessageParcel reply;
     MessageOption option;
-    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_APP_DONE, data, reply, option);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_DONE), data, reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
@@ -209,7 +216,8 @@ ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &file
     MessageParcel reply;
     MessageOption option;
     option.SetFlags(MessageOption::TF_ASYNC);
-    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_GET_FILE_NAME, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_FILE_NAME), data,
+                                        reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
@@ -217,7 +225,10 @@ ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &file
     return ret;
 }
 
-ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames)
+ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
+                                                  const vector<BundleName> &bundleNames,
+                                                  RestoreTpyeEnum restoreType,
+                                                  int32_t userId)
 {
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
@@ -234,8 +245,15 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<Bund
     if (!data.WriteStringVector(bundleNames)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();
     }
+    if (!data.WriteInt32(static_cast<int32_t>(restoreType))) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send restoreType").GetCode();
+    }
+    if (!data.WriteInt32(userId)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send userId").GetCode();
+    }
 
-    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION, data, reply, option);
+    int32_t ret = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION), data, reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
@@ -258,7 +276,8 @@ ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundl
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();
     }
 
-    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION, data, reply, option);
+    int32_t ret = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION), data, reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
@@ -277,7 +296,8 @@ ErrCode ServiceProxy::Finish()
 
     MessageParcel reply;
     MessageOption option;
-    int32_t ret = Remote()->SendRequest(IService::SERVICE_CMD_FINISH, data, reply, option);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_FINISH), data, reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
@@ -317,6 +337,13 @@ sptr<IService> ServiceProxy::GetInstance()
         return nullptr;
     }
     return serviceProxy_;
+}
+
+void ServiceProxy::InvaildInstance()
+{
+    HILOGI("invalid instance");
+    unique_lock<mutex> lock(proxyMutex_);
+    serviceProxy_ = nullptr;
 }
 
 void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,

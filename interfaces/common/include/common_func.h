@@ -12,25 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LOG_H
-#define LOG_H
-#include "hilog/log.h"
+
+#ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_COMMON_FUNC_H
+#define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_COMMON_FUNC_H
+
+#include <string>
+#include <unordered_map>
 
 namespace OHOS {
 namespace AppFileService {
-const unsigned int APP_LOG_DOMAIN = 0xD004313;
-const char APP_LOG_TAG[] = "AppFileService";
-static constexpr OHOS::HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, APP_LOG_DOMAIN, APP_LOG_TAG };
-
-#define PRINT_LOG(Level, fmt, ...) \
-    OHOS::HiviewDFX::HiLog::Level(OHOS::AppFileService::LOG_LABEL, "[%{public}s:%{public}d] " fmt, \
-                            __FUNCTION__, __LINE__, ##__VA_ARGS__)
-
-#define LOGI(fmt, ...) PRINT_LOG(Info, fmt, ##__VA_ARGS__)
-#define LOGW(fmt, ...) PRINT_LOG(Warn, fmt, ##__VA_ARGS__)
-#define LOGE(fmt, ...) PRINT_LOG(Error, fmt, ##__VA_ARGS__)
-#define LOGF(fmt, ...) PRINT_LOG(Fatal, fmt, ##__VA_ARGS__)
+class CommonFunc {
+    static std::unordered_map<std::string, std::string> sandboxPathMap_;
+public:
+    static bool CheckValidPath(const std::string &filePath);
+    static int32_t GetPhysicalPath(const std::string &fileUri, const std::string &userId,
+                                   std::string &physicalPath);
+};
 } // namespace AppFileService
 } // namespace OHOS
 
-#endif // LOG_H
+#endif // FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_COMMON_FUNC_H

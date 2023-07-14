@@ -13,30 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef APP_FILE_SERVICE_FILE_SHARE
-#define APP_FILE_SERVICE_FILE_SHARE
+#ifndef OHOS_FILEMGMT_BACKUP_I_EXTENSION_IPC_INTERFACE_CODE_H
+#define OHOS_FILEMGMT_BACKUP_I_EXTENSION_IPC_INTERFACE_CODE_H
 
-#include <string>
-#include <vector>
-#include "want.h"
+/*SAID: 5203*/
+namespace OHOS::FileManagement::Backup {
+enum class IExtensionInterfaceCode {
+    CMD_GET_FILE_HANDLE = 1,
+    CMD_HANDLE_CLAER,
+    CMD_PUBLISH_FILE,
+    CMD_HANDLE_BACKUP,
+};
+} // namespace OHOS::FileManagement::Backup
 
-namespace OHOS {
-namespace AppFileService {
-using namespace std;
-
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif
-#endif /* End of #ifdef __cplusplus */
-    int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag);
-    int32_t DeleteShareFile(uint32_t tokenId, vector<string> sharePathList);
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif
-#endif /* End of #ifdef __cplusplus */
-} // namespace AppFileService
-} // namespace OHOS
-
-#endif
+#endif // OHOS_FILEMGMT_BACKUP_I_EXTENSION_IPC_INTERFACE_CODE_H

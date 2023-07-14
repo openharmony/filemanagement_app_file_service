@@ -18,6 +18,7 @@
 
 #include <cstdint>
 
+#include "i_service_reverse_ipc_interface_code.h"
 #include "iremote_broker.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -27,18 +28,6 @@ public:
         UNDEFINED,
         BACKUP,
         RESTORE,
-    };
-
-    enum {
-        SERVICER_BACKUP_ON_FILE_READY,
-        SERVICER_BACKUP_ON_SUB_TASK_STARTED,
-        SERVICER_BACKUP_ON_SUB_TASK_FINISHED,
-        SERVICER_BACKUP_ON_TASK_FINISHED,
-
-        SERVICER_RESTORE_ON_SUB_TASK_STARTED,
-        SERVICER_RESTORE_ON_SUB_TASK_FINISHED,
-        SERVICER_RESTORE_ON_TASK_FINISHED,
-        SERVICER_RESTORE_ON_FILE_READY,
     };
 
 public:

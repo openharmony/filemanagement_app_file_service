@@ -16,6 +16,7 @@
 #include "module_ipc/service_reverse_proxy.h"
 
 #include "b_error/b_error.h"
+#include "b_error/b_excep_utils.h"
 #include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -24,6 +25,7 @@ using namespace std;
 void ServiceReverseProxy::BackupOnFileReady(string bundleName, string fileName, int fd)
 {
     HILOGI("Begin");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(fileName) ||
         !data.WriteFileDescriptor(fd)) {
@@ -32,7 +34,8 @@ void ServiceReverseProxy::BackupOnFileReady(string bundleName, string fileName, 
 
     MessageParcel reply;
     MessageOption option;
-    if (int err = Remote()->SendRequest(IServiceReverse::SERVICER_BACKUP_ON_FILE_READY, data, reply, option);
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_FILE_READY), data, reply, option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }
@@ -41,6 +44,7 @@ void ServiceReverseProxy::BackupOnFileReady(string bundleName, string fileName, 
 void ServiceReverseProxy::BackupOnBundleStarted(int32_t errCode, string bundleName)
 {
     HILOGI("Begin");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteInt32(errCode) || !data.WriteString(bundleName)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
@@ -48,7 +52,9 @@ void ServiceReverseProxy::BackupOnBundleStarted(int32_t errCode, string bundleNa
 
     MessageParcel reply;
     MessageOption option;
-    if (int err = Remote()->SendRequest(IServiceReverse::SERVICER_BACKUP_ON_SUB_TASK_STARTED, data, reply, option);
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_SUB_TASK_STARTED), data, reply,
+        option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }
@@ -57,6 +63,7 @@ void ServiceReverseProxy::BackupOnBundleStarted(int32_t errCode, string bundleNa
 void ServiceReverseProxy::BackupOnBundleFinished(int32_t errCode, string bundleName)
 {
     HILOGI("Begin");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteInt32(errCode) || !data.WriteString(bundleName)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
@@ -64,7 +71,9 @@ void ServiceReverseProxy::BackupOnBundleFinished(int32_t errCode, string bundleN
 
     MessageParcel reply;
     MessageOption option;
-    if (int err = Remote()->SendRequest(IServiceReverse::SERVICER_BACKUP_ON_SUB_TASK_FINISHED, data, reply, option);
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_SUB_TASK_FINISHED), data, reply,
+        option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }
@@ -73,6 +82,7 @@ void ServiceReverseProxy::BackupOnBundleFinished(int32_t errCode, string bundleN
 void ServiceReverseProxy::BackupOnAllBundlesFinished(int32_t errCode)
 {
     HILOGI("Begin");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteInt32(errCode)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
@@ -80,7 +90,8 @@ void ServiceReverseProxy::BackupOnAllBundlesFinished(int32_t errCode)
 
     MessageParcel reply;
     MessageOption option;
-    if (int err = Remote()->SendRequest(IServiceReverse::SERVICER_BACKUP_ON_TASK_FINISHED, data, reply, option);
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_TASK_FINISHED), data, reply, option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }
@@ -89,6 +100,7 @@ void ServiceReverseProxy::BackupOnAllBundlesFinished(int32_t errCode)
 void ServiceReverseProxy::RestoreOnBundleStarted(int32_t errCode, string bundleName)
 {
     HILOGI("Begin");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteInt32(errCode) || !data.WriteString(bundleName)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
@@ -96,7 +108,9 @@ void ServiceReverseProxy::RestoreOnBundleStarted(int32_t errCode, string bundleN
 
     MessageParcel reply;
     MessageOption option;
-    if (int err = Remote()->SendRequest(IServiceReverse::SERVICER_RESTORE_ON_SUB_TASK_STARTED, data, reply, option);
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_SUB_TASK_STARTED), data, reply,
+        option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }
@@ -105,6 +119,7 @@ void ServiceReverseProxy::RestoreOnBundleStarted(int32_t errCode, string bundleN
 void ServiceReverseProxy::RestoreOnBundleFinished(int32_t errCode, string bundleName)
 {
     HILOGI("Begin");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteInt32(errCode) || !data.WriteString(bundleName)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
@@ -112,7 +127,9 @@ void ServiceReverseProxy::RestoreOnBundleFinished(int32_t errCode, string bundle
 
     MessageParcel reply;
     MessageOption option;
-    if (int err = Remote()->SendRequest(IServiceReverse::SERVICER_RESTORE_ON_SUB_TASK_FINISHED, data, reply, option);
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_SUB_TASK_FINISHED), data, reply,
+        option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }
@@ -121,6 +138,7 @@ void ServiceReverseProxy::RestoreOnBundleFinished(int32_t errCode, string bundle
 void ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode)
 {
     HILOGI("Begin");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteInt32(errCode)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
@@ -128,7 +146,9 @@ void ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode)
 
     MessageParcel reply;
     MessageOption option;
-    if (int err = Remote()->SendRequest(IServiceReverse::SERVICER_RESTORE_ON_TASK_FINISHED, data, reply, option);
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_TASK_FINISHED), data, reply,
+        option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }
@@ -137,6 +157,7 @@ void ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode)
 void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName, int fd)
 {
     HILOGI("Begin");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(fileName) ||
         !data.WriteFileDescriptor(fd)) {
@@ -145,7 +166,8 @@ void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName,
 
     MessageParcel reply;
     MessageOption option;
-    if (int err = Remote()->SendRequest(IServiceReverse::SERVICER_RESTORE_ON_FILE_READY, data, reply, option);
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_FILE_READY), data, reply, option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }

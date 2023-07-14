@@ -80,7 +80,10 @@ ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &file
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames)
+ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
+                                                  const vector<BundleName> &bundleNames,
+                                                  RestoreTpyeEnum restoreType,
+                                                  int32_t userId)
 {
     return BError(BError::Codes::OK);
 }
@@ -108,6 +111,11 @@ sptr<IService> ServiceProxy::GetInstance()
         serviceProxy_ = sptr(new ServiceProxy(object));
     }
     return serviceProxy_;
+}
+
+void ServiceProxy::InvaildInstance()
+{
+    serviceProxy_ = nullptr;
 }
 
 void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,

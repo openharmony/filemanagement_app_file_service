@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include "b_error/b_error.h"
+#include "b_filesystem/b_dir.h"
 #include "b_process/b_guard_cwd.h"
 #include "b_process/b_process.h"
 
@@ -53,10 +54,12 @@ void BTarballCmdline::Tar(string_view root, vector<string_view> includes, vector
         throw BError(BError::Codes::UTILS_INVAL_TARBALL_ARG, "tar includes argument must be not empty");
     }
 
-    for (auto &&include : includes) {
+    vector<string> includesDirs = BDir::GetDirs(includes);
+    for (auto &&include : includesDirs) {
         argv.push_back(include);
     }
-    for (auto &&exclude : excludes) {
+    vector<string> excludesDirs = BDir::GetDirs(excludes);
+    for (auto &&exclude : excludesDirs) {
         argv.push_back("--exclude");
         argv.push_back(exclude);
     }

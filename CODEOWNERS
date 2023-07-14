@@ -11,30 +11,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
-
-config("file_share_config") {
-  visibility = [ ":*" ]
-  include_dirs = [
-    "include",
-    "../common",
-  ]
-}
-
-ohos_shared_library("fileshare_native") {
-  sources = [ "src/file_share.cpp" ]
-
-  public_configs = [ ":file_share_config" ]
-
-  external_deps = [
-    "ability_base:base",
-    "ability_base:want",
-    "ability_base:zuri",
-    "access_token:libaccesstoken_sdk",
-    "c_utils:utils",
-    "hilog:libhilog",
-  ]
-
-  part_name = "app_file_service"
-  subsystem_name = "filemanagement"
-}
+# any change to xxx_ipc_interface_code.h needs to be reviewed by @leonchan5
+interfaces/inner_api/native/backup_kit_inner/impl/i_service_ipc_interface_code.h @leonchan5

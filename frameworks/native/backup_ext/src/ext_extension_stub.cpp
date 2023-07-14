@@ -27,10 +27,14 @@ using namespace std;
 
 ExtExtensionStub::ExtExtensionStub()
 {
-    opToInterfaceMap_[CMD_GET_FILE_HANDLE] = &ExtExtensionStub::CmdGetFileHandle;
-    opToInterfaceMap_[CMD_HANDLE_CLAER] = &ExtExtensionStub::CmdHandleClear;
-    opToInterfaceMap_[CMD_HANDLE_BACKUP] = &ExtExtensionStub::CmdHandleBackup;
-    opToInterfaceMap_[CMD_PUBLISH_FILE] = &ExtExtensionStub::CmdPublishFile;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_GET_FILE_HANDLE)] =
+        &ExtExtensionStub::CmdGetFileHandle;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_HANDLE_CLAER)] =
+        &ExtExtensionStub::CmdHandleClear;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_HANDLE_BACKUP)] =
+        &ExtExtensionStub::CmdHandleBackup;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_PUBLISH_FILE)] =
+        &ExtExtensionStub::CmdPublishFile;
 }
 
 int32_t ExtExtensionStub::OnRemoteRequest(uint32_t code,

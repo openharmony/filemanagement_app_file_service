@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,29 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef GET_URI_FROM_PATH_H
-#define GET_URI_FROM_PATH_H
+#ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_COMMON_INCLUDE_JSON_UTILS_H
+#define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_COMMON_INCLUDE_JSON_UTILS_H
 
 #include <string>
-#include "filemgmt_libn.h"
+#include <vector>
+#include <unordered_map>
+
+#include "nlohmann/json.hpp"
 
 namespace OHOS {
 namespace AppFileService {
-namespace ModuleFileUri {
-using namespace std;
-
-const string SCHEME = "file";
-const char SCHEME_SEPARATOR = ':';
-const string PATH_SYMBOLS = "//";
-const string FRAGMENT_SYMBOLS = "#";
-const char SCHEME_PATH_BEGIN = '/';
-
-class GetUriFromPath final {
+class JsonUtils {
 public:
-    static napi_value Sync(napi_env env, napi_callback_info info);
+    static int32_t GetJsonObjFromPath(nlohmann::json& jsonObj, const std::string& jsonPath);
+    static int32_t GetKVFromJson(const nlohmann::json &json, const std::string &key,
+                                 std::string &value);
 };
-} // namespace ModuleFileUri
-} // namespace AppFileService
-} // namespace OHOS
-
-#endif // GET_URI_FROM_PATH_H
+} // AppFileService
+} // OHOS
+#endif // FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_COMMON_INCLUDE_JSON_UTILS_H

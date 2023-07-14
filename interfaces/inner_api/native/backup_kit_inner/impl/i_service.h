@@ -22,26 +22,20 @@
 #include <unique_fd.h>
 
 #include "b_file_info.h"
+#include "i_service_ipc_interface_code.h"
 #include "i_service_reverse.h"
 #include "iremote_broker.h"
 
 namespace OHOS::FileManagement::Backup {
+const int DEFAULT_INVAL_VALUE = -1;
+
+typedef enum TypeRestoreTpyeEnum {
+    RESTORE_DATA_WAIT_SEND = 0,
+    RESTORE_DATA_READDY = 1,
+} RestoreTpyeEnum;
+
 class IService : public IRemoteBroker {
 public:
-    enum {
-        SERVICE_CMD_INIT_RESTORE_SESSION,
-        SERVICE_CMD_INIT_BACKUP_SESSION,
-        SERVICE_CMD_GET_LOCAL_CAPABILITIES,
-        SERVICE_CMD_PUBLISH_FILE,
-        SERVICE_CMD_APP_FILE_READY,
-        SERVICE_CMD_APP_DONE,
-        SERVICE_CMD_START,
-        SERVICE_CMD_GET_FILE_NAME,
-        SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION,
-        SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION,
-        SERVICE_CMD_FINISH,
-    };
-
     virtual ErrCode InitRestoreSession(sptr<IServiceReverse> remote) = 0;
     virtual ErrCode InitBackupSession(sptr<IServiceReverse> remote) = 0;
     virtual ErrCode Start() = 0;
@@ -50,7 +44,11 @@ public:
     virtual ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) = 0;
     virtual ErrCode AppDone(ErrCode errCode) = 0;
     virtual ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) = 0;
-    virtual ErrCode AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames) = 0;
+    virtual ErrCode AppendBundlesRestoreSession(
+        UniqueFd fd,
+        const std::vector<BundleName> &bundleNames,
+        RestoreTpyeEnum restoreType = RestoreTpyeEnum::RESTORE_DATA_WAIT_SEND,
+        int32_t userId = DEFAULT_INVAL_VALUE) = 0;
     virtual ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) = 0;
     virtual ErrCode Finish() = 0;
 

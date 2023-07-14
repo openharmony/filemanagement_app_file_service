@@ -16,6 +16,7 @@
 #include "module_ipc/svc_extension_proxy.h"
 
 #include "b_error/b_error.h"
+#include "b_error/b_excep_utils.h"
 #include "filemgmt_libhilog.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
@@ -26,6 +27,7 @@ using namespace std;
 UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
 {
     HILOGI("Start");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     data.WriteInterfaceToken(GetDescriptor());
 
@@ -36,7 +38,8 @@ UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
 
     MessageParcel reply;
     MessageOption option;
-    int32_t ret = Remote()->SendRequest(IExtension::CMD_GET_FILE_HANDLE, data, reply, option);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(IExtensionInterfaceCode::CMD_GET_FILE_HANDLE), data, reply, option);
     if (ret != NO_ERROR) {
         HILOGE("Received error %{public}d when doing IPC", ret);
         return UniqueFd(-ret);
@@ -50,12 +53,14 @@ UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
 ErrCode SvcExtensionProxy::HandleClear()
 {
     HILOGI("Start");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     data.WriteInterfaceToken(GetDescriptor());
 
     MessageParcel reply;
     MessageOption option;
-    int32_t ret = Remote()->SendRequest(IExtension::CMD_HANDLE_CLAER, data, reply, option);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(IExtensionInterfaceCode::CMD_HANDLE_CLAER), data, reply, option);
     if (ret != NO_ERROR) {
         HILOGE("Received error %{public}d when doing IPC", ret);
         return ErrCode(ret);
@@ -68,12 +73,14 @@ ErrCode SvcExtensionProxy::HandleClear()
 ErrCode SvcExtensionProxy::HandleBackup()
 {
     HILOGI("Start");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     data.WriteInterfaceToken(GetDescriptor());
 
     MessageParcel reply;
     MessageOption option;
-    int32_t ret = Remote()->SendRequest(IExtension::CMD_HANDLE_BACKUP, data, reply, option);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(IExtensionInterfaceCode::CMD_HANDLE_BACKUP), data, reply, option);
     if (ret != NO_ERROR) {
         HILOGE("Received error %{public}d when doing IPC", ret);
         return ErrCode(ret);
@@ -86,6 +93,7 @@ ErrCode SvcExtensionProxy::HandleBackup()
 ErrCode SvcExtensionProxy::PublishFile(const string &fileName)
 {
     HILOGI("Start");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     data.WriteInterfaceToken(GetDescriptor());
 
@@ -96,7 +104,8 @@ ErrCode SvcExtensionProxy::PublishFile(const string &fileName)
 
     MessageParcel reply;
     MessageOption option;
-    int32_t ret = Remote()->SendRequest(IExtension::CMD_PUBLISH_FILE, data, reply, option);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(IExtensionInterfaceCode::CMD_PUBLISH_FILE), data, reply, option);
     if (ret != NO_ERROR) {
         HILOGE("Received error %{public}d when doing IPC", ret);
         return ErrCode(ret);

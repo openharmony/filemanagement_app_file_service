@@ -54,6 +54,7 @@ ohos_shared_library("backup_extension_ability_native") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "napi:ace_napi",
   ]
 
   use_exceptions = true

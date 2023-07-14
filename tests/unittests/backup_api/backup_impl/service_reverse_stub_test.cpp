@@ -84,8 +84,10 @@ HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_BackupOnFileReady
         UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
         data.WriteFileDescriptor(fd);
 
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IServiceReverse::SERVICER_BACKUP_ON_FILE_READY, data, reply, option));
+        EXPECT_EQ(
+            BError(BError::Codes::OK),
+            service.OnRemoteRequest(static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_FILE_READY),
+                                    data, reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by BackupOnFileReady.";
@@ -119,7 +121,9 @@ HWTEST_F(ServiceReverseStubTest,
         EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
 
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IServiceReverse::SERVICER_BACKUP_ON_SUB_TASK_STARTED, data, reply, option));
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_SUB_TASK_STARTED), data,
+                      reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by BackupOnBundleStarted.";
@@ -153,7 +157,9 @@ HWTEST_F(ServiceReverseStubTest,
         EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
 
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IServiceReverse::SERVICER_BACKUP_ON_SUB_TASK_FINISHED, data, reply, option));
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_SUB_TASK_FINISHED), data,
+                      reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by BackupOnBundleFinished.";
@@ -186,7 +192,9 @@ HWTEST_F(ServiceReverseStubTest,
         EXPECT_TRUE(data.WriteInt32(BError(BError::Codes::OK)));
 
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IServiceReverse::SERVICER_BACKUP_ON_TASK_FINISHED, data, reply, option));
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_TASK_FINISHED), data,
+                      reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by BackupOnAllBundlesFinished.";
@@ -220,7 +228,9 @@ HWTEST_F(ServiceReverseStubTest,
         EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
 
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IServiceReverse::SERVICER_RESTORE_ON_SUB_TASK_STARTED, data, reply, option));
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_SUB_TASK_STARTED), data,
+                      reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by RestoreOnBundleStarted.";
@@ -254,7 +264,9 @@ HWTEST_F(ServiceReverseStubTest,
         EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
 
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IServiceReverse::SERVICER_RESTORE_ON_SUB_TASK_FINISHED, data, reply, option));
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_SUB_TASK_FINISHED), data,
+                      reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by RestoreOnBundleFinished.";
@@ -287,7 +299,9 @@ HWTEST_F(ServiceReverseStubTest,
         EXPECT_TRUE(data.WriteInt32(BError(BError::Codes::OK)));
 
         EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IServiceReverse::SERVICER_RESTORE_ON_TASK_FINISHED, data, reply, option));
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_TASK_FINISHED), data,
+                      reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by RestoreOnAllBundlesFinished.";
@@ -323,8 +337,10 @@ HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_RestoreOnFileRead
         UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
         data.WriteFileDescriptor(fd);
 
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IServiceReverse::SERVICER_RESTORE_ON_FILE_READY, data, reply, option));
+        EXPECT_EQ(
+            BError(BError::Codes::OK),
+            service.OnRemoteRequest(static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_FILE_READY),
+                                    data, reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by RestoreOnFileReady.";
@@ -352,8 +368,10 @@ HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_error_0100, testi
         EXPECT_TRUE(data.WriteInterfaceToken(Str8ToStr16("test")));
 
         EXPECT_NE(BError(BError::Codes::OK), service.OnRemoteRequest(3333, data, reply, option));
-        EXPECT_NE(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(IServiceReverse::SERVICER_RESTORE_ON_FILE_READY, data, reply, option));
+        EXPECT_NE(
+            BError(BError::Codes::OK),
+            service.OnRemoteRequest(static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_FILE_READY),
+                                    data, reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred.";

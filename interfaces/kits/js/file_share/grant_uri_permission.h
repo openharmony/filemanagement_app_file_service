@@ -30,6 +30,7 @@ const string MEDIA_GRANT_URI_PERMISSION =
 const string MEDIALIBRARY_DATA_URI = "datashare:///media";
 const string MEDIA_FILEMODE_READONLY = "r";
 const string GRANT_URI_NAME = "file_share_grant_uri_permission";
+const string MEDIA_API_VERSION_10 = "?api_version=10";
 const string PERMISSION_BUNDLE_NAME = "bundle_name";
 const string PERMISSION_FILE_ID = "file_id";
 const string PERMISSION_MODE = "mode";
