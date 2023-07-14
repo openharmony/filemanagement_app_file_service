@@ -220,7 +220,7 @@ int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, Message
     if (!data.ReadInt32(type)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive restoreType");
     }
-    RestoreTpyeEnum restoreType = static_cast<RestoreTpyeEnum>(type);
+    RestoreTypeEnum restoreType = static_cast<RestoreTypeEnum>(type);
     int32_t userId;
     if (!data.ReadInt32(userId)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive userId");

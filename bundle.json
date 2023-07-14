@@ -90,6 +90,7 @@
                         "header_files": [
                             "backup_kit_inner.h",
                             "impl/b_session_restore.h",
+                            "impl/b_session_restore_async.h",
                             "impl/b_file_info.h",
                             "impl/service_proxy.h",
                             "impl/b_session_backup.h",
