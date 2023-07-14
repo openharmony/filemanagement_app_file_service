@@ -360,7 +360,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1000, te
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_1000";
     try {
         string bundleName = "com.example.app2backup";
-        string jsonFileDir = string(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR).append(bundleName);
+        string jsonFileDir = BConstants::GetSaBundleBackupRootDir(BConstants::DEFAULT_USER_ID).append(bundleName);
         string jsonContent = R"({"allowToBackupRestore":true})";
         auto [bFatalErr, ret] = BProcess::ExecuteCmd({"mkdir", "-p", jsonFileDir});
         EXPECT_FALSE(bFatalErr);

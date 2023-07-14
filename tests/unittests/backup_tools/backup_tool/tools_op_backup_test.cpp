@@ -49,7 +49,7 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_0100, testing::ext::TestS
         SetMockGetInstance(true);
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-info";
         map<string, vector<string>> mapArgToVal;
-        string localCap = string(BConstants::SA_BUNDLE_BACKUP_TOOL_DIR.data()) + "/tmp";
+        string localCap = string(BConstants::GetSaBundleBackupToolDir(BConstants::DEFAULT_USER_ID).data()) + "/tmp";
         vector<string> path = {localCap.data()};
         mapArgToVal.insert(make_pair("pathCapFile", path));
         vector<string> bundles = {"com.example.app2backup"};

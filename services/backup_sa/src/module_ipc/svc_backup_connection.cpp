@@ -58,12 +58,12 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
     HILOGI("called end");
 }
 
-ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want)
+ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId)
 {
     HILOGI("called begin");
     std::unique_lock<std::mutex> lock(mutex_);
     ErrCode ret =
-        AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, AppExecFwk::Constants::START_USERID);
+        AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, userId);
     HILOGI("called end, ret=%{public}d", ret);
     return ret;
 }

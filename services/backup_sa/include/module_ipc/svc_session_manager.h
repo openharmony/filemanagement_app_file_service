@@ -32,6 +32,7 @@
 #include "b_file_info.h"
 #include "b_resources/b_constants.h"
 #include "i_service_reverse.h"
+#include "i_service.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "svc_death_recipient.h"
 
@@ -46,6 +47,12 @@ struct BackupExtInfo {
     BConstants::ServiceSchedAction schedAction {BConstants::ServiceSchedAction::WAIT};
     bool bNeedToInstall {false};
     std::string installState;
+    /* [RESTORE] Record whether data backup is required during the app exec restore proceess. */
+    RestoreTypeEnum restoreType;
+    /* Clone App: old device app versionCode */
+    uint32_t versionCode;
+    /* Clone App: old device app versionCode */
+    std::string versionName;
 };
 
 class Service;
@@ -58,6 +65,11 @@ public:
         sptr<IServiceReverse> clientProxy;
         bool isBackupStart {false};
         bool isAppendFinish {false};
+        /* Note: Multi user scenario: <System Update Upgrade>
+            Caller must complete all processes before next user tigger.<Session>
+            [RESTORE] Support for multiple users, incoming during restore process.
+        */
+        int32_t userId;
     };
 
 public:
@@ -109,6 +121,20 @@ public:
      * @throw BError::Codes::SA_INVAL_ARG 获取异常
      */
     IServiceReverse::Scenario GetScenario();
+
+    /**
+     * @brief 获取当前处理事务会话对应的userId
+     *
+     * @return int32_t
+     */
+    int32_t GetSessionUserId();
+
+    /**
+     * @brief 设置当前处理事务会话对应的userId
+     *
+     * @param userid 相关会话对应的userId
+     */
+    void SetSessionUserId(int32_t userId);
 
     /**
      * @brief 更新backupExtNameMap并判断是否完成分发
@@ -279,6 +305,54 @@ public:
      * @return false
      */
     bool NeedToUnloadService();
+
+/**
+     * @brief Set the bundle restore type object
+     *
+     * @param bundleName
+     * @param restoreType
+     */
+    void SetBundleRestoreType(const std::string &bundleName, RestoreTypeEnum restoreType);
+
+    /**
+     * @brief Get the bundle restore type object
+     *
+     * @param  bundleName
+     * @return restoreType
+     */
+    RestoreTypeEnum GetBundleRestoreType(const std::string &bundleName);
+
+    /**
+     * @brief Set the bundle version code object
+     *
+     * @param bundleName
+     * @param versionCode
+     */
+    void SetBundleVersionCode(const std::string &bundleName, uint32_t versionCode);
+
+    /**
+     * @brief Get the bundle version code object
+     *
+     * @param  bundleName
+     * @return versionCode
+     */
+    uint32_t GetBundleVersionCode(const std::string &bundleName);
+
+    /**
+     * @brief Set the bundle version name object
+     *
+     * @param bundleName
+     * @param versionName
+     */
+    void SetBundleVersionName(const std::string &bundleName, std::string versionName);
+
+    /**
+     * @brief Get the bundle version name object
+     *
+     * @param  bundleName
+     * @return versionName
+     */
+    std::string GetBundleVersionName(const std::string &bundleName);
 
 private:
     /**

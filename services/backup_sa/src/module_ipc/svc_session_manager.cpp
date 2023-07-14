@@ -119,6 +119,16 @@ IServiceReverse::Scenario SvcSessionManager::GetScenario()
     return impl_.scenario;
 }
 
+int32_t SvcSessionManager::GetSessionUserId()
+{
+    return impl_.userId;
+}
+
+void SvcSessionManager::SetSessionUserId(int32_t userId)
+{
+    impl_.userId = userId;
+}
+
 bool SvcSessionManager::OnBunleFileReady(const string &bundleName, const string &fileName)
 {
     unique_lock<shared_mutex> lock(lock_);
@@ -356,7 +366,7 @@ string SvcSessionManager::GetBackupExtName(const string &bundleName)
     }
     string name = bundleName;
     VerifyBundleName(name);
-    auto bundleInfos = BundleMgrAdapter::GetBundleInfos({bundleName});
+    auto bundleInfos = BundleMgrAdapter::GetBundleInfos({bundleName}, impl_.userId);
     for (auto &&bundleInfo : bundleInfos) {
         if (!bundleInfo.allToBackup || bundleInfo.extensionName.empty()) {
             throw BError(BError::Codes::SA_INVAL_ARG,
@@ -486,5 +496,71 @@ bool SvcSessionManager::NeedToUnloadService()
         return true;
     }
     return false;
+}
+
+void SvcSessionManager::SetBundleRestoreType(const std::string &bundleName, RestoreTypeEnum restoreType)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    it->second.restoreType = restoreType;
+}
+
+RestoreTypeEnum SvcSessionManager::GetBundleRestoreType(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    return it->second.restoreType;
+}
+
+void SvcSessionManager::SetBundleVersionCode(const std::string &bundleName, uint32_t versionCode)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    it->second.versionCode = versionCode;
+}
+
+uint32_t SvcSessionManager::GetBundleVersionCode(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    return it->second.versionCode;
+}
+
+void SvcSessionManager::SetBundleVersionName(const std::string &bundleName, std::string versionName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    it->second.versionName = versionName;
+}
+
+std::string SvcSessionManager::GetBundleVersionName(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    return it->second.versionName;
 }
 } // namespace OHOS::FileManagement::Backup

@@ -69,13 +69,12 @@ static tuple<bool, string> GetAllowAndExtName(const vector<AppExecFwk::Extension
     return {false, ""};
 }
 
-vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos()
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(int32_t userId)
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     vector<AppExecFwk::BundleInfo> installedBundles;
     auto bms = GetBundleManager();
-    if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles,
-                             AppExecFwk::Constants::START_USERID)) {
+    if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles, userId)) {
         throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle infos");
     }
     for (auto const &installedBundle : installedBundles) {
@@ -88,14 +87,13 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos()
     return bundleInfos;
 }
 
-vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vector<string> &bundleNames)
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vector<string> &bundleNames, int32_t userId)
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     auto bms = GetBundleManager();
     for (auto const &bundleName : bundleNames) {
         AppExecFwk::BundleInfo installedBundle;
-        if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle,
-                                AppExecFwk::Constants::START_USERID)) {
+        if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
             throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle info");
         }
         auto [allToBackup, extName] = GetAllowAndExtName(installedBundle.extensionInfos);
@@ -107,7 +105,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
     return bundleInfos;
 }
 
-ErrCode BundleMgrAdapter::Install(wptr<InnerReceiverImpl> statusReceiver, const string &bundleFilePath)
+ErrCode BundleMgrAdapter::Install(wptr<InnerReceiverImpl> statusReceiver, const string &bundleFilePath, int32_t userId)
 {
     HILOGI("Begin");
     auto bms = GetBundleManager();
@@ -131,7 +129,7 @@ ErrCode BundleMgrAdapter::Install(wptr<InnerReceiverImpl> statusReceiver, const 
 
     AppExecFwk::InstallParam installParam;
     installParam.installFlag = AppExecFwk::InstallFlag::REPLACE_EXISTING;
-    installParam.userId = AppExecFwk::Constants::START_USERID;
+    installParam.userId = userId;
     return install->StreamInstall({bundleFilePath}, installParam, receiver);
 }
 } // namespace OHOS::FileManagement::Backup

@@ -45,7 +45,7 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
     callDied_(move(bundleName));
 }
 
-ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want)
+ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId)
 {
     return 0;
 }

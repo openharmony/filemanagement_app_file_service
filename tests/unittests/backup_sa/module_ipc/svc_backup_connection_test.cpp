@@ -31,6 +31,7 @@ using namespace testing;
 
 namespace {
 constexpr int32_t WAIT_TIME = 1;
+constexpr int DEFAULT_USER_ID = 100;
 } // namespace
 
 class SvcBackupConnectionTest : public testing::Test {
@@ -138,7 +139,7 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_ConnectBackupExtAbility_0
 {
     GTEST_LOG_(INFO) << "SvcBackupConnectionTest-begin SUB_BackupConnection_ConnectBackupExtAbility_0100";
     AAFwk::Want want;
-    ErrCode ret = backupCon_->ConnectBackupExtAbility(want);
+    ErrCode ret = backupCon_->ConnectBackupExtAbility(want, DEFAULT_USER_ID);
     EXPECT_NE(ret, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_ConnectBackupExtAbility_0100";
 }
