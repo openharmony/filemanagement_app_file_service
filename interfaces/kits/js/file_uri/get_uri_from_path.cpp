@@ -96,7 +96,7 @@ napi_value GetUriFromPath::Sync(napi_env env, napi_callback_info info)
     }
 
     string realPath = path.get();
-    if (!NormalizePath(realPath)) {
+    if (!realPath.empty() && !NormalizePath(realPath)) {
         LOGE("GetUriFromPath::NormalizePath failed!");
         NError(EINVAL).ThrowErr(env);
         return nullptr;
