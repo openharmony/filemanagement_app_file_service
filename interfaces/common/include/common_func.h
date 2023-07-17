@@ -27,6 +27,9 @@ public:
     static bool CheckValidPath(const std::string &filePath);
     static int32_t GetPhysicalPath(const std::string &fileUri, const std::string &userId,
                                    std::string &physicalPath);
+    static std::string GetSelfBundleName();
+    static std::string GetUriFromPath(const std::string &path);
+    static bool CheckPublicDirPath(const std::string &sandboxPath);
 };
 } // namespace AppFileService
 } // namespace OHOS

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,21 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef GET_URI_FROM_PATH_H
-#define GET_URI_FROM_PATH_H
+#ifndef APP_FILE_SERVICE_FILE_URI_FILE_URI_H
+#define APP_FILE_SERVICE_FILE_URI_FILE_URI_H
 
 #include <string>
-#include "filemgmt_libn.h"
 
+#include "uri.h"
 namespace OHOS {
 namespace AppFileService {
 namespace ModuleFileUri {
-class GetUriFromPath final {
+class FileUri {
 public:
-    static napi_value Sync(napi_env env, napi_callback_info info);
-};
-} // namespace ModuleFileUri
-} // namespace AppFileService
-} // namespace OHOS
+    std::string GetName();
+    std::string GetPath();
+    std::string ToString();
 
-#endif // GET_URI_FROM_PATH_H
+    explicit FileUri(const std::string &uriOrPath);
+    ~FileUri() = default;
+private:
+    Uri uri_;
+};
+}  // ModuleFileUri
+}  // namespace AppFileService
+}  // namespace OHOS
+#endif  // APP_FILE_SERVICE_FILE_URI_FILE_URI_H

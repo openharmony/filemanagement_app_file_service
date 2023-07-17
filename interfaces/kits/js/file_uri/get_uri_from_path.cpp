@@ -14,71 +14,15 @@
  */
 #include "get_uri_from_path.h"
 
-#include "bundle_info.h"
-#include "bundle_mgr_proxy.h"
-#include "ipc_skeleton.h"
-#include "iservice_registry.h"
-#include "log.h"
 #include "status_receiver_host.h"
-#include "system_ability_definition.h"
+
+#include "common_func.h"
+#include "log.h"
 
 namespace OHOS {
 namespace AppFileService {
 namespace ModuleFileUri {
 using namespace OHOS::FileManagement::LibN;
-using namespace OHOS::AppExecFwk;
-
-static sptr<BundleMgrProxy> GetBundleMgrProxy()
-{
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (!systemAbilityManager) {
-        LOGE("fail to get system ability mgr.");
-        return nullptr;
-    }
-
-    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (!remoteObject) {
-        LOGE("fail to get bundle manager proxy.");
-        return nullptr;
-    }
-
-    return iface_cast<BundleMgrProxy>(remoteObject);
-}
-
-static string GetBundleName()
-{
-    int uid = -1;
-    uid = IPCSkeleton::GetCallingUid();
-
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        LOGE("GetBundleName: bundle mgr proxy is nullptr.");
-        return nullptr;
-    }
-
-    BundleInfo bundleInfo;
-    auto ret = bundleMgrProxy->GetBundleInfoForSelf(uid, bundleInfo);
-    if (ret != ERR_OK) {
-        LOGE("GetBundleName: bundleName get fail. uid is %{public}d", uid);
-        return nullptr;
-    }
-
-    return bundleInfo.name;
-}
-
-static bool NormalizePath(string &path)
-{
-    if (path.size() <= 0) {
-        return false;
-    }
-
-    if (path[0] != SCHEME_PATH_BEGIN) {
-        path.insert(0, 1, SCHEME_PATH_BEGIN);
-    }
-
-    return true;
-}
 
 napi_value GetUriFromPath::Sync(napi_env env, napi_callback_info info)
 {
@@ -95,15 +39,13 @@ napi_value GetUriFromPath::Sync(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    string realPath = path.get();
-    if (!realPath.empty() && !NormalizePath(realPath)) {
-        LOGE("GetUriFromPath::NormalizePath failed!");
+    std::string uri = CommonFunc::GetUriFromPath(path.get());
+    if (uri == "") {
+        LOGE("GetUriFromPath failed!");
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
 
-    string packageName = GetBundleName();
-    string uri = SCHEME + SCHEME_SEPARATOR + PATH_SYMBOLS + packageName + realPath;
     return NVal::CreateUTF8String(env, uri).val_;
 }
 

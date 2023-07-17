@@ -17,14 +17,21 @@
 
 #include <vector>
 
+#include "bundle_info.h"
+#include "bundle_mgr_proxy.h"
+#include "ipc_skeleton.h"
+#include "iservice_registry.h"
+#include "uri.h"
+#include "system_ability_definition.h"
+
 #include "log.h"
 #include "json_utils.h"
-#include "uri.h"
 
 using namespace std;
 
 namespace OHOS {
 namespace AppFileService {
+using namespace OHOS::AppExecFwk;
 namespace {
     const string PACKAGE_NAME_FLAG = "<PackageName>";
     const string CURRENT_USER_ID_FLAG = "<currentUserId>";
@@ -32,6 +39,11 @@ namespace {
     const string SANDBOX_PATH_KEY = "sandbox-path";
     const string MOUNT_PATH_MAP_KEY = "mount-path-map";
     const string SANDBOX_JSON_FILE_PATH = "/etc/app_file_service/file_share_sandbox.json";
+    const std::string FILE_SCHEME_PREFIX = "file://";
+    const char BACKFLASH = '/';
+    const std::vector<std::string> PUBLIC_DIR_PATHS = {
+        "/Documents"
+    };
 }
 std::unordered_map<std::string, string> CommonFunc::sandboxPathMap_;
 
@@ -121,6 +133,81 @@ bool CommonFunc::CheckValidPath(const std::string &filePath)
     } else {
         return false;
     }
+}
+
+static sptr<BundleMgrProxy> GetBundleMgrProxy()
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        LOGE("fail to get system ability mgr.");
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (!remoteObject) {
+        LOGE("fail to get bundle manager proxy.");
+        return nullptr;
+    }
+
+    return iface_cast<BundleMgrProxy>(remoteObject);
+}
+
+string CommonFunc::GetSelfBundleName()
+{
+    int uid = -1;
+    uid = IPCSkeleton::GetCallingUid();
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        LOGE("GetSelfBundleName: bundle mgr proxy is nullptr.");
+        return "";
+    }
+
+    BundleInfo bundleInfo;
+    auto ret = bundleMgrProxy->GetBundleInfoForSelf(uid, bundleInfo);
+    if (ret != ERR_OK) {
+        LOGE("GetSelfBundleName: bundleName get fail. uid is %{public}d", uid);
+        return "";
+    }
+
+    return bundleInfo.name;
+}
+
+bool CommonFunc::CheckPublicDirPath(const std::string &sandboxPath)
+{
+    for (const std::string &path : PUBLIC_DIR_PATHS) {
+        if (sandboxPath.find(path) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool NormalizePath(string &path)
+{
+    if (path.size() <= 0) {
+        return false;
+    }
+
+    if (path[0] != BACKFLASH) {
+        path.insert(0, 1, BACKFLASH);
+    }
+
+    return true;
+}
+
+string CommonFunc::GetUriFromPath(const string &path)
+{
+    string realPath = path;
+    if (!realPath.empty() && !NormalizePath(realPath)) {
+        LOGE("GetUriFromPath::NormalizePath failed!");
+        return "";
+    }
+
+    string packageName = GetSelfBundleName();
+    realPath = FILE_SCHEME_PREFIX + packageName + realPath;
+    return realPath;
 }
 } // namespace AppFileService
 } // namespace OHOS
