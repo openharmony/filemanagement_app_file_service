@@ -23,6 +23,7 @@
 #include "b_filesystem/b_dir.h"
 #include "b_process/b_guard_cwd.h"
 #include "b_process/b_process.h"
+#include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -55,6 +56,10 @@ void BTarballCmdline::Tar(string_view root, vector<string_view> includes, vector
     }
 
     vector<string> includesDirs = BDir::GetDirs(includes);
+    if (includesDirs.empty()) {
+        HILOGE("The package path does not exist, and an empty package is generated");
+        includesDirs.push_back("");
+    }
     for (auto &&include : includesDirs) {
         argv.push_back(include);
     }
