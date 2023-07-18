@@ -239,7 +239,10 @@ static int32_t AppendBundles(shared_ptr<SessionAsync> restore,
     return 0;
 }
 
-static int32_t InitArg(const string &pathCapFile, vector<string> bundleNames, const string &type, const string &userId)
+static int32_t InitArg(const string &pathCapFile,
+                       const vector<string> &bundleNames,
+                       const string &type,
+                       const string &userId)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "Init");
     BExcepUltils::VerifyPath(pathCapFile, false);
@@ -268,7 +271,7 @@ static int32_t InitArg(const string &pathCapFile, vector<string> bundleNames, co
 static int Exec(map<string, vector<string>> &mapArgToVal)
 {
     if (mapArgToVal.find("pathCapFile") == mapArgToVal.end() || mapArgToVal.find("bundles") == mapArgToVal.end() ||
-        mapArgToVal["restoreType"].empty() || mapArgToVal["userId"].empty()) {
+        mapArgToVal.find("restoreType") == mapArgToVal.end() || mapArgToVal.find("userId") == mapArgToVal.end()) {
         return -EPERM;
     }
     return InitArg(*(mapArgToVal["pathCapFile"].begin()), mapArgToVal["bundles"], *(mapArgToVal["restoreType"].begin()),
