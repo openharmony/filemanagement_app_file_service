@@ -51,7 +51,8 @@ string FileUri::GetPath()
     string realPath = sandboxPath;
     string providerBundleName = uri_.GetAuthority();
     string targetBundleName = CommonFunc::GetSelfBundleName();
-    if (CommonFunc::CheckPublicDirPath(realPath) || targetBundleName != providerBundleName) {
+    if (CommonFunc::CheckPublicDirPath(realPath) ||
+       ((targetBundleName != providerBundleName) && (providerBundleName != ""))) {
         realPath = PATH_SHARE + MODE_RW + providerBundleName + sandboxPath;
         if (access(realPath.c_str(), F_OK) != 0) {
             realPath = PATH_SHARE + MODE_R + providerBundleName + sandboxPath;

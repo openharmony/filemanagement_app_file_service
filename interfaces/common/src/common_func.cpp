@@ -184,26 +184,21 @@ bool CommonFunc::CheckPublicDirPath(const std::string &sandboxPath)
     return false;
 }
 
-static bool NormalizePath(string &path)
+static void NormalizePath(string &path)
 {
-    if (path.size() <= 0) {
-        return false;
+    if (path.size() == 0) {
+        return;
     }
 
     if (path[0] != BACKFLASH) {
         path.insert(0, 1, BACKFLASH);
     }
-
-    return true;
 }
 
 string CommonFunc::GetUriFromPath(const string &path)
 {
     string realPath = path;
-    if (!realPath.empty() && !NormalizePath(realPath)) {
-        LOGE("GetUriFromPath::NormalizePath failed!");
-        return "";
-    }
+    NormalizePath(realPath);
 
     string packageName = GetSelfBundleName();
     realPath = FILE_SCHEME_PREFIX + packageName + realPath;
