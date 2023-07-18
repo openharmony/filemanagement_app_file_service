@@ -75,6 +75,15 @@
                     }
                 },
                 {
+                    "name": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native:fileuri_native",
+                    "header": {
+                        "header_files": [
+                            "file_uri.h"
+                        ],
+                        "header_base": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native/file_uri/include"
+                    }
+                },
+                {
                     "name": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native:remote_file_share_native",
                     "header": {
                         "header_files": [

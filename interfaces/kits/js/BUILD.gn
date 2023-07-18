@@ -75,6 +75,7 @@ ohos_shared_library("fileuri") {
   ]
 
   sources = [
+    "../../common/src/common_func.cpp",
     "file_uri/file_uri_n_exporter.cpp",
     "file_uri/get_uri_from_path.cpp",
   ]
