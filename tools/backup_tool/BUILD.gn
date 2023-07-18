@@ -22,6 +22,7 @@ ohos_executable("backup_tool") {
     "src/tools_op_check_sa.cpp",
     "src/tools_op_help.cpp",
     "src/tools_op_restore.cpp",
+    "src/tools_op_restore_async.cpp",
   ]
 
   defines = [

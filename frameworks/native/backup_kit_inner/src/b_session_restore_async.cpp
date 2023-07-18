@@ -139,7 +139,8 @@ void BSessionRestoreAsync::AppendBundlesImpl(AppendBundleInfo info)
 {
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+        return OnBundleStarted(BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode(),
+                               info.bundlesToRestore);
     }
     auto onBackupServiceDied = bind(&BSessionRestoreAsync::OnBackupServiceDied, shared_from_this());
     RegisterBackupServiceDied(onBackupServiceDied);
