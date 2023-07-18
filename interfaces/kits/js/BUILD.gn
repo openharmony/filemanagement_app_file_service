@@ -28,7 +28,12 @@ ohos_shared_library("remotefileshare") {
 
   deps = [ "${third_party_path}/bounds_checking_function:libsec_shared" ]
 
-  external_deps = [ "file_api:filemgmt_libn" ]
+  external_deps = [
+    "file_api:filemgmt_libhilog",
+    "file_api:filemgmt_libn",
+    "hilog:libhilog",
+    "napi:ace_napi",
+  ]
 
   relative_install_dir = "module"
 
@@ -56,10 +61,12 @@ ohos_shared_library("fileshare") {
     "common_event_service:cesfwk_innerkits",
     "data_share:datashare_common",
     "data_share:datashare_consumer",
+    "file_api:filemgmt_libhilog",
     "file_api:filemgmt_libn",
     "file_api:remote_uri_native",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "napi:ace_napi",
   ]
 
   relative_install_dir = "module"
@@ -85,9 +92,11 @@ ohos_shared_library("fileuri") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "file_api:filemgmt_libhilog",
     "file_api:filemgmt_libn",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
 
@@ -114,9 +123,16 @@ ohos_shared_library("backup") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
-    "${path_file_api}/utils/filemgmt_libn:filemgmt_libn",
-    "${path_napi}:ace_napi",
+    "${path_backup}/utils:backup_utils",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
-  public_deps = [ "${path_file_api}/utils/filemgmt_libhilog:filemgmt_libhilog" ]
+  external_deps = [
+    "c_utils:utils",
+    "file_api:filemgmt_libhilog",
+    "file_api:filemgmt_libn",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "napi:ace_napi",
+  ]
 }

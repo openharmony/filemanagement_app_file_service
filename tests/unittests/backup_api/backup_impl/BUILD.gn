@@ -32,6 +32,8 @@ ohos_unittest("b_file_info_test") {
     "${path_backup}/utils:backup_utils",
   ]
 
+  external_deps = [ "hilog:libhilog" ]
+
   use_exceptions = true
 }
 
@@ -63,6 +65,8 @@ ohos_unittest("backup_sa_impl_test") {
   ]
 
   external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]

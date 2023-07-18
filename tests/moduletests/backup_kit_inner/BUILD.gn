@@ -40,6 +40,8 @@ ohos_unittest("b_session_test") {
   ]
 
   external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]

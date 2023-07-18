@@ -39,6 +39,7 @@ ohos_shared_library("backup_extension_ability_native") {
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/utils:backup_utils",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -50,6 +51,9 @@ ohos_shared_library("backup_extension_ability_native") {
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
     "napi:ace_napi",
   ]
 

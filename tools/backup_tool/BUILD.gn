@@ -32,11 +32,17 @@ ohos_executable("backup_tool") {
 
   include_dirs = [ "include" ]
 
-  external_deps = [ "hitrace:hitrace_meter" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+  ]
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/utils/:backup_utils",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
   use_exceptions = true

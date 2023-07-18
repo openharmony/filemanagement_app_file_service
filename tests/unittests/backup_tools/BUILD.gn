@@ -40,10 +40,13 @@ ohos_unittest("backup_tool_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
+    "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
@@ -74,10 +77,13 @@ ohos_unittest("backup_tool_restore_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
+    "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "samgr:samgr_proxy",

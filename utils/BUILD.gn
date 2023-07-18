@@ -77,12 +77,11 @@ ohos_shared_library("backup_utils") {
   configs = [ ":utils_private_config" ]
   public_configs = [ ":utils_public_config" ]
 
-  external_deps = [ "faultloggerd:libdfx_dumpcatcher" ]
-
-  public_deps = [
-    "${path_bas_hiviewdfx_hilog}/interfaces/native/innerkits:libhilog",
-    "${path_base}:utils",
-    "${path_jsoncpp}:jsoncpp",
+  external_deps = [
+    "c_utils:utils",
+    "faultloggerd:libdfx_dumpcatcher",
+    "hilog:libhilog",
+    "init:libbegetutil",
   ]
 
   include_dirs = [
@@ -96,7 +95,7 @@ ohos_shared_library("backup_utils") {
     ":backup_cxx_cppdeps",
     ":backup_cxx_gen",
     ":backup_cxx_rust",
-    "${path_init}/interfaces/innerkits:libbegetutil",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
   use_exceptions = true

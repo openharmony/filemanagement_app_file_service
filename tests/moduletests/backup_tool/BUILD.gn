@@ -27,6 +27,8 @@ ohos_unittest("tools_op_test") {
     "${path_backup}/utils/:backup_utils",
   ]
 
+  external_deps = [ "hilog:libhilog" ]
+
   use_exceptions = true
 }
 
