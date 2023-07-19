@@ -13,10 +13,10 @@
 
 group("fuzztest") {
   testonly = true
-  deps = []
 
-  deps += [
+  deps = [
     # deps file
+    "backupsa_fuzzer:BackupSaFuzzTest",
     "remotefileshare_fuzzer:RemoteFileShareFuzzTest",
   ]
 }
