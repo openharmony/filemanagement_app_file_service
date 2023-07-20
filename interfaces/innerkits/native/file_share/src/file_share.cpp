@@ -54,6 +54,7 @@ struct FileShareInfo {
     string providerLowerPath_;
     string providerSandboxPath_;
     vector<string> sharePath_;
+    vector<bool> isExist_;
     string currentUid_;
     ShareFileType type_;
 };
@@ -111,8 +112,11 @@ static void GetSharePath(FileShareInfo &info, uint32_t flag)
     if ((flag & WRITE_URI_PERMISSION) == WRITE_URI_PERMISSION) {
         info.sharePath_.push_back(shareRWPath);
         info.sharePath_.push_back(shareRPath);
+        info.isExist_.push_back(false);
+        info.isExist_.push_back(false);
     } else if ((flag & READ_URI_PERMISSION) == READ_URI_PERMISSION) {
         info.sharePath_.push_back(shareRPath);
+        info.isExist_.push_back(false);
     }
 }
 
@@ -178,16 +182,6 @@ static bool MakeDir(const string &path)
     return true;
 }
 
-static void DeleteExistShareFile(const string &path)
-{
-    if (access(path.c_str(), F_OK) == 0) {
-        if (umount2(path.c_str(), MNT_DETACH) != 0) {
-            LOGE("Umount failed with %{public}d", errno);
-        }
-        remove(path.c_str());
-    }
-}
-
 static int32_t PreparePreShareDir(FileShareInfo &info)
 {
     if (!CommonFunc::CheckValidPath(info.providerLowerPath_)) {
@@ -205,7 +199,8 @@ static int32_t PreparePreShareDir(FileShareInfo &info)
                 return -errno;
             }
         } else {
-            DeleteExistShareFile(info.sharePath_[i]);
+            LOGE("File %{public}s already exists", info.sharePath_[i].c_str());
+            info.isExist_[i] = true;
         }
     }
     return 0;
@@ -226,6 +221,10 @@ int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
     }
 
     for (size_t i = 0; i < info.sharePath_.size(); i++) {
+        if (info.isExist_[i]) {
+            continue;
+        }
+
         if (info.type_ == ShareFileType::FILE_TYPE) {
             if ((ret = creat(info.sharePath_[i].c_str(), FILE_MODE)) < 0) {
                 LOGE("Create file failed with %{public}d", errno);
