@@ -23,7 +23,12 @@
 #include <unistd.h>
 
 namespace OHOS::FileManagement::Backup::BConstants {
+
 static inline const char *EXTENSION_ACTION_PARA = "extensionAction";
+static inline const char *EXTENSION_RESTORE_TYPE_PARA = "restoreType";
+static inline const char *EXTENSION_VERSION_CODE_PARA = "versionCode";
+static inline const char *EXTENSION_VERSION_NAME_PARA = "versionName";
+
 enum class ExtensionAction {
     INVALID = 0,
     BACKUP = 1,
@@ -102,17 +107,42 @@ static inline std::string ENTRY_NAME_SIZE = "size";
 // backup.para内配置项的名称，改配置项值为true时可在不更新hap包的情况下，可以读取包管理元数据配置文件的内容
 static inline std::string BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_KEY = "backup.debug.overrideExtensionConfig";
 
-// 应用备份数据暂存路径。
-static inline std::string_view SA_BUNDLE_BACKUP_DIR = "/data/service/el2/100/backup/bundles/";
+// 应用备份数据暂存路径
 static inline std::string_view SA_BUNDLE_BACKUP_BACKUP = "/backup/";
 static inline std::string_view SA_BUNDLE_BACKUP_RESTORE = "/restore/";
-static inline std::string_view SA_BUNDLE_BACKUP_ROOT_DIR = "/data/service/el2/100/backup/backup_sa/";
 static inline std::string_view SA_BUNDLE_BACKUP_TMP_DIR = "/tmp/";
 static inline std::string_view BACKUP_TOOL_RECEIVE_DIR = "/data/backup/received/";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/backup";
-static inline std::string_view SA_BUNDLE_BACKUP_TOOL_DIR = "/data/service/el2/100/backup/backup_tool/";
 static inline std::string_view BACKUP_TOOL_LINK_DIR = "/data/backup";
 static inline std::string_view BACKUP_TOOL_INSTALL_DIR = "/data/backup/install/";
+
+// 多用户场景应用备份数据路径
+static inline std::string GetSaBundleBackupDir(int32_t userId)
+{
+    std::string str;
+    str.append("/data/service/el2/");
+    str.append(std::to_string(userId));
+    str.append("/backup/bundles/");
+    return str;
+}
+
+static inline std::string GetSaBundleBackupRootDir(int32_t userId)
+{
+    std::string str;
+    str.append("/data/service/el2/");
+    str.append(std::to_string(userId));
+    str.append("/backup/backup_sa/");
+    return str;
+}
+
+static inline std::string GetSaBundleBackupToolDir(int32_t userId)
+{
+    std::string str;
+    str.append("/data/service/el2/");
+    str.append(std::to_string(userId));
+    str.append("/backup/backup_tool/");
+    return str;
+}
 
 // 备份恢复配置文件暂存路径
 static inline std::string_view BACKUP_CONFIG_EXTENSION_PATH = "/data/storage/el2/base/temp/";

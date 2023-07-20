@@ -29,7 +29,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos()
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(int32_t userId)
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     bundleInfos.emplace_back(
@@ -37,7 +37,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos()
     return bundleInfos;
 }
 
-vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vector<string> &bundleNames)
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vector<string> &bundleNames, int32_t userId)
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     bundleInfos.emplace_back(
@@ -45,7 +45,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
     return bundleInfos;
 }
 
-ErrCode BundleMgrAdapter::Install(wptr<InnerReceiverImpl> statusReceiver, const string &bundleFilePath)
+ErrCode BundleMgrAdapter::Install(wptr<InnerReceiverImpl> statusReceiver, const string &bundleFilePath, int32_t userId)
 {
     return 0;
 }

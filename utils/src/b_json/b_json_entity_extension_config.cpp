@@ -102,6 +102,7 @@ string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, 
         return string(jsonFromRealWorld);
     }
 
+    /* Server for test case, the user function does not execute the following code. */
     if (!option.has_value()) {
         if (getuid() == static_cast<uid_t>(BConstants::BACKUP_UID)) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Current process is not extension process");
@@ -119,7 +120,7 @@ string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, 
     } catch (const bad_any_cast &e) {
         throw BError(BError::Codes::SA_INVAL_ARG, e.what());
     }
-    string jsonFilePath = string(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR).
+    string jsonFilePath = string(BConstants::GetSaBundleBackupRootDir(BConstants::DEFAULT_USER_ID)).
                                 append(bundleName).
                                 append("/").
                                 append(BConstants::BACKUP_CONFIG_JSON);

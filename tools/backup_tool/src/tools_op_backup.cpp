@@ -201,11 +201,12 @@ static void BackupToolDirSoftlinkToBackupDir()
         }
     }
 
-    if (access(BConstants::SA_BUNDLE_BACKUP_TOOL_DIR.data(), F_OK) != 0 &&
-        mkdir(BConstants::SA_BUNDLE_BACKUP_TOOL_DIR.data(), S_IRWXU) != 0) {
+    if (access(BConstants::GetSaBundleBackupToolDir(BConstants::DEFAULT_USER_ID).data(), F_OK) != 0 &&
+        mkdir(BConstants::GetSaBundleBackupToolDir(BConstants::DEFAULT_USER_ID).data(), S_IRWXU) != 0) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
-    if (symlink(BConstants::SA_BUNDLE_BACKUP_TOOL_DIR.data(), BConstants::BACKUP_TOOL_LINK_DIR.data()) == -1) {
+    if (symlink(BConstants::GetSaBundleBackupToolDir(BConstants::DEFAULT_USER_ID).data(),
+                BConstants::BACKUP_TOOL_LINK_DIR.data()) == -1) {
         HILOGE("failed to create soft link file %{public}s  errno : %{public}d",
                BConstants::BACKUP_TOOL_LINK_DIR.data(), errno);
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));

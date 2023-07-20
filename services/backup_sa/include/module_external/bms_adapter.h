@@ -30,25 +30,29 @@ public:
     /**
      * @brief Get the Bundle Infos object
      *
+     * @param userId User ID
      * @return std::vector<BJsonEntityCaps::BundleInfo>
      */
-    static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfos();
+    static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfos(int32_t userId);
 
     /**
      * @brief Get the bundle infos object
      *
      * @param bundleNames bundle names
+     * @param userId User ID
      * @return std::vector<BJsonEntityCaps::BundleInfo>
      */
-    static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfos(const std::vector<std::string> &bundleNames);
+    static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfos(
+                                    const std::vector<std::string> &bundleNames, int32_t userId);
 
     /**
      * @brief Install bundle
      *
      * @param bundleName bundle name
      * @param bundleFilePath bundle file path
+     * @param userId User ID
      */
-    static ErrCode Install(wptr<InnerReceiverImpl> statusReceiver, const std::string &bundleFilePath);
+    static ErrCode Install(wptr<InnerReceiverImpl> statusReceiver, const std::string &bundleFilePath, int32_t userId);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_BUNDLE_MGR_ADAPTER_H

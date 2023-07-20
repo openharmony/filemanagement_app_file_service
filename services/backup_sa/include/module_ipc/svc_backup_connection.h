@@ -49,7 +49,7 @@ public:
     /**
      * @brief connect remote ability of ExtBackup.
      */
-    ErrCode ConnectBackupExtAbility(AAFwk::Want &want);
+    ErrCode ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId);
 
     /**
      * @brief disconnect remote ability of ExtBackup.

@@ -139,7 +139,7 @@ void SchedScheduler::InstallingState(const string &bundleName)
             return;
         }
         string state = sessionPtr_->GetInstallState(bundleName);
-        string path = string(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR).append(bundleName);
+        string path = BConstants::GetSaBundleBackupRootDir(sessionPtr_->GetSessionUserId()).append(bundleName);
         string filePath = path + "/bundle.hap";
 
         if (state == BConstants::RESTORE_INSTALL_PATH) {
@@ -159,7 +159,7 @@ void SchedScheduler::InstallingState(const string &bundleName)
                 throw BError(BError::Codes::SA_INVAL_ARG, string("File already exists"));
             }
             sptr<InnerReceiverImpl> statusReceiver = sptr(new InnerReceiverImpl(bundleName, wptr(this)));
-            ErrCode err = BundleMgrAdapter::Install(statusReceiver, filePath);
+            ErrCode err = BundleMgrAdapter::Install(statusReceiver, filePath, sessionPtr_->GetSessionUserId());
             if (err != ERR_OK) {
                 InstallSuccess(bundleName, err);
             }
@@ -219,7 +219,7 @@ void SchedScheduler::InstallSuccess(const std::string &bundleName, const int32_t
         sessionPtr_->GetServiceReverseProxy()->RestoreOnBundleStarted(resultCode, bundleName);
         sessionPtr_->RemoveExtInfo(bundleName);
     }
-    string path = string(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR).append(bundleName);
+    string path = BConstants::GetSaBundleBackupRootDir(sessionPtr_->GetSessionUserId()).append(bundleName);
     if (!ForceRemoveDirectory(path)) {
         HILOGE("RemoveDirectory failed");
     }

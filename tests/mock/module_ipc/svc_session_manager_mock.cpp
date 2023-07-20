@@ -241,4 +241,69 @@ bool SvcSessionManager::NeedToUnloadService()
 {
     return false;
 }
+
+int32_t SvcSessionManager::GetSessionUserId()
+{
+    return impl_.userId;
+}
+
+void SvcSessionManager::SetSessionUserId(int32_t userId)
+{
+    impl_.userId = userId;
+}
+
+void SvcSessionManager::SetBundleRestoreType(const std::string &bundleName, RestoreTypeEnum restoreType)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return;
+    }
+    it->second.restoreType = restoreType;
+}
+
+RestoreTypeEnum SvcSessionManager::GetBundleRestoreType(const std::string &bundleName)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return RestoreTypeEnum::RESTORE_DATA_READDY;
+    }
+    return it->second.restoreType;
+}
+
+void SvcSessionManager::SetBundleVersionCode(const std::string &bundleName, uint32_t versionCode)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return;
+    }
+    it->second.versionCode = versionCode;
+}
+
+uint32_t SvcSessionManager::GetBundleVersionCode(const std::string &bundleName)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return 0;
+    }
+    return it->second.versionCode;
+}
+
+void SvcSessionManager::SetBundleVersionName(const std::string &bundleName, std::string versionName)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return;
+    }
+    it->second.versionName = versionName;
+}
+
+std::string SvcSessionManager::GetBundleVersionName(const std::string &bundleName)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return "";
+    }
+    return it->second.versionName;
+}
+
 } // namespace OHOS::FileManagement::Backup

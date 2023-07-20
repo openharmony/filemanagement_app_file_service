@@ -56,6 +56,15 @@ using namespace std;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Service, FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, false);
 
+/* Shell/Xts user id equal to 0/1, we need set default 100 */
+static inline int32_t GetUserIdDefault(int32_t userId)
+{
+    if ((userId == BConstants::SYSTEM_UID) || (userId == BConstants::XTS_UID)) {
+        return BConstants::DEFAULT_USER_ID;
+    }
+    return userId;
+}
+
 void Service::OnStart()
 {
     bool res = SystemAbility::Publish(sptr(this));
@@ -75,14 +84,21 @@ UniqueFd Service::GetLocalCapabilities()
 {
     try {
         HILOGI("Begin");
+        /*
+         Only called by restore app before InitBackupSession,
+           so there must be set init userId.
+        */
+        session_->SetSessionUserId(GetUserIdDefault(IPCSkeleton::GetCallingUid()));
         VerifyCaller();
         BJsonCachedEntity<BJsonEntityCaps> cachedEntity(
-            UniqueFd(open(BConstants::SA_BUNDLE_BACKUP_ROOT_DIR.data(), O_TMPFILE | O_RDWR, 0600)));
+            UniqueFd(open(BConstants::GetSaBundleBackupRootDir(
+                session_->GetSessionUserId()).data(), O_TMPFILE | O_RDWR, 0600)));
+
         auto cache = cachedEntity.Structuralize();
 
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
-        auto bundleInfos = BundleMgrAdapter::GetBundleInfos();
+        auto bundleInfos = BundleMgrAdapter::GetBundleInfos(session_->GetSessionUserId());
         cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
 
@@ -124,12 +140,8 @@ void Service::VerifyCaller()
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
     int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
     switch (tokenType) {
+        case Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE: /* Update Service */
         case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP: {
-            auto multiuser = BMultiuser::ParseUid(IPCSkeleton::GetCallingUid());
-            if ((multiuser.userId != BConstants::DEFAULT_USER_ID) && (multiuser.userId != BConstants::XTS_UID)) {
-                throw BError(BError::Codes::SA_INVAL_ARG, string("Calling user is ").append(
-                    to_string(multiuser.userId)).append(", which is currently not supported"));
-            }
             const string permission = "ohos.permission.BACKUP";
             if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
                 Security::AccessToken::TypePermissionState::PERMISSION_DENIED) {
@@ -163,6 +175,7 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
             .clientToken = IPCSkeleton::GetCallingTokenID(),
             .scenario = IServiceReverse::Scenario::RESTORE,
             .clientProxy = remote,
+            .userId = GetUserIdDefault(IPCSkeleton::GetCallingUid()),
         });
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
@@ -185,6 +198,7 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
             .clientToken = IPCSkeleton::GetCallingTokenID(),
             .scenario = IServiceReverse::Scenario::BACKUP,
             .clientProxy = remote,
+            .userId = GetUserIdDefault(IPCSkeleton::GetCallingUid()),
         });
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
@@ -208,7 +222,10 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              int32_t userId)
 {
     HILOGI("Begin");
-    VerifyCaller(session_->GetScenario());
+    if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
+        session_->SetSessionUserId(userId);
+    }
+    VerifyCaller(IServiceReverse::Scenario::RESTORE);
     BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     auto bundleInfos = cache.GetBundleInfos();
@@ -222,6 +239,9 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                 continue;
             }
             session_->SetNeedToInstall(bundleInfo.name, bundleInfo.needToInstall);
+            session_->SetBundleRestoreType(bundleInfo.name, restoreType);
+            session_->SetBundleVersionCode(bundleInfo.name, bundleInfo.versionCode);
+            session_->SetBundleVersionName(bundleInfo.name, bundleInfo.versionName);
         }
     }
     Start();
@@ -233,7 +253,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
     HILOGI("Begin");
-    VerifyCaller(session_->GetScenario());
+    VerifyCaller(IServiceReverse::Scenario::BACKUP);
     session_->AppendBundles(bundleNames);
     Start();
     Finish();
@@ -378,12 +398,20 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         }
 
         AAFwk::Want want;
-        string backupExtName = session_->GetBackupExtName(bundleName);
+        string backupExtName = session_->GetBackupExtName(bundleName); /* new device app ext name */
+        string versionName = session_->GetBundleVersionName(bundleName); /* old device app version name */
+        uint32_t versionCode = session_->GetBundleVersionCode(bundleName); /* old device app version code */
+        RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
+
         want.SetElementName(bundleName, backupExtName);
         want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
+        want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<int>(versionCode));
+        want.SetParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, static_cast<int>(restoreType));
+        want.SetParam(BConstants::EXTENSION_VERSION_NAME_PARA, versionName);
 
         auto backUpConnection = session_->GetExtConnection(bundleName);
-        ErrCode ret = backUpConnection->ConnectBackupExtAbility(want);
+
+        ErrCode ret = backUpConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
         return ret;
     } catch (const BError &e) {
         return e.GetCode();
