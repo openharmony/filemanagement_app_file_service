@@ -34,8 +34,8 @@ config("file_uri_config") {
 
 ohos_shared_library("fileshare_native") {
   sources = [
-    "../../common/src/common_func.cpp",
     "../../common/src/json_utils.cpp",
+    "../../common/src/sandbox_helper.cpp",
     "file_share/src/file_share.cpp",
   ]
 
@@ -45,14 +45,9 @@ ohos_shared_library("fileshare_native") {
     "ability_base:base",
     "ability_base:want",
     "ability_base:zuri",
-    "ability_runtime:abilitykit_native",
     "access_token:libaccesstoken_sdk",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog:libhilog",
-    "ipc:ipc_core",
-    "samgr:samgr_proxy",
   ]
 
   part_name = "app_file_service"
@@ -108,8 +103,8 @@ config("remote_file_share_config") {
 
 ohos_shared_library("remote_file_share_native") {
   sources = [
-    "../../common/src/common_func.cpp",
     "../../common/src/json_utils.cpp",
+    "../../common/src/sandbox_helper.cpp",
     "remote_file_share/src/remote_file_share.cpp",
   ]
 
@@ -119,13 +114,8 @@ ohos_shared_library("remote_file_share_native") {
     "ability_base:base",
     "ability_base:want",
     "ability_base:zuri",
-    "ability_runtime:abilitykit_native",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog:libhilog",
-    "ipc:ipc_core",
-    "samgr:samgr_proxy",
   ]
 
   innerapi_tags = [ "platformsdk_indirect" ]

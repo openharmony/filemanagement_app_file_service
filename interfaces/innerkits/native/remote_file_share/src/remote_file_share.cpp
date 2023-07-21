@@ -23,11 +23,10 @@
 #include <climits>
 #include <pthread.h>
 
-#include "directory_ex.h"
-#include "securec.h"
-#include "common_func.h"
-#include "uri.h"
 #include "log.h"
+#include "sandbox_helper.h"
+#include "securec.h"
+#include "uri.h"
 
 namespace OHOS {
 namespace AppFileService {
@@ -268,7 +267,7 @@ static std::string GetPhysicalPath(Uri &uri, const std::string &userId)
     }
 
     std::string physicalPath = "";
-    int ret = CommonFunc::GetPhysicalPath(uri.ToString(), userId, physicalPath);
+    int ret = SandboxHelper::GetPhysicalPath(uri.ToString(), userId, physicalPath);
     if (ret != 0) {
         LOGE("Get physical path failed with %{public}d", ret);
         return "";
