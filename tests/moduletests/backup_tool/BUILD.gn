@@ -17,10 +17,7 @@ import("//foundation/filemanagement/app_file_service/backup.gni")
 ohos_unittest("tools_op_test") {
   module_out_path = path_module_out_tests
 
-  sources = [
-    "tool_backup_restore_test.cpp",
-    "tool_help_test.cpp",
-  ]
+  sources = [ "tool_help_test.cpp" ]
 
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
