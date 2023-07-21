@@ -31,7 +31,7 @@
             "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Documents"
         }, {
             "sandbox-path" : "/Documents",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Documents"
+            "src-path" : "/data/service/el2/<currentUserId>/hmdfs/account/files/Documents"
         }
     ]
 }
