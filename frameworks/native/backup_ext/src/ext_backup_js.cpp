@@ -16,29 +16,31 @@
 #include "ext_backup_js.h"
 
 #include <cstdio>
+#include <memory>
 #include <sstream>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#include "bundle_mgr_client.h"
+#include "js_runtime.h"
+#include "js_runtime_utils.h"
+#include "napi/native_api.h"
+#include "napi/native_node_api.h"
+#include "napi_common_util.h"
+#include "napi_common_want.h"
+#include "napi_remote_object.h"
+#include "unique_fd.h"
 
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_resources/b_constants.h"
-#include "bundle_mgr_client.h"
 #include "ext_extension.h"
 #include "filemgmt_libhilog.h"
-#include "js_runtime_utils.h"
-#include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
-
-void ExtBackupJs::OnStart(const AAFwk::Want &want)
-{
-    HILOGI("BackupExtensionAbility(JS) was started");
-    Extension::OnStart(want);
-}
 
 static string GetSrcPath(const AppExecFwk::AbilityInfo &info)
 {
@@ -74,7 +76,7 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
         // 加载用户扩展 BackupExtensionAbility 到 JS 引擎，并将之暂存在 jsObj_ 中。注意，允许加载失败，往后执行默认逻辑
         AbilityRuntime::HandleScope handleScope(jsRuntime_);
         jsObj_ = jsRuntime_.LoadModule(moduleName, modulePath, info.hapPath,
-            abilityInfo_->compileMode == AbilityRuntime::CompileMode::ES_MODULE);
+                                       abilityInfo_->compileMode == AbilityRuntime::CompileMode::ES_MODULE);
         if (jsObj_) {
             HILOGI("Wow! Here's a custsom BackupExtensionAbility");
         } else {
@@ -119,116 +121,168 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
     return {BError(BError::Codes::OK).GetCode(), ret};
 }
 
-void ExtBackupJs::OnCommand(const AAFwk::Want &want, bool restart, int startId)
-{
-    HILOGI("BackupExtensionAbility(JS) was invoked. restart=%{public}d, startId=%{public}d", restart, startId);
-
-    // REM: 处理返回结果 ret
-    // REM: 通过杀死进程实现 Stop
-}
-
 ExtBackupJs *ExtBackupJs::Create(const unique_ptr<AbilityRuntime::Runtime> &runtime)
 {
     HILOGI("Create as an BackupExtensionAbility(JS)");
     return new ExtBackupJs(static_cast<AbilityRuntime::JsRuntime &>(*runtime));
 }
 
-string ExtBackupJs::GetUsrConfig() const
+ErrCode ExtBackupJs::OnBackup(void)
 {
-    vector<string> config;
-    AppExecFwk::BundleMgrClient client;
-    BExcepUltils::BAssert(abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
-    const AppExecFwk::AbilityInfo &info = *abilityInfo_;
-    if (!client.GetProfileFromAbility(info, "ohos.extension.backup", config)) {
-        throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to invoke the GetProfileFromAbility method.");
+    HILOGI("BackupExtensionAbility(JS) OnBackup.");
+    if (!jsObj_) {
+        HILOGI("The app does not provide the onBackup interface.");
+        return ERR_OK;
     }
-
-    return config.empty() ? "" : config[0];
-}
-
-bool ExtBackupJs::AllowToBackupRestore() const
-{
-    string usrConfig = GetUsrConfig();
-    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
-    auto cache = cachedEntity.Structuralize();
-    if (cache.GetAllowToBackupRestore()) {
-        return true;
-    }
-    return false;
-}
-
-BConstants::ExtensionAction ExtBackupJs::GetExtensionAction() const
-{
-    return extAction_;
-}
-
-static BConstants::ExtensionAction VerifyAndGetAction(const AAFwk::Want &want,
-                                                      std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo)
-{
-    string pendingMsg = "Received an empty ability. You must missed the init proc";
-    BExcepUltils::BAssert(abilityInfo, BError::Codes::EXT_INVAL_ARG, pendingMsg);
-    using namespace BConstants;
-    ExtensionAction extAction {want.GetIntParam(EXTENSION_ACTION_PARA, static_cast<int>(ExtensionAction::INVALID))};
-    if (extAction == ExtensionAction::INVALID) {
-        int extActionInt = static_cast<int>(extAction);
-        pendingMsg = string("Want must specify a valid action instead of ").append(to_string(extActionInt));
-        throw BError(BError::Codes::EXT_INVAL_ARG, pendingMsg);
-    }
-
-    return extAction;
-}
-
-sptr<IRemoteObject> ExtBackupJs::OnConnect(const AAFwk::Want &want)
-{
-    try {
-        HILOGI("begin");
-        BExcepUltils::BAssert(abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
-        // 发起者必须是备份服务
-        auto extAction = VerifyAndGetAction(want, abilityInfo_);
-        if (extAction_ != BConstants::ExtensionAction::INVALID && extAction == BConstants::ExtensionAction::INVALID &&
-            extAction_ != extAction) {
-            HILOGI("Verification failed.");
-            return nullptr;
+    auto ret = std::make_shared<int>();
+    auto retParser = [ret](NativeEngine &engine, NativeValue *result) -> bool {
+        bool res = AbilityRuntime::ConvertFromJsValue(engine, result, *ret);
+        if (!res) {
+            HILOG_ERROR("Convert js value fail.");
         }
-        // 应用必须配置支持备份恢复
-        if (!AllowToBackupRestore()) {
-            HILOGI("The application does not allow to backup and restore.");
-            return nullptr;
-        }
-        extAction_ = extAction;
+        return res;
+    };
 
-        Extension::OnConnect(want);
-
-        auto remoteObject =
-            sptr<BackupExtExtension>(new BackupExtExtension(std::static_pointer_cast<ExtBackupJs>(shared_from_this())));
-        HILOGI("end");
-        return remoteObject->AsObject();
-    } catch (const BError &e) {
-        return nullptr;
-    } catch (const exception &e) {
-        HILOGE("%{public}s", e.what());
-        return nullptr;
-    } catch (...) {
-        HILOGE("");
-        return nullptr;
+    auto errCode = CallJsMethod("onBackup", jsRuntime_, jsObj_.get(), {}, retParser);
+    if (errCode != ERR_OK) {
+        HILOGE("CallJsMethod error, code:%{public}d.", errCode);
+        return errCode;
     }
+
+    if (*ret != ERR_OK) {
+        HILOGE("backup fail.");
+        return *ret;
+    }
+    return ERR_OK;
 }
 
-void ExtBackupJs::OnDisconnect(const AAFwk::Want &want)
+ErrCode ExtBackupJs::OnRestore(void)
 {
-    try {
-        HILOGI("begin");
-        Extension::OnDisconnect(want);
-        extAction_ = BConstants::ExtensionAction::INVALID;
-        HILOGI("end");
-    } catch (const BError &e) {
-        return;
-    } catch (const exception &e) {
-        HILOGE("%{public}s", e.what());
-        return;
-    } catch (...) {
-        HILOGE("");
-        return;
+    HILOGI("BackupExtensionAbility(JS) OnRestore.");
+    if (!jsObj_) {
+        HILOGI("The app does not provide the onRestore interface.");
+        return ERR_OK;
     }
+    auto ret = std::make_shared<int>();
+    vector<NativeValue *> argv;
+    NativeValue *verCode = jsRuntime_.GetNativeEngine().CreateNumber(appVersionCode_);
+    NativeValue *verStr = jsRuntime_.GetNativeEngine().CreateString(appVersionStr_.c_str(), appVersionStr_.length());
+
+    NativeValue *param = jsRuntime_.GetNativeEngine().CreateObject();
+    auto paramObj = reinterpret_cast<NativeObject *>(param->GetInterface(NativeObject::INTERFACE_ID));
+    paramObj->SetProperty("code", verCode);
+    paramObj->SetProperty("name", verStr);
+    argv.push_back(param);
+
+    auto retParser = [ret](NativeEngine &engine, NativeValue *result) -> bool {
+        bool res = AbilityRuntime::ConvertFromJsValue(engine, result, *ret);
+        if (!res) {
+            HILOG_ERROR("Convert js value fail.");
+        }
+        return res;
+    };
+
+    auto errCode = CallJsMethod("onRestore", jsRuntime_, jsObj_.get(), argv, retParser);
+    if (errCode != ERR_OK) {
+        HILOGE("CallJsMethod error, code:%{public}d.", errCode);
+        return errCode;
+    }
+
+    if (*ret != ERR_OK) {
+        HILOGE("backup fail.");
+        return *ret;
+    }
+    return ERR_OK;
+}
+
+static int DoCallJsMethod(CallJsParam *param)
+{
+    AbilityRuntime::JsRuntime *jsRuntime = param->jsRuntime;
+    if (jsRuntime == nullptr) {
+        HILOGE("failed to get jsRuntime.");
+        return EINVAL;
+    }
+    AbilityRuntime::HandleEscape handleEscape(*jsRuntime);
+    auto &nativeEngine = jsRuntime->GetNativeEngine();
+    NativeValue *value = param->jsObj->Get();
+    if (value == nullptr) {
+        HILOGE("failed to get native value object.");
+        return EINVAL;
+    }
+    NativeObject *obj = AbilityRuntime::ConvertNativeValueTo<NativeObject>(value);
+    if (obj == nullptr) {
+        HILOGE("failed to get BackupExtAbility object.");
+        return EINVAL;
+    }
+    NativeValue *method = obj->GetProperty(param->funcName.c_str());
+    if (method == nullptr) {
+        HILOGE("failed to get %{public}s from BackupExtAbility object.", param->funcName.c_str());
+        return EINVAL;
+    }
+    if (param->retParser == nullptr) {
+        HILOGE("ResultValueParser must not null.");
+        return EINVAL;
+    }
+    if (!param->retParser(nativeEngine, handleEscape.Escape(nativeEngine.CallFunction(value, method, param->argv.data(),
+                                                                                      param->argv.size())))) {
+        HILOGI("Parser js result fail.");
+        return EINVAL;
+    }
+    return ERR_OK;
+}
+
+int ExtBackupJs::CallJsMethod(const std::string &funcName,
+                              AbilityRuntime::JsRuntime &jsRuntime,
+                              NativeReference *jsObj,
+                              const std::vector<NativeValue *> &argv,
+                              ResultValueParser retParser)
+{
+
+    uv_loop_s *loop = nullptr;
+    napi_status status = napi_get_uv_event_loop(reinterpret_cast<napi_env>(&jsRuntime.GetNativeEngine()), &loop);
+    if (status != napi_ok) {
+
+        HILOGE("failed to get uv event loop.");
+        return EINVAL;
+    }
+    auto param = std::make_shared<CallJsParam>(funcName, &jsRuntime, jsObj, argv, retParser);
+    if (param == nullptr) {
+
+        HILOGE("failed to new param.");
+        return EINVAL;
+    }
+    auto work = std::make_shared<uv_work_t>();
+    if (work == nullptr) {
+
+        HILOGE("failed to new uv_work_t.");
+        return EINVAL;
+    }
+    work->data = reinterpret_cast<void *>(param.get());
+    int ret = uv_queue_work(
+        loop, work.get(), [](uv_work_t *work) {},
+        [](uv_work_t *work, int status) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            do {
+                if (param == nullptr) {
+                    HILOGE("failed to get CallJsParam.");
+                    break;
+                }
+                if (DoCallJsMethod(param) != ERR_OK) {
+                    HILOGE("failed to call DoCallJsMethod.");
+                }
+            } while (false);
+            std::unique_lock<std::mutex> lock(param->backupOperateMutex);
+            param->isReady = true;
+            param->backupOperateCondition.notify_one();
+        });
+    if (ret != 0) {
+
+        HILOGE("failed to exec uv_queue_work.");
+        return EINVAL;
+    }
+    std::unique_lock<std::mutex> lock(param->backupOperateMutex);
+    param->backupOperateCondition.wait(lock, [param]() { return param->isReady; });
+
+    return ERR_OK;
 }
 } // namespace OHOS::FileManagement::Backup
