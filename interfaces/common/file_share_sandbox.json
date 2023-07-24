@@ -25,7 +25,7 @@
             "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/data/<PackageName>"
         }, {
             "sandbox-path" : "/mnt/data/fuse",
-            "src-path" : "/mnt/sandbox/<PackageName>/mnt/data/fuse"
+            "src-path" : "/mnt/data/<currentUserId>/fuse"
         }, {
             "sandbox-path" : "/storage/local/Documents",
             "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Documents"
