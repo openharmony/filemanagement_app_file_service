@@ -94,6 +94,7 @@ static void OnFileReady(shared_ptr<SessionAsync> ctx, const BFileInfo &fileInfo,
     if (access(tmpPath.data(), F_OK) != 0) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
+    BExcepUltils::VerifyPath(tmpPath, false);
     UniqueFd fdLocal(open(tmpPath.data(), O_RDONLY));
     if (fdLocal < 0) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
@@ -169,6 +170,7 @@ static void RestoreApp(shared_ptr<SessionAsync> restore, vector<BundleName> &bun
 
 static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> &bundleNames, const string &type)
 {
+    BExcepUltils::VerifyPath(pathCapFile, false);
     UniqueFd fd(open(pathCapFile.data(), O_RDWR, S_IRWXU));
     if (fd < 0) {
         fprintf(stderr, "Failed to open file error: %d %s\n", errno, strerror(errno));
@@ -181,7 +183,7 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     for (auto name : bundleNames) {
         string versionName = string(BConstants::DEFAULT_VERSION_NAME);
-        int32_t versionCode = BConstants::DEFAULT_VERSION_CODE;
+        uint32_t versionCode = static_cast<uint32_t>(BConstants::DEFAULT_VERSION_CODE);
         if (type == "false") {
             auto iter = find_if(infos.begin(), infos.end(), [name](const auto &it) { return it.name == name; });
             if (iter != infos.end()) {
@@ -209,6 +211,7 @@ static int32_t AppendBundles(shared_ptr<SessionAsync> restore,
                              const string &type,
                              const string &userId)
 {
+    BExcepUltils::VerifyPath(pathCapFile, false);
     UniqueFd fd(open(pathCapFile.data(), O_RDWR, S_IRWXU));
     if (fd < 0) {
         fprintf(stderr, "Failed to open file error: %d %s\n", errno, strerror(errno));

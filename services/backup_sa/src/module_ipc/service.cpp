@@ -38,6 +38,7 @@
 #include "ability_manager_client.h"
 #include "accesstoken_kit.h"
 #include "b_error/b_error.h"
+#include "b_error/b_excep_utils.h"
 #include "b_file_info.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_caps.h"
@@ -90,9 +91,10 @@ UniqueFd Service::GetLocalCapabilities()
         */
         session_->SetSessionUserId(GetUserIdDefault(IPCSkeleton::GetCallingUid()));
         VerifyCaller();
+        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
+        BExcepUltils::VerifyPath(path, false);
         BJsonCachedEntity<BJsonEntityCaps> cachedEntity(
-            UniqueFd(open(BConstants::GetSaBundleBackupRootDir(
-                session_->GetSessionUserId()).data(), O_TMPFILE | O_RDWR, 0600)));
+            UniqueFd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR)));
 
         auto cache = cachedEntity.Structuralize();
 
@@ -398,9 +400,9 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         }
 
         AAFwk::Want want;
-        string backupExtName = session_->GetBackupExtName(bundleName); /* new device app ext name */
-        string versionName = session_->GetBundleVersionName(bundleName); /* old device app version name */
-        uint32_t versionCode = session_->GetBundleVersionCode(bundleName); /* old device app version code */
+        string backupExtName = session_->GetBackupExtName(bundleName);            /* new device app ext name */
+        string versionName = session_->GetBundleVersionName(bundleName);          /* old device app version name */
+        uint32_t versionCode = session_->GetBundleVersionCode(bundleName);        /* old device app version code */
         RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
 
         want.SetElementName(bundleName, backupExtName);
