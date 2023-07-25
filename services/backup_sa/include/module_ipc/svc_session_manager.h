@@ -69,7 +69,7 @@ public:
             Caller must complete all processes before next user tigger.<Session>
             [RESTORE] Support for multiple users, incoming during restore process.
         */
-        int32_t userId;
+        int32_t userId {100};
     };
 
 public:
