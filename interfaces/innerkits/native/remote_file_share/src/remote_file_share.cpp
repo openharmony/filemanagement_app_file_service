@@ -295,7 +295,8 @@ static void SetHmdfsUriInfo(struct HmdfsUriInfo &hdi, Uri &uri, uint64_t fileSiz
     std::string bundleName = uri.GetAuthority();
     std::string path = uri.GetPath();
 
-    hdi.uriStr = FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH + REMOTE_SHARE_PATH_DIR + path;
+    hdi.uriStr = SandboxHelper::Encode(FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH +
+                                       REMOTE_SHARE_PATH_DIR + path);
     hdi.fileSize = fileSize;
     return;
 }
@@ -303,8 +304,9 @@ static void SetHmdfsUriInfo(struct HmdfsUriInfo &hdi, Uri &uri, uint64_t fileSiz
 int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int32_t &userId,
                                             struct HmdfsUriInfo &hui)
 {
-    Uri uri(uriStr);
-    LOGD("GetDfsUriFromLocal begin with %{public}s", uriStr.c_str());
+    Uri uri(SandboxHelper::Decode(uriStr));
+    LOGD("GetDfsUriFromLocal begin with uri:%{private}s, decode uri:%{private}s",
+         uriStr.c_str(), uri.ToString().c_str());
     std::string physicalPath = GetPhysicalPath(uri, std::to_string(userId));
     if (physicalPath == "") {
         LOGE("Failed to get physical path");
@@ -320,7 +322,7 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
 
     struct HmdfsDstInfo hdi;
     std::string bundleName = uri.GetAuthority();
-    LOGD("PhysicalPath: %{public}s DistributedPath: %{public}s BundleName: %{public}s",
+    LOGD("PhysicalPath: %{private}s DistributedPath: %{private}s BundleName: %{private}s",
          physicalPath.c_str(), distributedPath.c_str(), bundleName.c_str());
     InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
 
@@ -340,7 +342,7 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
 
     close(dirFd);
     SetHmdfsUriInfo(hui, uri, hdi.size);
-    LOGD("GetDfsUriFromLocal successfully with %{public}s", hui.uriStr.c_str());
+    LOGD("GetDfsUriFromLocal successfully with %{private}s", hui.uriStr.c_str());
     return 0;
 }
 } // namespace ModuleRemoteFileShare

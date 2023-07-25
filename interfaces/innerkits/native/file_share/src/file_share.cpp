@@ -214,7 +214,10 @@ static int32_t PreparePreShareDir(FileShareInfo &info)
 int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
 {
     FileShareInfo info;
-    int32_t ret = GetFileShareInfo(uri, tokenId, flag, info);
+    string decodeUri = SandboxHelper::Decode(uri);
+    LOGD("CreateShareFile begin with uri %{private}s decodeUri %{private}s",
+         uri.c_str(), decodeUri.c_str());
+    int32_t ret = GetFileShareInfo(decodeUri, tokenId, flag, info);
     if (ret != 0) {
         LOGE("Failed to get FileShareInfo with %{public}d", ret);
         return ret;
@@ -250,7 +253,7 @@ int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
 static void UmountDelUris(vector<string> sharePathList, string currentUid, string bundleNameSelf)
 {
     for (size_t i = 0; i < sharePathList.size(); i++) {
-        Uri uri(sharePathList[i]);
+        Uri uri(SandboxHelper::Decode(sharePathList[i]));
         string path = uri.GetPath();
         string bundleName = uri.GetAuthority();
         string delRPath = DATA_APP_EL2_PATH + currentUid + SHARE_PATH + bundleNameSelf + SHARE_R_PATH +
