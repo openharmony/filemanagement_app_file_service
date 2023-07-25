@@ -31,7 +31,10 @@ using namespace std;
 using namespace OHOS::Security::AccessToken;
 using namespace OHOS::AppFileService;
 
-const string bundleA = "com.ohos.systemui";
+namespace {
+    const string bundleA = "com.ohos.systemui";
+}
+
 string CommonFunc::GetSelfBundleName()
 {
     return bundleA;
