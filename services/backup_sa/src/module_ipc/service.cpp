@@ -58,12 +58,13 @@ using namespace std;
 REGISTER_SYSTEM_ABILITY_BY_ID(Service, FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, false);
 
 /* Shell/Xts user id equal to 0/1, we need set default 100 */
-static inline int32_t GetUserIdDefault(int32_t userId)
+static inline int32_t GetUserIdDefault()
 {
-    if ((userId == BConstants::SYSTEM_UID) || (userId == BConstants::XTS_UID)) {
+    auto multiuser = BMultiuser::ParseUid(IPCSkeleton::GetCallingUid());
+    if ((multiuser.userId == BConstants::SYSTEM_UID) || (multiuser.userId == BConstants::XTS_UID)) {
         return BConstants::DEFAULT_USER_ID;
     }
-    return userId;
+    return multiuser.userId;
 }
 
 void Service::OnStart()
@@ -89,7 +90,7 @@ UniqueFd Service::GetLocalCapabilities()
          Only called by restore app before InitBackupSession,
            so there must be set init userId.
         */
-        session_->SetSessionUserId(GetUserIdDefault(IPCSkeleton::GetCallingUid()));
+        session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
         string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
         BExcepUltils::VerifyPath(path, false);
@@ -177,7 +178,7 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
             .clientToken = IPCSkeleton::GetCallingTokenID(),
             .scenario = IServiceReverse::Scenario::RESTORE,
             .clientProxy = remote,
-            .userId = GetUserIdDefault(IPCSkeleton::GetCallingUid()),
+            .userId = GetUserIdDefault(),
         });
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
@@ -200,7 +201,7 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
             .clientToken = IPCSkeleton::GetCallingTokenID(),
             .scenario = IServiceReverse::Scenario::BACKUP,
             .clientProxy = remote,
-            .userId = GetUserIdDefault(IPCSkeleton::GetCallingUid()),
+            .userId = GetUserIdDefault(),
         });
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
