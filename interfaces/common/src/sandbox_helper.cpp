@@ -15,6 +15,9 @@
 
 #include "sandbox_helper.h"
 
+#include <iomanip>
+#include <sstream>
+#include <unordered_set>
 #include <vector>
 
 #include "log.h"
@@ -34,6 +37,52 @@ namespace {
     const string SANDBOX_JSON_FILE_PATH = "/etc/app_file_service/file_share_sandbox.json";
 }
 std::unordered_map<std::string, std::string> SandboxHelper::sandboxPathMap_;
+
+string SandboxHelper::Encode(const string &uri)
+{
+    const unordered_set<char> uriCompentsSet = {
+        ';', ',', '/', '?', ':', '@', '&',
+        '=', '+', '$', '-', '_', '.', '!',
+        '~', '*', '(', ')', '#', '\''
+    };
+    const int32_t encodeLen = 2;
+    ostringstream outPutStream;
+    outPutStream.fill('0');
+    outPutStream << std::hex;
+
+    for (unsigned char tmpChar : uri) {
+        if (std::isalnum(tmpChar) || uriCompentsSet.find(tmpChar) != uriCompentsSet.end()) {
+            outPutStream << tmpChar;
+        } else {
+            outPutStream << std::uppercase;
+            outPutStream << '%' << std::setw(encodeLen) << static_cast<unsigned int>(tmpChar);
+            outPutStream << std::nouppercase;
+        }
+    }
+
+    return outPutStream.str();
+}
+
+string SandboxHelper::Decode(const string &uri)
+{
+    std::ostringstream outPutStream;
+    const int32_t encodeLen = 2;
+    size_t index = 0;
+    while (index < uri.length()) {
+        if (uri[index] == '%') {
+            int hex = 0;
+            std::istringstream inputStream(uri.substr(index + 1, encodeLen));
+            inputStream >> std::hex >> hex;
+            outPutStream << static_cast<char>(hex);
+            index += encodeLen + 1;
+        } else {
+            outPutStream << uri[index];
+            index++;
+        }
+    }
+
+    return outPutStream.str();
+}
 
 static string GetLowerPath(string &lowerPathHead, const string &lowerPathTail,
                            const string &userId, const string &bundleName)

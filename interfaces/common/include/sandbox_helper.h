@@ -24,6 +24,8 @@ namespace AppFileService {
 class SandboxHelper {
     static std::unordered_map<std::string, std::string> sandboxPathMap_;
 public:
+    static std::string Encode(const std::string &uri);
+    static std::string Decode(const std::string &uri);
     static bool CheckValidPath(const std::string &filePath);
     static int32_t GetPhysicalPath(const std::string &fileUri, const std::string &userId,
                                    std::string &physicalPath);

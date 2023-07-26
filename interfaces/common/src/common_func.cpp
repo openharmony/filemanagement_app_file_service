@@ -17,13 +17,13 @@
 
 #include <vector>
 
-#include "bundle_info.h"
 #include "bundle_mgr_proxy.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 
 #include "log.h"
+#include "sandbox_helper.h"
 
 using namespace std;
 
@@ -104,7 +104,7 @@ string CommonFunc::GetUriFromPath(const string &path)
 
     string packageName = GetSelfBundleName();
     realPath = FILE_SCHEME_PREFIX + packageName + realPath;
-    return realPath;
+    return SandboxHelper::Encode(realPath);
 }
 } // namespace AppFileService
 } // namespace OHOS

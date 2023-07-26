@@ -17,7 +17,6 @@
 #include <fstream>
 #include <sstream>
 
-#include "common_func.h"
 #include "log.h"
 
 namespace OHOS {
