@@ -280,4 +280,43 @@ namespace {
         GTEST_LOG_(INFO) << "RemoteFileShareTest file size is " << hui.fileSize;
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0010";
     }
+
+    /**
+     * @tc.name: remote_file_share_test_0011
+     * @tc.desc: Test function of GetDfsUriFromLocal() interface for SUCCESS.
+     *           the file name is chinese which has been encoded
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7KDF7
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetDfsUriFromLocal_0011, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_GetDfsUriFromLocal_0011";
+        const string dirPath = "/data/app/el2/100/base/com.demo.a/";
+        const string uriStr = "file://com.demo.a/data/storage/el2/base/"
+            "%E5%85%B1%20%E4%BA%AB%20%E6%96%87%20%E4%BB%B6%20%E6%B5%8B%20%E8%AF%95.txt";
+        const string fileStr = "/data/app/el2/100/base/com.demo.a/共 享 文 件 测 试.txt";
+        const int userId = 100;
+
+        int ret = mkdir(dirPath.c_str(), S_IRWXU | S_IRWXG | S_IXOTH);
+        ASSERT_TRUE((ret != -1) || (ret == -1 && errno == EEXIST)) << "RemoteFileShareTest mkdir failed! " << errno;
+
+        int fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
+        ASSERT_TRUE(fd != -1) << "RemoteFileShareTest open file failed! " << errno;
+        close(fd);
+
+        HmdfsUriInfo hui;
+        ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
+        EXPECT_EQ(ret, E_OK);
+
+        ret = unlink(fileStr.c_str());
+        ASSERT_TRUE(ret != -1) << "RemoteFileShareTest delete file failed! " << errno;
+
+        ret = rmdir(dirPath.c_str());
+        ASSERT_TRUE(ret != -1) << "RemoteFileShareTest rmdir failed! " << errno;
+        GTEST_LOG_(INFO) << "RemoteFileShareTest uri is " << hui.uriStr;
+        GTEST_LOG_(INFO) << "RemoteFileShareTest file size is " << hui.fileSize;
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0011";
+    }
 }
