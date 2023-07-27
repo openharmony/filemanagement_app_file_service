@@ -13,21 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_COMMON_FUNC_H
-#define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_COMMON_FUNC_H
+#ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_SANDBOX_HELPER_H
+#define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_SANDBOX_HELPER_H
 
 #include <string>
 #include <unordered_map>
 
 namespace OHOS {
 namespace AppFileService {
-class CommonFunc {
+class SandboxHelper {
+    static std::unordered_map<std::string, std::string> sandboxPathMap_;
 public:
-    static std::string GetSelfBundleName();
-    static std::string GetUriFromPath(const std::string &path);
-    static bool CheckPublicDirPath(const std::string &sandboxPath);
+    static bool CheckValidPath(const std::string &filePath);
+    static int32_t GetPhysicalPath(const std::string &fileUri, const std::string &userId,
+                                   std::string &physicalPath);
 };
 } // namespace AppFileService
 } // namespace OHOS
 
-#endif // FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_COMMON_FUNC_H
+#endif // FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_SANDBOX_HELPER_H

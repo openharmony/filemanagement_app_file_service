@@ -23,9 +23,9 @@
 #include <unistd.h>
 
 #include "accesstoken_kit.h"
-#include "common_func.h"
 #include "hap_token_info.h"
 #include "log.h"
+#include "sandbox_helper.h"
 #include "uri.h"
 
 namespace OHOS {
@@ -139,7 +139,7 @@ static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t fl
 
     GetProviderInfo(uri, info);
 
-    ret = CommonFunc::GetPhysicalPath(uri, info.currentUid_, info.providerLowerPath_);
+    ret = SandboxHelper::GetPhysicalPath(uri, info.currentUid_, info.providerLowerPath_);
     if (ret != 0) {
         LOGE("Failed to get lower path %{public}d", ret);
         return ret;
@@ -190,7 +190,7 @@ static void DeleteExistShareFile(const string &path)
 
 static int32_t PreparePreShareDir(FileShareInfo &info)
 {
-    if (!CommonFunc::CheckValidPath(info.providerLowerPath_)) {
+    if (!SandboxHelper::CheckValidPath(info.providerLowerPath_)) {
         LOGE("Invalid share path with %{private}s", info.providerLowerPath_.c_str());
         return -EINVAL;
     }
