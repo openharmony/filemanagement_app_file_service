@@ -20,9 +20,11 @@ ohos_unittest("b_session_test") {
   sources = [
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_backup.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore_async.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",
     "b_session_backup_test.cpp",
+    "b_session_restore_async_test.cpp",
     "b_session_restore_test.cpp",
   ]
   sources += backup_mock_proxy_src
