@@ -32,6 +32,9 @@
         }, {
             "sandbox-path" : "/Documents",
             "src-path" : "/data/service/el2/<currentUserId>/hmdfs/account/files/Documents"
+        }, {
+            "sandbox-path" : "/Download",
+            "src-path" : "/data/service/el2/<currentUserId>/hmdfs/account/files/Download"
         }
     ]
 }
