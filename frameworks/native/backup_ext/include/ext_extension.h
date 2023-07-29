@@ -34,8 +34,10 @@ public:
     ErrCode PublishFile(const std::string &fileName) override;
     ErrCode HandleBackup() override;
 
+    void AsyncTaskRestoreForUpgrade(void);
+
 public:
-    explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackupJs> &extension) : extension_(extension)
+    explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension) : extension_(extension)
     {
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
     }
@@ -82,7 +84,7 @@ private:
 
 private:
     std::shared_mutex lock_;
-    std::shared_ptr<ExtBackupJs> extension_;
+    std::shared_ptr<ExtBackup> extension_;
     std::vector<std::string> tars_;
     OHOS::ThreadPool threadPool_;
 };

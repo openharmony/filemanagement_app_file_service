@@ -364,16 +364,22 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
             return;
         }
 
-        int ret = ptr->HandleBackup(cache);
+        int ret = ptr->extension_->OnBackup();
+        HILOGI("backup ret %{public}d", ret);
+
+        if (ret == ERR_OK) {
+            ret = ptr->HandleBackup(cache);
+        }
 
         // REM: 处理返回结果 ret
         auto proxy = ServiceProxy::GetInstance();
         if (proxy == nullptr) {
             HILOGE("Failed to obtain the ServiceProxy handle");
             return;
-        } else {
-            proxy->AppDone(ret);
         }
+
+        proxy->AppDone(ret);
+        HILOGI("backup app done %{public}d", ret);
 
         // 清空备份目录
         ptr->HandleClear();
@@ -495,14 +501,58 @@ void BackupExtExtension::AsyncTaskRestore()
         // 恢复大文件
         RestoreBigFiles();
 
+        if (ret == ERR_OK) {
+            HILOGI("after extra, do restore.");
+            ret = ptr->extension_->OnRestore();
+        }
+
         // 处理返回结果
         auto proxy = ServiceProxy::GetInstance();
         if (proxy == nullptr) {
             HILOGE("Failed to obtain the ServiceProxy handle");
             return;
-        } else {
-            proxy->AppDone(ret);
         }
+
+        proxy->AppDone(ret);
+
+        // 清空恢复目录
+        ptr->HandleClear();
+    };
+
+    // REM: 这里异步化了，需要做并发控制
+    // 在往线程池中投入任务之前将需要的数据拷贝副本到参数中，保证不发生读写竞争，
+    // 由于拷贝参数时尚运行在主线程中，故在参数拷贝过程中是线程安全的。
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (const BError &e) {
+            HILOGE("%{public}s", e.what());
+        } catch (const exception &e) {
+            HILOGE("%{public}s", e.what());
+        } catch (...) {
+            HILOGE("");
+        }
+    });
+}
+
+void BackupExtExtension::AsyncTaskRestoreForUpgrade()
+{
+    auto task = [obj {wptr<BackupExtExtension>(this)}]() {
+        auto ptr = obj.promote();
+        if (!ptr) {
+            HILOGI("ext_extension handle have been already released");
+            return;
+        }
+        auto ret = ptr->extension_->OnRestore();
+
+        // 处理返回结果
+        auto proxy = ServiceProxy::GetInstance();
+        if (proxy == nullptr) {
+            HILOGE("Failed to obtain the ServiceProxy handle");
+            return;
+        }
+
+        proxy->AppDone(ret);
 
         // 清空恢复目录
         ptr->HandleClear();
