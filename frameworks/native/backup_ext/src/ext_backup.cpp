@@ -180,7 +180,6 @@ sptr<IRemoteObject> ExtBackup::OnConnect(const AAFwk::Want &want)
         }
 
         return remoteObject->AsObject();
-
     } catch (const BError &e) {
         return nullptr;
     } catch (const exception &e) {

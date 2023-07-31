@@ -78,7 +78,6 @@ public:
      */
     sptr<IRemoteObject> OnConnect(const AAFwk::Want &want) override;
 
-
     /**
      * @brief Called when all abilities connected to this Wallpaper extension are disconnected.
      *
