@@ -30,11 +30,23 @@
             "sandbox-path" : "/storage/local/Documents",
             "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Documents"
         }, {
+            "sandbox-path" : "/storage/local/Download",
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Download"
+        }, {
+            "sandbox-path" : "/storage/local/Desktop",
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Desktop"
+        }, {
+            "sandbox-path" : "/storage/External",
+            "src-path" : "/mnt/data/External"
+        }, {
+            "sandbox-path" : "/storage/Share",
+            "src-path" : "/data/service/el1/public/storage_daemon/share/public"
+        }, {
             "sandbox-path" : "/Documents",
-            "src-path" : "/data/service/el2/<currentUserId>/hmdfs/account/files/Documents"
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Documents"
         }, {
             "sandbox-path" : "/Download",
-            "src-path" : "/data/service/el2/<currentUserId>/hmdfs/account/files/Download"
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Download"
         }
     ]
 }

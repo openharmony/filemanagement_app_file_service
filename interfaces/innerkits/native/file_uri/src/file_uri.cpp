@@ -21,6 +21,7 @@
 
 #include "common_func.h"
 #include "log.h"
+#include "sandbox_helper.h"
 
 using namespace std;
 namespace OHOS {
@@ -30,35 +31,45 @@ const std::string PATH_SHARE = "/data/storage/el2/share";
 const std::string MODE_RW = "/rw/";
 const std::string MODE_R = "/r/";
 const std::string FILE_SCHEME_PREFIX = "file://";
+const std::string FILE_MANAGER_AUTHORITY = "docs";
 string FileUri::GetName()
 {
     string sandboxPath = uri_.GetPath();
     size_t posLast = sandboxPath.find_last_of("/");
     if (posLast == string::npos) {
-        return sandboxPath;
+        return "";
     }
 
     if (posLast == sandboxPath.size()) {
         return "";
     }
 
-    return sandboxPath.substr(posLast + 1);
+    return SandboxHelper::Decode(sandboxPath.substr(posLast + 1));
 }
 
 string FileUri::GetPath()
 {
-    string sandboxPath = uri_.GetPath();
+    return SandboxHelper::Decode(uri_.GetPath());
+}
+
+string FileUri::GetRealPath()
+{
+    string sandboxPath = SandboxHelper::Decode(uri_.GetPath());
     string realPath = sandboxPath;
-    string providerBundleName = uri_.GetAuthority();
-    string targetBundleName = CommonFunc::GetSelfBundleName();
-    if (CommonFunc::CheckPublicDirPath(realPath) ||
-       ((targetBundleName != providerBundleName) && (providerBundleName != ""))) {
-        realPath = PATH_SHARE + MODE_RW + providerBundleName + sandboxPath;
-        if (access(realPath.c_str(), F_OK) != 0) {
-            realPath = PATH_SHARE + MODE_R + providerBundleName + sandboxPath;
-        }
+    string bundleName = uri_.GetAuthority();
+    LOGD("GetRealPath decode path is %{private}s", sandboxPath.c_str());
+    if (bundleName == FILE_MANAGER_AUTHORITY &&
+        access(realPath.c_str(), F_OK) == 0) {
+        return realPath;
     }
 
+    if ((bundleName != "") && (bundleName != CommonFunc::GetSelfBundleName())) {
+        realPath = PATH_SHARE + MODE_RW + bundleName + sandboxPath;
+        if (access(realPath.c_str(), F_OK) != 0) {
+            realPath = PATH_SHARE + MODE_R + bundleName + sandboxPath;
+        }
+    }
+    LOGD("GetRealPath real path is %{private}s", realPath.c_str());
     return realPath;
 }
 

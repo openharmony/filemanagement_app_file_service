@@ -21,6 +21,7 @@
 #include "log.h"
 #include "remote_uri.h"
 #include "tokenid_kit.h"
+#include "uri_permission_manager_client.h"
 #include "want.h"
 
 using namespace OHOS::DataShare;
@@ -34,6 +35,13 @@ namespace ModuleFileShare {
         FILE_TABLE = 0,
         PHOTO_TABLE = 1,
         AUDIO_TABLE = 2,
+    };
+
+    struct UriPermissionInfo {
+        unsigned int flag;
+        string mode;
+        string bundleName;
+        string uri;
     };
 
     static bool IsAllDigits(string idStr)
@@ -52,28 +60,8 @@ namespace ModuleFileShare {
         return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
     }
 
-    static string DealWithUriWithName(string str)
-    {
-        static uint32_t MEET_COUNT = 6;
-        uint32_t count = 0;
-        uint32_t index;
-        for (index = 0; index < str.length(); index++) {
-            if (str[index] == '/') {
-                count++;
-            }
-            if (count == MEET_COUNT) {
-                break;
-            }
-        }
-        if (count == MEET_COUNT) {
-            str = str.substr(0, index);
-        }
-        return str;
-    }
-
     static string GetIdFromUri(string uri)
     {
-        uri = DealWithUriWithName(uri);
         string rowNum = "";
         size_t pos = uri.rfind('/');
         if (pos != string::npos) {
@@ -97,6 +85,15 @@ namespace ModuleFileShare {
         return mode;
     }
 
+    static unsigned int GetFlagFromMode(const string &mode)
+    {
+        unsigned int flag = AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION;
+        if (mode.find("w") != string::npos) {
+            flag = AAFwk::Want::FLAG_AUTH_WRITE_URI_PERMISSION;
+        }
+        return flag;
+    }
+
     static int32_t GetMediaTypeAndApiFromUri(const std::string &uri, bool &isApi10)
     {
         if (uri.find(MEDIA_FILE_URI_PHOTO_PREFEX) == 0) {
@@ -117,61 +114,7 @@ namespace ModuleFileShare {
         return MediaFileTable::FILE_TABLE;
     }
 
-    static napi_value GetJSArgs(napi_env env, const NFuncArg &funcArg,
-                                DataShareValuesBucket &valuesBucket, bool &isApi10)
-    {
-        napi_value result = nullptr;
-        auto [succPath, path, lenPath] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
-        if (!succPath) {
-            LOGE("FileShare::GetJSArgs get path parameter failed!");
-            NError(EINVAL).ThrowErr(env);
-            return nullptr;
-        }
-
-        if (!DistributedFS::ModuleRemoteUri::RemoteUri::IsMediaUri(path.get())) {
-            LOGE("FileShare::GetJSArgs path parameter format error!");
-            NError(EINVAL).ThrowErr(env);
-            return nullptr;
-        }
-
-        auto [succBundleName, bundleName, lenBundleName] = NVal(env, funcArg[NARG_POS::SECOND]).ToUTF8String();
-        if (!succBundleName) {
-            LOGE("FileShare::GetJSArgs get bundleName parameter failed!");
-            NError(EINVAL).ThrowErr(env);
-            return nullptr;
-        }
-
-        string mode;
-        if (NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_number)) {
-            auto [succFlag, flag] = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
-            mode = GetModeFromFlag(flag);
-        } else if (NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_string)) {
-            auto [succFlag, flag, lenFlag] = NVal(env, funcArg[NARG_POS::THIRD]).ToUTF8String();
-            mode = string(flag.get());
-        } else {
-            LOGE("FileShare::GetJSArgs get flag parameter failed!");
-            NError(EINVAL).ThrowErr(env);
-            return nullptr;
-        }
-
-        string idStr = GetIdFromUri(string(path.get()));
-        if (idStr == "") {
-            LOGE("FileShare::GetJSArgs get fileId parameter failed!");
-            NError(EINVAL).ThrowErr(env);
-            return nullptr;
-        }
-
-        int32_t fileId = stoi(idStr);
-        int32_t filesType = GetMediaTypeAndApiFromUri(string(path.get()), isApi10);
-        valuesBucket.Put(PERMISSION_FILE_ID, fileId);
-        valuesBucket.Put(PERMISSION_BUNDLE_NAME, string(bundleName.get()));
-        valuesBucket.Put(PERMISSION_MODE, mode);
-        valuesBucket.Put(PERMISSION_TABLE_TYPE, filesType);
-        napi_get_boolean(env, true, &result);
-        return result;
-    }
-
-    static int InsertByDatashare(napi_env env, const DataShareValuesBucket &valuesBucket, bool isApi10)
+    static int InsertByDatashare(const DataShareValuesBucket &valuesBucket, bool isApi10)
     {
         int ret = -1;
         std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = nullptr;
@@ -200,8 +143,99 @@ namespace ModuleFileShare {
         return ret;
     }
 
+    static int InitValuesBucket(const UriPermissionInfo &uriPermInfo, Uri &uri, bool &isApi10,
+                                DataShareValuesBucket &valuesBucket)
+    {
+        string idStr = GetIdFromUri(uriPermInfo.uri);
+        if (idStr == "") {
+            LOGE("FileShare::InitValuesBucket get fileId parameter failed!");
+            return -EINVAL;
+        }
+
+        int32_t fileId = stoi(idStr);
+        int32_t filesType = GetMediaTypeAndApiFromUri(uri.GetPath(), isApi10);
+        valuesBucket.Put(PERMISSION_FILE_ID, fileId);
+        valuesBucket.Put(PERMISSION_BUNDLE_NAME, uri.GetAuthority());
+        valuesBucket.Put(PERMISSION_MODE, uriPermInfo.mode);
+        valuesBucket.Put(PERMISSION_TABLE_TYPE, filesType);
+        return 0;
+    }
+
+    static int GrantInMediaLibrary(const UriPermissionInfo &uriPermInfo, Uri &uri)
+    {
+        bool isApi10 = false;
+        DataShareValuesBucket valuesBucket;
+        int ret = InitValuesBucket(uriPermInfo, uri, isApi10, valuesBucket);
+        if (ret < 0) {
+            return ret;
+        }
+
+        ret = InsertByDatashare(valuesBucket, isApi10);
+        if (ret < 0) {
+            return ret;
+        }
+        return 0;
+    }
+
+    static int DoGrantUriPermission(const UriPermissionInfo &uriPermInfo)
+    {
+        Uri uri(uriPermInfo.uri);
+        string authority = uri.GetAuthority();
+        string scheme = uri.GetScheme();
+        string path = uri.GetPath();
+
+        if (scheme == FILE_SCHEME) {
+            if (authority == MEDIA_AUTHORITY && path.find(".") == string::npos) {
+                return GrantInMediaLibrary(uriPermInfo, uri);
+            } else {
+                auto& uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
+                return uriPermissionClient.GrantUriPermission(uri, uriPermInfo.flag,
+                                                              uriPermInfo.bundleName, 1);
+            }
+        } else {
+            LOGE("FileShare::GetJSArgs get uri parameter failed!");
+            return -EINVAL;
+        }
+    }
+
+    static bool GetJSArgs(napi_env env, const NFuncArg &funcArg, UriPermissionInfo &uriPermInfo)
+    {
+        auto [succUri, uri, lenUri] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
+        if (!succUri) {
+            LOGE("FileShare::GetJSArgs get uri parameter failed!");
+            NError(EINVAL).ThrowErr(env);
+            return false;
+        }
+        uriPermInfo.uri = string(uri.get());
+
+        auto [succBundleName, bundleName, lenBundleName] = NVal(env, funcArg[NARG_POS::SECOND]).ToUTF8String();
+        if (!succBundleName) {
+            LOGE("FileShare::GetJSArgs get bundleName parameter failed!");
+            NError(EINVAL).ThrowErr(env);
+            return false;
+        }
+        uriPermInfo.bundleName = string(bundleName.get());
+
+        if (NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_number)) {
+            auto [succFlag, flag] = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
+            uriPermInfo.flag = flag;
+            uriPermInfo.mode = GetModeFromFlag(flag);
+        } else if (NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_string)) {
+            auto [succFlag, flag, lenFlag] = NVal(env, funcArg[NARG_POS::THIRD]).ToUTF8String();
+            uriPermInfo.mode = string(flag.get());
+            uriPermInfo.flag = GetFlagFromMode(uriPermInfo.mode);
+        } else {
+            LOGE("FileShare::GetJSArgs get flag parameter failed!");
+            NError(EINVAL).ThrowErr(env);
+            return false;
+        }
+
+        return true;
+    }
+
     napi_value GrantUriPermission::Async(napi_env env, napi_callback_info info)
     {
+        LOGD("FileShare::GrantUriPermission begin!");
         if (!IsSystemApp()) {
             LOGE("FileShare::GrantUriPermission is not System App!");
             NError(E_PERMISSION_SYS).ThrowErr(env);
@@ -214,19 +248,18 @@ namespace ModuleFileShare {
             return nullptr;
         }
 
-        OHOS::DataShare::DataShareValuesBucket valuesBucket;
-        bool isApi10 = false;
-        bool result = GetJSArgs(env, funcArg, valuesBucket, isApi10);
+        UriPermissionInfo uriPermInfo;
+        bool result = GetJSArgs(env, funcArg, uriPermInfo);
         if (!result) {
-            LOGE("FileShare::GrantUriPermission GetJSArgsForGrantUriPermission failed!");
+            LOGE("FileShare::GrantUriPermission GetJSArgs failed!");
             NError(EINVAL).ThrowErr(env);
             return nullptr;
         }
 
-        auto cbExec = [valuesBucket, isApi10, env]() -> NError {
-            int ret = InsertByDatashare(env, valuesBucket, isApi10);
+        auto cbExec = [uriPermInfo, env]() -> NError {
+            int ret = DoGrantUriPermission(uriPermInfo);
             if (ret < 0) {
-                LOGE("FileShare::GrantUriPermission InsertByDatashare failed!");
+                LOGE("FileShare::GrantUriPermission DoGrantUriPermission failed with %{public}d", ret);
                 return NError(-ret);
             }
             return NError(ERRNO_NOERR);
