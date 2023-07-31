@@ -237,23 +237,19 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
                               const std::vector<NativeValue *> &argv,
                               ResultValueParser retParser)
 {
-
     uv_loop_s *loop = nullptr;
     napi_status status = napi_get_uv_event_loop(reinterpret_cast<napi_env>(&jsRuntime.GetNativeEngine()), &loop);
     if (status != napi_ok) {
-
         HILOGE("failed to get uv event loop.");
         return EINVAL;
     }
     auto param = std::make_shared<CallJsParam>(funcName, &jsRuntime, jsObj, argv, retParser);
     if (param == nullptr) {
-
         HILOGE("failed to new param.");
         return EINVAL;
     }
     auto work = std::make_shared<uv_work_t>();
     if (work == nullptr) {
-
         HILOGE("failed to new uv_work_t.");
         return EINVAL;
     }
@@ -276,7 +272,6 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
             param->backupOperateCondition.notify_one();
         });
     if (ret != 0) {
-
         HILOGE("failed to exec uv_queue_work.");
         return EINVAL;
     }
