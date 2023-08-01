@@ -127,6 +127,8 @@ public:
      */
     virtual ErrCode OnRestore(void);
 
+    bool WasFromSpeicalVersion(void);
+
 public:
     ExtBackup() = default;
     ~ExtBackup() override = default;
