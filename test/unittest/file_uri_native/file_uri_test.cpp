@@ -128,10 +128,9 @@ namespace OHOS::AppFileService::ModuleFileUri {
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0001";
         string fileStr = "/Documents/test.txt";
         string uri = "file://" + bundleA + fileStr;
-        string rltStr = PATH_SHARE + MODE_R + bundleA + fileStr;
         FileUri fileUri(uri);
-        string path = fileUri.GetPath();
-        EXPECT_EQ(path, rltStr);
+        string path = fileUri.GetRealPath();
+        EXPECT_EQ(path, fileStr);
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0001";
     }
 
@@ -151,7 +150,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
         string uri = "file://" + bundleB + fileStr;
         string rltStr = PATH_SHARE + MODE_R + bundleB + fileStr;
         FileUri fileUri(uri);
-        string path = fileUri.GetPath();
+        string path = fileUri.GetRealPath();
         EXPECT_EQ(path, rltStr);
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0002";
     }
@@ -184,7 +183,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
         
         string rltStr = PATH_SHARE + MODE_R + bundleB + actStr;
         FileUri fileUri(uri);
-        string path = fileUri.GetPath();
+        string path = fileUri.GetRealPath();
         EXPECT_EQ(path, rltStr);
 
         vector<string> sharePathList;
