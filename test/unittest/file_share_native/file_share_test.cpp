@@ -21,9 +21,11 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
 #include "accesstoken_kit.h"
 #include "file_share.h"
 #include "ipc_skeleton.h"
+#include "sandbox_helper.h"
 
 namespace {
     using namespace std;
@@ -230,5 +232,97 @@ namespace {
         int32_t ret = DeleteShareFile(tokenId, sharePathList);
         EXPECT_EQ(ret, -EINVAL);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_DeleteShareFile_0006";
+    }
+
+    /**
+     * @tc.name: File_share_GetPhysicalPath_0001
+     * @tc.desc: Test function of GetPhysicalPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7PDZL
+     */
+    HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0001";
+        std::string fileUri = "file://media/Photo/12/IMG_12345_0011/test.jpg";
+        std::string physicalPath;
+        int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(physicalPath, "/mnt/hmdfs/100/account/merge_view/files/Photo/11/IMG_12345_0011.jpg");
+        GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0001";
+    }
+
+    /**
+     * @tc.name: File_share_GetPhysicalPath_0002
+     * @tc.desc: Test function of GetPhysicalPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7PDZL
+     */
+    HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0002, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0002";
+        std::string fileUri = "file://media/Photo/12/IMG_12345_/test.jpg";
+        std::string physicalPath;
+        int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+        EXPECT_EQ(ret, -EINVAL);
+        GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0002";
+    }
+
+    /**
+     * @tc.name: File_share_GetPhysicalPath_0003
+     * @tc.desc: Test function of GetPhysicalPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7PDZL
+     */
+    HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0003, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0003";
+        std::string fileUri = "file://media/Photo/12/IMG_12345_a0011/test.jpg";
+        std::string physicalPath;
+        int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+        EXPECT_EQ(ret, -EINVAL);
+        GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0003";
+    }
+
+    /**
+     * @tc.name: File_share_GetPhysicalPath_0004
+     * @tc.desc: Test function of GetPhysicalPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7PDZL
+     */
+    HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0004, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0004";
+        std::string fileUri = "file://media/Photo/IMG_12345_999999/test.jpg";
+        std::string physicalPath;
+        int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+        EXPECT_EQ(ret, -EINVAL);
+        GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0004";
+    }
+
+    /**
+     * @tc.name: File_share_GetPhysicalPath_0005
+     * @tc.desc: Test function of GetPhysicalPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7PDZL
+     */
+    HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0005, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0005";
+        std::string fileUri = "file://media/Photo/12/IMG_12345_999999/test.jpg";
+        std::string physicalPath;
+        int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(physicalPath, "/mnt/hmdfs/100/account/merge_view/files/Photo/575/IMG_12345_999999.jpg");
+        GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0005";
     }
 }

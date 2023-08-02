@@ -35,7 +35,21 @@ namespace {
     const string SANDBOX_PATH_KEY = "sandbox-path";
     const string MOUNT_PATH_MAP_KEY = "mount-path-map";
     const string SANDBOX_JSON_FILE_PATH = "/etc/app_file_service/file_share_sandbox.json";
+    const std::string SHAER_PATH_HEAD = "/mnt/hmdfs/";
+    const std::string SHAER_PATH_MID = "/account/merge_view/files/";
+    const string BACKFLASH = "/";
+    const string MEDIA = "media";
+    const int ASSET_IN_BUCKET_NUM_MAX = 1000;
+    const int ASSET_DIR_START_NUM = 16;
 }
+
+struct MediaUriInfo {
+    string mediaType;
+    string fileId;
+    string realName;
+    string displayName;
+};
+
 std::unordered_map<std::string, std::string> SandboxHelper::sandboxPathMap_;
 
 string SandboxHelper::Encode(const string &uri)
@@ -123,12 +137,106 @@ static void GetSandboxPathMap(unordered_map<string, string> &sandboxPathMap)
     return;
 }
 
+static int32_t GetPathSuffix(const std::string &path, string &pathSuffix)
+{
+    size_t pos = path.rfind('.');
+    if (pos != string::npos) {
+        pathSuffix = path.substr(pos);
+        return 0;
+    }
+    return -EINVAL;
+}
+
+static int32_t CalAssetBucket(const int32_t &fileId)
+{
+    int32_t bucketNum = 0;
+    if (fileId < 0) {
+        LOGE("input fileId %{private}d is invalid", fileId);
+        return -EINVAL;
+    }
+
+    int32_t start = ASSET_DIR_START_NUM;
+    int32_t divider = ASSET_DIR_START_NUM;
+    while (fileId > start * ASSET_IN_BUCKET_NUM_MAX) {
+        divider = start;
+        start <<= 1;
+    }
+
+    int32_t fileIdRemainder = fileId % divider;
+    if (fileIdRemainder == 0) {
+        bucketNum = start + fileIdRemainder;
+    } else {
+        bucketNum = (start - divider) + fileIdRemainder;
+    }
+    return bucketNum;
+}
+
+static int32_t GetFileIdFromFileName(const std::string &fileName)
+{
+    size_t pos = fileName.find_last_of('_');
+    if (pos == std::string::npos || pos == fileName.size() - 1) {
+        return -EINVAL;
+    }
+
+    std::string idStr = fileName.substr(pos + 1);
+    if (!std::all_of(idStr.begin(), idStr.end(), ::isdigit)) {
+        return -EINVAL;
+    }
+
+    return std::stoi(idStr);
+}
+
+static int32_t GetBucketNum(const std::string &fileName)
+{
+    int32_t fileId = GetFileIdFromFileName(fileName);
+    if (fileId < 0) {
+        LOGE("GetFileIdFromFileName failed with %{public}s", fileName.c_str());
+        return fileId;
+    }
+    return CalAssetBucket(fileId);
+}
+
+static void ParseMediaSandboxPath(const string &sandboxPath, MediaUriInfo &mediaUriInfo)
+{
+    string path = sandboxPath;
+    std::replace(path.begin(), path.end(), '/', ' ');
+    stringstream ss;
+    ss << path;
+    ss >> mediaUriInfo.mediaType >> mediaUriInfo.fileId >> mediaUriInfo.realName >> mediaUriInfo.displayName;
+}
+
+static int32_t GetMediaPhysicalPath(const std::string &sandboxPath, const std::string &userId,
+                                    std::string &physicalPath)
+{
+    MediaUriInfo mediaUriInfo;
+    ParseMediaSandboxPath(sandboxPath, mediaUriInfo);
+
+    int32_t bucketNum = GetBucketNum(mediaUriInfo.realName);
+    if (bucketNum < 0) {
+        return -EINVAL;
+    }
+
+    std::string mediaSuffix;
+    if (GetPathSuffix(sandboxPath, mediaSuffix) != 0) {
+        LOGE("GetPathSuffix failed");
+        return -EINVAL;
+    }
+
+    physicalPath = SHAER_PATH_HEAD + userId + SHAER_PATH_MID + mediaUriInfo.mediaType +
+                   BACKFLASH + to_string(bucketNum) + BACKFLASH + mediaUriInfo.realName + mediaSuffix;
+    return 0;
+}
+
 int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::string &userId,
                                        std::string &physicalPath)
 {
     Uri uri(fileUri);
     string bundleName = uri.GetAuthority();
     string sandboxPath = uri.GetPath();
+
+    if (bundleName == MEDIA) {
+        return GetMediaPhysicalPath(sandboxPath, userId, physicalPath);
+    }
 
     string lowerPathTail = "";
     string lowerPathHead = "";
