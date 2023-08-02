@@ -33,9 +33,6 @@ using namespace OHOS::AppExecFwk;
 namespace {
     const std::string FILE_SCHEME_PREFIX = "file://";
     const char BACKFLASH = '/';
-    const std::vector<std::string> PUBLIC_DIR_PATHS = {
-        "/Documents"
-    };
 }
 static sptr<BundleMgrProxy> GetBundleMgrProxy()
 {
@@ -74,16 +71,6 @@ string CommonFunc::GetSelfBundleName()
     }
 
     return bundleInfo.name;
-}
-
-bool CommonFunc::CheckPublicDirPath(const std::string &sandboxPath)
-{
-    for (const std::string &path : PUBLIC_DIR_PATHS) {
-        if (sandboxPath.find(path) == 0) {
-            return true;
-        }
-    }
-    return false;
 }
 
 static void NormalizePath(string &path)

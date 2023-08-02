@@ -26,6 +26,7 @@ class FileUri {
 public:
     std::string GetName();
     std::string GetPath();
+    std::string GetRealPath();
     std::string ToString();
 
     explicit FileUri(const std::string &uriOrPath);

@@ -45,6 +45,8 @@ namespace {
     const std::string LOWER_SHARE_PATH_MID = "/account/device_view/local/services/";
     const std::string SHARE_PATH_DIR = "/.share";
     const std::string REMOTE_SHARE_PATH_DIR = "/.remote_share";
+    const std::string MEDIA_AUTHORITY = "media";
+    const std::string FILE_MANAGER_AUTHORITY = "docs";
 }
 
 #define HMDFS_IOC_SET_SHARE_PATH    _IOW(HMDFS_IOC, 1, struct HmdfsShareControl)
@@ -279,38 +281,57 @@ static void InitHmdfsInfo(struct HmdfsDstInfo &hdi, const std::string &physicalP
                           const std::string &distributedPath, const std::string &bundleName)
 {
     hdi.localLen = physicalPath.size() + 1;
-    hdi.localPathIndex = (uint64_t)(physicalPath.c_str());
+    hdi.localPathIndex = reinterpret_cast<uint64_t>(physicalPath.c_str());
 
     hdi.distributedLen = distributedPath.size() + 1;
-    hdi.distributedPathIndex = (uint64_t)(distributedPath.c_str());
+    hdi.distributedPathIndex = reinterpret_cast<uint64_t>(distributedPath.c_str());
 
     hdi.bundleNameLen = bundleName.size() + 1;
-    hdi.bundleNameIndex = (uint64_t)(bundleName.c_str());
+    hdi.bundleNameIndex = reinterpret_cast<uint64_t>(bundleName.c_str());
 
-    hdi.size = (uint64_t)&hdi.size;
+    hdi.size = reinterpret_cast<uint64_t>(&hdi.size);
 }
 
-static void SetHmdfsUriInfo(struct HmdfsUriInfo &hdi, Uri &uri, uint64_t fileSize)
+static void SetHmdfsUriInfo(struct HmdfsUriInfo &hui, Uri &uri, uint64_t fileSize)
 {
     std::string bundleName = uri.GetAuthority();
     std::string path = uri.GetPath();
 
-    hdi.uriStr = SandboxHelper::Encode(FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH +
+    hui.uriStr = SandboxHelper::Encode(FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH +
                                        REMOTE_SHARE_PATH_DIR + path);
-    hdi.fileSize = fileSize;
+    hui.fileSize = fileSize;
     return;
+}
+
+static int32_t SetPublicDirHmdfsInfo(const std::string &physicalPath, const std::string &uriStr,
+                                     struct HmdfsUriInfo &hui)
+{
+    hui.uriStr = uriStr;
+    struct stat buf = {};
+    if (stat(physicalPath.c_str(), &buf) != 0) {
+        LOGE("Failed to get physical path stat with %{public}d", -errno);
+        return -errno;
+    }
+    hui.fileSize = buf.st_size;
+    return 0;
 }
 
 int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int32_t &userId,
                                             struct HmdfsUriInfo &hui)
 {
     Uri uri(SandboxHelper::Decode(uriStr));
+    std::string bundleName = uri.GetAuthority();
     LOGD("GetDfsUriFromLocal begin with uri:%{private}s, decode uri:%{private}s",
          uriStr.c_str(), uri.ToString().c_str());
     std::string physicalPath = GetPhysicalPath(uri, std::to_string(userId));
     if (physicalPath == "") {
         LOGE("Failed to get physical path");
         return -EINVAL;
+    }
+
+    if (bundleName == MEDIA_AUTHORITY || bundleName == FILE_MANAGER_AUTHORITY) {
+        (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, hui);
+        return 0;
     }
 
     std::string distributedPath;
@@ -321,7 +342,6 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
     }
 
     struct HmdfsDstInfo hdi;
-    std::string bundleName = uri.GetAuthority();
     LOGD("PhysicalPath: %{private}s DistributedPath: %{private}s BundleName: %{private}s",
          physicalPath.c_str(), distributedPath.c_str(), bundleName.c_str());
     InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
