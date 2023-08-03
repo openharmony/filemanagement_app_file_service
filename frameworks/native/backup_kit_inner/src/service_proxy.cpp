@@ -15,12 +15,14 @@
 
 #include "service_proxy.h"
 
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
+
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
-#include "iservice_registry.h"
-#include "system_ability_definition.h"
+#include "svc_death_recipient.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -324,8 +326,8 @@ sptr<IService> ServiceProxy::GetInstance()
     }
     int32_t ret = samgr->LoadSystemAbility(FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, loadCallback);
     if (ret != ERR_OK) {
-        HILOGE("Failed to Load systemAbility, systemAbilityId:%d, ret code:%d", FILEMANAGEMENT_BACKUP_SERVICE_SA_ID,
-               ret);
+        HILOGE("Failed to Load systemAbility, systemAbilityId:%{private}d, ret code:%{public}d",
+               FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, ret);
         return nullptr;
     }
 
@@ -349,17 +351,37 @@ void ServiceProxy::InvaildInstance()
 void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
                                                                         const OHOS::sptr<IRemoteObject> &remoteObject)
 {
-    HILOGI("Load backup sa success, systemAbilityId:%d, remoteObject result:%s", systemAbilityId,
+    HILOGI("Load backup sa success, systemAbilityId: %{private}d, remoteObject result:%{private}s", systemAbilityId,
            (remoteObject != nullptr) ? "true" : "false");
+    if (systemAbilityId != FILEMANAGEMENT_BACKUP_SERVICE_SA_ID || remoteObject == nullptr) {
+        isLoadSuccess_.store(false);
+        proxyConVar_.notify_one();
+        return;
+    }
     unique_lock<mutex> lock(proxyMutex_);
     serviceProxy_ = iface_cast<IService>(remoteObject);
+    auto remoteObj = serviceProxy_->AsObject();
+    if (!remoteObj) {
+        HILOGE("Failed to get remote object");
+        serviceProxy_ = nullptr;
+        isLoadSuccess_.store(false);
+        proxyConVar_.notify_one();
+        return;
+    }
+
+    auto callback = [](const wptr<IRemoteObject> &obj) {
+        ServiceProxy::InvaildInstance();
+        HILOGE("Backup service died");
+    };
+    sptr<SvcDeathRecipient> deathRecipient = sptr(new SvcDeathRecipient(callback));
+    remoteObj->AddDeathRecipient(deathRecipient);
     isLoadSuccess_.store(true);
     proxyConVar_.notify_one();
 }
 
 void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
 {
-    HILOGE("Load backup sa failed, systemAbilityId:%d", systemAbilityId);
+    HILOGE("Load backup sa failed, systemAbilityId:%{private}d", systemAbilityId);
     unique_lock<mutex> lock(proxyMutex_);
     serviceProxy_ = nullptr;
     isLoadSuccess_.store(false);
