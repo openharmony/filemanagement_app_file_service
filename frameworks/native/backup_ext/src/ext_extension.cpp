@@ -333,7 +333,11 @@ int BackupExtExtension::HandleRestore(const string &fileName)
         string tarName = path + fileName;
 
         auto tarballFunc = BTarballFactory::Create("cmdline", tarName);
-        (tarballFunc->untar)("/");
+        if (extension_->WasFromSpeicalVersion()) {
+            (tarballFunc->untar)(path);
+        } else {
+            (tarballFunc->untar)("/");
+        }
         HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
 
         return ERR_OK;

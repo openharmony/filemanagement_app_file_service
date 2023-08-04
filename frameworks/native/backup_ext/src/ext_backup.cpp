@@ -173,8 +173,8 @@ sptr<IRemoteObject> ExtBackup::OnConnect(const AAFwk::Want &want)
 
         // async do restore.
         if (extAction_ == BConstants::ExtensionAction::RESTORE &&
-            restoreType_ == RestoreTypeEnum::RESTORE_DATA_READDY && appVersionCode_ == 0 &&
-            appVersionStr_ == "0.0.0.0") {
+                restoreType_ == RestoreTypeEnum::RESTORE_DATA_READDY &&
+                WasFromSpeicalVersion()) {
             HILOGI("Restore directly when upgrading.");
             remoteObject->AsyncTaskRestoreForUpgrade();
         }
@@ -207,6 +207,14 @@ void ExtBackup::OnDisconnect(const AAFwk::Want &want)
         HILOGE("");
         return;
     }
+}
+
+bool ExtBackup::WasFromSpeicalVersion(void)
+{
+    if (appVersionCode_ == 0 && appVersionStr_ == "0.0.0.0") {
+        return true;
+    }
+    return false;
 }
 
 ErrCode ExtBackup::OnBackup(void)
