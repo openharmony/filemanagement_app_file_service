@@ -1,0 +1,18 @@
+[package]
+name = "tar_rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "4.3.19", features = ["derive"] }
+glob = "0.3.1"
+lz4_flex = { version = "0.11", default-features = false, features = ["frame"], optional = true }
+tar = "0.4.39"
+walkdir = "2.3.3"
+ylong_runtime = { git = "https://gitee.com/openharmony-sig/commonlibrary_rust_ylong_runtime.git", features = ["full"]}
+libc = "0.2.101"
+
+[features]
+compress_lz4_flex = ["dep:lz4_flex"]
