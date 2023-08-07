@@ -31,11 +31,11 @@ Json::Value Stat2JsonValue(struct stat sta)
 {
     Json::Value value;
 
-    value["st_size"] = static_cast<uint64_t>(sta.st_size);
-    value["st_atim"]["tv_sec"] = static_cast<uint64_t>(sta.st_atim.tv_sec);
-    value["st_atim"]["tv_nsec"] = static_cast<uint64_t>(sta.st_atim.tv_nsec);
-    value["st_mtim"]["tv_sec"] = static_cast<uint64_t>(sta.st_mtim.tv_sec);
-    value["st_mtim"]["tv_nsec"] = static_cast<uint64_t>(sta.st_mtim.tv_nsec);
+    value["st_size"] = static_cast<int64_t>(sta.st_size);
+    value["st_atim"]["tv_sec"] = static_cast<int64_t>(sta.st_atim.tv_sec);
+    value["st_atim"]["tv_nsec"] = static_cast<int64_t>(sta.st_atim.tv_nsec);
+    value["st_mtim"]["tv_sec"] = static_cast<int64_t>(sta.st_mtim.tv_sec);
+    value["st_mtim"]["tv_nsec"] = static_cast<int64_t>(sta.st_mtim.tv_nsec);
 
     return value;
 }
