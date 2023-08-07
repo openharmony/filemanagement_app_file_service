@@ -184,20 +184,8 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
     for (auto name : bundleNames) {
         string versionName = string(BConstants::DEFAULT_VERSION_NAME);
         uint32_t versionCode = static_cast<uint32_t>(BConstants::DEFAULT_VERSION_CODE);
-        if (type == "false") {
-            auto iter = find_if(infos.begin(), infos.end(), [name](const auto &it) { return it.name == name; });
-            if (iter != infos.end()) {
-                versionName = iter->versionName;
-                versionCode = iter->versionCode;
-            }
-        }
-        string installPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + name + ".hap";
-        bool needToInstall = false;
-        if (access(installPath.data(), F_OK) == 0) {
-            needToInstall = true;
-        }
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {
-            .name = name, .needToInstall = needToInstall, .versionCode = versionCode, .versionName = versionName});
+            .name = name, .needToInstall = false, .versionCode = versionCode, .versionName = versionName});
     }
     cache.SetBundleInfos(bundleInfos);
     cachedEntity.Persist();

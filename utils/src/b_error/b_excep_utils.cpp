@@ -38,4 +38,14 @@ void BExcepUltils::VerifyPath(const string_view &path, bool isExtension)
         throw BError(BError::Codes::EXT_INVAL_ARG, "Invalid path");
     }
 }
+
+string BExcepUltils::Canonicalize(const string_view &path)
+{
+    try {
+        auto ret = canonicalize(path.data());
+        return ret.c_str();
+    } catch (const rust::Error &e) {
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Invalid path");
+    }
+}
 } // namespace OHOS::FileManagement::Backup
