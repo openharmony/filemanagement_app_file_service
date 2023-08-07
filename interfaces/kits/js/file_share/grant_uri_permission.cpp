@@ -155,7 +155,7 @@ namespace ModuleFileShare {
         int32_t fileId = stoi(idStr);
         int32_t filesType = GetMediaTypeAndApiFromUri(uri.GetPath(), isApi10);
         valuesBucket.Put(PERMISSION_FILE_ID, fileId);
-        valuesBucket.Put(PERMISSION_BUNDLE_NAME, uri.GetAuthority());
+        valuesBucket.Put(PERMISSION_BUNDLE_NAME, uriPermInfo.bundleName);
         valuesBucket.Put(PERMISSION_MODE, uriPermInfo.mode);
         valuesBucket.Put(PERMISSION_TABLE_TYPE, filesType);
         return 0;
@@ -181,21 +181,36 @@ namespace ModuleFileShare {
     {
         Uri uri(uriPermInfo.uri);
         string authority = uri.GetAuthority();
-        string scheme = uri.GetScheme();
         string path = uri.GetPath();
-
-        if (scheme == FILE_SCHEME) {
-            if (authority == MEDIA_AUTHORITY && path.find(".") == string::npos) {
-                return GrantInMediaLibrary(uriPermInfo, uri);
-            } else {
-                auto& uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
-                return uriPermissionClient.GrantUriPermission(uri, uriPermInfo.flag,
-                                                              uriPermInfo.bundleName, 1);
-            }
+        if (authority == MEDIA_AUTHORITY && path.find(".") == string::npos) {
+            return GrantInMediaLibrary(uriPermInfo, uri);
         } else {
-            LOGE("FileShare::GetJSArgs get uri parameter failed!");
-            return -EINVAL;
+            auto& uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
+            int ret =  uriPermissionClient.GrantUriPermission(uri, uriPermInfo.flag,
+                                                              uriPermInfo.bundleName, 1);
+            if (ret != 0) {
+                LOGE("uriPermissionClient.GrantUriPermission failed!");
+                return -EINVAL;
+            }
         }
+
+        return 0;
+    }
+
+    static bool CheckValidPublicUri(const string &inputUri)
+    {
+        Uri uri(inputUri);
+        string scheme = uri.GetScheme();
+        if (scheme != FILE_SCHEME) {
+            return false;
+        }
+
+        string authority = uri.GetAuthority();
+        if (authority != MEDIA_AUTHORITY && authority != FILE_MANAGER_AUTHORITY) {
+            return false;
+        }
+
+        return true;
     }
 
     static bool GetJSArgs(napi_env env, const NFuncArg &funcArg, UriPermissionInfo &uriPermInfo)
@@ -206,7 +221,15 @@ namespace ModuleFileShare {
             NError(EINVAL).ThrowErr(env);
             return false;
         }
+
         uriPermInfo.uri = string(uri.get());
+        if (!CheckValidPublicUri(uriPermInfo.uri)) {
+            LOGE("FileShare::GetJSArgs uri = %{private}s parameter format error!", uriPermInfo.uri.c_str());
+            NError(EINVAL).ThrowErr(env);
+            return false;
+        }
+
+        LOGD("FileShare::GetJSArgs uri = %{private}s", uriPermInfo.uri.c_str());
 
         auto [succBundleName, bundleName, lenBundleName] = NVal(env, funcArg[NARG_POS::SECOND]).ToUTF8String();
         if (!succBundleName) {
