@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,37 +13,130 @@
  * limitations under the License.
  */
 #include "file_uri_n_exporter.h"
-#include "get_uri_from_path.h"
+
+#include "file_uri_entity.h"
+#include "file_utils.h"
+#include "log.h"
 
 namespace OHOS {
 namespace AppFileService {
 namespace ModuleFileUri {
-/***********************************************
- * Module export and register
- ***********************************************/
-napi_value FileUriExport(napi_env env, napi_value exports)
+using namespace std;
+using namespace FileManagement;
+using namespace FileManagement::LibN;
+
+napi_value FileUriNExporter::Constructor(napi_env env, napi_callback_info info)
 {
-    static napi_property_descriptor desc[] = {
-        DECLARE_NAPI_FUNCTION("getUriFromPath", GetUriFromPath::Sync),
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        LOGE("Number of arguments unmatched");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    auto [succPath, path, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
+    if (!succPath) {
+        LOGE("Failed to get path");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    auto fileuriEntity = CreateUniquePtr<FileUriEntity>(string(path.get()));
+    if (fileuriEntity == nullptr) {
+        LOGE("Failed to request heap memory.");
+        NError(ENOMEM).ThrowErr(env);
+        return nullptr;
+    }
+    if (!NClass::SetEntityFor<FileUriEntity>(env, funcArg.GetThisVar(), move(fileuriEntity))) {
+        LOGE("Failed to set file entity");
+        NError(EIO).ThrowErr(env);
+        return nullptr;
+    }
+    return funcArg.GetThisVar();
+}
+
+
+napi_value FileUriNExporter::UriToString(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+        LOGE("Number of arguments unmatched");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    auto fileuriEntity = NClass::GetEntityOf<FileUriEntity>(env, funcArg.GetThisVar());
+    if (!fileuriEntity) {
+        LOGE("Failed to get file entity");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    return NVal::CreateUTF8String(env, fileuriEntity->fileUri_.ToString()).val_;
+}
+
+napi_value FileUriNExporter::GetFileUriName(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+        LOGE("Number of arguments unmatched");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    auto fileuriEntity = NClass::GetEntityOf<FileUriEntity>(env, funcArg.GetThisVar());
+    if (!fileuriEntity) {
+        LOGE("Failed to get file entity");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    return NVal::CreateUTF8String(env, fileuriEntity->fileUri_.GetName()).val_;
+}
+
+napi_value FileUriNExporter::GetFileUriPath(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+        LOGE("Number of arguments unmatched");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    auto fileuriEntity = NClass::GetEntityOf<FileUriEntity>(env, funcArg.GetThisVar());
+    if (!fileuriEntity) {
+        LOGE("Failed to get file entity");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    return NVal::CreateUTF8String(env, fileuriEntity->fileUri_.GetPath()).val_;
+}
+
+bool FileUriNExporter::Export()
+{
+    vector<napi_property_descriptor> props = {
+        NVal::DeclareNapiFunction("toString", UriToString),
+        NVal::DeclareNapiGetter("name", GetFileUriName),
+        NVal::DeclareNapiGetter("path", GetFileUriPath),
     };
-    napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
-    return exports;
+
+    auto [succ, classValue] = NClass::DefineClass(exports_.env_, className, Constructor, std::move(props));
+    if (!succ) {
+        LOGE("Failed to define class");
+        NError(EIO).ThrowErr(exports_.env_);
+        return false;
+    }
+    succ = NClass::SaveClass(exports_.env_, className, classValue);
+    if (!succ) {
+        LOGE("Failed to save class");
+        NError(EIO).ThrowErr(exports_.env_);
+        return false;
+    }
+
+    return exports_.AddProp(className, classValue);
 }
 
-static napi_module _module = {
-    .nm_version = 1,
-    .nm_flags = 0,
-    .nm_filename = nullptr,
-    .nm_register_func = FileUriExport,
-    .nm_modname = "file.fileuri",
-    .nm_priv = ((void *)0),
-    .reserved = {0}
-};
-
-extern "C" __attribute__((constructor)) void RegisterModule(void)
+string FileUriNExporter::GetClassName()
 {
-    napi_module_register(&_module);
+    return FileUriNExporter::className;
 }
+
+FileUriNExporter::FileUriNExporter(napi_env env, napi_value exports) : NExporter(env, exports) {}
+
+FileUriNExporter::~FileUriNExporter() {}
 } // namespace ModuleFileUri
 } // namespace AppFileService
 } // namespace OHOS

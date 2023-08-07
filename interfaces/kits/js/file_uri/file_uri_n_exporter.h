@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,16 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef FILE_URI_N_EXPOTER_H
-#define FILE_URI_N_EXPOTER_H
+#ifndef INTERFACES_KITS_JS_FILE_URI_FILE_URI_N_EXPOTER_H
+#define INTERFACES_KITS_JS_FILE_URI_FILE_URI_N_EXPOTER_H
 
 #include "filemgmt_libn.h"
 
 namespace OHOS {
 namespace AppFileService {
 namespace ModuleFileUri {
-    napi_value FileUriExport(napi_env env, napi_value exports);
+class FileUriNExporter final : public FileManagement::LibN::NExporter {
+public:
+    inline static const std::string className = "FileUri";
+
+    bool Export() override;
+    std::string GetClassName() override;
+
+    static napi_value Constructor(napi_env env, napi_callback_info cbinfo);
+    static napi_value UriToString(napi_env env, napi_callback_info info);
+    static napi_value GetFileUriName(napi_env env, napi_callback_info info);
+    static napi_value GetFileUriPath(napi_env env, napi_callback_info info);
+
+    FileUriNExporter(napi_env env, napi_value exports);
+    ~FileUriNExporter() override;
+};
 } // namespace ModuleFileUri
 } // namespace AppFileService
 } // namespace OHOS
-#endif // FILE_URI_N_EXPOTER_H
+#endif // INTERFACES_KITS_JS_FILE_URI_FILE_URI_N_EXPOTER_H

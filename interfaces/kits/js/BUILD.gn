@@ -80,6 +80,7 @@ ohos_shared_library("fileuri") {
   include_dirs = [
     ".",
     "../../common/include",
+    "${app_file_service_path}/interfaces/innerkits/native/file_uri/include",
   ]
 
   sources = [
@@ -87,9 +88,15 @@ ohos_shared_library("fileuri") {
     "../../common/src/sandbox_helper.cpp",
     "file_uri/file_uri_n_exporter.cpp",
     "file_uri/get_uri_from_path.cpp",
+    "file_uri/module.cpp",
+    "file_uri/prop_n_exporter.cpp",
   ]
 
+  deps =
+      [ "${app_file_service_path}/interfaces/innerkits/native:fileuri_native" ]
+
   external_deps = [
+    "ability_base:zuri",
     "ability_runtime:abilitykit_native",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -101,6 +108,8 @@ ohos_shared_library("fileuri") {
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
+
+  use_exceptions = true
 
   relative_install_dir = "module/file"
 
