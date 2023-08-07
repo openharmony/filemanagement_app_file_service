@@ -181,15 +181,13 @@ namespace ModuleFileShare {
     {
         Uri uri(uriPermInfo.uri);
         string authority = uri.GetAuthority();
-        string scheme = uri.GetScheme();
         string path = uri.GetPath();
-
         if (authority == MEDIA_AUTHORITY && path.find(".") == string::npos) {
             return GrantInMediaLibrary(uriPermInfo, uri);
         } else {
             auto& uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
             int ret =  uriPermissionClient.GrantUriPermission(uri, uriPermInfo.flag,
-                                                          uriPermInfo.bundleName, 1);
+                                                              uriPermInfo.bundleName, 1);
             if (ret != 0) {
                 LOGE("uriPermissionClient.GrantUriPermission failed!");
                 return -EINVAL;
@@ -199,7 +197,7 @@ namespace ModuleFileShare {
         return 0;
     }
 
-    static bool IsCorrectUri(const string &inputUri)
+    static bool CheckValidPublicUri(const string &inputUri)
     {
         Uri uri(inputUri);
         string scheme = uri.GetScheme();
@@ -225,7 +223,7 @@ namespace ModuleFileShare {
         }
 
         uriPermInfo.uri = string(uri.get());
-        if (!IsCorrectUri(uriPermInfo.uri)) {
+        if (!CheckValidPublicUri(uriPermInfo.uri)) {
             LOGE("FileShare::GetJSArgs uri = %{private}s parameter format error!", uriPermInfo.uri.c_str());
             NError(EINVAL).ThrowErr(env);
             return false;
