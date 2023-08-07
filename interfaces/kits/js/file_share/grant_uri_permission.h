@@ -37,6 +37,7 @@ const string PERMISSION_MODE = "mode";
 const string MEDIA_AUTHORITY = "media";
 const string FILE_SCHEME = "file";
 const string PERMISSION_TABLE_TYPE = "table_type";
+const string FILE_MANAGER_AUTHORITY = "docs";
 const string MEDIA_FILE_URI_PHOTO_PREFEX = "file://media/Photo/";
 const string MEDIA_FILE_URI_AUDIO_PREFEX = "file://media/Audio/";
 const string MEDIA_FILE_URI_VIDEO_PREFEX = "file://media/video/";
