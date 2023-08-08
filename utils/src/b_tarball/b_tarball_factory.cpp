@@ -28,10 +28,14 @@
 #include <unistd.h>
 
 #include "b_error/b_error.h"
+#include "b_error/b_excep_utils.h"
 #include "b_tarball/b_tarball_cmdline.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+namespace {
+const string UNTAT_ROOT = "/";
+} // namespace
 
 /**
  * @brief Verifying untar input parameters
@@ -41,8 +45,11 @@ using namespace std;
  */
 static void UntarFort(string_view root)
 {
-    auto resolvedPath = make_unique<char[]>(PATH_MAX);
-    if (!realpath(root.data(), resolvedPath.get()) || (string_view(resolvedPath.get()) != root)) {
+    auto resolvedPath = BExcepUltils::Canonicalize(root);
+    if (string_view(UNTAT_ROOT) != root) {
+        resolvedPath += UNTAT_ROOT;
+    }
+    if (string_view(resolvedPath) != root) {
         throw BError(BError::Codes::UTILS_INVAL_TARBALL_ARG, "The root must be an existing canonicalized path");
     }
 }

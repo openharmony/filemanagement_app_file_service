@@ -72,6 +72,14 @@ public:
      * @param isExtension
      */
     static void VerifyPath(const std::string_view &path, bool isExtension = false);
+
+    /**
+     * @brief 获取规范化后的绝对路径
+     *
+     * @param path 路径
+     * @return std::string 返回绝对路径
+     */
+    static std::string Canonicalize(const std::string_view &path);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_B_EXCEP_UTILES_H
