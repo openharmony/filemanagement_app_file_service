@@ -44,33 +44,20 @@ namespace ModuleFileShare {
         string uri;
     };
 
-    static bool IsAllDigits(string idStr)
-    {
-        for (size_t i = 0; i < idStr.size(); i++) {
-            if (!isdigit(idStr[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     static bool IsSystemApp()
     {
         uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
         return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
     }
 
-    static string GetIdFromUri(string uri)
+    static int32_t GetIdFromUri(string uri)
     {
-        string rowNum = "";
-        size_t pos = uri.rfind('/');
-        if (pos != string::npos) {
-            rowNum = uri.substr(pos + 1);
-            if (!IsAllDigits(rowNum)) {
-                rowNum = "";
-            }
-        }
-        return rowNum;
+        std::replace(uri.begin(), uri.end(), '/', ' ');
+        stringstream ss(uri);
+        string tmp;
+        int fileId = -1;
+        ss >> tmp >> tmp >> tmp >> fileId;
+        return fileId;
     }
 
     static string GetModeFromFlag(unsigned int flag)
@@ -146,13 +133,12 @@ namespace ModuleFileShare {
     static int InitValuesBucket(const UriPermissionInfo &uriPermInfo, Uri &uri, bool &isApi10,
                                 DataShareValuesBucket &valuesBucket)
     {
-        string idStr = GetIdFromUri(uriPermInfo.uri);
-        if (idStr == "") {
+        int32_t fileId = GetIdFromUri(uriPermInfo.uri);
+        if (fileId == -1) {
             LOGE("FileShare::InitValuesBucket get fileId parameter failed!");
             return -EINVAL;
         }
 
-        int32_t fileId = stoi(idStr);
         int32_t filesType = GetMediaTypeAndApiFromUri(uri.GetPath(), isApi10);
         valuesBucket.Put(PERMISSION_FILE_ID, fileId);
         valuesBucket.Put(PERMISSION_BUNDLE_NAME, uriPermInfo.bundleName);
@@ -189,8 +175,8 @@ namespace ModuleFileShare {
             int ret =  uriPermissionClient.GrantUriPermission(uri, uriPermInfo.flag,
                                                               uriPermInfo.bundleName, 1);
             if (ret != 0) {
-                LOGE("uriPermissionClient.GrantUriPermission failed!");
-                return -EINVAL;
+                LOGD("uriPermissionClient.GrantUriPermission by uri permission client failed!");
+                return GrantInMediaLibrary(uriPermInfo, uri);
             }
         }
 
@@ -285,6 +271,7 @@ namespace ModuleFileShare {
                 LOGE("FileShare::GrantUriPermission DoGrantUriPermission failed with %{public}d", ret);
                 return NError(-ret);
             }
+            LOGD("FileShare::GrantUriPermission DoGrantUriPermission successfully!");
             return NError(ERRNO_NOERR);
         };
 
