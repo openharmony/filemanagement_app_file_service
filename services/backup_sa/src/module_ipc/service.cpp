@@ -498,6 +498,11 @@ void Service::ExtStart(const string &bundleName)
         if (!proxy) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
         }
+        if (session_->GetBundleVersionCode(bundleName) != BConstants::DEFAULT_VERSION_CODE &&
+            session_->GetBundleVersionName(bundleName) != BConstants::DEFAULT_VERSION_NAME &&
+            session_->GetBundleRestoreType(bundleName) != RestoreTypeEnum::RESTORE_DATA_READDY) {
+            proxy->HandleClear();
+        }
         if (scenario == IServiceReverse::Scenario::BACKUP) {
             auto ret = proxy->HandleBackup();
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
