@@ -58,14 +58,24 @@ private:
      *
      * @param usrConfig user configure
      */
-    int HandleBackup(const BJsonEntityExtensionConfig &usrConfig);
+    int DoBackup(const BJsonEntityExtensionConfig &usrConfig);
 
     /**
      * @brief restore
      *
      * @param fileName name of the file that to be untar
      */
-    int HandleRestore(const string &fileName);
+    int DoRestore(const string &fileName);
+
+    /** @brief clear backup restore data */
+    void DoClear();
+
+    /**
+     * @brief extension backup restore is done
+     *
+     * @param errCode
+     */
+    void AppDone(ErrCode errCode);
 
     /**
      * @brief Executing Backup Tasks Asynchronously

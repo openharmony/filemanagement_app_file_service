@@ -18,18 +18,20 @@
 #include <algorithm>
 #include <iomanip>
 #include <regex>
-#include <sstream>
 #include <string>
 #include <vector>
 
 #include <sys/stat.h>
 #include <unistd.h>
-#include <utime.h>
 
 #include <directory_ex.h>
 #include <unique_fd.h>
 
 #include "accesstoken_kit.h"
+#include "bundle_mgr_client.h"
+#include "errors.h"
+#include "ipc_skeleton.h"
+
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "b_filesystem/b_dir.h"
@@ -38,10 +40,7 @@
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_resources/b_constants.h"
 #include "b_tarball/b_tarball_factory.h"
-#include "bundle_mgr_client.h"
-#include "errors.h"
 #include "filemgmt_libhilog.h"
-#include "ipc_skeleton.h"
 #include "service_proxy.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -64,67 +63,48 @@ void BackupExtExtension::VerifyCaller()
 
 UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
 {
-    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
-        HILOGI("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
+    try {
+        if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
+            HILOGI("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
+        }
+
+        VerifyCaller();
+
+        if (!regex_match(fileName, regex("^[0-9a-zA-Z_.]+$"))) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Filename is not alphanumeric");
+        }
+
+        string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+        if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
+            string str = string("Failed to create restore folder. ").append(std::generic_category().message(errno));
+            throw BError(BError::Codes::EXT_INVAL_ARG, str);
+        }
+
+        string tarName = path + fileName;
+        if (access(tarName.c_str(), F_OK) == 0) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, string("The file already exists"));
+        }
+        return UniqueFd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    } catch (...) {
+        HILOGE("Failed to get file handle");
+        DoClear();
         return UniqueFd(-1);
     }
-
-    VerifyCaller();
-
-    if (!regex_match(fileName, regex("^[0-9a-zA-Z_.]+$"))) {
-        throw BError(BError::Codes::EXT_INVAL_ARG, "Filename is not alphanumeric");
-    }
-
-    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
-    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
-        stringstream ss;
-        ss << "Failed to create backup folder. ";
-        ss << std::generic_category().message(errno);
-        throw BError(BError::Codes::EXT_INVAL_ARG, ss.str());
-    }
-
-    string tarName = path + fileName;
-    if (access(tarName.c_str(), F_OK) == 0) {
-        throw BError(BError::Codes::EXT_INVAL_ARG, string("The file already exists"));
-    }
-    return UniqueFd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
 }
 
 ErrCode BackupExtExtension::HandleClear()
 {
     HILOGI("begin clear");
-    try {
-        if (extension_->GetExtensionAction() == BConstants::ExtensionAction::INVALID) {
-            return EPERM;
-        }
-        VerifyCaller();
-
-        string backupCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
-        string restoreCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
-
-        if (!ForceRemoveDirectory(backupCache)) {
-            HILOGI("Failed to delete the backup cache %{public}s", backupCache.c_str());
-        }
-
-        if (!ForceRemoveDirectory(restoreCache)) {
-            HILOGI("Failed to delete the restore cache %{public}s", restoreCache.c_str());
-        }
-        unique_lock<shared_mutex> lock(lock_);
-        tars_.clear();
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (const exception &e) {
-        HILOGE("%{public}s", e.what());
-        return EPERM;
-    } catch (...) {
-        HILOGE("");
-        return EPERM;
+    if (extension_->GetExtensionAction() == BConstants::ExtensionAction::INVALID) {
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
     }
-
+    VerifyCaller();
+    DoClear();
     return ERR_OK;
 }
 
-ErrCode IndexFileReady(const map<string, pair<string, struct stat>> &pkgInfo, sptr<IService> proxy)
+static ErrCode IndexFileReady(const map<string, pair<string, struct stat>> &pkgInfo, sptr<IService> proxy)
 {
     string indexFile = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
                             append(BConstants::SA_BUNDLE_BACKUP_BACKUP).
@@ -149,7 +129,7 @@ ErrCode IndexFileReady(const map<string, pair<string, struct stat>> &pkgInfo, sp
     return ret;
 }
 
-ErrCode BigFileReady(sptr<IService> proxy)
+static ErrCode BigFileReady(sptr<IService> proxy)
 {
     string indexFile = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
                             append(BConstants::SA_BUNDLE_BACKUP_BACKUP).
@@ -185,10 +165,10 @@ ErrCode BigFileReady(sptr<IService> proxy)
 
 ErrCode BackupExtExtension::PublishFile(const string &fileName)
 {
-    HILOGI("begin publish file. fileName is %{public}s", fileName.data());
+    HILOGE("begin publish file. fileName is %{public}s", fileName.data());
     try {
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
-            return BError(-EPERM);
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
         VerifyCaller();
 
@@ -198,7 +178,7 @@ ErrCode BackupExtExtension::PublishFile(const string &fileName)
             BExcepUltils::VerifyPath(tarName, true);
             unique_lock<shared_mutex> lock(lock_);
             if (find(tars_.begin(), tars_.end(), fileName) != tars_.end() || access(tarName.data(), F_OK) != 0) {
-                return BError(-EPERM);
+                throw BError(BError::Codes::EXT_INVAL_ARG, "The file does not exist");
             }
             tars_.push_back(fileName);
         }
@@ -210,13 +190,16 @@ ErrCode BackupExtExtension::PublishFile(const string &fileName)
 
         return ERR_OK;
     } catch (const BError &e) {
+        DoClear();
         return e.GetCode();
     } catch (const exception &e) {
         HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
-        return BError(-EPERM);
+        DoClear();
+        return BError(BError::Codes::EXT_BROKEN_FRAMEWORK).GetCode();
     } catch (...) {
         HILOGE("Unexpected exception");
-        return BError(-EPERM);
+        DoClear();
+        return BError(BError::Codes::EXT_BROKEN_FRAMEWORK).GetCode();
     }
 }
 
@@ -263,130 +246,111 @@ static map<string, pair<string, struct stat>> GetBigFileInfo(const vector<string
     return bigFiles;
 }
 
-int BackupExtExtension::HandleBackup(const BJsonEntityExtensionConfig &usrConfig)
+int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
 {
     HILOGI("Do backup");
-    try {
-        if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
-            return EPERM;
-        }
-
-        string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
-        if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
-            throw BError(errno);
-        }
-
-        vector<string> includes = usrConfig.GetIncludes();
-        vector<string> excludes = usrConfig.GetExcludes();
-        auto bigFileInfo = GetBigFileInfo(includes, excludes);
-        for (const auto &item : bigFileInfo) {
-            if (!item.second.first.empty()) {
-                excludes.push_back(item.second.first);
-            }
-        }
-
-        string pkgName = "1.tar";
-        string tarName = path + pkgName;
-        string root = "/";
-
-        // 打包
-        auto tarballTar = BTarballFactory::Create("cmdline", tarName);
-        (tarballTar->tar)(root, {includes.begin(), includes.end()}, {excludes.begin(), excludes.end()});
-
-        struct stat sta = {};
-        if (stat(tarName.data(), &sta) == -1) {
-            HILOGE("failed to invoke the system function stat, %{public}s", tarName.c_str());
-        }
-        bigFileInfo.emplace(pkgName, make_pair(tarName, sta));
-
-        auto proxy = ServiceProxy::GetInstance();
-        if (proxy == nullptr) {
-            throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
-        }
-
-        ErrCode ret = ERR_OK;
-        ret = IndexFileReady(bigFileInfo, proxy);
-        ret = BigFileReady(proxy);
-        HILOGE("HandleBackup finish, ret = %{public}d", ret);
-        return ret;
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (const exception &e) {
-        HILOGE("%{public}s", e.what());
-        return EPERM;
-    } catch (...) {
-        HILOGE("");
+    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
         return EPERM;
     }
+
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
+        throw BError(errno);
+    }
+
+    vector<string> includes = usrConfig.GetIncludes();
+    vector<string> excludes = usrConfig.GetExcludes();
+    auto bigFileInfo = GetBigFileInfo(includes, excludes);
+    for (const auto &item : bigFileInfo) {
+        if (!item.second.first.empty()) {
+            excludes.push_back(item.second.first);
+        }
+    }
+
+    string pkgName = "1.tar";
+    string tarName = path + pkgName;
+    string root = "/";
+
+    // 打包
+    auto tarballTar = BTarballFactory::Create("cmdline", tarName);
+    (tarballTar->tar)(root, {includes.begin(), includes.end()}, {excludes.begin(), excludes.end()});
+
+    struct stat sta = {};
+    if (stat(tarName.data(), &sta) == -1) {
+        HILOGE("failed to invoke the system function stat, %{public}s", tarName.c_str());
+    }
+    bigFileInfo.emplace(pkgName, make_pair(tarName, sta));
+
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
+    }
+
+    ErrCode ret = ERR_OK;
+    ret = IndexFileReady(bigFileInfo, proxy);
+    ret = BigFileReady(proxy);
+    HILOGE("HandleBackup finish, ret = %{public}d", ret);
+    return ret;
 }
 
-int BackupExtExtension::HandleRestore(const string &fileName)
+int BackupExtExtension::DoRestore(const string &fileName)
 {
     HILOGI("Do restore");
-    try {
-        if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
-            return EPERM;
-        }
-        // REM: 给定version
-        // REM: 解压启动Extension时即挂载好的备份目录中的数据
-        string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
-        string tarName = path + fileName;
-
-        auto tarballFunc = BTarballFactory::Create("cmdline", tarName);
-        if (extension_->WasFromSpeicalVersion()) {
-            (tarballFunc->untar)(path);
-        } else {
-            (tarballFunc->untar)("/");
-        }
-        HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
-
-        return ERR_OK;
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (const exception &e) {
-        HILOGE("%{public}s", e.what());
-        return EPERM;
-    } catch (...) {
-        HILOGE("");
+    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
         return EPERM;
     }
+    // REM: 给定version
+    // REM: 解压启动Extension时即挂载好的备份目录中的数据
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    string tarName = path + fileName;
+
+    auto tarballFunc = BTarballFactory::Create("cmdline", tarName);
+    if (extension_->WasFromSpeicalVersion()) {
+        (tarballFunc->untar)(path);
+    } else {
+        (tarballFunc->untar)("/");
+    }
+    HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
+
+    return ERR_OK;
 }
 
 void BackupExtExtension::AsyncTaskBackup(const string config)
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}, config]() {
         auto ptr = obj.promote();
-        if (!ptr) {
-            HILOGI("ext_extension handle have been already released");
-            return;
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                              "Ext extension handle have been already released");
+
+        try {
+            BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
+            auto cache = cachedEntity.Structuralize();
+            if (!cache.GetAllowToBackupRestore()) {
+                HILOGI("Application does not allow backup or restore");
+                return;
+            }
+            BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
+                                  "extension handle have been already released");
+
+            int ret = ptr->extension_->OnBackup();
+            if (ret == ERR_OK) {
+                ret = ptr->DoBackup(cache);
+            }
+
+            // REM: 处理返回结果 ret
+            ptr->AppDone(ret);
+            HILOGE("backup app done %{public}d", ret);
+        } catch (const BError &e) {
+            ptr->AppDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         }
-
-        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
-        auto cache = cachedEntity.Structuralize();
-        if (!cache.GetAllowToBackupRestore()) {
-            HILOGI("Application does not allow backup or restore");
-            return;
-        }
-
-        int ret = ptr->extension_->OnBackup();
-        HILOGI("backup ret %{public}d", ret);
-
-        if (ret == ERR_OK) {
-            ret = ptr->HandleBackup(cache);
-        }
-
-        // REM: 处理返回结果 ret
-        auto proxy = ServiceProxy::GetInstance();
-        if (proxy == nullptr) {
-            HILOGE("Failed to obtain the ServiceProxy handle");
-            return;
-        }
-
-        proxy->AppDone(ret);
-        HILOGI("backup app done %{public}d", ret);
-
         // 清空备份目录
-        ptr->HandleClear();
+        ptr->DoClear();
     };
 
     // REM: 这里异步化了，需要做并发控制
@@ -395,12 +359,8 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
     threadPool_.AddTask([task]() {
         try {
             task();
-        } catch (const BError &e) {
-            HILOGE("%{public}s", e.what());
-        } catch (const exception &e) {
-            HILOGE("%{public}s", e.what());
         } catch (...) {
-            HILOGE("");
+            HILOGE("Failed to add task to thread pool");
         }
     });
 }
@@ -486,41 +446,44 @@ void BackupExtExtension::AsyncTaskRestore()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}, tars {tars_}]() {
         auto ptr = obj.promote();
-        if (!ptr) {
-            HILOGI("ext_extension handle have been already released");
-            return;
-        }
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                              "Ext extension handle have been already released");
 
-        if (!IsAllFileReceived(tars)) {
-            return;
-        }
-
-        // 解压
-        int ret = ERR_OK;
-        for (auto item : tars) {
-            if (ExtractFileExt(item) == "tar") {
-                ret = ptr->HandleRestore(item);
+        try {
+            if (!IsAllFileReceived(tars)) {
+                return;
             }
+
+            // 解压
+            int ret = ERR_OK;
+            for (auto item : tars) {
+                if (ExtractFileExt(item) == "tar") {
+                    ret = ptr->DoRestore(item);
+                }
+            }
+            // 恢复大文件
+            RestoreBigFiles();
+
+            if (ret == ERR_OK) {
+                HILOGI("after extra, do restore.");
+                BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
+                                      "extension handle have been already released");
+                ret = ptr->extension_->OnRestore();
+            }
+
+            // 处理返回结果
+            ptr->AppDone(ret);
+        } catch (const BError &e) {
+            ptr->AppDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         }
-        // 恢复大文件
-        RestoreBigFiles();
-
-        if (ret == ERR_OK) {
-            HILOGI("after extra, do restore.");
-            ret = ptr->extension_->OnRestore();
-        }
-
-        // 处理返回结果
-        auto proxy = ServiceProxy::GetInstance();
-        if (proxy == nullptr) {
-            HILOGE("Failed to obtain the ServiceProxy handle");
-            return;
-        }
-
-        proxy->AppDone(ret);
-
         // 清空恢复目录
-        ptr->HandleClear();
+        ptr->DoClear();
     };
 
     // REM: 这里异步化了，需要做并发控制
@@ -529,12 +492,8 @@ void BackupExtExtension::AsyncTaskRestore()
     threadPool_.AddTask([task]() {
         try {
             task();
-        } catch (const BError &e) {
-            HILOGE("%{public}s", e.what());
-        } catch (const exception &e) {
-            HILOGE("%{public}s", e.what());
         } catch (...) {
-            HILOGE("");
+            HILOGE("Failed to add task to thread pool");
         }
     });
 }
@@ -543,23 +502,23 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
-        if (!ptr) {
-            HILOGI("ext_extension handle have been already released");
-            return;
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                              "Ext extension handle have been already released");
+        try {
+            BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
+                                  "extension handle have been already released");
+            ptr->AppDone(ptr->extension_->OnRestore());
+        } catch (const BError &e) {
+            ptr->AppDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         }
-        auto ret = ptr->extension_->OnRestore();
-
-        // 处理返回结果
-        auto proxy = ServiceProxy::GetInstance();
-        if (proxy == nullptr) {
-            HILOGE("Failed to obtain the ServiceProxy handle");
-            return;
-        }
-
-        proxy->AppDone(ret);
-
         // 清空恢复目录
-        ptr->HandleClear();
+        ptr->DoClear();
     };
 
     // REM: 这里异步化了，需要做并发控制
@@ -568,13 +527,39 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
     threadPool_.AddTask([task]() {
         try {
             task();
-        } catch (const BError &e) {
-            HILOGE("%{public}s", e.what());
-        } catch (const exception &e) {
-            HILOGE("%{public}s", e.what());
         } catch (...) {
-            HILOGE("");
+            HILOGE("Failed to add task to thread pool");
         }
     });
+}
+
+void BackupExtExtension::DoClear()
+{
+    try {
+        string backupCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+        string restoreCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+
+        if (!ForceRemoveDirectory(backupCache)) {
+            HILOGI("Failed to delete the backup cache %{public}s", backupCache.c_str());
+        }
+
+        if (!ForceRemoveDirectory(restoreCache)) {
+            HILOGI("Failed to delete the restore cache %{public}s", restoreCache.c_str());
+        }
+        unique_lock<shared_mutex> lock(lock_);
+        tars_.clear();
+    } catch (...) {
+        HILOGI("Failed to clear");
+    }
+}
+
+void BackupExtExtension::AppDone(ErrCode errCode)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+    auto ret = proxy->AppDone(errCode);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to notify the app done. err = %{public}d", ret);
+    }
 }
 } // namespace OHOS::FileManagement::Backup
