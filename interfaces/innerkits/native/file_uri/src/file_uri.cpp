@@ -32,6 +32,7 @@ const std::string MODE_RW = "/rw/";
 const std::string MODE_R = "/r/";
 const std::string FILE_SCHEME_PREFIX = "file://";
 const std::string FILE_MANAGER_AUTHORITY = "docs";
+const std::string MEDIA_AUTHORITY = "media";
 string FileUri::GetName()
 {
     string sandboxPath = uri_.GetPath();
@@ -49,7 +50,14 @@ string FileUri::GetName()
 
 string FileUri::GetPath()
 {
-    return SandboxHelper::Decode(uri_.GetPath());
+    string sandboxPath = SandboxHelper::Decode(uri_.GetPath());
+    string bundleName = uri_.GetAuthority();
+    if (bundleName == MEDIA_AUTHORITY && sandboxPath.find(".") != string::npos) {
+        size_t pos = sandboxPath.rfind("/");
+        return sandboxPath.substr(0, pos);
+    }
+
+    return sandboxPath;
 }
 
 string FileUri::GetRealPath()
