@@ -35,7 +35,6 @@ constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr uint8_t MAX_CALL_TRANSACTION = 16;
 constexpr int32_t SERVICE_ID = 5203;
-std::shared_ptr<Service> service = std::make_shared<Service>(SERVICE_ID, true);
 
 uint32_t GetU32Data(const char* ptr)
 {
@@ -45,6 +44,7 @@ uint32_t GetU32Data(const char* ptr)
 
 bool BackupSaFuzzTest(std::unique_ptr<char[]> data, size_t size)
 {
+    sptr service = sptr(new Service(SERVICE_ID));
     uint32_t code = GetU32Data(data.get());
     if (code == 0) {
         return true;
@@ -56,7 +56,7 @@ bool BackupSaFuzzTest(std::unique_ptr<char[]> data, size_t size)
     MessageParcel reply;
     MessageOption option;
     service->OnRemoteRequest(code % MAX_CALL_TRANSACTION, datas, reply, option);
-
+    service = nullptr;
     return true;
 }
 } // namespace OHOS
