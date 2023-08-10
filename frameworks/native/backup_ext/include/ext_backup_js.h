@@ -29,6 +29,7 @@
 #include "want.h"
 
 namespace OHOS::FileManagement::Backup {
+using InputArgsParser = std::function<bool(NativeEngine &, std::vector<NativeValue *> &)>;
 using ResultValueParser = std::function<bool(NativeEngine &, NativeValue *)>;
 
 struct CallJsParam {
@@ -38,13 +39,17 @@ struct CallJsParam {
     std::string funcName;
     AbilityRuntime::JsRuntime *jsRuntime;
     NativeReference *jsObj;
-    const std::vector<NativeValue *> &argv;
+    InputArgsParser argParser;
     ResultValueParser retParser;
 
-    CallJsParam(const std::string &funcNameIn, AbilityRuntime::JsRuntime *jsRuntimeIn, NativeReference *jsObjIn,
-        const std::vector<NativeValue *> &argvIn, ResultValueParser &retParserIn)
-        : funcName(funcNameIn), jsRuntime(jsRuntimeIn), jsObj(jsObjIn), argv(argvIn), retParser(retParserIn)
-    {}
+    CallJsParam(const std::string &funcNameIn,
+                AbilityRuntime::JsRuntime *jsRuntimeIn,
+                NativeReference *jsObjIn,
+                InputArgsParser &argParserIn,
+                ResultValueParser &retParserIn)
+        : funcName(funcNameIn), jsRuntime(jsRuntimeIn), jsObj(jsObjIn), argParser(argParserIn), retParser(retParserIn)
+    {
+    }
 };
 
 class ExtBackupJs : public ExtBackup {
@@ -92,7 +97,7 @@ private:
     int CallJsMethod(const std::string &funcName,
                      AbilityRuntime::JsRuntime &jsRuntime,
                      NativeReference *jsObj,
-                     const std::vector<NativeValue *> &argv,
+                     InputArgsParser argParser,
                      ResultValueParser retParser);
     std::tuple<ErrCode, NativeValue *> CallObjectMethod(std::string_view name,
                                                         const std::vector<NativeValue *> &argv = {});
