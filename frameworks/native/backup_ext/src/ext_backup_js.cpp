@@ -130,17 +130,11 @@ ExtBackupJs *ExtBackupJs::Create(const unique_ptr<AbilityRuntime::Runtime> &runt
 ErrCode ExtBackupJs::OnBackup(void)
 {
     HILOGI("BackupExtensionAbility(JS) OnBackup.");
-    if (!jsObj_) {
-        HILOGI("The app does not provide the onBackup interface.");
-        return ERR_OK;
-    }
-    auto ret = std::make_shared<int>();
-    auto retParser = [ret](NativeEngine &engine, NativeValue *result) -> bool {
-        bool res = AbilityRuntime::ConvertFromJsValue(engine, result, *ret);
-        if (!res) {
-            HILOG_ERROR("Convert js value fail.");
-        }
-        return res;
+    BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                          "The app does not provide the onRestore interface.");
+
+    auto retParser = [](NativeEngine &engine, NativeValue *result) -> bool {
+        return true;
     };
 
     auto errCode = CallJsMethod("onBackup", jsRuntime_, jsObj_.get(), {}, retParser);
@@ -148,49 +142,35 @@ ErrCode ExtBackupJs::OnBackup(void)
         HILOGE("CallJsMethod error, code:%{public}d.", errCode);
         return errCode;
     }
-
-    if (*ret != ERR_OK) {
-        HILOGE("backup fail.");
-        return *ret;
-    }
     return ERR_OK;
 }
 
 ErrCode ExtBackupJs::OnRestore(void)
 {
     HILOGI("BackupExtensionAbility(JS) OnRestore.");
-    if (!jsObj_) {
-        HILOGI("The app does not provide the onRestore interface.");
-        return ERR_OK;
-    }
-    auto ret = std::make_shared<int>();
-    vector<NativeValue *> argv;
-    NativeValue *verCode = jsRuntime_.GetNativeEngine().CreateNumber(appVersionCode_);
-    NativeValue *verStr = jsRuntime_.GetNativeEngine().CreateString(appVersionStr_.c_str(), appVersionStr_.length());
+    BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                          "The app does not provide the onRestore interface.");
 
-    NativeValue *param = jsRuntime_.GetNativeEngine().CreateObject();
-    auto paramObj = reinterpret_cast<NativeObject *>(param->GetInterface(NativeObject::INTERFACE_ID));
-    paramObj->SetProperty("code", verCode);
-    paramObj->SetProperty("name", verStr);
-    argv.push_back(param);
-
-    auto retParser = [ret](NativeEngine &engine, NativeValue *result) -> bool {
-        bool res = AbilityRuntime::ConvertFromJsValue(engine, result, *ret);
-        if (!res) {
-            HILOG_ERROR("Convert js value fail.");
-        }
-        return res;
+    auto argParser = [appVersionCode(appVersionCode_),
+                      appVersionStr(appVersionStr_)](NativeEngine &engine, vector<NativeValue *> &argv) -> bool {
+        NativeValue *verCode = engine.CreateNumber(appVersionCode);
+        NativeValue *verStr = engine.CreateString(appVersionStr.c_str(), appVersionStr.length());
+        NativeValue *param = engine.CreateObject();
+        auto paramObj = reinterpret_cast<NativeObject *>(param->GetInterface(NativeObject::INTERFACE_ID));
+        paramObj->SetProperty("code", verCode);
+        paramObj->SetProperty("name", verStr);
+        argv.push_back(param);
+        return true;
     };
 
-    auto errCode = CallJsMethod("onRestore", jsRuntime_, jsObj_.get(), argv, retParser);
+    auto retParser = [](NativeEngine &engine, NativeValue *result) -> bool {
+        return true;
+    };
+
+    auto errCode = CallJsMethod("onRestore", jsRuntime_, jsObj_.get(), argParser, retParser);
     if (errCode != ERR_OK) {
         HILOGE("CallJsMethod error, code:%{public}d.", errCode);
         return errCode;
-    }
-
-    if (*ret != ERR_OK) {
-        HILOGE("backup fail.");
-        return *ret;
     }
     return ERR_OK;
 }
@@ -204,6 +184,13 @@ static int DoCallJsMethod(CallJsParam *param)
     }
     AbilityRuntime::HandleEscape handleEscape(*jsRuntime);
     auto &nativeEngine = jsRuntime->GetNativeEngine();
+    vector<NativeValue *> argv = {};
+    if (param->argParser != nullptr) {
+        if (!param->argParser(nativeEngine, argv)) {
+            HILOGE("failed to get params.");
+            return EINVAL;
+        }
+    }
     NativeValue *value = param->jsObj->Get();
     if (value == nullptr) {
         HILOGE("failed to get native value object.");
@@ -223,8 +210,8 @@ static int DoCallJsMethod(CallJsParam *param)
         HILOGE("ResultValueParser must not null.");
         return EINVAL;
     }
-    if (!param->retParser(nativeEngine, handleEscape.Escape(nativeEngine.CallFunction(value, method, param->argv.data(),
-                                                                                      param->argv.size())))) {
+    if (!param->retParser(nativeEngine,
+                          handleEscape.Escape(nativeEngine.CallFunction(value, method, argv.data(), argv.size())))) {
         HILOGI("Parser js result fail.");
         return EINVAL;
     }
@@ -234,7 +221,7 @@ static int DoCallJsMethod(CallJsParam *param)
 int ExtBackupJs::CallJsMethod(const std::string &funcName,
                               AbilityRuntime::JsRuntime &jsRuntime,
                               NativeReference *jsObj,
-                              const std::vector<NativeValue *> &argv,
+                              InputArgsParser argParser,
                               ResultValueParser retParser)
 {
     uv_loop_s *loop = nullptr;
@@ -243,16 +230,12 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
         HILOGE("failed to get uv event loop.");
         return EINVAL;
     }
-    auto param = std::make_shared<CallJsParam>(funcName, &jsRuntime, jsObj, argv, retParser);
-    if (param == nullptr) {
-        HILOGE("failed to new param.");
-        return EINVAL;
-    }
+    auto param = std::make_shared<CallJsParam>(funcName, &jsRuntime, jsObj, argParser, retParser);
+    BExcepUltils::BAssert(param, BError::Codes::EXT_BROKEN_FRAMEWORK, "failed to new param.");
+
     auto work = std::make_shared<uv_work_t>();
-    if (work == nullptr) {
-        HILOGE("failed to new uv_work_t.");
-        return EINVAL;
-    }
+    BExcepUltils::BAssert(work, BError::Codes::EXT_BROKEN_FRAMEWORK, "failed to new uv_work_t.");
+
     work->data = reinterpret_cast<void *>(param.get());
     int ret = uv_queue_work(
         loop, work.get(), [](uv_work_t *work) {},
