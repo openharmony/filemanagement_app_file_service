@@ -312,7 +312,7 @@ static int32_t SetPublicDirHmdfsInfo(const std::string &physicalPath, const std:
         LOGE("Failed to get physical path stat with %{public}d", -errno);
         return -errno;
     }
-    hui.fileSize = buf.st_size;
+    hui.fileSize = static_cast<size_t>(buf.st_size);
     return 0;
 }
 
