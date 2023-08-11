@@ -226,7 +226,7 @@ namespace ModuleFileShare {
         uriPermInfo.bundleName = string(bundleName.get());
 
         if (NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_number)) {
-            auto [succFlag, flag] = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
+            auto [succFlag, flag] = NVal(env, funcArg[NARG_POS::THIRD]).ToUint32();
             uriPermInfo.flag = flag;
             uriPermInfo.mode = GetModeFromFlag(flag);
         } else if (NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_string)) {
