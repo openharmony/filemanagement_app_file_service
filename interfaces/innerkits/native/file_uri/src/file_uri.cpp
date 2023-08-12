@@ -31,6 +31,7 @@ const std::string PATH_SHARE = "/data/storage/el2/share";
 const std::string MODE_RW = "/rw/";
 const std::string MODE_R = "/r/";
 const std::string FILE_SCHEME_PREFIX = "file://";
+const std::string FILE_MANAGER_BASE_PATH = "/storage/Users/";
 const std::string FILE_MANAGER_AUTHORITY = "docs";
 const std::string MEDIA_AUTHORITY = "media";
 string FileUri::GetName()
@@ -67,7 +68,7 @@ string FileUri::GetRealPath()
     string bundleName = uri_.GetAuthority();
     LOGD("GetRealPath decode path is %{private}s", sandboxPath.c_str());
     if (bundleName == FILE_MANAGER_AUTHORITY &&
-        access(realPath.c_str(), F_OK) == 0) {
+        access(FILE_MANAGER_BASE_PATH.c_str(), F_OK) == 0) {
         return realPath;
     }
 

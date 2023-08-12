@@ -1,55 +1,55 @@
 {
     "mount-path-map" : [{
-            "sandbox-path" : "/data/storage/el1/bundle",
-            "src-path" : "/data/app/el1/bundle/public/<PackageName>"
+            "sandbox-path" : "/data/storage/el1/bundle/",
+            "src-path" : "/data/app/el1/bundle/public/<PackageName>/"
         }, {
-            "sandbox-path" : "/data/storage/el2/base",
-            "src-path" : "/data/app/el2/<currentUserId>/base/<PackageName>"
+            "sandbox-path" : "/data/storage/el2/base/",
+            "src-path" : "/data/app/el2/<currentUserId>/base/<PackageName>/"
         }, {
-            "sandbox-path" : "/data/storage/el1/database",
-            "src-path" : "/data/app/el1/<currentUserId>/database/<PackageName>"
+            "sandbox-path" : "/data/storage/el1/database/",
+            "src-path" : "/data/app/el1/<currentUserId>/database/<PackageName>/"
         }, {
-            "sandbox-path" : "/data/storage/el2/database",
-            "src-path" : "/data/app/el2/<currentUserId>/database/<PackageName>"
+            "sandbox-path" : "/data/storage/el2/database/",
+            "src-path" : "/data/app/el2/<currentUserId>/database/<PackageName>/"
         }, {
-            "sandbox-path" : "/data/storage/el1/base",
-            "src-path" : "/data/app/el1/<currentUserId>/base/<PackageName>"
+            "sandbox-path" : "/data/storage/el1/base/",
+            "src-path" : "/data/app/el1/<currentUserId>/base/<PackageName>/"
         }, {
-            "sandbox-path" : "/data/storage/ark-cache",
-            "src-path" : "/data/local/ark-cache/<PackageName>"
+            "sandbox-path" : "/data/storage/ark-cache/",
+            "src-path" : "/data/local/ark-cache/<PackageName>/"
         }, {
-            "sandbox-path" : "/data/storage/ark-profile",
-            "src-path" : "/data/local/ark-profile/<currentUserId>/<PackageName>"
+            "sandbox-path" : "/data/storage/ark-profile/",
+            "src-path" : "/data/local/ark-profile/<currentUserId>/<PackageName>/"
         }, {
-            "sandbox-path" : "/data/storage/el2/distributedfiles",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/data/<PackageName>"
+            "sandbox-path" : "/data/storage/el2/distributedfiles/",
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/data/<PackageName>/"
         }, {
-            "sandbox-path" : "/mnt/data/fuse",
-            "src-path" : "/mnt/data/<currentUserId>/fuse"
+            "sandbox-path" : "/mnt/data/fuse/",
+            "src-path" : "/mnt/data/<currentUserId>/fuse/"
         }, {
-            "sandbox-path" : "/storage/Users/currentUser/Documents",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Documents"
+            "sandbox-path" : "/storage/Users/currentUser/Documents/",
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Documents/"
         }, {
-            "sandbox-path" : "/storage/Users/currentUser/Download",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Download"
+            "sandbox-path" : "/storage/Users/currentUser/Download/",
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Download/"
         }, {
-            "sandbox-path" : "/storage/Users/currentUser/Desktop",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Desktop"
+            "sandbox-path" : "/storage/Users/currentUser/Desktop/",
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Desktop/"
         }, {
-            "sandbox-path" : "/storage/Users/currentUser",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Docs"
+            "sandbox-path" : "/storage/Users/currentUser/",
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Docs/"
         }, {
-            "sandbox-path" : "/storage/External",
-            "src-path" : "/mnt/data/External"
+            "sandbox-path" : "/storage/External/",
+            "src-path" : "/mnt/data/External/"
         }, {
-            "sandbox-path" : "/storage/Share",
-            "src-path" : "/data/service/el1/public/storage_daemon/share/public"
+            "sandbox-path" : "/storage/Share/",
+            "src-path" : "/data/service/el1/public/storage_daemon/share/public/"
         }, {
-            "sandbox-path" : "/Documents",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Documents"
+            "sandbox-path" : "/Documents/",
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Documents/"
         }, {
-            "sandbox-path" : "/Download",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Download"
+            "sandbox-path" : "/Download/",
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Download/"
         }
     ]
 }
