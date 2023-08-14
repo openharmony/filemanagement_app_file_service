@@ -245,10 +245,10 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
         GetSandboxPathMap(sandboxPathMap_);
     }
 
-    size_t curPrefixMatchLen = 0;
+    string::size_type curPrefixMatchLen = 0;
     for (auto it = sandboxPathMap_.begin(); it != sandboxPathMap_.end(); it++) {
         string sandboxPathPrefix = it->first;
-        size_t prefixMatchLen = sandboxPathPrefix.length();
+        string::size_type prefixMatchLen = sandboxPathPrefix.length();
         if (sandboxPath.length() >= prefixMatchLen) {
             string sandboxPathTemp = sandboxPath.substr(0, prefixMatchLen);
             if (sandboxPathTemp == sandboxPathPrefix && curPrefixMatchLen <= prefixMatchLen) {
