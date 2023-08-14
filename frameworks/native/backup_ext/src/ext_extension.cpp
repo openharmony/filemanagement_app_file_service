@@ -286,11 +286,12 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
         throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
     }
 
-    ErrCode ret = ERR_OK;
-    ret = IndexFileReady(bigFileInfo, proxy);
-    ret = BigFileReady(proxy);
-    HILOGE("HandleBackup finish, ret = %{public}d", ret);
-    return ret;
+    if (auto ret = IndexFileReady(bigFileInfo, proxy); ret) {
+        return ret;
+    }
+    auto res = BigFileReady(proxy);
+    HILOGE("HandleBackup finish, ret = %{public}d", res);
+    return res;
 }
 
 int BackupExtExtension::DoRestore(const string &fileName)
