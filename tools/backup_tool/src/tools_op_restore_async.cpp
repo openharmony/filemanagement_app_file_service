@@ -179,7 +179,6 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
     }
     BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
-    vector<BJsonEntityCaps::BundleInfo> infos = cache.GetBundleInfos();
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     for (auto name : bundleNames) {
         string versionName = string(BConstants::DEFAULT_VERSION_NAME);
