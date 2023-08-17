@@ -141,6 +141,39 @@ namespace {
 
     /**
      * @tc.name: remote_file_share_test_0005
+     * @tc.desc: Test function of CreateSharePath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: SR000H63TL
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_CreateSharePath_0005, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_CreateSharePath_0005";
+        const string fileStr = "/data/test/remote_file_share_test.txt";
+        int fd = open(fileStr.c_str(), O_RDWR);
+        ASSERT_TRUE(fd != -1) << "RemoteFileShareTest Create File Failed!";
+        const int userId = 100;
+        const string deviceId = "0";
+        string sharePath = "";
+        char pthreadName[PATH_MAX];
+        int ret = pthread_getname_np(pthread_self(), pthreadName, sizeof(pthreadName));
+        EXPECT_EQ(ret, E_OK);
+        string pthreadNameStr = pthreadName;
+        string errPthreadName = "../test";
+        ret = pthread_setname_np(pthread_self(), errPthreadName.c_str());
+        EXPECT_EQ(ret, E_OK);
+        ret = RemoteFileShare::CreateSharePath(fd, sharePath, userId, deviceId);
+        close(fd);
+        EXPECT_NE(ret, E_OK);
+        ret = pthread_setname_np(pthread_self(), pthreadNameStr.c_str());
+        EXPECT_EQ(ret, E_OK);
+        GTEST_LOG_(INFO) << "RemoteFileShareTest Create Share Path " << sharePath;
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_CreateSharePath_0005";
+    }
+
+    /**
+     * @tc.name: remote_file_share_test_0005
      * @tc.desc: Test function of GetDfsUriFromLocal() interface for SUCCESS.
      * @tc.size: MEDIUM
      * @tc.type: FUNC
