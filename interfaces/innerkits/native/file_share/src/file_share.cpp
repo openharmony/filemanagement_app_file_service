@@ -250,28 +250,34 @@ int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
     return 0;
 }
 
+static void DelSharePath(const string &delPath)
+{
+    if (!SandboxHelper::CheckValidPath(delPath)) {
+        LOGE("DelSharePath, umount path is invalid, path = %{private}s", delPath.c_str());
+        return;
+    }
+
+    if (access(delPath.c_str(), F_OK) == 0) {
+        if (umount2(delPath.c_str(), MNT_DETACH) != 0) {
+            LOGE("DelSharePath, umount failed with %{public}d", errno);
+        }
+        remove(delPath.c_str());
+    }
+}
+
 static void UmountDelUris(vector<string> sharePathList, string currentUid, string bundleNameSelf)
 {
+    string delPathPrefix = DATA_APP_EL2_PATH + currentUid + SHARE_PATH + bundleNameSelf;
     for (size_t i = 0; i < sharePathList.size(); i++) {
         Uri uri(SandboxHelper::Decode(sharePathList[i]));
         string path = uri.GetPath();
         string bundleName = uri.GetAuthority();
-        string delRPath = DATA_APP_EL2_PATH + currentUid + SHARE_PATH + bundleNameSelf + SHARE_R_PATH +
-                          bundleName + path;
-        string delRWPath = DATA_APP_EL2_PATH + currentUid + SHARE_PATH + bundleNameSelf + SHARE_RW_PATH +
-                           bundleName + path;
-        if (access(delRPath.c_str(), F_OK) == 0) {
-            if (umount2(delRPath.c_str(), MNT_DETACH) != 0) {
-                LOGE("UmountdelRPath, umount failed with %{public}d", errno);
-            }
-            remove(delRPath.c_str());
-        }
-        if (access(delRWPath.c_str(), F_OK) == 0) {
-            if (umount2(delRWPath.c_str(), MNT_DETACH) != 0) {
-                LOGE("UmountdelRWPath, umount failed with %{public}d", errno);
-            }
-            remove(delRWPath.c_str());
-        }
+
+        string delRPath = delPathPrefix + SHARE_R_PATH + bundleName + path;
+        DelSharePath(delRPath);
+
+        string delRWPath = delPathPrefix + SHARE_RW_PATH + bundleName + path;
+        DelSharePath(delRWPath);
     }
 }
 
