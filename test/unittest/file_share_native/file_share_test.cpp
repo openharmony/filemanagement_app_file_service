@@ -235,6 +235,53 @@ namespace {
     }
 
     /**
+     * @tc.name: File_share_DeleteShareFile_0007
+     * @tc.desc: Test function of DeleteShareFile() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: SR000H63TL
+     */
+    HWTEST_F(FileShareTest, File_share_DeleteShareFile_0007, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileShareTest-begin File_share_DeleteShareFile_0007";
+        int32_t uid = -1;
+        uid = OHOS::IPCSkeleton::GetCallingUid();
+
+        string bundleNameA = "com.ohos.settingsdata";
+        string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
+        int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
+        ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
+        string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
+
+        string bundleNameB = "com.ohos.systemui";
+        uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
+
+        int32_t flag = 3;
+        int32_t ret = CreateShareFile(uri, tokenId, flag);
+        EXPECT_EQ(ret, E_OK);
+
+        vector<string> sharePathList;
+        string uriErr = "file://" + bundleNameA + "/data/storage/el2/base/files/abc/../test.txt";
+        sharePathList.push_back(uriErr);
+        ret = DeleteShareFile(tokenId, sharePathList);
+        EXPECT_EQ(ret, E_OK);
+
+        string sharePath = "/data/service/el2/" + to_string(uid) + "/share/" + bundleNameB +
+                           "/rw/" + bundleNameA + "/data/storage/el2/base/files/test.txt";
+        ret = access(sharePath.c_str(), F_OK);
+        EXPECT_EQ(ret, E_OK);
+
+        sharePathList.push_back(uri);
+        ret = DeleteShareFile(tokenId, sharePathList);
+        EXPECT_EQ(ret, E_OK);
+
+        ret = access(sharePath.c_str(), F_OK);
+        EXPECT_EQ(ret, -1);
+        GTEST_LOG_(INFO) << "FileShareTest-end File_share_DeleteShareFile_0007";
+    }
+
+    /**
      * @tc.name: File_share_GetPhysicalPath_0001
      * @tc.desc: Test function of GetPhysicalPath() interface for SUCCESS.
      * @tc.size: MEDIUM
