@@ -24,6 +24,7 @@
 #include "bundle_mgr_client.h"
 #include "js_runtime.h"
 #include "js_runtime_utils.h"
+#include "js_extension_context.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "napi_common_util.h"
@@ -77,16 +78,54 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
         AbilityRuntime::HandleScope handleScope(jsRuntime_);
         jsObj_ = jsRuntime_.LoadModule(moduleName, modulePath, info.hapPath,
                                        abilityInfo_->compileMode == AbilityRuntime::CompileMode::ES_MODULE);
-        if (jsObj_) {
-            HILOGI("Wow! Here's a custsom BackupExtensionAbility");
-        } else {
+        if (jsObj_ == nullptr) {
             HILOGW("Oops! There's no custom BackupExtensionAbility");
+            return;
         }
+        HILOGI("Wow! Here's a custsom BackupExtensionAbility");
+        ExportJsContext();
     } catch (const BError &e) {
         HILOGE("%{public}s", e.what());
     } catch (const exception &e) {
         HILOGE("%{public}s", e.what());
     }
+}
+
+void ExtBackupJs::ExportJsContext(void)
+{
+    auto& engine = jsRuntime_.GetNativeEngine();
+    NativeObject* obj = AbilityRuntime::ConvertNativeValueTo<NativeObject>(jsObj_->Get());
+    if (obj == nullptr) {
+        HILOGE("Failed to get BackupExtAbility object");
+        return;
+    }
+
+    auto context = GetContext();
+    if (context == nullptr) {
+        HILOGE("Failed to get context");
+        return;
+    }
+
+    HILOGI("CreateBackupExtAbilityContext");
+    NativeValue* contextObj = CreateJsExtensionContext(engine, context);
+    auto contextRef = jsRuntime_.LoadSystemModule("application.ExtensionContext", &contextObj, 1);
+    contextObj = contextRef->Get();
+    HILOGI("Bind context");
+    context->Bind(jsRuntime_, contextRef.release());
+    obj->SetProperty("context", contextObj);
+
+    auto nativeObj = AbilityRuntime::ConvertNativeValueTo<NativeObject>(contextObj);
+    if (nativeObj == nullptr) {
+        HILOGE("Failed to get backup extension ability native object");
+        return;
+    }
+
+    HILOGI("Set backup extension ability context pointer is nullptr: %{public}d", context.get() == nullptr);
+    auto releaseContext = [](NativeEngine*, void* data, void*) {
+        HILOGI("Finalizer for weak_ptr backup extension ability context is called");
+        delete static_cast<std::weak_ptr<AbilityRuntime::Context>*>(data);
+    };
+    nativeObj->SetNativePointer(new std::weak_ptr<AbilityRuntime::Context>(context), releaseContext, nullptr);
 }
 
 [[maybe_unused]] tuple<ErrCode, NativeValue *> ExtBackupJs::CallObjectMethod(string_view name,
