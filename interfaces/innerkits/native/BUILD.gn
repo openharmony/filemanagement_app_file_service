@@ -118,11 +118,43 @@ ohos_shared_library("remote_file_share_native") {
   subsystem_name = "filemanagement"
 }
 
+config("sandbox_helper_config") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "include",
+    "${utils_system_safwk_path}/native/include",
+    "//third_party/json/include",
+    "${path_base}/include",
+    "../../common/include",
+    ".",
+  ]
+}
+
+ohos_shared_library("sandbox_helper_native") {
+  sources = [
+    "../../common/src/json_utils.cpp",
+    "../../common/src/sandbox_helper.cpp",
+  ]
+
+  public_configs = [ ":sandbox_helper_config" ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  innerapi_tags = [ "platformsdk_indirect" ]
+  part_name = "app_file_service"
+  subsystem_name = "filemanagement"
+}
+
 group("app_file_service_native") {
   deps = [
     ":fileshare_native",
     ":fileuri_native",
     ":remote_file_share_native",
+    ":sandbox_helper_native",
   ]
 }
 
