@@ -94,6 +94,15 @@
                     }
                 },
                 {
+                    "name": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native:sandbox_helper_native",
+                    "header": {
+                        "header_files": [
+                            "sandbox_helper.h"
+                        ],
+                        "header_base": "//foundation/filemanagement/app_file_service/interfaces/common/include"
+                    }
+                },
+                {
                     "name": "//foundation/filemanagement/app_file_service/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
                     "header": {
                         "header_base": "//foundation/filemanagement/app_file_service/interfaces/inner_api/native/backup_kit_inner",

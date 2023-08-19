@@ -34,6 +34,7 @@ namespace AppFileService {
 #define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)
 #define READ_URI_PERMISSION OHOS::AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION
 #define WRITE_URI_PERMISSION OHOS::AAFwk::Want::FLAG_AUTH_WRITE_URI_PERMISSION
+#define PERSISTABLE_URI_PERMISSION OHOS::AAFwk::Want::FLAG_AUTH_PERSISTABLE_URI_PERMISSION
 
 enum ShareFileType {
     DIR_TYPE = 0,
@@ -132,7 +133,7 @@ static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t fl
 {
     int32_t ret = 0;
     ret = GetTargetInfo(tokenId, info.targetBundleName_, info.currentUid_);
-    if (ret != 0) {
+    if (ret != 0 || info.currentUid_ == "0") {
         LOGE("Failed to get target info %{public}d", ret);
         return ret;
     }
@@ -188,68 +189,6 @@ static void DeleteExistShareFile(const string &path)
     }
 }
 
-static int32_t PreparePreShareDir(FileShareInfo &info)
-{
-    if (!SandboxHelper::CheckValidPath(info.providerLowerPath_)) {
-        LOGE("Invalid share path with %{private}s", info.providerLowerPath_.c_str());
-        return -EINVAL;
-    }
-
-    for (size_t i = 0; i < info.sharePath_.size(); i++) {
-        if (access(info.sharePath_[i].c_str(), F_OK) != 0) {
-            string sharePathDir = info.sharePath_[i];
-            size_t posLast = info.sharePath_[i].find_last_of("/");
-            sharePathDir = info.sharePath_[i].substr(0, posLast);
-            if (!MakeDir(sharePathDir.c_str())) {
-                LOGE("Make dir failed with %{public}d", errno);
-                return -errno;
-            }
-        } else {
-            DeleteExistShareFile(info.sharePath_[i]);
-        }
-    }
-    return 0;
-}
-
-int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
-{
-    FileShareInfo info;
-    string decodeUri = SandboxHelper::Decode(uri);
-    LOGD("CreateShareFile begin with uri %{private}s decodeUri %{private}s",
-         uri.c_str(), decodeUri.c_str());
-    int32_t ret = GetFileShareInfo(decodeUri, tokenId, flag, info);
-    if (ret != 0) {
-        LOGE("Failed to get FileShareInfo with %{public}d", ret);
-        return ret;
-    }
-
-    if ((ret = PreparePreShareDir(info)) != 0) {
-        LOGE("PreparePreShareDir failed");
-        return ret;
-    }
-
-    for (size_t i = 0; i < info.sharePath_.size(); i++) {
-        if (info.type_ == ShareFileType::FILE_TYPE) {
-            if ((ret = creat(info.sharePath_[i].c_str(), FILE_MODE)) < 0) {
-                LOGE("Create file failed with %{public}d", errno);
-                return -errno;
-            }
-            close(ret);
-        } else {
-            LOGE("Invalid argument not support dir to share");
-            return -EINVAL;
-        }
-
-        if (mount(info.providerLowerPath_.c_str(), info.sharePath_[i].c_str(),
-                  nullptr, MS_BIND, nullptr) != 0) {
-            LOGE("Mount failed with %{public}d", errno);
-            return -errno;
-        }
-    }
-    LOGI("Create Share File Successfully!");
-    return 0;
-}
-
 static void DelSharePath(const string &delPath)
 {
     if (!SandboxHelper::CheckValidPath(delPath)) {
@@ -279,6 +218,71 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
         string delRWPath = delPathPrefix + SHARE_RW_PATH + bundleName + path;
         DelSharePath(delRWPath);
     }
+}
+
+static int32_t PreparePreShareDir(FileShareInfo &info, const string &uri)
+{
+    if (!SandboxHelper::CheckValidPath(info.providerLowerPath_)) {
+        LOGE("Invalid share path with %{private}s", info.providerLowerPath_.c_str());
+        return -EINVAL;
+    }
+
+    vector<string> sharePathList{ uri };
+    UmountDelUris(sharePathList, info.currentUid_, info.targetBundleName_);
+
+    for (size_t i = 0; i < info.sharePath_.size(); i++) {
+        if (access(info.sharePath_[i].c_str(), F_OK) != 0) {
+            string sharePathDir = info.sharePath_[i];
+            size_t posLast = info.sharePath_[i].find_last_of("/");
+            sharePathDir = info.sharePath_[i].substr(0, posLast);
+            if (!MakeDir(sharePathDir.c_str())) {
+                LOGE("Make dir failed with %{public}d", errno);
+                return -errno;
+            }
+        } else {
+            DeleteExistShareFile(info.sharePath_[i]);
+        }
+    }
+    return 0;
+}
+
+int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
+{
+    FileShareInfo info;
+    string decodeUri = SandboxHelper::Decode(uri);
+    LOGD("CreateShareFile begin with uri %{private}s decodeUri %{private}s",
+         uri.c_str(), decodeUri.c_str());
+    int32_t ret = GetFileShareInfo(decodeUri, tokenId, flag, info);
+    if (ret != 0 || info.currentUid_ == "0" || (flag & PERSISTABLE_URI_PERMISSION) != 0) {
+        LOGE("Failed to get FileShareInfo with %{public}d", ret);
+        return ret;
+    }
+
+    if ((ret = PreparePreShareDir(info, uri)) != 0) {
+        LOGE("PreparePreShareDir failed");
+        return ret;
+    }
+
+    for (size_t i = 0; i < info.sharePath_.size(); i++) {
+        if (info.type_ == ShareFileType::FILE_TYPE) {
+            if ((ret = creat(info.sharePath_[i].c_str(), FILE_MODE)) < 0) {
+                LOGE("Create file failed with %{public}d", errno);
+                return -errno;
+            }
+            close(ret);
+        } else {
+            LOGE("Invalid argument not support dir to share");
+            return -EINVAL;
+        }
+
+        if (mount(info.providerLowerPath_.c_str(), info.sharePath_[i].c_str(),
+                  nullptr, MS_BIND, nullptr) != 0) {
+            LOGE("Mount failed with %{public}d", errno);
+            return -errno;
+        }
+    }
+    LOGI("Create Share File Successfully!");
+    return 0;
 }
 
 int32_t DeleteShareFile(uint32_t tokenId, vector<string> sharePathList)
