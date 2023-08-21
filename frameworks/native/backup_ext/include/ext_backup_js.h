@@ -102,6 +102,8 @@ private:
     std::tuple<ErrCode, NativeValue *> CallObjectMethod(std::string_view name,
                                                         const std::vector<NativeValue *> &argv = {});
 
+    void ExportJsContext(void);
+
     AbilityRuntime::JsRuntime &jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
 };
