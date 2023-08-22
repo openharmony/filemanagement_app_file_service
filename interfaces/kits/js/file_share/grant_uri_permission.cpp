@@ -139,7 +139,7 @@ namespace ModuleFileShare {
             return -EINVAL;
         }
 
-        int32_t filesType = GetMediaTypeAndApiFromUri(uri.GetPath(), isApi10);
+        int32_t filesType = GetMediaTypeAndApiFromUri(uri.ToString(), isApi10);
         valuesBucket.Put(PERMISSION_FILE_ID, fileId);
         valuesBucket.Put(PERMISSION_BUNDLE_NAME, uriPermInfo.bundleName);
         valuesBucket.Put(PERMISSION_MODE, uriPermInfo.mode);

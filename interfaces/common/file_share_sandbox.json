@@ -40,7 +40,7 @@
             "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Docs/"
         }, {
             "sandbox-path" : "/storage/External/",
-            "src-path" : "/mnt/data/External/"
+            "src-path" : "/mnt/data/external/"
         }, {
             "sandbox-path" : "/storage/Share/",
             "src-path" : "/data/service/el1/public/storage_daemon/share/public/"
