@@ -36,6 +36,11 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+namespace {
+const string HMOS_HAP_CODE_PATH = "1";
+const string LINUX_HAP_CODE_PATH = "2";
+} // namespace
+
 static sptr<AppExecFwk::IBundleMgr> GetBundleManager()
 {
     auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -78,6 +83,11 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(int32_t use
         throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle infos");
     }
     for (auto const &installedBundle : installedBundles) {
+        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+            installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
+            HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
+            continue;
+        }
         auto [allToBackup, extName] = GetAllowAndExtName(installedBundle.extensionInfos);
         auto bundleStats = StorageMgrAdapter::GetBundleStats(installedBundle.name);
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
@@ -95,6 +105,11 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
         AppExecFwk::BundleInfo installedBundle;
         if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
             throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle info");
+        }
+        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+            installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
+            HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
+            continue;
         }
         auto [allToBackup, extName] = GetAllowAndExtName(installedBundle.extensionInfos);
         auto bundleStats = StorageMgrAdapter::GetBundleStats(installedBundle.name);
