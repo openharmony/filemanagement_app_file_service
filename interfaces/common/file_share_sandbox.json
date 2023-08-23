@@ -44,12 +44,6 @@
         }, {
             "sandbox-path" : "/storage/Share/",
             "src-path" : "/data/service/el1/public/storage_daemon/share/public/"
-        }, {
-            "sandbox-path" : "/Documents/",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Documents/"
-        }, {
-            "sandbox-path" : "/Download/",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Download/"
         }
     ]
 }
