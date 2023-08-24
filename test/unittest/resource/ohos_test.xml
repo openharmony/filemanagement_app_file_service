@@ -19,4 +19,16 @@
             <option name="push" value="remote_file_share_test.txt -> /data/test" src="res"/>
         </preparer>
     </target>
+    <target name="file_share_test">
+        <preparer>
+            <option name="push" value="filesharea.hap -> /data/test/" src="res"/>
+            <option name="push" value="fileshareb.hap -> /data/test/" src="res"/>
+            <option name="shell" value="bm install -r -p /data/test/filesharea.hap"/>
+            <option name="shell" value="bm install -r -p /data/test/fileshareb.hap"/>
+        </preparer>
+        <cleaner>
+            <option name="shell" value="bm uninstall -n com.example.filesharea"/>
+            <option name="shell" value="bm uninstall -n com.example.fileshareb"/>
+        </cleaner>
+    </target>
 </configuration>

@@ -17,5 +17,7 @@ group("unittest") {
     "file_share_native:file_share_test",
     "file_uri_native:file_uri_test",
     "remote_file_share:remote_file_share_test",
+    "resource/bundle_dependencies/fileShareA:filesharea",
+    "resource/bundle_dependencies/fileShareB:fileshareb",
   ]
 }
