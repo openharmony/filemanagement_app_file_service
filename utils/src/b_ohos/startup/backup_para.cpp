@@ -65,4 +65,22 @@ bool BackupPara::GetBackupDebugOverrideExtensionConfig()
     }
     return value == "true";
 }
+
+tuple<bool, int32_t> BackupPara::GetBackupDebugOverrideAccount()
+{
+    auto [getCfgParaValSucc, value] = GetConfigParameterValue(BConstants::BACKUP_DEBUG_OVERRIDE_ACCOUNT_CONFIG_KEY,
+                                                              BConstants::BACKUP_PARA_VALUE_MAX);
+    if (!getCfgParaValSucc) {
+        return {false, 0};
+    }
+    if (value == "true") {
+        auto [getCfgParaValSucc, value] = GetConfigParameterValue(BConstants::BACKUP_DEBUG_OVERRIDE_ACCOUNT_NUMBER_KEY,
+                                                                  BConstants::BACKUP_PARA_VALUE_MAX);
+        if (!getCfgParaValSucc) {
+            return {false, 0};
+        }
+        return {true, stoi(value)};
+    }
+    return {false, 0};
+}
 } // namespace OHOS::FileManagement::Backup
