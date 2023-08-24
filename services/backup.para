@@ -12,3 +12,6 @@
 # limitations under the License.
 
 backup.debug.overrideExtensionConfig=false
+
+backup.debug.overrideAccountConfig=false
+backup.debug.overrideAccountNumber=0

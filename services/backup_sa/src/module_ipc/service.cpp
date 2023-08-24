@@ -42,6 +42,7 @@
 #include "b_file_info.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_caps.h"
+#include "b_ohos/startup/backup_para.h"
 #include "b_process/b_multiuser.h"
 #include "b_resources/b_constants.h"
 #include "bundle_mgr_client.h"
@@ -57,9 +58,17 @@ using namespace std;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Service, FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, false);
 
+namespace {
+constexpr int32_t DEBUG_ID = 100;
+} // namespace
+
 /* Shell/Xts user id equal to 0/1, we need set default 100 */
 static inline int32_t GetUserIdDefault()
 {
+    auto [isDebug, debugId] = BackupPara().GetBackupDebugOverrideAccount();
+    if (isDebug && debugId > DEBUG_ID) {
+        return debugId;
+    }
     auto multiuser = BMultiuser::ParseUid(IPCSkeleton::GetCallingUid());
     if ((multiuser.userId == BConstants::SYSTEM_UID) || (multiuser.userId == BConstants::XTS_UID)) {
         return BConstants::DEFAULT_USER_ID;

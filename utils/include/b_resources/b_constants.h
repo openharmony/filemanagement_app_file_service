@@ -104,8 +104,12 @@ static inline std::string ENTRY_NAME_LINKPATH = "linkpath";
 static inline std::string ENTRY_NAME_PATH = "path";
 static inline std::string ENTRY_NAME_SIZE = "size";
 
-// backup.para内配置项的名称，改配置项值为true时可在不更新hap包的情况下，可以读取包管理元数据配置文件的内容
+// backup.para内配置项的名称，该配置项值为true时可在不更新hap包的情况下，可以读取包管理元数据配置文件的内容
 static inline std::string BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_KEY = "backup.debug.overrideExtensionConfig";
+
+// backup.para内配置项的名称，该配置项AccountConfig为true时存在时，可以按照配置的AccountNumber备份恢复
+static inline std::string BACKUP_DEBUG_OVERRIDE_ACCOUNT_CONFIG_KEY = "backup.debug.overrideAccountConfig";
+static inline std::string BACKUP_DEBUG_OVERRIDE_ACCOUNT_NUMBER_KEY = "backup.debug.overrideAccountNumber";
 
 // 应用备份数据暂存路径
 static inline std::string_view SA_BUNDLE_BACKUP_BACKUP = "/backup/";
