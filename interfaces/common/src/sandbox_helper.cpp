@@ -37,6 +37,10 @@ namespace {
     const string SANDBOX_JSON_FILE_PATH = "/etc/app_file_service/file_share_sandbox.json";
     const std::string SHAER_PATH_HEAD = "/mnt/hmdfs/";
     const std::string SHAER_PATH_MID = "/account/merge_view/files/";
+    const string FILE_MANAGER_URI_HEAD = "/storage/";
+    const string FILE_MANAGER_AUTHORITY = "docs";
+    const string DLP_MANAGER_BUNDLE_NAME = "com.ohos.dlpmanager";
+    const string FUSE_URI_HEAD = "/mnt/data/fuse";
     const string BACKFLASH = "/";
     const string MEDIA = "media";
     const int ASSET_IN_BUCKET_NUM_MAX = 1000;
@@ -236,6 +240,11 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
 
     if (bundleName == MEDIA) {
         return GetMediaPhysicalPath(sandboxPath, userId, physicalPath);
+    }
+
+    if ((sandboxPath.find(FILE_MANAGER_URI_HEAD) == 0 && bundleName != FILE_MANAGER_AUTHORITY) ||
+        (sandboxPath.find(FUSE_URI_HEAD) == 0 && bundleName != DLP_MANAGER_BUNDLE_NAME)) {
+        return -EINVAL;
     }
 
     string lowerPathTail = "";
