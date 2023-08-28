@@ -36,7 +36,7 @@ namespace {
     const string MOUNT_PATH_MAP_KEY = "mount-path-map";
     const string SANDBOX_JSON_FILE_PATH = "/etc/app_file_service/file_share_sandbox.json";
     const std::string SHAER_PATH_HEAD = "/mnt/hmdfs/";
-    const std::string SHAER_PATH_MID = "/account/merge_view/files/";
+    const std::string SHAER_PATH_MID = "/account/cloud_merge_view/files/";
     const string FILE_MANAGER_URI_HEAD = "/storage/";
     const string FILE_MANAGER_AUTHORITY = "docs";
     const string DLP_MANAGER_BUNDLE_NAME = "com.ohos.dlpmanager";

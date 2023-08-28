@@ -289,7 +289,7 @@ namespace {
         std::string physicalPath;
         int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
         EXPECT_EQ(ret, E_OK);
-        EXPECT_EQ(physicalPath, "/mnt/hmdfs/100/account/merge_view/files/Photo/11/IMG_12345_0011.jpg");
+        EXPECT_EQ(physicalPath, "/mnt/hmdfs/100/account/cloud_merge_view/files/Photo/11/IMG_12345_0011.jpg");
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0001";
     }
 
@@ -362,7 +362,7 @@ namespace {
         std::string physicalPath;
         int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
         EXPECT_EQ(ret, E_OK);
-        EXPECT_EQ(physicalPath, "/mnt/hmdfs/100/account/merge_view/files/Photo/575/IMG_12345_999999.jpg");
+        EXPECT_EQ(physicalPath, "/mnt/hmdfs/100/account/cloud_merge_view/files/Photo/575/IMG_12345_999999.jpg");
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0005";
     }
 }
