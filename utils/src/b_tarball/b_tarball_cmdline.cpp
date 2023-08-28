@@ -28,6 +28,23 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+namespace {
+const vector<string_view> COMMAND_INJECTION = {
+    "--to-command", "--xform", "-op", "--checkpoint", "--checkpoint-action",
+};
+} // namespace
+
+static void VerifyArgv(const vector<string_view> &argv)
+{
+    for (auto &arg : argv) {
+        if (std::any_of(COMMAND_INJECTION.begin(), COMMAND_INJECTION.end(),
+                        [&arg](const string_view &cmd) { return arg == cmd; })) {
+            HILOGE("Invalid argv: %{public}s", arg.data());
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Invalid argv");
+        }
+    }
+}
+
 static bool IsTarFatalErrorOccur(string_view output)
 {
     vector<string_view> fatalError {"EOF",          "bad xform",     "bad header", "sparse overflow",
@@ -68,6 +85,8 @@ void BTarballCmdline::Tar(string_view root, vector<string_view> includes, vector
         argv.push_back("--exclude");
         argv.push_back(exclude);
     }
+
+    VerifyArgv(argv);
 
     // 如果打包后生成了打包文件，则默认打包器打包时生成的错误可以忽略(比如打包一个不存在的文件)
     auto [bFatalError, errCode] = BProcess::ExecuteCmd(argv, IsTarFatalErrorOccur);
