@@ -24,6 +24,8 @@
 #include <pthread.h>
 
 #include "log.h"
+#include "device_manager.h"
+#include "device_manager_callback.h"
 #include "sandbox_helper.h"
 #include "securec.h"
 #include "uri.h"
@@ -31,6 +33,7 @@
 namespace OHOS {
 namespace AppFileService {
 namespace ModuleRemoteFileShare {
+using namespace OHOS::DistributedHardware;
 namespace {
     const int HMDFS_CID_SIZE = 64;
     const int USER_ID_INIT = 100;
@@ -47,6 +50,8 @@ namespace {
     const std::string REMOTE_SHARE_PATH_DIR = "/.remote_share";
     const std::string MEDIA_AUTHORITY = "media";
     const std::string FILE_MANAGER_AUTHORITY = "docs";
+    const std::string PACKAGE_NAME = "get_dfs_uri_from_local";
+    const std::string NETWORK_PARA = "?networkid=";
 }
 
 #define HMDFS_IOC_SET_SHARE_PATH    _IOW(HMDFS_IOC, 1, struct HmdfsShareControl)
@@ -65,6 +70,13 @@ struct HmdfsDstInfo {
     uint64_t bundleNameLen;
     uint64_t bundleNameIndex;
     uint64_t size;
+};
+
+class InitDMCallback : public DmInitCallback {
+public:
+    InitDMCallback() = default;
+    ~InitDMCallback() override = default;
+    void OnRemoteDied() override {};
 };
 
 static std::string GetProcessName()
@@ -297,13 +309,32 @@ static void InitHmdfsInfo(struct HmdfsDstInfo &hdi, const std::string &physicalP
     hdi.size = reinterpret_cast<uint64_t>(&hdi.size);
 }
 
+static std::string GetLocalNetworkId()
+{
+    auto callback = std::make_shared<InitDMCallback>();
+    int32_t ret = DeviceManager::GetInstance().InitDeviceManager(PACKAGE_NAME, callback);
+    if (ret != 0) {
+        return "";
+    }
+
+    DmDeviceInfo info;
+    ret = DeviceManager::GetInstance().GetLocalDeviceInfo(PACKAGE_NAME, info);
+    auto networkId = std::string(info.networkId);
+    LOGD("GetLocalNetworkId :%{private}s", networkId.c_str());
+    if (ret != 0 || networkId.empty()) {
+        return "";
+    }
+    return networkId;
+}
+
 static void SetHmdfsUriInfo(struct HmdfsUriInfo &hui, Uri &uri, uint64_t fileSize)
 {
     std::string bundleName = uri.GetAuthority();
     std::string path = uri.GetPath();
+    std::string networkId = NETWORK_PARA + GetLocalNetworkId();
 
     hui.uriStr = SandboxHelper::Encode(FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH +
-                                       REMOTE_SHARE_PATH_DIR + path);
+                                       REMOTE_SHARE_PATH_DIR + path + networkId);
     hui.fileSize = fileSize;
     return;
 }
@@ -311,7 +342,7 @@ static void SetHmdfsUriInfo(struct HmdfsUriInfo &hui, Uri &uri, uint64_t fileSiz
 static int32_t SetPublicDirHmdfsInfo(const std::string &physicalPath, const std::string &uriStr,
                                      struct HmdfsUriInfo &hui)
 {
-    hui.uriStr = uriStr;
+    hui.uriStr = uriStr + NETWORK_PARA + GetLocalNetworkId();
     struct stat buf = {};
     if (stat(physicalPath.c_str(), &buf) != 0) {
         LOGE("Failed to get physical path stat with %{public}d", -errno);
@@ -336,6 +367,7 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
 
     if (bundleName == MEDIA_AUTHORITY || bundleName == FILE_MANAGER_AUTHORITY) {
         (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, hui);
+        LOGD("GetDfsUriFromLocal successfully with %{private}s", hui.uriStr.c_str());
         return 0;
     }
 

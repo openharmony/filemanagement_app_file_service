@@ -27,6 +27,7 @@
                 "common_event_service",
                 "c_utils",
                 "data_share",
+                "device_manager",
                 "faultloggerd",
                 "file_api",
                 "hitrace",

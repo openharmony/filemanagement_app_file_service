@@ -43,6 +43,8 @@ namespace {
     const string FUSE_URI_HEAD = "/mnt/data/fuse";
     const string BACKFLASH = "/";
     const string MEDIA = "media";
+    const string NETWORK_ID_FLAG = "<networkId>";
+    const string LOCAL = "local";
     const int ASSET_IN_BUCKET_NUM_MAX = 1000;
     const int ASSET_DIR_START_NUM = 16;
 }
@@ -103,7 +105,8 @@ string SandboxHelper::Decode(const string &uri)
 }
 
 static string GetLowerPath(string &lowerPathHead, const string &lowerPathTail,
-                           const string &userId, const string &bundleName)
+                           const string &userId, const string &bundleName,
+                           const string &networkId)
 {
     if (lowerPathHead.find(CURRENT_USER_ID_FLAG) != string::npos) {
         lowerPathHead = lowerPathHead.replace(lowerPathHead.find(CURRENT_USER_ID_FLAG),
@@ -113,6 +116,11 @@ static string GetLowerPath(string &lowerPathHead, const string &lowerPathTail,
     if (lowerPathHead.find(PACKAGE_NAME_FLAG) != string::npos) {
         lowerPathHead = lowerPathHead.replace(lowerPathHead.find(PACKAGE_NAME_FLAG),
                                               PACKAGE_NAME_FLAG.length(), bundleName);
+    }
+
+    if (lowerPathHead.find(NETWORK_ID_FLAG) != string::npos) {
+        lowerPathHead = lowerPathHead.replace(lowerPathHead.find(NETWORK_ID_FLAG),
+                                              NETWORK_ID_FLAG.length(), networkId);
     }
 
     return lowerPathHead + lowerPathTail;
@@ -231,6 +239,21 @@ static int32_t GetMediaPhysicalPath(const std::string &sandboxPath, const std::s
     return 0;
 }
 
+static void GetNetworkIdFromUri(const std::string &fileUri, string &networkId)
+{
+    Uri uri(fileUri);
+    std::string networkIdInfo = uri.GetQuery();
+    if (networkIdInfo.empty()) {
+        return;
+    }
+
+    size_t posIndex = networkIdInfo.find('=');
+    if (posIndex == string::npos || posIndex == (networkIdInfo.size() - 1)) {
+        return;
+    }
+    networkId = networkIdInfo.substr(posIndex + 1);
+}
+
 int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::string &userId,
                                        std::string &physicalPath)
 {
@@ -270,10 +293,13 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
 
     if (lowerPathHead == "") {
         return -EINVAL;
-    } else {
-        physicalPath = GetLowerPath(lowerPathHead, lowerPathTail, userId, bundleName);
-        return 0;
     }
+
+    string networkId = LOCAL;
+    GetNetworkIdFromUri(fileUri, networkId);
+
+    physicalPath = GetLowerPath(lowerPathHead, lowerPathTail, userId, bundleName, networkId);
+    return 0;
 }
 
 bool SandboxHelper::CheckValidPath(const std::string &filePath)
