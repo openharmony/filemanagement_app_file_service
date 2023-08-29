@@ -22,22 +22,22 @@
             "src-path" : "/data/local/ark-profile/<currentUserId>/<PackageName>/"
         }, {
             "sandbox-path" : "/data/storage/el2/distributedfiles/",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/data/<PackageName>/"
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/device_view/<networkId>/data/<PackageName>/"
         }, {
             "sandbox-path" : "/mnt/data/fuse/",
             "src-path" : "/mnt/data/<currentUserId>/fuse/"
         }, {
             "sandbox-path" : "/storage/Users/currentUser/Documents/",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Documents/"
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/device_view/<networkId>/files/Documents/"
         }, {
             "sandbox-path" : "/storage/Users/currentUser/Download/",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Download/"
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/device_view/<networkId>/files/Download/"
         }, {
             "sandbox-path" : "/storage/Users/currentUser/Desktop/",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Desktop/"
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/device_view/<networkId>/files/Desktop/"
         }, {
             "sandbox-path" : "/storage/Users/currentUser/",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/merge_view/files/Docs/"
+            "src-path" : "/mnt/hmdfs/<currentUserId>/account/device_view/<networkId>/files/Docs/"
         }, {
             "sandbox-path" : "/storage/External/",
             "src-path" : "/mnt/data/external/"

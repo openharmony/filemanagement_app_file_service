@@ -110,6 +110,7 @@ ohos_shared_library("remote_file_share_native") {
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
+    "device_manager:devicemanagersdk",
     "hilog:libhilog",
   ]
 
