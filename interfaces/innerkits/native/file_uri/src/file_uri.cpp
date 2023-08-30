@@ -33,6 +33,7 @@ const std::string MODE_R = "/r/";
 const std::string FILE_SCHEME_PREFIX = "file://";
 const std::string FILE_MANAGER_AUTHORITY = "docs";
 const std::string MEDIA_AUTHORITY = "media";
+const std::string NETWORK_PARA = "?networkid=";
 string FileUri::GetName()
 {
     string sandboxPath = uri_.GetPath();
@@ -67,6 +68,7 @@ string FileUri::GetRealPath()
     string bundleName = uri_.GetAuthority();
     LOGD("GetRealPath decode path is %{private}s", sandboxPath.c_str());
     if (bundleName == FILE_MANAGER_AUTHORITY &&
+        uri_.ToString().find(NETWORK_PARA) == string::npos &&
         access(realPath.c_str(), F_OK) == 0) {
         return realPath;
     }
