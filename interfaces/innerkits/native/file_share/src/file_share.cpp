@@ -220,15 +220,12 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
     }
 }
 
-static int32_t PreparePreShareDir(FileShareInfo &info, const string &uri)
+static int32_t PreparePreShareDir(FileShareInfo &info)
 {
     if (!SandboxHelper::CheckValidPath(info.providerLowerPath_)) {
         LOGE("Invalid share path with %{private}s", info.providerLowerPath_.c_str());
         return -EINVAL;
     }
-
-    vector<string> sharePathList{ uri };
-    UmountDelUris(sharePathList, info.currentUid_, info.targetBundleName_);
 
     for (size_t i = 0; i < info.sharePath_.size(); i++) {
         if (access(info.sharePath_[i].c_str(), F_OK) != 0) {
@@ -258,7 +255,7 @@ int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
         return ret;
     }
 
-    if ((ret = PreparePreShareDir(info, uri)) != 0) {
+    if ((ret = PreparePreShareDir(info)) != 0) {
         LOGE("PreparePreShareDir failed");
         return ret;
     }
