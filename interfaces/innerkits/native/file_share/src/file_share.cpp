@@ -16,6 +16,7 @@
 
 #include <dirent.h>
 #include <fcntl.h>
+#include <fstream>
 #include <stack>
 #include <sys/mount.h>
 #include <sys/stat.h>
@@ -246,6 +247,41 @@ static int32_t PreparePreShareDir(FileShareInfo &info, const string &uri)
     return 0;
 }
 
+static bool CheckIsMountPoint(const string &path)
+{
+    const string mountPonitInfo = "/proc/mounts";
+    std::ifstream inputStream(mountPonitInfo.c_str(), std::ios::in);
+    if (!inputStream.is_open()) {
+        return false;
+    }
+
+    string tmpLine;
+    while (std::getline(inputStream, tmpLine)) {
+        if (tmpLine.find(path) != std::string::npos) {
+            inputStream.close();
+            return true;
+        }
+    }
+
+    inputStream.close();
+    return false;
+}
+
+static int32_t CheckValidLowerPath(const string &path)
+{
+    int32_t ret = mount(path.c_str(), path.c_str(), nullptr, MS_BIND, nullptr);
+    if (ret != 0) {
+        LOGE("CheckValidLowerPath failed with %{public}d", errno);
+        return -errno;
+    }
+
+    if (CheckIsMountPoint(path) && SandboxHelper::CheckValidPath(path)) {
+        return 0;
+    }
+    umount2(path.c_str(), MNT_DETACH);
+    return -EINVAL;
+}
+
 int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
 {
     FileShareInfo info;
@@ -275,11 +311,18 @@ int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
             return -EINVAL;
         }
 
+        if (CheckValidLowerPath(info.providerLowerPath_.c_str()) != 0) {
+            LOGE("Invalid lower path with %{private}s", info.providerLowerPath_.c_str());
+            return -EINVAL;
+        }
+
         if (mount(info.providerLowerPath_.c_str(), info.sharePath_[i].c_str(),
                   nullptr, MS_BIND, nullptr) != 0) {
             LOGE("Mount failed with %{public}d", errno);
+            umount2(info.providerLowerPath_.c_str(), MNT_DETACH);
             return -errno;
         }
+        umount2(info.providerLowerPath_.c_str(), MNT_DETACH);
     }
     LOGI("Create Share File Successfully!");
     return 0;
