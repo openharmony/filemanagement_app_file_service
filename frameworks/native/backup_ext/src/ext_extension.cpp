@@ -206,7 +206,13 @@ ErrCode BackupExtExtension::PublishFile(const string &fileName)
 ErrCode BackupExtExtension::HandleBackup()
 {
     string usrConfig = extension_->GetUsrConfig();
-    AsyncTaskBackup(usrConfig);
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
+    auto cache = cachedEntity.Structuralize();
+    if (!cache.GetAllowToBackupRestore()) {
+        HILOGI("Application does not allow backup or restore");
+        return BError(BError::Codes::EXT_INVAL_ARG, "Application does not allow backup or restore").GetCode();
+    }
+    AsyncTaskOnBackup();
     return 0;
 }
 
@@ -322,22 +328,10 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
                               "Ext extension handle have been already released");
-
         try {
             BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
             auto cache = cachedEntity.Structuralize();
-            if (!cache.GetAllowToBackupRestore()) {
-                HILOGI("Application does not allow backup or restore");
-                return;
-            }
-            BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
-                                  "extension handle have been already released");
-
-            int ret = ptr->extension_->OnBackup();
-            if (ret == ERR_OK) {
-                ret = ptr->DoBackup(cache);
-            }
-
+            auto ret = ptr->DoBackup(cache);
             // REM: 处理返回结果 ret
             ptr->AppDone(ret);
             HILOGE("backup app done %{public}d", ret);
@@ -467,13 +461,11 @@ void BackupExtExtension::AsyncTaskRestore()
 
             if (ret == ERR_OK) {
                 HILOGI("after extra, do restore.");
-                BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
-                                      "extension handle have been already released");
-                ret = ptr->extension_->OnRestore();
+                ptr->AsyncTaskRestoreForUpgrade();
+            } else {
+                ptr->AppDone(ret);
+                ptr->DoClear();
             }
-
-            // 处理返回结果
-            ptr->AppDone(ret);
         } catch (const BError &e) {
             ptr->AppDone(e.GetCode());
         } catch (const exception &e) {
@@ -483,8 +475,6 @@ void BackupExtExtension::AsyncTaskRestore()
             HILOGE("Failed to restore the ext bundle");
             ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         }
-        // 清空恢复目录
-        ptr->DoClear();
     };
 
     // REM: 这里异步化了，需要做并发控制
@@ -503,12 +493,22 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
-        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                              "Ext extension handle have been already released");
         try {
+            BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                                  "Ext extension handle have been already released");
             BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
                                   "extension handle have been already released");
-            ptr->AppDone(ptr->extension_->OnRestore());
+
+            auto callBackup = [obj]() {
+                HILOGI("begin call restore");
+                auto extensionPtr = obj.promote();
+                BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                                      "Ext extension handle have been already released");
+                extensionPtr->AppDone(BError(BError::Codes::OK));
+                // 清空恢复目录
+                extensionPtr->DoClear();
+            };
+            ptr->extension_->OnRestore(callBackup);
         } catch (const BError &e) {
             ptr->AppDone(e.GetCode());
         } catch (const exception &e) {
@@ -518,8 +518,6 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
             HILOGE("Failed to restore the ext bundle");
             ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         }
-        // 清空恢复目录
-        ptr->DoClear();
     };
 
     // REM: 这里异步化了，需要做并发控制
@@ -562,5 +560,46 @@ void BackupExtExtension::AppDone(ErrCode errCode)
     if (ret != ERR_OK) {
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
     }
+}
+
+void BackupExtExtension::AsyncTaskOnBackup()
+{
+    auto task = [obj {wptr<BackupExtExtension>(this)}]() {
+        auto ptr = obj.promote();
+        try {
+            BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                                  "Ext extension handle have been already released");
+            BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
+                                  "extension handle have been already released");
+
+            auto callBackup = [obj]() {
+                HILOGI("begin call backup");
+                auto extensionPtr = obj.promote();
+                BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                                      "Ext extension handle have been already released");
+                BExcepUltils::BAssert(extensionPtr->extension_, BError::Codes::EXT_INVAL_ARG,
+                                      "extension handle have been already released");
+                extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
+            };
+
+            ptr->extension_->OnBackup(callBackup);
+        } catch (const BError &e) {
+            ptr->AppDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
 }
 } // namespace OHOS::FileManagement::Backup

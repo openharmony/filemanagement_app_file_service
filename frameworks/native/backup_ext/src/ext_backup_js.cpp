@@ -22,9 +22,9 @@
 #include <sys/types.h>
 
 #include "bundle_mgr_client.h"
+#include "js_extension_context.h"
 #include "js_runtime.h"
 #include "js_runtime_utils.h"
-#include "js_extension_context.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "napi_common_util.h"
@@ -54,6 +54,57 @@ static string GetSrcPath(const AppExecFwk::AbilityInfo &info)
         return ss.str();
     }
     return "";
+}
+
+static NativeValue *PromiseCallback(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    if (info == nullptr || info->functionInfo == nullptr || info->functionInfo->data == nullptr) {
+        HILOGI("PromiseCallback, Invalid input info.");
+        return nullptr;
+    }
+    void *data = info->functionInfo->data;
+    auto *callbackInfo = static_cast<CallBackInfo *>(data);
+    callbackInfo->callback();
+    info->functionInfo->data = nullptr;
+    return nullptr;
+}
+
+static bool CheckPromise(NativeValue *result)
+{
+    if (result == nullptr) {
+        HILOGE("CheckPromise, result is null, no need to call promise.");
+        return false;
+    }
+    if (!result->IsPromise()) {
+        HILOGE("CheckPromise, result is not promise, no need to call promise.");
+        return false;
+    }
+    return true;
+}
+
+static bool CallPromise(AbilityRuntime::JsRuntime &jsRuntime, NativeValue *result, CallBackInfo *callbackInfo)
+{
+    auto *retObj = AbilityRuntime::ConvertNativeValueTo<NativeObject>(result);
+    if (retObj == nullptr) {
+        HILOGI("CallPromise, Failed to convert native value to NativeObject.");
+        return false;
+    }
+    NativeValue *then = retObj->GetProperty("then");
+    if (then == nullptr) {
+        HILOGI("CallPromise, Failed to get property: then.");
+        return false;
+    }
+    if (!then->IsCallable()) {
+        HILOGI("CallPromise, property then is not callable.");
+        return false;
+    }
+    AbilityRuntime::HandleScope handleScope(jsRuntime);
+    auto &nativeEngine = jsRuntime.GetNativeEngine();
+    auto promiseCallback =
+        nativeEngine.CreateFunction("promiseCallback", strlen("promiseCallback"), PromiseCallback, callbackInfo);
+    NativeValue *argv[1] = {promiseCallback};
+    nativeEngine.CallFunction(result, then, argv, 1);
+    return true;
 }
 
 void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
@@ -93,8 +144,8 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
 
 void ExtBackupJs::ExportJsContext(void)
 {
-    auto& engine = jsRuntime_.GetNativeEngine();
-    NativeObject* obj = AbilityRuntime::ConvertNativeValueTo<NativeObject>(jsObj_->Get());
+    auto &engine = jsRuntime_.GetNativeEngine();
+    NativeObject *obj = AbilityRuntime::ConvertNativeValueTo<NativeObject>(jsObj_->Get());
     if (obj == nullptr) {
         HILOGE("Failed to get BackupExtAbility object");
         return;
@@ -107,7 +158,7 @@ void ExtBackupJs::ExportJsContext(void)
     }
 
     HILOGI("CreateBackupExtAbilityContext");
-    NativeValue* contextObj = CreateJsExtensionContext(engine, context);
+    NativeValue *contextObj = CreateJsExtensionContext(engine, context);
     auto contextRef = jsRuntime_.LoadSystemModule("application.ExtensionContext", &contextObj, 1);
     contextObj = contextRef->Get();
     HILOGI("Bind context");
@@ -121,9 +172,9 @@ void ExtBackupJs::ExportJsContext(void)
     }
 
     HILOGI("Set backup extension ability context pointer is nullptr: %{public}d", context.get() == nullptr);
-    auto releaseContext = [](NativeEngine*, void* data, void*) {
+    auto releaseContext = [](NativeEngine *, void *data, void *) {
         HILOGI("Finalizer for weak_ptr backup extension ability context is called");
-        delete static_cast<std::weak_ptr<AbilityRuntime::Context>*>(data);
+        delete static_cast<std::weak_ptr<AbilityRuntime::Context> *>(data);
     };
     nativeObj->SetNativePointer(new std::weak_ptr<AbilityRuntime::Context>(context), releaseContext, nullptr);
 }
@@ -166,25 +217,29 @@ ExtBackupJs *ExtBackupJs::Create(const unique_ptr<AbilityRuntime::Runtime> &runt
     return new ExtBackupJs(static_cast<AbilityRuntime::JsRuntime &>(*runtime));
 }
 
-ErrCode ExtBackupJs::OnBackup(void)
+ErrCode ExtBackupJs::OnBackup(function<void()> callback)
 {
     HILOGI("BackupExtensionAbility(JS) OnBackup.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
                           "The app does not provide the onRestore interface.");
-
-    auto retParser = [](NativeEngine &engine, NativeValue *result) -> bool {
-        return true;
+    callbackInfo_ = std::make_shared<CallBackInfo>(callback);
+    auto retParser = [jsRuntime {&jsRuntime_}, callback, callbackInfo {callbackInfo_}](NativeEngine &engine,
+                                                                                       NativeValue *result) -> bool {
+        if (!CheckPromise(result)) {
+            return false;
+        }
+        HILOGI("CheckPromise(JS) OnBackup ok.");
+        return CallPromise(*jsRuntime, result, callbackInfo.get());
     };
 
     auto errCode = CallJsMethod("onBackup", jsRuntime_, jsObj_.get(), {}, retParser);
     if (errCode != ERR_OK) {
         HILOGE("CallJsMethod error, code:%{public}d.", errCode);
-        return errCode;
     }
-    return ERR_OK;
+    return errCode;
 }
 
-ErrCode ExtBackupJs::OnRestore(void)
+ErrCode ExtBackupJs::OnRestore(function<void()> callback)
 {
     HILOGI("BackupExtensionAbility(JS) OnRestore.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
@@ -201,17 +256,21 @@ ErrCode ExtBackupJs::OnRestore(void)
         argv.push_back(param);
         return true;
     };
-
-    auto retParser = [](NativeEngine &engine, NativeValue *result) -> bool {
-        return true;
+    callbackInfo_ = std::make_shared<CallBackInfo>(callback);
+    auto retParser = [jsRuntime {&jsRuntime_}, callback, callbackInfo {callbackInfo_}](NativeEngine &engine,
+                                                                                       NativeValue *result) -> bool {
+        if (!CheckPromise(result)) {
+            return false;
+        }
+        HILOGI("CheckPromise(JS) OnRestore ok.");
+        return CallPromise(*jsRuntime, result, callbackInfo.get());
     };
 
     auto errCode = CallJsMethod("onRestore", jsRuntime_, jsObj_.get(), argParser, retParser);
     if (errCode != ERR_OK) {
         HILOGE("CallJsMethod error, code:%{public}d.", errCode);
-        return errCode;
     }
-    return ERR_OK;
+    return errCode;
 }
 
 static int DoCallJsMethod(CallJsParam *param)

@@ -92,6 +92,8 @@ private:
      */
     void AsyncTaskRestore();
 
+    void AsyncTaskOnBackup();
+
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;

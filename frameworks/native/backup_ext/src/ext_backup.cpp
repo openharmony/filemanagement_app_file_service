@@ -217,13 +217,13 @@ bool ExtBackup::WasFromSpeicalVersion(void)
     return false;
 }
 
-ErrCode ExtBackup::OnBackup(void)
+ErrCode ExtBackup::OnBackup(function<void()> callback)
 {
     HILOGI("BackupExtensionAbility(base) OnBackup.");
     return ERR_OK;
 }
 
-ErrCode ExtBackup::OnRestore(void)
+ErrCode ExtBackup::OnRestore(function<void()> callback)
 {
     HILOGI("BackupExtensionAbility(base) OnRestore.");
     return ERR_OK;
