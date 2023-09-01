@@ -25,11 +25,10 @@
 namespace OHOS::FileManagement::Backup {
 
 class ExtBackup;
-using CreatorFunc = std::function<ExtBackup* (const std::unique_ptr<AbilityRuntime::Runtime>& runtime)>;
+using CreatorFunc = std::function<ExtBackup *(const std::unique_ptr<AbilityRuntime::Runtime> &runtime)>;
 
 class ExtBackup : public AbilityRuntime::ExtensionBase<ExtBackupContext> {
 public:
-
     /**
      * @brief Called when this extension is started. You must override this function if you want to perform some
      *        initialization operations during extension startup.
@@ -87,7 +86,6 @@ public:
     void OnDisconnect(const AAFwk::Want &want) override;
 
 public:
-
     /**
      * @brief Create Extension.
      *
@@ -120,12 +118,12 @@ public:
     /**
      * @brief do backup. Subclasses can inherit to implement their own custom functionality.
      */
-    virtual ErrCode OnBackup(void);
+    virtual ErrCode OnBackup(std::function<void()> callback);
 
     /**
      * @brief Called do restore.
      */
-    virtual ErrCode OnRestore(void);
+    virtual ErrCode OnRestore(std::function<void()> callback);
 
     bool WasFromSpeicalVersion(void);
 
@@ -133,18 +131,16 @@ public:
     ExtBackup() = default;
     ~ExtBackup() override = default;
 
-    static void SetCreator(const CreatorFunc& creator);
+    static void SetCreator(const CreatorFunc &creator);
 
 protected:
-
     std::string appVersionStr_;
     int appVersionCode_;
     int restoreType_;
 
 private:
-
     BConstants::ExtensionAction VerifyAndGetAction(const AAFwk::Want &want,
-            std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo);
+                                                   std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo);
 
     ErrCode GetParament(const AAFwk::Want &want);
 

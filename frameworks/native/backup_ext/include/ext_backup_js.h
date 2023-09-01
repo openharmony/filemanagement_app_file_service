@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_BACKUP_EXT_BACKUP_JS_H
 #define OHOS_FILEMGMT_BACKUP_EXT_BACKUP_JS_H
 
+#include <memory>
 #include <string_view>
 #include <tuple>
 #include <vector>
@@ -52,6 +53,12 @@ struct CallJsParam {
     }
 };
 
+struct CallBackInfo {
+    std::function<void()> callback;
+
+    CallBackInfo(std::function<void()> callbackIn) : callback(callbackIn) {}
+};
+
 class ExtBackupJs : public ExtBackup {
 public:
     /**
@@ -78,13 +85,17 @@ public:
 
     /**
      * @brief Call the app's OnBackup.
+     *
+     * @param callback The callback.
      */
-    ErrCode OnBackup(void) override;
+    ErrCode OnBackup(std::function<void()> callback) override;
 
     /**
      * @brief Call the app's OnRestore.
+     *
+     * @param callback The callback.
      */
-    ErrCode OnRestore(void) override;
+    ErrCode OnRestore(std::function<void()> callback) override;
 
 public:
     explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
@@ -106,6 +117,7 @@ private:
 
     AbilityRuntime::JsRuntime &jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
+    std::shared_ptr<CallBackInfo> callbackInfo_;
 };
 } // namespace OHOS::FileManagement::Backup
 
