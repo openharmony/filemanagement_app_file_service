@@ -43,15 +43,27 @@ Json::Value Stat2JsonValue(struct stat sta)
 struct stat JsonValue2Stat(const Json::Value &value)
 {
     struct stat sta = {};
+    
+    if (!value.isObject()) {
+        return sta;
+    }
 
-    sta.st_size = value.isMember("st_size") ? value["st_size"].asInt64() : 0;
+    sta.st_size = value.isMember("st_size") && value["st_size"].isInt64() ? value["st_size"].asInt64() : 0;
     if (value.isMember("st_atim")) {
-        sta.st_atim.tv_sec = value["st_atim"].isMember("tv_sec") ? value["st_atim"]["tv_sec"].asInt64() : 0;
-        sta.st_atim.tv_nsec = value["st_atim"].isMember("tv_nsec") ? value["st_atim"]["tv_nsec"].asInt64() : 0;
+        sta.st_atim.tv_sec = value["st_atim"].isMember("tv_sec") && value["st_atim"]["tv_sec"].isInt64()
+                                 ? value["st_atim"]["tv_sec"].asInt64()
+                                 : 0;
+        sta.st_atim.tv_nsec = value["st_atim"].isMember("tv_nsec") && value["st_atim"]["tv_nsec"].isInt64()
+                                  ? value["st_atim"]["tv_nsec"].asInt64()
+                                  : 0;
     }
     if (value.isMember("st_mtim")) {
-        sta.st_mtim.tv_sec = value["st_mtim"].isMember("tv_sec") ? value["st_mtim"]["tv_sec"].asInt64() : 0;
-        sta.st_mtim.tv_nsec = value["st_mtim"].isMember("tv_nsec") ? value["st_mtim"]["tv_nsec"].asInt64() : 0;
+        sta.st_mtim.tv_sec = value["st_mtim"].isMember("tv_sec") && value["st_mtim"]["tv_sec"].isInt64()
+                                 ? value["st_mtim"]["tv_sec"].asInt64()
+                                 : 0;
+        sta.st_mtim.tv_nsec = value["st_mtim"].isMember("tv_nsec") && value["st_mtim"]["tv_nsec"].isInt64()
+                                  ? value["st_mtim"]["tv_nsec"].asInt64()
+                                  : 0;
     }
 
     return sta;
