@@ -252,9 +252,16 @@ static bool CheckIsMountPoint(const string &path)
         return false;
     }
 
+    string encodePath = path;
+    size_t pos = encodePath.find(" ");
+    while (pos != string::npos) {
+        encodePath.replace(pos, 1, "\\040");
+        pos = encodePath.find(" ", pos + 1);
+    }
+
     string tmpLine;
     while (std::getline(inputStream, tmpLine)) {
-        if (tmpLine.find(path) != std::string::npos) {
+        if (tmpLine.find(encodePath) != std::string::npos) {
             inputStream.close();
             return true;
         }
