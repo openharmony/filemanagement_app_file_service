@@ -43,7 +43,7 @@ Json::Value Stat2JsonValue(struct stat sta)
 struct stat JsonValue2Stat(const Json::Value &value)
 {
     struct stat sta = {};
-    
+
     if (!value.isObject()) {
         return sta;
     }
@@ -132,7 +132,9 @@ set<string> BJsonEntityExtManage::GetExtManage() const
 
     set<string> info;
     for (Json::Value &item : obj_) {
-        string fileName = item.isMember("fileName") ? item["fileName"].asString() : "";
+        string fileName = item.isObject() && item.isMember("fileName") && item["fileName"].isString()
+                              ? item["fileName"].asString()
+                              : "";
         info.emplace(fileName);
     }
     return info;
@@ -151,21 +153,22 @@ map<string, pair<string, struct stat>> BJsonEntityExtManage::GetExtManageInfo() 
 
     map<string, pair<string, struct stat>> info;
     for (const Json::Value &item : obj_) {
-        string fileName = item.isMember("fileName") ? item["fileName"].asString() : "";
 
-        if (!item.isMember("information")) {
+        if (!(item.isObject() && item.isMember("information"))) {
             continue;
         }
 
         struct stat sta = {};
-        string path = item["information"].isMember("path") ? item["information"]["path"].asString() : "";
+        string path = item["information"].isMember("path") && item["information"]["path"].isString()
+                          ? item["information"]["path"].asString()
+                          : "";
         if (path == BConstants::RESTORE_INSTALL_PATH) {
             throw BError(BError::Codes::UTILS_INVAL_JSON_ENTITY, "Failed to get ext manage info, invalid path");
         }
         if (item["information"].isMember("stat")) {
             sta = JsonValue2Stat(item["information"]["stat"]);
         }
-
+        string fileName = item.isMember("fileName") && item["fileName"].isString() ? item["fileName"].asString() : "";
         if (!fileName.empty() && !path.empty()) {
             info.emplace(fileName, make_pair(path, sta));
         }
@@ -190,7 +193,9 @@ bool BJsonEntityExtManage::SetHardLinkInfo(const string origin, const set<string
     }
 
     for (Json::Value &item : obj_) {
-        string fileName = item.isMember("fileName") ? item["fileName"].asString() : "";
+        string fileName = item.isObject() && item.isMember("fileName") && item["fileName"].isString()
+                              ? item["fileName"].asString()
+                              : "";
         if (origin == fileName) {
             for (const auto &lk : hardLinks) {
                 item["hardlinks"].append(lk);
@@ -219,13 +224,18 @@ const set<string> BJsonEntityExtManage::GetHardLinkInfo(const string origin)
 
     set<string> hardlinks;
     for (const Json::Value &item : obj_) {
-        string fileName = item.isMember("fileName") ? item["fileName"].asString() : "";
+        if (!item.isObject()) {
+            continue;
+        }
+        string fileName = item.isMember("fileName") && item["fileName"].isString() ? item["fileName"].asString() : "";
         if (origin == fileName) {
             if (!(item.isMember("hardlinks") && item["hardlinks"].isArray())) {
                 break;
             }
             for (const auto &lk : item["hardlinks"]) {
-                hardlinks.emplace(lk.asString());
+                if (lk.isString()) {
+                    hardlinks.emplace(lk.asString());
+                }
             }
         }
     }
