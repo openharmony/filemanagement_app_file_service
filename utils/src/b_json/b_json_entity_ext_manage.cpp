@@ -153,7 +153,6 @@ map<string, pair<string, struct stat>> BJsonEntityExtManage::GetExtManageInfo() 
 
     map<string, pair<string, struct stat>> info;
     for (const Json::Value &item : obj_) {
-
         if (!(item.isObject() && item.isMember("information"))) {
             continue;
         }
@@ -228,14 +227,15 @@ const set<string> BJsonEntityExtManage::GetHardLinkInfo(const string origin)
             continue;
         }
         string fileName = item.isMember("fileName") && item["fileName"].isString() ? item["fileName"].asString() : "";
-        if (origin == fileName) {
-            if (!(item.isMember("hardlinks") && item["hardlinks"].isArray())) {
-                break;
-            }
-            for (const auto &lk : item["hardlinks"]) {
-                if (lk.isString()) {
-                    hardlinks.emplace(lk.asString());
-                }
+        if (origin != fileName) {
+            continue;
+        }
+        if (!(item.isMember("hardlinks") && item["hardlinks"].isArray())) {
+            break;
+        }
+        for (const auto &lk : item["hardlinks"]) {
+            if (lk.isString()) {
+                hardlinks.emplace(lk.asString());
             }
         }
     }
