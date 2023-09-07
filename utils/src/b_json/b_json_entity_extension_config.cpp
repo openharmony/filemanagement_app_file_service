@@ -96,6 +96,16 @@ bool BJsonEntityExtensionConfig::GetAllowToBackupRestore() const
     return obj_["allowToBackupRestore"].asBool();
 }
 
+bool BJsonEntityExtensionConfig::GetFullBackupOnly() const
+{
+    if (!obj_ || !obj_.isMember("fullBackupOnly") || !obj_["fullBackupOnly"].isBool()) {
+        HILOGE("Failed to init field fullBackupOnly");
+        return false;
+    }
+
+    return obj_["fullBackupOnly"].asBool();
+}
+
 string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, any option)
 {
     if (!BackupPara().GetBackupDebugOverrideExtensionConfig()) {

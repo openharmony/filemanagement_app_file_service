@@ -109,6 +109,13 @@ public:
     virtual bool AllowToBackupRestore() const;
 
     /**
+     * @brief Get whether FullBackupOnly or not
+     *
+     * @return FullBackupOnly ro not
+     */
+    virtual bool UseFullBackupOnly(void) const;
+
+    /**
      * @brief Get the user configure
      *
      * @return user configure

@@ -312,7 +312,7 @@ int BackupExtExtension::DoRestore(const string &fileName)
     string tarName = path + fileName;
 
     auto tarballFunc = BTarballFactory::Create("cmdline", tarName);
-    if (extension_->WasFromSpeicalVersion()) {
+    if (extension_->WasFromSpeicalVersion() || extension_->UseFullBackupOnly()) {
         (tarballFunc->untar)(path);
     } else {
         (tarballFunc->untar)("/");
