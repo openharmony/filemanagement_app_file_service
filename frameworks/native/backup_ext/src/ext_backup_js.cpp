@@ -223,10 +223,11 @@ ErrCode ExtBackupJs::OnBackup(function<void()> callback)
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
                           "The app does not provide the onRestore interface.");
     callbackInfo_ = std::make_shared<CallBackInfo>(callback);
-    auto retParser = [jsRuntime {&jsRuntime_}, callback, callbackInfo {callbackInfo_}](NativeEngine &engine,
+    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](NativeEngine &engine,
                                                                                        NativeValue *result) -> bool {
         if (!CheckPromise(result)) {
-            return false;
+            callbackInfo->callback();
+            return true;
         }
         HILOGI("CheckPromise(JS) OnBackup ok.");
         return CallPromise(*jsRuntime, result, callbackInfo.get());
@@ -257,10 +258,11 @@ ErrCode ExtBackupJs::OnRestore(function<void()> callback)
         return true;
     };
     callbackInfo_ = std::make_shared<CallBackInfo>(callback);
-    auto retParser = [jsRuntime {&jsRuntime_}, callback, callbackInfo {callbackInfo_}](NativeEngine &engine,
+    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](NativeEngine &engine,
                                                                                        NativeValue *result) -> bool {
         if (!CheckPromise(result)) {
-            return false;
+            callbackInfo->callback();
+            return true;
         }
         HILOGI("CheckPromise(JS) OnRestore ok.");
         return CallPromise(*jsRuntime, result, callbackInfo.get());

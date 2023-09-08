@@ -113,6 +113,19 @@ bool ExtBackup::AllowToBackupRestore() const
     return false;
 }
 
+bool ExtBackup::UseFullBackupOnly(void) const
+{
+    string usrConfig = GetUsrConfig();
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
+    auto cache = cachedEntity.Structuralize();
+    if (cache.GetFullBackupOnly()) {
+        HILOGI("backup use fullBackupOnly.");
+        return true;
+    }
+    HILOGI("backup not use fullBackupOnly.");
+    return false;
+}
+
 BConstants::ExtensionAction ExtBackup::GetExtensionAction() const
 {
     return extAction_;

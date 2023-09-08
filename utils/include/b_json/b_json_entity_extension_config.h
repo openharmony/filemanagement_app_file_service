@@ -48,6 +48,13 @@ public:
      */
     bool GetAllowToBackupRestore() const;
 
+    /**
+     * @brief 从JSon对象中获取备份标志
+     *
+     * @return 备份标志: 是否恢复到根目录进行覆盖
+     */
+    bool GetFullBackupOnly() const;
+
 public:
     std::string GetJSonSource(std::string_view jsonFromRealWorld, std::any option);
 
