@@ -143,6 +143,7 @@ string Service::VerifyCallerAndGetCallerName()
         session_->VerifyBundleName(hapTokenInfo.bundleName);
         return hapTokenInfo.bundleName;
     } else {
+        HILOGE("tokenID = %{private}d", tokenCaller);
         throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
     }
 }
@@ -238,6 +239,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         session_->SetSessionUserId(userId);
     }
     VerifyCaller(IServiceReverse::Scenario::RESTORE);
+    auto restoreInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
     BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     auto bundleInfos = cache.GetBundleInfos();
@@ -256,6 +258,13 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             session_->SetBundleVersionName(bundleInfo.name, bundleInfo.versionName);
         }
     }
+    for (auto info : restoreInfos) {
+        if (info.allToBackup == false) {
+            session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_REFUSED_ACT),
+                                                                       info.name);
+            session_->RemoveExtInfo(info.name);
+        }
+    }
     Start();
     Finish();
     OnStartSched();
@@ -266,7 +275,14 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
 {
     HILOGI("Begin");
     VerifyCaller(IServiceReverse::Scenario::BACKUP);
+    auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
     session_->AppendBundles(bundleNames);
+    for (auto info : backupInfos) {
+        if (info.allToBackup == false) {
+            session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_REFUSED_ACT), info.name);
+            session_->RemoveExtInfo(info.name);
+        }
+    }
     Start();
     Finish();
     OnStartSched();
