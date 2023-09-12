@@ -57,6 +57,7 @@ struct MediaUriInfo {
 };
 
 std::unordered_map<std::string, std::string> SandboxHelper::sandboxPathMap_;
+std::mutex SandboxHelper::mapMutex_;
 
 string SandboxHelper::Encode(const string &uri)
 {
@@ -126,27 +127,37 @@ static string GetLowerPath(string &lowerPathHead, const string &lowerPathTail,
     return lowerPathHead + lowerPathTail;
 }
 
-static void GetSandboxPathMap(unordered_map<string, string> &sandboxPathMap)
+bool SandboxHelper::GetSandboxPathMap()
 {
+    lock_guard<mutex> lock(mapMutex_);
+    if (sandboxPathMap_.size() > 0) {
+        return true;
+    }
+
     nlohmann::json jsonObj;
     int ret = JsonUtils::GetJsonObjFromPath(jsonObj, SANDBOX_JSON_FILE_PATH);
     if (ret != 0) {
         LOGE("Get json object failed from %{public}s with %{public}d", SANDBOX_JSON_FILE_PATH.c_str(), ret);
-        return;
+        return false;
     }
 
     if (jsonObj.find(MOUNT_PATH_MAP_KEY) == jsonObj.end()) {
         LOGE("Json object find mount path map failed");
-        return;
+        return false;
     }
 
     nlohmann::json mountPathMap = jsonObj[MOUNT_PATH_MAP_KEY];
     for (size_t i = 0; i < mountPathMap.size(); i++) {
         string srcPath = mountPathMap[i][PHYSICAL_PATH_KEY];
         string sandboxPath = mountPathMap[i][SANDBOX_PATH_KEY];
-        sandboxPathMap[sandboxPath] = srcPath;
+        sandboxPathMap_[sandboxPath] = srcPath;
     }
-    return;
+
+    if (sandboxPathMap_.size() == 0) {
+        return false;
+    }
+
+    return true;
 }
 
 static int32_t GetPathSuffix(const std::string &path, string &pathSuffix)
@@ -270,13 +281,13 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
         return -EINVAL;
     }
 
-    string lowerPathTail = "";
-    string lowerPathHead = "";
-
-    if (sandboxPathMap_.size() == 0) {
-        GetSandboxPathMap(sandboxPathMap_);
+    if (!GetSandboxPathMap()) {
+        LOGE("GetSandboxPathMap failed");
+        return -EINVAL;
     }
 
+    string lowerPathTail = "";
+    string lowerPathHead = "";
     string::size_type curPrefixMatchLen = 0;
     for (auto it = sandboxPathMap_.begin(); it != sandboxPathMap_.end(); it++) {
         string sandboxPathPrefix = it->first;
@@ -292,6 +303,7 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
     }
 
     if (lowerPathHead == "") {
+        LOGE("lowerPathHead is invalid");
         return -EINVAL;
     }
 
