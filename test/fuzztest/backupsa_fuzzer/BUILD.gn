@@ -19,7 +19,7 @@ import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ##############################fuzztest##########################################
 ohos_fuzztest("BackupSaFuzzTest") {
-  module_out_path = "filemanagement/app_file_service"
+  module_out_path = "app_file_service/app_file_service"
   fuzz_config_file = "${app_file_service_path}/test/fuzztest/backupsa_fuzzer"
   include_dirs = [
     "${app_file_service_path}/services/backup_sa/include/module_ipc",
