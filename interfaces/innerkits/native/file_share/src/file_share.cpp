@@ -48,6 +48,7 @@ const string DATA_APP_EL2_PATH = "/data/service/el2/";
 const string SHARE_R_PATH = "/r/";
 const string SHARE_RW_PATH = "/rw/";
 const string SHARE_PATH = "/share/";
+const string EXTERNAL_PATH = "/mnt/data/external";
 }
 
 struct FileShareInfo {
@@ -286,6 +287,12 @@ static int32_t CheckValidLowerPath(const string &path)
     return -EINVAL;
 }
 
+static bool NotRequiredBindMount(const FileShareInfo& info, uint32_t flag)
+{
+    return (info.currentUid_ == "0" ||
+        ((flag & PERSISTABLE_URI_PERMISSION) != 0 && info.providerLowerPath_.find(EXTERNAL_PATH) != 0));
+}
+
 int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
 {
     FileShareInfo info;
@@ -293,7 +300,7 @@ int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
     LOGD("CreateShareFile begin with uri %{private}s decodeUri %{private}s",
          uri.c_str(), decodeUri.c_str());
     int32_t ret = GetFileShareInfo(decodeUri, tokenId, flag, info);
-    if (ret != 0 || info.currentUid_ == "0" || (flag & PERSISTABLE_URI_PERMISSION) != 0) {
+    if (ret != 0 || NotRequiredBindMount(info, flag)) {
         LOGE("Failed to get FileShareInfo with %{public}d", ret);
         return ret;
     }
