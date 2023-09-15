@@ -29,6 +29,7 @@
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
 #include "module_external/bms_adapter.h"
+#include "module_external/sms_adapter.h"
 #include "module_ipc/service.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -563,4 +564,63 @@ std::string SvcSessionManager::GetBundleVersionName(const std::string &bundleNam
     auto it = GetBackupExtNameMap(bundleName);
     return it->second.versionName;
 }
-} // namespace OHOS::FileManagement::Backup
+
+uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
+{
+    const uint32_t defaultTimeout = 30; /* 30 second */
+    const uint32_t processRate = 3 * 1024 * 1024; /* 3M/s */
+    const uint32_t multiple = 3;
+    const uint32_t invertMillisecond = 1000;
+    StorageManager::BundleStats stat;
+    uint32_t timeout;
+    uint64_t appSize;
+
+    try {
+        stat = StorageMgrAdapter::GetBundleStats(bundleName);
+        appSize = (stat.appSize_ + stat.cacheSize_ + stat.dataSize_);
+        /* % UINT_MAX force conver uint64 to uint32 */
+        /* timeout = (AppSize / 3Ms) * 3 + 30 */
+        timeout = (uint32_t)(defaultTimeout + (appSize / processRate) * multiple % UINT_MAX);
+        HILOGI("appSize=%{public}lld, cacheSize=%{public}lld, dataSize=%{public}lld, timeout=%{public}u(s)",
+            stat.appSize_, stat.cacheSize_, stat.dataSize_, timeout);
+    } catch (const BError &e) {
+        HILOGE("Failed to get app<%{public}s> dataInfo, default time=%{public}u, err=%{public}d",
+            bundleName.c_str(), defaultTimeout, e.GetCode());
+        timeout = defaultTimeout;
+    }
+    timeout = timeout * invertMillisecond % UINT_MAX; /* conver second to millisecond */
+    return timeout;
+}
+
+void SvcSessionManager::BundleExtTimerStart (
+    const std::string &bundleName,
+    const Utils::Timer::TimerCallback& callback)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    uint32_t timeout = CalAppProcessTime(bundleName);
+
+    auto it = GetBackupExtNameMap(bundleName);
+    if (it->second.timerStatus == false) {
+        it->second.timerStatus = true;
+        it->second.extTimerId = extBundleTimer.Register(callback, timeout, true);
+    }
+}
+
+void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    if (it->second.timerStatus == true) {
+        it->second.timerStatus = false;
+        extBundleTimer.Unregister(it->second.extTimerId);
+    }
+}
+
+} // namespace OHOS::FileManagement::Backup-

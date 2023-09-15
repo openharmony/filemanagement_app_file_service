@@ -342,6 +342,8 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd)
             }
             // 通知extension清空缓存
             proxy->HandleClear();
+            // 清除Timer
+            session_->BundleExtTimerStop(callerName);
             // 通知TOOL 备份完成
             session_->GetServiceReverseProxy()->BackupOnBundleFinished(BError(BError::Codes::OK), callerName);
             // 断开extension
@@ -373,6 +375,7 @@ ErrCode Service::AppDone(ErrCode errCode)
                 throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
             }
             proxy->HandleClear();
+            session_->BundleExtTimerStop(callerName);
             IServiceReverse::Scenario scenario = session_->GetScenario();
             if (scenario == IServiceReverse::Scenario::BACKUP) {
                 session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, callerName);
@@ -472,20 +475,21 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 void Service::OnBackupExtensionDied(const string &&bundleName, ErrCode ret)
 {
     try {
-        HILOGI("extension died. Died bundleName = %{public}s", bundleName.data());
         string callName = move(bundleName);
         session_->VerifyBundleName(callName);
-        auto scenario = session_->GetScenario();
-        if (scenario == IServiceReverse::Scenario::BACKUP) {
-            session_->GetServiceReverseProxy()->BackupOnBundleFinished(ret, callName);
-        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-            session_->GetServiceReverseProxy()->RestoreOnBundleFinished(ret, callName);
-        }
+
+        /* Standard Log Output, for testers */
+        HILOGE("Backup <%{public}s> Extension Process Died", callName.data());
+        /* Clear Timer */
+        session_->BundleExtTimerStop(callName);
         auto backUpConnection = session_->GetExtConnection(callName);
         if (backUpConnection->IsExtAbilityConnected()) {
             backUpConnection->DisconnectBackupExtAbility();
         }
-        ClearSessionAndSchedInfo(bundleName);
+        /* Clear Session before notice client finish event */
+        ClearSessionAndSchedInfo(callName);
+        /* Notice Client Ext Ability Process Died */
+        NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
     } catch (const BError &e) {
         return;
     } catch (const exception &e) {
@@ -580,10 +584,41 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
     }
 }
 
+void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
+{
+    auto scenario = session_->GetScenario();
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
+    };
+    /* If all bundle ext process finish, notice client. */
+    OnAllBundlesFinished(BError(BError::Codes::OK));
+}
+
 void Service::ExtConnectDone(string bundleName)
 {
+    /* Callback for App Ext Timeout Process. */
+    auto timeoutCallback = [ptr {wptr(this)}, bundleName]() {
+        auto thisPtr = ptr.promote();
+        if (!thisPtr) {
+            HILOGW("this pointer is null.");
+            return;
+        }
+        auto sessionPtr = ptr->session_;
+        auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
+        /* Standard Log Output, for testers */
+        HILOGE("Backup <%{public}s> Extension Process Timeout", bundleName.data());
+        sessionPtr->BundleExtTimerStop(bundleName);
+        sessionConnection->DisconnectBackupExtAbility();
+        /* Must clear bundle session before call NoticeClientFinish. */
+        thisPtr->ClearSessionAndSchedInfo(bundleName);
+        thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+    };
+
     try {
         HILOGE("begin %{public}s", bundleName.data());
+        session_->BundleExtTimerStart(bundleName, timeoutCallback);
         session_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::RUNNING);
         sched_->Sched(bundleName);
     } catch (const BError &e) {
