@@ -177,7 +177,9 @@ namespace OHOS::AppFileService::ModuleFileUri {
         uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleA, 0);
 
         int32_t flag = 3;
-        int32_t ret = CreateShareFile(uri, tokenId, flag);
+        vector<string> uriList(1, uri);
+        vector<int32_t> retList;
+        int32_t ret = CreateShareFile(uriList, tokenId, flag, retList);
         EXPECT_EQ(ret, E_OK);
         
         string rltStr = PATH_SHARE + MODE_R + bundleB + actStr;
