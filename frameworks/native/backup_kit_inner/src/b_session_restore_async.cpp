@@ -121,6 +121,7 @@ void BSessionRestoreAsync::OnBackupServiceDied()
 
 void BSessionRestoreAsync::PopBundleInfo()
 {
+    HILOGE("Start");
     AppendBundleInfo info;
     isAppend_.store(true);
     {
@@ -137,6 +138,7 @@ void BSessionRestoreAsync::PopBundleInfo()
 
 void BSessionRestoreAsync::AppendBundlesImpl(AppendBundleInfo info)
 {
+    HILOGD("Start");
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
         return OnBundleStarted(BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode(),
@@ -152,9 +154,12 @@ void BSessionRestoreAsync::AppendBundlesImpl(AppendBundleInfo info)
                                              .onBackupServiceDied = onBackupServiceDied};
     int32_t res = proxy->InitRestoreSession(new ServiceReverse(callbacksTmp));
     if (res != 0) {
-        HILOGE("Failed to Restore because of %{public}d", res);
+        HILOGE("Failed to Init Restore because of %{public}d", res);
         BError(BError::Codes::SDK_BROKEN_IPC, "Failed to int restore session").GetCode();
         return OnBundleStarted(res, info.bundlesToRestore);
+    }
+    for (auto &bundleName : info.bundlesToRestore) {
+        HILOGD("Append bundleName: %{public}s", bundleName.c_str());
     }
     res =
         proxy->AppendBundlesRestoreSession(move(info.remoteCap), info.bundlesToRestore, info.restoreType, info.userId);

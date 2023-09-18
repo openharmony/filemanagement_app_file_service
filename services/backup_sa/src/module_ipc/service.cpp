@@ -246,6 +246,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
     }
     session_->AppendBundles(bundleNames);
     for (auto bundleName : bundleNames) {
+        HILOGD("bundleName: %{public}s", bundleName.c_str());
         for (auto &&bundleInfo : bundleInfos) {
             if (bundleInfo.name != bundleName) {
                 continue;

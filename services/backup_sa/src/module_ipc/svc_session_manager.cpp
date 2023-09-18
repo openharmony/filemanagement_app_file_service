@@ -388,6 +388,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
     }
 
     for (auto &&bundleName : bundleNames) {
+        HILOGD("bundleName: %{public}s", bundleName.c_str());
         BackupExtInfo info {};
         info.backUpConnection = GetBackupExtAbility(bundleName);
         impl_.backupExtNameMap.insert(make_pair(bundleName, info));
