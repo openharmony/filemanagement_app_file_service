@@ -197,7 +197,9 @@ void SvcSessionManager::RemoveExtInfo(const string &bundleName)
         return;
     }
     impl_.backupExtNameMap.erase(it);
-    extConnectNum_--;
+    if (extConnectNum_) {
+        extConnectNum_--;
+    }
 }
 
 wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &bundleName)
