@@ -79,6 +79,8 @@ public:
         EXT_BROKEN_FRAMEWORK = 0x5001,
         EXT_BROKEN_BACKUP_SA = 0x5002,
         EXT_BROKEN_IPC = 0x5003,
+        EXT_ABILITY_DIED = 0x5004,
+        EXT_ABILITY_TIMEOUT = 0x5005,
     };
 
     enum BackupErrorCode {
@@ -203,6 +205,8 @@ private:
         {Codes::EXT_BROKEN_FRAMEWORK, "Extension found the appex framework is broken"},
         {Codes::EXT_BROKEN_BACKUP_SA, "Extension found the backup SA died"},
         {Codes::EXT_BROKEN_IPC, "Extension failed to do IPC"},
+        {Codes::EXT_ABILITY_TIMEOUT, "Extension process timeout"},
+        {Codes::EXT_ABILITY_DIED, "Extension process died"},
     };
 
     static inline const std::map<int, int> errCodeTable_ {
@@ -224,6 +228,8 @@ private:
         {static_cast<int>(Codes::EXT_BROKEN_FRAMEWORK), BackupErrorCode::E_UKERR},
         {static_cast<int>(Codes::EXT_BROKEN_BACKUP_SA), BackupErrorCode::E_IPCSS},
         {static_cast<int>(Codes::EXT_BROKEN_IPC), BackupErrorCode::E_IPCSS},
+        {static_cast<int>(Codes::EXT_ABILITY_DIED), BackupErrorCode::E_INVAL},
+        {static_cast<int>(Codes::EXT_ABILITY_TIMEOUT), BackupErrorCode::E_INVAL},
         {BackupErrorCode::E_IPCSS, BackupErrorCode::E_IPCSS},
         {BackupErrorCode::E_INVAL, BackupErrorCode::E_INVAL},
         {BackupErrorCode::E_UKERR, BackupErrorCode::E_UKERR},

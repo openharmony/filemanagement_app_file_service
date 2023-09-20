@@ -35,6 +35,7 @@
 #include "i_service.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "svc_death_recipient.h"
+#include "timer.h"
 
 namespace OHOS::FileManagement::Backup {
 struct BackupExtInfo {
@@ -53,6 +54,10 @@ struct BackupExtInfo {
     uint32_t versionCode;
     /* Clone App: old device app versionCode */
     std::string versionName;
+    /* Ext Ability APP process time */
+    uint32_t extTimerId;
+    /* Timer Status: true is start & false is stop */
+    bool timerStatus {false};
 };
 
 class Service;
@@ -354,6 +359,22 @@ public:
      */
     std::string GetBundleVersionName(const std::string &bundleName);
 
+    /**
+     * @brief 启动应用扩展能力定时器
+     *
+     * @param bundleName 应用名称
+     * @return
+     */
+    void BundleExtTimerStart(const std::string &bundleName, const Utils::Timer::TimerCallback& callback);
+
+    /**
+     * @brief 取消/暂停应用扩展能力定时器
+     *
+     * @param bundleName 应用名称
+     * @return
+     */
+    void BundleExtTimerStop(const std::string &bundleName);
+
 private:
     /**
      * @brief 获取backup extension ability
@@ -377,14 +398,28 @@ private:
      */
     std::map<BundleName, BackupExtInfo>::iterator GetBackupExtNameMap(const std::string &bundleName);
 
+    /**
+     * @brief 计算出应用程序处理数据可能使用的时间
+     *
+     * @param bundleName 应用名称
+     * @return
+     */
+    uint32_t CalAppProcessTime(const std::string &bundleName);
+
 public:
     /**
      * @brief Construct a new Svc Session object
      *
      * @param reversePtr 指向Service的反向指针，使用wptr避免循环引用
      */
-    explicit SvcSessionManager(wptr<Service> reversePtr) : reversePtr_(reversePtr) {}
-    ~SvcSessionManager() override = default;
+    explicit SvcSessionManager(wptr<Service> reversePtr) : reversePtr_(reversePtr)
+    {
+        extBundleTimer.Setup();
+    }
+    ~SvcSessionManager() override
+    {
+        extBundleTimer.Shutdown();
+    }
 
 private:
     mutable std::shared_mutex lock_;
@@ -392,6 +427,7 @@ private:
     sptr<SvcDeathRecipient> deathRecipient_;
     Impl impl_;
     uint32_t extConnectNum_ {0};
+    Utils::Timer extBundleTimer {"backupBundleExtTimer"};
 };
 } // namespace OHOS::FileManagement::Backup
 

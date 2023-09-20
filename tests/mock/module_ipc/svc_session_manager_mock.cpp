@@ -305,5 +305,9 @@ std::string SvcSessionManager::GetBundleVersionName(const std::string &bundleNam
     }
     return it->second.versionName;
 }
+void SvcSessionManager::BundleExtTimerStart (
+    const std::string &bundleName, const Utils::Timer::TimerCallback& callback) {}
+
+void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName) {}
 
 } // namespace OHOS::FileManagement::Backup

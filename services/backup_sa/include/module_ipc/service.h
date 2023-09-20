@@ -137,6 +137,13 @@ private:
      *
      */
     void OnStartSched();
+    /**
+     * @brief 通知客户端程序扩展能力处理结果
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void NoticeClientFinish(const std::string &bundleName, ErrCode errCode);
 
 private:
     static sptr<Service> instance_;
