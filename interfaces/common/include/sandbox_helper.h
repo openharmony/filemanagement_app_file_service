@@ -16,13 +16,17 @@
 #ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_SANDBOX_HELPER_H
 #define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_INNERKITS_NATIVE_COMMON_INCLUDE_SANDBOX_HELPER_H
 
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
 namespace OHOS {
 namespace AppFileService {
 class SandboxHelper {
+private:
+    static std::mutex mapMutex_;
     static std::unordered_map<std::string, std::string> sandboxPathMap_;
+    static bool GetSandboxPathMap();
 public:
     static std::string Encode(const std::string &uri);
     static std::string Decode(const std::string &uri);
