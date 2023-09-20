@@ -32,7 +32,7 @@ using namespace OHOS::Security::AccessToken;
 using namespace OHOS::AppFileService;
 
 namespace {
-    const string bundleA = "com.ohos.systemui";
+    const string bundleA = "com.example.filesharea";
 }
 
 string CommonFunc::GetSelfBundleName()
@@ -166,9 +166,8 @@ namespace OHOS::AppFileService::ModuleFileUri {
     HWTEST_F(FileUriTest, File_uri_GetPath_0003, testing::ext::TestSize.Level1)
     {
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0003";
-        int32_t uid = -1;
-        uid = OHOS::IPCSkeleton::GetCallingUid();
-        string bundleB = "com.ohos.settingsdata";
+        int32_t uid = 100;
+        string bundleB = "com.example.fileshareb";
         string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleB + "/files/test.txt";
         int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
         ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
