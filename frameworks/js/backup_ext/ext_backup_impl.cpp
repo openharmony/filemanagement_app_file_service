@@ -20,15 +20,14 @@ extern const char _binary_backup_extension_ability_js_end[];
 extern const char _binary_backup_extension_ability_abc_start[];
 extern const char _binary_backup_extension_ability_abc_end[];
 
+static napi_module _module = {
+    .nm_modname = "application.BackupExtensionAbility",
+    .nm_filename = "application/libbackupextensionability_napi.so/BackupExtensionAbility.js",
+};
+
 extern "C" __attribute__((constructor)) void NAPI_application_BackupExtensionAbility_AutoRegister()
 {
-    auto moduleManager = NativeModuleManager::GetInstance();
-    NativeModule newModuleInfo = {
-        .name = "application.BackupExtensionAbility",
-        .fileName = "application/libbackupextensionability_napi.so/BackupExtensionAbility.js",
-    };
-
-    moduleManager->Register(&newModuleInfo);
+    napi_module_register(&_module);
 }
 
 extern "C" __attribute__((visibility("default"))) void
