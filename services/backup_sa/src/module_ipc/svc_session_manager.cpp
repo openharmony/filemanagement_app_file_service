@@ -584,8 +584,7 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
         /* % UINT_MAX force conver uint64 to uint32 */
         /* timeout = (AppSize / 3Ms) * 3 + 30 */
         timeout = (uint32_t)(defaultTimeout + (appSize / processRate) * multiple % UINT_MAX);
-        HILOGI("appSize=%{public}lld, cacheSize=%{public}lld, dataSize=%{public}lld, timeout=%{public}u(s)",
-            stat.appSize_, stat.cacheSize_, stat.dataSize_, timeout);
+        HILOGI("Calculate App extension process run timeout=%{public}u(s)", timeout);
     } catch (const BError &e) {
         HILOGE("Failed to get app<%{public}s> dataInfo, default time=%{public}u, err=%{public}d",
             bundleName.c_str(), defaultTimeout, e.GetCode());
