@@ -22,6 +22,7 @@
 #include <sys/types.h>
 
 #include "bundle_mgr_client.h"
+#include "ext_backup_context.h"
 #include "js_extension_context.h"
 #include "js_runtime.h"
 #include "js_runtime_utils.h"
@@ -142,6 +143,47 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
     }
 }
 
+NativeValue *AttachBackupExtensionContext(NativeEngine *engine, void *value, void *)
+{
+    HILOGI("AttachBackupExtensionContext");
+    if (value == nullptr) {
+        HILOGE("invalid parameter.");
+        return nullptr;
+    }
+    auto ptr = reinterpret_cast<std::weak_ptr<ExtBackupContext> *>(value)->lock();
+    if (ptr == nullptr) {
+        HILOGE("invalid context.");
+        return nullptr;
+    }
+    NativeValue *object = CreateJsExtensionContext(*engine, ptr);
+    if (object == nullptr) {
+        HILOGE("Failed to get js backup extension context");
+        return nullptr;
+    }
+    auto contextObj =
+        AbilityRuntime::JsRuntime::LoadSystemModuleByEngine(engine, "application.ExtensionContext", &object, 1)->Get();
+    NativeObject *nObject = AbilityRuntime::ConvertNativeValueTo<NativeObject>(contextObj);
+    if (nObject == nullptr) {
+        HILOGE("Failed to get context native object");
+        return nullptr;
+    }
+    nObject->ConvertToNativeBindingObject(engine, AbilityRuntime::DetachCallbackFunc, AttachBackupExtensionContext,
+                                          value, nullptr);
+    auto workContext = new (std::nothrow) std::weak_ptr<ExtBackupContext>(ptr);
+    if (workContext == nullptr) {
+        HILOGE("Failed to get backup extension context");
+        return nullptr;
+    }
+    nObject->SetNativePointer(
+        workContext,
+        [](NativeEngine *, void *data, void *) {
+            HILOGE("Finalizer for weak_ptr backup extension context is called");
+            delete static_cast<std::weak_ptr<ExtBackupContext> *>(data);
+        },
+        nullptr);
+    return contextObj;
+}
+
 void ExtBackupJs::ExportJsContext(void)
 {
     auto &engine = jsRuntime_.GetNativeEngine();
@@ -170,13 +212,16 @@ void ExtBackupJs::ExportJsContext(void)
         HILOGE("Failed to get backup extension ability native object");
         return;
     }
+    auto workContext = new (std::nothrow) std::weak_ptr<ExtBackupContext>(context);
+    nativeObj->ConvertToNativeBindingObject(&engine, AbilityRuntime::DetachCallbackFunc, AttachBackupExtensionContext,
+                                            workContext, nullptr);
 
     HILOGI("Set backup extension ability context pointer is nullptr: %{public}d", context.get() == nullptr);
     auto releaseContext = [](NativeEngine *, void *data, void *) {
         HILOGI("Finalizer for weak_ptr backup extension ability context is called");
-        delete static_cast<std::weak_ptr<AbilityRuntime::Context> *>(data);
+        delete static_cast<std::weak_ptr<ExtBackupContext> *>(data);
     };
-    nativeObj->SetNativePointer(new std::weak_ptr<AbilityRuntime::Context>(context), releaseContext, nullptr);
+    nativeObj->SetNativePointer(workContext, releaseContext, nullptr);
 }
 
 [[maybe_unused]] tuple<ErrCode, NativeValue *> ExtBackupJs::CallObjectMethod(string_view name,
