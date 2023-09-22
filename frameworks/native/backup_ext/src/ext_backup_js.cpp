@@ -24,6 +24,8 @@
 #include "bundle_mgr_client.h"
 #include "ext_backup_context.h"
 #include "js_extension_context.h"
+#include "js_native_api.h"
+#include "js_native_api_types.h"
 #include "js_runtime.h"
 #include "js_runtime_utils.h"
 #include "napi/native_api.h"
@@ -57,54 +59,56 @@ static string GetSrcPath(const AppExecFwk::AbilityInfo &info)
     return "";
 }
 
-static NativeValue *PromiseCallback(NativeEngine *engine, NativeCallbackInfo *info)
+static napi_value PromiseCallback(napi_env env, napi_callback_info info)
 {
-    if (info == nullptr || info->functionInfo == nullptr || info->functionInfo->data == nullptr) {
-        HILOGI("PromiseCallback, Invalid input info.");
+    HILOGI("Promise callback.");
+    void *data = nullptr;
+    if (napi_get_cb_info(env, info, nullptr, 0, nullptr, &data) != napi_ok) {
+        HILOGE("Failed to get callback info.");
         return nullptr;
     }
-    void *data = info->functionInfo->data;
     auto *callbackInfo = static_cast<CallBackInfo *>(data);
     callbackInfo->callback();
-    info->functionInfo->data = nullptr;
+    data = nullptr;
     return nullptr;
 }
 
-static bool CheckPromise(NativeValue *result)
+static bool CheckPromise(napi_env env, napi_value value)
 {
-    if (result == nullptr) {
+    if (value == nullptr) {
         HILOGE("CheckPromise, result is null, no need to call promise.");
         return false;
     }
-    if (!result->IsPromise()) {
+    bool isPromise = false;
+    if (napi_is_promise(env, value, &isPromise) != napi_ok) {
         HILOGE("CheckPromise, result is not promise, no need to call promise.");
         return false;
     }
-    return true;
+    return isPromise;
 }
 
-static bool CallPromise(AbilityRuntime::JsRuntime &jsRuntime, NativeValue *result, CallBackInfo *callbackInfo)
+static bool CallPromise(AbilityRuntime::JsRuntime &jsRuntime, napi_value result, CallBackInfo *callbackInfo)
 {
-    auto *retObj = AbilityRuntime::ConvertNativeValueTo<NativeObject>(result);
-    if (retObj == nullptr) {
-        HILOGI("CallPromise, Failed to convert native value to NativeObject.");
+    AbilityRuntime::HandleScope handleScope(jsRuntime);
+    auto env = jsRuntime.GetNapiEnv();
+    napi_value method = nullptr;
+    if (napi_get_named_property(env, result, "then", &method) != napi_ok) {
+        HILOGI("CallPromise, Failed to get method then");
         return false;
     }
-    NativeValue *then = retObj->GetProperty("then");
-    if (then == nullptr) {
-        HILOGI("CallPromise, Failed to get property: then.");
+    bool isCallable = false;
+    if (napi_is_callable(env, method, &isCallable) != napi_ok) {
+        HILOGI("CallPromise, Failed to check method then is callable");
         return false;
     }
-    if (!then->IsCallable()) {
+    if (!isCallable) {
         HILOGI("CallPromise, property then is not callable.");
         return false;
     }
-    AbilityRuntime::HandleScope handleScope(jsRuntime);
-    auto &nativeEngine = jsRuntime.GetNativeEngine();
-    auto promiseCallback =
-        nativeEngine.CreateFunction("promiseCallback", strlen("promiseCallback"), PromiseCallback, callbackInfo);
-    NativeValue *argv[1] = {promiseCallback};
-    nativeEngine.CallFunction(result, then, argv, 1);
+    napi_value ret;
+    napi_create_function(env, "promiseCallback", strlen("promiseCallback"), PromiseCallback, callbackInfo, &ret);
+    napi_value argv[1] = {ret};
+    napi_call_function(env, result, method, 1, argv, nullptr);
     return true;
 }
 
@@ -143,11 +147,11 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
     }
 }
 
-NativeValue *AttachBackupExtensionContext(NativeEngine *engine, void *value, void *)
+napi_value AttachBackupExtensionContext(napi_env env, void *value, void *)
 {
     HILOGI("AttachBackupExtensionContext");
-    if (value == nullptr) {
-        HILOGE("invalid parameter.");
+    if (value == nullptr || env == nullptr) {
+        HILOG_WARN("invalid parameter.");
         return nullptr;
     }
     auto ptr = reinterpret_cast<std::weak_ptr<ExtBackupContext> *>(value)->lock();
@@ -155,39 +159,36 @@ NativeValue *AttachBackupExtensionContext(NativeEngine *engine, void *value, voi
         HILOGE("invalid context.");
         return nullptr;
     }
-    NativeValue *object = CreateJsExtensionContext(*engine, ptr);
+    auto object = CreateJsExtensionContext(env, ptr);
     if (object == nullptr) {
         HILOGE("Failed to get js backup extension context");
         return nullptr;
     }
-    auto contextObj =
-        AbilityRuntime::JsRuntime::LoadSystemModuleByEngine(engine, "application.ExtensionContext", &object, 1)->Get();
-    NativeObject *nObject = AbilityRuntime::ConvertNativeValueTo<NativeObject>(contextObj);
-    if (nObject == nullptr) {
-        HILOGE("Failed to get context native object");
-        return nullptr;
-    }
-    nObject->ConvertToNativeBindingObject(engine, AbilityRuntime::DetachCallbackFunc, AttachBackupExtensionContext,
-                                          value, nullptr);
+    auto contextRef =
+        AbilityRuntime::JsRuntime::LoadSystemModuleByEngine(env, "application.ExtensionContext", &object, 1);
+    napi_value contextObj = contextRef->GetNapiValue();
+    napi_coerce_to_native_binding_object(env, contextObj, AbilityRuntime::DetachCallbackFunc,
+                                         AttachBackupExtensionContext, value, nullptr);
+
     auto workContext = new (std::nothrow) std::weak_ptr<ExtBackupContext>(ptr);
     if (workContext == nullptr) {
         HILOGE("Failed to get backup extension context");
         return nullptr;
     }
-    nObject->SetNativePointer(
-        workContext,
-        [](NativeEngine *, void *data, void *) {
-            HILOGE("Finalizer for weak_ptr backup extension context is called");
+    napi_wrap(
+        env, contextObj, workContext,
+        [](napi_env, void *data, void *) {
+            HILOG_DEBUG("Finalizer for weak_ptr base context is called");
             delete static_cast<std::weak_ptr<ExtBackupContext> *>(data);
         },
-        nullptr);
+        nullptr, nullptr);
     return contextObj;
 }
 
 void ExtBackupJs::ExportJsContext(void)
 {
-    auto &engine = jsRuntime_.GetNativeEngine();
-    NativeObject *obj = AbilityRuntime::ConvertNativeValueTo<NativeObject>(jsObj_->Get());
+    auto env = jsRuntime_.GetNapiEnv();
+    napi_value obj = jsObj_->GetNapiValue();
     if (obj == nullptr) {
         HILOGE("Failed to get BackupExtAbility object");
         return;
@@ -200,60 +201,32 @@ void ExtBackupJs::ExportJsContext(void)
     }
 
     HILOGI("CreateBackupExtAbilityContext");
-    NativeValue *contextObj = CreateJsExtensionContext(engine, context);
+    napi_value contextObj = CreateJsExtensionContext(env, context);
     auto contextRef = jsRuntime_.LoadSystemModule("application.ExtensionContext", &contextObj, 1);
-    contextObj = contextRef->Get();
+    contextObj = contextRef->GetNapiValue();
     HILOGI("Bind context");
     context->Bind(jsRuntime_, contextRef.release());
-    obj->SetProperty("context", contextObj);
+    napi_set_named_property(env, obj, "context", contextObj);
 
-    auto nativeObj = AbilityRuntime::ConvertNativeValueTo<NativeObject>(contextObj);
-    if (nativeObj == nullptr) {
-        HILOGE("Failed to get backup extension ability native object");
-        return;
-    }
     auto workContext = new (std::nothrow) std::weak_ptr<ExtBackupContext>(context);
-    nativeObj->ConvertToNativeBindingObject(&engine, AbilityRuntime::DetachCallbackFunc, AttachBackupExtensionContext,
-                                            workContext, nullptr);
 
+    napi_coerce_to_native_binding_object(env, contextObj, AbilityRuntime::DetachCallbackFunc,
+                                         AttachBackupExtensionContext, workContext, nullptr);
     HILOGI("Set backup extension ability context pointer is nullptr: %{public}d", context.get() == nullptr);
-    auto releaseContext = [](NativeEngine *, void *data, void *) {
-        HILOGI("Finalizer for weak_ptr backup extension ability context is called");
-        delete static_cast<std::weak_ptr<ExtBackupContext> *>(data);
-    };
-    nativeObj->SetNativePointer(workContext, releaseContext, nullptr);
+    napi_wrap(
+        env, contextObj, workContext,
+        [](napi_env, void *data, void *) {
+            HILOG_DEBUG("Finalizer for weak_ptr base context is called");
+            delete static_cast<std::weak_ptr<ExtBackupContext> *>(data);
+        },
+        nullptr, nullptr);
 }
 
-[[maybe_unused]] tuple<ErrCode, NativeValue *> ExtBackupJs::CallObjectMethod(string_view name,
-                                                                             const vector<NativeValue *> &argv)
+[[maybe_unused]] tuple<ErrCode, napi_value> ExtBackupJs::CallObjectMethod(string_view name,
+                                                                          const vector<napi_value> &argv)
 {
     HILOGI("Call %{public}s", name.data());
-
-    if (!jsObj_) {
-        return {BError(BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid jsObj_").GetCode(), nullptr};
-    }
-
-    AbilityRuntime::HandleScope handleScope(jsRuntime_);
-
-    NativeValue *value = jsObj_->Get();
-    NativeObject *obj = AbilityRuntime::ConvertNativeValueTo<NativeObject>(value);
-    if (!obj) {
-        return {BError(BError::Codes::EXT_INVAL_ARG, "The custom BackupAbilityExtension is required to be an object")
-                    .GetCode(),
-                nullptr};
-    }
-
-    NativeValue *method = obj->GetProperty(name.data());
-    if (!method || method->TypeOf() != NATIVE_FUNCTION) {
-        return {BError(BError::Codes::EXT_INVAL_ARG, string(name).append(" is required to be a function")).GetCode(),
-                nullptr};
-    }
-
-    auto ret = jsRuntime_.GetNativeEngine().CallFunction(value, method, argv.data(), argv.size());
-    if (!ret) {
-        return {BError(BError::Codes::EXT_INVAL_ARG, string(name).append(" raised an exception")).GetCode(), nullptr};
-    }
-    return {BError(BError::Codes::OK).GetCode(), ret};
+    return {BError(BError::Codes::OK).GetCode(), nullptr};
 }
 
 ExtBackupJs *ExtBackupJs::Create(const unique_ptr<AbilityRuntime::Runtime> &runtime)
@@ -268,9 +241,9 @@ ErrCode ExtBackupJs::OnBackup(function<void()> callback)
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
                           "The app does not provide the onRestore interface.");
     callbackInfo_ = std::make_shared<CallBackInfo>(callback);
-    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](NativeEngine &engine,
-                                                                                       NativeValue *result) -> bool {
-        if (!CheckPromise(result)) {
+    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env,
+                                                                             napi_value result) -> bool {
+        if (!CheckPromise(env, result)) {
             callbackInfo->callback();
             return true;
         }
@@ -292,20 +265,18 @@ ErrCode ExtBackupJs::OnRestore(function<void()> callback)
                           "The app does not provide the onRestore interface.");
 
     auto argParser = [appVersionCode(appVersionCode_),
-                      appVersionStr(appVersionStr_)](NativeEngine &engine, vector<NativeValue *> &argv) -> bool {
-        NativeValue *verCode = engine.CreateNumber(appVersionCode);
-        NativeValue *verStr = engine.CreateString(appVersionStr.c_str(), appVersionStr.length());
-        NativeValue *param = engine.CreateObject();
-        auto paramObj = reinterpret_cast<NativeObject *>(param->GetInterface(NativeObject::INTERFACE_ID));
-        paramObj->SetProperty("code", verCode);
-        paramObj->SetProperty("name", verStr);
-        argv.push_back(param);
+                      appVersionStr(appVersionStr_)](napi_env env, vector<napi_value> &argv) -> bool {
+        napi_value objValue = nullptr;
+        napi_create_object(env, &objValue);
+        napi_set_named_property(env, objValue, "code", AbilityRuntime::CreateJsValue(env, appVersionCode));
+        napi_set_named_property(env, objValue, "name", AbilityRuntime::CreateJsValue(env, appVersionStr.c_str()));
+        argv.push_back(objValue);
         return true;
     };
     callbackInfo_ = std::make_shared<CallBackInfo>(callback);
-    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](NativeEngine &engine,
-                                                                                       NativeValue *result) -> bool {
-        if (!CheckPromise(result)) {
+    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env,
+                                                                             napi_value result) -> bool {
+        if (!CheckPromise(env, result)) {
             callbackInfo->callback();
             return true;
         }
@@ -328,35 +299,28 @@ static int DoCallJsMethod(CallJsParam *param)
         return EINVAL;
     }
     AbilityRuntime::HandleEscape handleEscape(*jsRuntime);
-    auto &nativeEngine = jsRuntime->GetNativeEngine();
-    vector<NativeValue *> argv = {};
+    auto env = jsRuntime->GetNapiEnv();
+    vector<napi_value> argv = {};
     if (param->argParser != nullptr) {
-        if (!param->argParser(nativeEngine, argv)) {
+        if (!param->argParser(env, argv)) {
             HILOGE("failed to get params.");
             return EINVAL;
         }
     }
-    NativeValue *value = param->jsObj->Get();
+    napi_value value = param->jsObj->GetNapiValue();
     if (value == nullptr) {
-        HILOGE("failed to get native value object.");
+        HILOGE("failed to get napi value object.");
         return EINVAL;
     }
-    NativeObject *obj = AbilityRuntime::ConvertNativeValueTo<NativeObject>(value);
-    if (obj == nullptr) {
-        HILOGE("failed to get BackupExtAbility object.");
-        return EINVAL;
-    }
-    NativeValue *method = obj->GetProperty(param->funcName.c_str());
-    if (method == nullptr) {
-        HILOGE("failed to get %{public}s from BackupExtAbility object.", param->funcName.c_str());
-        return EINVAL;
-    }
+    napi_value method;
+    napi_get_named_property(env, value, param->funcName.c_str(), &method);
     if (param->retParser == nullptr) {
         HILOGE("ResultValueParser must not null.");
         return EINVAL;
     }
-    if (!param->retParser(nativeEngine,
-                          handleEscape.Escape(nativeEngine.CallFunction(value, method, argv.data(), argv.size())))) {
+    napi_value result;
+    napi_call_function(env, value, method, argv.size(), argv.data(), &result);
+    if (!param->retParser(env, handleEscape.Escape(result))) {
         HILOGI("Parser js result fail.");
         return EINVAL;
     }
@@ -370,7 +334,7 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
                               ResultValueParser retParser)
 {
     uv_loop_s *loop = nullptr;
-    napi_status status = napi_get_uv_event_loop(reinterpret_cast<napi_env>(&jsRuntime.GetNativeEngine()), &loop);
+    napi_status status = napi_get_uv_event_loop(jsRuntime.GetNapiEnv(), &loop);
     if (status != napi_ok) {
         HILOGE("failed to get uv event loop.");
         return EINVAL;

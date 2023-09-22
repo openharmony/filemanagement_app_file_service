@@ -30,8 +30,8 @@
 #include "want.h"
 
 namespace OHOS::FileManagement::Backup {
-using InputArgsParser = std::function<bool(NativeEngine &, std::vector<NativeValue *> &)>;
-using ResultValueParser = std::function<bool(NativeEngine &, NativeValue *)>;
+using InputArgsParser = std::function<bool(napi_env, std::vector<napi_value> &)>;
+using ResultValueParser = std::function<bool(napi_env, napi_value)>;
 
 struct CallJsParam {
     std::mutex backupOperateMutex;
@@ -110,8 +110,7 @@ private:
                      NativeReference *jsObj,
                      InputArgsParser argParser,
                      ResultValueParser retParser);
-    std::tuple<ErrCode, NativeValue *> CallObjectMethod(std::string_view name,
-                                                        const std::vector<NativeValue *> &argv = {});
+    std::tuple<ErrCode, napi_value> CallObjectMethod(std::string_view name, const std::vector<napi_value> &argv = {});
 
     void ExportJsContext(void);
 
