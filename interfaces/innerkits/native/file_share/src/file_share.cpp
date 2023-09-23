@@ -134,12 +134,6 @@ static int32_t GetShareFileType(FileShareInfo &info)
 static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t flag, FileShareInfo &info)
 {
     int32_t ret = 0;
-    ret = GetTargetInfo(tokenId, info.targetBundleName_, info.currentUid_);
-    if (ret != 0 || info.currentUid_ == "0") {
-        LOGE("Failed to get target info %{public}d", ret);
-        return ret;
-    }
-
     GetProviderInfo(uri, info);
 
     ret = SandboxHelper::GetPhysicalPath(uri, info.currentUid_, info.providerLowerPath_);
@@ -245,101 +239,72 @@ static int32_t PreparePreShareDir(FileShareInfo &info)
     return 0;
 }
 
-static bool CheckIsMountPoint(const string &path)
-{
-    const string mountPonitInfo = "/proc/mounts";
-    std::ifstream inputStream(mountPonitInfo.c_str(), std::ios::in);
-    if (!inputStream.is_open()) {
-        return false;
-    }
-
-    string encodePath = path;
-    size_t pos = encodePath.find(" ");
-    while (pos != string::npos) {
-        encodePath.replace(pos, 1, "\\040");
-        pos = encodePath.find(" ", pos + 1);
-    }
-
-    string tmpLine;
-    while (std::getline(inputStream, tmpLine)) {
-        if (tmpLine.find(encodePath) != std::string::npos) {
-            inputStream.close();
-            return true;
-        }
-    }
-
-    inputStream.close();
-    return false;
-}
-
-static int32_t CheckValidLowerPath(const string &path)
-{
-    int32_t ret = mount(path.c_str(), path.c_str(), nullptr, MS_BIND, nullptr);
-    if (ret != 0) {
-        LOGE("CheckValidLowerPath failed with %{public}d", errno);
-        return -errno;
-    }
-
-    if (CheckIsMountPoint(path) && SandboxHelper::CheckValidPath(path)) {
-        return 0;
-    }
-    umount2(path.c_str(), MNT_DETACH);
-    return -EINVAL;
-}
-
-static bool NotRequiredBindMount(const FileShareInfo& info, uint32_t flag)
+static bool NotRequiredBindMount(const FileShareInfo &info, uint32_t flag)
 {
     return (info.currentUid_ == "0" ||
         ((flag & PERSISTABLE_URI_PERMISSION) != 0 && info.providerLowerPath_.find(EXTERNAL_PATH) != 0));
 }
 
-int32_t CreateShareFile(const string &uri, uint32_t tokenId, uint32_t flag)
+static int32_t CreateSingleShareFile(const string &uri, uint32_t tokenId, uint32_t flag, FileShareInfo &info)
 {
-    FileShareInfo info;
     string decodeUri = SandboxHelper::Decode(uri);
-    LOGD("CreateShareFile begin with uri %{private}s decodeUri %{private}s",
-         uri.c_str(), decodeUri.c_str());
+    LOGD("CreateShareFile begin with uri %{private}s decodeUri %{private}s", uri.c_str(), decodeUri.c_str());
+
     int32_t ret = GetFileShareInfo(decodeUri, tokenId, flag, info);
     if (ret != 0 || NotRequiredBindMount(info, flag)) {
         LOGE("Failed to get FileShareInfo with %{public}d", ret);
         return ret;
     }
 
-    if ((ret = PreparePreShareDir(info)) != 0) {
-        LOGE("PreparePreShareDir failed");
+    ret = PreparePreShareDir(info);
+    if (ret != 0) {
         return ret;
     }
 
+    if (info.type_ != ShareFileType::FILE_TYPE) {
+        LOGE("Invalid argument not support dir to share");
+        return -EINVAL;
+    }
+
     for (size_t i = 0; i < info.sharePath_.size(); i++) {
-        if (info.type_ == ShareFileType::FILE_TYPE) {
-            if ((ret = creat(info.sharePath_[i].c_str(), FILE_MODE)) < 0) {
-                LOGE("Create file failed with %{public}d", errno);
-                return -errno;
-            }
-            close(ret);
-        } else {
-            LOGE("Invalid argument not support dir to share");
-            return -EINVAL;
+        if ((ret = creat(info.sharePath_[i].c_str(), FILE_MODE)) < 0) {
+            LOGE("Create file failed with %{public}d", errno);
+            return -errno;
         }
-
-        if (CheckValidLowerPath(info.providerLowerPath_.c_str()) != 0) {
-            LOGE("Invalid lower path with %{private}s", info.providerLowerPath_.c_str());
-            return -EINVAL;
-        }
-
+        close(ret);
         if (mount(info.providerLowerPath_.c_str(), info.sharePath_[i].c_str(),
                   nullptr, MS_BIND, nullptr) != 0) {
             LOGE("Mount failed with %{public}d", errno);
-            umount2(info.providerLowerPath_.c_str(), MNT_DETACH);
             return -errno;
         }
-        umount2(info.providerLowerPath_.c_str(), MNT_DETACH);
     }
+
+    info.sharePath_.clear();
     LOGI("Create Share File Successfully!");
     return 0;
 }
 
-int32_t DeleteShareFile(uint32_t tokenId, vector<string> sharePathList)
+int32_t CreateShareFile(const vector<string> &uriList, uint32_t tokenId, uint32_t flag, vector<int32_t> &retList)
+{
+    FileShareInfo info;
+    int32_t ret = GetTargetInfo(tokenId, info.targetBundleName_, info.currentUid_);
+    if (ret != 0 || info.currentUid_ == "0") {
+        LOGE("Failed to get target info %{public}d", ret);
+        return ret;
+    }
+
+    for (const auto &uri : uriList) {
+        int32_t curRet = CreateSingleShareFile(uri, tokenId, flag, info);
+        retList.push_back(curRet);
+        if (curRet != 0) {
+            ret = curRet;
+            LOGE("Create share file failed with %{public}d", errno);
+        }
+    }
+    return ret;
+}
+
+int32_t DeleteShareFile(uint32_t tokenId, const vector<string> &uriList)
 {
     string bundleName, currentUid;
     int32_t ret = GetTargetInfo(tokenId, bundleName, currentUid);
@@ -347,7 +312,7 @@ int32_t DeleteShareFile(uint32_t tokenId, vector<string> sharePathList)
         LOGE("Failed to delete share file %{public}d", -EINVAL);
         return -EINVAL;
     }
-    UmountDelUris(sharePathList, currentUid, bundleName);
+    UmountDelUris(uriList, currentUid, bundleName);
 
     LOGI("Delete Share File Successfully!");
     return 0;
