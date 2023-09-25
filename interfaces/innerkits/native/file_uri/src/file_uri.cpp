@@ -36,7 +36,7 @@ const std::string MEDIA_AUTHORITY = "media";
 const std::string NETWORK_PARA = "?networkid=";
 string FileUri::GetName()
 {
-    string sandboxPath = uri_.GetPath();
+    string sandboxPath = SandboxHelper::Decode(uri_.GetPath());
     size_t posLast = sandboxPath.find_last_of("/");
     if (posLast == string::npos) {
         return "";
@@ -46,7 +46,7 @@ string FileUri::GetName()
         return "";
     }
 
-    return SandboxHelper::Decode(sandboxPath.substr(posLast + 1));
+    return sandboxPath.substr(posLast + 1);
 }
 
 string FileUri::GetPath()
