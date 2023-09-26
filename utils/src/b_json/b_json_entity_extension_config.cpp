@@ -134,6 +134,10 @@ string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, 
                                 append(bundleName).
                                 append("/").
                                 append(BConstants::BACKUP_CONFIG_JSON);
+    if (access(jsonFilePath.c_str(), F_OK) != 0) {
+        HILOGI("Failed to access jsonFilePath : %{public}s", jsonFilePath.c_str());
+        return string(jsonFromRealWorld);
+    }
     return BFile::ReadFile(UniqueFd(open(jsonFilePath.c_str(), O_RDONLY))).get();
 }
 } // namespace OHOS::FileManagement::Backup
