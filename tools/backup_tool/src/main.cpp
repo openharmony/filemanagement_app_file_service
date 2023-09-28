@@ -64,7 +64,7 @@ optional<map<string, vector<string>>> GetArgsMap(int argc, char *const argv[], c
     return mapArgToVals;
 }
 
-int ParseOpAndExecute(int argc, char *const argv[])
+int ParseOpAndExecute(const int argc, char *const argv[])
 {
     int flag = -1;
     for (int i = 1; i < argc; i++) {

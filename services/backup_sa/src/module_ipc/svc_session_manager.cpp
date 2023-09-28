@@ -580,7 +580,7 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
 
     try {
         stat = StorageMgrAdapter::GetBundleStats(bundleName);
-        appSize = (stat.appSize_ + stat.dataSize_);
+        appSize = static_cast<uint64_t>(stat.appSize_ + stat.dataSize_);
         /* % UINT_MAX force conver uint64 to uint32 */
         /* timeout = (AppSize / 3Ms) * 3 + 30 */
         timeout = (uint32_t)(defaultTimeout + (appSize / processRate) * multiple % UINT_MAX);
