@@ -48,7 +48,7 @@ const string DATA_APP_EL2_PATH = "/data/service/el2/";
 const string SHARE_R_PATH = "/r/";
 const string SHARE_RW_PATH = "/rw/";
 const string SHARE_PATH = "/share/";
-const string EXTERNAL_PATH = "/mnt/data/external";
+const string EXTERNAL_PATH = "file://docs/storage/External";
 }
 
 struct FileShareInfo {
@@ -239,10 +239,10 @@ static int32_t PreparePreShareDir(FileShareInfo &info)
     return 0;
 }
 
-static bool NotRequiredBindMount(const FileShareInfo &info, uint32_t flag)
+static bool NotRequiredBindMount(const FileShareInfo &info, uint32_t flag, const string &uri)
 {
     return (info.currentUid_ == "0" ||
-        ((flag & PERSISTABLE_URI_PERMISSION) != 0 && info.providerLowerPath_.find(EXTERNAL_PATH) != 0));
+        ((flag & PERSISTABLE_URI_PERMISSION) != 0 && uri.find(EXTERNAL_PATH) != 0));
 }
 
 static int32_t CreateSingleShareFile(const string &uri, uint32_t tokenId, uint32_t flag, FileShareInfo &info)
@@ -250,8 +250,13 @@ static int32_t CreateSingleShareFile(const string &uri, uint32_t tokenId, uint32
     string decodeUri = SandboxHelper::Decode(uri);
     LOGD("CreateShareFile begin with uri %{private}s decodeUri %{private}s", uri.c_str(), decodeUri.c_str());
 
+    if (NotRequiredBindMount(info, flag, uri)) {
+        LOGD("Not required to bind mount");
+        return 0;
+    }
+
     int32_t ret = GetFileShareInfo(decodeUri, tokenId, flag, info);
-    if (ret != 0 || NotRequiredBindMount(info, flag)) {
+    if (ret != 0) {
         LOGE("Failed to get FileShareInfo with %{public}d", ret);
         return ret;
     }
@@ -288,7 +293,8 @@ int32_t CreateShareFile(const vector<string> &uriList, uint32_t tokenId, uint32_
 {
     FileShareInfo info;
     int32_t ret = GetTargetInfo(tokenId, info.targetBundleName_, info.currentUid_);
-    if (ret != 0 || info.currentUid_ == "0") {
+    if (ret != 0) {
+        retList.push_back(ret);
         LOGE("Failed to get target info %{public}d", ret);
         return ret;
     }
