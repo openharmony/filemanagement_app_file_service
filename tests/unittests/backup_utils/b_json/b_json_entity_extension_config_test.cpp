@@ -45,6 +45,12 @@ public:
 };
 
 static vector<string> DEFAULT_INCLUDE_DIR = {
+    "data/storage/el1/database/",
+    "data/storage/el1/base/files/",
+    "data/storage/el1/base/preferences/",
+    "data/storage/el1/base/haps/*/database/",
+    "data/storage/el1/base/haps/*/files/",
+    "data/storage/el1/base/haps/*/preferences/",
     "data/storage/el2/database/",
     "data/storage/el2/base/files/",
     "data/storage/el2/base/preferences/",
