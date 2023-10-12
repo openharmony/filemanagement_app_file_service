@@ -34,14 +34,28 @@ static napi_value Export(napi_env env, napi_value exports)
     products.emplace_back(make_unique<SessionRestoreNExporter>(env, exports));
     for (auto &&product : products) {
         if (!product->Export()) {
-            HILOGE("INNER BUG. Failed to export class %{public}s for module backup", product->GetClassName().c_str());
+            HILOGE("INNER BUG. Failed to export class %{public}s for module file.backup",
+                   product->GetClassName().c_str());
             return nullptr;
         } else {
-            HILOGI("Class %{public}s for module fileio has been exported", product->GetClassName().c_str());
+            HILOGI("Class %{public}s for module file.backup has been exported", product->GetClassName().c_str());
         }
     }
     return exports;
 }
 
-NAPI_MODULE(backup, Export)
+static napi_module _module = {
+    .nm_version = 1,
+    .nm_flags = 0,
+    .nm_filename = nullptr,
+    .nm_register_func = Export,
+    .nm_modname = "file.backup",
+    .nm_priv = ((void *)0),
+    .reserved = {0}
+};
+
+extern "C" __attribute__((constructor)) void RegisterModule(void)
+{
+    napi_module_register(&_module);
+}
 } // namespace OHOS::FileManagement::Backup
