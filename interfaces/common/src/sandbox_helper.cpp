@@ -62,9 +62,8 @@ std::mutex SandboxHelper::mapMutex_;
 string SandboxHelper::Encode(const string &uri)
 {
     const unordered_set<char> uriCompentsSet = {
-        ';', ',', '/', '?', ':', '@', '&',
-        '=', '+', '$', '-', '_', '.', '!',
-        '~', '*', '(', ')', '#', '\''
+        '/', '-', '_', '.', '!',
+        '~', '*', '(', ')', '\''
     };
     const int32_t encodeLen = 2;
     ostringstream outPutStream;
@@ -270,7 +269,7 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
 {
     Uri uri(fileUri);
     string bundleName = uri.GetAuthority();
-    string sandboxPath = uri.GetPath();
+    string sandboxPath = SandboxHelper::Decode(uri.GetPath());
 
     if (bundleName == MEDIA) {
         return GetMediaPhysicalPath(sandboxPath, userId, physicalPath);

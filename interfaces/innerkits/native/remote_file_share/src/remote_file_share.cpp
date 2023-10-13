@@ -268,8 +268,8 @@ int RemoteFileShare::CreateSharePath(const int &fd, std::string &sharePath,
 
 static int GetDistributedPath(Uri &uri, const int &userId, std::string &distributedPath)
 {
-    distributedPath = DST_PATH_HEAD + std::to_string(userId) + DST_PATH_MID +
-                      uri.GetAuthority() + REMOTE_SHARE_PATH_DIR + uri.GetPath();
+    distributedPath = DST_PATH_HEAD + std::to_string(userId) + DST_PATH_MID + uri.GetAuthority() +
+                      REMOTE_SHARE_PATH_DIR + SandboxHelper::Decode(uri.GetPath());
     if (distributedPath.size() >= PATH_MAX) {
         return -EINVAL;
     }
@@ -333,8 +333,9 @@ static void SetHmdfsUriInfo(struct HmdfsUriInfo &hui, Uri &uri, uint64_t fileSiz
     std::string path = uri.GetPath();
     std::string networkId = NETWORK_PARA + GetLocalNetworkId();
 
-    hui.uriStr = SandboxHelper::Encode(FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH +
-                                       REMOTE_SHARE_PATH_DIR + path + networkId);
+    hui.uriStr = FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH + REMOTE_SHARE_PATH_DIR +
+                 SandboxHelper::Encode(path) + networkId;
+
     hui.fileSize = fileSize;
     return;
 }
@@ -355,7 +356,7 @@ static int32_t SetPublicDirHmdfsInfo(const std::string &physicalPath, const std:
 int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int32_t &userId,
                                             struct HmdfsUriInfo &hui)
 {
-    Uri uri(SandboxHelper::Decode(uriStr));
+    Uri uri(uriStr);
     std::string bundleName = uri.GetAuthority();
     LOGD("GetDfsUriFromLocal begin with uri:%{private}s, decode uri:%{private}s",
          uriStr.c_str(), uri.ToString().c_str());

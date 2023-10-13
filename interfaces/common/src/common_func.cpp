@@ -92,8 +92,8 @@ string CommonFunc::GetUriFromPath(const string &path)
     NormalizePath(realPath);
 
     string packageName = (path.find(FILE_MANAGER_URI_HEAD) == 0) ? FILE_MANAGER_AUTHORITY : GetSelfBundleName();
-    realPath = FILE_SCHEME_PREFIX + packageName + realPath;
-    return SandboxHelper::Encode(realPath);
+    realPath = FILE_SCHEME_PREFIX + packageName + SandboxHelper::Encode(realPath);
+    return realPath;
 }
 } // namespace AppFileService
 } // namespace OHOS
