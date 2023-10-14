@@ -65,8 +65,7 @@ constexpr int BLOCK_PADDING_SIZE = 1024; // 打包文件尾部追加的全零字
 constexpr off_t BIG_FILE_BOUNDARY = 1024 * 1024 * 1024; // 大文件边界
 constexpr unsigned long BIG_FILE_NAME_SIZE = 16;        // 大文件名长度(hash处理)
 
-// 打包文件头部Header结构体各字段数组/字符串大小。
-constexpr int PATHNAME_MAX_SIZE = 100;
+constexpr int PATHNAME_MAX_SIZE = 100; // 打包文件头部Header结构体各字段数组/字符串大小。
 constexpr int MODE_MAX_SIZE = 8;
 constexpr int UGID_MAX_SIZE = 8;
 constexpr int FILESIZE_MAX_SIZE = 12;
@@ -80,18 +79,13 @@ constexpr int DEV_MAX_SIZE = 8;
 constexpr int PREFIX_SIZE = 155;
 constexpr int PADDING_SIZE = 12;
 
-// 读取backup.para字段值的最大长度
-constexpr uint32_t BACKUP_PARA_VALUE_MAX = 5;
+constexpr int PATHES_TO_BACKUP_SIZE = 12; // 应用默认备份的目录个数
+constexpr uint32_t BACKUP_PARA_VALUE_MAX = 5; // 读取backup.para字段值的最大长度
+constexpr int SA_THREAD_POOL_COUNT = 1; // SA THREAD_POOL 最大线程数
+constexpr int EXT_CONNECT_MAX_COUNT = 3; // extension 最大启动数
+constexpr int EXT_CONNECT_MAX_TIME = 15000; // SA 启动 extension 等待连接最大时间
 
-// SA THREAD_POOL 最大线程数
-constexpr int SA_THREAD_POOL_COUNT = 1;
-// extension 最大启动数
-constexpr int EXT_CONNECT_MAX_COUNT = 3;
-// SA 启动 extension 等待连接最大时间
-constexpr int EXT_CONNECT_MAX_TIME = 15000;
-
-// 打包文件头部Header结构体fileSize字段最大值。
-constexpr off_t FILESIZE_MAX = 077777777777;
+constexpr off_t FILESIZE_MAX = 077777777777; // 打包文件头部Header结构体fileSize字段最大值。
 
 // 打包文件头部Header结构体typeFlag字段值。
 constexpr char TYPEFLAG_REGULAR_FILE = '0';
@@ -165,7 +159,7 @@ constexpr int DEFAULT_VERSION_CODE = 0;
 static inline std::string_view DEFAULT_VERSION_NAME = "0.0.0.0";
 
 // 应用默认备份的目录，其均为相对根路径的路径。为避免模糊匹配，务必以斜线为结尾。
-static inline std::array<std::string_view, 12> PATHES_TO_BACKUP = {
+static inline std::array<std::string_view, PATHES_TO_BACKUP_SIZE> PATHES_TO_BACKUP = {
     "data/storage/el1/database/",
     "data/storage/el1/base/files/",
     "data/storage/el1/base/preferences/",
