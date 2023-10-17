@@ -29,6 +29,14 @@ public:
      * @param bundleName bundle name
      */
     static StorageManager::BundleStats GetBundleStats(const std::string &bundleName);
+
+    /**
+     * @brief Get the user storage stats object
+     *
+     * @param bundleName bundle name
+     * @param userId user id
+     */
+    static int64_t GetUserStorageStats(const std::string &bundleName, int32_t userId);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_STORAGE_MGR_ADAPTER_H

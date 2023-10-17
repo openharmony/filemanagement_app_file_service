@@ -25,6 +25,11 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+namespace {
+const string MEDIA_LIBRARY_HAP = "com.ohos.medialibrary.medialibrarydata";
+const string EXTERNAL_FILE_HAP = "com.ohos.UserFile.ExternalFileManager";
+} // namespace
+
 static sptr<StorageManager::IStorageManager> GetStorageManager()
 {
     auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -48,5 +53,20 @@ StorageManager::BundleStats StorageMgrAdapter::GetBundleStats(const string &bund
         throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle stats");
     }
     return bundleStats;
+}
+
+int64_t StorageMgrAdapter::GetUserStorageStats(const std::string &bundleName, int32_t userId)
+{
+    StorageManager::StorageStats bundleStats;
+    auto storageMgr = GetStorageManager();
+    if (storageMgr->GetUserStorageStats(userId, bundleStats)) {
+        throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get user storage stats");
+    }
+    if (bundleName == MEDIA_LIBRARY_HAP) {
+        return bundleStats.image_ + bundleStats.video_;
+    } else if (bundleName == EXTERNAL_FILE_HAP) {
+        return bundleStats.file_;
+    }
+    return 0;
 }
 } // namespace OHOS::FileManagement::Backup
