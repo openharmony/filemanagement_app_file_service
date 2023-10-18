@@ -92,6 +92,11 @@ public:
         return BError(BError::Codes::OK);
     };
 
+    ErrCode HandleRestore() override
+    {
+        return BError(BError::Codes::OK);
+    };
+
 private:
     int32_t nHandleBackupNum_ = 0;
 };

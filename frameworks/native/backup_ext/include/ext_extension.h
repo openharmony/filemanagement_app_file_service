@@ -33,6 +33,7 @@ public:
     ErrCode HandleClear() override;
     ErrCode PublishFile(const std::string &fileName) override;
     ErrCode HandleBackup() override;
+    ErrCode HandleRestore() override;
 
     void AsyncTaskRestoreForUpgrade(void);
 

@@ -114,4 +114,24 @@ ErrCode SvcExtensionProxy::PublishFile(const string &fileName)
     HILOGI("Successful");
     return reply.ReadInt32();
 }
+
+ErrCode SvcExtensionProxy::HandleRestore()
+{
+    HILOGI("Start");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    data.WriteInterfaceToken(GetDescriptor());
+
+    MessageParcel reply;
+    MessageOption option;
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(IExtensionInterfaceCode::CMD_HANDLE_RESTORE), data, reply, option);
+    if (ret != NO_ERROR) {
+        HILOGE("Received error %{public}d when doing IPC", ret);
+        return ErrCode(ret);
+    }
+
+    HILOGI("Successful");
+    return reply.ReadInt32();
+}
 } // namespace OHOS::FileManagement::Backup

@@ -35,6 +35,7 @@ private:
     ErrCode CmdHandleClear(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdHandleBackup(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdPublishFile(MessageParcel &data, MessageParcel &reply);
+    ErrCode CmdHandleRestore(MessageParcel &data, MessageParcel &reply);
 
 private:
     using ExtensionInterface = int32_t (ExtExtensionStub::*)(MessageParcel &data, MessageParcel &reply);

@@ -31,6 +31,7 @@ public:
     virtual ErrCode HandleClear() = 0;
     virtual ErrCode HandleBackup() = 0;
     virtual ErrCode PublishFile(const std::string &fileName) = 0;
+    virtual ErrCode HandleRestore() = 0;
 };
 } // namespace OHOS::FileManagement::Backup
 
