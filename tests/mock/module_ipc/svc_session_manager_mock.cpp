@@ -305,6 +305,25 @@ std::string SvcSessionManager::GetBundleVersionName(const std::string &bundleNam
     }
     return it->second.versionName;
 }
+
+void SvcSessionManager::SetBundleDataSize(const std::string &bundleName, int64_t dataSize)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return;
+    }
+    it->second.dataSize = dataSize;
+}
+
+int64_t SvcSessionManager::GetBundleDataSize(const std::string &bundleName)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return 0;
+    }
+    return it->second.dataSize;
+}
+
 void SvcSessionManager::BundleExtTimerStart (
     const std::string &bundleName, const Utils::Timer::TimerCallback& callback) {}
 
