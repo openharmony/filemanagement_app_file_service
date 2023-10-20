@@ -37,8 +37,13 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 
 namespace {
+enum { APP = 0, LOCAL, DISTRIBUTED, DATABASE, CACHE };
 const string HMOS_HAP_CODE_PATH = "1";
 const string LINUX_HAP_CODE_PATH = "2";
+const string MEDIA_LIBRARY_HAP = "com.ohos.medialibrary.medialibrarydata";
+const string EXTERNAL_FILE_HAP = "com.ohos.UserFile.ExternalFileManager";
+const int E_ERR = -1;
+const vector<string> dataDir = {"app", "local", "distributed", "database", "cache"};
 } // namespace
 
 static sptr<AppExecFwk::IBundleMgr> GetBundleManager()
@@ -71,7 +76,31 @@ static tuple<bool, string> GetAllowAndExtName(const vector<AppExecFwk::Extension
         auto cache = cachedEntity.Structuralize();
         return {cache.GetAllowToBackupRestore(), ext.name};
     }
+    HILOGI("No backup extension ability found");
     return {false, ""};
+}
+
+static int64_t GetBundleStats(const string &bundleName, int32_t userId)
+{
+    HILOGI("Begin bundleName:%{public}s", bundleName.c_str());
+    if (bundleName == MEDIA_LIBRARY_HAP || bundleName == EXTERNAL_FILE_HAP) {
+        return StorageMgrAdapter::GetUserStorageStats(bundleName, userId);
+    }
+    auto bms = GetBundleManager();
+    vector<int64_t> bundleStats;
+    bool res = bms->GetBundleStats(bundleName, userId, bundleStats);
+    if (!res || bundleStats.size() != dataDir.size()) {
+        HILOGE("An error occurred in querying bundle stats. name:%{public}s", bundleName.c_str());
+        return 0;
+    }
+    for (uint i = 0; i < bundleStats.size(); i++) {
+        if (bundleStats[i] == E_ERR) {
+            HILOGE("Failed to query %{public}s data. name:%{public}s", dataDir[i].c_str(), bundleName.c_str());
+            bundleStats[i] = 0;
+        }
+    }
+    int64_t dataSize_ = bundleStats[LOCAL] + bundleStats[DISTRIBUTED] + bundleStats[DATABASE];
+    return dataSize_;
 }
 
 vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(int32_t userId)
@@ -89,10 +118,10 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(int32_t use
             continue;
         }
         auto [allToBackup, extName] = GetAllowAndExtName(installedBundle.extensionInfos);
-        auto bundleStats = StorageMgrAdapter::GetBundleStats(installedBundle.name);
+        auto dataSize = GetBundleStats(installedBundle.name, userId);
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
-                                                              installedBundle.versionName, bundleStats.dataSize_,
-                                                              allToBackup, extName});
+                                                              installedBundle.versionName, dataSize, allToBackup,
+                                                              extName});
     }
     return bundleInfos;
 }
@@ -102,6 +131,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     auto bms = GetBundleManager();
     for (auto const &bundleName : bundleNames) {
+        HILOGI("Begin Get bundleName:%{public}s", bundleName.c_str());
         AppExecFwk::BundleInfo installedBundle;
         if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
             throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle info");
@@ -112,10 +142,10 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
             continue;
         }
         auto [allToBackup, extName] = GetAllowAndExtName(installedBundle.extensionInfos);
-        auto bundleStats = StorageMgrAdapter::GetBundleStats(installedBundle.name);
+        auto dataSize = GetBundleStats(installedBundle.name, userId);
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
-                                                              installedBundle.versionName, bundleStats.dataSize_,
-                                                              allToBackup, extName});
+                                                              installedBundle.versionName, dataSize, allToBackup,
+                                                              extName});
     }
     return bundleInfos;
 }
