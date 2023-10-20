@@ -592,25 +592,25 @@ int64_t SvcSessionManager::GetBundleDataSize(const std::string &bundleName)
 
 uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
 {
-    const uint32_t defaultTimeout = 30; /* 30 second */
-    const uint32_t processRate = 3 * 1024 * 1024; /* 3M/s */
-    const uint32_t multiple = 3;
-    const uint32_t invertMillisecond = 1000;
-    uint32_t timeout;
+    const int64_t defaultTimeout = 30; /* 30 second */
+    const int64_t processRate = 3 * 1024 * 1024; /* 3M/s */
+    const int64_t multiple = 3;
+    const int64_t invertMillisecond = 1000;
+    int64_t timeout;
+    uint32_t resTimeoutMs;
 
     try {
-        uint64_t appSize = static_cast<uint64_t> (GetBundleDataSize(bundleName));
-        /* % UINT_MAX force conver uint64 to uint32 */
+        int64_t appSize = GetBundleDataSize(bundleName);
         /* timeout = (AppSize / 3Ms) * 3 + 30 */
-        timeout = (uint32_t)(defaultTimeout + (appSize / processRate) * multiple % UINT_MAX);
-        HILOGI("Calculate App extension process run timeout=%{public}u(s), bundleName=%{public}s ", timeout, bundleName.c_str());
+        timeout = defaultTimeout + (appSize / processRate) * multiple;
+        HILOGI("Calculate App extension process run timeout=%{public}lld(s), bundleName=%{public}s ", timeout, bundleName.c_str());
     } catch (const BError &e) {
-        HILOGE("Failed to get app<%{public}s> dataInfo, default time=%{public}u, err=%{public}d",
+        HILOGE("Failed to get app<%{public}s> dataInfo, default time=%{public}lld, err=%{public}d",
             bundleName.c_str(), defaultTimeout, e.GetCode());
         timeout = defaultTimeout;
     }
-    timeout = timeout * invertMillisecond % UINT_MAX; /* conver second to millisecond */
-    return timeout;
+    resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX); /* conver second to millisecond */
+    return resTimeoutMs;
 }
 
 void SvcSessionManager::BundleExtTimerStart (
