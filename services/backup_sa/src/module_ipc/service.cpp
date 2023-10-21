@@ -257,6 +257,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             session_->SetBundleRestoreType(bundleInfo.name, restoreType);
             session_->SetBundleVersionCode(bundleInfo.name, bundleInfo.versionCode);
             session_->SetBundleVersionName(bundleInfo.name, bundleInfo.versionName);
+            session_->SetBundleDataSize(bundleInfo.name, bundleInfo.spaceOccupied);
         }
     }
     for (auto info : restoreInfos) {
@@ -279,6 +280,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
     auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
     session_->AppendBundles(bundleNames);
     for (auto info : backupInfos) {
+        session_->SetBundleDataSize(info.name, info.spaceOccupied);
         if (info.allToBackup == false) {
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_REFUSED_ACT), info.name);
             session_->RemoveExtInfo(info.name);

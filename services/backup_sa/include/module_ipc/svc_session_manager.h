@@ -58,6 +58,7 @@ struct BackupExtInfo {
     uint32_t extTimerId;
     /* Timer Status: true is start & false is stop */
     bool timerStatus {false};
+    int64_t dataSize;
 };
 
 class Service;
@@ -358,6 +359,14 @@ public:
      * @return versionName
      */
     std::string GetBundleVersionName(const std::string &bundleName);
+
+    /**
+     * @brief Set the bundle data size object
+     *
+     * @param bundleName
+     * @param dataSize
+     */
+    void SetBundleDataSize(const std::string &bundleName, int64_t dataSize);
 
     /**
      * @brief 启动应用扩展能力定时器
