@@ -579,17 +579,6 @@ void SvcSessionManager::SetBundleDataSize(const std::string &bundleName, int64_t
     it->second.dataSize = dataSize;
 }
 
-int64_t SvcSessionManager::GetBundleDataSize(const std::string &bundleName)
-{
-    unique_lock<shared_mutex> lock(lock_);
-    if (!impl_.clientToken) {/*  */
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
-    }
-
-    auto it = GetBackupExtNameMap(bundleName);
-    return it->second.dataSize;
-}
-
 uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
 {
     const int64_t defaultTimeout = 30; /* 30 second */
@@ -600,7 +589,8 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
     uint32_t resTimeoutMs;
 
     try {
-        int64_t appSize = GetBundleDataSize(bundleName);
+        auto it = GetBackupExtNameMap(bundleName);
+        int64_t appSize = it->second.dataSize;
         /* timeout = (AppSize / 3Ms) * 3 + 30 */
         timeout = defaultTimeout + (appSize / processRate) * multiple;
         HILOGI("Calculate App extension process run timeout=%{public}lld(s), bundleName=%{public}s ",

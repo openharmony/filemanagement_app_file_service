@@ -369,14 +369,6 @@ public:
     void SetBundleDataSize(const std::string &bundleName, int64_t dataSize);
 
     /**
-     * @brief Get the bundle data size object
-     *
-     * @param  bundleName
-     * @return dataSize
-     */
-    int64_t GetBundleDataSize(const std::string &bundleName);
-
-    /**
      * @brief 启动应用扩展能力定时器
      *
      * @param bundleName 应用名称
