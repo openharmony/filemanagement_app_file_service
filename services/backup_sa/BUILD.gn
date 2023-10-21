@@ -24,6 +24,7 @@ ohos_shared_library("backup_sa") {
     "src/module_ipc/service_stub.cpp",
     "src/module_ipc/svc_backup_connection.cpp",
     "src/module_ipc/svc_extension_proxy.cpp",
+    "src/module_ipc/svc_restore_deps_manager.cpp",
     "src/module_ipc/svc_session_manager.cpp",
     "src/module_sched/sched_scheduler.cpp",
   ]

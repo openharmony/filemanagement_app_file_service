@@ -55,6 +55,8 @@ public:
      */
     bool GetFullBackupOnly() const;
 
+    std::string GetRestoreDeps() const;
+
 public:
     std::string GetJSonSource(std::string_view jsonFromRealWorld, std::any option);
 

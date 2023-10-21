@@ -61,7 +61,7 @@ static sptr<AppExecFwk::IBundleMgr> GetBundleManager()
     return iface_cast<AppExecFwk::IBundleMgr>(bundleObj);
 }
 
-static tuple<bool, string> GetAllowAndExtName(const vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
+static tuple<bool, string, string> GetAllowAndExtName(const vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
 {
     for (auto &&ext : extensionInfos) {
         if (ext.type != AppExecFwk::ExtensionAbilityType::BACKUP) {
@@ -74,10 +74,10 @@ static tuple<bool, string> GetAllowAndExtName(const vector<AppExecFwk::Extension
         }
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(out[0], ext.bundleName);
         auto cache = cachedEntity.Structuralize();
-        return {cache.GetAllowToBackupRestore(), ext.name};
+        return {cache.GetAllowToBackupRestore(), ext.name, cache.GetRestoreDeps()};
     }
     HILOGI("No backup extension ability found");
-    return {false, ""};
+    return {false, "", ""};
 }
 
 static int64_t GetBundleStats(const string &bundleName, int32_t userId)
@@ -117,11 +117,11 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(int32_t use
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
         }
-        auto [allToBackup, extName] = GetAllowAndExtName(installedBundle.extensionInfos);
+        auto [allToBackup, extName, restoreDeps] = GetAllowAndExtName(installedBundle.extensionInfos);
         auto dataSize = GetBundleStats(installedBundle.name, userId);
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, dataSize, allToBackup,
-                                                              extName});
+                                                              extName, false, restoreDeps});
     }
     return bundleInfos;
 }
@@ -141,11 +141,11 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
         }
-        auto [allToBackup, extName] = GetAllowAndExtName(installedBundle.extensionInfos);
+        auto [allToBackup, extName, restoreDeps] = GetAllowAndExtName(installedBundle.extensionInfos);
         auto dataSize = GetBundleStats(installedBundle.name, userId);
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, dataSize, allToBackup,
-                                                              extName});
+                                                              extName, false, restoreDeps});
     }
     return bundleInfos;
 }
