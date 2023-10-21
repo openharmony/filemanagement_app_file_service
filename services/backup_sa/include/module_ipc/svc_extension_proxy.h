@@ -26,6 +26,7 @@ public:
     ErrCode HandleClear() override;
     ErrCode HandleBackup() override;
     ErrCode PublishFile(const std::string &fileName) override;
+    ErrCode HandleRestore() override;
 
 public:
     explicit SvcExtensionProxy(const sptr<IRemoteObject> &remote) : IRemoteProxy<IExtension>(remote) {}

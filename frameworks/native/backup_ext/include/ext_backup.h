@@ -134,6 +134,8 @@ public:
 
     bool WasFromSpeicalVersion(void);
 
+    bool RestoreDataReady();
+
 public:
     ExtBackup() = default;
     ~ExtBackup() override = default;

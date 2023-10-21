@@ -23,6 +23,7 @@ enum class IExtensionInterfaceCode {
     CMD_HANDLE_CLAER,
     CMD_PUBLISH_FILE,
     CMD_HANDLE_BACKUP,
+    CMD_HANDLE_RESTORE,
 };
 } // namespace OHOS::FileManagement::Backup
 

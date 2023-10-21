@@ -544,7 +544,8 @@ void Service::ExtStart(const string &bundleName)
         if (scenario != IServiceReverse::Scenario::RESTORE) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Failed to scenario");
         }
-        session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::OK), bundleName);
+        auto ret = proxy->HandleRestore();
+        session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (auto &fileName : fileNameVec) {
             UniqueFd fd = proxy->GetFileHandle(fileName);

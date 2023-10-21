@@ -37,4 +37,9 @@ ErrCode SvcExtensionProxy::PublishFile(const string &fileName)
 {
     return 0;
 }
+
+ErrCode SvcExtensionProxy::HandleRestore()
+{
+    return 0;
+}
 } // namespace OHOS::FileManagement::Backup

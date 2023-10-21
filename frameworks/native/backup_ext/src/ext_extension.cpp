@@ -602,4 +602,29 @@ void BackupExtExtension::AsyncTaskOnBackup()
         }
     });
 }
+
+ErrCode BackupExtExtension::HandleRestore()
+{
+    VerifyCaller();
+    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
+        HILOGI("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
+    }
+    // read backup_config is allow to backup or restore
+    string usrConfig = extension_->GetUsrConfig();
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
+    auto cache = cachedEntity.Structuralize();
+    if (!cache.GetAllowToBackupRestore()) {
+        HILOGI("Application does not allow backup or restore");
+        return BError(BError::Codes::EXT_INVAL_ARG, "Application does not allow backup or restore").GetCode();
+    }
+
+    // async do restore.
+    if (extension_->WasFromSpeicalVersion() && extension_->RestoreDataReady()) {
+        HILOGI("Restore directly when upgrading.");
+        AsyncTaskRestoreForUpgrade();
+    }
+
+    return 0;
+}
 } // namespace OHOS::FileManagement::Backup

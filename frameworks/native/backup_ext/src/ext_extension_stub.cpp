@@ -35,6 +35,8 @@ ExtExtensionStub::ExtExtensionStub()
         &ExtExtensionStub::CmdHandleBackup;
     opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_PUBLISH_FILE)] =
         &ExtExtensionStub::CmdPublishFile;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_HANDLE_RESTORE)] =
+        &ExtExtensionStub::CmdHandleRestore;
 }
 
 int32_t ExtExtensionStub::OnRemoteRequest(uint32_t code,
@@ -107,6 +109,18 @@ ErrCode ExtExtensionStub::CmdPublishFile(MessageParcel &data, MessageParcel &rep
     }
 
     ErrCode res = PublishFile(fileName);
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::EXT_BROKEN_IPC, ss.str()).GetCode();
+    }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ExtExtensionStub::CmdHandleRestore(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("Begin");
+    ErrCode res = HandleRestore();
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;

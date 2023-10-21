@@ -183,15 +183,6 @@ sptr<IRemoteObject> ExtBackup::OnConnect(const AAFwk::Want &want)
 
         auto remoteObject =
             sptr<BackupExtExtension>(new BackupExtExtension(std::static_pointer_cast<ExtBackup>(shared_from_this())));
-
-        // async do restore.
-        if (extAction_ == BConstants::ExtensionAction::RESTORE &&
-                restoreType_ == RestoreTypeEnum::RESTORE_DATA_READDY &&
-                WasFromSpeicalVersion()) {
-            HILOGI("Restore directly when upgrading.");
-            remoteObject->AsyncTaskRestoreForUpgrade();
-        }
-
         return remoteObject->AsObject();
     } catch (const BError &e) {
         return nullptr;
@@ -228,6 +219,11 @@ bool ExtBackup::WasFromSpeicalVersion(void)
         return true;
     }
     return false;
+}
+
+bool ExtBackup::RestoreDataReady()
+{
+    return restoreType_ == RestoreTypeEnum::RESTORE_DATA_READDY;
 }
 
 ErrCode ExtBackup::OnBackup(function<void()> callback)
