@@ -593,14 +593,14 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
         int64_t appSize = it->second.dataSize;
         /* timeout = (AppSize / 3Ms) * 3 + 30 */
         timeout = defaultTimeout + (appSize / processRate) * multiple;
-        HILOGI("Calculate App extension process run timeout=%{public}lld(s), bundleName=%{public}s ",
-            timeout, bundleName.c_str());
     } catch (const BError &e) {
-        HILOGE("Failed to get app<%{public}s> dataInfo, default time=%{public}lld, err=%{public}d",
-            bundleName.c_str(), defaultTimeout, e.GetCode());
+        HILOGE("Failed to get app<%{public}s> dataInfo, err=%{public}d",
+            bundleName.c_str(), e.GetCode());
         timeout = defaultTimeout;
     }
     resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX); /* conver second to millisecond */
+    HILOGI("Calculate App extension process run timeout=%{public}u(s), bundleName=%{public}s ",
+            resTimeoutMs, bundleName.c_str());
     return resTimeoutMs;
 }
 
