@@ -600,7 +600,7 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
     }
     resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX); /* conver second to millisecond */
     HILOGI("Calculate App extension process run timeout=%{public}u(s), bundleName=%{public}s ",
-            resTimeoutMs, bundleName.c_str());
+        resTimeoutMs, bundleName.c_str());
     return resTimeoutMs;
 }
 
