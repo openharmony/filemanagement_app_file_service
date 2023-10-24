@@ -248,16 +248,8 @@ static bool GetRealPath(string &path)
     return true;
 }
 
-static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleNames)
+static int32_t InitFd(UniqueFd &fd, const vector<string> &bundleNames)
 {
-    StartTrace(HITRACE_TAG_FILEMANAGEMENT, "Init");
-    string realPath = pathCapFile;
-    if (!GetRealPath(realPath)) {
-        fprintf(stderr, "path to realpath error");
-        return -errno;
-    }
-
-    UniqueFd fd(open(realPath.data(), O_RDWR, S_IRWXU));
     if (fd < 0) {
         fprintf(stderr, "Failed to open file error: %d %s\n", errno, strerror(errno));
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
@@ -278,7 +270,15 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
         cachedEntity.Persist();
         fd = move(cachedEntity.GetFd());
     }
-    auto ctx = make_shared<Session>();
+    return 0;
+}
+
+static int32_t InitRestoreSession(shared_ptr<Session> ctx)
+{
+    if (!ctx) {
+        throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
+        return -1;
+    }
     ctx->session_ = BSessionRestore::Init(
         BSessionRestore::Callbacks {.onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2),
                                     .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
@@ -290,10 +290,51 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
         return -EPERM;
     }
-    int ret = ctx->session_->AppendBundles(move(fd), bundleNames);
+    return 0;
+}
+
+static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleNames, bool depMode)
+{
+    StartTrace(HITRACE_TAG_FILEMANAGEMENT, "Init");
+    string realPath = pathCapFile;
+    if (!GetRealPath(realPath)) {
+        fprintf(stderr, "path to realpath error");
+        return -errno;
+    }
+
+    UniqueFd fd(open(realPath.data(), O_RDWR, S_IRWXU));
+    int32_t ret = InitFd(fd, bundleNames);
     if (ret != 0) {
-        printf("restore append bundles error: %d\n", ret);
-        return -ret;
+        printf("Failed to get fd error:%d\n", ret);
+        return ret;
+    }
+    auto ctx = make_shared<Session>();
+    ret = InitRestoreSession(ctx);
+    if (ret != 0) {
+        printf("Failed to init restore session error:%d\n", ret);
+        return ret;
+    }
+
+    if (depMode) {
+        for (auto &bundleName : bundleNames) {
+            UniqueFd fd(open(realPath.data(), O_RDWR, S_IRWXU));
+            if (fd < 0) {
+                fprintf(stderr, "Failed to open file error: %d %s\n", errno, strerror(errno));
+                FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
+                return -errno;
+            }
+            int ret = ctx->session_->AppendBundles(move(fd), {bundleName});
+            if (ret != 0) {
+                printf("restore append bundles error: %d\n", ret);
+                return -ret;
+            }
+        }
+    } else {
+        ret = ctx->session_->AppendBundles(move(fd), bundleNames);
+        if (ret != 0) {
+            printf("restore append bundles error: %d\n", ret);
+            return -ret;
+        }
     }
     ctx->SetBundleFinishedCount(bundleNames.size());
     RestoreApp(ctx, bundleNames);
@@ -303,10 +344,17 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
 
 static int Exec(map<string, vector<string>> &mapArgToVal)
 {
+    bool depMode = false;
+    if (mapArgToVal.find("depMode") != mapArgToVal.end()) {
+        string strFlag = *(mapArgToVal["depMode"].begin());
+        printf("Exec, strFlag:%s", strFlag.c_str());
+        depMode = (strFlag == "true");
+    }
+
     if (mapArgToVal.find("pathCapFile") == mapArgToVal.end() || mapArgToVal.find("bundles") == mapArgToVal.end()) {
         return -EPERM;
     }
-    return InitPathCapFile(*(mapArgToVal["pathCapFile"].begin()), mapArgToVal["bundles"]);
+    return InitPathCapFile(*(mapArgToVal["pathCapFile"].begin()), mapArgToVal["bundles"], depMode);
 }
 
 /**
@@ -323,6 +371,10 @@ static bool g_autoRegHack = ToolsOp::Register(ToolsOp {ToolsOp::Descriptor {
                 {
                     .paramName = "bundles",
                     .repeatable = true,
+                },
+                {
+                    .paramName = "depMode",
+                    .repeatable = false,
                 }},
     .funcGenHelpMsg = GenHelpMsg,
     .funcExec = Exec,

@@ -137,6 +137,7 @@ private:
      *
      */
     void OnStartSched();
+
     /**
      * @brief 通知客户端程序扩展能力处理结果
      *
@@ -144,6 +145,14 @@ private:
      *
      */
     void NoticeClientFinish(const std::string &bundleName, ErrCode errCode);
+
+    /**
+     * @brief 处理有依赖的应用恢复
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void HandleRestoreDepsBundle(const std::string &bundleName);
 
 private:
     static sptr<Service> instance_;

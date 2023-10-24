@@ -117,6 +117,7 @@ UniqueFd Service::GetLocalCapabilities()
 
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
+        HILOGE("GetLocalCapabilities failed, errCode = %{public}d", e.GetCode());
         return UniqueFd(-e.GetCode());
     } catch (const exception &e) {
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
@@ -230,6 +231,19 @@ ErrCode Service::Start()
     return BError(BError::Codes::OK);
 }
 
+static void GetRestoreBundleNames(const vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
+                                  vector<string> &restoreBundleNames,
+                                  RestoreTypeEnum restoreType,
+                                  const vector<BundleName> &bundleNames)
+{
+    vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {};
+    for (auto &bundleInfo : bundleInfos) {
+        if (find(bundleNames.begin(), bundleNames.end(), bundleInfo.name) != bundleNames.end()) {
+            restoreBundleInfos.emplace_back(bundleInfo);
+        }
+    }
+    restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreBundleInfos, restoreType);
+}
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              const vector<BundleName> &bundleNames,
                                              RestoreTypeEnum restoreType,
@@ -247,18 +261,11 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
     if (!bundleInfos.size()) {
         throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
     }
-
-    vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {};
-    for (auto &bundleInfo : bundleInfos) {
-        if (find(bundleNames.begin(), bundleNames.end(), bundleInfo.name) != bundleNames.end()) {
-            restoreBundleInfos.push_back(bundleInfo);
-        }
-    }
-    vector<string> restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreBundleInfos);
+    vector<string> restoreBundleNames {};
+    GetRestoreBundleNames(bundleInfos, restoreBundleNames, restoreType, bundleNames);
     if (restoreBundleNames.empty()) {
         return BError(BError::Codes::OK);
     }
-
     session_->AppendBundles(restoreBundleNames);
     for (auto bundleName : restoreBundleNames) {
         HILOGD("bundleName: %{public}s", bundleName.c_str());
@@ -487,6 +494,7 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
         if (!regex_match(fileName, regex("^[0-9a-zA-Z_.]+$"))) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not alphanumeric");
         }
+        SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);
         session_->SetExtFileNameRequest(bundleName, fileName);
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {
@@ -670,28 +678,7 @@ void Service::ClearSessionAndSchedInfo(const string &bundleName)
     try {
         session_->RemoveExtInfo(bundleName);
         sched_->RemoveExtConn(bundleName);
-
-        if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
-            SvcRestoreDepsManager::GetInstance().AddRestoredBundles(bundleName);
-
-            // 该应用恢复完成，判断依赖hap的前置hap是否全部恢复完成，如果成了，追加该依赖hap
-            vector<string> restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames();
-            if (!restoreBundleNames.empty()) { // 启动恢复会话
-                session_->AppendBundles(restoreBundleNames);
-                for (auto &bundleName : restoreBundleNames) {
-                    for (auto &bundleInfo : SvcRestoreDepsManager::GetInstance().GetAllBundles()) {
-                        if (bundleName == bundleInfo.name) {
-                            session_->SetNeedToInstall(bundleInfo.name, bundleInfo.needToInstall);
-                            session_->SetBundleRestoreType(bundleInfo.name, RESTORE_DATA_WAIT_SEND);
-                            session_->SetBundleVersionCode(bundleInfo.name, bundleInfo.versionCode);
-                            session_->SetBundleVersionName(bundleInfo.name, bundleInfo.versionName);
-                            session_->SetBundleDataSize(bundleInfo.name, bundleInfo.spaceOccupied);
-                        }
-                    }
-                }
-            }
-        }
-
+        HandleRestoreDepsBundle(bundleName);
         sched_->Sched();
     } catch (const BError &e) {
         return;
@@ -702,6 +689,45 @@ void Service::ClearSessionAndSchedInfo(const string &bundleName)
         HILOGI("Unexpected exception");
         return;
     }
+}
+
+void Service::HandleRestoreDepsBundle(const string &bundleName)
+{
+    if (session_->GetScenario() != IServiceReverse::Scenario::RESTORE) {
+        return;
+    }
+    HILOGI("Begin, bundleName: %{public}s", bundleName.c_str());
+    SvcRestoreDepsManager::GetInstance().AddRestoredBundles(bundleName);
+    // 该应用恢复完成，判断依赖hap的前置hap是否全部恢复完成，如果成了，追加该依赖hap
+    auto restoreBundleMap = SvcRestoreDepsManager::GetInstance().GetRestoreBundleMap();
+    if (restoreBundleMap.empty()) {
+        HILOGI("restoreBundleMap is empty.");
+        return;
+    }
+    // 启动恢复会话
+    vector<string> restoreBundleNames {};
+    for (auto &bundle : restoreBundleMap) {
+        HILOGI("Start restore session, bundle: %{public}s", bundle.first.c_str());
+        restoreBundleNames.emplace_back(bundle.first);
+    }
+    session_->AppendBundles(restoreBundleNames);
+    for (auto &bundle : restoreBundleMap) {
+        for (auto &bundleInfo : SvcRestoreDepsManager::GetInstance().GetAllBundles()) {
+            if (bundle.first != bundleInfo.name) {
+                continue;
+            }
+            SvcRestoreDepsManager::RestoreInfo info = bundle.second;
+            session_->SetNeedToInstall(bundleInfo.name, bundleInfo.needToInstall);
+            session_->SetBundleRestoreType(bundleInfo.name, info.restoreType_);
+            session_->SetBundleVersionCode(bundleInfo.name, bundleInfo.versionCode);
+            session_->SetBundleVersionName(bundleInfo.name, bundleInfo.versionName);
+            session_->SetBundleDataSize(bundleInfo.name, bundleInfo.spaceOccupied);
+            for (auto &fileName : info.fileNames_) {
+                session_->SetExtFileNameRequest(bundleInfo.name, fileName);
+            }
+        }
+    }
+    HILOGI("End");
 }
 
 void Service::OnAllBundlesFinished(ErrCode errCode)

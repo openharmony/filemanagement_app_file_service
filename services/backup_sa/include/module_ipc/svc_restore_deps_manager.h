@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,13 +16,15 @@
 #ifndef OHOS_FILEMGMT_BACKUP_SVC_RESTORE_DEPS_MANAGER_H
 #define OHOS_FILEMGMT_BACKUP_SVC_RESTORE_DEPS_MANAGER_H
 
+#include <set>
+#include <shared_mutex>
 #include <string>
 #include <vector>
 
 #include "b_json/b_json_entity_caps.h"
+#include "i_service.h"
 
 namespace OHOS::FileManagement::Backup {
-using namespace std;
 
 class SvcRestoreDepsManager {
 public:
@@ -31,12 +33,17 @@ public:
         static SvcRestoreDepsManager manager;
         return manager;
     }
+    struct RestoreInfo {
+        RestoreTypeEnum restoreType_ {RESTORE_DATA_WAIT_SEND};
+        set<string> fileNames_ {};
+    };
 
-    vector<string> GetRestoreBundleNames(const vector<BJsonEntityCaps::BundleInfo> &infos);
+    vector<string> GetRestoreBundleNames(const vector<BJsonEntityCaps::BundleInfo> &infos, RestoreTypeEnum restoreType);
+    map<string, SvcRestoreDepsManager::RestoreInfo> GetRestoreBundleMap();
     void AddRestoredBundles(const string &bundleName);
-    vector<string> GetRestoreBundleNames();
     vector<BJsonEntityCaps::BundleInfo> GetAllBundles() const;
     bool IsAllBundlesRestored() const;
+    void UpdateToRestoreBundleMap(const string &bundleName, const string &fileName);
 
 private:
     SvcRestoreDepsManager() {}
@@ -45,15 +52,14 @@ private:
     SvcRestoreDepsManager &operator=(const SvcRestoreDepsManager &manager) = delete;
 
     void BuildDepsMap(const vector<BJsonEntityCaps::BundleInfo> &infos);
-    vector<string> SplitString(const string &str, char delim);
-    void AddBundles(vector<string> &bundles, const string &bundleName);
+    vector<string> SplitString(const string &srcStr, const string &separator);
     bool IsAllDepsRestored(const string &bundleName);
 
+    mutable std::shared_mutex lock_;
     map<string, vector<string>> depsMap_ {};
     vector<BJsonEntityCaps::BundleInfo> allBundles_ {}; // 所有的应用
-
-    vector<string> toRestoreBundles_ {}; // 有依赖的应用
-    vector<string> restoredBundles_ {};  // 已经恢复完成的应用
+    map<string, RestoreInfo> toRestoreBundleMap_ {};    // 有依赖的应用
+    set<string> restoredBundles_ {};                    // 已经恢复完成的应用
 };
 
 } // namespace OHOS::FileManagement::Backup

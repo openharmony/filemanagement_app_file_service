@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,13 +18,14 @@
 #include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
+using namespace std;
 
-vector<string> SvcRestoreDepsManager::GetRestoreBundleNames(const vector<BJsonEntityCaps::BundleInfo> &bundleInfos)
+vector<string> SvcRestoreDepsManager::GetRestoreBundleNames(const vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
+                                                            RestoreTypeEnum restoreType)
 {
-    HILOGI("SvcRestoreDepsManager::GetRestoreBundleNames, bundleInfos.size():%{public}d", bundleInfos.size());
+    unique_lock<shared_mutex> lock(lock_);
     vector<string> restoreBundleNames {}; // 需要恢复的应用列表
-
-    BuildDepsMap(bundleInfos); // 构建依赖Map
+    BuildDepsMap(bundleInfos);            // 构建依赖Map
 
     for (auto &bundleInfo : bundleInfos) {
         string restoreDeps = bundleInfo.restoreDeps;
@@ -32,13 +33,14 @@ vector<string> SvcRestoreDepsManager::GetRestoreBundleNames(const vector<BJsonEn
             // 将没有依赖的应用加入到需要恢复的应用列表
             restoreBundleNames.emplace_back(bundleInfo.name);
         } else {
-            AddBundles(toRestoreBundles_, bundleInfo.name);
+            RestoreInfo info {};
+            info.restoreType_ = restoreType;
+            toRestoreBundleMap_.insert(make_pair(bundleInfo.name, info));
 
             // 如果该应用的依赖项已经完成备份，也需要加到需要恢复的应用列表
             if (IsAllDepsRestored(bundleInfo.name)) {
-                AddBundles(restoreBundleNames, bundleInfo.name);
-                toRestoreBundles_.erase(remove(toRestoreBundles_.begin(), toRestoreBundles_.end(), bundleInfo.name),
-                                        toRestoreBundles_.end());
+                restoreBundleNames.emplace_back(bundleInfo.name);
+                toRestoreBundleMap_.erase(bundleInfo.name);
             }
         }
     }
@@ -46,24 +48,26 @@ vector<string> SvcRestoreDepsManager::GetRestoreBundleNames(const vector<BJsonEn
     return restoreBundleNames;
 }
 
-vector<string> SvcRestoreDepsManager::GetRestoreBundleNames()
+map<string, SvcRestoreDepsManager::RestoreInfo> SvcRestoreDepsManager::GetRestoreBundleMap()
 {
-    HILOGI("SvcRestoreDepsManager::GetRestoreBundleNames");
-    vector<string> restoreBundleNames {};    // 需要恢复的应用列表
-    for (auto &bundle : toRestoreBundles_) { // 所有有依赖的应用
+    unique_lock<shared_mutex> lock(lock_);
+    map<string, RestoreInfo> restoreBundleMap {};                                   // 需要恢复的应用列表
+    for (auto it = toRestoreBundleMap_.begin(); it != toRestoreBundleMap_.end();) { // 所有有依赖的应用
         // 如果该应用的依赖项已经完成备份，也需要加到 restoreBundleNames
-        if (IsAllDepsRestored(bundle)) {
-            AddBundles(restoreBundleNames, bundle);
-            toRestoreBundles_.erase(remove(toRestoreBundles_.begin(), toRestoreBundles_.end(), bundle),
-                                    toRestoreBundles_.end());
+        string bundleName = it->first;
+        if (IsAllDepsRestored(bundleName)) {
+            RestoreInfo restoreInfo = it->second;
+            restoreBundleMap.insert(make_pair(bundleName, restoreInfo));
+            toRestoreBundleMap_.erase(it++);
+        } else {
+            it++;
         }
     }
-    return restoreBundleNames;
+    return restoreBundleMap;
 }
 
 bool SvcRestoreDepsManager::IsAllDepsRestored(const string &bundle)
 {
-    HILOGI("SvcRestoreDepsManager::IsAllDepsRestored, bundle:%{public}s", bundle.c_str());
     if (depsMap_.find(bundle) == depsMap_.end()) {
         return false;
     }
@@ -75,13 +79,11 @@ bool SvcRestoreDepsManager::IsAllDepsRestored(const string &bundle)
             break;
         }
     }
-    HILOGI("SvcRestoreDepsManager::IsAllDepsRestored, isAllDepsRestored:%{public}d", isAllDepsRestored);
     return isAllDepsRestored;
 }
 
 void SvcRestoreDepsManager::BuildDepsMap(const vector<BJsonEntityCaps::BundleInfo> &bundleInfos)
 {
-    HILOGI("SvcRestoreDepsManager::BuildDepsMap, bundleInfos.size():%{public}d", bundleInfos.size());
     for (auto &bundleInfo : bundleInfos) {
         if (depsMap_.find(bundleInfo.name) != depsMap_.end()) {
             continue;
@@ -91,7 +93,7 @@ void SvcRestoreDepsManager::BuildDepsMap(const vector<BJsonEntityCaps::BundleInf
         vector<string> depsList {};
         string restoreDeps = bundleInfo.restoreDeps;
         if (restoreDeps.find(",") != string::npos) {
-            depsList = SplitString(restoreDeps, ',');
+            depsList = SplitString(restoreDeps, ",");
         } else {
             if (!restoreDeps.empty()) {
                 depsList.emplace_back(restoreDeps);
@@ -102,33 +104,41 @@ void SvcRestoreDepsManager::BuildDepsMap(const vector<BJsonEntityCaps::BundleInf
     }
 }
 
-vector<string> SvcRestoreDepsManager::SplitString(const string &str, char delim)
+vector<string> SvcRestoreDepsManager::SplitString(const string &srcStr, const string &separator)
 {
-    HILOGI("SvcRestoreDepsManager::SplitString, str:%{public}s", str.c_str());
-    stringstream ss(str);
-    string item {};
-    vector<string> results {};
-    while (getline(ss, item, delim)) {
-        if (!item.empty()) {
-            results.push_back(item);
+    HILOGI("srcStr:%{public}s, separator:%{public}s", srcStr.c_str(), separator.c_str());
+    vector<string> dst;
+    if (srcStr.empty() || separator.empty()) {
+        return dst;
+    }
+    size_t start = 0;
+    size_t index = srcStr.find_first_of(separator, 0);
+    while (index != srcStr.npos) {
+        if (start != index) {
+            string tempStr = srcStr.substr(start, index - start);
+            tempStr.erase(0, tempStr.find_first_not_of(" "));
+            tempStr.erase(tempStr.find_last_not_of(" ") + 1);
+            tempStr.erase(tempStr.find_last_not_of("\r") + 1);
+            dst.push_back(tempStr);
         }
+        start = index + 1;
+        index = srcStr.find_first_of(separator, start);
     }
-    HILOGI("SvcRestoreDepsManager::SplitString, results.size():%{public}d", results.size());
-    return results;
-}
 
-void SvcRestoreDepsManager::AddBundles(vector<string> &bundles, const string &bundleName)
-{
-    if (find(bundles.begin(), bundles.end(), bundleName) == bundles.end()) {
-        HILOGI("SvcRestoreDepsManager::AddBundles, bundleName:%{public}s", bundleName.c_str());
-        bundles.emplace_back(bundleName);
+    if (!srcStr.substr(start).empty()) {
+        string tempStr = srcStr.substr(start);
+        tempStr.erase(0, tempStr.find_first_not_of(" "));
+        tempStr.erase(tempStr.find_last_not_of(" ") + 1);
+        tempStr.erase(tempStr.find_last_not_of("\r") + 1);
+        dst.push_back(tempStr);
     }
+    return dst;
 }
 
 void SvcRestoreDepsManager::AddRestoredBundles(const string &bundleName)
 {
-    HILOGI("SvcRestoreDepsManager::AddRestoredBundles, bundleName:%{public}s", bundleName.c_str());
-    AddBundles(restoredBundles_, bundleName);
+    unique_lock<shared_mutex> lock(lock_);
+    restoredBundles_.insert(bundleName);
 }
 
 vector<BJsonEntityCaps::BundleInfo> SvcRestoreDepsManager::GetAllBundles() const
@@ -138,7 +148,16 @@ vector<BJsonEntityCaps::BundleInfo> SvcRestoreDepsManager::GetAllBundles() const
 
 bool SvcRestoreDepsManager::IsAllBundlesRestored() const
 {
-    return toRestoreBundles_.empty();
+    return toRestoreBundleMap_.empty();
+}
+
+void SvcRestoreDepsManager::UpdateToRestoreBundleMap(const string &bundleName, const string &fileName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    auto it = toRestoreBundleMap_.find(bundleName);
+    if (it != toRestoreBundleMap_.end()) {
+        it->second.fileNames_.insert(fileName);
+    }
 }
 
 } // namespace OHOS::FileManagement::Backup

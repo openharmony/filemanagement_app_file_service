@@ -432,7 +432,7 @@ bool SvcSessionManager::IsOnAllBundlesFinished()
         bool isAllBundlesRestored = SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
         isAllBundlesFinished = (isAllBundlesFinished && isAllBundlesRestored);
     }
-
+    HILOGI("isAllBundlesFinished:%{public}d", isAllBundlesFinished);
     return isAllBundlesFinished;
 }
 
@@ -504,8 +504,8 @@ bool SvcSessionManager::NeedToUnloadService()
     if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
         bool isAllBundlesRestored = SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
         isNeedToUnloadService = (isNeedToUnloadService && isAllBundlesRestored);
-    } 
-
+    }
+    HILOGI("isNeedToUnloadService:%{public}d", isNeedToUnloadService);
     return isNeedToUnloadService;
 }
 
@@ -600,20 +600,18 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
         int64_t appSize = it->second.dataSize;
         /* timeout = (AppSize / 3Ms) * 3 + 30 */
         timeout = defaultTimeout + (appSize / processRate) * multiple;
-        HILOGI("Calculate App extension process run timeout=%{public}lld(s), bundleName=%{public}s ",
-            timeout, bundleName.c_str());
+        HILOGI("Calculate App extension process run timeout=%{public}lld(s), bundleName=%{public}s ", timeout,
+               bundleName.c_str());
     } catch (const BError &e) {
-        HILOGE("Failed to get app<%{public}s> dataInfo, default time=%{public}lld, err=%{public}d",
-            bundleName.c_str(), defaultTimeout, e.GetCode());
+        HILOGE("Failed to get app<%{public}s> dataInfo, default time=%{public}lld, err=%{public}d", bundleName.c_str(),
+               defaultTimeout, e.GetCode());
         timeout = defaultTimeout;
     }
     resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX); /* conver second to millisecond */
     return resTimeoutMs;
 }
 
-void SvcSessionManager::BundleExtTimerStart (
-    const std::string &bundleName,
-    const Utils::Timer::TimerCallback& callback)
+void SvcSessionManager::BundleExtTimerStart(const std::string &bundleName, const Utils::Timer::TimerCallback &callback)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
