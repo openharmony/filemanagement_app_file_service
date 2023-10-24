@@ -21,8 +21,8 @@ extern const char _binary_backup_extension_ability_abc_start[];
 extern const char _binary_backup_extension_ability_abc_end[];
 
 static napi_module _module = {
-    .nm_modname = "application.BackupExtensionAbility",
     .nm_filename = "application/libbackupextensionability_napi.so/BackupExtensionAbility.js",
+    .nm_modname = "application.BackupExtensionAbility",
 };
 
 extern "C" __attribute__((constructor)) void NAPI_application_BackupExtensionAbility_AutoRegister()
