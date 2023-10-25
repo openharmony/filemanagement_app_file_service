@@ -279,7 +279,7 @@ static int GetDistributedPath(Uri &uri, const int &userId, std::string &distribu
 
 static std::string GetPhysicalPath(Uri &uri, const std::string &userId)
 {
-    std::string sandboxPath = uri.GetPath();
+    std::string sandboxPath = SandboxHelper::Decode(uri.GetPath());
     if (!IsValidPath(sandboxPath) || uri.GetScheme() != FILE_SCHEME) {
         LOGE("Sandbox path from uri is error with %{public}s", sandboxPath.c_str());
         return "";
@@ -330,11 +330,10 @@ static std::string GetLocalNetworkId()
 static void SetHmdfsUriInfo(struct HmdfsUriInfo &hui, Uri &uri, uint64_t fileSize)
 {
     std::string bundleName = uri.GetAuthority();
-    std::string path = uri.GetPath();
     std::string networkId = NETWORK_PARA + GetLocalNetworkId();
 
     hui.uriStr = FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH + REMOTE_SHARE_PATH_DIR +
-                 SandboxHelper::Encode(path) + networkId;
+                 uri.GetPath() + networkId;
 
     hui.fileSize = fileSize;
     return;
@@ -358,8 +357,7 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
 {
     Uri uri(uriStr);
     std::string bundleName = uri.GetAuthority();
-    LOGD("GetDfsUriFromLocal begin with uri:%{private}s, decode uri:%{private}s",
-         uriStr.c_str(), uri.ToString().c_str());
+    LOGD("GetDfsUriFromLocal begin with uri:%{private}s", uriStr.c_str());
     std::string physicalPath = GetPhysicalPath(uri, std::to_string(userId));
     if (physicalPath == "") {
         LOGE("Failed to get physical path");
