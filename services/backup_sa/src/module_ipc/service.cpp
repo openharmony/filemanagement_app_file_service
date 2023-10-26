@@ -116,6 +116,7 @@ UniqueFd Service::GetLocalCapabilities()
 
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
+        HILOGE("GetLocalCapabilities failed, errCode = %{public}d", e.GetCode());
         return UniqueFd(-e.GetCode());
     } catch (const exception &e) {
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());

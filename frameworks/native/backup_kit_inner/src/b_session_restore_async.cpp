@@ -139,6 +139,7 @@ void BSessionRestoreAsync::PopBundleInfo()
 void BSessionRestoreAsync::AppendBundlesImpl(AppendBundleInfo info)
 {
     HILOGD("Start");
+    ServiceProxy::InvaildInstance();
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
         return OnBundleStarted(BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode(),
