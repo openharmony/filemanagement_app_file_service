@@ -189,7 +189,7 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
                 continue;
             }
             bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {
-                .name = name, .needToInstall = false, .versionCode = versionCode, .versionName = versionName, 
+                .name = name, .needToInstall = false, .versionCode = versionCode, .versionName = versionName,
                 .extensionName = bundleInfo.extensionName, .spaceOccupied = bundleInfo.spaceOccupied});
         }
     }
