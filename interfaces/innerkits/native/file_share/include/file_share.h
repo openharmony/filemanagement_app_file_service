@@ -23,19 +23,17 @@
 namespace OHOS {
 namespace AppFileService {
 using namespace std;
+class FileShare {
+private:
+    static mutex mapMutex_;
 
-#ifdef __cplusplus
-#if __cplusplus
-extern "C" {
-#endif
-#endif /* End of #ifdef __cplusplus */
-    int32_t CreateShareFile(const vector<string> &uriList, uint32_t tokenId, uint32_t flag, vector<int32_t> &retList);
-    int32_t DeleteShareFile(uint32_t tokenId, const vector<string> &uriList);
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif
-#endif /* End of #ifdef __cplusplus */
+public:
+    static int32_t CreateShareFile(const vector<string> &uriList,
+                                   uint32_t tokenId,
+                                   uint32_t flag,
+                                   vector<int32_t> &retList);
+    static int32_t DeleteShareFile(uint32_t tokenId, const vector<string> &uriList);
+};
 } // namespace AppFileService
 } // namespace OHOS
 
