@@ -180,11 +180,11 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
     BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
-    auto bundleInfos = cache.GetBundleInfos();
+    auto cacheBundleInfos = cache.GetBundleInfos();
     for (auto name : bundleNames) {
         string versionName = string(BConstants::DEFAULT_VERSION_NAME);
         uint32_t versionCode = static_cast<uint32_t>(BConstants::DEFAULT_VERSION_CODE);
-        for (auto &&bundleInfo : bundleInfos) {
+        for (auto &&bundleInfo : cacheBundleInfos) {
             if (bundleInfo.name != name) {
                 continue;
             }
