@@ -44,6 +44,7 @@ unique_ptr<BSessionRestore> BSessionRestore::Init(Callbacks callbacks)
 {
     try {
         auto restore = make_unique<BSessionRestore>();
+        ServiceProxy::InvaildInstance();
         auto proxy = ServiceProxy::GetInstance();
         if (proxy == nullptr) {
             HILOGI("Failed to get backup service");
