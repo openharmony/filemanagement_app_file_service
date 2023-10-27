@@ -57,6 +57,7 @@ static vector<string> DEFAULT_INCLUDE_DIR = {
     "data/storage/el2/base/haps/*/database/",
     "data/storage/el2/base/haps/*/files/",
     "data/storage/el2/base/haps/*/preferences/",
+    "data/storage/el2/distributedfiles/",
 };
 static vector<string> DEFAULT_EXCLUDE_DIR = {};
 
