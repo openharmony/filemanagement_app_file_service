@@ -190,7 +190,7 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
             }
             bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {
                 .name = name, .needToInstall = false, .versionCode = versionCode, .versionName = versionName, 
-                .extensionName = spaceOccupied.extensionName, .spaceOccupied = bundleInfo.spaceOccupied});
+                .extensionName = bundleInfo.extensionName, .spaceOccupied = bundleInfo.spaceOccupied});
         }
     }
     cache.SetBundleInfos(bundleInfos);
