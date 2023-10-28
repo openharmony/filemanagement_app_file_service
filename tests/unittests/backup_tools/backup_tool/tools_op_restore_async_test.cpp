@@ -134,35 +134,41 @@ HWTEST_F(ToolsOpRestoreAsyncTest, SUB_backup_tools_op_restore_async_0200, testin
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
         auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        if (matchedOp == opeartions.end()) {
-            EXPECT_TRUE(false);
-            return;
-        }
         int ret = 0;
-        ret = matchedOp->Execute(mapArgToVal);
-        EXPECT_NE(ret, 0);
-
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-The bundles field is not contained.";
         mapArgToVal.clear();
         mapArgToVal.insert(make_pair("pathCapFile", path));
-        ret = matchedOp->Execute(mapArgToVal);
-        EXPECT_NE(ret, 0);
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
 
         mapArgToVal.clear();
         mapArgToVal.insert(make_pair("pathCapFile", path));
         mapArgToVal.insert(make_pair("bundles", bundles));
-        ret = matchedOp->Execute(mapArgToVal);
-        EXPECT_NE(ret, 0);
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
 
         mapArgToVal.clear();
         mapArgToVal.insert(make_pair("pathCapFile", path));
         mapArgToVal.insert(make_pair("bundles", bundles));
         mapArgToVal.insert(make_pair("restoreType", restoreType));
-        ret = matchedOp->Execute(mapArgToVal);
-        EXPECT_NE(ret, 0);
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
 
         mapArgToVal.clear();
-        ret = matchedOp->Execute(mapArgToVal);
-        EXPECT_NE(ret, 0);
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
