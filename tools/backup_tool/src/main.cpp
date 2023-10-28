@@ -15,6 +15,11 @@
 
 #include "errors.h"
 #include "tools_op.h"
+#include "tools_op_backup.h"
+#include "tools_op_help.h"
+#include "tools_op_check_sa.h"
+#include "tools_op_restore.h"
+#include "tools_op_restore_async.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -64,19 +69,31 @@ optional<map<string, vector<string>>> GetArgsMap(int argc, char *const argv[], c
     return mapArgToVals;
 }
 
+void ToolRegister()
+{
+    OHOS::FileManagement::Backup::BackUpRegister();
+    OHOS::FileManagement::Backup::HelpRegister();
+    OHOS::FileManagement::Backup::CheckSaRegister();
+    OHOS::FileManagement::Backup::RestoreRegister();
+    OHOS::FileManagement::Backup::RestoreAsyncRegister();
+}
+
 int ParseOpAndExecute(const int argc, char *const argv[])
 {
+    // 注册下命令
+    ToolRegister();
     int flag = -1;
     for (int i = 1; i < argc; i++) {
         // 暂存 {argv[1]...argv[i]};
         vector<string_view> curOp;
-        for (int j = i; j < argc; ++j) {
+        for (int j = 1; j <= i; ++j) {
             curOp.emplace_back(argv[j]);
         }
 
         // 尝试匹配当前命令，成功后执行
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
+
         auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
         if (matchedOp != opeartions.end()) {
             vector<ToolsOp::CmdInfo> argList = matchedOp->GetParams();
