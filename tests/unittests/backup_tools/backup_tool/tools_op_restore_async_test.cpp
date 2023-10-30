@@ -141,31 +141,25 @@ HWTEST_F(ToolsOpRestoreAsyncTest, SUB_backup_tools_op_restore_async_0200, testin
         }
         GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-The bundles field is not contained.";
         mapArgToVal.clear();
-        mapArgToVal.insert(make_pair("pathCapFile", path));
         if (matchedOp != opeartions.end()) {
+            mapArgToVal.insert(make_pair("pathCapFile", path));
             ret = matchedOp->Execute(mapArgToVal);
             EXPECT_NE(ret, 0);
-        }
 
-        mapArgToVal.clear();
-        mapArgToVal.insert(make_pair("pathCapFile", path));
-        mapArgToVal.insert(make_pair("bundles", bundles));
-        if (matchedOp != opeartions.end()) {
+            mapArgToVal.clear();
+            mapArgToVal.insert(make_pair("pathCapFile", path));
+            mapArgToVal.insert(make_pair("bundles", bundles));
             ret = matchedOp->Execute(mapArgToVal);
             EXPECT_NE(ret, 0);
-        }
 
-        mapArgToVal.clear();
-        mapArgToVal.insert(make_pair("pathCapFile", path));
-        mapArgToVal.insert(make_pair("bundles", bundles));
-        mapArgToVal.insert(make_pair("restoreType", restoreType));
-        if (matchedOp != opeartions.end()) {
+            mapArgToVal.clear();
+            mapArgToVal.insert(make_pair("pathCapFile", path));
+            mapArgToVal.insert(make_pair("bundles", bundles));
+            mapArgToVal.insert(make_pair("restoreType", restoreType));
             ret = matchedOp->Execute(mapArgToVal);
             EXPECT_NE(ret, 0);
-        }
 
-        mapArgToVal.clear();
-        if (matchedOp != opeartions.end()) {
+            mapArgToVal.clear();
             ret = matchedOp->Execute(mapArgToVal);
             EXPECT_NE(ret, 0);
         }

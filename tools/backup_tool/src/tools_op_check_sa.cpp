@@ -42,7 +42,8 @@ static int Exec(map<string, vector<string>> &mapArgToVal)
 }
 
 
-bool CheckSaRegister() {
+bool CheckSaRegister() 
+{
     return ToolsOp::Register(ToolsOp{ ToolsOp::Descriptor {
         .opName = {"check", "sa"},
         .funcGenHelpMsg = GenHelpMsg,
