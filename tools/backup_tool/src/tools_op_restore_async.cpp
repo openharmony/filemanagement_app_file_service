@@ -191,7 +191,7 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
             }
             bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {
                 .name = name, .versionCode = versionCode, .versionName = versionName,
-                .spaceOccupied = bundleInfo.spaceOccupied,.allToBackup = bundleInfo.allToBackup,
+                .spaceOccupied = bundleInfo.spaceOccupied, .allToBackup = bundleInfo.allToBackup,
                 .extensionName = bundleInfo.extensionName, .needToInstall = false});
         }
     }

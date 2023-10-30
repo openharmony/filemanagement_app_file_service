@@ -13,7 +13,12 @@
  * limitations under the License.
  */
 
+#ifndef OHOS_FILEMGMT_BACKUP_TOOLS_OP_RESTORE_ASYNC_H
+#define OHOS_FILEMGMT_BACKUP_TOOLS_OP_RESTORE_ASYNC_H
+
 namespace OHOS::FileManagement::Backup {
     bool RestoreAsyncRegister();
 
 } // namespace OHOS::FileManagement::Backup
+
+#endif // OHOS_FILEMGMT_BACKUP_TOOLS_OP_RESTORE_ASYNC_H

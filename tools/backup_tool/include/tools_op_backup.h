@@ -13,7 +13,12 @@
  * limitations under the License.
  */
 
+#ifndef OHOS_FILEMGMT_BACKUP_TOOLS_OP_BACKUP_H
+#define OHOS_FILEMGMT_BACKUP_TOOLS_OP_BACKUP_H
+
 namespace OHOS::FileManagement::Backup {
     bool BackUpRegister();
 
 } // namespace OHOS::FileManagement::Backup
+
+#endif // OHOS_FILEMGMT_BACKUP_TOOLS_OP_BACKUP_H
