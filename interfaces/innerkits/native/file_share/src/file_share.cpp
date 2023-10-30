@@ -61,6 +61,8 @@ struct FileShareInfo {
     ShareFileType type_;
 };
 
+mutex FileShare::mapMutex_;
+
 static int32_t GetTargetInfo(uint32_t tokenId, string &bundleName, string &currentUid)
 {
     Security::AccessToken::HapTokenInfo hapInfo;
@@ -181,7 +183,9 @@ static void DeleteExistShareFile(const string &path)
         if (umount2(path.c_str(), MNT_DETACH) != 0) {
             LOGE("Umount failed with %{public}d", errno);
         }
-        remove(path.c_str());
+        if (remove(path.c_str()) != 0) {
+            LOGE("DeleteExistShareFile, remove failed with %{public}d", errno);
+        }
     }
 }
 
@@ -196,7 +200,9 @@ static void DelSharePath(const string &delPath)
         if (umount2(delPath.c_str(), MNT_DETACH) != 0) {
             LOGE("DelSharePath, umount failed with %{public}d", errno);
         }
-        remove(delPath.c_str());
+        if (remove(delPath.c_str()) != 0) {
+            LOGE("DelSharePath, remove failed with %{public}d", errno);
+        }
     }
 }
 
@@ -270,7 +276,7 @@ static int32_t CreateSingleShareFile(const string &uri, uint32_t tokenId, uint32
     }
 
     for (size_t i = 0; i < info.sharePath_.size(); i++) {
-        if ((ret = creat(info.sharePath_[i].c_str(), FILE_MODE)) < 0) {
+        if ((ret = open(info.sharePath_[i].c_str(), O_RDONLY | O_CREAT)) < 0) {
             LOGE("Create file failed with %{public}d", errno);
             return -errno;
         }
@@ -287,8 +293,12 @@ static int32_t CreateSingleShareFile(const string &uri, uint32_t tokenId, uint32
     return 0;
 }
 
-int32_t CreateShareFile(const vector<string> &uriList, uint32_t tokenId, uint32_t flag, vector<int32_t> &retList)
+int32_t FileShare::CreateShareFile(const vector<string> &uriList,
+                                   uint32_t tokenId,
+                                   uint32_t flag,
+                                   vector<int32_t> &retList)
 {
+    lock_guard<mutex> lock(mapMutex_);
     FileShareInfo info;
     int32_t ret = GetTargetInfo(tokenId, info.targetBundleName_, info.currentUid_);
     if (ret != 0) {
@@ -308,8 +318,9 @@ int32_t CreateShareFile(const vector<string> &uriList, uint32_t tokenId, uint32_
     return ret;
 }
 
-int32_t DeleteShareFile(uint32_t tokenId, const vector<string> &uriList)
+int32_t FileShare::DeleteShareFile(uint32_t tokenId, const vector<string> &uriList)
 {
+    lock_guard<mutex> lock(mapMutex_);
     string bundleName, currentUid;
     int32_t ret = GetTargetInfo(tokenId, bundleName, currentUid);
     if (ret != 0) {

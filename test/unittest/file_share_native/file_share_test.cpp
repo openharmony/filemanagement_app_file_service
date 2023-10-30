@@ -69,7 +69,7 @@ namespace {
         int32_t flag = 3;
         vector<string> uriList(1, uri);
         vector<int32_t> retList;
-        int32_t ret = CreateShareFile(uriList, tokenId, flag, retList);
+        int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
         EXPECT_EQ(ret, E_OK);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0000";
     }
@@ -100,7 +100,7 @@ namespace {
         int32_t flag = 3;
         vector<string> uriList(1, uri);
         vector<int32_t> retList;
-        int32_t ret = CreateShareFile(uriList, tokenId, flag, retList);
+        int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
         EXPECT_EQ(ret, -EINVAL);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0001";
     }
@@ -128,7 +128,7 @@ namespace {
         int32_t flag = 3;
         vector<string> uriList(1, uri);
         vector<int32_t> retList;
-        int32_t ret = CreateShareFile(uriList, tokenId, flag, retList);
+        int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
         EXPECT_EQ(ret, E_INVALID_ARGUMENT);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0002";
     }
@@ -158,7 +158,7 @@ namespace {
         int32_t flag = 3;
         vector<string> uriList(1, uri);
         vector<int32_t> retList;
-        int32_t ret = CreateShareFile(uriList, tokenId, flag, retList);
+        int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
         EXPECT_EQ(ret, -EINVAL);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0003";
     }
@@ -188,7 +188,7 @@ namespace {
         int32_t flag = 4;
         vector<string> uriList(1, uri);
         vector<int32_t> retList;
-        int32_t ret = CreateShareFile(uriList, tokenId, flag, retList);
+        int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
         EXPECT_EQ(ret, -EINVAL);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0004";
     }
@@ -212,7 +212,7 @@ namespace {
         string bundleNameA = "com.example.filesharea";
         string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
         sharePathList.push_back(uri);
-        int32_t ret = DeleteShareFile(tokenId, sharePathList);
+        int32_t ret = FileShare::DeleteShareFile(tokenId, sharePathList);
         EXPECT_EQ(ret, E_OK);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_DeleteShareFile_0005";
     }
@@ -233,7 +233,7 @@ namespace {
         string bundleNameA = "com.example.filesharea";
         string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
         sharePathList.push_back(uri);
-        int32_t ret = DeleteShareFile(tokenId, sharePathList);
+        int32_t ret = FileShare::DeleteShareFile(tokenId, sharePathList);
         EXPECT_EQ(ret, -EINVAL);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_DeleteShareFile_0006";
     }
@@ -263,13 +263,13 @@ namespace {
         int32_t flag = 3;
         vector<string> uriList(1, uri);
         vector<int32_t> retList;
-        int32_t ret = CreateShareFile(uriList, tokenId, flag, retList);
+        int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
         EXPECT_EQ(ret, E_OK);
 
         vector<string> sharePathList;
         string uriErr = "file://" + bundleNameA + "/data/storage/el2/base/files/abc/../test.txt";
         sharePathList.push_back(uriErr);
-        ret = DeleteShareFile(tokenId, sharePathList);
+        ret = FileShare::DeleteShareFile(tokenId, sharePathList);
         EXPECT_EQ(ret, E_OK);
 
         string sharePath = "/data/service/el2/" + to_string(uid) + "/share/" + bundleNameB +
@@ -278,7 +278,7 @@ namespace {
         EXPECT_EQ(ret, E_OK);
 
         sharePathList.push_back(uri);
-        ret = DeleteShareFile(tokenId, sharePathList);
+        ret = FileShare::DeleteShareFile(tokenId, sharePathList);
         EXPECT_EQ(ret, E_OK);
 
         ret = access(sharePath.c_str(), F_OK);
