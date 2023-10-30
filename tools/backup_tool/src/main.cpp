@@ -18,8 +18,8 @@
 #include "tools_op_backup.h"
 #include "tools_op_check_sa.h"
 #include "tools_op_help.h"
-#include "tools_op_restore_async.h"
 #include "tools_op_restore.h"
+#include "tools_op_restore_async.h"
 
 #include <algorithm>
 #include <cstddef>
