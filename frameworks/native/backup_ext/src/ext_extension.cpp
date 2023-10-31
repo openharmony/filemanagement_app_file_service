@@ -44,6 +44,7 @@
 #include "service_proxy.h"
 
 namespace OHOS::FileManagement::Backup {
+const string DEFAULT_TAR_PKG = "1.tar";
 using namespace std;
 
 void BackupExtExtension::VerifyCaller()
@@ -273,8 +274,7 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
         }
     }
 
-    string pkgName = "1.tar";
-    string tarName = path + pkgName;
+    string tarName = path + DEFAULT_TAR_PKG;
     string root = "/";
 
     // 打包
@@ -285,7 +285,7 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
     if (stat(tarName.data(), &sta) == -1) {
         HILOGE("failed to invoke the system function stat, %{public}s", tarName.c_str());
     }
-    bigFileInfo.emplace(pkgName, make_pair(tarName, sta));
+    bigFileInfo.emplace(DEFAULT_TAR_PKG, make_pair(tarName, sta));
 
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
@@ -437,6 +437,21 @@ static void RestoreBigFiles()
     }
 }
 
+static void DeleteBackupTars()
+{
+    // The directory include tars and manage.json which would be deleted
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    string tarPath = path + DEFAULT_TAR_PKG;
+    string indexPath = path + string(BConstants::EXT_BACKUP_MANAGE);
+    if (!RemoveFile(tarPath)) {
+        HILOGE("Failed to delete the backup tar %{public}s", tarPath.c_str());
+    }
+
+    if (!RemoveFile(indexPath)) {
+        HILOGE("Failed to delete the backup index %{public}s", indexPath.c_str());
+    }
+}
+
 void BackupExtExtension::AsyncTaskRestore()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}, tars {tars_}]() {
@@ -458,6 +473,9 @@ void BackupExtExtension::AsyncTaskRestore()
             }
             // 恢复大文件
             RestoreBigFiles();
+
+            // delete 1.tar/manage.json
+            DeleteBackupTars();
 
             if (ret == ERR_OK) {
                 HILOGI("after extra, do restore.");
