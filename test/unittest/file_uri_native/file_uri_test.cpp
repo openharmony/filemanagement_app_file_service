@@ -179,7 +179,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
         int32_t flag = 3;
         vector<string> uriList(1, uri);
         vector<int32_t> retList;
-        int32_t ret = CreateShareFile(uriList, tokenId, flag, retList);
+        int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
         EXPECT_EQ(ret, E_OK);
         
         string rltStr = PATH_SHARE + MODE_R + bundleB + actStr;
@@ -189,7 +189,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
 
         vector<string> sharePathList;
         sharePathList.push_back(uri);
-        ret = DeleteShareFile(tokenId, sharePathList);
+        ret = FileShare::DeleteShareFile(tokenId, sharePathList);
         EXPECT_EQ(ret, E_OK);
         close(fd);
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0003";

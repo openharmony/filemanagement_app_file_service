@@ -17,8 +17,5 @@ import("//foundation/filemanagement/app_file_service/backup.gni")
 group("moduletests") {
   testonly = true
 
-  deps = [
-    "backup_kit_inner:session_test",
-    "backup_tool:tools_test",
-  ]
+  deps = [ "backup_kit_inner:session_test" ]
 }

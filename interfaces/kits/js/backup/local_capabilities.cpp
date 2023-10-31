@@ -35,6 +35,7 @@ napi_value LocalCapabilities::Async(napi_env env, napi_callback_info info)
     auto fd = make_shared<UniqueFd>();
     auto cbExec = [fd]() -> NError {
         HILOGI("called LocalCapabilities::Async cbExec");
+        ServiceProxy::InvaildInstance();
         auto proxy = ServiceProxy::GetInstance();
         if (!proxy) {
             HILOGI("called LocalCapabilities::Async cbExec, failed to get proxy");

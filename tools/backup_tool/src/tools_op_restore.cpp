@@ -41,6 +41,7 @@
 #include "errors.h"
 #include "service_proxy.h"
 #include "tools_op.h"
+#include "tools_op_restore.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -347,7 +348,6 @@ static int Exec(map<string, vector<string>> &mapArgToVal)
     bool depMode = false;
     if (mapArgToVal.find("depMode") != mapArgToVal.end()) {
         string strFlag = *(mapArgToVal["depMode"].begin());
-        printf("Exec, strFlag:%s", strFlag.c_str());
         depMode = (strFlag == "true");
     }
 
@@ -357,26 +357,24 @@ static int Exec(map<string, vector<string>> &mapArgToVal)
     return InitPathCapFile(*(mapArgToVal["pathCapFile"].begin()), mapArgToVal["bundles"], depMode);
 }
 
-/**
- * @brief The hack behind is that "variable with static storage duration has initialization or a destructor with side
- * effects; it shall not be eliminated even if it appears to be unused" -- point 2.[basic.stc.static].c++ draft
- *
- */
-static bool g_autoRegHack = ToolsOp::Register(ToolsOp {ToolsOp::Descriptor {
-    .opName = {"restore"},
-    .argList = {{
-                    .paramName = "pathCapFile",
-                    .repeatable = false,
-                },
-                {
-                    .paramName = "bundles",
-                    .repeatable = true,
-                },
-                {
-                    .paramName = "depMode",
-                    .repeatable = false,
-                }},
-    .funcGenHelpMsg = GenHelpMsg,
-    .funcExec = Exec,
-}});
+bool RestoreRegister()
+{
+    return ToolsOp::Register(ToolsOp {ToolsOp::Descriptor {
+        .opName = {"restore"},
+        .argList = {{
+                        .paramName = "pathCapFile",
+                        .repeatable = false,
+                    },
+                    {
+                        .paramName = "bundles",
+                        .repeatable = true,
+                    },
+                    {
+                        .paramName = "depMode",
+                        .repeatable = false,
+                    }},
+        .funcGenHelpMsg = GenHelpMsg,
+        .funcExec = Exec,
+    }});
+}
 } // namespace OHOS::FileManagement::Backup

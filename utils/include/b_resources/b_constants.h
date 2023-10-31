@@ -79,7 +79,7 @@ constexpr int DEV_MAX_SIZE = 8;
 constexpr int PREFIX_SIZE = 155;
 constexpr int PADDING_SIZE = 12;
 
-constexpr int PATHES_TO_BACKUP_SIZE = 12; // 应用默认备份的目录个数
+constexpr int PATHES_TO_BACKUP_SIZE = 13; // 应用默认备份的目录个数
 constexpr uint32_t BACKUP_PARA_VALUE_MAX = 5; // 读取backup.para字段值的最大长度
 constexpr int SA_THREAD_POOL_COUNT = 1; // SA THREAD_POOL 最大线程数
 constexpr int EXT_CONNECT_MAX_COUNT = 3; // extension 最大启动数
@@ -172,6 +172,7 @@ static inline std::array<std::string_view, PATHES_TO_BACKUP_SIZE> PATHES_TO_BACK
     "data/storage/el2/base/haps/*/database/",
     "data/storage/el2/base/haps/*/files/",
     "data/storage/el2/base/haps/*/preferences/",
+    "data/storage/el2/distributedfiles/",
 };
 } // namespace OHOS::FileManagement::Backup::BConstants
 

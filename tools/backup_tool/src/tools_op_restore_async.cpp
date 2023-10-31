@@ -38,6 +38,7 @@
 #include "hitrace_meter.h"
 #include "service_proxy.h"
 #include "tools_op.h"
+#include "tools_op_restore_async.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -180,11 +181,19 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
     BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    auto cacheBundleInfos = cache.GetBundleInfos();
     for (auto name : bundleNames) {
         string versionName = string(BConstants::DEFAULT_VERSION_NAME);
         uint32_t versionCode = static_cast<uint32_t>(BConstants::DEFAULT_VERSION_CODE);
-        bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {
-            .name = name, .needToInstall = false, .versionCode = versionCode, .versionName = versionName});
+        for (auto &&bundleInfo : cacheBundleInfos) {
+            if (bundleInfo.name != name) {
+                continue;
+            }
+            bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {
+                .name = name, .versionCode = versionCode, .versionName = versionName,
+                .spaceOccupied = bundleInfo.spaceOccupied,.allToBackup = bundleInfo.allToBackup,
+                .extensionName = bundleInfo.extensionName, .needToInstall = false});
+        }
     }
     cache.SetBundleInfos(bundleInfos);
     cachedEntity.Persist();
@@ -268,30 +277,28 @@ static int Exec(map<string, vector<string>> &mapArgToVal)
                    *(mapArgToVal["userId"].begin()));
 }
 
-/**
- * @brief The hack behind is that "variable with static storage duration has initialization or a destructor with side
- * effects; it shall not be eliminated even if it appears to be unused" -- point 2.[basic.stc.static].c++ draft
- *
- */
-static bool g_autoRegHack = ToolsOp::Register(ToolsOp {ToolsOp::Descriptor {
-    .opName = {"restoreAsync"},
-    .argList = {{
-                    .paramName = "pathCapFile",
-                    .repeatable = false,
-                },
-                {
-                    .paramName = "bundles",
-                    .repeatable = true,
-                },
-                {
-                    .paramName = "restoreType",
-                    .repeatable = true,
-                },
-                {
-                    .paramName = "userId",
-                    .repeatable = true,
-                }},
-    .funcGenHelpMsg = GenHelpMsg,
-    .funcExec = Exec,
-}});
+bool RestoreAsyncRegister()
+{
+    return ToolsOp::Register(ToolsOp{ ToolsOp::Descriptor {
+        .opName = {"restoreAsync"},
+        .argList = {{
+                        .paramName = "pathCapFile",
+                        .repeatable = false,
+                    },
+                    {
+                        .paramName = "bundles",
+                        .repeatable = true,
+                    },
+                    {
+                        .paramName = "restoreType",
+                        .repeatable = true,
+                    },
+                    {
+                        .paramName = "userId",
+                        .repeatable = true,
+                    }},
+        .funcGenHelpMsg = GenHelpMsg,
+        .funcExec = Exec,
+    } });
+}
 } // namespace OHOS::FileManagement::Backup
