@@ -28,8 +28,6 @@
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
-#include "module_external/bms_adapter.h"
-#include "module_external/sms_adapter.h"
 #include "module_ipc/service.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -360,6 +358,18 @@ void SvcSessionManager::SetServiceSchedAction(const string &bundleName, BConstan
     }
 }
 
+void SvcSessionManager::SetBackupExtName(const string &bundleName, const string &backupExtName)
+{
+    HILOGI("Begin");
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    it->second.backupExtName = backupExtName;
+}
+
 string SvcSessionManager::GetBackupExtName(const string &bundleName)
 {
     HILOGI("Begin");
@@ -367,19 +377,9 @@ string SvcSessionManager::GetBackupExtName(const string &bundleName)
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-    string name = bundleName;
-    VerifyBundleName(name);
-    auto bundleInfos = BundleMgrAdapter::GetBundleInfos({bundleName}, impl_.userId);
-    for (auto &&bundleInfo : bundleInfos) {
-        if (!bundleInfo.allToBackup || bundleInfo.extensionName.empty()) {
-            throw BError(BError::Codes::SA_INVAL_ARG,
-                         string(bundleInfo.name).append(" is not allow to backup or extension name is empty"));
-        }
-        if (bundleInfo.name == bundleName) {
-            return bundleInfo.extensionName;
-        }
-    }
-    throw BError(BError::Codes::SA_INVAL_ARG, "Could not find the extension name");
+
+    auto it = GetBackupExtNameMap(bundleName);
+    return it->second.backupExtName;
 }
 
 void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
@@ -396,6 +396,8 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
         info.backUpConnection = GetBackupExtAbility(bundleName);
         impl_.backupExtNameMap.insert(make_pair(bundleName, info));
     }
+    impl_.isBackupStart = true;
+    impl_.isAppendFinish = true;
 }
 
 void SvcSessionManager::Start()
@@ -460,7 +462,7 @@ void SvcSessionManager::SetInstallState(const string &bundleName, const string &
 string SvcSessionManager::GetInstallState(const string &bundleName)
 {
     HILOGI("Begin");
-    unique_lock<shared_mutex> lock(lock_);
+    shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
@@ -484,7 +486,7 @@ void SvcSessionManager::SetNeedToInstall(const std::string &bundleName, bool nee
 bool SvcSessionManager::GetNeedToInstall(const std::string &bundleName)
 {
     HILOGI("Begin");
-    unique_lock<shared_mutex> lock(lock_);
+    shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
@@ -515,7 +517,7 @@ void SvcSessionManager::SetBundleRestoreType(const std::string &bundleName, Rest
 
 RestoreTypeEnum SvcSessionManager::GetBundleRestoreType(const std::string &bundleName)
 {
-    unique_lock<shared_mutex> lock(lock_);
+    shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
@@ -537,7 +539,7 @@ void SvcSessionManager::SetBundleVersionCode(const std::string &bundleName, uint
 
 uint32_t SvcSessionManager::GetBundleVersionCode(const std::string &bundleName)
 {
-    unique_lock<shared_mutex> lock(lock_);
+    shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
@@ -559,7 +561,7 @@ void SvcSessionManager::SetBundleVersionName(const std::string &bundleName, std:
 
 std::string SvcSessionManager::GetBundleVersionName(const std::string &bundleName)
 {
-    unique_lock<shared_mutex> lock(lock_);
+    shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
@@ -634,5 +636,4 @@ void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName)
         extBundleTimer.Unregister(it->second.extTimerId);
     }
 }
-
-} // namespace OHOS::FileManagement::Backup-
+} // namespace OHOS::FileManagement::Backup

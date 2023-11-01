@@ -259,6 +259,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             session_->SetBundleVersionCode(bundleInfo.name, bundleInfo.versionCode);
             session_->SetBundleVersionName(bundleInfo.name, bundleInfo.versionName);
             session_->SetBundleDataSize(bundleInfo.name, bundleInfo.spaceOccupied);
+            session_->SetBackupExtName(bundleInfo.name, bundleInfo.extensionName);
         }
     }
     for (auto info : restoreInfos) {
@@ -268,8 +269,6 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             session_->RemoveExtInfo(info.name);
         }
     }
-    Start();
-    Finish();
     OnStartSched();
     return BError(BError::Codes::OK);
 }
@@ -282,13 +281,12 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
     session_->AppendBundles(bundleNames);
     for (auto info : backupInfos) {
         session_->SetBundleDataSize(info.name, info.spaceOccupied);
+        session_->SetBackupExtName(info.name, info.extensionName);
         if (info.allToBackup == false) {
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_REFUSED_ACT), info.name);
             session_->RemoveExtInfo(info.name);
         }
     }
-    Start();
-    Finish();
     OnStartSched();
     return BError(BError::Codes::OK);
 }
@@ -434,6 +432,7 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
 
         AAFwk::Want want;
         string backupExtName = session_->GetBackupExtName(bundleName);            /* new device app ext name */
+        HILOGD("backupExtName: %{public}s, bundleName: %{public}s", backupExtName.data(), bundleName.data());
         string versionName = session_->GetBundleVersionName(bundleName);          /* old device app version name */
         uint32_t versionCode = session_->GetBundleVersionCode(bundleName);        /* old device app version code */
         RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */

@@ -31,8 +31,8 @@
 
 #include "b_file_info.h"
 #include "b_resources/b_constants.h"
-#include "i_service_reverse.h"
 #include "i_service.h"
+#include "i_service_reverse.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "svc_death_recipient.h"
 #include "timer.h"
@@ -226,10 +226,17 @@ public:
     bool GetSchedBundleName(std::string &bundleName);
 
     /**
+     * @brief Set the Backup Ext Name object
+     *
+     * @param bundleName 应用名称
+     * @param backupExtName extension name
+     */
+    void SetBackupExtName(const std::string &bundleName, const std::string &backupExtName);
+
+    /**
      * @brief 获取backup extension name
      *
      * @param bundleName 应用名称
-     * @return std::string
      * @return std::string extension name
      */
     std::string GetBackupExtName(const std::string &bundleName);
@@ -312,7 +319,7 @@ public:
      */
     bool NeedToUnloadService();
 
-/**
+    /**
      * @brief Set the bundle restore type object
      *
      * @param bundleName
@@ -374,7 +381,7 @@ public:
      * @param bundleName 应用名称
      * @return
      */
-    void BundleExtTimerStart(const std::string &bundleName, const Utils::Timer::TimerCallback& callback);
+    void BundleExtTimerStart(const std::string &bundleName, const Utils::Timer::TimerCallback &callback);
 
     /**
      * @brief 取消/暂停应用扩展能力定时器
