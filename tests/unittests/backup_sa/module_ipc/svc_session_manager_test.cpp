@@ -339,6 +339,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupExtName_0100, tes
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBackupExtName_0100";
     try {
+        sessionManagerPtr_->SetBackupExtName(BUNDLE_NAME, BUNDLE_NAME);
         string extName = sessionManagerPtr_->GetBackupExtName(BUNDLE_NAME);
         EXPECT_EQ(extName, BUNDLE_NAME);
     } catch (...) {
