@@ -320,4 +320,5 @@ void SvcSessionManager::BundleExtTimerStart (
 
 void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName) {}
 
+void SvcSessionManager::SetBackupExtName(const string &bundleName, const string &backupExtName) {}
 } // namespace OHOS::FileManagement::Backup
