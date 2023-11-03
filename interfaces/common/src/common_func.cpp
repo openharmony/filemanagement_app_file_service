@@ -56,9 +56,6 @@ static sptr<BundleMgrProxy> GetBundleMgrProxy()
 
 string CommonFunc::GetSelfBundleName()
 {
-    int uid = -1;
-    uid = IPCSkeleton::GetCallingUid();
-
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         LOGE("GetSelfBundleName: bundle mgr proxy is nullptr.");
@@ -66,9 +63,9 @@ string CommonFunc::GetSelfBundleName()
     }
 
     BundleInfo bundleInfo;
-    auto ret = bundleMgrProxy->GetBundleInfoForSelf(uid, bundleInfo);
+    auto ret = bundleMgrProxy->GetBundleInfoForSelf(0, bundleInfo);
     if (ret != ERR_OK) {
-        LOGE("GetSelfBundleName: bundleName get fail. uid is %{public}d", uid);
+        LOGE("GetSelfBundleName: bundleName get fail.");
         return "";
     }
 
