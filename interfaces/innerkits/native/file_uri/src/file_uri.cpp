@@ -16,6 +16,8 @@
 #include "file_uri.h"
 
 #include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "uri.h"
 
@@ -87,6 +89,33 @@ string FileUri::ToString()
 {
     return uri_.ToString();
 }
+
+string FileUri::GetDirectoryUri()
+{
+    string uri = uri_.ToString();
+    if(!IsFileUri()){
+        return uri;
+    }
+    size_t pos = uri.rfind("/");
+    return uri.substr(0, pos);
+}
+
+bool FileUri::IsFileUri()
+{
+    struct stat fileInfo;
+    if (stat(uri_.ToString().c_str(), &fileInfo) == 0){
+        if (S_ISREG(fileInfo.st_mode)){
+            LOGD("uri's st_mode is reg");
+            return true;
+        } else if (S_ISDIR(fileInfo.st_mode)){
+            LOGD("uri's st_mode is dir");
+            return false;
+        }
+    }
+    LOGE("fileInfo is error");
+    return false;
+}
+
 
 FileUri::FileUri(const string &uriOrPath): uri_(
     (uriOrPath.find(FILE_SCHEME_PREFIX) == 0) ? uriOrPath : CommonFunc::GetUriFromPath(uriOrPath)

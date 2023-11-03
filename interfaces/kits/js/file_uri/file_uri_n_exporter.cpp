@@ -88,6 +88,23 @@ napi_value FileUriNExporter::GetFileUriName(napi_env env, napi_callback_info inf
     return NVal::CreateUTF8String(env, fileuriEntity->fileUri_.GetName()).val_;
 }
 
+napi_value FileUriNExporter::GetDirectoryUri(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+        LOGE("Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    auto fileuriEntity = NClass::GetEntityOf<FileUriEntity>(env, funcArg.GetThisVar());
+    if (!fileuriEntity) {
+        LOGE("Failed to get file entity");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    return NVal::CreateUTF8String(env, fileuriEntity->fileUri_.GetDirectoryUri()).val_;
+}
+
 napi_value FileUriNExporter::GetFileUriPath(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -111,6 +128,7 @@ bool FileUriNExporter::Export()
         NVal::DeclareNapiFunction("toString", UriToString),
         NVal::DeclareNapiGetter("name", GetFileUriName),
         NVal::DeclareNapiGetter("path", GetFileUriPath),
+        NVal::DeclareNapiFunction("getDirectoryUri", GetDirectoryUri),
     };
 
     auto [succ, classValue] = NClass::DefineClass(exports_.env_, className, Constructor, std::move(props));

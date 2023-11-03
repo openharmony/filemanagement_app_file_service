@@ -31,6 +31,7 @@ public:
     static napi_value UriToString(napi_env env, napi_callback_info info);
     static napi_value GetFileUriName(napi_env env, napi_callback_info info);
     static napi_value GetFileUriPath(napi_env env, napi_callback_info info);
+    static napi_value GetDirectoryUri(napi_env env, napi_callback_info info);
 
     FileUriNExporter(napi_env env, napi_value exports);
     ~FileUriNExporter() override;
