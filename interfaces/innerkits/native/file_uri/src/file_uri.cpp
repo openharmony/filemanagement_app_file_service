@@ -93,7 +93,7 @@ string FileUri::ToString()
 string FileUri::GetDirectoryUri()
 {
     string uri = uri_.ToString();
-    if(!IsFileUri()){
+    if (!IsFileUri()) {
         return uri;
     }
     size_t pos = uri.rfind("/");
@@ -103,11 +103,11 @@ string FileUri::GetDirectoryUri()
 bool FileUri::IsFileUri()
 {
     struct stat fileInfo;
-    if (stat(uri_.ToString().c_str(), &fileInfo) == 0){
-        if (S_ISREG(fileInfo.st_mode)){
+    if (stat(uri_.ToString().c_str(), &fileInfo) == 0) {
+        if (S_ISREG(fileInfo.st_mode)) {
             LOGD("uri's st_mode is reg");
             return true;
-        } else if (S_ISDIR(fileInfo.st_mode)){
+        } else if (S_ISDIR(fileInfo.st_mode)) {
             LOGD("uri's st_mode is dir");
             return false;
         }
@@ -115,7 +115,6 @@ bool FileUri::IsFileUri()
     LOGE("fileInfo is error");
     return false;
 }
-
 
 FileUri::FileUri(const string &uriOrPath): uri_(
     (uriOrPath.find(FILE_SCHEME_PREFIX) == 0) ? uriOrPath : CommonFunc::GetUriFromPath(uriOrPath)
