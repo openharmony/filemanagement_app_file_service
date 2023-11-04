@@ -721,6 +721,7 @@ void Service::HandleRestoreDepsBundle(const string &bundleName)
             session_->SetBundleVersionCode(bundleInfo.name, bundleInfo.versionCode);
             session_->SetBundleVersionName(bundleInfo.name, bundleInfo.versionName);
             session_->SetBundleDataSize(bundleInfo.name, bundleInfo.spaceOccupied);
+            session_->SetBackupExtName(bundleInfo.name, bundleInfo.extensionName);
             for (auto &fileName : info.fileNames_) {
                 session_->SetExtFileNameRequest(bundleInfo.name, fileName);
             }
