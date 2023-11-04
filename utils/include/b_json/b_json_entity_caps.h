@@ -30,6 +30,7 @@ public:
         bool allToBackup;
         std::string extensionName;
         bool needToInstall {false};
+        std::string restoreDeps;
     };
 
 public:
@@ -57,6 +58,7 @@ public:
             arrObj["allToBackup"] = item.allToBackup;
             arrObj["extensionName"] = item.extensionName;
             arrObj["needToInstall"] = item.needToInstall;
+            arrObj["restoreDeps"] = item.restoreDeps;
             obj_["bundleInfos"].append(arrObj);
         }
     }
@@ -81,6 +83,16 @@ public:
         return obj_["deviceType"].asString();
     }
 
+    std::string GetRestoreDeps()
+    {
+        if (!obj_ || !obj_.isMember("restoreDeps") || !obj_["restoreDeps"].isString()) {
+            HILOGI("Failed to get field restoreDeps");
+            return "";
+        }
+
+        return obj_["restoreDeps"].asString();
+    }
+
     std::vector<BundleInfo> GetBundleInfos()
     {
         if (!obj_ || !obj_.isMember("bundleInfos") || !obj_["bundleInfos"].isArray()) {
@@ -91,14 +103,15 @@ public:
         for (const auto &item : obj_["bundleInfos"]) {
             if (!item || !item["name"].isString() || !item["versionCode"].isUInt() || !item["versionName"].isString() ||
                 !item["spaceOccupied"].isInt64() || !item["allToBackup"].isBool() ||
-                !item["extensionName"].isString() || !item["needToInstall"].isBool()) {
+                !item["extensionName"].isString() || !item["needToInstall"].isBool() ||
+                !item["restoreDeps"].isString()) {
                 HILOGI("Failed to get field bundleInfos, type error");
                 return {};
             }
             bundleInfos.emplace_back(BundleInfo {item["name"].asString(), item["versionCode"].asUInt(),
                                                  item["versionName"].asString(), item["spaceOccupied"].asInt64(),
                                                  item["allToBackup"].asBool(), item["extensionName"].asString(),
-                                                 item["needToInstall"].asBool()});
+                                                 item["needToInstall"].asBool(), item["restoreDeps"].asString()});
         }
         return bundleInfos;
     }

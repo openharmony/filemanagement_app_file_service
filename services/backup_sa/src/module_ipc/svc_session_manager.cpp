@@ -29,6 +29,7 @@
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
 #include "module_ipc/service.h"
+#include "module_ipc/svc_restore_deps_manager.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -428,10 +429,13 @@ bool SvcSessionManager::IsOnAllBundlesFinished()
     }
     auto iter = find_if(impl_.backupExtNameMap.begin(), impl_.backupExtNameMap.end(),
                         [](const auto &it) { return it.second.isBundleFinished == false; });
-    if (iter == impl_.backupExtNameMap.end() && impl_.isAppendFinish) {
-        return true;
+    bool isAllBundlesFinished = (iter == impl_.backupExtNameMap.end() && impl_.isAppendFinish);
+    if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
+        bool isAllBundlesRestored = SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
+        isAllBundlesFinished = (isAllBundlesFinished && isAllBundlesRestored);
     }
-    return false;
+    HILOGI("isAllBundlesFinished:%{public}d", isAllBundlesFinished);
+    return isAllBundlesFinished;
 }
 
 bool SvcSessionManager::IsOnOnStartSched()
@@ -498,10 +502,13 @@ bool SvcSessionManager::GetNeedToInstall(const std::string &bundleName)
 bool SvcSessionManager::NeedToUnloadService()
 {
     unique_lock<shared_mutex> lock(lock_);
-    if (!impl_.clientToken || !impl_.clientProxy || !impl_.backupExtNameMap.size()) {
-        return true;
+    bool isNeedToUnloadService = (!impl_.clientToken || !impl_.clientProxy || !impl_.backupExtNameMap.size());
+    if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
+        bool isAllBundlesRestored = SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
+        isNeedToUnloadService = (isNeedToUnloadService && isAllBundlesRestored);
     }
-    return false;
+    HILOGI("isNeedToUnloadService:%{public}d", isNeedToUnloadService);
+    return isNeedToUnloadService;
 }
 
 void SvcSessionManager::SetBundleRestoreType(const std::string &bundleName, RestoreTypeEnum restoreType)

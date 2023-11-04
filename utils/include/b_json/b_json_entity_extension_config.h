@@ -55,6 +55,13 @@ public:
      */
     bool GetFullBackupOnly() const;
 
+    /**
+     * @brief 从JSon对象中获取应用依赖项
+     *
+     * @return 应用依赖项: 该应用恢复依赖的应用
+     */
+    std::string GetRestoreDeps() const;
+
 public:
     std::string GetJSonSource(std::string_view jsonFromRealWorld, std::any option);
 

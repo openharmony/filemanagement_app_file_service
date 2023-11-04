@@ -140,4 +140,15 @@ string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, 
     }
     return BFile::ReadFile(UniqueFd(open(jsonFilePath.c_str(), O_RDONLY))).get();
 }
+
+string BJsonEntityExtensionConfig::GetRestoreDeps() const
+{
+    if (!obj_ || !obj_.isMember("restoreDeps") || !obj_["restoreDeps"].isString()) {
+        HILOGE("Failed to init field restoreDeps");
+        return "";
+    }
+
+    return obj_["restoreDeps"].asString();
+}
+
 } // namespace OHOS::FileManagement::Backup
