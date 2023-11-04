@@ -32,7 +32,9 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing::ext;
-
+const int32_t INDEX_FIRST = 0;
+const int32_t INDEX_SECOND = 1;
+const int32_t INDEX_THIRD = 2;
 class BJsonEntityExtManageTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
@@ -61,7 +63,8 @@ bool IsEqual(const struct stat &lf, const struct stat &rh)
     return true;
 }
 
-bool IsEqual(const map<string, pair<string, struct stat>> &lf, const map<string, pair<string, struct stat>> &rh)
+bool IsEqual(const map<string, tuple<string, struct stat, bool>> &lf,
+             const map<string, tuple<string, struct stat, bool>> &rh)
 {
     if (lf.size() != rh.size()) {
         return false;
@@ -73,14 +76,33 @@ bool IsEqual(const map<string, pair<string, struct stat>> &lf, const map<string,
         if (itemLF->first != itemRH->first) {
             return false;
         }
-        if (itemLF->second.first != itemRH->second.first) {
+        if (std::get<INDEX_FIRST>(itemLF->second) != std::get<INDEX_FIRST>(itemRH->second)) {
             return false;
         }
-        if (!IsEqual(itemLF->second.second, itemRH->second.second)) {
+        if (!IsEqual(std::get<INDEX_SECOND>(itemLF->second), std::get<INDEX_SECOND>(itemRH->second))) {
+            return false;
+        }
+        if (std::get<INDEX_THIRD>(itemLF->second) != std::get<INDEX_THIRD>(itemRH->second)) {
             return false;
         }
     }
 
+    return true;
+}
+
+bool IsEqual(const std::vector<ExtManageInfo> &lf, const map<string, tuple<string, struct stat, bool>> &rh)
+{
+    if (lf.size() != rh.size()) {
+        return false;
+    }
+    for (auto &item : lf) {
+        if (rh.find(item.hashName) != rh.end()) {
+            auto [fileName, sta, isBeforeTar] = rh.at(item.hashName);
+            if (item.fileName != fileName || !IsEqual(item.sta, sta)) {
+                return false;
+            }
+        }
+    }
     return true;
 }
 
@@ -121,7 +143,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0100, testing::ext::
         auto cache = cachedEntity.Structuralize();
 
         // 写入空数据
-        map<string, pair<string, struct stat>> info;
+        map<string, tuple<string, struct stat, bool>> info;
         cache.SetExtManage(info);
 
         // 读取索引文件信息并做结果判断
@@ -168,20 +190,20 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0200, testing::ext::
         auto cache = cachedEntity.Structuralize();
 
         // 生成一条有用数据并写入索引文件
-        map<string, pair<string, struct stat>> info;
+        map<string, tuple<string, struct stat, bool>> info;
         struct stat sta = {};
-        info.emplace(testFileHexName, make_pair(pathTestFile, sta = GetFileStat(pathTestFile)));
+        info.emplace(testFileHexName, make_tuple(pathTestFile, sta = GetFileStat(pathTestFile), true));
         cache.SetExtManage(info);
 
         // 读取索引文件内容并做结果判断
         auto fileNames = cache.GetExtManage();
         ASSERT_EQ(fileNames.size(), 1ul);
         EXPECT_EQ(*fileNames.begin(), testFileHexName);
-        auto fileInfo = cache.GetExtManageInfo();
+        auto fileInfo = cache.GetExtManageInfo(); // std::vector<ExtManageInfo>
         ASSERT_EQ(fileInfo.size(), 1ul);
-        EXPECT_EQ(fileInfo.begin()->first, testFileHexName);
-        EXPECT_EQ(fileInfo.begin()->second.first, pathTestFile);
-        EXPECT_TRUE(IsEqual(fileInfo.begin()->second.second, sta));
+        EXPECT_EQ(fileInfo[0].hashName, testFileHexName);
+        EXPECT_EQ(fileInfo[0].fileName, pathTestFile);
+        EXPECT_TRUE(IsEqual(fileInfo[0].sta, sta));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-an exception occurred.";
@@ -227,10 +249,10 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0300, testing::ext::
         auto cache = cachedEntity.Structuralize();
 
         // 生成三条有用数据并写入索引文件
-        map<string, pair<string, struct stat>> info;
-        info.emplace(testFile1HexName, make_pair(pathTestFile1, GetFileStat(pathTestFile1)));
-        info.emplace(testFile2HexName, make_pair(pathTestFile2, GetFileStat(pathTestFile2)));
-        info.emplace(testFile3HexName, make_pair(pathTestFile3, GetFileStat(pathTestFile3)));
+        map<string, tuple<string, struct stat, bool>> info;
+        info.emplace(testFile1HexName, make_tuple(pathTestFile1, GetFileStat(pathTestFile1), true));
+        info.emplace(testFile2HexName, make_tuple(pathTestFile2, GetFileStat(pathTestFile2), true));
+        info.emplace(testFile3HexName, make_tuple(pathTestFile3, GetFileStat(pathTestFile3), true));
         cache.SetExtManage(info);
 
         // 预置结果集，用以在读取索引文件后做结果判断
@@ -291,10 +313,10 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0400, testing::ext::
         auto cache = cachedEntity.Structuralize();
 
         // 生成三条有用数据并写入索引文件
-        map<string, pair<string, struct stat>> info;
-        info.emplace(testFile1HexName, make_pair(pathTestFile1, GetFileStat(pathTestFile1)));
-        info.emplace(testFile2HexName, make_pair(pathTestFile2, GetFileStat(pathTestFile2)));
-        info.emplace(testFile3HexName, make_pair(pathTestFile3, GetFileStat(pathTestFile3)));
+        map<string, tuple<string, struct stat, bool>> info;
+        info.emplace(testFile1HexName, make_tuple(pathTestFile1, GetFileStat(pathTestFile1), true));
+        info.emplace(testFile2HexName, make_tuple(pathTestFile2, GetFileStat(pathTestFile2), true));
+        info.emplace(testFile3HexName, make_tuple(pathTestFile3, GetFileStat(pathTestFile3), true));
         cache.SetExtManage(info);
 
         // 向索引文件中的三条记录分别追加0、1、2条硬链接信息
@@ -373,14 +395,14 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0500, testing::ext::
 
         // 生成三条有用数据并写入索引文件
         // 通过重用原始文件的stat向该记录追加(0/1/2)条硬链接文件信息
-        map<string, pair<string, struct stat>> info;
+        map<string, tuple<string, struct stat, bool>> info;
         struct stat sta = {};
-        info.emplace(testFile1HexName, make_pair(pathTestFile1, GetFileStat(pathTestFile1)));
-        info.emplace(testFile2HexName, make_pair(pathTestFile2, sta = GetFileStat(pathTestFile2)));
-        info.emplace("testFile2hardlink1", make_pair(root + "testFile2hardlink1", sta));
-        info.emplace(testFile3HexName, make_pair(pathTestFile3, sta = GetFileStat(pathTestFile3)));
-        info.emplace("testFile3hardlink1", make_pair(root + "testFile3hardlink1", sta));
-        info.emplace("testFile3hardlink2", make_pair(root + "testFile3hardlink2", sta));
+        info.emplace(testFile1HexName, make_tuple(pathTestFile1, GetFileStat(pathTestFile1), true));
+        info.emplace(testFile2HexName, make_tuple(pathTestFile2, sta = GetFileStat(pathTestFile2), true));
+        info.emplace("testFile2hardlink1", make_tuple(root + "testFile2hardlink1", sta, true));
+        info.emplace(testFile3HexName, make_tuple(pathTestFile3, sta = GetFileStat(pathTestFile3), true));
+        info.emplace("testFile3hardlink1", make_tuple(root + "testFile3hardlink1", sta, true));
+        info.emplace("testFile3hardlink2", make_tuple(root + "testFile3hardlink2", sta, true));
         cache.SetExtManage(info);
 
         // 预置结果集，用以在读取索引文件后做结果判断
@@ -425,7 +447,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0600, testing::ext::
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0600";
     try {
-        map<string, pair<string, struct stat>> mp = {{"key", {"first", {}}}};
+        map<string, tuple<string, struct stat, bool>> mp = {{"key", {"first", {}, true}}};
         Json::Value jv;
         BJsonEntityExtManage extMg(jv);
 
@@ -433,7 +455,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0600, testing::ext::
         set<string> ss = extMg.GetExtManage();
         EXPECT_EQ(ss.size(), 1);
 
-        mp.at("key").second.st_dev = 1;
+        std::get<INDEX_SECOND>(mp.at("key")).st_dev = 1;
         extMg.SetExtManage(mp);
         ss = extMg.GetExtManage();
         EXPECT_EQ(ss.size(), 1);

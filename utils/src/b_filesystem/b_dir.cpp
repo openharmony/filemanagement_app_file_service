@@ -35,7 +35,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-pair<ErrCode, map<string, struct stat>> GetDirFilesDetail(const string &path, bool recursion, off_t size = -1)
+static pair<ErrCode, map<string, struct stat>> GetDirFilesDetail(const string &path, bool recursion, off_t size = -1)
 {
     map<string, struct stat> files;
     unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(path.c_str()), closedir};
@@ -184,4 +184,5 @@ vector<string> BDir::GetDirs(const vector<string_view> &paths)
     vector<string> dirs(inc.begin(), inc.end());
     return dirs;
 }
+
 } // namespace OHOS::FileManagement::Backup

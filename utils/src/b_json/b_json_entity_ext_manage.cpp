@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <directory_ex.h>
 #include <map>
 #include <string>
 #include <tuple>
@@ -26,6 +27,31 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+
+static bool CheckBigFile(const string &tarFile)
+{
+    HILOGI("CheckBigFile tarFile:%{public}s", tarFile.data());
+    struct stat sta;
+    int ret = stat(tarFile.c_str(), &sta);
+    if (ret != 0) {
+        HILOGE("stat file failed, file:%{public}s", tarFile.c_str());
+        return false;
+    }
+    if (sta.st_size > BConstants::BIG_FILE_BOUNDARY) {
+        return true;
+    }
+    return false;
+}
+
+static bool CheckUserTar(const string &fileName)
+{
+    if (access(fileName.c_str(), F_OK) != 0) {
+        HILOGI("file does not exists");
+        return false;
+    }
+
+    return (ExtractFileExt(fileName) == "tar") && CheckBigFile(fileName);
+}
 
 Json::Value Stat2JsonValue(struct stat sta)
 {
@@ -69,15 +95,15 @@ struct stat JsonValue2Stat(const Json::Value &value)
     return sta;
 }
 
-void BJsonEntityExtManage::SetExtManage(const map<string, pair<string, struct stat>> &info) const
+void BJsonEntityExtManage::SetExtManage(const map<string, tuple<string, struct stat, bool>> &info) const
 {
     obj_.clear();
 
     vector<bool> vec(info.size(), false);
 
-    auto FindLinks = [&vec](map<string, pair<string, struct stat>>::const_iterator it,
+    auto FindLinks = [&vec](map<string, tuple<string, struct stat, bool>>::const_iterator it,
                             unsigned long index) -> set<string> {
-        if (it->second.second.st_dev == 0 || it->second.second.st_ino == 0) {
+        if (std::get<1>(it->second).st_dev == 0 || std::get<1>(it->second).st_ino == 0) {
             return {};
         }
 
@@ -86,11 +112,13 @@ void BJsonEntityExtManage::SetExtManage(const map<string, pair<string, struct st
         item++;
 
         for (auto i = index + 1; i < vec.size(); ++i, ++item) {
-            if (it->second.second.st_dev == item->second.second.st_dev &&
-                it->second.second.st_ino == item->second.second.st_ino) {
+            if (std::get<1>(it->second).st_dev == std::get<1>(item->second).st_dev &&
+                std::get<1>(it->second).st_ino == std::get<1>(item->second).st_ino) {
                 vec[i] = true;
-                lks.insert(item->second.first);
+                lks.insert(std::get<0>(item->second));
+                HILOGI("lks insert %{public}s", std::get<0>(item->second).c_str());
             }
+            HILOGI("lks doesn't insert %{public}s", std::get<0>(item->second).c_str());
         }
         return lks;
     };
@@ -105,11 +133,14 @@ void BJsonEntityExtManage::SetExtManage(const map<string, pair<string, struct st
 
         Json::Value value;
         value["fileName"] = item->first;
-        if (item->second.first == BConstants::RESTORE_INSTALL_PATH) {
+        if (std::get<0>(item->second) == BConstants::RESTORE_INSTALL_PATH) {
             throw BError(BError::Codes::UTILS_INVAL_JSON_ENTITY, "Failed to set ext manage, invalid path");
         }
-        value["information"]["path"] = item->second.first;
-        value["information"]["stat"] = Stat2JsonValue(item->second.second);
+        auto [path, sta, isBeforeTar] = item->second;
+        value["information"]["path"] = path;
+        value["information"]["stat"] = Stat2JsonValue(sta);
+        value["isUserTar"] = isBeforeTar && CheckUserTar(path);
+        value["isBigFile"] = CheckBigFile(path);
         set<string> lks = FindLinks(item, index);
         for (const auto &lk : lks) {
             value["hardlinks"].append(lk);
@@ -140,7 +171,7 @@ set<string> BJsonEntityExtManage::GetExtManage() const
     return info;
 }
 
-map<string, pair<string, struct stat>> BJsonEntityExtManage::GetExtManageInfo() const
+std::vector<ExtManageInfo> BJsonEntityExtManage::GetExtManageInfo() const
 {
     if (!obj_) {
         HILOGE("Uninitialized JSon Object reference");
@@ -151,7 +182,7 @@ map<string, pair<string, struct stat>> BJsonEntityExtManage::GetExtManageInfo() 
         return {};
     }
 
-    map<string, pair<string, struct stat>> info;
+    std::vector<ExtManageInfo> infos {};
     for (const Json::Value &item : obj_) {
         if (!(item.isObject() && item.isMember("information"))) {
             continue;
@@ -168,12 +199,18 @@ map<string, pair<string, struct stat>> BJsonEntityExtManage::GetExtManageInfo() 
             sta = JsonValue2Stat(item["information"]["stat"]);
         }
         string fileName = item.isMember("fileName") && item["fileName"].isString() ? item["fileName"].asString() : "";
+        bool isUserTar = item.isMember("isUserTar") && item["isUserTar"].isBool() ? item["isUserTar"].asBool() : false;
+        bool isBigFile = item.isMember("isBigFile") && item["isBigFile"].isBool() ? item["isBigFile"].asBool() : false;
+        HILOGI("GetExtManageInfo, fileName:%{public}s, isUserTar:%{public}d, isBigFile:%{public}d", fileName.data(),
+               isUserTar, isBigFile);
         if (!fileName.empty() && !path.empty()) {
-            info.emplace(fileName, make_pair(path, sta));
+            ExtManageInfo info = {
+                .hashName = fileName, .fileName = path, .sta = sta, .isUserTar = isUserTar, .isBigFile = isBigFile};
+            infos.emplace_back(info);
         }
     }
 
-    return info;
+    return infos;
 }
 
 bool BJsonEntityExtManage::SetHardLinkInfo(const string origin, const set<string> hardLinks)
