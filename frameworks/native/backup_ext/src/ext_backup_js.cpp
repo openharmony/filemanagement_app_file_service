@@ -300,30 +300,41 @@ static int DoCallJsMethod(CallJsParam *param)
     }
     AbilityRuntime::HandleEscape handleEscape(*jsRuntime);
     auto env = jsRuntime->GetNapiEnv();
-    vector<napi_value> argv;
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(env, &scope);
+    if (scope == nullptr) {
+        HILOGE("scope is nullptr");
+        return EINVAL;
+    }
+    vector<napi_value> argv = {};
     if (param->argParser != nullptr) {
         if (!param->argParser(env, argv)) {
             HILOGE("failed to get params.");
+            napi_close_handle_scope(env, scope);
             return EINVAL;
         }
     }
     napi_value value = param->jsObj->GetNapiValue();
     if (value == nullptr) {
         HILOGE("failed to get napi value object.");
+        napi_close_handle_scope(env, scope);
         return EINVAL;
     }
     napi_value method;
     napi_get_named_property(env, value, param->funcName.c_str(), &method);
     if (param->retParser == nullptr) {
         HILOGE("ResultValueParser must not null.");
+        napi_close_handle_scope(env, scope);
         return EINVAL;
     }
-    napi_value result = nullptr;
+    napi_value result;
     napi_call_function(env, value, method, argv.size(), argv.data(), &result);
     if (!param->retParser(env, handleEscape.Escape(result))) {
         HILOGI("Parser js result fail.");
+        napi_close_handle_scope(env, scope);
         return EINVAL;
     }
+    napi_close_handle_scope(env, scope);
     return ERR_OK;
 }
 
