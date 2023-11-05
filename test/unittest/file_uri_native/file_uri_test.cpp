@@ -226,12 +226,11 @@ namespace OHOS::AppFileService::ModuleFileUri {
     HWTEST_F(FileUriTest, File_uri_GetDirectoryUri_0000, testing::ext::TestSize.Level1)
     {
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetDirectoryUri_0000";
-        string fileStr = "/data/storage/el2/base/files/test.txt";
-        string uri = "file://" + bundleA + fileStr;
-        FileUri fileUriObject(uri);
-        string fileDirectoryUri = "file://" + bundleA + "/data/storage/el2/base/files";
+        string fileStr = "/data/test/remote_file_share_test.txt";
+        FileUri fileUriObject(fileStr);
+        string fileDirectoryUri = "file://" + bundleA + "/data/test";
         EXPECT_EQ(fileUriObject.GetDirectoryUri(), fileDirectoryUri);
-        string folderStr = "/data/storage/el2/base/files";
+        string folderStr = "/data/test";
         string folderUri = "file://" + bundleA + folderStr;
         FileUri folderUriObject(folderUri);
         string folderDirectoryUri = "file://" + bundleA + folderStr;

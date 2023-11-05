@@ -103,7 +103,7 @@ string FileUri::GetDirectoryUri()
 bool FileUri::IsFileUri()
 {
     struct stat fileInfo;
-    if (stat(uri_.ToString().c_str(), &fileInfo) == 0) {
+    if (stat(GetRealPath().c_str(), &fileInfo) == 0) {
         if (S_ISREG(fileInfo.st_mode)) {
             LOGD("uri's st_mode is reg");
             return true;
@@ -111,8 +111,9 @@ bool FileUri::IsFileUri()
             LOGD("uri's st_mode is dir");
             return false;
         }
+    } else {
+        LOGE("fileInfo is error,%{public}s", strerror(errno));
     }
-    LOGE("fileInfo is error");
     return false;
 }
 
