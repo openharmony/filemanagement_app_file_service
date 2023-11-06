@@ -278,10 +278,11 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             session_->SetBundleVersionCode(bundleInfo.name, bundleInfo.versionCode);
             session_->SetBundleVersionName(bundleInfo.name, bundleInfo.versionName);
             session_->SetBundleDataSize(bundleInfo.name, bundleInfo.spaceOccupied);
-            session_->SetBackupExtName(bundleInfo.name, bundleInfo.extensionName);
         }
     }
     for (auto info : restoreInfos) {
+        session_->SetBackupExtName(info.name, info.extensionName);
+        HILOGD("bundleName: %{public}s, extensionName: %{public}s", info.name.c_str(), info.extensionName.c_str());
         if (info.allToBackup == false) {
             session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_REFUSED_ACT),
                                                                        info.name);
