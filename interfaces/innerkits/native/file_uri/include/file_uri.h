@@ -29,12 +29,14 @@ public:
     std::string GetRealPath();
     std::string ToString();
     std::string GetDirectoryUri();
-    bool IsFileUri();
 
     explicit FileUri(const std::string &uriOrPath);
     ~FileUri() = default;
+
 private:
     Uri uri_;
+
+    bool IsFileUri();
 };
 }  // ModuleFileUri
 }  // namespace AppFileService
