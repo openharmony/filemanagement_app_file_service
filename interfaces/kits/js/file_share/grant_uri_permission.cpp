@@ -173,7 +173,7 @@ namespace ModuleFileShare {
         } else {
             auto& uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
             int ret =  uriPermissionClient.GrantUriPermission(uri, uriPermInfo.flag,
-                                                              uriPermInfo.bundleName, 1);
+                                                              uriPermInfo.bundleName);
             if (ret != 0) {
                 LOGD("uriPermissionClient.GrantUriPermission by uri permission client failed!");
                 return GrantInMediaLibrary(uriPermInfo, uri);
