@@ -103,15 +103,19 @@ public:
         for (const auto &item : obj_["bundleInfos"]) {
             if (!item || !item["name"].isString() || !item["versionCode"].isUInt() || !item["versionName"].isString() ||
                 !item["spaceOccupied"].isInt64() || !item["allToBackup"].isBool() ||
-                !item["extensionName"].isString() || !item["needToInstall"].isBool() ||
-                !item["restoreDeps"].isString()) {
+                !item["extensionName"].isString() || !item["needToInstall"].isBool()) {
                 HILOGI("Failed to get field bundleInfos, type error");
                 return {};
+            }
+            string restoreDeps("");
+            if (item.isMember("restoreDeps") && item["restoreDeps"].isString()) {
+                restoreDeps = item["restoreDeps"].asString();
+                HILOGI("restoreDeps is %{public}s", restoreDeps.data());
             }
             bundleInfos.emplace_back(BundleInfo {item["name"].asString(), item["versionCode"].asUInt(),
                                                  item["versionName"].asString(), item["spaceOccupied"].asInt64(),
                                                  item["allToBackup"].asBool(), item["extensionName"].asString(),
-                                                 item["needToInstall"].asBool(), item["restoreDeps"].asString()});
+                                                 item["needToInstall"].asBool(), restoreDeps});
         }
         return bundleInfos;
     }
