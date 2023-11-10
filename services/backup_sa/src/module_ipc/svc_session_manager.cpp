@@ -502,7 +502,7 @@ bool SvcSessionManager::GetNeedToInstall(const std::string &bundleName)
 bool SvcSessionManager::NeedToUnloadService()
 {
     unique_lock<shared_mutex> lock(lock_);
-    bool isNeedToUnloadService = (!impl_.clientToken || !impl_.clientProxy || !impl_.backupExtNameMap.size());
+    bool isNeedToUnloadService = (!impl_.backupExtNameMap.size() && !impl_.isBusy);
     if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
         bool isAllBundlesRestored = SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
         isNeedToUnloadService = (isNeedToUnloadService && isAllBundlesRestored);
@@ -642,5 +642,17 @@ void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName)
         it->second.timerStatus = false;
         extBundleTimer.Unregister(it->second.extTimerId);
     }
+}
+
+void SvcSessionManager::SetIsBusy(bool isBusy)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    impl_.isBusy = isBusy;
+}
+
+bool SvcSessionManager::GetIsBusy()
+{
+    shared_lock<shared_mutex> lock(lock_);
+    return impl_.isBusy;
 }
 } // namespace OHOS::FileManagement::Backup

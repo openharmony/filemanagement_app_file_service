@@ -113,6 +113,7 @@ UniqueFd ServiceProxy::GetLocalCapabilities()
 
     MessageParcel reply;
     MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
     int32_t ret = Remote()->SendRequest(
         static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES), data, reply, option);
     if (ret != NO_ERROR) {
@@ -240,6 +241,7 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
     }
     MessageParcel reply;
     MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
 
     if (!data.WriteFileDescriptor(fd)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the fd").GetCode();
@@ -273,6 +275,7 @@ ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundl
     }
     MessageParcel reply;
     MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
 
     if (!data.WriteStringVector(bundleNames)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();

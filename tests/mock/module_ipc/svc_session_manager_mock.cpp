@@ -321,4 +321,14 @@ void SvcSessionManager::BundleExtTimerStart (
 void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName) {}
 
 void SvcSessionManager::SetBackupExtName(const string &bundleName, const string &backupExtName) {}
+
+void SvcSessionManager::SetIsBusy(bool isBusy)
+{
+    impl_.isBusy = isBusy;
+}
+
+bool SvcSessionManager::GetIsBusy()
+{
+    return impl_.isBusy;
+}
 } // namespace OHOS::FileManagement::Backup
