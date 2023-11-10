@@ -25,6 +25,13 @@
 #include "json/json.h"
 
 namespace OHOS::FileManagement::Backup {
+struct ExtManageInfo {
+    string hashName {""};
+    string fileName {""};
+    struct stat sta {};
+    bool isUserTar {false};
+    bool isBigFile {false};
+};
 class BJsonEntityExtManage : public BJsonEntity {
 public:
     /**
@@ -32,7 +39,7 @@ public:
      *
      * @param info std::map<string, pair<string, struct stat>>
      */
-    void SetExtManage(const map<string, pair<string, struct stat>> &info) const;
+    void SetExtManage(const map<string, tuple<string, struct stat, bool>> &info) const;
 
     /**
      * @brief 获取索引文件
@@ -46,7 +53,7 @@ public:
      *
      * @return map<string, pair<string, struct stat>>
      */
-    std::map<std::string, std::pair<std::string, struct stat>> GetExtManageInfo() const;
+    std::vector<ExtManageInfo> GetExtManageInfo() const;
 
     /**
      * @brief Set the hard link Information

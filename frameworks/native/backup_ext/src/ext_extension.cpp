@@ -45,6 +45,12 @@
 
 namespace OHOS::FileManagement::Backup {
 const string DEFAULT_TAR_PKG = "1.tar";
+const string INDEX_FILE_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
+                                 append(BConstants::SA_BUNDLE_BACKUP_BACKUP).
+                                 append(BConstants::EXT_BACKUP_MANAGE);
+const string INDEX_FILE_RESTORE = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
+                                  append(BConstants::SA_BUNDLE_BACKUP_RESTORE).
+                                  append(BConstants::EXT_BACKUP_MANAGE);
 using namespace std;
 
 void BackupExtExtension::VerifyCaller()
@@ -105,20 +111,17 @@ ErrCode BackupExtExtension::HandleClear()
     return ERR_OK;
 }
 
-static ErrCode IndexFileReady(const map<string, pair<string, struct stat>> &pkgInfo, sptr<IService> proxy)
+static ErrCode IndexFileReady(const map<string, tuple<string, struct stat, bool>> &pkgInfo, sptr<IService> proxy)
 {
-    string indexFile = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
-                            append(BConstants::SA_BUNDLE_BACKUP_BACKUP).
-                            append(BConstants::EXT_BACKUP_MANAGE);
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(
-        UniqueFd(open(indexFile.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)));
+        UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)));
     auto cache = cachedEntity.Structuralize();
     cache.SetExtManage(pkgInfo);
     cachedEntity.Persist();
     close(cachedEntity.GetFd().Release());
 
     ErrCode ret =
-        proxy->AppFileReady(string(BConstants::EXT_BACKUP_MANAGE), UniqueFd(open(indexFile.data(), O_RDONLY)));
+        proxy->AppFileReady(string(BConstants::EXT_BACKUP_MANAGE), UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDONLY)));
     if (SUCCEEDED(ret)) {
         HILOGI("The application is packaged successfully");
     } else {
@@ -132,28 +135,25 @@ static ErrCode IndexFileReady(const map<string, pair<string, struct stat>> &pkgI
 
 static ErrCode BigFileReady(sptr<IService> proxy)
 {
-    string indexFile = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
-                            append(BConstants::SA_BUNDLE_BACKUP_BACKUP).
-                            append(BConstants::EXT_BACKUP_MANAGE);
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(indexFile.data(), O_RDONLY)));
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDONLY)));
     auto cache = cachedEntity.Structuralize();
-    map<string, pair<string, struct stat>> pkgInfo = cache.GetExtManageInfo();
+    auto pkgInfo = cache.GetExtManageInfo();
 
     ErrCode ret {ERR_OK};
     for (auto &item : pkgInfo) {
-        if (item.first.empty() || item.second.first.empty()) {
+        if (item.hashName.empty() || item.fileName.empty()) {
             continue;
         }
 
-        UniqueFd fd(open(item.second.first.data(), O_RDONLY));
+        UniqueFd fd(open(item.fileName.data(), O_RDONLY));
         if (fd < 0) {
-            HILOGE("open file failed, file name is %{public}s", std::get<0>(item.second).c_str());
+            HILOGE("open file failed, file name is %{public}s", item.fileName.c_str());
             continue;
         }
 
-        ret = proxy->AppFileReady(item.first, std::move(fd));
+        ret = proxy->AppFileReady(item.hashName, std::move(fd));
         if (SUCCEEDED(ret)) {
-            HILOGI("The application is packaged successfully, package name is %{public}s", item.first.c_str());
+            HILOGI("The application is packaged successfully, package name is %{public}s", item.hashName.c_str());
         } else {
             HILOGI(
                 "The application is packaged successfully but the AppFileReady interface fails to be invoked: "
@@ -217,15 +217,33 @@ ErrCode BackupExtExtension::HandleBackup()
     return 0;
 }
 
-static map<string, pair<string, struct stat>> GetBigFileInfo(const vector<string> &includes,
-                                                             const vector<string> &excludes)
+static bool IsUserTar(const string &tarFile, const string &indexFile)
+{
+    if (tarFile.empty()) {
+        return false;
+    }
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(indexFile.data(), O_RDONLY)));
+    auto cache = cachedEntity.Structuralize();
+    auto info = cache.GetExtManageInfo();
+    for (auto &item : info) {
+        if (item.fileName == tarFile) {
+            HILOGI("tarFile:%{public}s isUserTar:%{public}d", tarFile.data(), item.isUserTar);
+            return item.isUserTar;
+        }
+    }
+    HILOGE("Can not find tarFile %{public}s", tarFile.data());
+    return false;
+}
+
+static map<string, tuple<string, struct stat, bool>> GetBigFileInfo(const vector<string> &includes,
+                                                                    const vector<string> &excludes)
 {
     auto [errCode, files] = BDir::GetBigFiles(includes, excludes);
     if (errCode != 0) {
         return {};
     }
 
-    auto GetStringHash = [](const map<string, pair<string, struct stat>> &m, const string &str) -> string {
+    auto GetStringHash = [](const map<string, tuple<string, struct stat, bool>> &m, const string &str) -> string {
         ostringstream strHex;
         strHex << hex;
 
@@ -242,11 +260,11 @@ static map<string, pair<string, struct stat>> GetBigFileInfo(const vector<string
         return name;
     };
 
-    map<string, pair<string, struct stat>> bigFiles;
+    map<string, tuple<string, struct stat, bool>> bigFiles;
     for (const auto &item : files) {
         string md5Name = GetStringHash(bigFiles, item.first);
         if (!md5Name.empty()) {
-            bigFiles.emplace(md5Name, make_pair(item.first, item.second));
+            bigFiles.emplace(md5Name, make_tuple(item.first, item.second, true));
         }
     }
 
@@ -267,10 +285,13 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
 
     vector<string> includes = usrConfig.GetIncludes();
     vector<string> excludes = usrConfig.GetExcludes();
+
+    // 大文件处理
     auto bigFileInfo = GetBigFileInfo(includes, excludes);
     for (const auto &item : bigFileInfo) {
-        if (!item.second.first.empty()) {
-            excludes.push_back(item.second.first);
+        auto filePath = std::get<0>(item.second);
+        if (!filePath.empty()) {
+            excludes.push_back(filePath);
         }
     }
 
@@ -285,7 +306,7 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
     if (stat(tarName.data(), &sta) == -1) {
         HILOGE("failed to invoke the system function stat, %{public}s", tarName.c_str());
     }
-    bigFileInfo.emplace(DEFAULT_TAR_PKG, make_pair(tarName, sta));
+    bigFileInfo.emplace(DEFAULT_TAR_PKG, make_tuple(tarName, sta, false));
 
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
@@ -296,7 +317,7 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
         return ret;
     }
     auto res = BigFileReady(proxy);
-    HILOGE("HandleBackup finish, ret = %{public}d", res);
+    HILOGI("HandleBackup finish, ret = %{public}d", res);
     return res;
 }
 
@@ -310,6 +331,7 @@ int BackupExtExtension::DoRestore(const string &fileName)
     // REM: 解压启动Extension时即挂载好的备份目录中的数据
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     string tarName = path + fileName;
+    HILOGI("tarName:%{public}s, fileName:%{public}s", tarName.c_str(), fileName.c_str());
 
     auto tarballFunc = BTarballFactory::Create("cmdline", tarName);
     if (extension_->WasFromSpeicalVersion() || extension_->UseFullBackupOnly()) {
@@ -369,9 +391,7 @@ static bool IsAllFileReceived(vector<string> tars)
     }
 
     // 获取索引文件内容
-    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
-    string indexFile = path + string(BConstants::EXT_BACKUP_MANAGE);
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(indexFile.data(), O_RDONLY)));
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
     auto cache = cachedEntity.Structuralize();
     set<string> info = cache.GetExtManage();
 
@@ -392,22 +412,21 @@ static void RestoreBigFiles()
 {
     // 获取索引文件内容
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
-    string indexFile = path + string(BConstants::EXT_BACKUP_MANAGE);
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(indexFile.data(), O_RDONLY)));
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManageInfo();
 
     for (auto &item : info) {
-        if (item.first.empty() || item.first.size() < BConstants::BIG_FILE_NAME_SIZE ||
-            item.first.rfind('.') != string::npos) {
+        if (item.hashName.empty() || (!item.isUserTar && !item.isBigFile)) {
             continue;
         }
 
-        string fileName = path + item.first;
-        auto [filePath, sta] = item.second;
+        string fileName = path + item.hashName;
+        string filePath = item.fileName;
+        struct stat sta = item.sta;
 
         if (access(fileName.data(), F_OK) != 0) {
-            HILOGI("file dose not exist");
+            HILOGI("file does not exist");
             continue;
         }
         if (filePath.empty()) {
@@ -422,7 +441,7 @@ static void RestoreBigFiles()
             }
             HILOGI("succeed to rename or copy the file");
         }
-        set<string> lks = cache.GetHardLinkInfo(item.first);
+        set<string> lks = cache.GetHardLinkInfo(item.hashName);
         for (const auto &lksPath : lks) {
             if (link(filePath.data(), lksPath.data())) {
                 HILOGE("failed to create hard link file %{public}s  errno : %{public}d", lksPath.c_str(), errno);
@@ -458,7 +477,6 @@ void BackupExtExtension::AsyncTaskRestore()
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
                               "Ext extension handle have been already released");
-
         try {
             if (!IsAllFileReceived(tars)) {
                 return;
@@ -466,12 +484,12 @@ void BackupExtExtension::AsyncTaskRestore()
 
             // 解压
             int ret = ERR_OK;
-            for (auto item : tars) {
-                if (ExtractFileExt(item) == "tar") {
+            for (auto item : tars) { // 处理要解压的tar文件
+                if (ExtractFileExt(item) == "tar" && !IsUserTar(item, INDEX_FILE_RESTORE)) {
                     ret = ptr->DoRestore(item);
                 }
             }
-            // 恢复大文件
+            // 恢复用户tar包以及大文件
             RestoreBigFiles();
 
             // delete 1.tar/manage.json
