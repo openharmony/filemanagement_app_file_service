@@ -90,32 +90,25 @@ string FileUri::ToString()
     return uri_.ToString();
 }
 
-string FileUri::GetDirectoryUri()
+string FileUri::GetFullDirectoryUri()
 {
     string uri = uri_.ToString();
-    if (!IsFileUri()) {
-        return uri;
-    }
-    size_t pos = uri.rfind("/");
-    return uri.substr(0, pos);
-}
-
-bool FileUri::IsFileUri()
-{
     struct stat fileInfo;
-    if (stat(GetRealPath().c_str(), &fileInfo) == 0) {
+    if (stat(GetRealPath().c_str(), &fileInfo) != 0) {
         LOGE("fileInfo is error,%{public}s", strerror(errno));
-        return false;
+        return "";
     }
     if (S_ISREG(fileInfo.st_mode)) {
         LOGD("uri's st_mode is reg");
-        return true;
+        size_t pos = uri.rfind("/");
+        return uri.substr(0, pos);
     }
     if (S_ISDIR(fileInfo.st_mode)) {
         LOGD("uri's st_mode is dir");
+        return uri;
     }
-    LOGD("uri's st_mode is other");
-    return false;
+    LOGD("uri's st_mode is not reg and dir");
+    return "";
 }
 
 FileUri::FileUri(const string &uriOrPath): uri_(

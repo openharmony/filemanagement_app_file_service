@@ -53,7 +53,6 @@ napi_value FileUriNExporter::Constructor(napi_env env, napi_callback_info info)
     return funcArg.GetThisVar();
 }
 
-
 napi_value FileUriNExporter::UriToString(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -88,7 +87,7 @@ napi_value FileUriNExporter::GetFileUriName(napi_env env, napi_callback_info inf
     return NVal::CreateUTF8String(env, fileuriEntity->fileUri_.GetName()).val_;
 }
 
-napi_value FileUriNExporter::GetDirectoryUri(napi_env env, napi_callback_info info)
+napi_value FileUriNExporter::GetFullDirectoryUri(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
@@ -102,7 +101,12 @@ napi_value FileUriNExporter::GetDirectoryUri(napi_env env, napi_callback_info in
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
-    return NVal::CreateUTF8String(env, fileuriEntity->fileUri_.GetDirectoryUri()).val_;
+    string uri = fileuriEntity->fileUri_.GetFullDirectoryUri();
+    if (uri == "") {
+        LOGE("No such file or directory!");
+        NError(ENOENT).ThrowErr(env);
+    }
+    return NVal::CreateUTF8String(env, uri).val_;
 }
 
 napi_value FileUriNExporter::GetFileUriPath(napi_env env, napi_callback_info info)
@@ -128,7 +132,7 @@ bool FileUriNExporter::Export()
         NVal::DeclareNapiFunction("toString", UriToString),
         NVal::DeclareNapiGetter("name", GetFileUriName),
         NVal::DeclareNapiGetter("path", GetFileUriPath),
-        NVal::DeclareNapiFunction("getDirectoryUri", GetDirectoryUri),
+        NVal::DeclareNapiFunction("getFullDirectoryUri", GetFullDirectoryUri),
     };
 
     auto [succ, classValue] = NClass::DefineClass(exports_.env_, className, Constructor, std::move(props));
