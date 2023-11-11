@@ -43,7 +43,7 @@ enum ShareFileType {
 };
 
 namespace {
-const string FILE_SCHEME = "file";
+const string BROKER_SCHEME_PREFIX = "content://";
 const string DATA_APP_EL2_PATH = "/data/service/el2/";
 const string SHARE_R_PATH = "/r/";
 const string SHARE_RW_PATH = "/rw/";
@@ -248,7 +248,8 @@ static int32_t PreparePreShareDir(FileShareInfo &info)
 static bool NotRequiredBindMount(const FileShareInfo &info, uint32_t flag, const string &uri)
 {
     return (info.currentUid_ == "0" ||
-        ((flag & PERSISTABLE_URI_PERMISSION) != 0 && uri.find(EXTERNAL_PATH) != 0));
+        ((flag & PERSISTABLE_URI_PERMISSION) != 0 && uri.find(EXTERNAL_PATH) != 0) ||
+        uri.find(BROKER_SCHEME_PREFIX) == 0);
 }
 
 static int32_t CreateSingleShareFile(const string &uri, uint32_t tokenId, uint32_t flag, FileShareInfo &info)
