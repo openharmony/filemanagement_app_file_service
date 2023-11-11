@@ -231,19 +231,32 @@ ErrCode Service::Start()
     return BError(BError::Codes::OK);
 }
 
-static void GetRestoreBundleNames(const vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
+static bool GetRestoreBundleNames(const vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
                                   vector<string> &restoreBundleNames,
                                   RestoreTypeEnum restoreType,
-                                  const vector<BundleName> &bundleNames)
+                                  const vector<BJsonEntityCaps::BundleInfo> &restoreInfos)
 {
     vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {};
-    for (auto &bundleInfo : bundleInfos) {
-        if (find(bundleNames.begin(), bundleNames.end(), bundleInfo.name) != bundleNames.end()) {
-            restoreBundleInfos.emplace_back(bundleInfo);
+    for (auto &restoreInfo : restoreInfos) {
+        auto it = find_if(bundleInfos.begin(), bundleInfos.end(),
+                          [&restoreInfo](auto &obj) { return obj.name == restoreInfo.name; });
+        if (it == bundleInfos.end()) {
+            HILOGE("Can't find %{public}s, append bundles error", restoreInfo.name.data());
+            return false;
         }
+        BJsonEntityCaps::BundleInfo info = {.name = (*it).name,
+                                            .versionCode = (*it).versionCode,
+                                            .spaceOccupied = (*it).spaceOccupied,
+                                            .allToBackup = (*it).allToBackup,
+                                            .extensionName = restoreInfo.extensionName,
+                                            .needToInstall = (*it).needToInstall,
+                                            .restoreDeps = (*it).restoreDeps};
+        restoreBundleInfos.emplace_back(info);
     }
     restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreBundleInfos, restoreType);
+    return true;
 }
+
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              const vector<BundleName> &bundleNames,
                                              RestoreTypeEnum restoreType,
@@ -262,7 +275,9 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
     }
     vector<string> restoreBundleNames {};
-    GetRestoreBundleNames(bundleInfos, restoreBundleNames, restoreType, bundleNames);
+    if (!GetRestoreBundleNames(bundleInfos, restoreBundleNames, restoreType, restoreInfos)) {
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
     if (restoreBundleNames.empty()) {
         return BError(BError::Codes::OK);
     }
@@ -451,7 +466,7 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         }
 
         AAFwk::Want want;
-        string backupExtName = session_->GetBackupExtName(bundleName);            /* new device app ext name */
+        string backupExtName = session_->GetBackupExtName(bundleName); /* new device app ext name */
         HILOGD("backupExtName: %{public}s, bundleName: %{public}s", backupExtName.data(), bundleName.data());
         string versionName = session_->GetBundleVersionName(bundleName);          /* old device app version name */
         uint32_t versionCode = session_->GetBundleVersionCode(bundleName);        /* old device app version code */
