@@ -16,9 +16,10 @@
 #include "b_error/b_excep_utils.h"
 
 #include <string_view>
+#include <cstdlib>
+#include <climits>
 
 #include "b_resources/b_constants.h"
-#include "cxx.h"
 #include "lib.rs.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -26,26 +27,23 @@ using namespace std;
 
 void BExcepUltils::VerifyPath(const string_view &path, bool isExtension)
 {
-    try {
-        auto ret = canonicalize(path.data());
-        string absPath = ret.c_str();
-        if (isExtension &&
-            absPath.find(string(BConstants::PATH_BUNDLE_BACKUP_HOME)
-            .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)) == std::string::npos) {
-            throw BError(BError::Codes::EXT_INVAL_ARG, "Invalid path, not in backup restore path");
-        }
-    } catch (const rust::Error &e) {
-        throw BError(BError::Codes::EXT_INVAL_ARG, "Invalid path");
+    string absPath = BExcepUltils::Canonicalize(path);
+    if (isExtension &&
+        absPath.find(string(BConstants::PATH_BUNDLE_BACKUP_HOME)
+        .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)) == string::npos) {
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Invalid path, not in backup restore path");
     }
 }
 
 string BExcepUltils::Canonicalize(const string_view &path)
 {
-    try {
-        auto ret = canonicalize(path.data());
-        return ret.c_str();
-    } catch (const rust::Error &e) {
-        throw BError(BError::Codes::EXT_INVAL_ARG, "Invalid path");
-    }
+    char full_path[PATH_MAX] = {0};
+    //1.转换绝对路径到dir
+#ifdef _WIN32
+    _fullpath(full_path, path.data(), PATH_MAX);
+#else
+    realpath(path.data(), full_path);
+#endif
+    return string(full_path);
 }
 } // namespace OHOS::FileManagement::Backup
