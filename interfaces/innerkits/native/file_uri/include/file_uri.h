@@ -28,9 +28,11 @@ public:
     std::string GetPath();
     std::string GetRealPath();
     std::string ToString();
+    std::string GetFullDirectoryUri();
 
     explicit FileUri(const std::string &uriOrPath);
     ~FileUri() = default;
+
 private:
     Uri uri_;
 };

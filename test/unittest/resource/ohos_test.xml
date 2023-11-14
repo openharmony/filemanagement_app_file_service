@@ -33,6 +33,7 @@
     </target>
     <target name="file_uri_test">
         <preparer>
+            <option name="push" value="remote_file_share_test.txt -> /data/test" src="res"/>
             <option name="push" value="filesharea.hap -> /data/test/" src="res"/>
             <option name="push" value="fileshareb.hap -> /data/test/" src="res"/>
             <option name="shell" value="bm install -r -p /data/test/filesharea.hap"/>

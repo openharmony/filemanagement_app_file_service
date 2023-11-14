@@ -214,4 +214,27 @@ namespace OHOS::AppFileService::ModuleFileUri {
         EXPECT_EQ(fileUri.GetPath(), fileStr);
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0004";
     }
+
+    /**
+     * @tc.name: file_uri_test_0007
+     * @tc.desc: Test function of GetFullDirectoryUri() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require:
+     */
+    HWTEST_F(FileUriTest, File_uri_GetFullDirectoryUri_0000, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetFullDirectoryUri_0000";
+        string fileStr = "/data/test/remote_file_share_test.txt";
+        FileUri fileUriObject(fileStr);
+        string fileDirectoryUri = "file://" + bundleA + "/data/test";
+        EXPECT_EQ(fileUriObject.GetFullDirectoryUri(), fileDirectoryUri);
+        string folderStr = "/data/test";
+        string folderUri = "file://" + bundleA + folderStr;
+        FileUri folderUriObject(folderUri);
+        string folderDirectoryUri = "file://" + bundleA + folderStr;
+        EXPECT_EQ(folderUriObject.GetFullDirectoryUri(), folderDirectoryUri);
+        GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0000";
+    }
 }
