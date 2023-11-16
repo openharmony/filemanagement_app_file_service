@@ -177,4 +177,18 @@ ErrCode BundleMgrAdapter::Install(wptr<InnerReceiverImpl> statusReceiver, const 
     installParam.userId = userId;
     return install->StreamInstall({bundleFilePath}, installParam, receiver);
 }
+
+string BundleMgrAdapter::GetAppGalleryBundleName()
+{
+    auto bms = GetBundleManager();
+
+    string bundleName = "";
+    auto ret = bms->QueryAppGalleryBundleName(bundleName);
+    if (!ret) {
+        HILOGI("Get App Gallery BundleName fail!");
+    } else {
+        HILOGI("App Gallery BundleName: %{public}s", bundleName.c_str());
+    }
+    return bundleName;
+}
 } // namespace OHOS::FileManagement::Backup

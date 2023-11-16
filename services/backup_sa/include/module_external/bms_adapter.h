@@ -53,6 +53,11 @@ public:
      * @param userId User ID
      */
     static ErrCode Install(wptr<InnerReceiverImpl> statusReceiver, const std::string &bundleFilePath, int32_t userId);
+
+    /**
+     * @brief Get app gallery bundle name
+    */
+    static std::string GetAppGalleryBundleName();
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_BUNDLE_MGR_ADAPTER_H
