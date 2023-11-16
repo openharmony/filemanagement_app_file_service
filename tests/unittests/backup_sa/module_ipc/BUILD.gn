@@ -138,7 +138,6 @@ ohos_unittest("backup_service_session_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "safwk:dynamic_cache",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",

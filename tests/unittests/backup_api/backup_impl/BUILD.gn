@@ -69,7 +69,6 @@ ohos_unittest("backup_sa_impl_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "safwk:dynamic_cache",
     "samgr:samgr_proxy",
   ]
 
