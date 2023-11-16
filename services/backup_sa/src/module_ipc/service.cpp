@@ -100,6 +100,7 @@ UniqueFd Service::GetLocalCapabilities()
          Only called by restore app before InitBackupSession,
            so there must be set init userId.
         */
+        session_->SetIsBusy(true);
         session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
         string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
@@ -114,6 +115,7 @@ UniqueFd Service::GetLocalCapabilities()
         auto bundleInfos = BundleMgrAdapter::GetBundleInfos(session_->GetSessionUserId());
         cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
+        session_->SetIsBusy(false);
 
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
@@ -263,6 +265,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              int32_t userId)
 {
     HILOGI("Begin");
+    session_->SetIsBusy(true);  // BundleMgrAdapter::GetBundleInfos可能耗时
     if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
         session_->SetSessionUserId(userId);
     }
@@ -305,12 +308,14 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         }
     }
     OnStartSched();
+    session_->SetIsBusy(false);
     return BError(BError::Codes::OK);
 }
 
 ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
     HILOGI("Begin");
+    session_->SetIsBusy(true);  // BundleMgrAdapter::GetBundleInfos可能耗时
     VerifyCaller(IServiceReverse::Scenario::BACKUP);
     auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
     session_->AppendBundles(bundleNames);
@@ -323,6 +328,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
         }
     }
     OnStartSched();
+    session_->SetIsBusy(false);
     return BError(BError::Codes::OK);
 }
 

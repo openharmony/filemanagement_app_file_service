@@ -85,6 +85,8 @@ constexpr int SA_THREAD_POOL_COUNT = 1; // SA THREAD_POOL 最大线程数
 constexpr int EXT_CONNECT_MAX_COUNT = 3; // extension 最大启动数
 constexpr int EXT_CONNECT_MAX_TIME = 15000; // SA 启动 extension 等待连接最大时间
 
+constexpr int IPC_MAX_WAIT_TIME = 3000; // IPC通讯最大等待时间(s)
+
 constexpr off_t FILESIZE_MAX = 077777777777; // 打包文件头部Header结构体fileSize字段最大值。
 
 // 打包文件头部Header结构体typeFlag字段值。
