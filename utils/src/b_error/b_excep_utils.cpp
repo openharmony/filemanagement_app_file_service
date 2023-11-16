@@ -20,7 +20,6 @@
 #include <climits>
 
 #include "b_resources/b_constants.h"
-#include "lib.rs.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
