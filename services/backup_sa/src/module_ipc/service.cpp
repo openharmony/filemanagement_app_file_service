@@ -352,8 +352,8 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
             sched_->Sched(fileInfo.owner);
             return BError(BError::Codes::OK);
         }
-        if (!regex_match(fileInfo.fileName, regex("^[0-9a-zA-Z_.]+$"))) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not alphanumeric");
+        if (fileInfo.fileName.find('/') != string::npos) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not valid");
         }
 
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
@@ -384,8 +384,8 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd)
     try {
         HILOGI("Begin");
         string callerName = VerifyCallerAndGetCallerName();
-        if (!regex_match(fileName, regex("^[0-9a-zA-Z_.]+$"))) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not alphanumeric");
+        if (fileName.find('/') != string::npos) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not valid");
         }
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
             fd = session_->OnBunleExtManageInfo(callerName, move(fd));
@@ -504,7 +504,7 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
     try {
         HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
-        if (fileName == BConstants::RESTORE_INSTALL_PATH && regex_match(bundleName, regex("^[0-9a-zA-Z_.]+$"))) {
+        if (fileName == BConstants::RESTORE_INSTALL_PATH && bundleName.find('/') == string::npos) {
             session_->SetInstallState(bundleName, string(BConstants::RESTORE_INSTALL_PATH));
             auto action = session_->GetServiceSchedAction(bundleName);
             if (action == BConstants::ServiceSchedAction::INSTALLING) {
@@ -512,8 +512,8 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
             }
             return BError(BError::Codes::OK);
         }
-        if (!regex_match(fileName, regex("^[0-9a-zA-Z_.]+$"))) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not alphanumeric");
+        if (fileName.find('/') != string::npos) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not valid");
         }
         SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);
         session_->SetExtFileNameRequest(bundleName, fileName);

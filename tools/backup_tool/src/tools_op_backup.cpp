@@ -132,8 +132,8 @@ static void OnFileReady(shared_ptr<Session> ctx, const BFileInfo &fileInfo, Uniq
     if (access(tmpPath.data(), F_OK) != 0 && mkdir(tmpPath.data(), S_IRWXU) != 0) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
-    if (!regex_match(fileInfo.fileName, regex("^[0-9a-zA-Z_.]+$"))) {
-        throw BError(BError::Codes::TOOL_INVAL_ARG, "Filename is not alphanumeric");
+    if (fileInfo.fileName.find('/') != string::npos) {
+        throw BError(BError::Codes::TOOL_INVAL_ARG, "Filename is not valid");
     }
     UniqueFd fdLocal(open((tmpPath + "/" + fileInfo.fileName).data(), O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU));
     if (fdLocal < 0) {

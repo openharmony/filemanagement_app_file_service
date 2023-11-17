@@ -78,8 +78,8 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
 
         VerifyCaller();
 
-        if (!regex_match(fileName, regex("^[0-9a-zA-Z_.]+$"))) {
-            throw BError(BError::Codes::EXT_INVAL_ARG, "Filename is not alphanumeric");
+        if (fileName.find('/') != string::npos) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Filename is not valid");
         }
 
         string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
@@ -226,7 +226,7 @@ static bool IsUserTar(const string &tarFile, const string &indexFile)
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManageInfo();
     for (auto &item : info) {
-        if (item.fileName == tarFile) {
+        if (item.hashName == tarFile) {
             HILOGI("tarFile:%{public}s isUserTar:%{public}d", tarFile.data(), item.isUserTar);
             return item.isUserTar;
         }
