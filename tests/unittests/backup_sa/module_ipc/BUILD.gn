@@ -58,6 +58,7 @@ ohos_unittest("backup_service_test") {
 
   sources = [
     "${path_backup_mock}/accesstoken/accesstoken_kit_mock.cpp",
+    "${path_backup}/services/backup_sa/src/module_app_gallery/app_gallery_dispose_proxy.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
     "service_test.cpp",

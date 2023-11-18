@@ -49,4 +49,9 @@ ErrCode BundleMgrAdapter::Install(wptr<InnerReceiverImpl> statusReceiver, const 
 {
     return 0;
 }
+
+string BundleMgrAdapter::GetAppGalleryBundleName()
+{
+    return "";
+}
 } // namespace OHOS::FileManagement::Backup

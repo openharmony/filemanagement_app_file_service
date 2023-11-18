@@ -15,6 +15,7 @@
 
 #include "module_ipc/service_reverse_proxy.h"
 
+#include "module_app_gallery/app_gallery_dispose_proxy.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "filemgmt_libhilog.h"
@@ -133,6 +134,9 @@ void ServiceReverseProxy::RestoreOnBundleFinished(int32_t errCode, string bundle
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }
+
+    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
+    HILOGI("AppGalleryDisposeProxy EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr, bundleName.c_str());
 }
 
 void ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode)

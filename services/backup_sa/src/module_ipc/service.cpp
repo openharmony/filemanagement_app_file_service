@@ -48,6 +48,7 @@
 #include "bundle_mgr_client.h"
 #include "filemgmt_libhilog.h"
 #include "ipc_skeleton.h"
+#include "module_app_gallery/app_gallery_dispose_proxy.h"
 #include "module_external/bms_adapter.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "module_ipc/svc_restore_deps_manager.h"
@@ -461,6 +462,11 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
 {
     try {
         HILOGE("begin %{public}s", bundleName.data());
+
+        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
+        HILOGI("AppGalleryDisposeProxy StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+            bundleName.c_str());
+
         IServiceReverse::Scenario scenario = session_->GetScenario();
         BConstants::ExtensionAction action;
         if (scenario == IServiceReverse::Scenario::BACKUP) {
@@ -632,6 +638,10 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
+
+            DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
+            HILOGI("AppGalleryDisposeProxy EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+                bundleName.c_str());
         }
         ClearSessionAndSchedInfo(bundleName);
         return;
