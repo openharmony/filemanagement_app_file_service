@@ -131,9 +131,9 @@ static void OnFileReady(shared_ptr<Session> ctx, const BFileInfo &fileInfo, Uniq
 {
     printf("FileReady owner = %s, fileName = %s, sn = %u, fd = %d\n", fileInfo.owner.c_str(), fileInfo.fileName.c_str(),
            fileInfo.sn, fd.Get());
-    if (!regex_match(fileInfo.fileName, regex("^[0-9a-zA-Z_.]+$")) &&
+    if (fileInfo.fileName.find('/') != string::npos &&
         fileInfo.fileName != BConstants::RESTORE_INSTALL_PATH) {
-        throw BError(BError::Codes::TOOL_INVAL_ARG, "Filename is not alphanumeric");
+        throw BError(BError::Codes::TOOL_INVAL_ARG, "Filename is not valid");
     }
     string tmpPath;
     if (fileInfo.fileName == BConstants::RESTORE_INSTALL_PATH) {
@@ -208,8 +208,8 @@ static void RestoreApp(shared_ptr<Session> restore, vector<BundleName> &bundleNa
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
     for (auto &bundleName : bundleNames) {
-        if (!regex_match(bundleName, regex("^[0-9a-zA-Z_.]+$"))) {
-            throw BError(BError::Codes::TOOL_INVAL_ARG, "bundleName is not alphanumeric");
+        if (bundleName.find('/') != string::npos) {
+            throw BError(BError::Codes::TOOL_INVAL_ARG, "Filename is not valid");
         }
         string path = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + bundleName;
         if (access(path.data(), F_OK) != 0) {
