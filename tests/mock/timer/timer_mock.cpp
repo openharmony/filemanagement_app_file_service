@@ -27,6 +27,8 @@ Timer::Timer(const std::string &name, int timeoutMs)
     name_ = name;
 }
 
+Timer::~Timer() {}
+
 uint32_t Timer::Setup()
 {
     GTEST_LOG_(INFO) << "Timer Setup";
