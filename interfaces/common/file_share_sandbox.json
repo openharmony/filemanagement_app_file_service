@@ -12,15 +12,6 @@
             "sandbox-path" : "/mnt/data/fuse/",
             "src-path" : "/mnt/data/<currentUserId>/fuse/"
         }, {
-            "sandbox-path" : "/storage/Users/currentUser/Documents/",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/device_view/<networkId>/files/Documents/"
-        }, {
-            "sandbox-path" : "/storage/Users/currentUser/Download/",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/device_view/<networkId>/files/Download/"
-        }, {
-            "sandbox-path" : "/storage/Users/currentUser/Desktop/",
-            "src-path" : "/mnt/hmdfs/<currentUserId>/account/device_view/<networkId>/files/Desktop/"
-        }, {
             "sandbox-path" : "/storage/Users/currentUser/",
             "src-path" : "/mnt/hmdfs/<currentUserId>/account/device_view/<networkId>/files/Docs/"
         }, {
