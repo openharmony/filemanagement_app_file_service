@@ -18,7 +18,6 @@
 #include <string>
 
 #include "message_parcel.h"
-#include "nlohmann/json.hpp"
 #include "want.h"
 
 #include "module_app_gallery/app_gallery_service_connection.h"
