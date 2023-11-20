@@ -84,8 +84,20 @@ static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, co
         return;
     }
 
-    auto cbCompl = [name {name}](napi_env env, NError err) -> NVal {
-        return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUTF8String(env, name);
+    auto cbCompl = [name {name}, errCode {err}](napi_env env, NError err) -> NVal {
+        NVal res;
+        NVal bundleName = NVal::CreateUTF8String(env, name);
+        if (err) {
+            res = NVal {env, err.GetNapiErr(env)};
+        } else {
+            res = NVal {env, NError(errCode).GetNapiErr(env)};
+        }
+        napi_status status = napi_set_named_property(env, res.val_, FILEIO_TAG_ERR_DATA.c_str(), bundleName.val_);
+        if (status != napi_ok) {
+            HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s", status, name.c_str());
+        }
+
+        return res;
     };
 
     callbacks->onBundleBegin.ThreadSafeSchedule(cbCompl);
@@ -107,8 +119,20 @@ static void onBundleEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, cons
         return;
     }
 
-    auto cbCompl = [name {name}](napi_env env, NError err) -> NVal {
-        return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUTF8String(env, name);
+    auto cbCompl = [name {name}, errCode {err}](napi_env env, NError err) -> NVal {
+        NVal res;
+        NVal bundleName = NVal::CreateUTF8String(env, name);
+        if (err) {
+            res = NVal {env, err.GetNapiErr(env)};
+        } else {
+            res = NVal {env, NError(errCode).GetNapiErr(env)};
+        }
+        napi_status status = napi_set_named_property(env, res.val_, FILEIO_TAG_ERR_DATA.c_str(), bundleName.val_);
+        if (status != napi_ok) {
+            HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s", status, name.c_str());
+        }
+
+        return res;
     };
 
     callbacks->onBundleEnd.ThreadSafeSchedule(cbCompl);
@@ -130,8 +154,15 @@ static void onAllBundlesEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err)
         return;
     }
 
-    auto cbCompl = [](napi_env env, NError err) -> NVal {
-        return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
+    auto cbCompl = [errCode {err}](napi_env env, NError err) -> NVal {
+        NVal res;
+        if (err) {
+            res = NVal {env, err.GetNapiErr(env)};
+        } else {
+            res = NVal {env, NError(errCode).GetNapiErr(env)};
+        }
+
+        return res;
     };
 
     callbacks->onAllBundlesEnd.ThreadSafeSchedule(cbCompl);
