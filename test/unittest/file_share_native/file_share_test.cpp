@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "access_token_error.h"
 #include "accesstoken_kit.h"
 #include "file_share.h"
 #include "ipc_skeleton.h"
@@ -33,7 +34,6 @@ namespace {
     using namespace OHOS::Security::AccessToken;
 
     const int E_OK = 0;
-    const int E_INVALID_ARGUMENT = 12100002;
 
     class FileShareTest : public testing::Test {
     public:
@@ -129,7 +129,7 @@ namespace {
         vector<string> uriList(1, uri);
         vector<int32_t> retList;
         int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
-        EXPECT_EQ(ret, E_INVALID_ARGUMENT);
+        EXPECT_EQ(ret, static_cast<int32_t>(AccessTokenError::ERR_TOKENID_NOT_EXIST));
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0002";
     }
 
