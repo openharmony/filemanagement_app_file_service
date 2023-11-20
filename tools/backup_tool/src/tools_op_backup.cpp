@@ -169,7 +169,7 @@ static void OnAllBundlesFinished(shared_ptr<Session> ctx, ErrCode err)
 {
     ctx->isAllBundelsFinished.store(true);
     if (err == 0) {
-        printf("backup successful\n");
+        printf("all bundles finished end\n");
     } else {
         printf("Failed to Unplanned Abort error: %d\n", err);
         ctx->TryNotify(true);

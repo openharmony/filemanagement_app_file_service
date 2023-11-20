@@ -125,7 +125,7 @@ static void OnBundleFinished(shared_ptr<SessionAsync> ctx, ErrCode err, const Bu
 
 static void OnAllBundlesFinished(shared_ptr<SessionAsync> ctx, ErrCode err)
 {
-    printf("AllBundlesFinished errCode = %d\n", err);
+    printf("all bundles finished end\n");
     if (err != 0) {
         ctx->TryNotify(true);
     }
