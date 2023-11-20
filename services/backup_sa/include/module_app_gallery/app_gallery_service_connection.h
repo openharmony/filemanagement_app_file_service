@@ -30,7 +30,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace OHOS::AppExecFwk;
-const int32_t CONNECT_TIME = 5;
+const int32_t CONNECT_TIME = 3;
 
 template <typename T> class AppGralleryConnection : public AbilityConnectionStub {
 public:
