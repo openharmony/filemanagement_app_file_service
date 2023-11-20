@@ -41,6 +41,16 @@ ohos_rust_static_ffi("backup_cxx_rust") {
 }
 
 ohos_static_library("backup_cxx_cppdeps") {
+  stack_protector_ret = true
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
   defines = [ "RUST_CXX_NO_EXCEPTIONS" ]
@@ -57,6 +67,16 @@ ohos_static_library("backup_cxx_cppdeps") {
 }
 
 ohos_shared_library("backup_utils") {
+  stack_protector_ret = true
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [
     "src/b_encryption/b_encryption.cpp",
     "src/b_error/b_error.cpp",

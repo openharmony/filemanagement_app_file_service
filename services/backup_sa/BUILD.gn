@@ -15,6 +15,16 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ohos_shared_library("backup_sa") {
+  stack_protector_ret = true
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [
     "src/module_app_gallery/app_gallery_dispose_proxy.cpp",
     "src/module_external/bms_adapter.cpp",
