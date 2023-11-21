@@ -164,6 +164,28 @@ static ErrCode BigFileReady(sptr<IService> proxy)
     return ret;
 }
 
+static bool IsAllFileReceived(vector<string> tars)
+{
+    // 是否已收到索引文件
+    if (find(tars.begin(), tars.end(), string(BConstants::EXT_BACKUP_MANAGE)) == tars.end()) {
+        return false;
+    }
+
+    // 获取索引文件内容
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
+    auto cache = cachedEntity.Structuralize();
+    set<string> info = cache.GetExtManage();
+
+    // 从数量上判断是否已经全部收到
+    if (tars.size() <= info.size()) {
+        return false;
+    }
+
+    // 逐个判断是否收到
+    sort(tars.begin(), tars.end());
+    return includes(tars.begin(), tars.end(), info.begin(), info.end());
+}
+
 ErrCode BackupExtExtension::PublishFile(const string &fileName)
 {
     HILOGE("begin publish file. fileName is %{public}s", fileName.data());
@@ -182,6 +204,9 @@ ErrCode BackupExtExtension::PublishFile(const string &fileName)
                 throw BError(BError::Codes::EXT_INVAL_ARG, "The file does not exist");
             }
             tars_.push_back(fileName);
+            if (!IsAllFileReceived(tars_)) {
+                return ERR_OK;
+            }
         }
 
         // 异步执行解压操作
@@ -382,32 +407,6 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
     });
 }
 
-static bool IsAllFileReceived(vector<string> tars)
-{
-    // 是否已收到索引文件
-    auto it = find(tars.begin(), tars.end(), string(BConstants::EXT_BACKUP_MANAGE));
-    if (tars.end() == it) {
-        return false;
-    }
-
-    // 获取索引文件内容
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
-    auto cache = cachedEntity.Structuralize();
-    set<string> info = cache.GetExtManage();
-
-    // 从数量上判断是否已经全部收到
-    if (tars.size() <= info.size()) {
-        return false;
-    }
-
-    // 逐个判断是否收到
-    sort(tars.begin(), tars.end());
-    if (includes(tars.begin(), tars.end(), info.begin(), info.end())) {
-        return true;
-    }
-    return false;
-}
-
 static void RestoreBigFiles()
 {
     // 获取索引文件内容
@@ -478,10 +477,6 @@ void BackupExtExtension::AsyncTaskRestore()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
                               "Ext extension handle have been already released");
         try {
-            if (!IsAllFileReceived(tars)) {
-                return;
-            }
-
             // 解压
             int ret = ERR_OK;
             for (auto item : tars) { // 处理要解压的tar文件
