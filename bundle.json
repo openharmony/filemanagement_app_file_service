@@ -37,7 +37,8 @@
                 "napi",
                 "safwk",
                 "samgr",
-                "storage_service"
+                "storage_service",
+                "os_account"
             ],
             "third_party": [
                 "bounds_checking_function",

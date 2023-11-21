@@ -27,7 +27,9 @@ ohos_unittest("file_uri_test") {
     "app_file_service:fileuri_native",
     "c_utils:utils",
     "hilog:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
+    "os_account:os_account_innerkits",
   ]
 
   deps = [
