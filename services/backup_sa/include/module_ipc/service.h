@@ -90,6 +90,14 @@ public:
      */
     virtual void ExtStart(const std::string &bundleName);
 
+    /**
+     * @brief 发送备份恢复通知到应用市场
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void SendAppGalleryNotify(const std::string &bundleName);
+    
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {

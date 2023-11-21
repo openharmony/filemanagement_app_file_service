@@ -462,11 +462,6 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
 {
     try {
         HILOGE("begin %{public}s", bundleName.data());
-
-        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
-        HILOGI("AppGalleryDisposeProxy StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
-            bundleName.c_str());
-
         IServiceReverse::Scenario scenario = session_->GetScenario();
         BConstants::ExtensionAction action;
         if (scenario == IServiceReverse::Scenario::BACKUP) {
@@ -781,6 +776,16 @@ void Service::OnStartSched()
         for (int num = 0; num < BConstants::EXT_CONNECT_MAX_COUNT; num++) {
             sched_->Sched();
         }
+    }
+}
+
+void Service::SendAppGalleryNotify(const BundleName &bundleName)
+{
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    if (scenario == IServiceReverse::Scenario::RESTORE) {
+        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
+        HILOGI("AppGalleryDisposeProxy StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+            bundleName.c_str());
     }
 }
 } // namespace OHOS::FileManagement::Backup
