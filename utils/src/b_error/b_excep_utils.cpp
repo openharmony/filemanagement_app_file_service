@@ -26,23 +26,31 @@ using namespace std;
 
 void BExcepUltils::VerifyPath(const string_view &path, bool isExtension)
 {
-    string absPath = BExcepUltils::Canonicalize(path);
-    if (isExtension &&
-        absPath.find(string(BConstants::PATH_BUNDLE_BACKUP_HOME)
-        .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)) == string::npos) {
-        throw BError(BError::Codes::EXT_INVAL_ARG, "Invalid path, not in backup restore path");
+    try {
+        string absPath = BExcepUltils::Canonicalize(path);
+        if (isExtension &&
+            absPath.find(string(BConstants::PATH_BUNDLE_BACKUP_HOME)
+            .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)) == string::npos) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Invalid path, not in backup restore path");
+        }
+    } catch (const BError &e) {
+        throw BError(BError::Codes::EXT_INVAL_ARG, e.what());
     }
 }
 
 string BExcepUltils::Canonicalize(const string_view &path)
 {
-    char full_path[PATH_MAX] = {0};
-    //1.转换绝对路径到dir
+    try {
+        char full_path[PATH_MAX] = {0};
+        //1.转换绝对路径到dir
 #ifdef _WIN32
-    _fullpath(full_path, path.data(), PATH_MAX);
+        _fullpath(full_path, path.data(), PATH_MAX);
 #else
-    realpath(path.data(), full_path);
+        realpath(path.data(), full_path);
 #endif
-    return string(full_path);
+        return string(full_path);
+    } catch (const exception &e) {
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Invalid path");
+    }
 }
 } // namespace OHOS::FileManagement::Backup
