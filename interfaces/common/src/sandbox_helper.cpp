@@ -218,20 +218,31 @@ static int32_t GetBucketNum(const std::string &fileName)
     return CalAssetBucket(fileId);
 }
 
-static void ParseMediaSandboxPath(const string &sandboxPath, MediaUriInfo &mediaUriInfo)
+static bool ParseMediaSandboxPath(const string &sandboxPath, MediaUriInfo &mediaUriInfo)
 {
     string path = sandboxPath;
     std::replace(path.begin(), path.end(), '/', ' ');
     stringstream ss;
     ss << path;
     ss >> mediaUriInfo.mediaType >> mediaUriInfo.fileId >> mediaUriInfo.realName >> mediaUriInfo.displayName;
+
+    string buf;
+    ss >> buf;
+    if (!buf.empty()) {
+        LOGE("media sandboxPath is invalid");
+        return false;
+    }
+
+    return true;
 }
 
 static int32_t GetMediaPhysicalPath(const std::string &sandboxPath, const std::string &userId,
                                     std::string &physicalPath)
 {
     MediaUriInfo mediaUriInfo;
-    ParseMediaSandboxPath(sandboxPath, mediaUriInfo);
+    if (!ParseMediaSandboxPath(sandboxPath, mediaUriInfo)) {
+        return -EINVAL;
+    }
 
     int32_t bucketNum = GetBucketNum(mediaUriInfo.realName);
     if (bucketNum < 0) {
@@ -311,6 +322,15 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
 
     physicalPath = GetLowerPath(lowerPathHead, lowerPathTail, userId, bundleName, networkId);
     return 0;
+}
+
+bool SandboxHelper::IsValidPath(const std::string &path)
+{
+    if (path.find("/./") != std::string::npos ||
+        path.find("/../") != std::string::npos) {
+        return false;
+    }
+    return true;
 }
 
 bool SandboxHelper::CheckValidPath(const std::string &filePath)
