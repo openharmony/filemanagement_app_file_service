@@ -225,11 +225,16 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
 static int32_t PreparePreShareDir(FileShareInfo &info)
 {
     if (!SandboxHelper::CheckValidPath(info.providerLowerPath_)) {
-        LOGE("Invalid share path with %{private}s", info.providerLowerPath_.c_str());
+        LOGE("info.providerLowerPath_ is invalid");
         return -EINVAL;
     }
 
     for (size_t i = 0; i < info.sharePath_.size(); i++) {
+        if (!SandboxHelper::IsValidPath(info.sharePath_[i])) {
+            LOGE("Invalid share path");
+            return -EINVAL;
+        }
+
         if (access(info.sharePath_[i].c_str(), F_OK) != 0) {
             string sharePathDir = info.sharePath_[i];
             size_t posLast = info.sharePath_[i].find_last_of("/");
