@@ -41,15 +41,6 @@ const string VERSION = "1.0";
 const string LONG_LINK_SYMBOL = "longLinkSymbol";
 } // namespace
 
-static vector<uint8_t> CharToUint8(char *input)
-{
-    vector<uint8_t> vec {};
-    for (size_t i = 0; i < strlen(input); i++) {
-        vec.emplace_back(static_cast<uint8_t>(input[i]));
-    }
-    return vec;
-}
-
 TarFile &TarFile::GetInstance()
 {
     static TarFile instance;
@@ -76,56 +67,19 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
 
     for (auto &filePath : srcFiles) {
         rootPath_ = filePath;
-        TraversalFile(rootPath_);
+        if (!TraversalFile(rootPath_)) {
+            HILOGE("Failed to traversal file");
+        }
     }
-    bool ret = FillSplitTailBlocks();
+
+    if (!FillSplitTailBlocks()) {
+        HILOGE("Failed to fill split tail blocks");
+    }
     tarMap = tarMap_;
 
     if (currentTarFile_ != nullptr) {
         fclose(currentTarFile_);
         currentTarFile_ = nullptr;
-    }
-
-    return ret;
-}
-
-bool TarFile::TraversalDir(const string &currentPath)
-{
-    stack<string> dirs, destDirs;
-    dirs.push(currentPath);
-    while (dirs.size() > 0) {
-        string curPath = dirs.top();
-        dirs.pop();
-
-        DIR *curDir = opendir(curPath.c_str());
-        if (curDir == nullptr) {
-            HILOGI("Failed to opendir errno:%{public}d", errno);
-            return false;
-        }
-
-        string fullPath(currentPath);
-        if (fullPath[fullPath.length() - 1] != '/') {
-            fullPath.append("/");
-        }
-
-        struct dirent *ptr = readdir(curDir);
-        while (ptr != nullptr) {
-            if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
-                continue;
-            }
-            string subPath = fullPath + ptr->d_name;
-            dirs.push(subPath);
-            destDirs.push(subPath);
-            ptr = readdir(curDir);
-        }
-
-        closedir(curDir);
-    }
-
-    while (destDirs.size() > 0) {
-        string curPath = destDirs.top();
-        TraversalFile(curPath);
-        destDirs.pop();
     }
 
     return true;
@@ -138,29 +92,27 @@ bool TarFile::TraversalFile(string &filePath)
         return false;
     }
 
-    struct stat currentStat {};
-    memset_s(&currentStat, sizeof(currentStat), 0, sizeof(currentStat));
-    int err = lstat(filePath.c_str(), &currentStat);
-    if (err != 0) {
-        HILOGI("Failed to lstat err = %{public}d", errno);
+    struct stat curFileStat {};
+    memset_s(&curFileStat, sizeof(curFileStat), 0, sizeof(curFileStat));
+    if (lstat(filePath.c_str(), &curFileStat) != 0) {
+        HILOGE("Failed to lstat, err = %{public}d", errno);
         return false;
     }
-    AddFile(filePath, currentStat, false);
+    if (!AddFile(filePath, curFileStat, false)) {
+        HILOGE("Failed to add file to tar package");
+        return false;
+    }
 
     // tar包内文件数量大于6000，分片打包
     fileCount_++;
     if (fileCount_ == MAX_FILE_COUNT) {
-        HILOGI("The number of files in the tar package exceeds %{public}d, start to slice.", MAX_FILE_COUNT);
+        HILOGI("The number of files in the tar package exceeds %{public}d, start to slice", MAX_FILE_COUNT);
         fileCount_ = 0;
         FillSplitTailBlocks();
         CreateSplitTarFile();
         FillSplitHeaderBlocks();
     }
 
-    if (S_ISDIR(currentStat.st_mode)) {
-        HILOGI("%{public}s is a directory", filePath.data());
-        return TraversalDir(filePath);
-    }
     return true;
 }
 
@@ -182,19 +134,16 @@ bool TarFile::I2OcsConvert(const struct stat &st, TarHeader &hdr, string &fileNa
         if (sizeof(off_t) <= OFF_T_SIZE || st.st_size <= static_cast<off_t>(MAX_FILE_SIZE)) {
             memcpy_s(hdr.size, sizeof(hdr.size), I2Ocs(sizeof(hdr.size), hdrSize).c_str(), sizeof(hdr.size) - 1);
         } else {
+            HILOGE("Invalid tar header size");
             return false;
         }
-    } else if (S_ISLNK(st.st_mode)) {
-        hdr.typeFlag = SYMTYPE;
-        int targetLen = sizeof(hdr.linkName);
-        memcpy_s(hdr.linkName, targetLen, FillLinkName(targetLen, fileName, st.st_size + 1).c_str(), targetLen - 1);
     } else if (S_ISDIR(st.st_mode)) {
         hdr.typeFlag = DIRTYPE;
     } else {
         return true;
     }
 
-    if (S_ISDIR(st.st_mode)) {
+    if (S_ISDIR(st.st_mode) && fileName.back() != '/') {
         fileName.append("/");
     }
 
@@ -207,6 +156,7 @@ bool TarFile::AddFile(string &fileName, const struct stat &st, bool isSplit)
 
     TarHeader hdr;
     if (!I2OcsConvert(st, hdr, fileName, isSplit)) {
+        HILOGE("Failed to I2OcsConvert");
         return false;
     }
 
@@ -215,32 +165,28 @@ bool TarFile::AddFile(string &fileName, const struct stat &st, bool isSplit)
             WriteLongName(fileName, GNUTYPE_LONGNAME);
         }
     }
-
     memcpy_s(hdr.magic, sizeof(hdr.magic), TMAGIC.c_str(), sizeof(hdr.magic) - 1);
     memcpy_s(hdr.version, sizeof(hdr.version), VERSION.c_str(), sizeof(hdr.version) - 1);
-
     FillOwnerName(hdr, st);
     SetCheckSum(hdr);
 
     if ((hdr.typeFlag != REGTYPE) && (hdr.typeFlag != SPLIT_START_TYPE)) {
-        bool flag = false;
-        vector<uint8_t> hdrBuf = CharToUint8(reinterpret_cast<char *>(&hdr));
-        if (SplitWriteAll(hdrBuf, BLOCK_SIZE, flag) != BLOCK_SIZE) {
-            HILOGI("Failed to split write all");
+        if (WriteTarHeader(hdr) != BLOCK_SIZE) {
+            HILOGE("Failed to write all");
             return false;
         }
+        currentFileName_ = "";
         return true;
     }
 
     // write tar header of src file
-    string hdrStr(reinterpret_cast<char *>(&hdr), BLOCK_SIZE);
-    if (WriteAll(hdrStr, BLOCK_SIZE) != BLOCK_SIZE) {
-        HILOGI("Failed to write all");
+    if (WriteTarHeader(hdr) != BLOCK_SIZE) {
+        HILOGE("Failed to write all");
         return false;
     }
     // write src file content to tar file
     if (!WriteFileContent(fileName, st.st_size)) {
-        HILOGI("Failed to write file content");
+        HILOGE("Failed to write file content");
         return false;
     }
     currentFileName_ = "";
@@ -269,14 +215,14 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
         }
         // read buffer from src file
         if (ReadAll(fd, ioBuffer_, size) != read) {
-            HILOGI("Failed to read all");
+            HILOGE("Failed to read all");
             break;
         }
 
         fileRemainSize_ -= read;
         // write buffer to tar file
         if (SplitWriteAll(ioBuffer_, read, isFilled) != read) {
-            HILOGI("Failed to split write all");
+            HILOGE("Failed to split write all");
             break;
         }
         remain -= read;
@@ -304,7 +250,7 @@ int TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, int read, bool &isFi
     while (count < len) {
         auto writeBytes = fwrite(&ioBuffer[count], sizeof(uint8_t), len - count, currentTarFile_);
         if (writeBytes < 1) {
-            HILOGI("Failed to fwrite tar file, err = %{public}d", errno);
+            HILOGE("Failed to fwrite tar file, err = %{public}d", errno);
             return writeBytes;
         }
         count += writeBytes;
