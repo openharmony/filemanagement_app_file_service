@@ -29,7 +29,7 @@ using namespace std;
 mutex AppGalleryDisposeProxy::instanceLock_;
 mutex AppGalleryDisposeProxy::conditionMutex_;
 
-string AppGalleryDisposeProxy::abilityName = "AppFoundationServiceExtensionAbility";
+string AppGalleryDisposeProxy::abilityName = "AppFoundationService";
 sptr<IRemoteObject> AppGalleryDisposeProxy::appRemoteObj_;
 condition_variable AppGalleryDisposeProxy::conditionVal_;
 mutex AppGalleryDisposeProxy::appRemoteObjLock_;
