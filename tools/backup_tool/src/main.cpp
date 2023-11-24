@@ -13,6 +13,13 @@
  * limitations under the License.
  */
 
+#ifndef BACKUP_TOOL_ENABLE
+int main(int argc, char *const argv[])
+{
+    return 0;
+}
+#else
+
 #include "errors.h"
 #include "tools_op.h"
 #include "tools_op_backup.h"
@@ -113,3 +120,5 @@ int main(int argc, char *const argv[])
 {
     return OHOS::FileManagement::Backup::ParseOpAndExecute(argc, argv);
 }
+
+#endif

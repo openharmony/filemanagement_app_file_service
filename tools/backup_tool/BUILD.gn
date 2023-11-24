@@ -15,35 +15,43 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ohos_executable("backup_tool") {
-  sources = [
-    "src/main.cpp",
-    "src/tools_op.cpp",
-    "src/tools_op_backup.cpp",
-    "src/tools_op_check_sa.cpp",
-    "src/tools_op_help.cpp",
-    "src/tools_op_restore.cpp",
-    "src/tools_op_restore_async.cpp",
-  ]
+  include_dirs = []
+  deps = []
+  defines = []
+  sources = [ "src/main.cpp" ]
 
-  defines = [
-    "LOG_DOMAIN=0xD004304",
-    "LOG_TAG=\"BackupTool\"",
-  ]
+  if (build_variant == "root") {
+    include_dirs += [ "include" ]
 
-  include_dirs = [ "include" ]
+    defines += [
+      "LOG_DOMAIN=0xD004304",
+      "LOG_TAG=\"BackupTool\"",
+    ]
 
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "hitrace:hitrace_meter",
-    "ipc:ipc_core",
-  ]
+    deps += [
+      "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+      "${path_backup}/utils/:backup_utils",
+      "${path_jsoncpp}:jsoncpp",
+    ]
 
-  deps = [
-    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
-    "${path_backup}/utils/:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
-  ]
+    sources += [
+      "src/tools_op.cpp",
+      "src/tools_op_backup.cpp",
+      "src/tools_op_check_sa.cpp",
+      "src/tools_op_help.cpp",
+      "src/tools_op_restore.cpp",
+      "src/tools_op_restore_async.cpp",
+    ]
+
+    external_deps = [
+      "c_utils:utils",
+      "hilog:libhilog",
+      "hitrace:hitrace_meter",
+      "ipc:ipc_core",
+    ]
+
+    defines += [ "BACKUP_TOOL_ENABLE=1" ]
+  }
 
   use_exceptions = true
   install_enable = true
