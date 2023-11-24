@@ -110,7 +110,6 @@ public:
             string restoreDeps("");
             if (item.isMember("restoreDeps") && item["restoreDeps"].isString()) {
                 restoreDeps = item["restoreDeps"].asString();
-                HILOGI("restoreDeps is %{public}s", restoreDeps.data());
             }
             bundleInfos.emplace_back(BundleInfo {item["name"].asString(), item["versionCode"].asUInt(),
                                                  item["versionName"].asString(), item["spaceOccupied"].asInt64(),

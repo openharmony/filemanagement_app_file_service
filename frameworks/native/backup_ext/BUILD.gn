@@ -21,6 +21,8 @@ ohos_shared_library("backup_extension_ability_native") {
     "src/ext_backup_loader.cpp",
     "src/ext_extension.cpp",
     "src/ext_extension_stub.cpp",
+    "src/tar_file.cpp",
+    "src/untar_file.cpp",
   ]
 
   defines = [
