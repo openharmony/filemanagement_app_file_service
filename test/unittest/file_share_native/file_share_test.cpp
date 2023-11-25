@@ -61,6 +61,7 @@ namespace {
         string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
         int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
         ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
+        close(fd);
         string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
 
         string bundleNameB = "com.example.fileshareb";
@@ -71,6 +72,14 @@ namespace {
         vector<int32_t> retList;
         int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
         EXPECT_EQ(ret, E_OK);
+
+        uriList.clear();
+        retList.clear();
+        uri.clear();
+        uri = "file://" + bundleNameA + "/data/storage/el2/base/files/../files/test.txt";
+        uriList.push_back(uri);
+        ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
+        EXPECT_EQ(ret, -EINVAL);
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0000";
     }
 
@@ -92,6 +101,7 @@ namespace {
         string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
         int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
         ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
+        close(fd);
         string uri = "file://" + bundleNameA + "/data/test/el2/base/files/test.txt";
 
         string bundleNameB = "com.example.fileshareb";
@@ -122,6 +132,7 @@ namespace {
         string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
         int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
         ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
+        close(fd);
         string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
         uint32_t tokenId = 100;
 
@@ -150,6 +161,7 @@ namespace {
         string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
         int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
         ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
+        close(fd);
         string uri = "";
 
         string bundleNameB = "com.example.fileshareb";
@@ -180,6 +192,7 @@ namespace {
         string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
         int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
         ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
+        close(fd);
         string uri = "";
 
         string bundleNameB = "com.example.fileshareb";
@@ -255,6 +268,7 @@ namespace {
         string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
         int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
         ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
+        close(fd);
         string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
 
         string bundleNameB = "com.example.fileshareb";
@@ -376,5 +390,23 @@ namespace {
         EXPECT_EQ(ret, E_OK);
         EXPECT_EQ(physicalPath, "/mnt/hmdfs/100/account/cloud_merge_view/files/Photo/575/IMG_12345_999999.jpg");
         GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0005";
+    }
+
+    /**
+     * @tc.name: File_share_GetPhysicalPath_0006
+     * @tc.desc: Test function of GetPhysicalPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7PDZL
+     */
+    HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0006, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0006";
+        std::string fileUri = "file://media/Photo/12/IMG_12345_999999/test.jpg/other";
+        std::string physicalPath;
+        int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+        EXPECT_EQ(ret, -EINVAL);
+        GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0006";
     }
 }

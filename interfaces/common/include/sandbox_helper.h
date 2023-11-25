@@ -33,6 +33,7 @@ public:
     static bool CheckValidPath(const std::string &filePath);
     static int32_t GetPhysicalPath(const std::string &fileUri, const std::string &userId,
                                    std::string &physicalPath);
+    static bool IsValidPath(const std::string &path);
 };
 } // namespace AppFileService
 } // namespace OHOS

@@ -124,6 +124,11 @@ ohos_shared_library("backup") {
 
   include_dirs = [ "${path_napi}/interfaces/kits" ]
 
+  defines = [
+    "LOG_DOMAIN=0xD004306",
+    "LOG_TAG=\"BackupNAPI\"",
+  ]
+
   sources = [
     "${path_backup_js}/backup/local_capabilities.cpp",
     "${path_backup_js}/backup/module.cpp",

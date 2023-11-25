@@ -165,15 +165,6 @@ static bool DeleteShareDir(const std::string &PACKAGE_PATH, const std::string &S
     return result;
 }
 
-static bool IsValidPath(const std::string &path)
-{
-    if (path.find("/./") != std::string::npos ||
-        path.find("/../") != std::string::npos) {
-        return false;
-    }
-    return true;
-}
-
 static int CreateShareFile(struct HmdfsShareControl &shareControl, const char* file,
                            const std::string &deviceId)
 {
@@ -223,8 +214,8 @@ int RemoteFileShare::CreateSharePath(const int &fd, std::string &sharePath,
     }
 
     const std::string PACKAGE_PATH = GetLowerSharePath(userId, processName);
-    if (!IsValidPath(PACKAGE_PATH)) {
-        LOGE("RemoteFileShare::CreateSharePath, GetLowerSharePath failed with %{private}s", PACKAGE_PATH.c_str());
+    if (!SandboxHelper::IsValidPath(PACKAGE_PATH)) {
+        LOGE("RemoteFileShare::CreateSharePath, GetLowerSharePath failed");
         return EACCES;
     }
 
@@ -280,8 +271,8 @@ static int GetDistributedPath(Uri &uri, const int &userId, std::string &distribu
 static std::string GetPhysicalPath(Uri &uri, const std::string &userId)
 {
     std::string sandboxPath = SandboxHelper::Decode(uri.GetPath());
-    if (!IsValidPath(sandboxPath) || uri.GetScheme() != FILE_SCHEME) {
-        LOGE("Sandbox path from uri is error with %{public}s", sandboxPath.c_str());
+    if (!SandboxHelper::IsValidPath(sandboxPath) || uri.GetScheme() != FILE_SCHEME) {
+        LOGE("Sandbox path from uri is error");
         return "";
     }
 

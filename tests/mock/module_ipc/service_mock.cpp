@@ -125,4 +125,6 @@ void Service::VerifyCaller(IServiceReverse::Scenario scenario) {}
 void Service::OnAllBundlesFinished(ErrCode errCode) {}
 
 void Service::OnStartSched() {}
+
+void Service::SendAppGalleryNotify(const BundleName &bundleName) {}
 } // namespace OHOS::FileManagement::Backup

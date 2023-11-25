@@ -119,12 +119,18 @@ private:
      */
     void RegisterBackupServiceDied(std::function<void()> functor);
 
+    /**
+     * @brief Backup Session init
+     *
+     * @param bundlesToRestore
+     */
+    void InitSession(const std::vector<BundleName> bundlesToRestore);
+
 private:
     sptr<SvcDeathRecipient> deathRecipient_;
     Callbacks callbacks_;
-    std::atomic<bool> isAppend_ {false};
+    std::atomic<bool> isAlive_ {false};
     std::mutex mutex_;
-    std::queue<AppendBundleInfo> workList_;
 };
 } // namespace OHOS::FileManagement::Backup
 

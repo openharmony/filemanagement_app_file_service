@@ -462,11 +462,6 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
 {
     try {
         HILOGE("begin %{public}s", bundleName.data());
-
-        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
-        HILOGI("AppGalleryDisposeProxy StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
-            bundleName.c_str());
-
         IServiceReverse::Scenario scenario = session_->GetScenario();
         BConstants::ExtensionAction action;
         if (scenario == IServiceReverse::Scenario::BACKUP) {
@@ -521,11 +516,21 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
         if (fileName.find('/') != string::npos) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not valid");
         }
-        SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);
-        session_->SetExtFileNameRequest(bundleName, fileName);
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {
-            sched_->Sched(bundleName);
+            auto backUpConnection = session_->GetExtConnection(bundleName);
+            auto proxy = backUpConnection->GetBackupExtProxy();
+            if (!proxy) {
+                throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+            }
+            UniqueFd fd = proxy->GetFileHandle(fileName);
+            if (fd < 0) {
+                HILOGE("Failed to extension file handle");
+            }
+            session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd));
+        } else {
+            SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);
+            session_->SetExtFileNameRequest(bundleName, fileName);
         }
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
@@ -601,8 +606,6 @@ void Service::ExtStart(const string &bundleName)
             UniqueFd fd = proxy->GetFileHandle(fileName);
             if (fd < 0) {
                 HILOGE("Failed to extension file handle");
-                OnBackupExtensionDied(move(bundleName), fd);
-                return;
             }
             session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd));
         }
@@ -781,6 +784,16 @@ void Service::OnStartSched()
         for (int num = 0; num < BConstants::EXT_CONNECT_MAX_COUNT; num++) {
             sched_->Sched();
         }
+    }
+}
+
+void Service::SendAppGalleryNotify(const BundleName &bundleName)
+{
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    if (scenario == IServiceReverse::Scenario::RESTORE) {
+        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
+        HILOGI("AppGalleryDisposeProxy StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+            bundleName.c_str());
     }
 }
 } // namespace OHOS::FileManagement::Backup
