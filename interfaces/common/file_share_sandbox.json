@@ -20,6 +20,9 @@
         }, {
             "sandbox-path" : "/storage/Share/",
             "src-path" : "/data/service/el1/public/storage_daemon/share/public/"
+        }, {
+            "sandbox-path" : "/data/storage/el2/cloud/",
+            "src-path" : "/mnt/hmdfs/<currentUserId>/cloud/data/<PackageName>/"
         }
     ]
 }
