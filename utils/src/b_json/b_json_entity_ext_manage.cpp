@@ -58,6 +58,7 @@ Json::Value Stat2JsonValue(struct stat sta)
     Json::Value value;
 
     value["st_size"] = static_cast<int64_t>(sta.st_size);
+    value["st_mode"] = static_cast<int32_t>(sta.st_mode);
     value["st_atim"]["tv_sec"] = static_cast<int64_t>(sta.st_atim.tv_sec);
     value["st_atim"]["tv_nsec"] = static_cast<int64_t>(sta.st_atim.tv_nsec);
     value["st_mtim"]["tv_sec"] = static_cast<int64_t>(sta.st_mtim.tv_sec);
@@ -75,6 +76,7 @@ struct stat JsonValue2Stat(const Json::Value &value)
     }
 
     sta.st_size = value.isMember("st_size") && value["st_size"].isInt64() ? value["st_size"].asInt64() : 0;
+    sta.st_mode = value.isMember("st_mode") && value["st_mode"].isInt() ? value["st_mode"].asInt() : 0;
     if (value.isMember("st_atim")) {
         sta.st_atim.tv_sec = value["st_atim"].isMember("tv_sec") && value["st_atim"]["tv_sec"].isInt64()
                                  ? value["st_atim"]["tv_sec"].asInt64()

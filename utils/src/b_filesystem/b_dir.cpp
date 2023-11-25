@@ -35,13 +35,40 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-static pair<ErrCode, map<string, struct stat>> GetDirFilesDetail(const string &path, bool recursion, off_t size = -1)
+static bool IsEmptyDirectory(const string &path)
+{
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        return false;
+    }
+    bool isEmpty = true;
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (entry->d_type != DT_DIR || (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)) {
+            isEmpty = false;
+            break;
+        }
+    }
+    closedir(dir);
+    return isEmpty;
+}
+
+static tuple<ErrCode, map<string, struct stat>, vector<string>> GetDirFilesDetail(const string &path,
+                                                                                  bool recursion,
+                                                                                  off_t size = -1)
 {
     map<string, struct stat> files;
+    vector<string> smallFiles;
+
+    if (IsEmptyDirectory(path)) {
+        smallFiles.emplace_back(path);
+        return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
+    }
+
     unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(path.c_str()), closedir};
     if (!dir) {
         HILOGE("Invalid directory path: %{private}s", path.c_str());
-        return {BError(errno).GetCode(), files};
+        return {BError(errno).GetCode(), files, smallFiles};
     }
 
     struct dirent *ptr = nullptr;
@@ -53,13 +80,13 @@ static pair<ErrCode, map<string, struct stat>> GetDirFilesDetail(const string &p
             if (!recursion) {
                 continue;
             }
-
-            auto [errCode, subfiles] =
+            auto [errCode, subFiles, subSmallFiles] =
                 GetDirFilesDetail(IncludeTrailingPathDelimiter(path) + string(ptr->d_name), recursion, size);
             if (errCode != 0) {
-                return {errCode, files};
+                return {errCode, files, smallFiles};
             }
-            files.merge(subfiles);
+            files.merge(subFiles);
+            smallFiles.insert(smallFiles.end(), subSmallFiles.begin(), subSmallFiles.end());
         } else if (ptr->d_type == DT_LNK) {
             continue;
         } else {
@@ -69,6 +96,8 @@ static pair<ErrCode, map<string, struct stat>> GetDirFilesDetail(const string &p
                 continue;
             }
             if (sta.st_size < size) {
+                HILOGI("Find small file %{public}s", fileName.data());
+                smallFiles.emplace_back(fileName);
                 continue;
             }
             HILOGI("Find big file");
@@ -76,7 +105,7 @@ static pair<ErrCode, map<string, struct stat>> GetDirFilesDetail(const string &p
         }
     }
 
-    return {BError(BError::Codes::OK).GetCode(), files};
+    return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
 }
 
 tuple<ErrCode, vector<string>> BDir::GetDirFiles(const string &path)
@@ -136,19 +165,22 @@ static set<string> ExpandPathWildcard(const vector<string> &vec)
     return filteredPath;
 }
 
-pair<ErrCode, map<string, struct stat>> BDir::GetBigFiles(const vector<string> &includes,
-                                                          const vector<string> &excludes)
+tuple<ErrCode, map<string, struct stat>, vector<string>> BDir::GetBigFiles(const vector<string> &includes,
+                                                                           const vector<string> &excludes)
 {
     set<string> inc = ExpandPathWildcard(includes);
 
     map<string, struct stat> incFiles;
+    vector<string> incSmallFiles;
     for (const auto &item : inc) {
-        auto [errCode, files] =
+        auto [errCode, files, smallFiles] =
             OHOS::FileManagement::Backup::GetDirFilesDetail(item, true, BConstants::BIG_FILE_BOUNDARY);
         if (errCode == 0) {
             int32_t num = static_cast<int32_t>(files.size());
             HILOGI("found big files. total number is : %{public}d", num);
             incFiles.merge(move(files));
+            HILOGI("found small files. total number is : %{public}d", static_cast<int32_t>(smallFiles.size()));
+            incSmallFiles.insert(incSmallFiles.end(), smallFiles.begin(), smallFiles.end());
         }
     }
 
@@ -172,9 +204,9 @@ pair<ErrCode, map<string, struct stat>> BDir::GetBigFiles(const vector<string> &
             bigFiles[item.first] = item.second;
         }
     }
-    int32_t num = static_cast<int32_t>(bigFiles.size());
-    HILOGI("total number of big files is %{public}d", num);
-    return {ERR_OK, move(bigFiles)};
+    HILOGI("total number of big files is %{public}d", static_cast<int32_t>(bigFiles.size()));
+    HILOGI("total number of small files is %{public}d", static_cast<int32_t>(incSmallFiles.size()));
+    return {ERR_OK, move(bigFiles), move(incSmallFiles)};
 }
 
 vector<string> BDir::GetDirs(const vector<string_view> &paths)

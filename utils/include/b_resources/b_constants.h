@@ -62,8 +62,8 @@ constexpr int DECIMAL_BASE = 10; // 十进制基数
 constexpr int HEADER_SIZE = 512;         // 打包文件头部Header结构体大小
 constexpr int BLOCK_SIZE = 512;          // 打包文件数据段尾部补充的全零字节块上限大小
 constexpr int BLOCK_PADDING_SIZE = 1024; // 打包文件尾部追加的全零字节块大小
-constexpr off_t BIG_FILE_BOUNDARY = 1024 * 1024 * 1024; // 大文件边界
-constexpr unsigned long BIG_FILE_NAME_SIZE = 16;        // 大文件名长度(hash处理)
+constexpr off_t BIG_FILE_BOUNDARY = 2 * 1024 * 1024; // 大文件边界
+constexpr unsigned long BIG_FILE_NAME_SIZE = 16;     // 大文件名长度(hash处理)
 
 constexpr int PATHNAME_MAX_SIZE = 100; // 打包文件头部Header结构体各字段数组/字符串大小。
 constexpr int MODE_MAX_SIZE = 8;

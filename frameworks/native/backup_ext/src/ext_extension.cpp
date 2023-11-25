@@ -42,6 +42,8 @@
 #include "b_tarball/b_tarball_factory.h"
 #include "filemgmt_libhilog.h"
 #include "service_proxy.h"
+#include "tar_file.h"
+#include "untar_file.h"
 
 namespace OHOS::FileManagement::Backup {
 const string DEFAULT_TAR_PKG = "1.tar";
@@ -111,7 +113,7 @@ ErrCode BackupExtExtension::HandleClear()
     return ERR_OK;
 }
 
-static ErrCode IndexFileReady(const map<string, tuple<string, struct stat, bool>> &pkgInfo, sptr<IService> proxy)
+static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
 {
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(
         UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)));
@@ -260,15 +262,14 @@ static bool IsUserTar(const string &tarFile, const string &indexFile)
     return false;
 }
 
-static map<string, tuple<string, struct stat, bool>> GetBigFileInfo(const vector<string> &includes,
-                                                                    const vector<string> &excludes)
+static pair<TarMap, vector<string>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes)
 {
-    auto [errCode, files] = BDir::GetBigFiles(includes, excludes);
+    auto [errCode, files, smallFiles] = BDir::GetBigFiles(includes, excludes);
     if (errCode != 0) {
         return {};
     }
 
-    auto GetStringHash = [](const map<string, tuple<string, struct stat, bool>> &m, const string &str) -> string {
+    auto GetStringHash = [](const TarMap &m, const string &str) -> string {
         ostringstream strHex;
         strHex << hex;
 
@@ -285,7 +286,7 @@ static map<string, tuple<string, struct stat, bool>> GetBigFileInfo(const vector
         return name;
     };
 
-    map<string, tuple<string, struct stat, bool>> bigFiles;
+    TarMap bigFiles;
     for (const auto &item : files) {
         string md5Name = GetStringHash(bigFiles, item.first);
         if (!md5Name.empty()) {
@@ -293,7 +294,7 @@ static map<string, tuple<string, struct stat, bool>> GetBigFileInfo(const vector
         }
     }
 
-    return bigFiles;
+    return {bigFiles, smallFiles};
 }
 
 int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
@@ -312,7 +313,7 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
     vector<string> excludes = usrConfig.GetExcludes();
 
     // 大文件处理
-    auto bigFileInfo = GetBigFileInfo(includes, excludes);
+    auto [bigFileInfo, smallFiles] = GetFileInfos(includes, excludes);
     for (const auto &item : bigFileInfo) {
         auto filePath = std::get<0>(item.second);
         if (!filePath.empty()) {
@@ -320,18 +321,10 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
         }
     }
 
-    string tarName = path + DEFAULT_TAR_PKG;
-    string root = "/";
-
-    // 打包
-    auto tarballTar = BTarballFactory::Create("cmdline", tarName);
-    (tarballTar->tar)(root, {includes.begin(), includes.end()}, {excludes.begin(), excludes.end()});
-
-    struct stat sta = {};
-    if (stat(tarName.data(), &sta) == -1) {
-        HILOGE("failed to invoke the system function stat, %{public}s", tarName.c_str());
-    }
-    bigFileInfo.emplace(DEFAULT_TAR_PKG, make_tuple(tarName, sta, false));
+    // 分片打包
+    TarMap tarMap {};
+    TarFile::GetInstance().Packet(smallFiles, "part", path, tarMap);
+    bigFileInfo.insert(tarMap.begin(), tarMap.end());
 
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
@@ -356,14 +349,7 @@ int BackupExtExtension::DoRestore(const string &fileName)
     // REM: 解压启动Extension时即挂载好的备份目录中的数据
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     string tarName = path + fileName;
-    HILOGI("tarName:%{public}s, fileName:%{public}s", tarName.c_str(), fileName.c_str());
-
-    auto tarballFunc = BTarballFactory::Create("cmdline", tarName);
-    if (extension_->WasFromSpeicalVersion() || extension_->UseFullBackupOnly()) {
-        (tarballFunc->untar)(path);
-    } else {
-        (tarballFunc->untar)("/");
-    }
+    UntarFile::GetInstance().UnPacket(tarName, "/");
     HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
 
     return ERR_OK;
@@ -432,13 +418,17 @@ static void RestoreBigFiles()
             HILOGE("file path is empty. %{public}s", filePath.c_str());
             continue;
         }
-        if (rename(fileName.data(), filePath.data()) != 0) {
-            HILOGE("failed to rename the file, try to copy it. err = %{public}d", errno);
-            if (!BFile::CopyFile(fileName, filePath)) {
-                HILOGE("failed to copy the file. err = %{public}d", errno);
-                continue;
+        if (!BFile::CopyFile(fileName, filePath)) {
+            HILOGE("failed to copy the file. err = %{public}d", errno);
+            continue;
+        }
+        if (chmod(filePath.c_str(), item.sta.st_mode) != 0) {
+            HILOGE("Failed to chmod %{public}s, err = %{public}d", filePath.c_str(), errno);
+        }
+        if (fileName != filePath) {
+            if (!RemoveFile(fileName)) {
+                HILOGE("Failed to delete the big file %{public}s", fileName.c_str());
             }
-            HILOGI("succeed to rename or copy the file");
         }
         set<string> lks = cache.GetHardLinkInfo(item.hashName);
         for (const auto &lksPath : lks) {
@@ -458,15 +448,21 @@ static void RestoreBigFiles()
 static void DeleteBackupTars()
 {
     // The directory include tars and manage.json which would be deleted
-    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
-    string tarPath = path + DEFAULT_TAR_PKG;
-    string indexPath = path + string(BConstants::EXT_BACKUP_MANAGE);
-    if (!RemoveFile(tarPath)) {
-        HILOGE("Failed to delete the backup tar %{public}s", tarPath.c_str());
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
+    auto cache = cachedEntity.Structuralize();
+    auto info = cache.GetExtManage();
+    auto path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    for (auto &item : info) {
+        if (ExtractFileExt(item) != "tar" || IsUserTar(item, INDEX_FILE_RESTORE)) {
+            continue;
+        }
+        string tarPath = path + item;
+        if (!RemoveFile(tarPath)) {
+            HILOGE("Failed to delete the backup tar %{public}s", tarPath.c_str());
+        }
     }
-
-    if (!RemoveFile(indexPath)) {
-        HILOGE("Failed to delete the backup index %{public}s", indexPath.c_str());
+    if (!RemoveFile(INDEX_FILE_RESTORE)) {
+        HILOGE("Failed to delete the backup index %{public}s", INDEX_FILE_RESTORE.c_str());
     }
 }
 
