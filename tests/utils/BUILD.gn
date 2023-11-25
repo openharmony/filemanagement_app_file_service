@@ -19,6 +19,16 @@ config("test_util_public_config") {
 }
 
 ohos_static_library("backup_test_utils") {
+  stack_protector_ret = true
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   testonly = true
 
   sources = [ "src/test_manager.cpp" ]
