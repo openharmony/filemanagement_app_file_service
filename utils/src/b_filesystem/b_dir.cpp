@@ -62,7 +62,7 @@ static tuple<ErrCode, map<string, struct stat>, vector<string>> GetDirFilesDetai
 
     if (IsEmptyDirectory(path)) {
         smallFiles.emplace_back(path);
-        return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
+        return {ERR_OK, files, smallFiles};
     }
 
     unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(path.c_str()), closedir};
@@ -105,7 +105,7 @@ static tuple<ErrCode, map<string, struct stat>, vector<string>> GetDirFilesDetai
         }
     }
 
-    return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
+    return {ERR_OK, files, smallFiles};
 }
 
 tuple<ErrCode, vector<string>> BDir::GetDirFiles(const string &path)
@@ -129,7 +129,7 @@ tuple<ErrCode, vector<string>> BDir::GetDirFiles(const string &path)
         }
     }
 
-    return {BError(BError::Codes::OK).GetCode(), files};
+    return {ERR_OK, files};
 }
 
 static set<string> ExpandPathWildcard(const vector<string> &vec)

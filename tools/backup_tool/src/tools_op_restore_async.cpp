@@ -185,6 +185,10 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
     for (auto name : bundleNames) {
         string versionName = string(BConstants::DEFAULT_VERSION_NAME);
         uint32_t versionCode = static_cast<uint32_t>(BConstants::DEFAULT_VERSION_CODE);
+        if (type == "false") {
+            versionName = string(BConstants::DEFAULT_VERSION_NAME_CLONE);
+            versionCode = static_cast<uint32_t>(BConstants::DEFAULT_VERSION_CODE);
+        }
         for (auto &&bundleInfo : cacheBundleInfos) {
             if (bundleInfo.name != name) {
                 continue;
