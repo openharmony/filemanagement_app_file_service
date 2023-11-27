@@ -29,7 +29,7 @@ using namespace std;
 mutex AppGalleryDisposeProxy::instanceLock_;
 mutex AppGalleryDisposeProxy::conditionMutex_;
 
-string AppGalleryDisposeProxy::abilityName = "AppFoundationServiceExtensionAbility";
+string AppGalleryDisposeProxy::abilityName = "AppFoundationService";
 sptr<IRemoteObject> AppGalleryDisposeProxy::appRemoteObj_;
 condition_variable AppGalleryDisposeProxy::conditionVal_;
 mutex AppGalleryDisposeProxy::appRemoteObjLock_;
@@ -106,13 +106,13 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
-    auto ret = appRemoteObj_->SendRequest(static_cast<int>(disposeOperation), data, reply, option);
+    int32_t ret = appRemoteObj_->SendRequest(static_cast<int>(disposeOperation), data, reply, option);
     if (ret != ERR_NONE) {
-        HILOGI("SendRequest error, code=%{public}d, bundleName=%{public}s", disposeOperation, bundleName.c_str());
+        HILOGI("SendRequest error, code=%{public}d, bundleName=%{public}s", ret, bundleName.c_str());
         return DisposeErr::REQUEST_FAIL;
     }
 
-    HILOGI("SendRequest error, code=%{public}d, bundleName=%{public}s", disposeOperation, bundleName.c_str());
+    HILOGI("SendRequest success, dispose=%{public}d, bundleName=%{public}s", disposeOperation, bundleName.c_str());
     return DisposeErr::OK;
 }
 
