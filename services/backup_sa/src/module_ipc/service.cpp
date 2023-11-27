@@ -242,7 +242,7 @@ static bool GetRestoreBundleNames(const vector<BJsonEntityCaps::BundleInfo> &bun
     vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {};
     for (auto &restoreInfo : restoreInfos) {
         auto it = find_if(bundleInfos.begin(), bundleInfos.end(),
-                          [&restoreInfo](auto &obj) { return obj.name == restoreInfo.name; });
+                          [&restoreInfo](const auto &obj) { return obj.name == restoreInfo.name; });
         if (it == bundleInfos.end()) {
             HILOGE("Can't find %{public}s, append bundles error", restoreInfo.name.data());
             return false;
@@ -740,7 +740,7 @@ void Service::HandleRestoreDepsBundle(const string &bundleName)
     }
     // 启动恢复会话
     vector<string> restoreBundleNames {};
-    for (auto &bundle : restoreBundleMap) {
+    for (const auto &bundle : restoreBundleMap) {
         HILOGI("Start restore session, bundle: %{public}s", bundle.first.c_str());
         restoreBundleNames.emplace_back(bundle.first);
     }

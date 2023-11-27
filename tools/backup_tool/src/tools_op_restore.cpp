@@ -278,7 +278,6 @@ static int32_t InitRestoreSession(shared_ptr<Session> ctx)
 {
     if (!ctx) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
-        return -1;
     }
     ctx->session_ = BSessionRestore::Init(
         BSessionRestore::Callbacks {.onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2),
@@ -318,16 +317,16 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
 
     if (depMode) {
         for (auto &bundleName : bundleNames) {
-            UniqueFd fd(open(realPath.data(), O_RDWR, S_IRWXU));
-            if (fd < 0) {
+            UniqueFd fileFd(open(realPath.data(), O_RDWR, S_IRWXU));
+            if (fileFd < 0) {
                 fprintf(stderr, "Failed to open file error: %d %s\n", errno, strerror(errno));
                 FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
                 return -errno;
             }
-            int ret = ctx->session_->AppendBundles(move(fd), {bundleName});
-            if (ret != 0) {
-                printf("restore append bundles error: %d\n", ret);
-                return -ret;
+            int result = ctx->session_->AppendBundles(move(fileFd), {bundleName});
+            if (result != 0) {
+                printf("restore append bundles error: %d\n", result);
+                return -result;
             }
         }
     } else {
