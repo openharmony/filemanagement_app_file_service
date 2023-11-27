@@ -349,7 +349,12 @@ int BackupExtExtension::DoRestore(const string &fileName)
     // REM: 解压启动Extension时即挂载好的备份目录中的数据
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     string tarName = path + fileName;
-    UntarFile::GetInstance().UnPacket(tarName, "/");
+    // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
+    if (extension_->SpeicalVersionForCloneAndCloud() || extension_->UseFullBackupOnly()) {
+        UntarFile::GetInstance().UnPacket(tarName, path);
+    } else {
+        UntarFile::GetInstance().UnPacket(tarName, "/");
+    }
     HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
 
     return ERR_OK;

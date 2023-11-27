@@ -43,12 +43,6 @@ enum ServiceSchedAction {
     FINISH,
 };
 
-enum EntryKey {
-    SUPER_LONG_PATH = 0,
-    SUPER_LONG_LINK_PATH,
-    SUPER_LONG_SIZE,
-};
-
 constexpr int SPAN_USERID_UID = 20000000;
 constexpr int SYSTEM_UID = 0;
 constexpr int XTS_UID = 1;
@@ -59,25 +53,8 @@ constexpr int BACKUP_LOADSA_TIMEOUT_MS = 4000;
 
 constexpr int DECIMAL_BASE = 10; // 十进制基数
 
-constexpr int HEADER_SIZE = 512;         // 打包文件头部Header结构体大小
-constexpr int BLOCK_SIZE = 512;          // 打包文件数据段尾部补充的全零字节块上限大小
-constexpr int BLOCK_PADDING_SIZE = 1024; // 打包文件尾部追加的全零字节块大小
 constexpr off_t BIG_FILE_BOUNDARY = 2 * 1024 * 1024; // 大文件边界
 constexpr unsigned long BIG_FILE_NAME_SIZE = 16;     // 大文件名长度(hash处理)
-
-constexpr int PATHNAME_MAX_SIZE = 100; // 打包文件头部Header结构体各字段数组/字符串大小。
-constexpr int MODE_MAX_SIZE = 8;
-constexpr int UGID_MAX_SIZE = 8;
-constexpr int FILESIZE_MAX_SIZE = 12;
-constexpr int TIME_MAX_SIZE = 12;
-constexpr int CHKSUM_MAX_SIZE = 8;
-constexpr int LINKNAME_MAX_SIZE = 100;
-constexpr int MAGIC_SIZE = 6;
-constexpr int VERSION_SIZE = 2;
-constexpr int UGNAME_MAX_SIZE = 32;
-constexpr int DEV_MAX_SIZE = 8;
-constexpr int PREFIX_SIZE = 155;
-constexpr int PADDING_SIZE = 12;
 
 constexpr int PATHES_TO_BACKUP_SIZE = 13; // 应用默认备份的目录个数
 constexpr uint32_t BACKUP_PARA_VALUE_MAX = 5; // 读取backup.para字段值的最大长度
@@ -86,19 +63,6 @@ constexpr int EXT_CONNECT_MAX_COUNT = 3; // extension 最大启动数
 constexpr int EXT_CONNECT_MAX_TIME = 15000; // SA 启动 extension 等待连接最大时间
 
 constexpr int IPC_MAX_WAIT_TIME = 3000; // IPC通讯最大等待时间(s)
-
-constexpr off_t FILESIZE_MAX = 077777777777; // 打包文件头部Header结构体fileSize字段最大值。
-
-// 打包文件头部Header结构体typeFlag字段值。
-constexpr char TYPEFLAG_REGULAR_FILE = '0';
-constexpr char TYPEFLAG_SYMBOLIC_LINK = '2';
-constexpr char TYPEFLAG_DIRECTORY = '5';
-constexpr char TYPEFLAG_EXTENDED = 'x';
-
-// 打包文件扩展数据段字段值。
-static inline std::string ENTRY_NAME_LINKPATH = "linkpath";
-static inline std::string ENTRY_NAME_PATH = "path";
-static inline std::string ENTRY_NAME_SIZE = "size";
 
 // backup.para内配置项的名称，该配置项值为true时可在不更新hap包的情况下，可以读取包管理元数据配置文件的内容
 static inline std::string BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_KEY = "backup.debug.overrideExtensionConfig";
@@ -156,9 +120,21 @@ static inline std::string_view BACKUP_CONFIG_JSON = "backup_config.json";
 // 恢复应用安装包URL判断
 static inline std::string_view RESTORE_INSTALL_PATH = "/data/storage/el2/restore/bundle.hap";
 
-// 双生单场景默认的版本信息
+// 特殊版本信息
 constexpr int DEFAULT_VERSION_CODE = 0;
 static inline std::string_view DEFAULT_VERSION_NAME = "0.0.0.0";
+static inline std::string_view DEFAULT_VERSION_NAME_CLONE = "99.99.99.999";
+static inline std::string_view DEFAULT_VERSION_NAME_CLONE_2 = "99.99.99.998";
+static inline std::string_view DEFAULT_VERSION_NAME_CLONE_3 = "99.99.99.997";
+static inline std::string_view DEFAULT_VERSION_NAME_PC = "99.99.99.996";
+static inline std::string_view DEFAULT_VERSION_NAME_CLOUD = "99.99.99.995";
+static inline std::vector<std::string_view> DEFAULT_VERSION_NAMES_VEC = {
+    DEFAULT_VERSION_NAME_CLONE,
+    DEFAULT_VERSION_NAME_CLONE_2,
+    DEFAULT_VERSION_NAME_CLONE_3,
+    DEFAULT_VERSION_NAME_PC,
+    DEFAULT_VERSION_NAME_CLOUD,
+};
 
 // 应用默认备份的目录，其均为相对根路径的路径。为避免模糊匹配，务必以斜线为结尾。
 static inline std::array<std::string_view, PATHES_TO_BACKUP_SIZE> PATHES_TO_BACKUP = {

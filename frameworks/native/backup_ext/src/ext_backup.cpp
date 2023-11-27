@@ -15,6 +15,7 @@
 
 #include "ext_backup.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <sstream>
 
@@ -215,7 +216,18 @@ void ExtBackup::OnDisconnect(const AAFwk::Want &want)
 
 bool ExtBackup::WasFromSpeicalVersion(void)
 {
-    if (appVersionCode_ == 0 && appVersionStr_ == "0.0.0.0") {
+    if (appVersionCode_ == BConstants::DEFAULT_VERSION_CODE && appVersionStr_ == BConstants::DEFAULT_VERSION_NAME) {
+        return true;
+    }
+    return false;
+}
+
+bool ExtBackup::SpeicalVersionForCloneAndCloud(void)
+{
+    auto iter =
+        find_if(BConstants::DEFAULT_VERSION_NAMES_VEC.begin(), BConstants::DEFAULT_VERSION_NAMES_VEC.end(),
+                [appVersionStr {appVersionStr_}](const auto &versionName) { return versionName == appVersionStr; });
+    if (appVersionCode_ == BConstants::DEFAULT_VERSION_CODE && iter != BConstants::DEFAULT_VERSION_NAMES_VEC.end()) {
         return true;
     }
     return false;

@@ -132,8 +132,28 @@ public:
      */
     virtual ErrCode OnRestore(std::function<void()> callback);
 
+    /**
+     * @brief 数据迁移判断
+     *
+     * @return true
+     * @return false
+     */
     bool WasFromSpeicalVersion(void);
 
+    /**
+     * @brief Version for clone and cloud
+     *
+     * @return true
+     * @return false
+     */
+    bool SpeicalVersionForCloneAndCloud(void);
+
+    /**
+     * @brief 数据以准备就绪
+     *
+     * @return true
+     * @return false
+     */
     bool RestoreDataReady();
 
 public:
