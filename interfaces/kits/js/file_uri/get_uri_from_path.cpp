@@ -29,20 +29,20 @@ napi_value GetUriFromPath::Sync(napi_env env, napi_callback_info info)
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         LOGE("GetUriFromPath::Sync Number of arguments unmatched");
-        NError(EINVAL).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
     auto [succPath, path, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
     if (!succPath) {
         LOGE("GetUriFromPath::Sync get path parameter failed!");
-        NError(EINVAL).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
     std::string uri = CommonFunc::GetUriFromPath(path.get());
     if (uri == "") {
         LOGE("GetUriFromPath failed!");
-        NError(EINVAL).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
