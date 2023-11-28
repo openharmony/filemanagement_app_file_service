@@ -136,7 +136,7 @@ bool SandboxHelper::GetSandboxPathMap()
     nlohmann::json jsonObj;
     int ret = JsonUtils::GetJsonObjFromPath(jsonObj, SANDBOX_JSON_FILE_PATH);
     if (ret != 0) {
-        LOGE("Get json object failed from %{public}s with %{public}d", SANDBOX_JSON_FILE_PATH.c_str(), ret);
+        LOGE("Get json object failed with %{public}d", ret);
         return false;
     }
 

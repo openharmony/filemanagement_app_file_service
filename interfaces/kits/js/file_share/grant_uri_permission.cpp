@@ -210,12 +210,10 @@ namespace ModuleFileShare {
 
         uriPermInfo.uri = string(uri.get());
         if (!CheckValidPublicUri(uriPermInfo.uri)) {
-            LOGE("FileShare::GetJSArgs uri = %{private}s parameter format error!", uriPermInfo.uri.c_str());
+            LOGE("FileShare::GetJSArgs uri parameter format error!");
             NError(EINVAL).ThrowErr(env);
             return false;
         }
-
-        LOGD("FileShare::GetJSArgs uri = %{private}s", uriPermInfo.uri.c_str());
 
         auto [succBundleName, bundleName, lenBundleName] = NVal(env, funcArg[NARG_POS::SECOND]).ToUTF8String();
         if (!succBundleName) {

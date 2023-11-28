@@ -112,6 +112,11 @@ namespace OHOS::AppFileService::ModuleFileUri {
         FileUri fileUri(uri);
         string path = fileUri.GetPath();
         EXPECT_EQ(path, fileStr);
+
+        string uri2 = "file://media/Photo/12/IMG_12345_999999/test.jpg";
+        FileUri fileUri2(uri2);
+        path = fileUri2.GetPath();
+        EXPECT_EQ(path, "/Photo/12/IMG_12345_999999");
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0000";
     }
 
@@ -131,6 +136,13 @@ namespace OHOS::AppFileService::ModuleFileUri {
         FileUri fileUri(uri);
         string path = fileUri.GetRealPath();
         EXPECT_EQ(path, fileStr);
+
+        string fileStr2 = "docs/storage/Users/currentUser/Documents/1.txt";
+        string uri2 = "file://" + fileStr2;
+        FileUri fileUri2(uri2);
+        path.clear();
+        path = fileUri2.GetRealPath();
+        EXPECT_EQ(path, PATH_SHARE + MODE_R + fileStr2);
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0001";
     }
 
@@ -195,7 +207,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0003";
     }
 
-        /**
+    /**
      * @tc.name: file_uri_test_0006
      * @tc.desc: Test function of GetPath() interface for SUCCESS.
      * @tc.size: MEDIUM
@@ -212,6 +224,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
         EXPECT_EQ(fileUri.ToString(), uri);
         EXPECT_EQ(fileUri.GetName(), "test.txt");
         EXPECT_EQ(fileUri.GetPath(), fileStr);
+        EXPECT_EQ(fileUri.GetRealPath(), fileStr);
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0004";
     }
 

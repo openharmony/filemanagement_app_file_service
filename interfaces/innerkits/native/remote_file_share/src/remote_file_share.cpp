@@ -112,7 +112,7 @@ static std::string GetFileName(const int &fd)
     std::string fileName = filePath;
     std::size_t firstSlash = fileName.rfind("/");
     if (firstSlash == fileName.npos) {
-        LOGE("RemoteFileShare::GetFileName, get error path with %{public}s", fileName.c_str());
+        LOGE("RemoteFileShare::GetFileName, get error path");
         return "";
     }
     fileName = fileName.substr(firstSlash + 1, fileName.size() - firstSlash);
@@ -150,7 +150,7 @@ static bool DeleteShareDir(const std::string &PACKAGE_PATH, const std::string &S
             LOGE("RemoteFileShare::DeleteShareDir, delete dir failed with %{public}d", errno);
             result = false;
         } else {
-            LOGI("RemoteFileShare::DeleteShareDir, delete %{public}s path successfully", SHARE_PATH.c_str());
+            LOGI("RemoteFileShare::DeleteShareDir, delete path successfully");
         }
     }
     if (access(PACKAGE_PATH.c_str(), F_OK) == 0) {
@@ -159,7 +159,7 @@ static bool DeleteShareDir(const std::string &PACKAGE_PATH, const std::string &S
             LOGE("RemoteFileShare::DeleteShareDir, delete dir failed with %{public}d", errno);
             result = false;
         } else {
-            LOGI("RemoteFileShare::DeleteShareDir, delete %{public}s path successfully", PACKAGE_PATH.c_str());
+            LOGI("RemoteFileShare::DeleteShareDir, delete path successfully");
         }
     }
     return result;
@@ -253,7 +253,7 @@ int RemoteFileShare::CreateSharePath(const int &fd, std::string &sharePath,
         DeleteShareDir(PACKAGE_PATH, LOWER_SHARE_PATH);
         return errno;
     }
-    LOGI("RemoteFileShare::CreateSharePath, create %{public}s successfully", sharePath.c_str());
+    LOGI("RemoteFileShare::CreateSharePath, create successfully");
     return 0;
 }
 
@@ -348,7 +348,7 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
 {
     Uri uri(uriStr);
     std::string bundleName = uri.GetAuthority();
-    LOGD("GetDfsUriFromLocal begin with uri:%{private}s", uriStr.c_str());
+    LOGD("GetDfsUriFromLocal begin");
     std::string physicalPath = GetPhysicalPath(uri, std::to_string(userId));
     if (physicalPath == "") {
         LOGE("Failed to get physical path");
@@ -357,7 +357,7 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
 
     if (bundleName == MEDIA_AUTHORITY || bundleName == FILE_MANAGER_AUTHORITY) {
         (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, hui);
-        LOGD("GetDfsUriFromLocal successfully with %{private}s", hui.uriStr.c_str());
+        LOGD("GetDfsUriFromLocal successfully");
         return 0;
     }
 
@@ -369,8 +369,6 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
     }
 
     struct HmdfsDstInfo hdi;
-    LOGD("PhysicalPath: %{private}s DistributedPath: %{private}s BundleName: %{private}s",
-         physicalPath.c_str(), distributedPath.c_str(), bundleName.c_str());
     InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
 
     std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + SHAER_PATH_MID;
@@ -389,7 +387,7 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
 
     close(dirFd);
     SetHmdfsUriInfo(hui, uri, hdi.size);
-    LOGD("GetDfsUriFromLocal successfully with %{private}s", hui.uriStr.c_str());
+    LOGD("GetDfsUriFromLocal successfully");
     return 0;
 }
 } // namespace ModuleRemoteFileShare

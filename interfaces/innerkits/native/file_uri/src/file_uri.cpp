@@ -68,7 +68,6 @@ string FileUri::GetRealPath()
     string sandboxPath = SandboxHelper::Decode(uri_.GetPath());
     string realPath = sandboxPath;
     string bundleName = uri_.GetAuthority();
-    LOGD("GetRealPath decode path is %{private}s", sandboxPath.c_str());
     if (bundleName == FILE_MANAGER_AUTHORITY &&
         uri_.ToString().find(NETWORK_PARA) == string::npos &&
         access(realPath.c_str(), F_OK) == 0) {
@@ -81,7 +80,6 @@ string FileUri::GetRealPath()
             realPath = PATH_SHARE + MODE_R + bundleName + sandboxPath;
         }
     }
-    LOGD("GetRealPath real path is %{private}s", realPath.c_str());
     return realPath;
 }
 
