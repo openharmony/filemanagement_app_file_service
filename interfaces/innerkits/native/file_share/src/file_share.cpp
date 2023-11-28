@@ -101,7 +101,7 @@ static bool IsExistFile(const string &path)
 {
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        LOGE("Get path stat failed, path: %s err %{public}d", path.c_str(), errno);
+        LOGE("Get path stat failed, err %{public}d", errno);
         return false;
     }
     return S_ISREG(buf.st_mode);
@@ -192,7 +192,7 @@ static void DeleteExistShareFile(const string &path)
 static void DelSharePath(const string &delPath)
 {
     if (!SandboxHelper::CheckValidPath(delPath)) {
-        LOGE("DelSharePath, umount path is invalid, path = %{private}s", delPath.c_str());
+        LOGE("DelSharePath, umount path is invalid");
         return;
     }
 
@@ -259,7 +259,7 @@ static bool NotRequiredBindMount(const FileShareInfo &info, uint32_t flag, const
 
 static int32_t CreateSingleShareFile(const string &uri, uint32_t tokenId, uint32_t flag, FileShareInfo &info)
 {
-    LOGD("CreateShareFile begin with uri %{private}s", uri.c_str());
+    LOGD("CreateShareFile begin");
     if (NotRequiredBindMount(info, flag, uri)) {
         LOGD("Not required to bind mount");
         return 0;
@@ -282,7 +282,7 @@ static int32_t CreateSingleShareFile(const string &uri, uint32_t tokenId, uint32
     }
 
     for (size_t i = 0; i < info.sharePath_.size(); i++) {
-        if ((ret = open(info.sharePath_[i].c_str(), O_RDONLY | O_CREAT)) < 0) {
+        if ((ret = open(info.sharePath_[i].c_str(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) < 0) {
             LOGE("Create file failed with %{public}d", errno);
             return -errno;
         }
