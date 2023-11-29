@@ -85,8 +85,12 @@ static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, co
     }
 
     auto cbCompl = [name {name}, errCode {err}](napi_env env, NError err) -> NVal {
-        NVal res;
         NVal bundleName = NVal::CreateUTF8String(env, name);
+        if (!err && errCode == 0) {
+            return bundleName;
+        }
+        
+        NVal res;
         if (err) {
             res = NVal {env, err.GetNapiErr(env)};
         } else {
@@ -120,8 +124,12 @@ static void onBundleEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, cons
     }
 
     auto cbCompl = [name {name}, errCode {err}](napi_env env, NError err) -> NVal {
-        NVal res;
         NVal bundleName = NVal::CreateUTF8String(env, name);
+        if (!err && errCode == 0) {
+            return bundleName;
+        }
+        
+        NVal res;
         if (err) {
             res = NVal {env, err.GetNapiErr(env)};
         } else {
@@ -155,6 +163,10 @@ static void onAllBundlesEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err)
     }
 
     auto cbCompl = [errCode {err}](napi_env env, NError err) -> NVal {
+        if (!err && errCode == 0) {
+            return NVal::CreateUndefined(env);
+        }
+
         NVal res;
         if (err) {
             res = NVal {env, err.GetNapiErr(env)};
