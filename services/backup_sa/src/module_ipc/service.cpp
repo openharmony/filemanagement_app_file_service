@@ -353,9 +353,6 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
             sched_->Sched(fileInfo.owner);
             return BError(BError::Codes::OK);
         }
-        if (fileInfo.fileName.find('/') != string::npos) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not valid");
-        }
 
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
 
@@ -512,9 +509,6 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
                 sched_->Sched(bundleName);
             }
             return BError(BError::Codes::OK);
-        }
-        if (fileName.find('/') != string::npos) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not valid");
         }
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {
