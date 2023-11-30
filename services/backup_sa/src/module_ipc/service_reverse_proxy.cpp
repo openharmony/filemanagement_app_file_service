@@ -136,7 +136,8 @@ void ServiceReverseProxy::RestoreOnBundleFinished(int32_t errCode, string bundle
     }
 
     DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
-    HILOGI("AppGalleryDisposeProxy EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr, bundleName.c_str());
+    HILOGI("RestoreOnBundleFinished EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+        bundleName.c_str());
 }
 
 void ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode)
