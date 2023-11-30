@@ -95,7 +95,7 @@ static tuple<ErrCode, map<string, struct stat>, vector<string>> GetDirFilesDetai
             if (stat(fileName.data(), &sta) == -1) {
                 continue;
             }
-            if (sta.st_size < size) {
+            if (sta.st_size <= size) {
                 HILOGI("Find small file %{public}s", fileName.data());
                 smallFiles.emplace_back(fileName);
                 continue;
