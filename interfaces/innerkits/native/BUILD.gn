@@ -17,6 +17,7 @@ import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 config("file_share_config") {
   visibility = [ ":*" ]
   include_dirs = [
+    "file_permission/include",
     "file_share/include",
     "//third_party/json/include",
     "../../common/include",
@@ -47,6 +48,7 @@ ohos_shared_library("fileshare_native") {
     "../../common/src/json_utils.cpp",
     "../../common/src/sandbox_helper.cpp",
     "file_share/src/file_share.cpp",
+    "file_share/src/file_permission.cpp",
   ]
 
   public_configs = [ ":file_share_config" ]
@@ -57,7 +59,9 @@ ohos_shared_library("fileshare_native") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
+    "file_api:filemgmt_libn",
     "hilog:libhilog",
+    "init:libbegetutil",
   ]
 
   part_name = "app_file_service"

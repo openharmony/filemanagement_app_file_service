@@ -14,6 +14,7 @@
  */
 #include "fileshare_n_exporter.h"
 #include "grant_uri_permission.h"
+#include "grant_multiple_permissions.h"
 
 namespace OHOS {
 namespace AppFileService {
@@ -23,11 +24,167 @@ namespace ModuleFileShare {
  ***********************************************/
 napi_value FileShareExport(napi_env env, napi_value exports)
 {
+    InitOperateMode(env, exports);
+    InitPolicyFlag(env, exports);
+    InitPolicyInfo(env, exports);
+    InitPolicyErrorCode(env, exports);
+    InitPolicyErrorResult(env, exports);
     static napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("grantUriPermission", GrantUriPermission::Async),
+        DECLARE_NAPI_FUNCTION("grantPermission", GrantPermission),
+        DECLARE_NAPI_FUNCTION("persistPermission", PersistPermission),
+        DECLARE_NAPI_FUNCTION("revokePermission", RevokePermission),
+        DECLARE_NAPI_FUNCTION("activatePermission", ActivatePermission),
+        DECLARE_NAPI_FUNCTION("deactivatePermission", DeactivatePermission),
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;
+}
+
+
+static napi_value InitPolicyConstructor(napi_env env, napi_callback_info info)
+{
+    size_t argc = 0;
+    napi_value args[1] = {0};
+    napi_value res = nullptr;
+    void *data = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argc, args, &res, &data);
+    if (status != napi_ok) {
+        HILOGE("InitPolicyConstructor, status is not napi_ok");
+        return nullptr;
+    }
+    return res;
+}
+
+void InitOperateMode(napi_env env, napi_value exports)
+{
+    char propertyName[] = "OperateMode";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("READ_MODE",
+                                     NVal::CreateUint32(env, static_cast<uint32_t>(OperateMode::READ_MODE)).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("WRITE_MODE",
+                                     NVal::CreateUint32(env, static_cast<uint32_t>(OperateMode::WRITE_MODE)).val_),
+    };
+    napi_value obj = nullptr;
+    napi_status status = napi_create_object(env, &obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to create object at initializing OperateMode");
+        return;
+    }
+    status = napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    if (status != napi_ok) {
+        HILOGE("Failed to set properties of character at initializing OperateMode");
+        return;
+    }
+    status = napi_set_named_property(env, exports, propertyName, obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to set direction property at initializing OperateMode");
+        return;
+    }
+}
+
+void InitPolicyFlag(napi_env env, napi_value exports)
+{
+    char propertyName[] = "PolicyFlag";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("ALLOWED_PERSIST",
+                                     NVal::CreateUint32(env, static_cast<uint32_t>(PolicyFlag::ALLOWED_PERSIST)).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("FORBID_PERSIST",
+                                     NVal::CreateUint32(env, static_cast<uint32_t>(PolicyFlag::FORBID_PERSIST)).val_),
+    };
+    napi_value obj = nullptr;
+    napi_status status = napi_create_object(env, &obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to create object at initializing PolicyFlag");
+        return;
+    }
+    status = napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    if (status != napi_ok) {
+        HILOGE("Failed to set properties of character at initializing PolicyFlag");
+        return;
+    }
+    status = napi_set_named_property(env, exports, propertyName, obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to set direction property at initializing PolicyFlag");
+        return;
+    }
+}
+
+void InitPolicyErrorCode(napi_env env, napi_value exports)
+{
+    char propertyName[] = "PolicyErrorCode";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY(
+            "FORBIDDEN_TO_BE_PERSISTED",
+            NVal::CreateInt32(env, static_cast<int32_t>(PolicyErrorCode::FORBIDDEN_TO_BE_PERSISTED)).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("INVALID_MODE",
+                                     NVal::CreateInt32(env, static_cast<int32_t>(PolicyErrorCode::INVALID_MODE)).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("INVALID_PATH",
+                                     NVal::CreateInt32(env, static_cast<int32_t>(PolicyErrorCode::INVALID_PATH)).val_),
+    };
+    napi_value obj = nullptr;
+    napi_status status = napi_create_object(env, &obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to create object at initializing InitPolicyErrorCode");
+        return;
+    }
+    status = napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    if (status != napi_ok) {
+        HILOGE("Failed to set properties of character at initializing InitPolicyErrorCode");
+        return;
+    }
+    status = napi_set_named_property(env, exports, propertyName, obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to set direction property at initializing InitPolicyErrorCode");
+        return;
+    }
+}
+
+void InitPolicyErrorResult(napi_env env, napi_value exports)
+{
+    char className[] = "PolicyErrorResult";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("uri", NVal::CreateUTF8String(env, "uri").val_),
+        DECLARE_NAPI_STATIC_PROPERTY(
+            "code", NVal::CreateInt32(env, static_cast<int32_t>(PolicyErrorCode::FORBIDDEN_TO_BE_PERSISTED)).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("message", NVal::CreateUTF8String(env, "message").val_),
+    };
+    napi_value obj = nullptr;
+    napi_status status = napi_define_class(env, className, NAPI_AUTO_LENGTH, InitPolicyConstructor, nullptr,
+                                           sizeof(desc) / sizeof(desc[0]), desc, &obj);
+    napi_create_object(env, &obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to define class at initializing PolicyErrorResult");
+        return;
+    }
+    status = napi_set_named_property(env, exports, className, obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to set direction property at initializing PolicyErrorResult");
+        return;
+    }
+}
+
+void InitPolicyInfo(napi_env env, napi_value exports)
+{
+    char className[] = "PolicyInfo";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("uri", NVal::CreateUTF8String(env, "uri").val_),
+        DECLARE_NAPI_STATIC_PROPERTY("operaMode",
+                                     NVal::CreateUint32(env, static_cast<uint32_t>(OperateMode::READ_MODE)).val_),
+    };
+    napi_value obj = nullptr;
+    napi_status status = napi_define_class(env, className, NAPI_AUTO_LENGTH, InitPolicyConstructor, nullptr,
+                                           sizeof(desc) / sizeof(desc[0]), desc, &obj);
+    napi_create_object(env, &obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to define class at initializing PolicyFlag");
+        return;
+    }
+    status = napi_set_named_property(env, exports, className, obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to set direction property at initializing PolicyFlag");
+        return;
+    }
 }
 
 NAPI_MODULE(fileshare, FileShareExport)
