@@ -724,10 +724,7 @@ ErrCode BackupExtExtension::HandleRestore()
         throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
     }
     // read backup_config is allow to backup or restore
-    string usrConfig = extension_->GetUsrConfig();
-    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
-    auto cache = cachedEntity.Structuralize();
-    if (!cache.GetAllowToBackupRestore()) {
+    if (!extension_->AllowToBackupRestore()) {
         HILOGI("Application does not allow backup or restore");
         return BError(BError::Codes::EXT_INVAL_ARG, "Application does not allow backup or restore").GetCode();
     }

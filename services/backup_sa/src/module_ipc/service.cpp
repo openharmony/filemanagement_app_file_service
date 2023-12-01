@@ -234,21 +234,40 @@ ErrCode Service::Start()
     return BError(BError::Codes::OK);
 }
 
-static bool GetRestoreBundleNames(const vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
-                                  vector<string> &restoreBundleNames,
-                                  RestoreTypeEnum restoreType,
-                                  const vector<BJsonEntityCaps::BundleInfo> &restoreInfos)
+static bool SpeicalVersion(const string &versionName, uint32_t versionCode)
 {
+    auto iter = find_if(BConstants::DEFAULT_VERSION_NAMES_VEC.begin(), BConstants::DEFAULT_VERSION_NAMES_VEC.end(),
+                        [&versionName](const auto &version) { return version == versionName; });
+    if (versionCode == BConstants::DEFAULT_VERSION_CODE && iter != BConstants::DEFAULT_VERSION_NAMES_VEC.end()) {
+        return true;
+    }
+    return false;
+}
+
+static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
+                                                                 sptr<SvcSessionManager> session,
+                                                                 const vector<BundleName> &bundleNames)
+{
+    // BundleMgrAdapter::GetBundleInfos可能耗时
+    auto restoreInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session->GetSessionUserId());
+    BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
+    auto cache = cachedEntity.Structuralize();
+    auto bundleInfos = cache.GetBundleInfos();
+    if (!bundleInfos.size()) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
+    }
     vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {};
     for (auto &restoreInfo : restoreInfos) {
         auto it = find_if(bundleInfos.begin(), bundleInfos.end(),
                           [&restoreInfo](auto &obj) { return obj.name == restoreInfo.name; });
         if (it == bundleInfos.end()) {
-            HILOGE("Can't find %{public}s, append bundles error", restoreInfo.name.data());
-            return false;
+            session->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
+                                                                      restoreInfo.name);
+            continue;
         }
         BJsonEntityCaps::BundleInfo info = {.name = (*it).name,
                                             .versionCode = (*it).versionCode,
+                                            .versionName = (*it).versionName,
                                             .spaceOccupied = (*it).spaceOccupied,
                                             .allToBackup = (*it).allToBackup,
                                             .extensionName = restoreInfo.extensionName,
@@ -256,8 +275,7 @@ static bool GetRestoreBundleNames(const vector<BJsonEntityCaps::BundleInfo> &bun
                                             .restoreDeps = (*it).restoreDeps};
         restoreBundleInfos.emplace_back(info);
     }
-    restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreBundleInfos, restoreType);
-    return true;
+    return restoreBundleInfos;
 }
 
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
@@ -265,52 +283,52 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              RestoreTypeEnum restoreType,
                                              int32_t userId)
 {
-    HILOGI("Begin");
-    session_->SetIsBusy(true);  // BundleMgrAdapter::GetBundleInfos可能耗时
-    if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
-        session_->SetSessionUserId(userId);
-    }
-    VerifyCaller(IServiceReverse::Scenario::RESTORE);
-    auto restoreInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
-    BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
-    auto cache = cachedEntity.Structuralize();
-    auto bundleInfos = cache.GetBundleInfos();
-    if (!bundleInfos.size()) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
-    }
-    vector<string> restoreBundleNames {};
-    if (!GetRestoreBundleNames(bundleInfos, restoreBundleNames, restoreType, restoreInfos)) {
-        return BError(BError::Codes::SA_INVAL_ARG);
-    }
-    if (restoreBundleNames.empty()) {
-        return BError(BError::Codes::OK);
-    }
-    session_->AppendBundles(restoreBundleNames);
-    for (auto bundleName : restoreBundleNames) {
-        HILOGD("bundleName: %{public}s", bundleName.c_str());
-        for (auto &&bundleInfo : bundleInfos) {
-            if (bundleInfo.name != bundleName) {
+    try {
+        HILOGI("Begin");
+        session_->SetIsBusy(true);
+        if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
+            session_->SetSessionUserId(userId);
+        }
+        VerifyCaller(IServiceReverse::Scenario::RESTORE);
+        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
+        auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
+        if (restoreBundleNames.empty()) {
+            session_->SetIsBusy(false);
+            return BError(BError::Codes::OK);
+        }
+        session_->AppendBundles(restoreBundleNames);
+        for (auto restoreInfo : restoreInfos) {
+            auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
+                              [&restoreInfo](auto &bundleName) { return bundleName == restoreInfo.name; });
+            if (it == restoreBundleNames.end()) {
+                throw BError(BError::Codes::SA_INVAL_ARG, "Can't find bundle name");
+            }
+            HILOGD("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
+                   restoreInfo.extensionName.c_str());
+            if (restoreInfo.allToBackup == false && !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) {
+                session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_REFUSED_ACT),
+                                                                           restoreInfo.name);
+                session_->RemoveExtInfo(restoreInfo.name);
                 continue;
             }
-            session_->SetNeedToInstall(bundleInfo.name, bundleInfo.needToInstall);
-            session_->SetBundleRestoreType(bundleInfo.name, restoreType);
-            session_->SetBundleVersionCode(bundleInfo.name, bundleInfo.versionCode);
-            session_->SetBundleVersionName(bundleInfo.name, bundleInfo.versionName);
-            session_->SetBundleDataSize(bundleInfo.name, bundleInfo.spaceOccupied);
+            session_->SetNeedToInstall(restoreInfo.name, restoreInfo.needToInstall);
+            session_->SetBundleRestoreType(restoreInfo.name, restoreType);
+            session_->SetBundleVersionCode(restoreInfo.name, restoreInfo.versionCode);
+            session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
+            session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
+            session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
         }
+        OnStartSched();
+        session_->SetIsBusy(false);
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        session_->SetIsBusy(false);
+        return e.GetCode();
+    } catch (...) {
+        session_->SetIsBusy(false);
+        HILOGI("Unexpected exception");
+        return EPERM;
     }
-    for (auto info : restoreInfos) {
-        session_->SetBackupExtName(info.name, info.extensionName);
-        HILOGD("bundleName: %{public}s, extensionName: %{public}s", info.name.c_str(), info.extensionName.c_str());
-        if (info.allToBackup == false) {
-            session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_REFUSED_ACT),
-                                                                       info.name);
-            session_->RemoveExtInfo(info.name);
-        }
-    }
-    OnStartSched();
-    session_->SetIsBusy(false);
-    return BError(BError::Codes::OK);
 }
 
 ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
