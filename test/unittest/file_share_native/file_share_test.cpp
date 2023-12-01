@@ -15,7 +15,6 @@
 
 #include <cassert>
 #include <fcntl.h>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <singleton.h>
@@ -28,10 +27,8 @@
 #include "accesstoken_kit.h"
 #include "file_permission.h"
 #include "file_share.h"
-#include "filemgmt_libn.h"
 #include "ipc_skeleton.h"
 #include "log.h"
-#include "parameter.h"
 #include "sandbox_helper.h"
 #include "uri.h"
 
@@ -50,15 +47,6 @@ public:
     void SetUp() {};
     void TearDown() {};
 };
-bool CheckFileManagerFullMountEnable()
-{
-    char value[FULL_MOUNT_ENABLE_SIZE] = "false";
-    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER, "false", value, FULL_MOUNT_ENABLE_SIZE);
-    if (retSystem > 0 && !strcmp(value, "true")) {
-        return true;
-    }
-    return false;
-}
 
 /**
  * @tc.name: file_share_test_0000
@@ -435,23 +423,19 @@ HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0006, testing::ext::TestSize.
  * @tc.level Level 1
  * @tc.require:
  */
-HWTEST_F(FilePermissionTest, GrantPermission_test_0000, testing::ext::TestSize.Level1)
+HWTEST_F(FileShareTest, GrantPermission_test_0000, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FilePermissionTest-begin GrantPermission";
-    int32_t targetCode = 0;
-    if (!CheckFileManagerFullMountEnable()) {
-        targetCode = E_DEVICENOTSUPPORT;
-    }
+    GTEST_LOG_(INFO) << "FileShareTest-begin GrantPermission";
     string uri = "file://" + bundleA + "/data/storage/el2/base";
-    int32_t tokenId = 0;
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
-    uint32_t policyFlag = OperateMode::READ_MODE | OperateMode::WRITE_MODE;
+    uriPolicyInfo.mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE;
+    uint32_t policyFlag = PolicyFlag::ALLOW_PERSISTENCE;
     uriPolicies.emplace_back(uriPolicyInfo);
-    int32_t ret = FilePermission::GrantPermission(tokenId, uriPolicies, policyFlag);
-    EXPECT_EQ(ret, targetCode);
-    GTEST_LOG_(INFO) << "FilePermissionTest-end GrantPermission";
+    int32_t ret = FilePermission::GrantPermission(0, uriPolicies, policyFlag);
+    EXPECT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "FileShareTest-end GrantPermission";
 }
 
 /**
@@ -462,26 +446,22 @@ HWTEST_F(FilePermissionTest, GrantPermission_test_0000, testing::ext::TestSize.L
  * @tc.level Level 1
  * @tc.require:
  */
-HWTEST_F(FilePermissionTest, GrantPermission_test_0001, testing::ext::TestSize.Level1)
+HWTEST_F(FileShareTest, GrantPermission_test_0001, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FilePermissionTest-begin GrantPermission_test_0001";
-    int32_t targetCode = EPERM;
-    if (!CheckFileManagerFullMountEnable()) {
-        targetCode = E_DEVICENOTSUPPORT;
-    }
+    GTEST_LOG_(INFO) << "FileShareTest-begin GrantPermission_test_0001";
     string inexistentUri = "file://" + bundleA + "/data/storage/el2/base/files/inexistentTest.txt";
     string mediaUri = "file://media/data/storage/el2/base";
-    int32_t tokenId = 0;
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = inexistentUri;
-    uint32_t policyFlag = OperateMode::READ_MODE | OperateMode::WRITE_MODE;
+    uriPolicyInfo.mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE;
+    uint32_t policyFlag = PolicyFlag::ALLOW_PERSISTENCE;
     uriPolicies.emplace_back(uriPolicyInfo);
     uriPolicyInfo.uri = mediaUri;
     uriPolicies.emplace_back(uriPolicyInfo);
-    int32_t ret = FilePermission::GrantPermission(tokenId, uriPolicies, policyFlag);
-    EXPECT_EQ(ret, targetCode);
-    GTEST_LOG_(INFO) << "FilePermissionTest-end GrantPermission_test_0001";
+    int32_t ret = FilePermission::GrantPermission(0, uriPolicies, policyFlag);
+    EXPECT_EQ(ret, EPERM);
+    GTEST_LOG_(INFO) << "FileShareTest-end GrantPermission_test_0001";
 }
 
 /**
@@ -492,23 +472,19 @@ HWTEST_F(FilePermissionTest, GrantPermission_test_0001, testing::ext::TestSize.L
  * @tc.level Level 1
  * @tc.require:
  */
-HWTEST_F(FilePermissionTest, PersistPermission_test_0000, testing::ext::TestSize.Level1)
+HWTEST_F(FileShareTest, PersistPermission_test_0000, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FilePermissionTest-begin PersistPermission_test_0000";
-    int32_t targetCode = 0;
-    if (!CheckFileManagerFullMountEnable()) {
-        targetCode = E_DEVICENOTSUPPORT;
-    }
+    GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_0000";
     string uri = "file://" + bundleA + "/data/storage/el2/base";
-    int32_t tokenId = 0;
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
-    uint32_t policyFlag = OperateMode::READ_MODE | OperateMode::WRITE_MODE;
+    uriPolicyInfo.mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE;
     uriPolicies.emplace_back(uriPolicyInfo);
-    int32_t ret = FilePermission::PersistPermission(uriPolicies);
-    EXPECT_EQ(ret, targetCode);
-    GTEST_LOG_(INFO) << "FilePermissionTest-end PersistPermission_test_0000";
+    deque<struct PolicyErrorResult> errorResults;
+    int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "FileShareTest-end PersistPermission_test_0000";
 }
 
 /**
@@ -519,26 +495,22 @@ HWTEST_F(FilePermissionTest, PersistPermission_test_0000, testing::ext::TestSize
  * @tc.level Level 1
  * @tc.require:
  */
-HWTEST_F(FilePermissionTest, PersistPermission_test_0001, testing::ext::TestSize.Level1)
+HWTEST_F(FileShareTest, PersistPermission_test_0001, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FilePermissionTest-begin PersistPermission_test_0001";
-    int32_t targetCode = EPERM;
-    if (!CheckFileManagerFullMountEnable()) {
-        targetCode = E_DEVICENOTSUPPORT;
-    }
+    GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_0001";
     string inexistentUri = "file://" + bundleA + "/data/storage/el2/base/files/inexistentTest.txt";
     string mediaUri = "file://media/data/storage/el2/base";
-    int32_t tokenId = 0;
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = inexistentUri;
-    uint32_t policyFlag = OperateMode::READ_MODE | OperateMode::WRITE_MODE;
+    uriPolicyInfo.mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE;
     uriPolicies.emplace_back(uriPolicyInfo);
     uriPolicyInfo.uri = mediaUri;
     uriPolicies.emplace_back(uriPolicyInfo);
-    int32_t ret = FilePermission::PersistPermission(tokenId, uriPolicies, policyFlag);
-    EXPECT_EQ(ret, targetCode);
-    GTEST_LOG_(INFO) << "FilePermissionTest-end PersistPermission_test_0001";
+    deque<struct PolicyErrorResult> errorResults;
+    int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    GTEST_LOG_(INFO) << "FileShareTest-end PersistPermission_test_0001";
 }
 
 /**
@@ -549,23 +521,19 @@ HWTEST_F(FilePermissionTest, PersistPermission_test_0001, testing::ext::TestSize
  * @tc.level Level 1
  * @tc.require:
  */
-HWTEST_F(FilePermissionTest, DesistPersistedPermission_test_0000, testing::ext::TestSize.Level1)
+HWTEST_F(FileShareTest, DesistPersistedPermission_test_0000, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FilePermissionTest-begin DesistPersistedPermission_test_0000";
-    int32_t targetCode = 0;
-    if (!CheckFileManagerFullMountEnable()) {
-        targetCode = E_DEVICENOTSUPPORT;
-    }
+    GTEST_LOG_(INFO) << "FileShareTest-begin DesistPersistedPermission_test_0000";
     string uri = "file://" + bundleA + "/data/storage/el2/base";
-    int32_t tokenId = 0;
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
-    uint32_t policyFlag = OperateMode::READ_MODE | OperateMode::WRITE_MODE;
+    uriPolicyInfo.mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE;
     uriPolicies.emplace_back(uriPolicyInfo);
-    int32_t ret = FilePermission::RevokePermission(uriPolicies);
-    EXPECT_EQ(ret, targetCode);
-    GTEST_LOG_(INFO) << "FilePermissionTest-end DesistPersistedPermission_test_0000";
+    deque<struct PolicyErrorResult> errorResults;
+    int32_t ret = FilePermission::RevokePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "FileShareTest-end DesistPersistedPermission_test_0000";
 }
 
 /**
@@ -576,26 +544,22 @@ HWTEST_F(FilePermissionTest, DesistPersistedPermission_test_0000, testing::ext::
  * @tc.level Level 1
  * @tc.require:
  */
-HWTEST_F(FilePermissionTest, DesistPersistedPermission_test_0001, testing::ext::TestSize.Level1)
+HWTEST_F(FileShareTest, DesistPersistedPermission_test_0001, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FilePermissionTest-begin DesistPersistedPermission_test_0001";
-    int32_t targetCode = EPERM;
-    if (!CheckFileManagerFullMountEnable()) {
-        targetCode = E_DEVICENOTSUPPORT;
-    }
+    GTEST_LOG_(INFO) << "FileShareTest-begin DesistPersistedPermission_test_0001";
     string inexistentUri = "file://" + bundleA + "/data/storage/el2/base/files/inexistentTest.txt";
     string mediaUri = "file://media/data/storage/el2/base";
-    int32_t tokenId = 0;
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = inexistentUri;
-    uint32_t policyFlag = OperateMode::READ_MODE | OperateMode::WRITE_MODE;
+    uriPolicyInfo.mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE;
     uriPolicies.emplace_back(uriPolicyInfo);
     uriPolicyInfo.uri = mediaUri;
     uriPolicies.emplace_back(uriPolicyInfo);
-    int32_t ret = FilePermission::RevokePermission(tokenId, uriPolicies, policyFlag);
-    EXPECT_EQ(ret, targetCode);
-    GTEST_LOG_(INFO) << "FilePermissionTest-end DesistPersistedPermission_test_0001";
+    deque<struct PolicyErrorResult> errorResults;
+    int32_t ret = FilePermission::RevokePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    GTEST_LOG_(INFO) << "FileShareTest-end DesistPersistedPermission_test_0001";
 }
 
 /**
@@ -606,23 +570,19 @@ HWTEST_F(FilePermissionTest, DesistPersistedPermission_test_0001, testing::ext::
  * @tc.level Level 1
  * @tc.require:
  */
-HWTEST_F(FilePermissionTest, ActivatePermission_test_0000, testing::ext::TestSize.Level1)
+HWTEST_F(FileShareTest, ActivatePermission_test_0000, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FilePermissionTest-begin ActivatePermission_test_0000";
-    int32_t targetCode = 0;
-    if (!CheckFileManagerFullMountEnable()) {
-        targetCode = E_DEVICENOTSUPPORT;
-    }
+    GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_0000";
     string uri = "file://" + bundleA + "/data/storage/el2/base";
-    int32_t tokenId = 0;
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
-    uint32_t policyFlag = OperateMode::READ_MODE | OperateMode::WRITE_MODE;
+    uriPolicyInfo.mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE;
     uriPolicies.emplace_back(uriPolicyInfo);
-    int32_t ret = FilePermission::ActivatePermission(uriPolicies);
-    EXPECT_EQ(ret, targetCode);
-    GTEST_LOG_(INFO) << "FilePermissionTest-end ActivatePermission_test_0000";
+    deque<struct PolicyErrorResult> errorResults;
+    int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_0000";
 }
 
 /**
@@ -633,26 +593,22 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0000, testing::ext::TestSiz
  * @tc.level Level 1
  * @tc.require:
  */
-HWTEST_F(FilePermissionTest, ActivatePermission_test_0001, testing::ext::TestSize.Level1)
+HWTEST_F(FileShareTest, ActivatePermission_test_0001, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FilePermissionTest-begin ActivatePermission_test_0001";
-    int32_t targetCode = EPERM;
-    if (!CheckFileManagerFullMountEnable()) {
-        targetCode = E_DEVICENOTSUPPORT;
-    }
+    GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_0001";
     string inexistentUri = "file://" + bundleA + "/data/storage/el2/base/files/inexistentTest.txt";
     string mediaUri = "file://media/data/storage/el2/base";
-    int32_t tokenId = 0;
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = inexistentUri;
-    uint32_t policyFlag = OperateMode::READ_MODE | OperateMode::WRITE_MODE;
+    uriPolicyInfo.mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE;
     uriPolicies.emplace_back(uriPolicyInfo);
     uriPolicyInfo.uri = mediaUri;
     uriPolicies.emplace_back(uriPolicyInfo);
-    int32_t ret = FilePermission::ActivatePermission(tokenId, uriPolicies, policyFlag);
-    EXPECT_EQ(ret, targetCode);
-    GTEST_LOG_(INFO) << "FilePermissionTest-end ActivatePermission_test_0001";
+    deque<struct PolicyErrorResult> errorResults;
+    int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_0001";
 }
 
 /**
@@ -663,23 +619,19 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0001, testing::ext::TestSiz
  * @tc.level Level 1
  * @tc.require:
  */
-HWTEST_F(FilePermissionTest, DeactivatePermission_test_0000, testing::ext::TestSize.Level1)
+HWTEST_F(FileShareTest, DeactivatePermission_test_0000, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FilePermissionTest-begin DeactivatePermission_test_0000";
-    int32_t targetCode = 0;
-    if (!CheckFileManagerFullMountEnable()) {
-        targetCode = E_DEVICENOTSUPPORT;
-    }
+    GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_0000";
     string uri = "file://" + bundleA + "/data/storage/el2/base";
-    int32_t tokenId = 0;
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
-    uint32_t policyFlag = OperateMode::READ_MODE | OperateMode::WRITE_MODE;
+    uriPolicyInfo.mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE;
     uriPolicies.emplace_back(uriPolicyInfo);
-    int32_t ret = FilePermission::DeactivatePermission(uriPolicies);
-    EXPECT_EQ(ret, targetCode);
-    GTEST_LOG_(INFO) << "FilePermissionTest-end DeactivatePermission_test_0000";
+    deque<struct PolicyErrorResult> errorResults;
+    int32_t ret = FilePermission::DeactivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "FileShareTest-end DeactivatePermission_test_0000";
 }
 
 /**
@@ -690,25 +642,21 @@ HWTEST_F(FilePermissionTest, DeactivatePermission_test_0000, testing::ext::TestS
  * @tc.level Level 1
  * @tc.require:
  */
-HWTEST_F(FilePermissionTest, DeactivatePermission_test_0001, testing::ext::TestSize.Level1)
+HWTEST_F(FileShareTest, DeactivatePermission_test_0001, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FilePermissionTest-begin DeactivatePermission_test_0001";
-    int32_t targetCode = EPERM;
-    if (!CheckFileManagerFullMountEnable()) {
-        targetCode = E_DEVICENOTSUPPORT;
-    }
+    GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_0001";
     string inexistentUri = "file://" + bundleA + "/data/storage/el2/base/files/inexistentTest.txt";
     string mediaUri = "file://media/data/storage/el2/base";
-    int32_t tokenId = 0;
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = inexistentUri;
-    uint32_t policyFlag = OperateMode::READ_MODE | OperateMode::WRITE_MODE;
+    uriPolicyInfo.mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE;
     uriPolicies.emplace_back(uriPolicyInfo);
     uriPolicyInfo.uri = mediaUri;
     uriPolicies.emplace_back(uriPolicyInfo);
-    int32_t ret = FilePermission::DeactivatePermission(tokenId, uriPolicies, policyFlag);
-    EXPECT_EQ(ret, targetCode);
-    GTEST_LOG_(INFO) << "FilePermissionTest-end DeactivatePermission_test_0001";
+    deque<struct PolicyErrorResult> errorResults;
+    int32_t ret = FilePermission::DeactivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    GTEST_LOG_(INFO) << "FileShareTest-end DeactivatePermission_test_0001";
 }
 } // namespace

@@ -138,6 +138,11 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
 
 napi_value GrantPermission(napi_env env, napi_callback_info info)
 {
+    if (!CheckFileManagerFullMountEnable()) {
+        LOGE("The device doesn't support this api");
+        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
+        return nullptr;
+    }
     NFuncArg funcArg(env, info);
     if (!IsSystemApp()) {
         LOGE("GrantPermission is not System App!");
@@ -147,11 +152,6 @@ napi_value GrantPermission(napi_env env, napi_callback_info info)
     if (!CheckPermission(SET_SANDBOX_POLICY_PERMISSION)) {
         LOGE("GrantPermission has not ohos permission!");
         NError(E_PERMISSION).ThrowErr(env);
-        return nullptr;
-    }
-    if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this apil");
-        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
         return nullptr;
     }
     if (!funcArg.InitArgs(NARG_CNT::THREE)) {
@@ -191,7 +191,7 @@ napi_value GrantPermission(napi_env env, napi_callback_info info)
 napi_value PersistPermission(napi_env env, napi_callback_info info)
 {
     if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this apil");
+        LOGE("The device doesn't support this api");
         NError(E_DEVICENOTSUPPORT).ThrowErr(env);
         return nullptr;
     }
@@ -243,7 +243,7 @@ napi_value PersistPermission(napi_env env, napi_callback_info info)
 napi_value RevokePermission(napi_env env, napi_callback_info info)
 {
     if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this apil");
+        LOGE("The device doesn't support this api");
         NError(E_DEVICENOTSUPPORT).ThrowErr(env);
         return nullptr;
     }
@@ -295,7 +295,7 @@ napi_value RevokePermission(napi_env env, napi_callback_info info)
 napi_value ActivatePermission(napi_env env, napi_callback_info info)
 {
     if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this apil");
+        LOGE("The device doesn't support this api");
         NError(E_DEVICENOTSUPPORT).ThrowErr(env);
         return nullptr;
     }
@@ -347,7 +347,7 @@ napi_value ActivatePermission(napi_env env, napi_callback_info info)
 napi_value DeactivatePermission(napi_env env, napi_callback_info info)
 {
     if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this apil");
+        LOGE("The device doesn't support this api");
         NError(E_DEVICENOTSUPPORT).ThrowErr(env);
         return nullptr;
     }
