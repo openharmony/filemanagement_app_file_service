@@ -114,7 +114,7 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
             LOGE("get named property failed");
             return status;
         }
-        status = napi_get_named_property(env, object, "operateMode", &modeValue);
+        status = napi_get_named_property(env, object, "operationMode", &modeValue);
         if (status != napi_ok) {
             LOGE("get named property failed");
             return status;
