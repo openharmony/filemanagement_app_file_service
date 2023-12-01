@@ -23,30 +23,30 @@
 namespace OHOS {
 namespace AppFileService {
 using namespace std;
-typedef enum OperateMode {
+typedef enum OperationMode {
     READ_MODE = 1 << 0,
     WRITE_MODE = 1 << 1,
-} OperateMode;
+} OperationMode;
 typedef enum PolicyFlag {
-    ALLOWED_PERSIST = 1 << 0,
-    FORBID_PERSIST = 1 << 1,
+    ALLOW_PERSISTENCE = 1 << 0,
+    FORBID_PERSISTENCE = 1 << 1,
 } PolicyFlag;
 enum PolicyErrorCode {
-    FORBIDDEN_TO_BE_PERSISTED = 1,
+    PERSISTENCE_FORBIDDEN = 1,
     INVALID_MODE = 2,
     INVALID_PATH = 3,
 };
 struct UriPolicyInfo {
     string uri = "";
-    uint32_t mode = OperateMode::READ_MODE;
+    uint32_t mode = OperationMode::READ_MODE;
 };
 struct PolicyInfo {
     string path = "";
-    uint32_t mode = OperateMode::READ_MODE;
+    uint32_t mode = OperationMode::READ_MODE;
 };
 struct PolicyErrorResult {
     string uri = "";
-    PolicyErrorCode code = PolicyErrorCode::FORBIDDEN_TO_BE_PERSISTED;
+    PolicyErrorCode code = PolicyErrorCode::PERSISTENCE_FORBIDDEN;
     string message = "";
 };
 
@@ -54,12 +54,10 @@ class FilePermission {
 public:
     static int32_t GrantPermission(uint32_t tokenId, vector<UriPolicyInfo> uriPolicies, uint32_t policyFlag);
     static int32_t PersistPermission(vector<UriPolicyInfo> uriPolicies, deque<struct PolicyErrorResult> &errorResults);
-    static int32_t RevokePermission(vector<UriPolicyInfo> uriPolicies,
-                                           deque<struct PolicyErrorResult> &errorResults);
-    static int32_t ActivatePermission(vector<UriPolicyInfo> uriPolicies,
-                                        deque<struct PolicyErrorResult> &errorResults);
+    static int32_t RevokePermission(vector<UriPolicyInfo> uriPolicies, deque<struct PolicyErrorResult> &errorResults);
+    static int32_t ActivatePermission(vector<UriPolicyInfo> uriPolicies, deque<struct PolicyErrorResult> &errorResults);
     static int32_t DeactivatePermission(vector<UriPolicyInfo> uriPolicies,
-                                          deque<struct PolicyErrorResult> &errorResults);
+                                        deque<struct PolicyErrorResult> &errorResults);
 
 private:
     static void GetErrorResults(const vector<uint32_t> &resultCodes,

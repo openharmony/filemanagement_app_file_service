@@ -55,10 +55,11 @@ ohos_shared_library("fileshare") {
   include_dirs = [
     ".",
     "../../common/include",
-    "${app_file_service_path}/interfaces/innerkits/native/file_permission/include",
+    "${app_file_service_path}/interfaces/innerkits/native/file_share/include",
   ]
 
   sources = [
+    "../../innerkits/native/file_permission/src/file_permission.cpp",
     "file_share/fileshare_n_exporter.cpp",
     "file_share/grant_uri_permission.cpp",
     "file_share/grant_multiple_permissions.cpp",
@@ -79,6 +80,7 @@ ohos_shared_library("fileshare") {
     "file_api:filemgmt_libn",
     "file_api:remote_uri_native",
     "hilog:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "napi:ace_napi",
   ]

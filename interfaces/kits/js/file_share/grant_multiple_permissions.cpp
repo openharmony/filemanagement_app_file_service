@@ -21,9 +21,9 @@
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 #include "log.h"
-#include "tokenid_kit.h"
 #include "n_napi.h"
-
+#include "parameter.h"
+#include "tokenid_kit.h"
 
 namespace OHOS {
 namespace AppFileService {
@@ -31,10 +31,12 @@ namespace ModuleFileShare {
 using namespace OHOS::FileManagement::LibN;
 using namespace std;
 
+namespace {
 const std::string FILE_ACCESS_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
 const std::string SET_SANDBOX_POLICY_PERMISSION = "ohos.permission.SET_SANDBOX_POLICY";
+const char *FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mout.enable";
+const int32_t FULL_MOUNT_ENABLE_SIZE = 6;
 
-namespace {
 bool IsSystemApp()
 {
     uint32_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
@@ -46,6 +48,18 @@ bool CheckPermission(const string &permission)
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
            Security::AccessToken::PermissionState::PERMISSION_GRANTED;
+}
+
+bool CheckFileManagerFullMountEnable()
+{
+    char value[FULL_MOUNT_ENABLE_SIZE] = "false";
+    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER, "false", value, FULL_MOUNT_ENABLE_SIZE);
+    if (retSystem > 0 && !strcmp(value, "true")) {
+        LOGE("The full mount enable parameter is true");
+        return true;
+    }
+    LOGD("The full mount enable parameter is false");
+    return false;
 }
 } // namespace
 
@@ -72,7 +86,8 @@ static napi_value GetErrData(napi_env env, deque<struct PolicyErrorResult> &erro
     return res;
 }
 
-static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<UriPolicyInfo> &uriPolicies){
+static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<UriPolicyInfo> &uriPolicies)
+{
     uint32_t count;
     napi_status status = napi_get_array_length(env, agrv, &count);
     if (status != napi_ok) {
@@ -106,7 +121,7 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
         }
         auto [succStr, str, ignore] = NVal(env, uriValue).ToUTF8String();
         auto [succMode, mode] = NVal(env, modeValue).ToUint32();
-        if(!succStr || !succMode){
+        if (!succStr || !succMode) {
             LOGE("the argument error");
             return napi_invalid_arg;
         }
@@ -124,11 +139,6 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
 napi_value GrantPermission(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(NARG_CNT::THREE)) {
-        LOGE("GrantPermission Number of arguments unmatched");
-        NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
-    }
     if (!IsSystemApp()) {
         LOGE("GrantPermission is not System App!");
         NError(E_PERMISSION_SYS).ThrowErr(env);
@@ -139,10 +149,19 @@ napi_value GrantPermission(napi_env env, napi_callback_info info)
         NError(E_PERMISSION).ThrowErr(env);
         return nullptr;
     }
+    if (!CheckFileManagerFullMountEnable()) {
+        LOGE("The device doesn't support this apil");
+        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
+        return nullptr;
+    }
+    if (!funcArg.InitArgs(NARG_CNT::THREE)) {
+        LOGE("GrantPermission Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
     auto [succTokenId, id] = NVal(env, funcArg[NARG_POS::FIRST]).ToUint32();
     auto [succPolicyFlag, flag] = NVal(env, funcArg[NARG_POS::THIRD]).ToUint32();
     if (!succTokenId || !succPolicyFlag) {
-        LOGE("The first/third argument error");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
@@ -150,8 +169,7 @@ napi_value GrantPermission(napi_env env, napi_callback_info info)
     uint32_t policyFlag = flag;
     std::vector<UriPolicyInfo> uriPolicies;
     napi_status status = GetUriPoliciesArg(env, funcArg[NARG_POS::SECOND], uriPolicies);
-    if(status != napi_ok){
-        LOGE("the second argument error");
+    if (status != napi_ok) {
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
@@ -165,7 +183,6 @@ napi_value GrantPermission(napi_env env, napi_callback_info info)
         }
         return NVal::CreateUndefined(env);
     };
-
     const string procedureName = "grant_permission";
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
@@ -173,10 +190,9 @@ napi_value GrantPermission(napi_env env, napi_callback_info info)
 
 napi_value PersistPermission(napi_env env, napi_callback_info info)
 {
-    NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
-        LOGE("PersistPermission Number of arguments unmatched");
-        NError(E_PARAMS).ThrowErr(env);
+    if (!CheckFileManagerFullMountEnable()) {
+        LOGE("The device doesn't support this apil");
+        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
         return nullptr;
     }
     if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
@@ -184,16 +200,19 @@ napi_value PersistPermission(napi_env env, napi_callback_info info)
         NError(E_PERMISSION).ThrowErr(env);
         return nullptr;
     }
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        LOGE("PersistPermission Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
     std::vector<UriPolicyInfo> uriPolicies;
-    napi_status status = GetUriPoliciesArg(env, funcArg[NARG_POS::FIRST], uriPolicies);
-    if(status != napi_ok){
-        LOGE("get arguments failed");
+    if (GetUriPoliciesArg(env, funcArg[NARG_POS::FIRST], uriPolicies) != napi_ok) {
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
-        LOGE("Failed to request heap memory.");
         NError(EILSEQ).ThrowErr(env);
         return nullptr;
     }
@@ -203,14 +222,14 @@ napi_value PersistPermission(napi_env env, napi_callback_info info)
     };
     auto cbCompl = [arg](napi_env env, NError err) -> NVal {
         if (err) {
-            if(arg->errNo == EPERM){
+            if (arg->errNo == EPERM) {
                 napi_value data = err.GetNapiErr(env);
-                napi_status status = napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(),
-                                                             GetErrData(env, arg->errorResults));
+                napi_status status =
+                    napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
                 if (status != napi_ok) {
                     LOGE("Failed to set data property on Error");
                 }
-                return { env, data };
+                return {env, data};
             }
             return {env, err.GetNapiErr(env)};
         }
@@ -223,10 +242,9 @@ napi_value PersistPermission(napi_env env, napi_callback_info info)
 
 napi_value RevokePermission(napi_env env, napi_callback_info info)
 {
-    NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
-        LOGE("RevokePermission Number of arguments unmatched");
-        NError(E_PARAMS).ThrowErr(env);
+    if (!CheckFileManagerFullMountEnable()) {
+        LOGE("The device doesn't support this apil");
+        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
         return nullptr;
     }
     if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
@@ -234,16 +252,19 @@ napi_value RevokePermission(napi_env env, napi_callback_info info)
         NError(E_PERMISSION).ThrowErr(env);
         return nullptr;
     }
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        LOGE("RevokePermission Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
     std::vector<UriPolicyInfo> uriPolicies;
-    napi_status status = GetUriPoliciesArg(env, funcArg[NARG_POS::FIRST], uriPolicies);
-    if(status != napi_ok){
-        LOGE("get arguments failed");
+    if (GetUriPoliciesArg(env, funcArg[NARG_POS::FIRST], uriPolicies) != napi_ok) {
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
-        LOGE("Failed to request heap memory.");
         NError(EILSEQ).ThrowErr(env);
         return nullptr;
     }
@@ -253,14 +274,14 @@ napi_value RevokePermission(napi_env env, napi_callback_info info)
     };
     auto cbCompl = [arg](napi_env env, NError err) -> NVal {
         if (err) {
-            if(arg->errNo == EPERM){
+            if (arg->errNo == EPERM) {
                 napi_value data = err.GetNapiErr(env);
-                napi_status status = napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(),
-                                                             GetErrData(env, arg->errorResults));
+                napi_status status =
+                    napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
                 if (status != napi_ok) {
                     LOGE("Failed to set data property on Error");
                 }
-                return { env, data };
+                return {env, data};
             }
             return {env, err.GetNapiErr(env)};
         }
@@ -273,6 +294,16 @@ napi_value RevokePermission(napi_env env, napi_callback_info info)
 
 napi_value ActivatePermission(napi_env env, napi_callback_info info)
 {
+    if (!CheckFileManagerFullMountEnable()) {
+        LOGE("The device doesn't support this apil");
+        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
+        return nullptr;
+    }
+    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
+        LOGE("PersistPermission has not ohos permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         LOGE("ActivatePermission Number of arguments unmatched");
@@ -280,15 +311,12 @@ napi_value ActivatePermission(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::vector<UriPolicyInfo> uriPolicies;
-    napi_status status = GetUriPoliciesArg(env, funcArg[NARG_POS::FIRST], uriPolicies);
-    if(status != napi_ok){
-        LOGE("get arguments failed");
+    if (GetUriPoliciesArg(env, funcArg[NARG_POS::FIRST], uriPolicies) != napi_ok) {
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
-        LOGE("Failed to request heap memory.");
         NError(EILSEQ).ThrowErr(env);
         return nullptr;
     }
@@ -298,14 +326,14 @@ napi_value ActivatePermission(napi_env env, napi_callback_info info)
     };
     auto cbCompl = [arg](napi_env env, NError err) -> NVal {
         if (err) {
-            if(arg->errNo == EPERM){
+            if (arg->errNo == EPERM) {
                 napi_value data = err.GetNapiErr(env);
-                napi_status status = napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(),
-                                                             GetErrData(env, arg->errorResults));
+                napi_status status =
+                    napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
                 if (status != napi_ok) {
                     LOGE("Failed to set data property on Error");
                 }
-                return { env, data };
+                return {env, data};
             }
             return {env, err.GetNapiErr(env)};
         }
@@ -318,6 +346,16 @@ napi_value ActivatePermission(napi_env env, napi_callback_info info)
 
 napi_value DeactivatePermission(napi_env env, napi_callback_info info)
 {
+    if (!CheckFileManagerFullMountEnable()) {
+        LOGE("The device doesn't support this apil");
+        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
+        return nullptr;
+    }
+    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
+        LOGE("PersistPermission has not ohos permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         LOGE("DeactivatePermission Number of arguments unmatched");
@@ -325,16 +363,12 @@ napi_value DeactivatePermission(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::vector<UriPolicyInfo> uriPolicies;
-    napi_status status = GetUriPoliciesArg(env, funcArg[NARG_POS::FIRST], uriPolicies);
-    if(status != napi_ok){
-        LOGE("get arguments failed");
+    if (GetUriPoliciesArg(env, funcArg[NARG_POS::FIRST], uriPolicies) != napi_ok) {
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-    LOGE("DeactivatePermission %{public}d", uriPolicies.size());
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
-        LOGE("Failed to request heap memory.");
         NError(EILSEQ).ThrowErr(env);
         return nullptr;
     }
@@ -344,14 +378,14 @@ napi_value DeactivatePermission(napi_env env, napi_callback_info info)
     };
     auto cbCompl = [arg](napi_env env, NError err) -> NVal {
         if (err) {
-            if(arg->errNo == EPERM){
+            if (arg->errNo == EPERM) {
                 napi_value data = err.GetNapiErr(env);
-                napi_status status = napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(),
-                                                             GetErrData(env, arg->errorResults));
+                napi_status status =
+                    napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
                 if (status != napi_ok) {
                     LOGE("Failed to set data property on Error");
                 }
-                return { env, data };
+                return {env, data};
             }
             return {env, err.GetNapiErr(env)};
         }

@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace AppFileService {
 namespace ModuleFileShare {
-void InitOperateMode(napi_env env, napi_value exports);
+void InitOperationMode(napi_env env, napi_value exports);
 void InitPolicyFlag(napi_env env, napi_value exports);
 void InitPolicyInfo(napi_env env, napi_value exports);
 void InitPolicyErrorResult(napi_env env, napi_value exports);

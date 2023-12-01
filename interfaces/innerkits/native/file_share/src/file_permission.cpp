@@ -15,20 +15,16 @@
 #include "file_permission.h"
 #include <unistd.h>
 
-#include "filemgmt_libn.h"
 #include "log.h"
-#include "parameter.h"
 #include "uri.h"
 
 namespace OHOS {
 namespace AppFileService {
 const std::string MEDIA_AUTHORITY = "media";
 const std::string REMOTE_SHARE_PATH_DIR = "/.remote_share";
-const std::string FORBIDDEN_TO_BE_PERSISTED_MESSAGE = "URI refusal to be persisted!";
+const std::string PERSISTENCE_FORBIDDEN_MESSAGE = "URI forbid to be persisted!";
 const std::string INVALID_MODE_MESSAGE = "Invalid operation mode!";
 const std::string INVALID_PATH_MESSAGE = "Invalid path!";
-const int32_t FULL_MOUNT_ENABLE_SIZE = 6;
-const char *FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mout.enable";
 
 namespace {
 bool CheckValidUri(const string &uriStr)
@@ -45,18 +41,6 @@ bool CheckValidUri(const string &uriStr)
     }
     return true;
 }
-
-bool CheckFileManagerFullMountEnable()
-{
-    char value[FULL_MOUNT_ENABLE_SIZE] = "false";
-    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER, "false", value, FULL_MOUNT_ENABLE_SIZE);
-    if (retSystem > 0 && !strcmp(value, "true")) {
-        LOGE("The full mount enable parameter is true");
-        return true;
-    }
-    LOGD("The full mount enable parameter is false");
-    return false;
-}
 } // namespace
 
 void FilePermission::GetErrorResults(const vector<uint32_t> &resultCodes,
@@ -66,8 +50,8 @@ void FilePermission::GetErrorResults(const vector<uint32_t> &resultCodes,
     for (int i = 0; i < resultCodes.size(); i++) {
         PolicyErrorResult result;
         switch (resultCodes[i]) {
-            case static_cast<PolicyErrorCode>(PolicyErrorCode::FORBIDDEN_TO_BE_PERSISTED):
-                result = {resultUris[i], PolicyErrorCode::FORBIDDEN_TO_BE_PERSISTED, FORBIDDEN_TO_BE_PERSISTED_MESSAGE};
+            case static_cast<PolicyErrorCode>(PolicyErrorCode::PERSISTENCE_FORBIDDEN):
+                result = {resultUris[i], PolicyErrorCode::PERSISTENCE_FORBIDDEN, PERSISTENCE_FORBIDDEN_MESSAGE};
                 errorResults.emplace_back(result);
                 break;
             case static_cast<PolicyErrorCode>(PolicyErrorCode::INVALID_MODE):
@@ -106,10 +90,6 @@ void FilePermission::GetPolicyInformation(const vector<UriPolicyInfo> &uriPolici
 
 int32_t FilePermission::GrantPermission(uint32_t tokenId, vector<UriPolicyInfo> uriPolicies, uint32_t policyFlag)
 {
-    if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this apil");
-        return E_DEVICENOTSUPPORT;
-    }
     vector<PolicyInfo> policies;
     vector<string> resultUris;
     deque<struct PolicyErrorResult> errorResults;
@@ -127,10 +107,6 @@ int32_t FilePermission::GrantPermission(uint32_t tokenId, vector<UriPolicyInfo> 
 int32_t FilePermission::PersistPermission(vector<UriPolicyInfo> uriPolicies,
                                           deque<struct PolicyErrorResult> &errorResults)
 {
-    if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this apil");
-        return E_DEVICENOTSUPPORT;
-    }
     vector<PolicyInfo> policies;
     vector<string> resultUris;
     vector<uint32_t> resultCodes;
@@ -147,12 +123,8 @@ int32_t FilePermission::PersistPermission(vector<UriPolicyInfo> uriPolicies,
 }
 
 int32_t FilePermission::RevokePermission(vector<UriPolicyInfo> uriPolicies,
-                                                  deque<struct PolicyErrorResult> &errorResults)
+                                         deque<struct PolicyErrorResult> &errorResults)
 {
-    if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this apil");
-        return E_DEVICENOTSUPPORT;
-    }
     vector<PolicyInfo> policies;
     vector<string> resultUris;
     vector<uint32_t> resultCodes;
@@ -169,12 +141,8 @@ int32_t FilePermission::RevokePermission(vector<UriPolicyInfo> uriPolicies,
 }
 
 int32_t FilePermission::ActivatePermission(vector<UriPolicyInfo> uriPolicies,
-                                             deque<struct PolicyErrorResult> &errorResults)
+                                           deque<struct PolicyErrorResult> &errorResults)
 {
-    if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this apil");
-        return E_DEVICENOTSUPPORT;
-    }
     vector<PolicyInfo> policies;
     vector<string> resultUris;
     vector<uint32_t> resultCodes;
@@ -191,12 +159,8 @@ int32_t FilePermission::ActivatePermission(vector<UriPolicyInfo> uriPolicies,
 }
 
 int32_t FilePermission::DeactivatePermission(vector<UriPolicyInfo> uriPolicies,
-                                               deque<struct PolicyErrorResult> &errorResults)
+                                             deque<struct PolicyErrorResult> &errorResults)
 {
-    if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this apil");
-        return E_DEVICENOTSUPPORT;
-    }
     vector<PolicyInfo> policies;
     vector<string> resultUris;
     vector<uint32_t> resultCodes;
