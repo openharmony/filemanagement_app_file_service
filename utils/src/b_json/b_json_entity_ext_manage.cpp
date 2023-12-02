@@ -203,6 +203,10 @@ std::vector<ExtManageInfo> BJsonEntityExtManage::GetExtManageInfo() const
         string fileName = item.isMember("fileName") && item["fileName"].isString() ? item["fileName"].asString() : "";
         bool isUserTar = item.isMember("isUserTar") && item["isUserTar"].isBool() ? item["isUserTar"].asBool() : false;
         bool isBigFile = item.isMember("isBigFile") && item["isBigFile"].isBool() ? item["isBigFile"].asBool() : false;
+        // 兼容旧版本没有isBigFile属性时,增加判断是否为bigFile
+        if (!item.isMember("isBigFile") && fileName != "" && ExtractFileExt(fileName) != "tar") {
+            isBigFile = true;
+        }
         HILOGI("GetExtManageInfo, fileName:%{public}s, isUserTar:%{public}d, isBigFile:%{public}d", fileName.data(),
                isUserTar, isBigFile);
         if (!fileName.empty() && !path.empty()) {
