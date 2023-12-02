@@ -38,7 +38,7 @@ using namespace OHOS::AppFileService;
 using namespace OHOS::Security::AccessToken;
 
 const int E_OK = 0;
-const string bundleA = "com.example.filesharea";
+const string BUNDLE_A = "com.example.filesharea";
 
 class FileShareTest : public testing::Test {
 public:
@@ -426,7 +426,7 @@ HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0006, testing::ext::TestSize.
 HWTEST_F(FileShareTest, GrantPermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin GrantPermission";
-    string uri = "file://" + bundleA + "/data/test";
+    string uri = "file://" + BUNDLE_A + "/data/test";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
@@ -449,7 +449,7 @@ HWTEST_F(FileShareTest, GrantPermission_test_0000, testing::ext::TestSize.Level1
 HWTEST_F(FileShareTest, GrantPermission_test_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin GrantPermission_test_0001";
-    string inexistentUri = "file://" + bundleA + "/data/storage/el2/base/files/inexistentTest.txt";
+    string inexistentUri = "file://" + BUNDLE_A + "/data/storage/el2/base/files/inexistentTest.txt";
     string mediaUri = "file://media/data/storage/el2/base";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
@@ -475,7 +475,7 @@ HWTEST_F(FileShareTest, GrantPermission_test_0001, testing::ext::TestSize.Level1
 HWTEST_F(FileShareTest, PersistPermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_0000";
-    string uri = "file://" + bundleA + "/data/test";
+    string uri = "file://" + BUNDLE_A + "/data/test";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
@@ -498,7 +498,7 @@ HWTEST_F(FileShareTest, PersistPermission_test_0000, testing::ext::TestSize.Leve
 HWTEST_F(FileShareTest, PersistPermission_test_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_0001";
-    string inexistentUri = "file://" + bundleA + "/data/storage/el2/base/files/inexistentTest.txt";
+    string inexistentUri = "file://" + BUNDLE_A + "/data/storage/el2/base/files/inexistentTest.txt";
     string mediaUri = "file://media/data/storage/el2/base";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
@@ -524,7 +524,7 @@ HWTEST_F(FileShareTest, PersistPermission_test_0001, testing::ext::TestSize.Leve
 HWTEST_F(FileShareTest, DesistPersistedPermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin DesistPersistedPermission_test_0000";
-    string uri = "file://" + bundleA + "/data/test";
+    string uri = "file://" + BUNDLE_A + "/data/test";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
@@ -547,7 +547,7 @@ HWTEST_F(FileShareTest, DesistPersistedPermission_test_0000, testing::ext::TestS
 HWTEST_F(FileShareTest, DesistPersistedPermission_test_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin DesistPersistedPermission_test_0001";
-    string inexistentUri = "file://" + bundleA + "/data/storage/el2/base/files/inexistentTest.txt";
+    string inexistentUri = "file://" + BUNDLE_A + "/data/storage/el2/base/files/inexistentTest.txt";
     string mediaUri = "file://media/data/storage/el2/base";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
@@ -573,7 +573,7 @@ HWTEST_F(FileShareTest, DesistPersistedPermission_test_0001, testing::ext::TestS
 HWTEST_F(FileShareTest, ActivatePermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_0000";
-    string uri = "file://" + bundleA + "/data/test";
+    string uri = "file://" + BUNDLE_A + "/data/test";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
@@ -596,7 +596,7 @@ HWTEST_F(FileShareTest, ActivatePermission_test_0000, testing::ext::TestSize.Lev
 HWTEST_F(FileShareTest, ActivatePermission_test_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_0001";
-    string inexistentUri = "file://" + bundleA + "/data/storage/el2/base/files/inexistentTest.txt";
+    string inexistentUri = "file://" + BUNDLE_A + "/data/storage/el2/base/files/inexistentTest.txt";
     string mediaUri = "file://media/data/storage/el2/base";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
@@ -622,7 +622,7 @@ HWTEST_F(FileShareTest, ActivatePermission_test_0001, testing::ext::TestSize.Lev
 HWTEST_F(FileShareTest, DeactivatePermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_0000";
-    string uri = "file://" + bundleA + "/data/test";
+    string uri = "file://" + BUNDLE_A + "/data/test";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
@@ -645,7 +645,7 @@ HWTEST_F(FileShareTest, DeactivatePermission_test_0000, testing::ext::TestSize.L
 HWTEST_F(FileShareTest, DeactivatePermission_test_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_0001";
-    string inexistentUri = "file://" + bundleA + "/data/storage/el2/base/files/inexistentTest.txt";
+    string inexistentUri = "file://" + BUNDLE_A + "/data/storage/el2/base/files/inexistentTest.txt";
     string mediaUri = "file://media/data/storage/el2/base";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;

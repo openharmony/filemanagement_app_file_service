@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef _APP_FILE_SERVICE_FILE_PERMISSION_
-#define _APP_FILE_SERVICE_FILE_PERMISSION_
+#ifndef APP_FILE_SERVICE_FILE_PERMISSION
+#define APP_FILE_SERVICE_FILE_PERMISSION
 
 #include <deque>
 #include <string>

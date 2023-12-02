@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef _GRANT_PERMISSIONS_H_
-
-#define _GRANT_PERMISSIONS_H_
+#ifndef GRANT_PERMISSIONS_H
+#define GRANT_PERMISSIONS_H
 
 #include <deque>
 
