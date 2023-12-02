@@ -426,7 +426,7 @@ HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0006, testing::ext::TestSize.
 HWTEST_F(FileShareTest, GrantPermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin GrantPermission";
-    string uri = "file://" + bundleA + "/data/storage/el2/base";
+    string uri = "file://" + bundleA + "/data/test";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
@@ -475,7 +475,7 @@ HWTEST_F(FileShareTest, GrantPermission_test_0001, testing::ext::TestSize.Level1
 HWTEST_F(FileShareTest, PersistPermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_0000";
-    string uri = "file://" + bundleA + "/data/storage/el2/base";
+    string uri = "file://" + bundleA + "/data/test";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
@@ -524,7 +524,7 @@ HWTEST_F(FileShareTest, PersistPermission_test_0001, testing::ext::TestSize.Leve
 HWTEST_F(FileShareTest, DesistPersistedPermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin DesistPersistedPermission_test_0000";
-    string uri = "file://" + bundleA + "/data/storage/el2/base";
+    string uri = "file://" + bundleA + "/data/test";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
@@ -573,7 +573,7 @@ HWTEST_F(FileShareTest, DesistPersistedPermission_test_0001, testing::ext::TestS
 HWTEST_F(FileShareTest, ActivatePermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_0000";
-    string uri = "file://" + bundleA + "/data/storage/el2/base";
+    string uri = "file://" + bundleA + "/data/test";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;
@@ -622,7 +622,7 @@ HWTEST_F(FileShareTest, ActivatePermission_test_0001, testing::ext::TestSize.Lev
 HWTEST_F(FileShareTest, DeactivatePermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_0000";
-    string uri = "file://" + bundleA + "/data/storage/el2/base";
+    string uri = "file://" + bundleA + "/data/test";
     std::vector<UriPolicyInfo> uriPolicies;
     UriPolicyInfo uriPolicyInfo;
     uriPolicyInfo.uri = uri;

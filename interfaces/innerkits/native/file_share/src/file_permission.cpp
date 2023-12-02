@@ -175,6 +175,5 @@ int32_t FilePermission::DeactivatePermission(vector<UriPolicyInfo> uriPolicies,
     LOGD("DeactivatePermission success");
     return 0;
 }
-
 } // namespace AppFileService
 } // namespace OHOS
