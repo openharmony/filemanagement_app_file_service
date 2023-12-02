@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "grant_multiple_permissions.h"
+#include "grant_permissions.h"
 
 #include <string>
 #include <vector>
@@ -35,25 +35,24 @@ namespace {
 const std::string FILE_ACCESS_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
 const std::string SET_SANDBOX_POLICY_PERMISSION = "ohos.permission.SET_SANDBOX_POLICY";
 const char *FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mout.enable";
-const int32_t FULL_MOUNT_ENABLE_SIZE = 6;
 
-bool IsSystemApp()
+static bool IsSystemApp()
 {
     uint32_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
     return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
 }
 
-bool CheckPermission(const string &permission)
+static bool CheckPermission(const string &permission)
 {
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
            Security::AccessToken::PermissionState::PERMISSION_GRANTED;
 }
 
-bool CheckFileManagerFullMountEnable()
+static bool CheckFileManagerFullMountEnable()
 {
-    char value[FULL_MOUNT_ENABLE_SIZE] = "false";
-    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER, "false", value, FULL_MOUNT_ENABLE_SIZE);
+    char value[] = "false";
+    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER, "false", value, sizeof(value));
     if (retSystem > 0 && !strcmp(value, "true")) {
         LOGE("The full mount enable parameter is true");
         return true;

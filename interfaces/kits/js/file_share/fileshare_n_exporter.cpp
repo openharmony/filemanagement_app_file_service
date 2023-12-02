@@ -14,7 +14,7 @@
  */
 #include "fileshare_n_exporter.h"
 #include "file_permission.h"
-#include "grant_multiple_permissions.h"
+#include "grant_permissions.h"
 #include "grant_uri_permission.h"
 #include "log.h"
 

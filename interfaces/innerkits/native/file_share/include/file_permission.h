@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef APP_FILE_SERVICE_FILE_PERMISSION
-#define APP_FILE_SERVICE_FILE_PERMISSION
+#ifndef _APP_FILE_SERVICE_FILE_PERMISSION_
+#define _APP_FILE_SERVICE_FILE_PERMISSION_
 
 #include <deque>
 #include <string>
@@ -27,23 +27,28 @@ typedef enum OperationMode {
     READ_MODE = 1 << 0,
     WRITE_MODE = 1 << 1,
 } OperationMode;
+
 typedef enum PolicyFlag {
     ALLOW_PERSISTENCE = 1 << 0,
     FORBID_PERSISTENCE = 1 << 1,
 } PolicyFlag;
+
 enum PolicyErrorCode {
     PERSISTENCE_FORBIDDEN = 1,
     INVALID_MODE = 2,
     INVALID_PATH = 3,
 };
+
 struct UriPolicyInfo {
     string uri = "";
     uint32_t mode = OperationMode::READ_MODE;
 };
-struct PolicyInfo {
+
+struct PathPolicyInfo {
     string path = "";
     uint32_t mode = OperationMode::READ_MODE;
 };
+
 struct PolicyErrorResult {
     string uri = "";
     PolicyErrorCode code = PolicyErrorCode::PERSISTENCE_FORBIDDEN;
@@ -52,21 +57,23 @@ struct PolicyErrorResult {
 
 class FilePermission {
 public:
-    static int32_t GrantPermission(uint32_t tokenId, vector<UriPolicyInfo> uriPolicies, uint32_t policyFlag);
-    static int32_t PersistPermission(vector<UriPolicyInfo> uriPolicies, deque<struct PolicyErrorResult> &errorResults);
-    static int32_t RevokePermission(vector<UriPolicyInfo> uriPolicies, deque<struct PolicyErrorResult> &errorResults);
-    static int32_t ActivatePermission(vector<UriPolicyInfo> uriPolicies, deque<struct PolicyErrorResult> &errorResults);
-    static int32_t DeactivatePermission(vector<UriPolicyInfo> uriPolicies,
+    static int32_t GrantPermission(uint32_t tokenId, const vector<UriPolicyInfo> &uriPolicies, uint32_t policyFlag);
+    static int32_t PersistPermission(const vector<UriPolicyInfo> &uriPolicies,
+                                     deque<struct PolicyErrorResult> &errorResults);
+    static int32_t RevokePermission(const vector<UriPolicyInfo> &uriPolicies,
+                                    deque<struct PolicyErrorResult> &errorResults);
+    static int32_t ActivatePermission(const vector<UriPolicyInfo> &uriPolicies,
+                                      deque<struct PolicyErrorResult> &errorResults);
+    static int32_t DeactivatePermission(const vector<UriPolicyInfo> &uriPolicies,
                                         deque<struct PolicyErrorResult> &errorResults);
 
 private:
     static void GetErrorResults(const vector<uint32_t> &resultCodes,
-                                const vector<string> &resultUris,
+                                const vector<PathPolicyInfo> &pathPolicies,
                                 deque<struct PolicyErrorResult> &errorResults);
-    static void GetPolicyInformation(const vector<UriPolicyInfo> &uriPolicies,
-                                     vector<string> &resultUris,
-                                     deque<struct PolicyErrorResult> &errorResults,
-                                     vector<struct PolicyInfo> &policies);
+    static void GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
+                                                   deque<struct PolicyErrorResult> &errorResults,
+                                                   vector<struct PathPolicyInfo> &pathPolicies);
 };
 } // namespace AppFileService
 } // namespace OHOS

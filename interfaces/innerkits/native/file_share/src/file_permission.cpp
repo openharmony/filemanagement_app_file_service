@@ -25,10 +25,15 @@ const std::string REMOTE_SHARE_PATH_DIR = "/.remote_share";
 const std::string PERSISTENCE_FORBIDDEN_MESSAGE = "URI forbid to be persisted!";
 const std::string INVALID_MODE_MESSAGE = "Invalid operation mode!";
 const std::string INVALID_PATH_MESSAGE = "Invalid path!";
+const std::string FILE_SCHEME_PREFIX = "file://";
 
 namespace {
 bool CheckValidUri(const string &uriStr)
 {
+    if(!uriStr.find(FILE_SCHEME_PREFIX)){
+        LOGE("Incorrect URI format!");
+        return false;
+    }
     Uri uri(uriStr);
     std::string bundleName = uri.GetAuthority();
     if (bundleName == MEDIA_AUTHORITY) {
@@ -44,22 +49,23 @@ bool CheckValidUri(const string &uriStr)
 } // namespace
 
 void FilePermission::GetErrorResults(const vector<uint32_t> &resultCodes,
-                                     const vector<string> &resultUris,
+                                     const vector<PathPolicyInfo> &pathPolicies,
                                      deque<struct PolicyErrorResult> &errorResults)
 {
     for (int i = 0; i < resultCodes.size(); i++) {
         PolicyErrorResult result;
+        Uri uri(pathPolicies[i].path);
         switch (resultCodes[i]) {
             case static_cast<PolicyErrorCode>(PolicyErrorCode::PERSISTENCE_FORBIDDEN):
-                result = {resultUris[i], PolicyErrorCode::PERSISTENCE_FORBIDDEN, PERSISTENCE_FORBIDDEN_MESSAGE};
+                result = {uri.ToString(), PolicyErrorCode::PERSISTENCE_FORBIDDEN, PERSISTENCE_FORBIDDEN_MESSAGE};
                 errorResults.emplace_back(result);
                 break;
             case static_cast<PolicyErrorCode>(PolicyErrorCode::INVALID_MODE):
-                result = {resultUris[i], PolicyErrorCode::INVALID_MODE, INVALID_MODE_MESSAGE};
+                result = {uri.ToString(), PolicyErrorCode::INVALID_MODE, INVALID_MODE_MESSAGE};
                 errorResults.emplace_back(result);
                 break;
             case static_cast<PolicyErrorCode>(PolicyErrorCode::INVALID_PATH):
-                result = {resultUris[i], PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
+                result = {uri.ToString(), PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
                 errorResults.emplace_back(result);
                 break;
             default:
@@ -68,34 +74,30 @@ void FilePermission::GetErrorResults(const vector<uint32_t> &resultCodes,
     }
 }
 
-void FilePermission::GetPolicyInformation(const vector<UriPolicyInfo> &uriPolicies,
-                                          vector<string> &resultUris,
-                                          deque<struct PolicyErrorResult> &errorResults,
-                                          vector<struct PolicyInfo> &policies)
+void FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
+                                                        deque<struct PolicyErrorResult> &errorResults,
+                                                        vector<struct PathPolicyInfo> &pathPolicies)
 {
     for (auto uriPolicy : uriPolicies) {
         Uri uri(uriPolicy.uri);
         string path = uri.GetPath();
         if (!CheckValidUri(uriPolicy.uri) || access(path.c_str(), F_OK) != 0) {
-            LOGE("Not the correct uri!");
+            LOGE("Not correct uri!");
             PolicyErrorResult result = {uriPolicy.uri, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
             errorResults.emplace_back(result);
         } else {
-            PolicyInfo policyInfo = {path, uriPolicy.mode};
-            policies.emplace_back(policyInfo);
-            resultUris.emplace_back(uriPolicy.uri);
+            PathPolicyInfo policyInfo = {path, uriPolicy.mode};
+            pathPolicies.emplace_back(policyInfo);
         }
     }
 }
 
-int32_t FilePermission::GrantPermission(uint32_t tokenId, vector<UriPolicyInfo> uriPolicies, uint32_t policyFlag)
+int32_t FilePermission::GrantPermission(uint32_t tokenId, const vector<UriPolicyInfo> &uriPolicies, uint32_t policyFlag)
 {
-    vector<PolicyInfo> policies;
-    vector<string> resultUris;
+    vector<PathPolicyInfo> pathPolicies;
     deque<struct PolicyErrorResult> errorResults;
-    GetPolicyInformation(uriPolicies, resultUris, errorResults, policies);
+    GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, pathPolicies);
     // SandboxManager interface call
-    // int32_t SandboxRet = SandboxManager::GrantPermission(tokenId, resultCodes);
     if (!errorResults.empty()) {
         LOGE("There are some URI operations that fail");
         return EPERM;
@@ -104,16 +106,14 @@ int32_t FilePermission::GrantPermission(uint32_t tokenId, vector<UriPolicyInfo> 
     return 0;
 }
 
-int32_t FilePermission::PersistPermission(vector<UriPolicyInfo> uriPolicies,
+int32_t FilePermission::PersistPermission(const vector<UriPolicyInfo> &uriPolicies,
                                           deque<struct PolicyErrorResult> &errorResults)
 {
-    vector<PolicyInfo> policies;
-    vector<string> resultUris;
+    vector<PathPolicyInfo> pathPolicies;
     vector<uint32_t> resultCodes;
-    GetPolicyInformation(uriPolicies, resultUris, errorResults, policies);
+    GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, pathPolicies);
     // SandboxManager interface call
-    // int32_t SandboxRet = SandboxManager::PersistPermission(policies, resultCodes);
-    GetErrorResults(resultCodes, resultUris, errorResults);
+    GetErrorResults(resultCodes, pathPolicies, errorResults);
     if (!errorResults.empty()) {
         LOGE("There are some URI operations that fail");
         return EPERM;
@@ -122,16 +122,14 @@ int32_t FilePermission::PersistPermission(vector<UriPolicyInfo> uriPolicies,
     return 0;
 }
 
-int32_t FilePermission::RevokePermission(vector<UriPolicyInfo> uriPolicies,
+int32_t FilePermission::RevokePermission(const vector<UriPolicyInfo> &uriPolicies,
                                          deque<struct PolicyErrorResult> &errorResults)
 {
-    vector<PolicyInfo> policies;
-    vector<string> resultUris;
+    vector<PathPolicyInfo> pathPolicies;
     vector<uint32_t> resultCodes;
-    GetPolicyInformation(uriPolicies, resultUris, errorResults, policies);
+    GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, pathPolicies);
     // SandboxManager interface call
-    // int32_t SandboxRet = SandboxManager::RevokePermission(policies, resultCodes);
-    GetErrorResults(resultCodes, resultUris, errorResults);
+    GetErrorResults(resultCodes, pathPolicies, errorResults);
     if (!errorResults.empty()) {
         LOGE("There are some URI operations that fail");
         return EPERM;
@@ -140,16 +138,14 @@ int32_t FilePermission::RevokePermission(vector<UriPolicyInfo> uriPolicies,
     return 0;
 }
 
-int32_t FilePermission::ActivatePermission(vector<UriPolicyInfo> uriPolicies,
+int32_t FilePermission::ActivatePermission(const vector<UriPolicyInfo> &uriPolicies,
                                            deque<struct PolicyErrorResult> &errorResults)
 {
-    vector<PolicyInfo> policies;
-    vector<string> resultUris;
+    vector<PathPolicyInfo> pathPolicies;
     vector<uint32_t> resultCodes;
-    GetPolicyInformation(uriPolicies, resultUris, errorResults, policies);
+    GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, pathPolicies);
     // SandboxManager interface call
-    // int32_t SandboxRet = SandboxManager::ActivatePermission(policies, resultCodes);
-    GetErrorResults(resultCodes, resultUris, errorResults);
+    GetErrorResults(resultCodes, pathPolicies, errorResults);
     if (!errorResults.empty()) {
         LOGE("There are some URI operations that fail");
         return EPERM;
@@ -158,16 +154,14 @@ int32_t FilePermission::ActivatePermission(vector<UriPolicyInfo> uriPolicies,
     return 0;
 }
 
-int32_t FilePermission::DeactivatePermission(vector<UriPolicyInfo> uriPolicies,
+int32_t FilePermission::DeactivatePermission(const vector<UriPolicyInfo> &uriPolicies,
                                              deque<struct PolicyErrorResult> &errorResults)
 {
-    vector<PolicyInfo> policies;
-    vector<string> resultUris;
+    vector<PathPolicyInfo> pathPolicies;
     vector<uint32_t> resultCodes;
-    GetPolicyInformation(uriPolicies, resultUris, errorResults, policies);
+    GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, pathPolicies);
     // SandboxManager interface call
-    // int32_t SandboxRet = SandboxManager::DeactivatePermission(policies, resultCodes);
-    GetErrorResults(resultCodes, resultUris, errorResults);
+    GetErrorResults(resultCodes, pathPolicies, errorResults);
     if (!errorResults.empty()) {
         LOGE("There are some URI operations that fail");
         return EPERM;

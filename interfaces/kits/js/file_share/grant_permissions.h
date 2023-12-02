@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef GRANT_MULTIPLE_PERMISSIONS_H
+#ifndef _GRANT_PERMISSIONS_H_
 
-#define GRANT_MULTIPLE_PERMISSIONS_H
+#define _GRANT_PERMISSIONS_H_
 
 #include <deque>
 
@@ -39,4 +39,4 @@ struct PolicyErrorArgs {
 } // namespace ModuleFileShare
 } // namespace AppFileService
 } // namespace OHOS
-#endif // GRANT_MULTIPLE_PERMISSIONS_H
+#endif // _GRANT_PERMISSIONS_H_
