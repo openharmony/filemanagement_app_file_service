@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace AppFileService {
 const std::string MEDIA_AUTHORITY = "media";
-const std::string REMOTE_SHARE_PATH_DIR = "/.remote_share";
+const std::string NETWORK_PARA = "?networkid=";
 const std::string PERSISTENCE_FORBIDDEN_MESSAGE = "URI forbid to be persisted!";
 const std::string INVALID_MODE_MESSAGE = "Invalid operation mode!";
 const std::string INVALID_PATH_MESSAGE = "Invalid path!";
@@ -40,8 +40,8 @@ bool CheckValidUri(const string &uriStr)
         LOGE("the URI is media URI");
         return false;
     }
-    if (uriStr.find(REMOTE_SHARE_PATH_DIR) != string::npos) {
-        LOGE("the URI is distributed URI");
+    if (uriStr.find(NETWORK_PARA) != string::npos) {
+        LOGE("the URI is not the current device URI");
         return false;
     }
     return true;
