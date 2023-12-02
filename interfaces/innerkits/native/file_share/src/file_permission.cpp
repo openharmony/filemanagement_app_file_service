@@ -30,7 +30,7 @@ const std::string FILE_SCHEME_PREFIX = "file://";
 namespace {
 bool CheckValidUri(const string &uriStr)
 {
-    if(!uriStr.find(FILE_SCHEME_PREFIX)){
+    if(uriStr.find(FILE_SCHEME_PREFIX) != 0){
         LOGE("Incorrect URI format!");
         return false;
     }
