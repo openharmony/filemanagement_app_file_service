@@ -129,6 +129,7 @@ static inline std::string_view DEFAULT_VERSION_NAME_CLONE_3 = "99.99.99.997";
 static inline std::string_view DEFAULT_VERSION_NAME_PC = "99.99.99.996";
 static inline std::string_view DEFAULT_VERSION_NAME_CLOUD = "99.99.99.995";
 static inline std::vector<std::string_view> DEFAULT_VERSION_NAMES_VEC = {
+    DEFAULT_VERSION_NAME,
     DEFAULT_VERSION_NAME_CLONE,
     DEFAULT_VERSION_NAME_CLONE_2,
     DEFAULT_VERSION_NAME_CLONE_3,
