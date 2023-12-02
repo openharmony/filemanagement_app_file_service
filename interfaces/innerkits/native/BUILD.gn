@@ -46,6 +46,7 @@ ohos_shared_library("fileshare_native") {
   sources = [
     "../../common/src/json_utils.cpp",
     "../../common/src/sandbox_helper.cpp",
+    "file_share/src/file_permission.cpp",
     "file_share/src/file_share.cpp",
   ]
 
