@@ -223,8 +223,7 @@ napi_value PersistPermission(napi_env env, napi_callback_info info)
         if (err) {
             if (arg->errNo == EPERM) {
                 napi_value data = err.GetNapiErr(env);
-                napi_status status =
-                    napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
+                napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
                 return {env, data};
             }
             return {env, err.GetNapiErr(env)};
@@ -272,8 +271,7 @@ napi_value RevokePermission(napi_env env, napi_callback_info info)
         if (err) {
             if (arg->errNo == EPERM) {
                 napi_value data = err.GetNapiErr(env);
-                napi_status status =
-                    napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
+                napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
                 return {env, data};
             }
             return {env, err.GetNapiErr(env)};
@@ -321,8 +319,7 @@ napi_value ActivatePermission(napi_env env, napi_callback_info info)
         if (err) {
             if (arg->errNo == EPERM) {
                 napi_value data = err.GetNapiErr(env);
-                napi_status status =
-                    napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
+                napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
                 return {env, data};
             }
             return {env, err.GetNapiErr(env)};
@@ -370,8 +367,7 @@ napi_value DeactivatePermission(napi_env env, napi_callback_info info)
         if (err) {
             if (arg->errNo == EPERM) {
                 napi_value data = err.GetNapiErr(env);
-                napi_status status =
-                    napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
+                napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
                 return {env, data};
             }
             return {env, err.GetNapiErr(env)};
