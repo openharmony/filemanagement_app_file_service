@@ -34,7 +34,7 @@ using namespace std;
 namespace {
 const std::string FILE_ACCESS_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
 const std::string SET_SANDBOX_POLICY_PERMISSION = "ohos.permission.SET_SANDBOX_POLICY";
-const char *g_FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mout.enable";
+const char *g_fullMountEnableParameter = "const.filemanager.full_mout.enable";
 
 static bool IsSystemApp()
 {
@@ -52,7 +52,7 @@ static bool CheckPermission(const string &permission)
 static bool CheckFileManagerFullMountEnable()
 {
     char value[] = "false";
-    int retSystem = GetParameter(g_FULL_MOUNT_ENABLE_PARAMETER, "false", value, sizeof(value));
+    int retSystem = GetParameter(g_fullMountEnableParameter, "false", value, sizeof(value));
     if (retSystem > 0 && !strcmp(value, "true")) {
         LOGE("The full mount enable parameter is true");
         return true;
