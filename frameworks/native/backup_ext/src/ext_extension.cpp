@@ -173,7 +173,7 @@ static ErrCode BigFileReady(sptr<IService> proxy)
 
         UniqueFd fd(open(item.fileName.data(), O_RDONLY));
         if (fd < 0) {
-            HILOGE("open file failed, file name is %{public}s", item.fileName.c_str());
+            HILOGE("open file failed, file name is %{public}s, err = %{public}d", item.fileName.c_str(), errno);
             continue;
         }
 

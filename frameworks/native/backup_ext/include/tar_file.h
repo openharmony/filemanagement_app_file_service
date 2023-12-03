@@ -55,10 +55,6 @@ const char REGTYPE = '0';   // regular file
 const char AREGTYPE = '\0'; // regular file
 const char SYMTYPE = '2';   // reserved
 const char DIRTYPE = '5';   // directory
-const char SPLIT_START_TYPE = '8';
-const char SPLIT_CONTINUE_TYPE = '9';
-const char SPLIT_END_TYPE = 'A';
-const char GNUTYPE_LONGLINK = 'K';
 const char GNUTYPE_LONGNAME = 'L';
 }
 
@@ -151,48 +147,6 @@ private:
     bool FillSplitTailBlocks();
 
     /**
-     * @brief fill split headerblocks
-     */
-    bool FillSplitHeaderBlocks();
-
-    /**
-     * @brief flush the file of tar is dir/files
-     *
-     * @param isSplit  是否分片
-     * @param fileSize  文件大小
-     * @param hdrSize 文件夹大小
-     * @param typeFlag 文件类型
-     */
-    void FlushTarSizeAndFlag(bool isSplit, const off_t fileSize, off_t &hdrSize, char &typeFlag);
-
-    /**
-     * @brief is first split
-     *
-     * @param filesize 文件大小
-     */
-    bool IsFirstSplitPKT(off_t fileSize);
-
-    /**
-     * @brief get size of file
-     *
-     * @param filesize 文件大小
-     */
-    off_t GetSizeOfFile(off_t fileSize);
-
-    /**
-     * @brief get split PKT rmainsize
-     *
-     */
-    off_t GetSplitPKTRemainSize();
-
-    /**
-     * @brief get firstsize of splitfile
-     *
-     * @param filesize 文件大小
-     */
-    off_t GetFirstSizeOfSplitFile(off_t fileSize);
-
-    /**
      * @brief set check sum
      *
      * @param hdr tar文件结构体
@@ -272,7 +226,6 @@ private:
     uint32_t tarFileCount_ {0};
 
     std::string currentFileName_ {};
-    off_t fileRemainSize_ {0};
 };
 } // namespace OHOS::FileManagement::Backup
 
