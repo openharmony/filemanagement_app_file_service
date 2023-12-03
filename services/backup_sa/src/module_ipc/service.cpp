@@ -120,12 +120,15 @@ UniqueFd Service::GetLocalCapabilities()
 
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
+        session_->SetIsBusy(false);
         HILOGE("GetLocalCapabilities failed, errCode = %{public}d", e.GetCode());
         return UniqueFd(-e.GetCode());
     } catch (const exception &e) {
+        session_->SetIsBusy(false);
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return UniqueFd(-EPERM);
     } catch (...) {
+        session_->SetIsBusy(false);
         HILOGI("Unexpected exception");
         return UniqueFd(-EPERM);
     }
@@ -333,22 +336,37 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 
 ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
-    HILOGI("Begin");
-    session_->SetIsBusy(true);  // BundleMgrAdapter::GetBundleInfos可能耗时
-    VerifyCaller(IServiceReverse::Scenario::BACKUP);
-    auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
-    session_->AppendBundles(bundleNames);
-    for (auto info : backupInfos) {
-        session_->SetBundleDataSize(info.name, info.spaceOccupied);
-        session_->SetBackupExtName(info.name, info.extensionName);
-        if (info.allToBackup == false) {
-            session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_REFUSED_ACT), info.name);
-            session_->RemoveExtInfo(info.name);
+    try {
+        HILOGI("Begin");
+        session_->SetIsBusy(true);  // BundleMgrAdapter::GetBundleInfos可能耗时
+        VerifyCaller(IServiceReverse::Scenario::BACKUP);
+        auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
+        session_->AppendBundles(bundleNames);
+        for (auto info : backupInfos) {
+            session_->SetBundleDataSize(info.name, info.spaceOccupied);
+            session_->SetBackupExtName(info.name, info.extensionName);
+            if (info.allToBackup == false) {
+                session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_REFUSED_ACT),
+                    info.name);
+                session_->RemoveExtInfo(info.name);
+            }
         }
+        OnStartSched();
+        session_->SetIsBusy(false);
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        session_->SetIsBusy(false);
+        HILOGE("Failed, errCode = %{public}d", e.GetCode());
+        return e.GetCode();
+    } catch (const exception &e) {
+        session_->SetIsBusy(false);
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
+        return EPERM;
+    } catch (...) {
+        session_->SetIsBusy(false);
+        HILOGI("Unexpected exception");
+        return EPERM;
     }
-    OnStartSched();
-    session_->SetIsBusy(false);
-    return BError(BError::Codes::OK);
 }
 
 ErrCode Service::Finish()
