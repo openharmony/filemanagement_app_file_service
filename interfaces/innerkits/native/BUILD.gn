@@ -121,9 +121,13 @@ ohos_shared_library("remote_file_share_native") {
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "hilog:libhilog",
   ]
+
+  if (defined(global_parts_info) && defined(global_parts_info.device_manager)) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines = [ "ENABLE_DEVICE_MANAGER" ]
+  }
 
   innerapi_tags = [ "platformsdk_indirect" ]
   part_name = "app_file_service"

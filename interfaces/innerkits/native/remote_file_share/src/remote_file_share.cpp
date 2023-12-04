@@ -24,8 +24,10 @@
 #include <pthread.h>
 
 #include "log.h"
+#ifdef ENABLE_DEVICE_MANAGER
 #include "device_manager.h"
 #include "device_manager_callback.h"
+#endif
 #include "sandbox_helper.h"
 #include "securec.h"
 #include "uri.h"
@@ -33,7 +35,9 @@
 namespace OHOS {
 namespace AppFileService {
 namespace ModuleRemoteFileShare {
+#ifdef ENABLE_DEVICE_MANAGER
 using namespace OHOS::DistributedHardware;
+#endif
 namespace {
     const int HMDFS_CID_SIZE = 64;
     const int USER_ID_INIT = 100;
@@ -72,12 +76,14 @@ struct HmdfsDstInfo {
     uint64_t size;
 };
 
+#ifdef ENABLE_DEVICE_MANAGER
 class InitDMCallback : public DmInitCallback {
 public:
     InitDMCallback() = default;
     ~InitDMCallback() override = default;
     void OnRemoteDied() override {};
 };
+#endif
 
 static std::string GetProcessName()
 {
@@ -302,6 +308,9 @@ static void InitHmdfsInfo(struct HmdfsDstInfo &hdi, const std::string &physicalP
 
 static std::string GetLocalNetworkId()
 {
+    const std::string LOCAL = "local";
+    std::string networkId = LOCAL;
+    #ifdef ENABLE_DEVICE_MANAGER
     auto callback = std::make_shared<InitDMCallback>();
     int32_t ret = DeviceManager::GetInstance().InitDeviceManager(PACKAGE_NAME, callback);
     if (ret != 0) {
@@ -310,11 +319,12 @@ static std::string GetLocalNetworkId()
 
     DmDeviceInfo info;
     ret = DeviceManager::GetInstance().GetLocalDeviceInfo(PACKAGE_NAME, info);
-    auto networkId = std::string(info.networkId);
+    networkId = std::string(info.networkId);
     LOGD("GetLocalNetworkId :%{private}s", networkId.c_str());
     if (ret != 0 || networkId.empty()) {
         return "";
     }
+    #endif
     return networkId;
 }
 
