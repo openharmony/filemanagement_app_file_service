@@ -189,9 +189,56 @@ ohos_unittest("backup_service_scheduler_test") {
   use_exceptions = true
 }
 
+ohos_unittest("backup_restore_deps_manager_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup_mock}/accesstoken/accesstoken_kit_mock.cpp",
+    "${path_backup}/services/backup_sa/src/module_app_gallery/app_gallery_dispose_proxy.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
+    "svc_restore_deps_manager_test.cpp",
+  ]
+  sources += backup_mock_src
+  sources += backup_mock_session_manager_src
+  sources += backup_mock_scheduler_src
+  sources += backup_mock_module_external_src
+
+  include_dirs = [
+    "${path_backup}/services/backup_sa/include",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/tests/unittests/backup_api/backup_impl/include",
+    "${path_access_token}/interfaces/innerkits/accesstoken/include",
+    "${path_backup_mock}/b_process/",
+  ]
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+    "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_manager",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
+  ]
+
+  use_exceptions = true
+}
+
 group("backup_sa_ipc_test") {
   testonly = true
   deps = [
+    ":backup_restore_deps_manager_test",
     ":backup_service_scheduler_test",
     ":backup_service_session_test",
     ":backup_service_test",
