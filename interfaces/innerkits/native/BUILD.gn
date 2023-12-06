@@ -124,7 +124,8 @@ ohos_shared_library("remote_file_share_native") {
     "hilog:libhilog",
   ]
 
-  if (defined(global_parts_info) && defined(global_parts_info.device_manager)) {
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.distributedhardware_device_manager)) {
     external_deps += [ "device_manager:devicemanagersdk" ]
     defines = [ "ENABLE_DEVICE_MANAGER" ]
   }
