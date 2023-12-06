@@ -38,7 +38,7 @@ const char *g_fullMountEnableParameter = "const.filemanager.full_mout.enable";
 
 static bool IsSystemApp()
 {
-    uint32_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
+    uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
     return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
 }
 
