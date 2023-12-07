@@ -473,6 +473,53 @@ static bool RestoreBigFilesWithPath(string& fileName, const string& path,
     return true;
 }
 
+static bool CheckAndCreateDirectory(const string& filePath)
+{
+    size_t pos = filePath.rfind('/');
+    if (pos == string::npos) {
+        return true;
+    }
+
+    string folderPath = "/" + filePath.substr(0, pos);
+    if (access(folderPath.c_str(), F_OK) != 0) {
+        if (!ForceCreateDirectory(folderPath.data())) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+static bool RestoreBigFilePrecheck(string& fileName, const string& path,
+                                   const string& hashName, const string& filePath)
+{
+    if (filePath.empty()) {
+        HILOGE("file path is empty. %{public}s", filePath.c_str());
+        return false;
+    }
+
+    // 带路径的文件名特殊处理
+    if (hashName.find('/') != string::npos) {
+        if (!RestoreBigFilesWithPath(fileName, path, hashName, filePath)) {
+            HILOGE("failed to restore big files with path %{public}s", filePath.c_str());
+            return false;
+        }
+    } else { // 不带路径的文件名
+        if (access(fileName.data(), F_OK) != 0) {
+            HILOGI("file does not exist");
+            return false;
+        }
+        
+        // 目录不存在且只有大文件时，不能通过untar创建，需要检查并创建
+        if (!CheckAndCreateDirectory(filePath)) {
+            HILOGE("failed to create directory %{public}s", filePath.c_str());
+            return false;
+        }
+    }
+
+    return true;
+}
+
 static void RestoreBigFiles()
 {
     // 获取索引文件内容
@@ -490,17 +537,7 @@ static void RestoreBigFiles()
         string filePath = item.fileName;
         struct stat sta = item.sta;
 
-        if (filePath.empty()) {
-            HILOGE("file path is empty. %{public}s", filePath.c_str());
-            continue;
-        }
-
-        // 带路径的文件名特殊处理
-        if (item.hashName.find('/') != string::npos &&
-            !RestoreBigFilesWithPath(fileName, path, item.hashName, filePath)) {
-            continue;
-        } else if (access(fileName.data(), F_OK) != 0) {
-            HILOGI("file does not exist");
+        if (!RestoreBigFilePrecheck(fileName, path, item.hashName, filePath)) {
             continue;
         }
 
