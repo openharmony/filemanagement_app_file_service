@@ -186,6 +186,12 @@ ohos_unittest("backup_service_scheduler_test") {
     "storage_service:storage_manager_sa_proxy",
   ]
 
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   use_exceptions = true
 }
 

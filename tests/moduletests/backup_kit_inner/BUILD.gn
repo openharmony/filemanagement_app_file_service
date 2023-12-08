@@ -48,6 +48,12 @@ ohos_unittest("b_session_test") {
     "samgr:samgr_proxy",
   ]
 
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   use_exceptions = true
 }
 

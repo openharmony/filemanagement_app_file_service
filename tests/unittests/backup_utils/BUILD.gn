@@ -77,6 +77,12 @@ ohos_unittest("b_json_test") {
     "hilog:libhilog",
   ]
 
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   use_exceptions = true
 }
 
