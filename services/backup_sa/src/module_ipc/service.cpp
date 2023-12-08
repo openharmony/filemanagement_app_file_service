@@ -262,7 +262,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {};
     for (auto &restoreInfo : restoreInfos) {
         auto it = find_if(bundleInfos.begin(), bundleInfos.end(),
-                          [&restoreInfo](auto &obj) { return obj.name == restoreInfo.name; });
+                          [&restoreInfo](const auto &obj) { return obj.name == restoreInfo.name; });
         if (it == bundleInfos.end()) {
             session->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
                                                                       restoreInfo.name);
@@ -770,7 +770,7 @@ void Service::HandleRestoreDepsBundle(const string &bundleName)
     }
     // 启动恢复会话
     vector<string> restoreBundleNames {};
-    for (auto &bundle : restoreBundleMap) {
+    for (const auto &bundle : restoreBundleMap) {
         HILOGI("Start restore session, bundle: %{public}s", bundle.first.c_str());
         restoreBundleNames.emplace_back(bundle.first);
     }

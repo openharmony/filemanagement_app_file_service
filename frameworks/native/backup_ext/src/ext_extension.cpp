@@ -281,14 +281,15 @@ static bool IsUserTar(const string &tarFile, const string &indexFile)
     if (tarFile.empty()) {
         return false;
     }
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(indexFile.data(), O_RDONLY)));
+    string filePath = BExcepUltils::Canonicalize(indexFile);
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(filePath.data(), O_RDONLY)));
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManageInfo();
-    for (auto &item : info) {
-        if (item.hashName == tarFile) {
-            HILOGI("tarFile:%{public}s isUserTar:%{public}d", tarFile.data(), item.isUserTar);
-            return item.isUserTar;
-        }
+    auto iter = find_if(info.begin(), info.end(),
+    [&tarFile](const auto& item) { return item.hashName == tarFile; });
+    if (iter != info.end()) {
+        HILOGI("tarFile:%{public}s isUserTar:%{public}d", tarFile.data(), iter->isUserTar);
+        return iter->isUserTar;
     }
     HILOGE("Can not find tarFile %{public}s", tarFile.data());
     return false;
@@ -301,7 +302,7 @@ static pair<TarMap, vector<string>> GetFileInfos(const vector<string> &includes,
         return {};
     }
 
-    auto GetStringHash = [](const TarMap &m, const string &str) -> string {
+    auto getStringHash = [](const TarMap &m, const string &str) -> string {
         ostringstream strHex;
         strHex << hex;
 
@@ -320,7 +321,7 @@ static pair<TarMap, vector<string>> GetFileInfos(const vector<string> &includes,
 
     TarMap bigFiles;
     for (const auto &item : files) {
-        string md5Name = GetStringHash(bigFiles, item.first);
+        string md5Name = getStringHash(bigFiles, item.first);
         if (!md5Name.empty()) {
             bigFiles.emplace(md5Name, make_tuple(item.first, item.second, true));
         }
