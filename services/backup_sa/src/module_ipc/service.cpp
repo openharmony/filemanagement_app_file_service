@@ -309,7 +309,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             HILOGD("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
                    restoreInfo.extensionName.c_str());
             if ((restoreInfo.allToBackup == false && !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode))
-                || !restoreInfo.extensionName.empty()) {
+                || restoreInfo.extensionName.empty()) {
                 session_->GetServiceReverseProxy()->RestoreOnBundleStarted(
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), restoreInfo.name);
                 session_->RemoveExtInfo(restoreInfo.name);
