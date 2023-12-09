@@ -199,7 +199,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0200, testing::ext::
         auto fileNames = cache.GetExtManage();
         ASSERT_EQ(fileNames.size(), 1ul);
         EXPECT_EQ(*fileNames.begin(), testFileHexName);
-        auto fileInfo = cache.GetExtManageInfo(); // std::vector<ExtManageInfo>
+        auto fileInfo = cache.GetExtManageInfo(); 
         ASSERT_EQ(fileInfo.size(), 1ul);
         EXPECT_EQ(fileInfo[0].hashName, testFileHexName);
         EXPECT_EQ(fileInfo[0].fileName, pathTestFile);
