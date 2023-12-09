@@ -101,7 +101,7 @@ UniqueFd Service::GetLocalCapabilities()
          Only called by restore app before InitBackupSession,
            so there must be set init userId.
         */
-        session_->SetIsBusy(true);
+        session_->IncreaseSessionCnt();
         session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
         string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
@@ -116,19 +116,18 @@ UniqueFd Service::GetLocalCapabilities()
         auto bundleInfos = BundleMgrAdapter::GetBundleInfos(session_->GetSessionUserId());
         cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
-        session_->SetIsBusy(false);
-
+        session_->DecreaseSessionCnt();
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGE("GetLocalCapabilities failed, errCode = %{public}d", e.GetCode());
         return UniqueFd(-e.GetCode());
     } catch (const exception &e) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return UniqueFd(-EPERM);
     } catch (...) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGI("Unexpected exception");
         return UniqueFd(-EPERM);
     }
@@ -288,7 +287,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 {
     try {
         HILOGI("Begin");
-        session_->SetIsBusy(true);
+        session_->IncreaseSessionCnt();
         if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
             session_->SetSessionUserId(userId);
         }
@@ -296,7 +295,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         if (restoreBundleNames.empty()) {
-            session_->SetIsBusy(false);
+            session_->DecreaseSessionCnt();
             return BError(BError::Codes::OK);
         }
         session_->AppendBundles(restoreBundleNames);
@@ -322,13 +321,13 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
         }
         OnStartSched();
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         return e.GetCode();
     } catch (...) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGI("Unexpected exception");
         return EPERM;
     }
@@ -338,7 +337,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
 {
     try {
         HILOGI("Begin");
-        session_->SetIsBusy(true);  // BundleMgrAdapter::GetBundleInfos可能耗时
+        session_->IncreaseSessionCnt();  // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
@@ -352,18 +351,18 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
             }
         }
         OnStartSched();
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGE("Failed, errCode = %{public}d", e.GetCode());
         return e.GetCode();
     } catch (const exception &e) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGI("Unexpected exception");
         return EPERM;
     }

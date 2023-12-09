@@ -71,7 +71,6 @@ public:
         sptr<IServiceReverse> clientProxy;
         bool isBackupStart {false};
         bool isAppendFinish {false};
-        bool isBusy {false};
         /* Note: Multi user scenario: <System Update Upgrade>
             Caller must complete all processes before next user tigger.<Session>
             [RESTORE] Support for multiple users, incoming during restore process.
@@ -393,19 +392,18 @@ public:
     void BundleExtTimerStop(const std::string &bundleName);
 
     /**
-     * @brief 设置Busy状态
+     * @brief sessionCnt加计数
      *
-     * @param isBusy
+     * @param sessionCnt
      */
-    void SetIsBusy(bool isBusy);
+    void IncreaseSessionCnt();
 
     /**
-     * @brief 获取Busy状态
+     * @brief sessionCnt加计数
      *
-     * @return true
-     * @return false
+     * @param sessionCnt
      */
-    bool GetIsBusy();
+    void DecreaseSessionCnt();
 
 private:
     /**
@@ -460,6 +458,7 @@ private:
     Impl impl_;
     uint32_t extConnectNum_ {0};
     Utils::Timer extBundleTimer {"backupBundleExtTimer"};
+    std::atomic<int> sessionCnt_ {0};
 };
 } // namespace OHOS::FileManagement::Backup
 
