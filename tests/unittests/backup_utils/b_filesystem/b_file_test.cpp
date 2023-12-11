@@ -133,4 +133,31 @@ HWTEST_F(BFileTest, b_file_CopyFile_0100, testing::ext::TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "BFileTest-end b_file_CopyFile_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_b_file_Write_0100
+ * @tc.name: b_file_Write_0100
+ * @tc.desc: 测试Write接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BFileTest, b_file_Write_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BFileTest-begin b_file_Write_0100";
+    try {
+        TestManager tm(__func__);
+        const auto [filePath, content] = GetTestFile(tm);
+        TestManager tmInFile("b_file_GetFd_0200");
+        string fileInPath = tmInFile.GetRootDirCurTest().append("1.txt");
+        BFile::Write(UniqueFd(open(filePath.data(), O_RDWR)), fileInPath);
+        string contentTmp = BFile::ReadFile(UniqueFd(open(fileInPath.c_str(), O_RDONLY))).get();
+        EXPECT_EQ(contentTmp, fileInPath);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BFileTest-an exception occurred by Write.";
+        e.what();
+    }
+    GTEST_LOG_(INFO) << "BFileTest-end b_file_Write_0100";
+}
 } // namespace OHOS::FileManagement::Backup
