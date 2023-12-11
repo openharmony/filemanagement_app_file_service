@@ -67,7 +67,7 @@ public:
      *
      * @param bundleName 应用名称
      */
-    void OnBackupExtensionDied(const std::string &&bundleName, ErrCode ret);
+    void OnBackupExtensionDied(const std::string &&bundleName);
 
     /**
      * @brief extension启动连接成功

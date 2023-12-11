@@ -228,7 +228,7 @@ sptr<SvcBackupConnection> SvcSessionManager::GetBackupExtAbility(const string &b
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        revPtrStrong->OnBackupExtensionDied(move(bundleName), ESRCH);
+        revPtrStrong->OnBackupExtensionDied(move(bundleName));
     };
 
     auto callConnDone = [revPtr {reversePtr_}](const string &&bundleName) {
@@ -608,7 +608,7 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
         timeout = defaultTimeout;
     }
     resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX); /* conver second to millisecond */
-    HILOGI("Calculate App extension process run timeout=%{public}u(s), bundleName=%{public}s ",
+    HILOGI("Calculate App extension process run timeout=%{public}u(us), bundleName=%{public}s ",
         resTimeoutMs, bundleName.c_str());
     return resTimeoutMs;
 }

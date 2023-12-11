@@ -270,7 +270,8 @@ ErrCode BackupExtExtension::HandleBackup()
     auto cache = cachedEntity.Structuralize();
     if (!cache.GetAllowToBackupRestore()) {
         HILOGI("Application does not allow backup or restore");
-        return BError(BError::Codes::EXT_INVAL_ARG, "Application does not allow backup or restore").GetCode();
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+            .GetCode();
     }
     AsyncTaskOnBackup();
     return 0;
@@ -764,7 +765,8 @@ ErrCode BackupExtExtension::HandleRestore()
     // read backup_config is allow to backup or restore
     if (!extension_->AllowToBackupRestore()) {
         HILOGI("Application does not allow backup or restore");
-        return BError(BError::Codes::EXT_INVAL_ARG, "Application does not allow backup or restore").GetCode();
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+            .GetCode();
     }
 
     // async do restore.

@@ -68,6 +68,9 @@ public:
         SA_BROKEN_IPC = 0x3001,
         SA_REFUSED_ACT = 0x3002,
         SA_BROKEN_ROOT_DIR = 0x3003,
+        SA_FORBID_BACKUP_RESTORE = 0x3004,
+        SA_BOOT_TIMEOUT = 0x3005,
+        SA_BUNDLE_INFO_EMPTY = 0x3006,
 
         // 0x4000~0x4999 backup_SDK错误
         SDK_INVAL_ARG = 0x4000,
@@ -81,6 +84,7 @@ public:
         EXT_BROKEN_IPC = 0x5003,
         EXT_ABILITY_DIED = 0x5004,
         EXT_ABILITY_TIMEOUT = 0x5005,
+        EXT_FORBID_BACKUP_RESTORE = 0x5006,
     };
 
     enum BackupErrorCode {
@@ -91,6 +95,11 @@ public:
         E_INVAL = 13900020,
         E_NOSPC = 13900025,
         E_UKERR = 13900042,
+        E_FORBID = 13500001,
+        E_BTO = 13500002,
+        E_ETO = 13500003,
+        E_DIED = 13500004,
+        E_EMPTY = 13500005,
     };
 
 public:
@@ -198,6 +207,9 @@ private:
         {Codes::SA_BROKEN_IPC, "SA failed to issue a IPC"},
         {Codes::SA_REFUSED_ACT, "SA refuse to act"},
         {Codes::SA_BROKEN_ROOT_DIR, "SA failed to operate on the given root dir"},
+        {Codes::SA_FORBID_BACKUP_RESTORE, "SA forbid backup or restore"},
+        {Codes::SA_BOOT_TIMEOUT, "SA boot application extension time out"},
+        {Codes::SA_BUNDLE_INFO_EMPTY, "SA the bundle info for backup/restore is empty"},
         {Codes::SDK_INVAL_ARG, "SDK received invalid arguments"},
         {Codes::SDK_BROKEN_IPC, "SDK failed to do IPC"},
         {Codes::SDK_MIXED_SCENARIO, "SDK involed backup/restore when doing the contrary"},
@@ -207,6 +219,7 @@ private:
         {Codes::EXT_BROKEN_IPC, "Extension failed to do IPC"},
         {Codes::EXT_ABILITY_TIMEOUT, "Extension process timeout"},
         {Codes::EXT_ABILITY_DIED, "Extension process died"},
+        {Codes::EXT_FORBID_BACKUP_RESTORE, "forbid backup or restore"},
     };
 
     static inline const std::map<int, int> errCodeTable_ {
@@ -221,6 +234,9 @@ private:
         {static_cast<int>(Codes::SA_BROKEN_IPC), BackupErrorCode::E_IPCSS},
         {static_cast<int>(Codes::SA_REFUSED_ACT), BackupErrorCode::E_PERM},
         {static_cast<int>(Codes::SA_BROKEN_ROOT_DIR), BackupErrorCode::E_UKERR},
+        {static_cast<int>(Codes::SA_FORBID_BACKUP_RESTORE), BackupErrorCode::E_FORBID},
+        {static_cast<int>(Codes::SA_BOOT_TIMEOUT), BackupErrorCode::E_BTO},
+        {static_cast<int>(Codes::SA_BUNDLE_INFO_EMPTY), BackupErrorCode::E_EMPTY},
         {static_cast<int>(Codes::SDK_INVAL_ARG), BackupErrorCode::E_INVAL},
         {static_cast<int>(Codes::SDK_BROKEN_IPC), BackupErrorCode::E_IPCSS},
         {static_cast<int>(Codes::SDK_MIXED_SCENARIO), BackupErrorCode::E_INVAL},
@@ -228,8 +244,9 @@ private:
         {static_cast<int>(Codes::EXT_BROKEN_FRAMEWORK), BackupErrorCode::E_UKERR},
         {static_cast<int>(Codes::EXT_BROKEN_BACKUP_SA), BackupErrorCode::E_IPCSS},
         {static_cast<int>(Codes::EXT_BROKEN_IPC), BackupErrorCode::E_IPCSS},
-        {static_cast<int>(Codes::EXT_ABILITY_DIED), BackupErrorCode::E_INVAL},
-        {static_cast<int>(Codes::EXT_ABILITY_TIMEOUT), BackupErrorCode::E_INVAL},
+        {static_cast<int>(Codes::EXT_ABILITY_DIED), BackupErrorCode::E_DIED},
+        {static_cast<int>(Codes::EXT_ABILITY_TIMEOUT), BackupErrorCode::E_ETO},
+        {static_cast<int>(Codes::EXT_FORBID_BACKUP_RESTORE), BackupErrorCode::E_FORBID},
         {BackupErrorCode::E_IPCSS, BackupErrorCode::E_IPCSS},
         {BackupErrorCode::E_INVAL, BackupErrorCode::E_INVAL},
         {BackupErrorCode::E_UKERR, BackupErrorCode::E_UKERR},
@@ -237,6 +254,11 @@ private:
         {BackupErrorCode::E_NOMEM, BackupErrorCode::E_NOMEM},
         {BackupErrorCode::E_NOSPC, BackupErrorCode::E_NOSPC},
         {BackupErrorCode::E_IO, BackupErrorCode::E_IO},
+        {BackupErrorCode::E_FORBID, BackupErrorCode::E_FORBID},
+        {BackupErrorCode::E_BTO, BackupErrorCode::E_BTO},
+        {BackupErrorCode::E_ETO, BackupErrorCode::E_ETO},
+        {BackupErrorCode::E_DIED, BackupErrorCode::E_DIED},
+        {BackupErrorCode::E_EMPTY, BackupErrorCode::E_EMPTY},
     };
 
 private:
