@@ -56,7 +56,7 @@ const char AREGTYPE = '\0'; // regular file
 const char SYMTYPE = '2';   // reserved
 const char DIRTYPE = '5';   // directory
 const char GNUTYPE_LONGNAME = 'L';
-}
+} // namespace
 
 // 512 bytes
 using TarHeader = struct {
