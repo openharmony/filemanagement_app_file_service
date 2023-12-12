@@ -251,32 +251,6 @@ HWTEST_F(BDirTest, b_dir_GetBigFiles_0203, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetBigFiles_0203";
 }
 
-// /**
-//  * @tc.number: SUB_backup_b_dir_GetBigFiles_0204
-//  * @tc.name: b_dir_GetBigFiles_0204
-//  * @tc.desc: 测试GetBigFiles接口 分支逻辑
-//  * @tc.size: MEDIUM
-//  * @tc.type: FUNC
-//  * @tc.level Level 1
-//  * @tc.require: I6F3GV
-//  */
-// HWTEST_F(BDirTest, b_dir_GetBigFiles_0204, testing::ext::TestSize.Level1)
-// {
-//     GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetBigFiles_0204";
-//     try {
-//         vector<string> includes;
-//         vector<string> excludes;
-//         const string item = "app";
-//         const string str = "app";
-//         auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
-//         EXPECT_EQ(errCode, ERR_OK);
-//     } catch (...) {
-//         EXPECT_TRUE(false);
-//         GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
-//     }
-//     GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetBigFiles_0204";
-// }
-
 /**
  * @tc.number: SUB_backup_b_dir_GetBigFiles_0300
  * @tc.name: b_dir_GetBigFiles_0300
@@ -343,8 +317,5 @@ HWTEST_F(BDirTest, b_dir_GetDirs_0100, testing::ext::TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetDirs_0100";
 }
-
-
-
 
 } // namespace OHOS::FileManagement::Backup
