@@ -164,7 +164,7 @@ napi_value GrantPermission(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-    int32_t tokenId = id;
+    uint32_t tokenId = id;
     uint32_t policyFlag = flag;
     std::vector<UriPolicyInfo> uriPolicies;
     napi_status status = GetUriPoliciesArg(env, funcArg[NARG_POS::SECOND], uriPolicies);
