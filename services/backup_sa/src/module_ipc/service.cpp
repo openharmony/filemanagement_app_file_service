@@ -101,7 +101,7 @@ UniqueFd Service::GetLocalCapabilities()
          Only called by restore app before InitBackupSession,
            so there must be set init userId.
         */
-        session_->SetIsBusy(true);
+        session_->IncreaseSessionCnt();
         session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
         string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
@@ -116,19 +116,18 @@ UniqueFd Service::GetLocalCapabilities()
         auto bundleInfos = BundleMgrAdapter::GetBundleInfos(session_->GetSessionUserId());
         cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
-        session_->SetIsBusy(false);
-
+        session_->DecreaseSessionCnt();
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGE("GetLocalCapabilities failed, errCode = %{public}d", e.GetCode());
         return UniqueFd(-e.GetCode());
     } catch (const exception &e) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return UniqueFd(-EPERM);
     } catch (...) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGI("Unexpected exception");
         return UniqueFd(-EPERM);
     }
@@ -264,7 +263,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
         auto it = find_if(bundleInfos.begin(), bundleInfos.end(),
                           [&restoreInfo](const auto &obj) { return obj.name == restoreInfo.name; });
         if (it == bundleInfos.end()) {
-            session->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
+            session->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_BUNDLE_INFO_EMPTY),
                                                                       restoreInfo.name);
             continue;
         }
@@ -288,7 +287,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 {
     try {
         HILOGI("Begin");
-        session_->SetIsBusy(true);
+        session_->IncreaseSessionCnt();
         if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
             session_->SetSessionUserId(userId);
         }
@@ -296,7 +295,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         if (restoreBundleNames.empty()) {
-            session_->SetIsBusy(false);
+            session_->DecreaseSessionCnt();
             return BError(BError::Codes::OK);
         }
         session_->AppendBundles(restoreBundleNames);
@@ -304,13 +303,14 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
                               [&restoreInfo](auto &bundleName) { return bundleName == restoreInfo.name; });
             if (it == restoreBundleNames.end()) {
-                throw BError(BError::Codes::SA_INVAL_ARG, "Can't find bundle name");
+                throw BError(BError::Codes::SA_BUNDLE_INFO_EMPTY, "Can't find bundle name");
             }
             HILOGD("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
                    restoreInfo.extensionName.c_str());
-            if (restoreInfo.allToBackup == false && !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) {
-                session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_REFUSED_ACT),
-                                                                           restoreInfo.name);
+            if ((restoreInfo.allToBackup == false && !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode))
+                || restoreInfo.extensionName.empty()) {
+                session_->GetServiceReverseProxy()->RestoreOnBundleStarted(
+                    BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), restoreInfo.name);
                 session_->RemoveExtInfo(restoreInfo.name);
                 continue;
             }
@@ -322,13 +322,13 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
         }
         OnStartSched();
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         return e.GetCode();
     } catch (...) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGI("Unexpected exception");
         return EPERM;
     }
@@ -338,7 +338,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
 {
     try {
         HILOGI("Begin");
-        session_->SetIsBusy(true);  // BundleMgrAdapter::GetBundleInfos可能耗时
+        session_->IncreaseSessionCnt();  // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
@@ -346,24 +346,24 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
             session_->SetBundleDataSize(info.name, info.spaceOccupied);
             session_->SetBackupExtName(info.name, info.extensionName);
             if (info.allToBackup == false) {
-                session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_REFUSED_ACT),
-                    info.name);
+                session_->GetServiceReverseProxy()->BackupOnBundleStarted(
+                    BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
                 session_->RemoveExtInfo(info.name);
             }
         }
         OnStartSched();
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGE("Failed, errCode = %{public}d", e.GetCode());
         return e.GetCode();
     } catch (const exception &e) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
-        session_->SetIsBusy(false);
+        session_->DecreaseSessionCnt();
         HILOGI("Unexpected exception");
         return EPERM;
     }
@@ -574,7 +574,7 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
     }
 }
 
-void Service::OnBackupExtensionDied(const string &&bundleName, ErrCode ret)
+void Service::OnBackupExtensionDied(const string &&bundleName)
 {
     try {
         string callName = move(bundleName);
@@ -673,7 +673,7 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
             session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
 
             DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
-            HILOGI("AppGalleryDisposeProxy EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+            HILOGI("ExtConnectFailed EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
                 bundleName.c_str());
         }
         ClearSessionAndSchedInfo(bundleName);
@@ -822,7 +822,7 @@ void Service::SendAppGalleryNotify(const BundleName &bundleName)
     IServiceReverse::Scenario scenario = session_->GetScenario();
     if (scenario == IServiceReverse::Scenario::RESTORE) {
         DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
-        HILOGI("AppGalleryDisposeProxy StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+        HILOGI("SendAppGalleryNotify StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
             bundleName.c_str());
     }
 }

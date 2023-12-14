@@ -228,7 +228,7 @@ sptr<SvcBackupConnection> SvcSessionManager::GetBackupExtAbility(const string &b
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        revPtrStrong->OnBackupExtensionDied(move(bundleName), ESRCH);
+        revPtrStrong->OnBackupExtensionDied(move(bundleName));
     };
 
     auto callConnDone = [revPtr {reversePtr_}](const string &&bundleName) {
@@ -502,7 +502,7 @@ bool SvcSessionManager::GetNeedToInstall(const std::string &bundleName)
 bool SvcSessionManager::NeedToUnloadService()
 {
     unique_lock<shared_mutex> lock(lock_);
-    bool isNeedToUnloadService = (!impl_.backupExtNameMap.size() && !impl_.isBusy);
+    bool isNeedToUnloadService = (!impl_.backupExtNameMap.size() && (sessionCnt_.load() <= 0));
     if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
         bool isAllBundlesRestored = SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
         isNeedToUnloadService = (isNeedToUnloadService && isAllBundlesRestored);
@@ -608,7 +608,7 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
         timeout = defaultTimeout;
     }
     resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX); /* conver second to millisecond */
-    HILOGI("Calculate App extension process run timeout=%{public}u(s), bundleName=%{public}s ",
+    HILOGI("Calculate App extension process run timeout=%{public}u(us), bundleName=%{public}s ",
         resTimeoutMs, bundleName.c_str());
     return resTimeoutMs;
 }
@@ -644,15 +644,18 @@ void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName)
     }
 }
 
-void SvcSessionManager::SetIsBusy(bool isBusy)
+void SvcSessionManager::IncreaseSessionCnt()
 {
-    unique_lock<shared_mutex> lock(lock_);
-    impl_.isBusy = isBusy;
+    sessionCnt_++;
 }
 
-bool SvcSessionManager::GetIsBusy()
+void SvcSessionManager::DecreaseSessionCnt()
 {
-    shared_lock<shared_mutex> lock(lock_);
-    return impl_.isBusy;
+    unique_lock<shared_mutex> lock(lock_);
+    if (sessionCnt_.load() > 0) {
+        sessionCnt_--;
+    } else {
+        HILOGE("Invalid sessionCount.");
+    }
 }
 } // namespace OHOS::FileManagement::Backup
