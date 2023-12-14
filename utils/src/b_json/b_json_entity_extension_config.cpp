@@ -106,6 +106,16 @@ bool BJsonEntityExtensionConfig::GetFullBackupOnly() const
     return obj_["fullBackupOnly"].asBool();
 }
 
+string BJsonEntityExtensionConfig::GetSupportScene() const
+{
+    if (!obj_ || !obj_.isMember("supportScene") || !obj_["supportScene"].isString()) {
+        HILOGE("Failed to init field supportScene");
+        return "";
+    }
+
+    return obj_["supportScene"].asString();
+}
+
 string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, any option)
 {
     if (!BackupPara().GetBackupDebugOverrideExtensionConfig()) {
