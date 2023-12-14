@@ -114,7 +114,7 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0100, testing::ext::Tes
 /**
  * @tc.number: SUB_backup_b_session_backup_0200
  * @tc.name: SUB_backup_b_session_backup_0200
- * @tc.desc: 测试Callbacks接口
+ * @tc.desc: 测试Finish接口
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -122,7 +122,64 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0100, testing::ext::Tes
  */
 HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0200, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_0200";
+    GTEST_LOG_(INFO) << "BSessionBackupTest-Finish SUB_backup_b_session_backup_0200";
+    try {
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        SetMockGetInstance(true);
+        auto ret = backupPtr_->Finish();
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        SetMockGetInstance(false);
+        ret = backupPtr_->Finish();
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionBackupTest-an exception occurred by Finish.";
+    }
+    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0200";
+}
+
+/**
+ * @tc.number: SUB_backup_b_session_backup_0300
+ * @tc.name: SUB_backup_b_session_backup_0300
+ * @tc.desc: 测试AppendBundles接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionBackupTest-AppendBundles SUB_backup_b_session_backup_0300";
+    try {
+        vector<BundleName> bundleNames;
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        SetMockGetInstance(true);
+        auto ret = backupPtr_->AppendBundles(bundleNames);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        SetMockGetInstance(false);
+        ret = backupPtr_->AppendBundles(bundleNames);
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionBackupTest-an exception occurred by AppendBundles.";
+    }
+    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0300";
+}
+
+/**
+ * @tc.number: SUB_backup_b_session_backup_0400
+ * @tc.name: SUB_backup_b_session_backup_0400
+ * @tc.desc: 测试Callbacks接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_0400";
     try {
         Init();
         BFileInfo bFileInfo("", "", 0);
@@ -135,21 +192,21 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0200, testing::ext::Tes
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BSessionBackupTest-an exception occurred by Callbacks.";
     }
-    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0200";
+    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0400";
 }
 
 /**
- * @tc.number: SUB_backup_b_session_backup_0300
- * @tc.name: SUB_backup_b_session_backup_0300
+ * @tc.number: SUB_backup_b_session_backup_0500
+ * @tc.name: SUB_backup_b_session_backup_0500
  * @tc.desc: 测试Init接口
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0300, testing::ext::TestSize.Level1)
+HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0500, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_0300";
+    GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_0500";
     try {
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
@@ -170,21 +227,21 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0300, testing::ext::Tes
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BSessionBackupTest-an exception occurred by Init.";
     }
-    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0300";
+    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0500";
 }
 
 /**
- * @tc.number: SUB_backup_b_session_backup_0400
- * @tc.name: SUB_backup_b_session_backup_0400
+ * @tc.number: SUB_backup_b_session_backup_0600
+ * @tc.name: SUB_backup_b_session_backup_0600
  * @tc.desc: 测试RegisterBackupServiceDied接口
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0400, testing::ext::TestSize.Level1)
+HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0600, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_0400";
+    GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_0600";
     try {
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
@@ -196,21 +253,21 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0400, testing::ext::Tes
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BSessionBackupTest-an exception occurred by RegisterBackupServiceDied.";
     }
-    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0400";
+    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0600";
 }
 
 /**
- * @tc.number: SUB_backup_b_session_backup_0500
- * @tc.name: SUB_backup_b_session_backup_0500
+ * @tc.number: SUB_backup_b_session_backup_0700
+ * @tc.name: SUB_backup_b_session_backup_0700
  * @tc.desc: 测试析构流程接口
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0500, testing::ext::TestSize.Level1)
+HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0700, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_0500";
+    GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_0700";
     try {
         SetMockGetInstance(true);
         SetMockLoadSystemAbility(true);
@@ -234,6 +291,6 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0500, testing::ext::Tes
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BSessionBackupTest-an exception occurred by ~BSessionBackup.";
     }
-    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0500";
+    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0700";
 }
 } // namespace OHOS::FileManagement::Backup
