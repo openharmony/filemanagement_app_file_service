@@ -522,6 +522,45 @@ static bool RestoreBigFilePrecheck(string& fileName, const string& path,
     return true;
 }
 
+static void RestoreBigFileAfter(const string& fileName, const string& filePath, const struct stat& sta,
+                                const set<string>& lks)
+{
+    if (chmod(filePath.c_str(), sta.st_mode) != 0) {
+        HILOGE("Failed to chmod filePath, err = %{public}d", errno);
+    }
+
+    if (fileName != filePath) {
+        auto resolvedFileName = make_unique<char[]>(PATH_MAX);
+        auto resolvedFilePath = make_unique<char[]>(PATH_MAX);
+        bool allOk = true;
+        if (!realpath(fileName.data(), resolvedFileName.get())) {
+            HILOGE("failed to real path for fileName");
+            allOk = false;
+        }
+        if (!realpath(filePath.data(), resolvedFilePath.get())) {
+            HILOGE("failed to real path for filePath");
+            allOk = false;
+        }
+        if (allOk && string_view(resolvedFileName.get()) != string_view(resolvedFilePath.get())) {
+            if (!RemoveFile(fileName)) {
+                HILOGE("Failed to delete the big file");
+            }
+        }
+    }
+
+    for (const auto &lksPath : lks) {
+        if (link(filePath.data(), lksPath.data())) {
+            HILOGE("failed to create hard link file, errno : %{public}d", errno);
+        }
+    }
+
+    struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
+    UniqueFd fd(open(filePath.data(), O_RDONLY));
+    if (futimens(fd.Get(), tv) != 0) {
+        HILOGI("failed to change the file time. %{public}s , %{public}d", filePath.c_str(), errno);
+    }
+}
+
 static void RestoreBigFiles(bool appendTargetPath)
 {
     // 获取索引文件内容
@@ -537,7 +576,6 @@ static void RestoreBigFiles(bool appendTargetPath)
 
         string fileName = path + item.hashName;
         string filePath = appendTargetPath ? (path + item.fileName) : item.fileName;
-        struct stat sta = item.sta;
 
         if (!RestoreBigFilePrecheck(fileName, path, item.hashName, filePath)) {
             continue;
@@ -547,26 +585,8 @@ static void RestoreBigFiles(bool appendTargetPath)
             HILOGE("failed to copy the file. err = %{public}d", errno);
             continue;
         }
-        if (chmod(filePath.c_str(), item.sta.st_mode) != 0) {
-            HILOGE("Failed to chmod %{public}s, err = %{public}d", filePath.c_str(), errno);
-        }
-        if (fileName != filePath) {
-            if (!RemoveFile(fileName)) {
-                HILOGE("Failed to delete the big file %{public}s", fileName.c_str());
-            }
-        }
-        set<string> lks = cache.GetHardLinkInfo(item.hashName);
-        for (const auto &lksPath : lks) {
-            if (link(filePath.data(), lksPath.data())) {
-                HILOGE("failed to create hard link file %{public}s  errno : %{public}d", lksPath.c_str(), errno);
-            }
-        }
-
-        struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
-        UniqueFd fd(open(filePath.data(), O_RDONLY));
-        if (futimens(fd.Get(), tv) != 0) {
-            HILOGI("failed to change the file time. %{public}s , %{public}d", filePath.c_str(), errno);
-        }
+        
+        RestoreBigFileAfter(fileName, filePath, item.sta, cache.GetHardLinkInfo(item.hashName));
     }
 }
 
