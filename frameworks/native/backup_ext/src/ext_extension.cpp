@@ -522,7 +522,7 @@ static bool RestoreBigFilePrecheck(string& fileName, const string& path,
     return true;
 }
 
-static void RestoreBigFiles()
+static void RestoreBigFiles(bool appendTargetPath)
 {
     // 获取索引文件内容
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
@@ -536,7 +536,7 @@ static void RestoreBigFiles()
         }
 
         string fileName = path + item.hashName;
-        string filePath = item.fileName;
+        string filePath = appendTargetPath ? (path + item.fileName) : item.fileName;
         struct stat sta = item.sta;
 
         if (!RestoreBigFilePrecheck(fileName, path, item.hashName, filePath)) {
@@ -606,7 +606,10 @@ void BackupExtExtension::AsyncTaskRestore()
                 }
             }
             // 恢复用户tar包以及大文件
-            RestoreBigFiles();
+            // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景
+            bool appendTargetPath = ptr->extension_->UseFullBackupOnly() &&
+                                    !ptr->extension_->SpeicalVersionForCloneAndCloud();
+            RestoreBigFiles(appendTargetPath);
 
             // delete 1.tar/manage.json
             DeleteBackupTars();
