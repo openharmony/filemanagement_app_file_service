@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "b_error/b_error.h"
+#include "b_error/b_excep_utils.h"
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
@@ -44,6 +45,44 @@ static bool CheckBigFile(const string &tarFile)
         return true;
     }
     return false;
+}
+
+/**
+ * @brief 判断是否属于自身打包的文件
+ *
+ * @param fileName
+ */
+static bool CheckOwnPackTar(const string &fileName)
+{
+    HILOGI("CheckOwnPackTar fileName:%{public}s", fileName.data());
+    if (access(fileName.c_str(), F_OK) != 0) {
+        HILOGI("file does not exists");
+        return false;
+    }
+    // 如果不是在默认路径下的文件包，不属于自身打包的tar文件
+    string defaultBackupPath = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    string absPath;
+    try {
+        absPath = IncludeTrailingPathDelimiter(BExcepUltils::Canonicalize(ExtractFilePath(fileName)));
+    } catch (const BError &e) {
+        HILOGI("file is not backup path");
+        return false;
+    }
+
+    string::size_type pathPos = absPath.find(defaultBackupPath);
+    if (pathPos == string::npos || pathPos != 0) {
+        return false;
+    }
+    // 获取tar包名称
+    string tarFile = ExtractFileName(fileName);
+    string::size_type pos = tarFile.find(".");
+    if (pos == string::npos) {
+        return false;
+    }
+
+    string firstName = string(tarFile).substr(0, pos);
+
+    return (firstName == "part") && (ExtractFileExt(tarFile) == "tar");
 }
 
 static bool CheckUserTar(const string &fileName)
@@ -142,7 +181,7 @@ void BJsonEntityExtManage::SetExtManage(const map<string, tuple<string, struct s
         value["information"]["path"] = path;
         value["information"]["stat"] = Stat2JsonValue(sta);
         value["isUserTar"] = isBeforeTar && CheckUserTar(path);
-        value["isBigFile"] = CheckBigFile(path);
+        value["isBigFile"] = !CheckOwnPackTar(path) && CheckBigFile(path);
         set<string> lks = FindLinks(item, index);
         for (const auto &lk : lks) {
             value["hardlinks"].append(lk);
