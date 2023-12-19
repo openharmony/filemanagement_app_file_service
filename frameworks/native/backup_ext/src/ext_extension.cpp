@@ -700,6 +700,11 @@ void BackupExtExtension::DoClear()
         if (!ForceRemoveDirectory(restoreCache)) {
             HILOGI("Failed to delete the restore cache %{public}s", restoreCache.c_str());
         }
+        // delete el1 backup/restore
+        ForceRemoveDirectory(
+            string(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1).append(BConstants::SA_BUNDLE_BACKUP_BACKUP));
+        ForceRemoveDirectory(
+            string(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
         unique_lock<shared_mutex> lock(lock_);
         tars_.clear();
     } catch (...) {

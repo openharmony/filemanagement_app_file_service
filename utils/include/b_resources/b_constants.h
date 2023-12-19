@@ -76,6 +76,7 @@ static inline std::string_view SA_BUNDLE_BACKUP_BACKUP = "/backup/";
 static inline std::string_view SA_BUNDLE_BACKUP_RESTORE = "/restore/";
 static inline std::string_view SA_BUNDLE_BACKUP_TMP_DIR = "/tmp/";
 static inline std::string_view BACKUP_TOOL_RECEIVE_DIR = "/data/backup/received/";
+static inline std::string_view PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/backup";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/backup";
 static inline std::string_view BACKUP_TOOL_LINK_DIR = "/data/backup";
 static inline std::string_view BACKUP_TOOL_INSTALL_DIR = "/data/backup/install/";
