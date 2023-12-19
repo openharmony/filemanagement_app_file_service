@@ -76,6 +76,7 @@ ohos_unittest("backup_sa_impl_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "${path_backup}/cfi_blocklist.txt"
   }
 
   use_exceptions = true
