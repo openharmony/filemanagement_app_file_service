@@ -210,6 +210,32 @@ void SchedScheduler::TryUnloadServiceTimer(bool force)
     tryUnload();
 }
 
+void SchedScheduler::TryUnloadService()
+{
+    HILOGI("Unload system ability");
+    sptr<ISystemAbilityManager> saManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saManager == nullptr) {
+        HILOGE("UnloadSA, GetSystemAbilityManager is null.");
+        return;
+    }
+    int32_t result = saManager->UnloadSystemAbility(FILEMANAGEMENT_BACKUP_SERVICE_SA_ID);
+    if (result != ERR_OK) {
+        HILOGE("UnloadSA, UnloadSystemAbility result: %{public}d", result);
+        return;
+    }
+}
+
+void SchedScheduler::ClearSchedulerData()
+{
+    unique_lock<shared_mutex> lock(lock_);
+    for (auto &bundleTime : bundleTimeVec_) {
+        auto &[bName, iTime] = bundleTime;
+        extTime_.Unregister(iTime);
+    }
+    bundleTimeVec_.clear();
+    threadPool_.Stop();
+}
+
 void SchedScheduler::InstallSuccess(const std::string &bundleName, const int32_t resultCode)
 {
     if (!resultCode) {

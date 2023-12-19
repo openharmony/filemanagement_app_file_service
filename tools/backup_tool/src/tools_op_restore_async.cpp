@@ -50,6 +50,9 @@ public:
         if (flag == true) {
             ready_ = true;
             cv_.notify_all();
+        } else if (cnt_ == 0) {
+            ready_ = true;
+            cv_.notify_all();
         }
     }
 
@@ -59,12 +62,24 @@ public:
         cv_.wait(lk, [&] { return ready_; });
     }
 
+    void UpdateBundleFinishedCount()
+    {
+        lock_guard<mutex> lk(lock_);
+        cnt_--;
+    }
+
+    void SetBundleFinishedCount(uint32_t cnt)
+    {
+        cnt_ = cnt;
+    }
+
     shared_ptr<BSessionRestoreAsync> session_ = {};
 
 private:
     mutable condition_variable cv_;
     mutex lock_;
     bool ready_ = false;
+    uint32_t cnt_ {0};
 };
 
 static string GenHelpMsg()
@@ -111,7 +126,8 @@ static void OnBundleStarted(shared_ptr<SessionAsync> ctx, ErrCode err, const Bun
 {
     printf("BundleStarted errCode = %d, BundleName = %s\n", err, name.c_str());
     if (err != 0) {
-        ctx->TryNotify(true);
+        ctx->UpdateBundleFinishedCount();
+        ctx->TryNotify();
     }
 }
 
@@ -119,16 +135,15 @@ static void OnBundleFinished(shared_ptr<SessionAsync> ctx, ErrCode err, const Bu
 {
     printf("BundleFinished errCode = %d, BundleName = %s\n", err, name.c_str());
     if (err != 0) {
-        ctx->TryNotify(true);
+        ctx->UpdateBundleFinishedCount();
+        ctx->TryNotify();
     }
 }
 
 static void OnAllBundlesFinished(shared_ptr<SessionAsync> ctx, ErrCode err)
 {
     printf("all bundles finished end\n");
-    if (err != 0) {
-        ctx->TryNotify(true);
-    }
+    ctx->TryNotify(true);
 }
 
 static void OnBackupServiceDied(shared_ptr<SessionAsync> ctx)
@@ -267,7 +282,7 @@ static int32_t InitArg(const string &pathCapFile,
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
         return -EPERM;
     }
-
+    ctx->SetBundleFinishedCount(bundleNames.size());
     return AppendBundles(ctx, pathCapFile, bundleNames, type, userId);
 }
 

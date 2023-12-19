@@ -76,6 +76,7 @@ public:
             [RESTORE] Support for multiple users, incoming during restore process.
         */
         int32_t userId {100};
+        RestoreTypeEnum restoreDataType {RESTORE_DATA_WAIT_SEND};
     };
 
 public:
@@ -404,6 +405,12 @@ public:
      * @param sessionCnt
      */
     void DecreaseSessionCnt();
+
+    /**
+     * @brief clear session data
+     *
+     */
+    void ClearSessionData();
 
 private:
     /**

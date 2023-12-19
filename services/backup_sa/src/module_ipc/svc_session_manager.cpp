@@ -269,7 +269,7 @@ void SvcSessionManager::InitClient(Impl &newImpl)
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        (void)revPtrStrong->StopAll(obj);
+        (void)revPtrStrong->SessionDeactive();
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(callback));
     remoteObj->AddDeathRecipient(deathRecipient_);
@@ -427,9 +427,7 @@ bool SvcSessionManager::IsOnAllBundlesFinished()
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-    auto iter = find_if(impl_.backupExtNameMap.begin(), impl_.backupExtNameMap.end(),
-                        [](const auto &it) { return it.second.isBundleFinished == false; });
-    bool isAllBundlesFinished = (iter == impl_.backupExtNameMap.end() && impl_.isAppendFinish);
+    bool isAllBundlesFinished = !impl_.backupExtNameMap.size();
     if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
         bool isAllBundlesRestored = SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
         isAllBundlesFinished = (isAllBundlesFinished && isAllBundlesRestored);
@@ -502,6 +500,9 @@ bool SvcSessionManager::GetNeedToInstall(const std::string &bundleName)
 bool SvcSessionManager::NeedToUnloadService()
 {
     unique_lock<shared_mutex> lock(lock_);
+    if (impl_.restoreDataType == RestoreTypeEnum::RESTORE_DATA_READDY) {
+        return false;
+    }
     bool isNeedToUnloadService = (!impl_.backupExtNameMap.size() && (sessionCnt_.load() <= 0));
     if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
         bool isAllBundlesRestored = SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
@@ -520,6 +521,7 @@ void SvcSessionManager::SetBundleRestoreType(const std::string &bundleName, Rest
 
     auto it = GetBackupExtNameMap(bundleName);
     it->second.restoreType = restoreType;
+    impl_.restoreDataType = restoreType;
 }
 
 RestoreTypeEnum SvcSessionManager::GetBundleRestoreType(const std::string &bundleName)
@@ -657,5 +659,21 @@ void SvcSessionManager::DecreaseSessionCnt()
     } else {
         HILOGE("Invalid sessionCount.");
     }
+}
+
+void SvcSessionManager::ClearSessionData()
+{
+    unique_lock<shared_mutex> lock(lock_);
+    for (auto it = impl_.backupExtNameMap.begin(); it != impl_.backupExtNameMap.end();) {
+        // clear timer
+        extBundleTimer.Unregister(it->second.extTimerId);
+        // disconnect extension
+        if (it->second.schedAction == BConstants::ServiceSchedAction::RUNNING) {
+            it->second.backUpConnection->DisconnectBackupExtAbility();
+        }
+        // clear data
+        it->second.schedAction = BConstants::ServiceSchedAction::FINISH;
+    }
+    impl_.backupExtNameMap.clear();
 }
 } // namespace OHOS::FileManagement::Backup

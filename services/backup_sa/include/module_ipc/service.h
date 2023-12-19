@@ -97,7 +97,13 @@ public:
      *
      */
     void SendAppGalleryNotify(const std::string &bundleName);
-    
+
+    /**
+     * @brief 结束会话删除session，卸载服务
+     *
+     */
+    void SessionDeactive();
+
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {

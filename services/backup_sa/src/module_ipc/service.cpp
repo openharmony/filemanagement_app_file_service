@@ -826,4 +826,22 @@ void Service::SendAppGalleryNotify(const BundleName &bundleName)
             bundleName.c_str());
     }
 }
+
+void Service::SessionDeactive()
+{
+    try {
+        HILOGI("Begin");
+        // 结束定时器
+        sched_->ClearSchedulerData();
+        // 清除缓存数据
+        session_->ClearSessionData();
+        // 清除session
+        session_->Deactive(nullptr, true);
+        // 卸载服务
+        sched_->TryUnloadService();
+    } catch (...) {
+        HILOGI("Unexpected exception");
+        return;
+    }
+}
 } // namespace OHOS::FileManagement::Backup
