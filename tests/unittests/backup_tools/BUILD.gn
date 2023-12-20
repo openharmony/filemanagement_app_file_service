@@ -23,8 +23,10 @@ ohos_unittest("backup_tool_test") {
     "${path_backup}/tools/backup_tool/src/tools_op.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_backup.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_check_sa.cpp",
+    "${path_backup}/tools/backup_tool/src/tools_op_help.cpp",
     "backup_tool/tools_op_backup_test.cpp",
     "backup_tool/tools_op_check_sa_test.cpp",
+    "backup_tool/tools_op_help_test.cpp",
     "backup_tool/tools_op_test.cpp",
   ]
   sources += backup_mock_proxy_src
@@ -44,6 +46,12 @@ ohos_unittest("backup_tool_test") {
     "${path_jsoncpp}:jsoncpp",
   ]
 
+  cflags = [ "--coverage" ]
+
+  ldflags = [ "--coverage" ]
+
+  cflags_cc = [ "--coverage" ]
+
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
@@ -51,6 +59,13 @@ ohos_unittest("backup_tool_test") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   use_exceptions = true
 }
 
@@ -84,6 +99,12 @@ ohos_unittest("backup_tool_restore_test") {
     "${path_jsoncpp}:jsoncpp",
   ]
 
+  cflags = [ "--coverage" ]
+
+  ldflags = [ "--coverage" ]
+
+  cflags_cc = [ "--coverage" ]
+
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
@@ -91,6 +112,13 @@ ohos_unittest("backup_tool_restore_test") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   use_exceptions = true
 }
 

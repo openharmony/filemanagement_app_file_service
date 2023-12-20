@@ -19,6 +19,7 @@
 #include <sstream>
 
 #include "tools_op.h"
+#include "tools_op_check_sa.h"
 #include "utils_mock_global_variable.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -68,5 +69,46 @@ HWTEST_F(ToolsOpCheckSaTest, SUB_backup_tools_op_check_sa_0100, testing::ext::Te
         GTEST_LOG_(INFO) << "ToolsOpCheckSaTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ToolsOpCheckSaTest-end SUB_backup_tools_op_check_sa_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_check_sa_0200
+ * @tc.name: SUB_backup_tools_op_check_sa_0200
+ * @tc.desc: 测试Exec
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpCheckSaTest, SUB_backup_tools_op_check_sa_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpCheckSaTest-begin SUB_backup_tools_op_check_sa_0200";
+    try {
+        GTEST_LOG_(INFO) << "ToolsOpCheckSaTest-info";
+        map<string, vector<string>> mapArgToVal;
+        SetMockGetInstance(true);
+        vector<string_view> curOp;
+        curOp.emplace_back("check");
+        curOp.emplace_back("sa");
+        CheckSaRegister();
+        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
+        auto &&opeartions = ToolsOp::GetAllOperations();
+        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
+        int ret = 0;
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_EQ(ret, 0);
+        }
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        SetMockGetInstance(false);
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpCheckSaTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpCheckSaTest-end SUB_backup_tools_op_check_sa_0200";
 }
 } // namespace OHOS::FileManagement::Backup
