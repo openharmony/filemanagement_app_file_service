@@ -280,12 +280,11 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
 {
     Uri uri(fileUri);
     string bundleName = uri.GetAuthority();
-    string sandboxPath = SandboxHelper::Decode(uri.GetPath());
-
     if (bundleName == MEDIA) {
-        return GetMediaPhysicalPath(sandboxPath, userId, physicalPath);
+        return GetMediaPhysicalPath(uri.GetPath(), userId, physicalPath);
     }
 
+    string sandboxPath = SandboxHelper::Decode(uri.GetPath());
     if ((sandboxPath.find(FILE_MANAGER_URI_HEAD) == 0 && bundleName != FILE_MANAGER_AUTHORITY) ||
         (sandboxPath.find(FUSE_URI_HEAD) == 0 && bundleName != DLP_MANAGER_BUNDLE_NAME)) {
         return -EINVAL;
