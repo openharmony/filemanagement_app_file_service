@@ -34,7 +34,7 @@ using namespace std;
 namespace {
 const std::string FILE_ACCESS_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
 const std::string SET_SANDBOX_POLICY_PERMISSION = "ohos.permission.SET_SANDBOX_POLICY";
-const char *g_fullMountEnableParameter = "const.filemanager.full_mout.enable";
+const char *g_fullMountEnableParameter = "const.filemanager.full_mount.enable";
 
 static bool IsSystemApp()
 {
