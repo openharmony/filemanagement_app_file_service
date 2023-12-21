@@ -28,7 +28,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 namespace {
-    const int32_t DEFAULT_MODE = 0100660; //0660
+const int32_t DEFAULT_MODE = 0100660; // 0660
 }
 
 static bool CheckBigFile(const string &tarFile)
@@ -135,9 +135,6 @@ void BJsonEntityExtManage::SetExtManage(const map<string, tuple<string, struct s
 
         Json::Value value;
         value["fileName"] = item->first;
-        if (std::get<0>(item->second) == BConstants::RESTORE_INSTALL_PATH) {
-            throw BError(BError::Codes::UTILS_INVAL_JSON_ENTITY, "Failed to set ext manage, invalid path");
-        }
         auto [path, sta, isBeforeTar] = item->second;
         value["information"]["path"] = path;
         value["information"]["stat"] = Stat2JsonValue(sta);
@@ -194,9 +191,6 @@ std::vector<ExtManageInfo> BJsonEntityExtManage::GetExtManageInfo() const
         string path = item["information"].isMember("path") && item["information"]["path"].isString()
                           ? item["information"]["path"].asString()
                           : "";
-        if (path == BConstants::RESTORE_INSTALL_PATH) {
-            throw BError(BError::Codes::UTILS_INVAL_JSON_ENTITY, "Failed to get ext manage info, invalid path");
-        }
         if (item["information"].isMember("stat")) {
             sta = JsonValue2Stat(item["information"]["stat"]);
         }

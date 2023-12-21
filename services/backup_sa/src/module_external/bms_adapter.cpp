@@ -25,7 +25,6 @@
 #include "filemgmt_libhilog.h"
 #include "install_param.h"
 #include "iservice_registry.h"
-#include "module_external/inner_receiver_impl.h"
 #include "module_external/sms_adapter.h"
 #include "module_ipc/service.h"
 #include "module_ipc/svc_session_manager.h"
@@ -122,7 +121,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(int32_t use
         auto dataSize = GetBundleStats(installedBundle.name, userId);
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, dataSize, allToBackup,
-                                                              extName, false, restoreDeps, supportScene});
+                                                              extName, restoreDeps, supportScene});
     }
     return bundleInfos;
 }
@@ -146,37 +145,9 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
         auto dataSize = GetBundleStats(installedBundle.name, userId);
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, dataSize, allToBackup,
-                                                              extName, false, restoreDeps, supportScene});
+                                                              extName, restoreDeps, supportScene});
     }
     return bundleInfos;
-}
-
-ErrCode BundleMgrAdapter::Install(wptr<InnerReceiverImpl> statusReceiver, const string &bundleFilePath, int32_t userId)
-{
-    HILOGI("Begin");
-    auto bms = GetBundleManager();
-    AppExecFwk::BundleInfo bundleInfo;
-    if (!bms->GetBundleArchiveInfo(bundleFilePath, AppExecFwk::BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo)) {
-        return BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle archive info").GetCode();
-    }
-    auto receiver = statusReceiver.promote();
-    if (receiver == nullptr) {
-        return BError(BError::Codes::SA_BROKEN_IPC, "Failed to get receiver").GetCode();
-    }
-    // check bundle name
-    if (bundleInfo.name != receiver->GetBundleName()) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Bundle name is not match").GetCode();
-    }
-
-    auto install = bms->GetBundleInstaller();
-    if (!install) {
-        return BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle installer").GetCode();
-    }
-
-    AppExecFwk::InstallParam installParam;
-    installParam.installFlag = AppExecFwk::InstallFlag::REPLACE_EXISTING;
-    installParam.userId = userId;
-    return install->StreamInstall({bundleFilePath}, installParam, receiver);
 }
 
 string BundleMgrAdapter::GetAppGalleryBundleName()

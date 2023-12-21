@@ -96,17 +96,10 @@ static void OnFileReady(shared_ptr<SessionAsync> ctx, const BFileInfo &fileInfo,
 {
     printf("FileReady owner = %s, fileName = %s, sn = %u, fd = %d\n", fileInfo.owner.c_str(), fileInfo.fileName.c_str(),
            fileInfo.sn, fd.Get());
-    if (fileInfo.fileName.find('/') != string::npos &&
-        fileInfo.fileName != BConstants::RESTORE_INSTALL_PATH) {
+    if (fileInfo.fileName.find('/') != string::npos) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, "Filename is not valid");
     }
-    string tmpPath;
-    if (fileInfo.fileName == BConstants::RESTORE_INSTALL_PATH) {
-        printf("OnFileReady bundle hap\n");
-        tmpPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + fileInfo.owner + ".hap";
-    } else {
-        tmpPath = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + fileInfo.owner + "/" + fileInfo.fileName;
-    }
+    string tmpPath = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + fileInfo.owner + "/" + fileInfo.fileName;
     if (access(tmpPath.data(), F_OK) != 0) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
@@ -170,12 +163,6 @@ static void RestoreApp(shared_ptr<SessionAsync> restore, vector<BundleName> &bun
         if (err != 0) {
             throw BError(BError::Codes::TOOL_INVAL_ARG, "error path");
         }
-        // install bundle.hap
-        string installPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + bundleName + ".hap";
-        if (access(installPath.data(), F_OK) == 0) {
-            printf("install bundle hap %s\n", installPath.c_str());
-            restore->session_->GetFileHandle(bundleName, string(BConstants::RESTORE_INSTALL_PATH));
-        }
         for (auto &filePath : filePaths) {
             string fileName = filePath.substr(filePath.rfind("/") + 1);
             restore->session_->GetFileHandle(bundleName, fileName);
@@ -208,10 +195,12 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
             if (bundleInfo.name != name) {
                 continue;
             }
-            bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {
-                .name = name, .versionCode = versionCode, .versionName = versionName,
-                .spaceOccupied = bundleInfo.spaceOccupied, .allToBackup = bundleInfo.allToBackup,
-                .extensionName = bundleInfo.extensionName, .needToInstall = false});
+            bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {.name = name,
+                                                                  .versionCode = versionCode,
+                                                                  .versionName = versionName,
+                                                                  .spaceOccupied = bundleInfo.spaceOccupied,
+                                                                  .allToBackup = bundleInfo.allToBackup,
+                                                                  .extensionName = bundleInfo.extensionName});
         }
     }
     cache.SetBundleInfos(bundleInfos);
@@ -298,7 +287,7 @@ static int Exec(map<string, vector<string>> &mapArgToVal)
 
 bool RestoreAsyncRegister()
 {
-    return ToolsOp::Register(ToolsOp{ ToolsOp::Descriptor {
+    return ToolsOp::Register(ToolsOp {ToolsOp::Descriptor {
         .opName = {"restoreAsync"},
         .argList = {{
                         .paramName = "pathCapFile",
@@ -318,6 +307,6 @@ bool RestoreAsyncRegister()
                     }},
         .funcGenHelpMsg = GenHelpMsg,
         .funcExec = Exec,
-    } });
+    }});
 }
 } // namespace OHOS::FileManagement::Backup

@@ -29,7 +29,6 @@ public:
         int64_t spaceOccupied;
         bool allToBackup;
         std::string extensionName;
-        bool needToInstall {false};
         std::string restoreDeps;
         std::string supportScene;
     };
@@ -58,7 +57,6 @@ public:
             arrObj["spaceOccupied"] = item.spaceOccupied;
             arrObj["allToBackup"] = item.allToBackup;
             arrObj["extensionName"] = item.extensionName;
-            arrObj["needToInstall"] = item.needToInstall;
             arrObj["restoreDeps"] = item.restoreDeps;
             arrObj["supportScene"] = item.supportScene;
             obj_["bundleInfos"].append(arrObj);
@@ -115,7 +113,7 @@ public:
         for (const auto &item : obj_["bundleInfos"]) {
             if (!item || !item["name"].isString() || !item["versionCode"].isUInt() || !item["versionName"].isString() ||
                 !item["spaceOccupied"].isInt64() || !item["allToBackup"].isBool() ||
-                !item["extensionName"].isString() || !item["needToInstall"].isBool()) {
+                !item["extensionName"].isString()) {
                 HILOGI("Failed to get field bundleInfos, type error");
                 return {};
             }
@@ -130,7 +128,7 @@ public:
             bundleInfos.emplace_back(BundleInfo {item["name"].asString(), item["versionCode"].asUInt(),
                                                  item["versionName"].asString(), item["spaceOccupied"].asInt64(),
                                                  item["allToBackup"].asBool(), item["extensionName"].asString(),
-                                                 item["needToInstall"].asBool(), restoreDeps, supportScene});
+                                                 restoreDeps, supportScene});
         }
         return bundleInfos;
     }

@@ -354,7 +354,7 @@ void SvcSessionManager::SetServiceSchedAction(const string &bundleName, BConstan
 
     auto it = GetBackupExtNameMap(bundleName);
     it->second.schedAction = action;
-    if (it->second.schedAction == BConstants::ServiceSchedAction::INSTALLING) {
+    if (it->second.schedAction == BConstants::ServiceSchedAction::START) {
         extConnectNum_++;
     }
 }
@@ -447,54 +447,6 @@ bool SvcSessionManager::IsOnOnStartSched()
     }
 
     return false;
-}
-
-void SvcSessionManager::SetInstallState(const string &bundleName, const string &state)
-{
-    HILOGI("Begin");
-    unique_lock<shared_mutex> lock(lock_);
-    if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
-    }
-
-    auto it = GetBackupExtNameMap(bundleName);
-    it->second.installState = state;
-}
-
-string SvcSessionManager::GetInstallState(const string &bundleName)
-{
-    HILOGI("Begin");
-    shared_lock<shared_mutex> lock(lock_);
-    if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
-    }
-
-    auto it = GetBackupExtNameMap(bundleName);
-    return it->second.installState;
-}
-
-void SvcSessionManager::SetNeedToInstall(const std::string &bundleName, bool needToInstall)
-{
-    HILOGI("Begin");
-    unique_lock<shared_mutex> lock(lock_);
-    if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
-    }
-
-    auto it = GetBackupExtNameMap(bundleName);
-    it->second.bNeedToInstall = needToInstall;
-}
-
-bool SvcSessionManager::GetNeedToInstall(const std::string &bundleName)
-{
-    HILOGI("Begin");
-    shared_lock<shared_mutex> lock(lock_);
-    if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
-    }
-
-    auto it = GetBackupExtNameMap(bundleName);
-    return it->second.bNeedToInstall;
 }
 
 bool SvcSessionManager::NeedToUnloadService()
@@ -592,7 +544,7 @@ void SvcSessionManager::SetBundleDataSize(const std::string &bundleName, int64_t
 
 uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
 {
-    const int64_t defaultTimeout = 30; /* 30 second */
+    const int64_t defaultTimeout = 30;           /* 30 second */
     const int64_t processRate = 3 * 1024 * 1024; /* 3M/s */
     const int64_t multiple = 3;
     const int64_t invertMillisecond = 1000;
@@ -605,19 +557,16 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
         /* timeout = (AppSize / 3Ms) * 3 + 30 */
         timeout = defaultTimeout + (appSize / processRate) * multiple;
     } catch (const BError &e) {
-        HILOGE("Failed to get app<%{public}s> dataInfo, err=%{public}d",
-            bundleName.c_str(), e.GetCode());
+        HILOGE("Failed to get app<%{public}s> dataInfo, err=%{public}d", bundleName.c_str(), e.GetCode());
         timeout = defaultTimeout;
     }
     resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX); /* conver second to millisecond */
-    HILOGI("Calculate App extension process run timeout=%{public}u(us), bundleName=%{public}s ",
-        resTimeoutMs, bundleName.c_str());
+    HILOGI("Calculate App extension process run timeout=%{public}u(us), bundleName=%{public}s ", resTimeoutMs,
+           bundleName.c_str());
     return resTimeoutMs;
 }
 
-void SvcSessionManager::BundleExtTimerStart (
-    const std::string &bundleName,
-    const Utils::Timer::TimerCallback& callback)
+void SvcSessionManager::BundleExtTimerStart(const std::string &bundleName, const Utils::Timer::TimerCallback &callback)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {

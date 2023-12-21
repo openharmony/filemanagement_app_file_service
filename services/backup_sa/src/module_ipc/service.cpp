@@ -273,7 +273,6 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
                                             .spaceOccupied = (*it).spaceOccupied,
                                             .allToBackup = (*it).allToBackup,
                                             .extensionName = restoreInfo.extensionName,
-                                            .needToInstall = (*it).needToInstall,
                                             .restoreDeps = (*it).restoreDeps};
         restoreBundleInfos.emplace_back(info);
     }
@@ -307,14 +306,14 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             }
             HILOGD("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
                    restoreInfo.extensionName.c_str());
-            if ((restoreInfo.allToBackup == false && !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode))
-                || restoreInfo.extensionName.empty()) {
+            if ((restoreInfo.allToBackup == false &&
+                 !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) ||
+                restoreInfo.extensionName.empty()) {
                 session_->GetServiceReverseProxy()->RestoreOnBundleStarted(
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), restoreInfo.name);
                 session_->RemoveExtInfo(restoreInfo.name);
                 continue;
             }
-            session_->SetNeedToInstall(restoreInfo.name, restoreInfo.needToInstall);
             session_->SetBundleRestoreType(restoreInfo.name, restoreType);
             session_->SetBundleVersionCode(restoreInfo.name, restoreInfo.versionCode);
             session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
@@ -338,7 +337,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
 {
     try {
         HILOGI("Begin");
-        session_->IncreaseSessionCnt();  // BundleMgrAdapter::GetBundleInfos可能耗时
+        session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
@@ -383,12 +382,6 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
     try {
         HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
-
-        if (fileInfo.fileName == BConstants::RESTORE_INSTALL_PATH) {
-            session_->SetInstallState(fileInfo.owner, "OK");
-            sched_->Sched(fileInfo.owner);
-            return BError(BError::Codes::OK);
-        }
 
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
 
@@ -538,14 +531,6 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
     try {
         HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
-        if (fileName == BConstants::RESTORE_INSTALL_PATH && bundleName.find('/') == string::npos) {
-            session_->SetInstallState(bundleName, string(BConstants::RESTORE_INSTALL_PATH));
-            auto action = session_->GetServiceSchedAction(bundleName);
-            if (action == BConstants::ServiceSchedAction::INSTALLING) {
-                sched_->Sched(bundleName);
-            }
-            return BError(BError::Codes::OK);
-        }
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {
             auto backUpConnection = session_->GetExtConnection(bundleName);
@@ -674,7 +659,7 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
 
             DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
             HILOGI("ExtConnectFailed EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
-                bundleName.c_str());
+                   bundleName.c_str());
         }
         ClearSessionAndSchedInfo(bundleName);
         return;
@@ -781,7 +766,6 @@ void Service::HandleRestoreDepsBundle(const string &bundleName)
                 continue;
             }
             SvcRestoreDepsManager::RestoreInfo info = bundle.second;
-            session_->SetNeedToInstall(bundleInfo.name, bundleInfo.needToInstall);
             session_->SetBundleRestoreType(bundleInfo.name, info.restoreType_);
             session_->SetBundleVersionCode(bundleInfo.name, bundleInfo.versionCode);
             session_->SetBundleVersionName(bundleInfo.name, bundleInfo.versionName);
@@ -823,7 +807,7 @@ void Service::SendAppGalleryNotify(const BundleName &bundleName)
     if (scenario == IServiceReverse::Scenario::RESTORE) {
         DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
         HILOGI("SendAppGalleryNotify StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
-            bundleName.c_str());
+               bundleName.c_str());
     }
 }
 

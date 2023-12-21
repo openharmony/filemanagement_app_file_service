@@ -55,14 +55,6 @@ public:
     void RemoveExtConn(const std::string &bundleName);
 
     /**
-     * @brief install success
-     *
-     * @param bundleName
-     * @param resultCode
-     */
-    void InstallSuccess(const std::string &bundleName, const int32_t resultCode);
-
-    /**
      * @brief try unload service timer
      *
      */
@@ -100,14 +92,6 @@ public:
         sessionPtr_ = nullptr;
         bundleTimeVec_.clear();
     }
-
-private:
-    /**
-     * @brief install state
-     *
-     * @param bundleName
-     */
-    void InstallingState(const std::string &bundleName);
 
 private:
     mutable std::shared_mutex lock_;

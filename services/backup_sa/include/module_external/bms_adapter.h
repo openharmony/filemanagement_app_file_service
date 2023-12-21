@@ -42,21 +42,12 @@ public:
      * @param userId User ID
      * @return std::vector<BJsonEntityCaps::BundleInfo>
      */
-    static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfos(
-                                    const std::vector<std::string> &bundleNames, int32_t userId);
-
-    /**
-     * @brief Install bundle
-     *
-     * @param bundleName bundle name
-     * @param bundleFilePath bundle file path
-     * @param userId User ID
-     */
-    static ErrCode Install(wptr<InnerReceiverImpl> statusReceiver, const std::string &bundleFilePath, int32_t userId);
+    static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfos(const std::vector<std::string> &bundleNames,
+                                                                   int32_t userId);
 
     /**
      * @brief Get app gallery bundle name
-    */
+     */
     static std::string GetAppGalleryBundleName();
 };
 } // namespace OHOS::FileManagement::Backup
