@@ -325,4 +325,6 @@ void SvcSessionManager::SetBackupExtName(const string &bundleName, const string 
 void SvcSessionManager::IncreaseSessionCnt() {}
 
 void SvcSessionManager::DecreaseSessionCnt() {}
+
+void SvcSessionManager::ClearSessionData() {}
 } // namespace OHOS::FileManagement::Backup

@@ -68,6 +68,18 @@ public:
      */
     void TryUnloadServiceTimer(bool force = false);
 
+    /**
+     * @brief clear scheduler data
+     *
+     */
+    void ClearSchedulerData();
+
+    /**
+     * @brief unload service
+     *
+     */
+    void TryUnloadService();
+
     void StartTimer()
     {
         extTime_.Setup();
