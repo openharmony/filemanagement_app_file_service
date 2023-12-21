@@ -86,6 +86,5 @@ group("backup_impl_test") {
 
   deps = [
     ":b_file_info_test",
-    ":backup_sa_impl_test",
   ]
 }

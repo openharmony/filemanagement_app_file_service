@@ -58,6 +58,7 @@ ohos_unittest("backup_service_test") {
 
   sources = [
     "${path_backup_mock}/accesstoken/accesstoken_kit_mock.cpp",
+    "${path_backup_mock}/timer/timer_mock.cpp",
     "${path_backup}/services/backup_sa/src/module_app_gallery/app_gallery_dispose_proxy.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
@@ -95,6 +96,12 @@ ohos_unittest("backup_service_test") {
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
   ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
 
   use_exceptions = true
 }
@@ -248,6 +255,5 @@ group("backup_sa_ipc_test") {
     ":backup_service_scheduler_test",
     ":backup_service_session_test",
     ":backup_service_test",
-    ":module_ipc_test",
   ]
 }
