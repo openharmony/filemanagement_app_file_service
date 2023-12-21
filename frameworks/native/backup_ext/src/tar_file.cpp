@@ -164,10 +164,11 @@ bool TarFile::AddFile(string &fileName, const struct stat &st, bool isSplit)
         return false;
     }
 
-    if (strncpy_s(hdr.name, sizeof(hdr.name), fileName.c_str(), sizeof(hdr.name) - 1) == 0) {
-        if (fileName.length() >= sizeof(hdr.name)) {
-            WriteLongName(fileName, GNUTYPE_LONGNAME);
-        }
+    if (fileName.length() < TNAME_LEN) {
+        memcpy_s(hdr.name, sizeof(hdr.name), fileName.c_str(), sizeof(hdr.name) - 1);
+    } else {
+        WriteLongName(fileName, GNUTYPE_LONGNAME);
+        memcpy_s(hdr.name, sizeof(hdr.name), LONG_LINK_SYMBOL.c_str(), sizeof(hdr.name) - 1);
     }
     memcpy_s(hdr.magic, sizeof(hdr.magic), TMAGIC.c_str(), sizeof(hdr.magic) - 1);
     memcpy_s(hdr.version, sizeof(hdr.version), VERSION.c_str(), sizeof(hdr.version) - 1);
@@ -451,14 +452,16 @@ bool TarFile::WriteLongName(string &name, char type)
 
     // write long name head to archive
     if (WriteTarHeader(tmp) != BLOCK_SIZE) {
+        HILOGE("Failed to write long name header");
         return false;
     }
 
     // write name to archive
     vector<uint8_t> buffer {};
     buffer.resize(sz);
-    buffer.assign(reinterpret_cast<uint8_t *>(&name), reinterpret_cast<uint8_t *>(&name) + sz);
+    buffer.assign(name.begin(), name.end());
     if (WriteAll(buffer, sz) != sz) {
+        HILOGE("Failed to write long name buffer");
         return false;
     }
 

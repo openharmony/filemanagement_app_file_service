@@ -55,6 +55,21 @@ static off_t ParseOctalStr(const string &octalStr, size_t destLen)
     return ret;
 }
 
+static bool ForceCreateDirectoryWithMode(const string& path, mode_t mode)
+{
+    string::size_type index = 0;
+    do {
+        index = path.find('/', index + 1);
+        string subPath = (index == string::npos) ? path : path.substr(0, index);
+        if (access(subPath.c_str(), F_OK) != 0) {
+            if (mkdir(subPath.c_str(), mode) != 0) {
+                return false;
+            }
+        }
+    } while (index != string::npos);
+    return access(path.c_str(), F_OK) == 0;
+}
+
 UntarFile &UntarFile::GetInstance()
 {
     static UntarFile instance;
@@ -93,6 +108,7 @@ void UntarFile::HandleTarBuffer(const string &buff, const string &name, FileStat
     string realName = name;
     if (!info.longName.empty()) {
         realName = info.longName;
+        info.longName.clear();
     }
     info.fullPath = GenRealPath(rootPath_, realName);
 }
@@ -134,6 +150,7 @@ int UntarFile::ParseTarFile(const string &rootPath)
                 HILOGE("Invalid tar file format");
                 ret = ERR_FORMAT;
             }
+            HILOGE("invalid tar block");
             return ret;
         }
         HandleTarBuffer(string(buff, BLOCK_SIZE), header->name, info);
@@ -164,7 +181,10 @@ void UntarFile::ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &i
         case GNUTYPE_LONGNAME: {
             size_t nameLen = static_cast<size_t>(tarFileSize_);
             if (nameLen < PATH_MAX_LEN) {
-                fread(&(info.longName[0]), sizeof(char), nameLen, tarFilePtr_);
+                string tempName("");
+                tempName.resize(nameLen);
+                fread(&(tempName[0]), sizeof(char), nameLen, tarFilePtr_);
+                info.longName = tempName;
             }
             isSkip = true;
             fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET);
@@ -275,9 +295,9 @@ void UntarFile::CreateDir(string &path, mode_t mode)
         path[len - 1] = '\0';
     }
     if (access(path.c_str(), F_OK) != 0) {
-        HILOGE("%{public}s does not exist, err = %{public}d", path.c_str(), errno);
-        if (mkdir(path.c_str(), mode) != 0) {
-            HILOGE("Failed to mkdir %{public}s, err = %{public}d", path.c_str(), errno);
+        HILOGE("directory does not exist, path:%{public}s, err = %{public}d", path.c_str(), errno);
+        if (!ForceCreateDirectoryWithMode(path, mode)) {
+            HILOGE("Failed to force create directory %{public}s, err = %{public}d", path.c_str(), errno);
         }
     }
 }
