@@ -94,7 +94,6 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_GetRestoreBundleNa
                                          .spaceOccupied = 0,
                                          .allToBackup = false,
                                          .extensionName = "",
-                                         .needToInstall = false,
                                          .restoreDeps = ""};
     BJsonEntityCaps::BundleInfo info2 = {.name = "com.example.app2",
                                          .versionCode = 1000000,
@@ -102,7 +101,6 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_GetRestoreBundleNa
                                          .spaceOccupied = 0,
                                          .allToBackup = false,
                                          .extensionName = "",
-                                         .needToInstall = false,
                                          .restoreDeps = "com.example.app1"};
     vector<BJsonEntityCaps::BundleInfo> bundleInfos {info1, info2};
     RestoreTypeEnum restoreType = RESTORE_DATA_WAIT_SEND;
@@ -131,7 +129,6 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_GetRestoreBundleNa
                                         .spaceOccupied = 0,
                                         .allToBackup = false,
                                         .extensionName = "",
-                                        .needToInstall = false,
                                         .restoreDeps = "com.example.app1"};
     vector<BJsonEntityCaps::BundleInfo> bundleInfos {info};
     RestoreTypeEnum restoreType = RESTORE_DATA_WAIT_SEND;
@@ -279,7 +276,6 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_GetAllBundles_0200
                                         .spaceOccupied = 0,
                                         .allToBackup = false,
                                         .extensionName = "",
-                                        .needToInstall = false,
                                         .restoreDeps = ""};
     SvcRestoreDepsManager::GetInstance().allBundles_.emplace_back(info);
     auto allBundles = SvcRestoreDepsManager::GetInstance().GetAllBundles();
@@ -411,7 +407,6 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_BuildDepsMap_0200,
                                          .spaceOccupied = 0,
                                          .allToBackup = false,
                                          .extensionName = "",
-                                         .needToInstall = false,
                                          .restoreDeps = ""};
     BJsonEntityCaps::BundleInfo info2 = {.name = "com.example.app2",
                                          .versionCode = 1000000,
@@ -419,7 +414,6 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_BuildDepsMap_0200,
                                          .spaceOccupied = 0,
                                          .allToBackup = false,
                                          .extensionName = "",
-                                         .needToInstall = false,
                                          .restoreDeps = "com.example.app1"};
     BJsonEntityCaps::BundleInfo info3 = {.name = "com.example.app3",
                                          .versionCode = 1000000,
@@ -427,7 +421,6 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_BuildDepsMap_0200,
                                          .spaceOccupied = 0,
                                          .allToBackup = false,
                                          .extensionName = "",
-                                         .needToInstall = false,
                                          .restoreDeps = "com.example.app1,com.example.app2"};
     vector<BJsonEntityCaps::BundleInfo> bundleInfos = {info1, info2, info3};
     SvcRestoreDepsManager::GetInstance().BuildDepsMap(bundleInfos);
@@ -455,7 +448,6 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_BuildDepsMap_0300,
                                         .spaceOccupied = 0,
                                         .allToBackup = false,
                                         .extensionName = "",
-                                        .needToInstall = false,
                                         .restoreDeps = ""};
     vector<BJsonEntityCaps::BundleInfo> bundleInfos = {info};
     vector<string> depList = {""};

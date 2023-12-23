@@ -30,13 +30,9 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName) {}
 
 void SchedScheduler::RemoveExtConn(const string &bundleName) {}
 
-void SchedScheduler::InstallingState(const string &bundleName) {}
-
 void SchedScheduler::TryUnloadServiceTimer(bool force) {}
 
 void SchedScheduler::TryUnloadService() {}
 
 void SchedScheduler::ClearSchedulerData() {}
-
-void SchedScheduler::InstallSuccess(const std::string &bundleName, const int32_t resultCode) {}
 }; // namespace OHOS::FileManagement::Backup

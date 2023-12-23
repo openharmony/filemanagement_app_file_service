@@ -223,20 +223,6 @@ bool SvcSessionManager::IsOnOnStartSched()
     return true;
 }
 
-void SvcSessionManager::SetInstallState(const string &bundleName, const string &state) {}
-
-string SvcSessionManager::GetInstallState(const string &bundleName)
-{
-    return "OK";
-}
-
-void SvcSessionManager::SetNeedToInstall(const std::string &bundleName, bool needToInstall) {}
-
-bool SvcSessionManager::GetNeedToInstall(const std::string &bundleName)
-{
-    return false;
-}
-
 bool SvcSessionManager::NeedToUnloadService()
 {
     return false;
@@ -315,8 +301,9 @@ void SvcSessionManager::SetBundleDataSize(const std::string &bundleName, int64_t
     it->second.dataSize = dataSize;
 }
 
-void SvcSessionManager::BundleExtTimerStart (
-    const std::string &bundleName, const Utils::Timer::TimerCallback& callback) {}
+void SvcSessionManager::BundleExtTimerStart(const std::string &bundleName, const Utils::Timer::TimerCallback &callback)
+{
+}
 
 void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName) {}
 

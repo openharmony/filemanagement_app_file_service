@@ -37,10 +37,9 @@ enum class ExtensionAction {
 
 enum ServiceSchedAction {
     WAIT = 0,
-    INSTALLING = 1,
-    START,
-    RUNNING,
-    FINISH,
+    START = 1,
+    RUNNING = 2,
+    FINISH = 3,
 };
 
 constexpr int SPAN_USERID_UID = 20000000;
@@ -56,11 +55,11 @@ constexpr int DECIMAL_BASE = 10; // 十进制基数
 constexpr off_t BIG_FILE_BOUNDARY = 2 * 1024 * 1024; // 大文件边界
 constexpr unsigned long BIG_FILE_NAME_SIZE = 16;     // 大文件名长度(hash处理)
 
-constexpr int PATHES_TO_BACKUP_SIZE = 13; // 应用默认备份的目录个数
+constexpr int PATHES_TO_BACKUP_SIZE = 13;     // 应用默认备份的目录个数
 constexpr uint32_t BACKUP_PARA_VALUE_MAX = 5; // 读取backup.para字段值的最大长度
-constexpr int SA_THREAD_POOL_COUNT = 1; // SA THREAD_POOL 最大线程数
-constexpr int EXT_CONNECT_MAX_COUNT = 3; // extension 最大启动数
-constexpr int EXT_CONNECT_MAX_TIME = 15000; // SA 启动 extension 等待连接最大时间
+constexpr int SA_THREAD_POOL_COUNT = 1;       // SA THREAD_POOL 最大线程数
+constexpr int EXT_CONNECT_MAX_COUNT = 3;      // extension 最大启动数
+constexpr int EXT_CONNECT_MAX_TIME = 15000;   // SA 启动 extension 等待连接最大时间
 
 constexpr int IPC_MAX_WAIT_TIME = 3000; // IPC通讯最大等待时间(s)
 
@@ -79,7 +78,6 @@ static inline std::string_view BACKUP_TOOL_RECEIVE_DIR = "/data/backup/received/
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/backup";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/backup";
 static inline std::string_view BACKUP_TOOL_LINK_DIR = "/data/backup";
-static inline std::string_view BACKUP_TOOL_INSTALL_DIR = "/data/backup/install/";
 
 // 多用户场景应用备份数据路径
 static inline std::string GetSaBundleBackupDir(int32_t userId)
@@ -118,9 +116,6 @@ static inline std::string_view EXT_BACKUP_MANAGE = "manage.json";
 // 包管理元数据配置文件
 static inline std::string_view BACKUP_CONFIG_JSON = "backup_config.json";
 
-// 恢复应用安装包URL判断
-static inline std::string_view RESTORE_INSTALL_PATH = "/data/storage/el2/restore/bundle.hap";
-
 // 特殊版本信息
 constexpr int DEFAULT_VERSION_CODE = 0;
 static inline std::string_view DEFAULT_VERSION_NAME = "0.0.0.0";
@@ -130,28 +125,18 @@ static inline std::string_view DEFAULT_VERSION_NAME_CLONE_3 = "99.99.99.997";
 static inline std::string_view DEFAULT_VERSION_NAME_PC = "99.99.99.996";
 static inline std::string_view DEFAULT_VERSION_NAME_CLOUD = "99.99.99.995";
 static inline std::vector<std::string_view> DEFAULT_VERSION_NAMES_VEC = {
-    DEFAULT_VERSION_NAME,
-    DEFAULT_VERSION_NAME_CLONE,
-    DEFAULT_VERSION_NAME_CLONE_2,
-    DEFAULT_VERSION_NAME_CLONE_3,
-    DEFAULT_VERSION_NAME_PC,
-    DEFAULT_VERSION_NAME_CLOUD,
+    DEFAULT_VERSION_NAME,         DEFAULT_VERSION_NAME_CLONE, DEFAULT_VERSION_NAME_CLONE_2,
+    DEFAULT_VERSION_NAME_CLONE_3, DEFAULT_VERSION_NAME_PC,    DEFAULT_VERSION_NAME_CLOUD,
 };
 
 // 应用默认备份的目录，其均为相对根路径的路径。为避免模糊匹配，务必以斜线为结尾。
 static inline std::array<std::string_view, PATHES_TO_BACKUP_SIZE> PATHES_TO_BACKUP = {
-    "data/storage/el1/database/",
-    "data/storage/el1/base/files/",
-    "data/storage/el1/base/preferences/",
-    "data/storage/el1/base/haps/*/database/",
-    "data/storage/el1/base/haps/*/files/",
-    "data/storage/el1/base/haps/*/preferences/",
-    "data/storage/el2/database/",
-    "data/storage/el2/base/files/",
-    "data/storage/el2/base/preferences/",
-    "data/storage/el2/base/haps/*/database/",
-    "data/storage/el2/base/haps/*/files/",
-    "data/storage/el2/base/haps/*/preferences/",
+    "data/storage/el1/database/",          "data/storage/el1/base/files/",
+    "data/storage/el1/base/preferences/",  "data/storage/el1/base/haps/*/database/",
+    "data/storage/el1/base/haps/*/files/", "data/storage/el1/base/haps/*/preferences/",
+    "data/storage/el2/database/",          "data/storage/el2/base/files/",
+    "data/storage/el2/base/preferences/",  "data/storage/el2/base/haps/*/database/",
+    "data/storage/el2/base/haps/*/files/", "data/storage/el2/base/haps/*/preferences/",
     "data/storage/el2/distributedfiles/",
 };
 } // namespace OHOS::FileManagement::Backup::BConstants

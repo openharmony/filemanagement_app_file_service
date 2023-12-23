@@ -350,52 +350,6 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupExtName_0100, tes
 }
 
 /**
- * @tc.number: SUB_backup_sa_session_GetInstallState_0100
- * @tc.name: SUB_backup_sa_session_GetInstallState_0100
- * @tc.desc: 测试 GetInstallState 接口
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6VA38
- */
-HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetInstallState_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetInstallState_0100";
-    try {
-        sessionManagerPtr_->SetInstallState(BUNDLE_NAME, "OK");
-        auto ret = sessionManagerPtr_->GetInstallState(BUNDLE_NAME);
-        EXPECT_EQ(ret, "OK");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetInstallState.";
-    }
-    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetInstallState_0100";
-}
-
-/**
- * @tc.number: SUB_backup_sa_session_GetNeedToInstall_0100
- * @tc.name: SUB_backup_sa_session_GetNeedToInstall_0100
- * @tc.desc: 测试 GetNeedToInstall 接口
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6VA38
- */
-HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetNeedToInstall_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetNeedToInstall_0100";
-    try {
-        sessionManagerPtr_->SetNeedToInstall(BUNDLE_NAME, true);
-        auto ret = sessionManagerPtr_->GetNeedToInstall(BUNDLE_NAME);
-        EXPECT_EQ(ret, true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetNeedToInstall.";
-    }
-    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetNeedToInstall_0100";
-}
-
-/**
  * @tc.number: SUB_backup_sa_session_NeedToUnloadService_0100
  * @tc.name: SUB_backup_sa_session_NeedToUnloadService_0100
  * @tc.desc: 测试 NeedToUnloadService 接口

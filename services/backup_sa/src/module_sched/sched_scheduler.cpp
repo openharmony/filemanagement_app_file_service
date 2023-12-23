@@ -31,7 +31,6 @@
 #include "filemgmt_libhilog.h"
 #include "iservice_registry.h"
 #include "module_external/bms_adapter.h"
-#include "module_external/inner_receiver_impl.h"
 #include "module_ipc/service.h"
 #include "module_ipc/svc_session_manager.h"
 #include "system_ability_definition.h"
@@ -47,7 +46,7 @@ void SchedScheduler::Sched(string bundleName)
         }
         BConstants::ServiceSchedAction action = sessionPtr_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::WAIT) {
-            sessionPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::INSTALLING);
+            sessionPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::START);
         }
     }
     HILOGE("Sched bundleName %{public}s", bundleName.data());
@@ -69,7 +68,6 @@ void SchedScheduler::Sched(string bundleName)
 void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
 {
     HILOGE("start");
-    InstallingState(bundleName);
     BConstants::ServiceSchedAction action = sessionPtr_->GetServiceSchedAction(bundleName);
     if (action == BConstants::ServiceSchedAction::START) {
         // 注册启动定时器
@@ -116,54 +114,6 @@ void SchedScheduler::RemoveExtConn(const string &bundleName)
         HILOGE("bundleName = %{public}s , iTime = %{public}d", bName.data(), iTime);
         extTime_.Unregister(iTime);
         bundleTimeVec_.erase(iter);
-    }
-}
-
-static bool GetRealPath(string &path)
-{
-    unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);
-    if (realpath(path.c_str(), absPath.get()) == nullptr) {
-        return false;
-    }
-    path = absPath.get();
-    return true;
-}
-
-void SchedScheduler::InstallingState(const string &bundleName)
-{
-    BConstants::ServiceSchedAction action = sessionPtr_->GetServiceSchedAction(bundleName);
-    if (action == BConstants::ServiceSchedAction::INSTALLING) {
-        IServiceReverse::Scenario scenario = sessionPtr_->GetScenario();
-        if (scenario == IServiceReverse::Scenario::BACKUP || !sessionPtr_->GetNeedToInstall(bundleName)) {
-            sessionPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::START);
-            return;
-        }
-        string state = sessionPtr_->GetInstallState(bundleName);
-        string path = BConstants::GetSaBundleBackupRootDir(sessionPtr_->GetSessionUserId()).append(bundleName);
-        string filePath = path + "/bundle.hap";
-
-        if (state == BConstants::RESTORE_INSTALL_PATH) {
-            if (!ForceCreateDirectory(path)) {
-                throw BError(BError::Codes::SA_INVAL_ARG, string("Failed to create directory"));
-            }
-            auto ret = GetRealPath(filePath);
-            HILOGE("ret = %{public}d", ret);
-            sessionPtr_->GetServiceReverseProxy()->RestoreOnFileReady(
-                bundleName, state,
-                UniqueFd(open(filePath.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IROTH)));
-        } else if (state == "OK") {
-            if (!GetRealPath(filePath)) {
-                throw BError(BError::Codes::SA_INVAL_ARG, string("File path is invalid"));
-            }
-            if (access(filePath.data(), F_OK) != 0) {
-                throw BError(BError::Codes::SA_INVAL_ARG, string("File already exists"));
-            }
-            sptr<InnerReceiverImpl> statusReceiver = sptr(new InnerReceiverImpl(bundleName, wptr(this)));
-            ErrCode err = BundleMgrAdapter::Install(statusReceiver, filePath, sessionPtr_->GetSessionUserId());
-            if (err != ERR_OK) {
-                InstallSuccess(bundleName, err);
-            }
-        }
     }
 }
 
@@ -234,20 +184,5 @@ void SchedScheduler::ClearSchedulerData()
     }
     bundleTimeVec_.clear();
     threadPool_.Stop();
-}
-
-void SchedScheduler::InstallSuccess(const std::string &bundleName, const int32_t resultCode)
-{
-    if (!resultCode) {
-        sessionPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::START);
-        Sched(bundleName);
-    } else {
-        sessionPtr_->GetServiceReverseProxy()->RestoreOnBundleStarted(resultCode, bundleName);
-        sessionPtr_->RemoveExtInfo(bundleName);
-    }
-    string path = BConstants::GetSaBundleBackupRootDir(sessionPtr_->GetSessionUserId()).append(bundleName);
-    if (!ForceRemoveDirectory(path)) {
-        HILOGE("RemoveDirectory failed");
-    }
 }
 }; // namespace OHOS::FileManagement::Backup
