@@ -15,7 +15,8 @@
         "subsystem": "filemanagement",
         "syscap": [
             "SystemCapability.FileManagement.AppFileService",
-            "SystemCapability.FileManagement.StorageService.Backup"
+            "SystemCapability.FileManagement.StorageService.Backup",
+            "SystemCapability.FileManagement.AppFileService.FolderAuthorization"
         ],
         "deps": {
             "components": [
