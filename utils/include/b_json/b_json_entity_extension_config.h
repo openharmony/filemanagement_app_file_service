@@ -62,6 +62,13 @@ public:
      */
     std::string GetRestoreDeps() const;
 
+    /**
+     * @brief Get the Support Scene object
+     *
+     * @return std::string
+     */
+    std::string GetSupportScene() const;
+
 public:
     std::string GetJSonSource(std::string_view jsonFromRealWorld, std::any option);
 

@@ -46,6 +46,7 @@ ohos_shared_library("fileshare_native") {
   sources = [
     "../../common/src/json_utils.cpp",
     "../../common/src/sandbox_helper.cpp",
+    "file_share/src/file_permission.cpp",
     "file_share/src/file_share.cpp",
   ]
 
@@ -122,9 +123,14 @@ ohos_shared_library("remote_file_share_native") {
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "hilog:libhilog",
   ]
+
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.distributedhardware_device_manager)) {
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines = [ "ENABLE_DEVICE_MANAGER" ]
+  }
 
   innerapi_tags = [ "platformsdk_indirect" ]
   part_name = "app_file_service"

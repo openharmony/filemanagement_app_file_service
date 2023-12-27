@@ -70,6 +70,27 @@ void BackupExtExtension::VerifyCaller()
     }
 }
 
+static string GenerateHashForFileName(const string &fName)
+{
+    ostringstream strHex;
+    strHex << hex;
+
+    hash<string> strHash;
+    size_t szHash = strHash(fName);
+    strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
+    return strHex.str();
+}
+
+static bool CheckIfTarSuffix(const string &fileName)
+{
+    if (auto suffix = string_view(".tar");
+        fileName.length() > suffix.length() &&
+        equal(fileName.rbegin(), next(fileName.rbegin(), suffix.length()), suffix.rbegin(), suffix.rend())) {
+        return true;
+    }
+    return false;
+}
+
 UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
 {
     try {
@@ -80,10 +101,6 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
 
         VerifyCaller();
 
-        if (fileName.find('/') != string::npos) {
-            throw BError(BError::Codes::EXT_INVAL_ARG, "Filename is not valid");
-        }
-
         string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
             string str = string("Failed to create restore folder. ").append(std::generic_category().message(errno));
@@ -91,6 +108,13 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
         }
 
         string tarName = path + fileName;
+        if (fileName.find('/') != string::npos) {
+            HILOGD("GetFileHandle: fileName include path symbol, need to make hash.");
+            tarName = path + GenerateHashForFileName(fileName);
+            if (CheckIfTarSuffix(fileName)) {
+                tarName += ".tar";
+            }
+        }
         if (access(tarName.c_str(), F_OK) == 0) {
             throw BError(BError::Codes::EXT_INVAL_ARG, string("The file already exists"));
         }
@@ -149,7 +173,7 @@ static ErrCode BigFileReady(sptr<IService> proxy)
 
         UniqueFd fd(open(item.fileName.data(), O_RDONLY));
         if (fd < 0) {
-            HILOGE("open file failed, file name is %{public}s", item.fileName.c_str());
+            HILOGE("open file failed, file name is %{public}s, err = %{public}d", item.fileName.c_str(), errno);
             continue;
         }
 
@@ -199,6 +223,14 @@ ErrCode BackupExtExtension::PublishFile(const string &fileName)
 
         string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         string tarName = path + fileName;
+        // 带路径的文件名在这里转换为hash值
+        if (fileName.find('/') != string::npos) {
+            HILOGD("PublishFile: fileName include path symbol, need to make hash.");
+            tarName = path + GenerateHashForFileName(fileName);
+            if (CheckIfTarSuffix(fileName)) {
+                tarName += ".tar";
+            }
+        }
         {
             BExcepUltils::VerifyPath(tarName, true);
             unique_lock<shared_mutex> lock(lock_);
@@ -238,7 +270,8 @@ ErrCode BackupExtExtension::HandleBackup()
     auto cache = cachedEntity.Structuralize();
     if (!cache.GetAllowToBackupRestore()) {
         HILOGI("Application does not allow backup or restore");
-        return BError(BError::Codes::EXT_INVAL_ARG, "Application does not allow backup or restore").GetCode();
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+            .GetCode();
     }
     AsyncTaskOnBackup();
     return 0;
@@ -249,14 +282,15 @@ static bool IsUserTar(const string &tarFile, const string &indexFile)
     if (tarFile.empty()) {
         return false;
     }
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(indexFile.data(), O_RDONLY)));
+    string filePath = BExcepUltils::Canonicalize(indexFile);
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(filePath.data(), O_RDONLY)));
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManageInfo();
-    for (auto &item : info) {
-        if (item.hashName == tarFile) {
-            HILOGI("tarFile:%{public}s isUserTar:%{public}d", tarFile.data(), item.isUserTar);
-            return item.isUserTar;
-        }
+    auto iter = find_if(info.begin(), info.end(),
+    [&tarFile](const auto& item) { return item.hashName == tarFile; });
+    if (iter != info.end()) {
+        HILOGI("tarFile:%{public}s isUserTar:%{public}d", tarFile.data(), iter->isUserTar);
+        return iter->isUserTar;
     }
     HILOGE("Can not find tarFile %{public}s", tarFile.data());
     return false;
@@ -269,7 +303,7 @@ static pair<TarMap, vector<string>> GetFileInfos(const vector<string> &includes,
         return {};
     }
 
-    auto GetStringHash = [](const TarMap &m, const string &str) -> string {
+    auto getStringHash = [](const TarMap &m, const string &str) -> string {
         ostringstream strHex;
         strHex << hex;
 
@@ -288,7 +322,7 @@ static pair<TarMap, vector<string>> GetFileInfos(const vector<string> &includes,
 
     TarMap bigFiles;
     for (const auto &item : files) {
-        string md5Name = GetStringHash(bigFiles, item.first);
+        string md5Name = getStringHash(bigFiles, item.first);
         if (!md5Name.empty()) {
             bigFiles.emplace(md5Name, make_tuple(item.first, item.second, true));
         }
@@ -349,6 +383,26 @@ int BackupExtExtension::DoRestore(const string &fileName)
     // REM: 解压启动Extension时即挂载好的备份目录中的数据
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     string tarName = path + fileName;
+
+    // 带路径的恢复需要找到hash后的待解压文件
+    if (fileName.find('/') != string::npos) {
+        HILOGD("DoRestore: fileName include path symbol, need to make hash.");
+        string filePath = path + GenerateHashForFileName(fileName);
+        size_t pos = filePath.rfind('/');
+        if (pos == string::npos) {
+            return EPERM;
+        }
+        string folderPath = filePath.substr(0, pos);
+        if (!ForceCreateDirectory(folderPath.data())) {
+            HILOGE("Failed to create directory");
+            return EPERM;
+        }
+        tarName = filePath;
+        if (CheckIfTarSuffix(fileName)) {
+            tarName += ".tar";
+        }
+    }
+
     // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
     if (extension_->SpeicalVersionForCloneAndCloud() || extension_->UseFullBackupOnly()) {
         UntarFile::GetInstance().UnPacket(tarName, path);
@@ -398,7 +452,116 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
     });
 }
 
-static void RestoreBigFiles()
+static bool RestoreBigFilesWithPath(string& fileName, const string& path,
+                                    const string& hashName, const string& filePath)
+{
+    // 带路径的文件名在这里转换为hash值
+    HILOGD("RestoreBigFiles: fileName include path symbol, need to make hash.");
+    fileName = path + GenerateHashForFileName(hashName);
+    if (access(fileName.data(), F_OK) != 0) {
+        HILOGI("file does not exist");
+        return false;
+    }
+
+    size_t pos = filePath.rfind('/');
+    if (pos == string::npos) {
+        return false;
+    }
+    string folderPath = "/" + filePath.substr(0, pos);
+    if (!ForceCreateDirectory(folderPath.data())) {
+        HILOGE("Failed to create directory");
+        return false;
+    }
+    return true;
+}
+
+static bool CheckAndCreateDirectory(const string& filePath)
+{
+    size_t pos = filePath.rfind('/');
+    if (pos == string::npos) {
+        return true;
+    }
+
+    string folderPath = "/" + filePath.substr(0, pos);
+    if (access(folderPath.c_str(), F_OK) != 0) {
+        if (!ForceCreateDirectory(folderPath.data())) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+static bool RestoreBigFilePrecheck(string& fileName, const string& path,
+                                   const string& hashName, const string& filePath)
+{
+    if (filePath.empty()) {
+        HILOGE("file path is empty. %{public}s", filePath.c_str());
+        return false;
+    }
+
+    // 带路径的文件名特殊处理
+    if (hashName.find('/') != string::npos) {
+        if (!RestoreBigFilesWithPath(fileName, path, hashName, filePath)) {
+            HILOGE("failed to restore big files with path %{public}s", filePath.c_str());
+            return false;
+        }
+    } else { // 不带路径的文件名
+        if (access(fileName.data(), F_OK) != 0) {
+            HILOGI("file does not exist");
+            return false;
+        }
+        
+        // 目录不存在且只有大文件时，不能通过untar创建，需要检查并创建
+        if (!CheckAndCreateDirectory(filePath)) {
+            HILOGE("failed to create directory %{public}s", filePath.c_str());
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static void RestoreBigFileAfter(const string& fileName, const string& filePath, const struct stat& sta,
+                                const set<string>& lks)
+{
+    if (chmod(filePath.c_str(), sta.st_mode) != 0) {
+        HILOGE("Failed to chmod filePath, err = %{public}d", errno);
+    }
+
+    if (fileName != filePath) {
+        auto resolvedFileName = make_unique<char[]>(PATH_MAX);
+        auto resolvedFilePath = make_unique<char[]>(PATH_MAX);
+        bool allOk = true;
+        if (!realpath(fileName.data(), resolvedFileName.get())) {
+            HILOGE("failed to real path for fileName");
+            allOk = false;
+        }
+        if (!realpath(filePath.data(), resolvedFilePath.get())) {
+            HILOGE("failed to real path for filePath");
+            allOk = false;
+        }
+        if (allOk && string_view(resolvedFileName.get()) != string_view(resolvedFilePath.get())) {
+            if (!RemoveFile(fileName)) {
+                HILOGE("Failed to delete the big file");
+            }
+        }
+    }
+
+    for (const auto &lksPath : lks) {
+        if (link(filePath.data(), lksPath.data())) {
+            HILOGE("failed to create hard link file, errno : %{public}d", errno);
+        }
+    }
+
+    struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
+    UniqueFd fd(open(filePath.data(), O_RDONLY));
+    if (futimens(fd.Get(), tv) != 0) {
+        HILOGI("failed to change the file time. %{public}s , %{public}d", filePath.c_str(), errno);
+    }
+}
+
+static void RestoreBigFiles(bool appendTargetPath)
 {
     // 获取索引文件内容
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
@@ -412,41 +575,18 @@ static void RestoreBigFiles()
         }
 
         string fileName = path + item.hashName;
-        string filePath = item.fileName;
-        struct stat sta = item.sta;
+        string filePath = appendTargetPath ? (path + item.fileName) : item.fileName;
 
-        if (access(fileName.data(), F_OK) != 0) {
-            HILOGI("file does not exist");
+        if (!RestoreBigFilePrecheck(fileName, path, item.hashName, filePath)) {
             continue;
         }
-        if (filePath.empty()) {
-            HILOGE("file path is empty. %{public}s", filePath.c_str());
-            continue;
-        }
+
         if (!BFile::CopyFile(fileName, filePath)) {
             HILOGE("failed to copy the file. err = %{public}d", errno);
             continue;
         }
-        if (chmod(filePath.c_str(), item.sta.st_mode) != 0) {
-            HILOGE("Failed to chmod %{public}s, err = %{public}d", filePath.c_str(), errno);
-        }
-        if (fileName != filePath) {
-            if (!RemoveFile(fileName)) {
-                HILOGE("Failed to delete the big file %{public}s", fileName.c_str());
-            }
-        }
-        set<string> lks = cache.GetHardLinkInfo(item.hashName);
-        for (const auto &lksPath : lks) {
-            if (link(filePath.data(), lksPath.data())) {
-                HILOGE("failed to create hard link file %{public}s  errno : %{public}d", lksPath.c_str(), errno);
-            }
-        }
-
-        struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
-        UniqueFd fd(open(filePath.data(), O_RDONLY));
-        if (futimens(fd.Get(), tv) != 0) {
-            HILOGI("failed to change the file time. %{public}s , %{public}d", filePath.c_str(), errno);
-        }
+        
+        RestoreBigFileAfter(fileName, filePath, item.sta, cache.GetHardLinkInfo(item.hashName));
     }
 }
 
@@ -486,7 +626,10 @@ void BackupExtExtension::AsyncTaskRestore()
                 }
             }
             // 恢复用户tar包以及大文件
-            RestoreBigFiles();
+            // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景
+            bool appendTargetPath = ptr->extension_->UseFullBackupOnly() &&
+                                    !ptr->extension_->SpeicalVersionForCloneAndCloud();
+            RestoreBigFiles(appendTargetPath);
 
             // delete 1.tar/manage.json
             DeleteBackupTars();
@@ -577,6 +720,11 @@ void BackupExtExtension::DoClear()
         if (!ForceRemoveDirectory(restoreCache)) {
             HILOGI("Failed to delete the restore cache %{public}s", restoreCache.c_str());
         }
+        // delete el1 backup/restore
+        ForceRemoveDirectory(
+            string(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1).append(BConstants::SA_BUNDLE_BACKUP_BACKUP));
+        ForceRemoveDirectory(
+            string(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
         unique_lock<shared_mutex> lock(lock_);
         tars_.clear();
     } catch (...) {
@@ -643,12 +791,10 @@ ErrCode BackupExtExtension::HandleRestore()
         throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
     }
     // read backup_config is allow to backup or restore
-    string usrConfig = extension_->GetUsrConfig();
-    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
-    auto cache = cachedEntity.Structuralize();
-    if (!cache.GetAllowToBackupRestore()) {
+    if (!extension_->AllowToBackupRestore()) {
         HILOGI("Application does not allow backup or restore");
-        return BError(BError::Codes::EXT_INVAL_ARG, "Application does not allow backup or restore").GetCode();
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+            .GetCode();
     }
 
     // async do restore.

@@ -47,7 +47,7 @@ const uint32_t TSIZE_BASE = 124;
 const uint32_t TMTIME_BASE = 136;
 const uint32_t CHKSUM_BASE = 148;
 const uint32_t BLOCK_SIZE = 512;
-const uint64_t READ_BUFF_SIZE = 512 * 1024;
+const off_t READ_BUFF_SIZE = 512 * 1024;
 const uint8_t BLANK_SPACE = 0x20;
 const uint64_t MB_TO_BYTE = 1024 * 1024;
 const std::string TMAGIC = "ustar";
@@ -55,12 +55,8 @@ const char REGTYPE = '0';   // regular file
 const char AREGTYPE = '\0'; // regular file
 const char SYMTYPE = '2';   // reserved
 const char DIRTYPE = '5';   // directory
-const char SPLIT_START_TYPE = '8';
-const char SPLIT_CONTINUE_TYPE = '9';
-const char SPLIT_END_TYPE = 'A';
-const char GNUTYPE_LONGLINK = 'K';
 const char GNUTYPE_LONGNAME = 'L';
-}
+} // namespace
 
 // 512 bytes
 using TarHeader = struct {
@@ -131,7 +127,7 @@ private:
      * @param read 读取文件
      * @param isFilled 是否写完
      */
-    int SplitWriteAll(const std::vector<uint8_t> &ioBuffer, int read, bool &isFilled);
+    off_t SplitWriteAll(const std::vector<uint8_t> &ioBuffer, off_t read, bool &isFilled);
 
     /**
      * @brief creaat split tarfile
@@ -149,48 +145,6 @@ private:
      * @brief fill split tailblocks
      */
     bool FillSplitTailBlocks();
-
-    /**
-     * @brief fill split headerblocks
-     */
-    bool FillSplitHeaderBlocks();
-
-    /**
-     * @brief flush the file of tar is dir/files
-     *
-     * @param isSplit  是否分片
-     * @param fileSize  文件大小
-     * @param hdrSize 文件夹大小
-     * @param typeFlag 文件类型
-     */
-    void FlushTarSizeAndFlag(bool isSplit, const off_t fileSize, off_t &hdrSize, char &typeFlag);
-
-    /**
-     * @brief is first split
-     *
-     * @param filesize 文件大小
-     */
-    bool IsFirstSplitPKT(off_t fileSize);
-
-    /**
-     * @brief get size of file
-     *
-     * @param filesize 文件大小
-     */
-    off_t GetSizeOfFile(off_t fileSize);
-
-    /**
-     * @brief get split PKT rmainsize
-     *
-     */
-    off_t GetSplitPKTRemainSize();
-
-    /**
-     * @brief get firstsize of splitfile
-     *
-     * @param filesize 文件大小
-     */
-    off_t GetFirstSizeOfSplitFile(off_t fileSize);
 
     /**
      * @brief set check sum
@@ -222,7 +176,7 @@ private:
      * @param iobuffer  文件信息数组
      * @param size  文件大小
      */
-    int ReadAll(int fd, std::vector<uint8_t> &ioBuffer, off_t size);
+    off_t ReadAll(int fd, std::vector<uint8_t> &ioBuffer, off_t size);
 
     /**
      * @brief write files
@@ -272,7 +226,6 @@ private:
     uint32_t tarFileCount_ {0};
 
     std::string currentFileName_ {};
-    off_t fileRemainSize_ {0};
 };
 } // namespace OHOS::FileManagement::Backup
 

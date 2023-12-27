@@ -63,31 +63,6 @@ void SvcBackupConnectionTest::TearDown()
 }
 
 /**
- * @tc.number: SUB_BackupConnection_OnAbilityConnectDone_0100
- * @tc.name: SUB_BackupConnection_OnAbilityConnectDone_0100
- * @tc.desc: 测试 OnAbilityConnectDone 链接回调接口调用成功
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityConnectDone_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-begin SUB_BackupConnection_OnAbilityConnectDone_0100";
-    AppExecFwk::ElementName element;
-    string bundleName = "";
-    element.SetBundleName(bundleName);
-    int resultCode = 1;
-    sptr<BackupExtExtensionMock> mock = sptr(new BackupExtExtensionMock());
-    backupCon_->OnAbilityConnectDone(element, mock->AsObject(), resultCode);
-    bool ret = backupCon_->IsExtAbilityConnected();
-    EXPECT_TRUE(ret);
-    mock = nullptr;
-    backupCon_->OnAbilityConnectDone(element, nullptr, resultCode);
-    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_OnAbilityConnectDone_0100";
-}
-
-/**
  * @tc.number: SUB_BackupConnection_OnAbilityDisconnectDone_0100
  * @tc.name: SUB_BackupConnection_OnAbilityDisconnectDone_0100
  * @tc.desc: 测试 OnAbilityDisconnectDone 链接回调接口调用成功

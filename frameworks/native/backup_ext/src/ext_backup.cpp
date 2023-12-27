@@ -103,12 +103,12 @@ string ExtBackup::GetUsrConfig() const
     return config.empty() ? "" : config[0];
 }
 
-bool ExtBackup::AllowToBackupRestore() const
+bool ExtBackup::AllowToBackupRestore()
 {
     string usrConfig = GetUsrConfig();
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
     auto cache = cachedEntity.Structuralize();
-    if (cache.GetAllowToBackupRestore()) {
+    if (cache.GetAllowToBackupRestore() || WasFromSpeicalVersion() || SpeicalVersionForCloneAndCloud()) {
         return true;
     }
     return false;
@@ -172,13 +172,13 @@ sptr<IRemoteObject> ExtBackup::OnConnect(const AAFwk::Want &want)
             HILOGE("Verification action failed.");
             return nullptr;
         }
+        extAction_ = extAction;
+        GetParament(want);
         // 应用必须配置支持备份恢复
         if (!AllowToBackupRestore()) {
             HILOGE("The application does not allow to backup and restore.");
             return nullptr;
         }
-        extAction_ = extAction;
-        GetParament(want);
 
         Extension::OnConnect(want);
 

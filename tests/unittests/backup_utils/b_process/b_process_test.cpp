@@ -76,4 +76,245 @@ HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0100, testing::ext::TestSize.Lev
     }
     GTEST_LOG_(INFO) << "BProcessTest-end SUB_backup_tool_BProcess_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_tool_BProcess_0200
+ * @tc.name: SUB_backup_tool_BProcess_0200
+ * @tc.desc: 测试ExecuteCmd
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0200, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0200";
+    try {
+        vector<string_view> argvCf = {
+            "",
+            "-cf",
+            "/data/backup/",
+        };
+        auto [bFatalError, ret] = BProcess::ExecuteCmd(argvCf, DetectFatalLog);
+        EXPECT_EQ(ret, 2);
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BProcessTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BProcessTest-end SUB_backup_tool_BProcess_0200";
+}
+
+/**
+ * @tc.number: SUB_backup_tool_BProcess_0300
+ * @tc.name: SUB_backup_tool_BProcess_0300
+ * @tc.desc: 测试ExecuteCmd
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0300, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0300";
+    try {
+        vector<string_view> argvCf = {
+            "/system/bin/tar",
+            "",
+            "/data/backup/",
+        };
+        auto [bFatalError, ret] = BProcess::ExecuteCmd(argvCf, DetectFatalLog);
+        EXPECT_EQ(ret, 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BProcessTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BProcessTest-end SUB_backup_tool_BProcess_0300";
+}
+
+/**
+ * @tc.number: SUB_backup_tool_BProcess_0400
+ * @tc.name: SUB_backup_tool_BProcess_0400
+ * @tc.desc: 测试ExecuteCmd
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0400, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0400";
+    try {
+        vector<string_view> argvCf = {
+            "/system/bin/tar",
+            "-cf",
+            "",
+        };
+        auto [bFatalError, ret] = BProcess::ExecuteCmd(argvCf, DetectFatalLog);
+        EXPECT_EQ(ret, 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BProcessTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BProcessTest-end SUB_backup_tool_BProcess_0400";
+}
+
+/**
+ * @tc.number: SUB_backup_tool_BProcess_0500
+ * @tc.name: SUB_backup_tool_BProcess_0500
+ * @tc.desc: 测试ExecuteCmd
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0500, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0500";
+    try {
+        vector<string_view> argvCf = {
+            "",
+            "",
+            "/data/backup/",
+        };
+        auto [bFatalError, ret] = BProcess::ExecuteCmd(argvCf, DetectFatalLog);
+        EXPECT_EQ(ret, 2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BProcessTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BProcessTest-end SUB_backup_tool_BProcess_0500";
+}
+
+/**
+ * @tc.number: SUB_backup_tool_BProcess_0600
+ * @tc.name: SUB_backup_tool_BProcess_0600
+ * @tc.desc: 测试ExecuteCmd
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0600, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0600";
+    try {
+        vector<string_view> argvCf = {
+            "",
+            "-cf",
+            "",
+        };
+        auto [bFatalError, ret] = BProcess::ExecuteCmd(argvCf, DetectFatalLog);
+        EXPECT_EQ(ret, 2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BProcessTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BProcessTest-end SUB_backup_tool_BProcess_0600";
+}
+
+/**
+ * @tc.number: SUB_backup_tool_BProcess_0700
+ * @tc.name: SUB_backup_tool_BProcess_0700
+ * @tc.desc: 测试ExecuteCmd
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0700, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0700";
+    try {
+        vector<string_view> argvCf = {
+            "/system/bin/tar",
+            "",
+            "",
+        };
+        auto [bFatalError, ret] = BProcess::ExecuteCmd(argvCf, DetectFatalLog);
+        EXPECT_EQ(ret, 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BProcessTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BProcessTest-end SUB_backup_tool_BProcess_0700";
+}
+
+/**
+ * @tc.number: SUB_backup_tool_BProcess_0800
+ * @tc.name: SUB_backup_tool_BProcess_0800
+ * @tc.desc: 测试ExecuteCmd
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0800, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0800";
+    try {
+        vector<string_view> argvCf = {
+            "",
+            "",
+            "",
+        };
+        auto [bFatalError, ret] = BProcess::ExecuteCmd(argvCf, DetectFatalLog);
+        EXPECT_EQ(ret, 2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BProcessTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BProcessTest-end SUB_backup_tool_BProcess_0800";
+}
+
+/**
+ * @tc.number: SUB_backup_tool_BProcess_0900
+ * @tc.name: SUB_backup_tool_BProcess_0900
+ * @tc.desc: 测试ExecuteCmd
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0900, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0900";
+    try {
+        vector<string_view> argvCf = {
+            "/system/bin/tar",
+        };
+        auto [bFatalError, ret] = BProcess::ExecuteCmd(argvCf, DetectFatalLog);
+        EXPECT_EQ(ret, 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BProcessTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BProcessTest-end SUB_backup_tool_BProcess_0900";
+}
+
+/**
+ * @tc.number: SUB_backup_tool_BProcess_1000
+ * @tc.name: SUB_backup_tool_BProcess_1000
+ * @tc.desc: 测试ExecuteCmd
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_1000, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_1000";
+    try {
+        vector<string_view> argvCf = {
+            "/system/bin/tar",
+            "-cf",
+        };
+        auto [bFatalError, ret] = BProcess::ExecuteCmd(argvCf, DetectFatalLog);
+        EXPECT_EQ(ret, 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BProcessTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BProcessTest-end SUB_backup_tool_BProcess_1000";
+}
 } // namespace OHOS::FileManagement::Backup

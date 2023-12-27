@@ -77,6 +77,45 @@ HWTEST_F(BDirTest, b_dir_GetDirFiles_0100, testing::ext::TestSize.Level0)
 }
 
 /**
+ * @tc.number: SUB_backup_b_dir_GetDirFiles_0104
+ * @tc.name: b_dir_GetDirFiles_0104
+ * @tc.desc: Test function of GetDirFiles interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_GetDirFiles_0104, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetDirFiles_0104";
+    try {
+        TestManager tm("b_dir_GetDirFiles_0104");
+
+        string preparedDir = "/data/app/";
+        string touchFilePrefix = string("touch ") + preparedDir;
+        system(touchFilePrefix.append("a.txt").c_str());
+        system(touchFilePrefix.append("b.txt").c_str());
+        system(touchFilePrefix.append("c.txt").c_str());
+
+        bool bSucc;
+        vector<string> out;
+        tie(bSucc, out) = BDir::GetDirFiles(preparedDir);
+
+        vector<string> expectedRes = {preparedDir.append("a.txt"), preparedDir.append("b.txt"),
+                                      preparedDir.append("c.txt")};
+        EXPECT_EQ(out, expectedRes);
+
+        tie(bSucc, out) = BDir::GetDirFiles("dev");
+        EXPECT_EQ(bSucc, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetDirFiles_0104";
+}
+
+
+/**
  * @tc.number: SUB_backup_b_dir_GetBigFiles_0100
  * @tc.name: b_dir_GetBigFiles_0100
  * @tc.desc: 测试GetBigFiles接口是否能成功获取大文件
@@ -140,6 +179,79 @@ HWTEST_F(BDirTest, b_dir_GetBigFiles_0200, testing::ext::TestSize.Level1)
 }
 
 /**
+ * @tc.number: SUB_backup_b_dir_GetBigFiles_0201
+ * @tc.name: b_dir_GetBigFiles_0201
+ * @tc.desc: 测试GetBigFiles接口 分支逻辑
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_GetBigFiles_0201, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetBigFiles_0201";
+    try {
+        vector<string> includes = {"/data/"};
+        vector<string> excludes;
+        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
+        EXPECT_EQ(errCode, ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetBigFiles_0201";
+}
+
+/**
+ * @tc.number: SUB_backup_b_dir_GetBigFiles_0202
+ * @tc.name: b_dir_GetBigFiles_0202
+ * @tc.desc: 测试GetBigFiles接口 分支逻辑
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_GetBigFiles_0202, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetBigFiles_0202";
+    try {
+        vector<string> includes = {"/data/app/"};
+        vector<string> excludes;
+        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
+        EXPECT_EQ(errCode, ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetBigFiles_0202";
+}
+
+/**
+ * @tc.number: SUB_backup_b_dir_GetBigFiles_0203
+ * @tc.name: b_dir_GetBigFiles_0203
+ * @tc.desc: 测试GetBigFiles接口 分支逻辑
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_GetBigFiles_0203, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetBigFiles_0203";
+    try {
+        vector<string> includes;
+        vector<string> excludes;
+        const string str = "";
+        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
+        EXPECT_EQ(errCode, ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetBigFiles_0203";
+}
+
+/**
  * @tc.number: SUB_backup_b_dir_GetBigFiles_0300
  * @tc.name: b_dir_GetBigFiles_0300
  * @tc.desc: 测试GetBigFiles接口 分支逻辑
@@ -179,4 +291,31 @@ HWTEST_F(BDirTest, b_dir_GetBigFiles_0300, testing::ext::TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetBigFiles_0300";
 }
+
+/**
+ * @tc.number: SUB_backup_b_dir_GetDirs_0100
+ * @tc.name: b_dir_GetDirs_0100
+ * @tc.desc: Test function of GetDirs interface for SUCCESS
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_GetDirs_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetDirs_0100";
+    try {
+        TestManager tm("b_dir_GetDirs_0100");
+        vector<string_view> paths;
+        vector<string> res = BDir::GetDirs(paths);
+        set<string> inc(paths.begin(), paths.end());
+        bool result = equal(inc.begin(), inc.end(), res.begin(), res.end());
+        EXPECT_EQ(1, result);
+        EXPECT_EQ(inc.size(), res.size());
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetDirs_0100";
+}
+
 } // namespace OHOS::FileManagement::Backup

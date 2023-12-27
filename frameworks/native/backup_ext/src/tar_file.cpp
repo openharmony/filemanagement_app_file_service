@@ -103,6 +103,12 @@ bool TarFile::TraversalFile(string &filePath)
         return false;
     }
 
+    if (currentTarFileSize_ >= DEFAULT_SLICE_SIZE) {
+        fileCount_ = 0;
+        FillSplitTailBlocks();
+        CreateSplitTarFile();
+    }
+
     // tar包内文件数量大于6000，分片打包
     fileCount_++;
     if (fileCount_ == MAX_FILE_COUNT) {
@@ -110,7 +116,6 @@ bool TarFile::TraversalFile(string &filePath)
         fileCount_ = 0;
         FillSplitTailBlocks();
         CreateSplitTarFile();
-        FillSplitHeaderBlocks();
     }
 
     return true;
@@ -130,7 +135,6 @@ bool TarFile::I2OcsConvert(const struct stat &st, TarHeader &hdr, string &fileNa
     if (S_ISREG(st.st_mode)) {
         hdr.typeFlag = REGTYPE;
         off_t hdrSize = st.st_size;
-        FlushTarSizeAndFlag(isSplit, st.st_size, hdrSize, hdr.typeFlag);
         if (sizeof(off_t) <= OFF_T_SIZE || st.st_size <= static_cast<off_t>(MAX_FILE_SIZE)) {
             memcpy_s(hdr.size, sizeof(hdr.size), I2Ocs(sizeof(hdr.size), hdrSize).c_str(), sizeof(hdr.size) - 1);
         } else {
@@ -170,7 +174,7 @@ bool TarFile::AddFile(string &fileName, const struct stat &st, bool isSplit)
     FillOwnerName(hdr, st);
     SetCheckSum(hdr);
 
-    if ((hdr.typeFlag != REGTYPE) && (hdr.typeFlag != SPLIT_START_TYPE)) {
+    if (hdr.typeFlag != REGTYPE) {
         if (WriteTarHeader(hdr) != BLOCK_SIZE) {
             HILOGE("Failed to write all");
             return false;
@@ -201,12 +205,11 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
         return false;
     }
     off_t remain = size;
-    fileRemainSize_ = remain;
     bool isFilled = false;
 
     while (remain > 0) {
-        size_t read = ioBuffer_.size();
-        if (size < ioBuffer_.size()) {
+        off_t read = ioBuffer_.size();
+        if (size < static_cast<off_t>(ioBuffer_.size())) {
             read = size;
         } else {
             if (read > remain) {
@@ -219,7 +222,6 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
             break;
         }
 
-        fileRemainSize_ -= read;
         // write buffer to tar file
         if (SplitWriteAll(ioBuffer_, read, isFilled) != read) {
             HILOGE("Failed to split write all");
@@ -229,8 +231,7 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
     }
 
     close(fd);
-    fileRemainSize_ = 0;
-    if (0 == remain) {
+    if (remain == 0) {
         if (!isFilled) {
             return CompleteBlock(size);
         } else {
@@ -240,13 +241,13 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
     return false;
 }
 
-int TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, int read, bool &isFilled)
+off_t TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, off_t read, bool &isFilled)
 {
-    size_t len = ioBuffer.size();
+    off_t len = ioBuffer.size();
     if (len > read) {
         len = read;
     }
-    size_t count = 0;
+    off_t count = 0;
     while (count < len) {
         auto writeBytes = fwrite(&ioBuffer[count], sizeof(uint8_t), len - count, currentTarFile_);
         if (writeBytes < 1) {
@@ -255,17 +256,6 @@ int TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, int read, bool &isFi
         }
         count += writeBytes;
         currentTarFileSize_ += writeBytes;
-        if (currentTarFileSize_ >= DEFAULT_SLICE_SIZE) {
-            HILOGI("Current tar file size is over %{public}dM, start to splice tar", DEFAULT_SLICE_SIZE);
-            fileCount_ = 0;
-            if (count < READ_BUFF_SIZE) {
-                isFilled = true;
-                CompleteBlock(count);
-            }
-            FillSplitTailBlocks();
-            CreateSplitTarFile();
-            FillSplitHeaderBlocks();
-        }
     }
     return count;
 }
@@ -329,81 +319,13 @@ bool TarFile::FillSplitTailBlocks()
     return true;
 }
 
-bool TarFile::FillSplitHeaderBlocks()
-{
-    if (fileRemainSize_ == 0) {
-        return true;
-    }
-    struct stat curStat;
-    lstat(currentFileName_.c_str(), &curStat);
-    return AddFile(currentFileName_, curStat, true);
-}
-
-void TarFile::FlushTarSizeAndFlag(bool isSplit, const off_t fileSize, off_t &hdrSize, char &typeFlag)
-{
-    if (isSplit) {
-        if (fileRemainSize_ <= DEFAULT_SLICE_SIZE) {
-            typeFlag = SPLIT_END_TYPE;
-            hdrSize = fileRemainSize_;
-        } else {
-            typeFlag = SPLIT_CONTINUE_TYPE;
-            hdrSize = DEFAULT_SLICE_SIZE;
-        }
-    } else {
-        if (IsFirstSplitPKT(fileSize)) {
-            typeFlag = SPLIT_START_TYPE;
-            hdrSize = GetFirstSizeOfSplitFile(fileSize);
-        }
-    }
-}
-
-bool TarFile::IsFirstSplitPKT(off_t fileSize)
-{
-    off_t fileSpace = GetSizeOfFile(fileSize);
-    off_t splitRemainSpace = GetSplitPKTRemainSize();
-    if (fileSpace > splitRemainSpace) {
-        return true;
-    }
-    return false;
-}
-
-off_t TarFile::GetSizeOfFile(off_t fileSize)
-{
-    const int PADDING_BLOCK_NUM = 2;
-    size_t nameSize = currentFileName_.length();
-    off_t len = 0;
-    if (nameSize >= TNAME_LEN) {
-        len = (nameSize / BLOCK_SIZE + PADDING_BLOCK_NUM) * BLOCK_SIZE;
-    }
-    len += (fileSize / BLOCK_SIZE + PADDING_BLOCK_NUM - 1) * BLOCK_SIZE;
-    return len;
-}
-
-off_t TarFile::GetSplitPKTRemainSize()
-{
-    off_t size = DEFAULT_SLICE_SIZE - currentTarFileSize_;
-    return size;
-}
-
-off_t TarFile::GetFirstSizeOfSplitFile(off_t fileSize)
-{
-    off_t fileSpace = GetSizeOfFile(fileSize);
-    off_t splitRemainSpace = GetSplitPKTRemainSize();
-
-    const int END_BLOCK_SIZE = 1024;
-    if (fileSpace - splitRemainSpace <= END_BLOCK_SIZE) {
-        return fileSpace;
-    }
-    return splitRemainSpace;
-}
-
 void TarFile::SetCheckSum(TarHeader &hdr)
 {
     int sum = 0;
-    vector<uint8_t> buffer {};
+    vector<uint32_t> buffer {};
     buffer.resize(sizeof(hdr));
     buffer.assign(reinterpret_cast<uint8_t *>(&hdr), reinterpret_cast<uint8_t *>(&hdr) + sizeof(hdr));
-    for (int index = 0; index < BLOCK_SIZE; index++) {
+    for (uint32_t index = 0; index < BLOCK_SIZE; index++) {
         if (index < CHKSUM_BASE || index > CHKSUM_BASE + CHKSUM_LEN - 1) {
             sum += (buffer[index] & 0xFF);
         } else {
@@ -417,7 +339,7 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
 {
     struct passwd *pw = getpwuid(st.st_uid);
     if (pw != nullptr) {
-        int ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%s", pw->pw_name);
+        size_t ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%s", pw->pw_name);
         if (ret < 0 || ret >= sizeof(hdr.uname)) {
             HILOGE("Fill pw_name failed, err = %{public}d", errno);
         }
@@ -442,10 +364,10 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
     }
 }
 
-int TarFile::ReadAll(int fd, vector<uint8_t> &ioBuffer, off_t size)
+off_t TarFile::ReadAll(int fd, vector<uint8_t> &ioBuffer, off_t size)
 {
-    size_t count = 0;
-    size_t len = ioBuffer.size();
+    off_t count = 0;
+    off_t len = ioBuffer.size();
     if (len > size) {
         len = size;
     }
@@ -481,8 +403,7 @@ int TarFile::WriteAll(const vector<uint8_t> &buf, size_t len)
 string TarFile::I2Ocs(int len, off_t val)
 {
     char tmp[OCTSTR_LEN] = {0};
-    int ret = sprintf_s(tmp, sizeof(tmp), "%0*llo", len - 1, val);
-    if (ret < 0) {
+    if (sprintf_s(tmp, sizeof(tmp), "%0*llo", len - 1, val) < 0) {
         return "";
     }
     return string(tmp);

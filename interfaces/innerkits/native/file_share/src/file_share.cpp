@@ -107,22 +107,56 @@ static bool IsExistFile(const string &path)
     return S_ISREG(buf.st_mode);
 }
 
-static void GetSharePath(FileShareInfo &info, uint32_t flag)
+static bool CheckIfNeedShare(ShareFileType type, const string &path)
 {
-    string shareRPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH +info.targetBundleName_ +
+    if (type == ShareFileType::DIR_TYPE) {
+        return true;
+    }
+
+    struct stat buf = {};
+    if (stat(path.c_str(), &buf) != 0) {
+        return true;
+    }
+
+    if (buf.st_nlink != 0) {
+        LOGI("no need create again");
+        return false;
+    }
+
+    return true;
+}
+
+static int32_t GetSharePath(FileShareInfo &info, uint32_t flag)
+{
+    string shareRPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH + info.targetBundleName_ +
                         SHARE_R_PATH + info.providerBundleName_ + info.providerSandboxPath_;
-    string shareRWPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH +info.targetBundleName_ +
+    string shareRWPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH + info.targetBundleName_ +
                          SHARE_RW_PATH + info.providerBundleName_ + info.providerSandboxPath_;
-    if ((flag & WRITE_URI_PERMISSION) == WRITE_URI_PERMISSION) {
-        info.sharePath_.push_back(shareRWPath);
-        info.sharePath_.push_back(shareRPath);
-    } else if ((flag & READ_URI_PERMISSION) == READ_URI_PERMISSION) {
+
+    if (!SandboxHelper::IsValidPath(shareRPath) || !SandboxHelper::IsValidPath(shareRWPath)) {
+        LOGE("Invalid share path");
+        return -EINVAL;
+    }
+
+    if (CheckIfNeedShare(info.type_, shareRPath)) {
         info.sharePath_.push_back(shareRPath);
     }
+
+    if ((flag & WRITE_URI_PERMISSION) == WRITE_URI_PERMISSION &&
+        CheckIfNeedShare(info.type_, shareRWPath)) {
+        info.sharePath_.push_back(shareRWPath);
+    }
+
+    return 0;
 }
 
 static int32_t GetShareFileType(FileShareInfo &info)
 {
+    if (!SandboxHelper::CheckValidPath(info.providerLowerPath_)) {
+        LOGE("info.providerLowerPath_ is invalid");
+        return -EINVAL;
+    }
+
     if (IsExistFile(info.providerLowerPath_)) {
         info.type_ = ShareFileType::FILE_TYPE;
         return 0;
@@ -150,7 +184,11 @@ static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t fl
         return ret;
     }
 
-    GetSharePath(info, flag);
+    ret = GetSharePath(info, flag);
+    if (ret != 0) {
+        LOGE("Failed to get share path %{public}d", ret);
+        return ret;
+    }
     return 0;
 }
 
@@ -224,17 +262,7 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
 
 static int32_t PreparePreShareDir(FileShareInfo &info)
 {
-    if (!SandboxHelper::CheckValidPath(info.providerLowerPath_)) {
-        LOGE("info.providerLowerPath_ is invalid");
-        return -EINVAL;
-    }
-
     for (size_t i = 0; i < info.sharePath_.size(); i++) {
-        if (!SandboxHelper::IsValidPath(info.sharePath_[i])) {
-            LOGE("Invalid share path");
-            return -EINVAL;
-        }
-
         if (access(info.sharePath_[i].c_str(), F_OK) != 0) {
             string sharePathDir = info.sharePath_[i];
             size_t posLast = info.sharePath_[i].find_last_of("/");
@@ -257,6 +285,35 @@ static bool NotRequiredBindMount(const FileShareInfo &info, uint32_t flag, const
         uri.find(BROKER_SCHEME_PREFIX) == 0);
 }
 
+static int32_t StartShareFile(const FileShareInfo &info)
+{
+    for (size_t i = 0; i < info.sharePath_.size(); i++) {
+        if (info.type_ == ShareFileType::FILE_TYPE) {
+            int fd = open(info.sharePath_[i].c_str(), O_RDONLY | O_CREAT,
+                          S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+            if (fd < 0) {
+                LOGE("Create file failed with %{public}d", errno);
+                return -errno;
+            }
+            close(fd);
+        } else {
+            if (access(info.sharePath_[i].c_str(), 0) != 0 &&
+                mkdir(info.sharePath_[i].c_str(), DIR_MODE) != 0) {
+                LOGE("Failed to make dir with %{public}d", errno);
+                return -errno;
+            }
+        }
+
+        if (mount(info.providerLowerPath_.c_str(), info.sharePath_[i].c_str(),
+                  nullptr, MS_BIND, nullptr) != 0) {
+            LOGE("Mount failed with %{public}d", errno);
+            return -errno;
+        }
+    }
+
+    return 0;
+}
+
 static int32_t CreateSingleShareFile(const string &uri, uint32_t tokenId, uint32_t flag, FileShareInfo &info)
 {
     LOGD("CreateShareFile begin");
@@ -271,27 +328,19 @@ static int32_t CreateSingleShareFile(const string &uri, uint32_t tokenId, uint32
         return ret;
     }
 
+    if (info.sharePath_.size() == 0) {
+        LOGI("no need share path, Create Share File Successfully!");
+        return 0;
+    }
+
     ret = PreparePreShareDir(info);
     if (ret != 0) {
         return ret;
     }
 
-    if (info.type_ != ShareFileType::FILE_TYPE) {
-        LOGE("Invalid argument not support dir to share");
-        return -EINVAL;
-    }
-
-    for (size_t i = 0; i < info.sharePath_.size(); i++) {
-        if ((ret = open(info.sharePath_[i].c_str(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) < 0) {
-            LOGE("Create file failed with %{public}d", errno);
-            return -errno;
-        }
-        close(ret);
-        if (mount(info.providerLowerPath_.c_str(), info.sharePath_[i].c_str(),
-                  nullptr, MS_BIND, nullptr) != 0) {
-            LOGE("Mount failed with %{public}d", errno);
-            return -errno;
-        }
+    ret = StartShareFile(info);
+    if (ret != 0) {
+        return ret;
     }
 
     info.sharePath_.clear();
