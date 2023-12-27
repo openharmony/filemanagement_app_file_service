@@ -138,4 +138,116 @@ HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0200, testing::ext::Tes
     }
     GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end SUB_backup_tools_op_restore_0200";
 }
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_0300
+ * @tc.name: SUB_backup_tools_op_restore_0300
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-begin SUB_backup_tools_op_restore_0300";
+    try {
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-The pathCapFile field is not contained.";
+        map<string, vector<string>> mapArgToVal;
+
+        vector<string> bundles = {"com.example.app2backup"};
+        vector<string> path = {"/data/backup/tmp"};
+        vector<string> depMode = {"true"};
+        mapArgToVal.insert(make_pair("pathCapFile", path));
+        mapArgToVal.insert(make_pair("bundles", bundles));
+        mapArgToVal.insert(make_pair("depMode", depMode));
+
+        vector<string_view> curOp;
+        curOp.emplace_back("restore");
+        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
+        auto &&opeartions = ToolsOp::GetAllOperations();
+        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
+        int ret = 0;
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-The bundles field is not contained.";
+        mapArgToVal.clear();
+        mapArgToVal.insert(make_pair("pathCapFile", path));
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
+
+        mapArgToVal.clear();
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
+
+        vector<string> path1 = {"/data/tmp/abdc"};
+        mapArgToVal.insert(make_pair("pathCapFile", path1));
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end SUB_backup_tools_op_restore_0300";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_0400
+ * @tc.name: SUB_backup_tools_op_restore_0400
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-begin SUB_backup_tools_op_restore_0400";
+    try {
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-The pathCapFile field is not contained.";
+        map<string, vector<string>> mapArgToVal;
+
+        vector<string> bundles = {"com.example.app2backup"};
+        vector<string> path = {"/data/backup/tmp"};
+        vector<string> depMode = {"false"};
+        mapArgToVal.insert(make_pair("depMode", depMode));
+        mapArgToVal.insert(make_pair("bundles", bundles));
+
+        vector<string_view> curOp;
+        curOp.emplace_back("restore");
+        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
+        auto &&opeartions = ToolsOp::GetAllOperations();
+        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
+        int ret = 0;
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-The bundles field is not contained.";
+        mapArgToVal.clear();
+        mapArgToVal.insert(make_pair("pathCapFile", path));
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
+
+        mapArgToVal.clear();
+        if (matchedOp != opeartions.end()) {
+            ret = matchedOp->Execute(mapArgToVal);
+            EXPECT_NE(ret, 0);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end SUB_backup_tools_op_restore_0400";
+}
 } // namespace OHOS::FileManagement::Backup
