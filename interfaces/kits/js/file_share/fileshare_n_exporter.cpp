@@ -30,13 +30,11 @@ using namespace FileManagement::LibN;
 napi_value FileShareExport(napi_env env, napi_value exports)
 {
     InitOperationMode(env, exports);
-    InitPolicyFlag(env, exports);
     InitPolicyInfo(env, exports);
     InitPolicyErrorCode(env, exports);
     InitPolicyErrorResult(env, exports);
     static napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("grantUriPermission", GrantUriPermission::Async),
-        DECLARE_NAPI_FUNCTION("grantPermission", GrantPermission),
         DECLARE_NAPI_FUNCTION("persistPermission", PersistPermission),
         DECLARE_NAPI_FUNCTION("revokePermission", RevokePermission),
         DECLARE_NAPI_FUNCTION("activatePermission", ActivatePermission),
@@ -83,33 +81,6 @@ void InitOperationMode(napi_env env, napi_value exports)
     status = napi_set_named_property(env, exports, propertyName, obj);
     if (status != napi_ok) {
         HILOGE("Failed to set direction property at initializing OperationMode");
-        return;
-    }
-}
-
-void InitPolicyFlag(napi_env env, napi_value exports)
-{
-    char propertyName[] = "PolicyFlag";
-    napi_property_descriptor desc[] = {
-        DECLARE_NAPI_STATIC_PROPERTY(
-            "ALLOW_PERSISTENCE", NVal::CreateUint32(env, static_cast<uint32_t>(PolicyFlag::ALLOW_PERSISTENCE)).val_),
-        DECLARE_NAPI_STATIC_PROPERTY(
-            "FORBID_PERSISTENCE", NVal::CreateUint32(env, static_cast<uint32_t>(PolicyFlag::FORBID_PERSISTENCE)).val_),
-    };
-    napi_value obj = nullptr;
-    napi_status status = napi_create_object(env, &obj);
-    if (status != napi_ok) {
-        HILOGE("Failed to create object at initializing PolicyFlag");
-        return;
-    }
-    status = napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
-    if (status != napi_ok) {
-        HILOGE("Failed to set properties of character at initializing PolicyFlag");
-        return;
-    }
-    status = napi_set_named_property(env, exports, propertyName, obj);
-    if (status != napi_ok) {
-        HILOGE("Failed to set direction property at initializing PolicyFlag");
         return;
     }
 }
