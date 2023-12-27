@@ -21,6 +21,7 @@
 
 #include "b_error/b_error.h"
 #include "b_file_info.h"
+#include "b_session_restore_async.h"
 #include "backup_kit_inner.h"
 #include "unique_fd.h"
 #include "utils_mock_global_variable.h"
@@ -222,5 +223,31 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0500, test
         GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-an exception occurred by ~BSessionRestoreAsync.";
     }
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-end SUB_backup_b_session_restore_async_0500";
+}
+
+/**
+ * @tc.number: SUB_backup_b_session_restore_async_0600
+ * @tc.name: SUB_backup_b_session_restore_async_0600
+ * @tc.desc: 测试RegisterBackupServiceDied接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7L7A6
+ */
+HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0600, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0600";
+    try {
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        SetMockGetInstance(false);
+        restorePtr_->RegisterBackupServiceDied(nullptr);
+        GTEST_LOG_(INFO) << "GetInstance is true but not equal to parameter";
+        SetMockGetInstance(true);
+        restorePtr_->RegisterBackupServiceDied(nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-an exception occurred by RegisterBackupServiceDied.";
+    }
+    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-end SUB_backup_b_session_restore_async_0600";
 }
 } // namespace OHOS::FileManagement::Backup

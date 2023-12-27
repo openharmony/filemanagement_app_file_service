@@ -50,6 +50,9 @@ public:
         if (flag == true) {
             ready_ = true;
             cv_.notify_all();
+        } else if (cnt_ == 0) {
+            ready_ = true;
+            cv_.notify_all();
         }
     }
 
@@ -59,12 +62,24 @@ public:
         cv_.wait(lk, [&] { return ready_; });
     }
 
+    void UpdateBundleFinishedCount()
+    {
+        lock_guard<mutex> lk(lock_);
+        cnt_--;
+    }
+
+    void SetBundleFinishedCount(uint32_t cnt)
+    {
+        cnt_ = cnt;
+    }
+
     shared_ptr<BSessionRestoreAsync> session_ = {};
 
 private:
     mutable condition_variable cv_;
     mutex lock_;
     bool ready_ = false;
+    uint32_t cnt_ {0};
 };
 
 static string GenHelpMsg()
@@ -81,17 +96,10 @@ static void OnFileReady(shared_ptr<SessionAsync> ctx, const BFileInfo &fileInfo,
 {
     printf("FileReady owner = %s, fileName = %s, sn = %u, fd = %d\n", fileInfo.owner.c_str(), fileInfo.fileName.c_str(),
            fileInfo.sn, fd.Get());
-    if (fileInfo.fileName.find('/') != string::npos &&
-        fileInfo.fileName != BConstants::RESTORE_INSTALL_PATH) {
+    if (fileInfo.fileName.find('/') != string::npos) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, "Filename is not valid");
     }
-    string tmpPath;
-    if (fileInfo.fileName == BConstants::RESTORE_INSTALL_PATH) {
-        printf("OnFileReady bundle hap\n");
-        tmpPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + fileInfo.owner + ".hap";
-    } else {
-        tmpPath = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + fileInfo.owner + "/" + fileInfo.fileName;
-    }
+    string tmpPath = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + fileInfo.owner + "/" + fileInfo.fileName;
     if (access(tmpPath.data(), F_OK) != 0) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
@@ -111,7 +119,8 @@ static void OnBundleStarted(shared_ptr<SessionAsync> ctx, ErrCode err, const Bun
 {
     printf("BundleStarted errCode = %d, BundleName = %s\n", err, name.c_str());
     if (err != 0) {
-        ctx->TryNotify(true);
+        ctx->UpdateBundleFinishedCount();
+        ctx->TryNotify();
     }
 }
 
@@ -119,16 +128,15 @@ static void OnBundleFinished(shared_ptr<SessionAsync> ctx, ErrCode err, const Bu
 {
     printf("BundleFinished errCode = %d, BundleName = %s\n", err, name.c_str());
     if (err != 0) {
-        ctx->TryNotify(true);
+        ctx->UpdateBundleFinishedCount();
+        ctx->TryNotify();
     }
 }
 
 static void OnAllBundlesFinished(shared_ptr<SessionAsync> ctx, ErrCode err)
 {
     printf("all bundles finished end\n");
-    if (err != 0) {
-        ctx->TryNotify(true);
-    }
+    ctx->TryNotify(true);
 }
 
 static void OnBackupServiceDied(shared_ptr<SessionAsync> ctx)
@@ -154,12 +162,6 @@ static void RestoreApp(shared_ptr<SessionAsync> restore, vector<BundleName> &bun
         const auto [err, filePaths] = BDir::GetDirFiles(path);
         if (err != 0) {
             throw BError(BError::Codes::TOOL_INVAL_ARG, "error path");
-        }
-        // install bundle.hap
-        string installPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + bundleName + ".hap";
-        if (access(installPath.data(), F_OK) == 0) {
-            printf("install bundle hap %s\n", installPath.c_str());
-            restore->session_->GetFileHandle(bundleName, string(BConstants::RESTORE_INSTALL_PATH));
         }
         for (auto &filePath : filePaths) {
             string fileName = filePath.substr(filePath.rfind("/") + 1);
@@ -193,10 +195,12 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
             if (bundleInfo.name != name) {
                 continue;
             }
-            bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {
-                .name = name, .versionCode = versionCode, .versionName = versionName,
-                .spaceOccupied = bundleInfo.spaceOccupied, .allToBackup = bundleInfo.allToBackup,
-                .extensionName = bundleInfo.extensionName, .needToInstall = false});
+            bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {.name = name,
+                                                                  .versionCode = versionCode,
+                                                                  .versionName = versionName,
+                                                                  .spaceOccupied = bundleInfo.spaceOccupied,
+                                                                  .allToBackup = bundleInfo.allToBackup,
+                                                                  .extensionName = bundleInfo.extensionName});
         }
     }
     cache.SetBundleInfos(bundleInfos);
@@ -267,7 +271,7 @@ static int32_t InitArg(const string &pathCapFile,
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
         return -EPERM;
     }
-
+    ctx->SetBundleFinishedCount(bundleNames.size());
     return AppendBundles(ctx, pathCapFile, bundleNames, type, userId);
 }
 
@@ -283,7 +287,7 @@ static int Exec(map<string, vector<string>> &mapArgToVal)
 
 bool RestoreAsyncRegister()
 {
-    return ToolsOp::Register(ToolsOp{ ToolsOp::Descriptor {
+    return ToolsOp::Register(ToolsOp {ToolsOp::Descriptor {
         .opName = {"restoreAsync"},
         .argList = {{
                         .paramName = "pathCapFile",
@@ -303,6 +307,6 @@ bool RestoreAsyncRegister()
                     }},
         .funcGenHelpMsg = GenHelpMsg,
         .funcExec = Exec,
-    } });
+    }});
 }
 } // namespace OHOS::FileManagement::Backup

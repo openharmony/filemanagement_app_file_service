@@ -38,18 +38,20 @@ static bool IsEmptyBlock(const char *p)
 static off_t ParseOctalStr(const string &octalStr, size_t destLen)
 {
     off_t ret = 0;
-    for (auto &ch : octalStr) {
-        if (ch < '0' || ch > '7') {
-            --destLen;
-        }
+    string::const_iterator it = octalStr.begin();
+
+    while (it != octalStr.end() && (*it < '0' || *it > '7') && destLen > 0) {
+        it++;
+        --destLen;
     }
-    for (auto &ch : octalStr) {
-        if (ch >= '0' && ch <= '7' && destLen > 0) {
-            ret *= OCTAL;
-            ret += ch - '0';
-            --destLen;
-        }
+
+    while (it != octalStr.end() && *it >= '0' && *it <= '7' && destLen > 0) {
+        ret *= OCTAL;
+        ret += *it - '0';
+        it++;
+        --destLen;
     }
+
     return ret;
 }
 
@@ -150,9 +152,6 @@ void UntarFile::ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &i
     switch (typeFlag) {
         case REGTYPE:
         case AREGTYPE:
-        case SPLIT_START_TYPE:
-        case SPLIT_END_TYPE:
-        case SPLIT_CONTINUE_TYPE:
             ParseRegularFile(info, typeFlag, isSkip);
             break;
         case SYMTYPE:
@@ -167,11 +166,6 @@ void UntarFile::ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &i
             if (nameLen < PATH_MAX_LEN) {
                 fread(&(info.longName[0]), sizeof(char), nameLen, tarFilePtr_);
             }
-            isSkip = true;
-            fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET);
-            break;
-        }
-        case GNUTYPE_LONGLINK: {
             isSkip = true;
             fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET);
             break;
@@ -202,7 +196,7 @@ void UntarFile::ParseRegularFile(FileStatInfo &info, char typeFlag, bool &isSkip
             remainSize -= readBuffSize;
         }
         fclose(destFile);
-
+        chmod(info.fullPath.data(), info.mode);
         struct utimbuf times;
         times.modtime = info.mtime;
         if (utime(info.fullPath.c_str(), &times) != 0) {
@@ -290,11 +284,7 @@ void UntarFile::CreateDir(string &path, mode_t mode)
 
 FILE *UntarFile::CreateFile(string &filePath, mode_t mode, char fileType)
 {
-    string fileMode = "wb+";
-    if (fileType == SPLIT_END_TYPE || fileType == SPLIT_CONTINUE_TYPE) {
-        fileMode = "ab+";
-    }
-    FILE *f = fopen(filePath.c_str(), fileMode.c_str());
+    FILE *f = fopen(filePath.c_str(), "wb+");
     if (f != nullptr) {
         return f;
     }

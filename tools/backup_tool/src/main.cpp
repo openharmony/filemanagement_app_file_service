@@ -14,7 +14,7 @@
  */
 
 #ifndef BACKUP_TOOL_ENABLE
-int main(int argc, char *const argv[])
+int main()
 {
     return 0;
 }

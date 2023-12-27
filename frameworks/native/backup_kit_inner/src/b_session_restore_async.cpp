@@ -47,6 +47,24 @@ shared_ptr<BSessionRestoreAsync> BSessionRestoreAsync::Init(Callbacks callbacks)
 {
     try {
         auto restore = make_shared<BSessionRestoreAsync>(callbacks);
+        ServiceProxy::InvaildInstance();
+        auto proxy = ServiceProxy::GetInstance();
+        if (proxy == nullptr) {
+            HILOGI("Failed to get backup service");
+            return nullptr;
+        }
+        BSessionRestore::Callbacks callbacksTmp {.onFileReady = callbacks.onFileReady,
+                                                 .onBundleStarted = callbacks.onBundleStarted,
+                                                 .onBundleFinished = callbacks.onBundleFinished,
+                                                 .onAllBundlesFinished = callbacks.onAllBundlesFinished,
+                                                 .onBackupServiceDied = callbacks.onBackupServiceDied};
+        int32_t res = proxy->InitRestoreSession(new ServiceReverse(callbacksTmp));
+        if (res != 0) {
+            HILOGE("Failed to Restore because of %{public}d", res);
+            return nullptr;
+        }
+
+        restore->RegisterBackupServiceDied(callbacks.onBackupServiceDied);
         return restore;
     } catch (const exception &e) {
         HILOGE("Failed to Restore because of %{public}s", e.what());
@@ -78,18 +96,12 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
                                             RestoreTypeEnum restoreType,
                                             int32_t userId)
 {
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        workList_.push({move(remoteCap), move(bundlesToRestore), restoreType, userId});
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
-    if (isAppend_.exchange(true)) {
-        return ERR_OK;
-    } else {
-        PopBundleInfo();
-    }
-
-    return ERR_OK;
+    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, restoreType, userId);
 }
 
 void BSessionRestoreAsync::RegisterBackupServiceDied(std::function<void()> functor)
@@ -106,77 +118,5 @@ void BSessionRestoreAsync::RegisterBackupServiceDied(std::function<void()> funct
     auto callback = [functor](const wptr<IRemoteObject> &obj) { functor(); };
     deathRecipient_ = sptr(new SvcDeathRecipient(callback));
     remoteObj->AddDeathRecipient(deathRecipient_);
-}
-
-void BSessionRestoreAsync::OnBackupServiceDied()
-{
-    HILOGE("Backup service died");
-    if (callbacks_.onBackupServiceDied) {
-        callbacks_.onBackupServiceDied();
-    }
-    deathRecipient_ = nullptr;
-    ServiceProxy::InvaildInstance();
-    PopBundleInfo();
-}
-
-void BSessionRestoreAsync::PopBundleInfo()
-{
-    HILOGE("Start");
-    AppendBundleInfo info;
-    isAppend_.store(true);
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        if (workList_.empty()) {
-            isAppend_.store(false);
-            return;
-        }
-        info = move(workList_.front());
-        workList_.pop();
-    }
-    AppendBundlesImpl(move(info));
-}
-
-void BSessionRestoreAsync::AppendBundlesImpl(AppendBundleInfo info)
-{
-    HILOGD("Start");
-    ServiceProxy::InvaildInstance();
-    auto proxy = ServiceProxy::GetInstance();
-    if (proxy == nullptr) {
-        return OnBundleStarted(BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode(),
-                               info.bundlesToRestore);
-    }
-    auto onBackupServiceDied = bind(&BSessionRestoreAsync::OnBackupServiceDied, shared_from_this());
-    RegisterBackupServiceDied(onBackupServiceDied);
-
-    BSessionRestore::Callbacks callbacksTmp {.onFileReady = callbacks_.onFileReady,
-                                             .onBundleStarted = callbacks_.onBundleStarted,
-                                             .onBundleFinished = callbacks_.onBundleFinished,
-                                             .onAllBundlesFinished = callbacks_.onAllBundlesFinished,
-                                             .onBackupServiceDied = onBackupServiceDied};
-    int32_t res = proxy->InitRestoreSession(new ServiceReverse(callbacksTmp));
-    if (res != 0) {
-        HILOGE("Failed to Init Restore because of %{public}d", res);
-        BError(BError::Codes::SDK_BROKEN_IPC, "Failed to int restore session").GetCode();
-        return OnBundleStarted(res, info.bundlesToRestore);
-    }
-    for (auto &bundleName : info.bundlesToRestore) {
-        HILOGD("Append bundleName: %{public}s", bundleName.c_str());
-    }
-    res =
-        proxy->AppendBundlesRestoreSession(move(info.remoteCap), info.bundlesToRestore, info.restoreType, info.userId);
-    if (res != 0) {
-        HILOGE("Failed to Restore because of %{public}d", res);
-        BError(BError::Codes::SDK_BROKEN_IPC, "Failed to append bundles").GetCode();
-        return OnBundleStarted(res, info.bundlesToRestore);
-    }
-}
-
-void BSessionRestoreAsync::OnBundleStarted(ErrCode errCode, const vector<BundleName> &bundlesToRestore)
-{
-    for (auto &bundleName : bundlesToRestore) {
-        if (callbacks_.onBundleStarted) {
-            callbacks_.onBundleStarted(errCode, bundleName);
-        }
-    }
 }
 } // namespace OHOS::FileManagement::Backup

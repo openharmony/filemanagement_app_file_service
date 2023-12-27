@@ -67,7 +67,7 @@ public:
      *
      * @param bundleName 应用名称
      */
-    void OnBackupExtensionDied(const std::string &&bundleName, ErrCode ret);
+    void OnBackupExtensionDied(const std::string &&bundleName);
 
     /**
      * @brief extension启动连接成功
@@ -97,7 +97,13 @@ public:
      *
      */
     void SendAppGalleryNotify(const std::string &bundleName);
-    
+
+    /**
+     * @brief 结束会话删除session，卸载服务
+     *
+     */
+    void SessionDeactive();
+
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {

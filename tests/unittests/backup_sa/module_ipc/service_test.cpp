@@ -313,12 +313,12 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0100, testing::ext::Test
         ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         string bundleName = BUNDLE_NAME;
-        servicePtr_->OnBackupExtensionDied(move(bundleName), BError(BError::Codes::OK));
+        servicePtr_->OnBackupExtensionDied(move(bundleName));
         GTEST_LOG_(INFO) << "SUB_Service_OnBackupExtensionDied_0100 BACKUP";
         ret = Init(IServiceReverse::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         bundleName = BUNDLE_NAME;
-        servicePtr_->OnBackupExtensionDied(move(bundleName), BError(BError::Codes::OK));
+        servicePtr_->OnBackupExtensionDied(move(bundleName));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetFileHandle.";

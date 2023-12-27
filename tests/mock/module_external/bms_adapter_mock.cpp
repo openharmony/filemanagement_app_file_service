@@ -21,7 +21,6 @@
 
 #include "b_json/b_json_entity_extension_config.h"
 #include "bundle_mgr_client.h"
-#include "module_external/inner_receiver_impl.h"
 #include "module_ipc/service.h"
 #include "module_ipc/svc_session_manager.h"
 #include "module_sched/sched_scheduler.h"
@@ -43,11 +42,6 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
     bundleInfos.emplace_back(
         BJsonEntityCaps::BundleInfo {"com.example.app2backup", {}, {}, 0, true, "com.example.app2backup"});
     return bundleInfos;
-}
-
-ErrCode BundleMgrAdapter::Install(wptr<InnerReceiverImpl> statusReceiver, const string &bundleFilePath, int32_t userId)
-{
-    return 0;
 }
 
 string BundleMgrAdapter::GetAppGalleryBundleName()

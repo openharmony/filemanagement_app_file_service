@@ -46,8 +46,6 @@ struct BackupExtInfo {
     sptr<SvcBackupConnection> backUpConnection;
     std::set<std::string> fileNameInfo;
     BConstants::ServiceSchedAction schedAction {BConstants::ServiceSchedAction::WAIT};
-    bool bNeedToInstall {false};
-    std::string installState;
     /* [RESTORE] Record whether data backup is required during the app exec restore proceess. */
     RestoreTypeEnum restoreType;
     /* Clone App: old device app versionCode */
@@ -71,12 +69,12 @@ public:
         sptr<IServiceReverse> clientProxy;
         bool isBackupStart {false};
         bool isAppendFinish {false};
-        bool isBusy {false};
         /* Note: Multi user scenario: <System Update Upgrade>
             Caller must complete all processes before next user tigger.<Session>
             [RESTORE] Support for multiple users, incoming during restore process.
         */
         int32_t userId {100};
+        RestoreTypeEnum restoreDataType {RESTORE_DATA_WAIT_SEND};
     };
 
 public:
@@ -280,39 +278,6 @@ public:
     bool IsOnOnStartSched();
 
     /**
-     * @brief Set the Install State object
-     *
-     * @param bundleName
-     * @param state
-     */
-    void SetInstallState(const std::string &bundleName, const std::string &state);
-
-    /**
-     * @brief Get the Install State object
-     *
-     * @param bundleName
-     * @return std::string
-     */
-    std::string GetInstallState(const std::string &bundleName);
-
-    /**
-     * @brief Set the Need To Install object
-     *
-     * @param bundleName
-     * @param needToInstall
-     */
-    void SetNeedToInstall(const std::string &bundleName, bool needToInstall);
-
-    /**
-     * @brief Get the Need To Install object
-     *
-     * @param bundleName
-     * @return true
-     * @return false
-     */
-    bool GetNeedToInstall(const std::string &bundleName);
-
-    /**
      * @brief Whether to unload the service
      *
      * @return true
@@ -393,19 +358,24 @@ public:
     void BundleExtTimerStop(const std::string &bundleName);
 
     /**
-     * @brief 设置Busy状态
+     * @brief sessionCnt加计数
      *
-     * @param isBusy
+     * @param sessionCnt
      */
-    void SetIsBusy(bool isBusy);
+    void IncreaseSessionCnt();
 
     /**
-     * @brief 获取Busy状态
+     * @brief sessionCnt加计数
      *
-     * @return true
-     * @return false
+     * @param sessionCnt
      */
-    bool GetIsBusy();
+    void DecreaseSessionCnt();
+
+    /**
+     * @brief clear session data
+     *
+     */
+    void ClearSessionData();
 
 private:
     /**
@@ -460,6 +430,7 @@ private:
     Impl impl_;
     uint32_t extConnectNum_ {0};
     Utils::Timer extBundleTimer {"backupBundleExtTimer"};
+    std::atomic<int> sessionCnt_ {0};
 };
 } // namespace OHOS::FileManagement::Backup
 

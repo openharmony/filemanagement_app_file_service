@@ -54,13 +54,6 @@ public:
         bundleStatusMap_[bundleName].sendFile.insert(fileName);
     }
 
-    void UpdateBundleSentFiles(const BundleName &bundleName, const string &fileName)
-    {
-        lock_guard<mutex> lk(lock_);
-        bundleStatusMap_[bundleName].sentFile.insert(fileName);
-        TryClearBundleOfMap(bundleName);
-    }
-
     void ClearBundleOfMap(const BundleName &bundleName)
     {
         lock_guard<mutex> lk(lock_);
@@ -131,17 +124,10 @@ static void OnFileReady(shared_ptr<Session> ctx, const BFileInfo &fileInfo, Uniq
 {
     printf("FileReady owner = %s, fileName = %s, sn = %u, fd = %d\n", fileInfo.owner.c_str(), fileInfo.fileName.c_str(),
            fileInfo.sn, fd.Get());
-    if (fileInfo.fileName.find('/') != string::npos &&
-        fileInfo.fileName != BConstants::RESTORE_INSTALL_PATH) {
+    if (fileInfo.fileName.find('/') != string::npos) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, "Filename is not valid");
     }
-    string tmpPath;
-    if (fileInfo.fileName == BConstants::RESTORE_INSTALL_PATH) {
-        printf("OnFileReady bundle hap\n");
-        tmpPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + fileInfo.owner + ".hap";
-    } else {
-        tmpPath = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + fileInfo.owner + "/" + fileInfo.fileName;
-    }
+    string tmpPath = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + fileInfo.owner + "/" + fileInfo.fileName;
     if (access(tmpPath.data(), F_OK) != 0) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
@@ -153,9 +139,6 @@ static void OnFileReady(shared_ptr<Session> ctx, const BFileInfo &fileInfo, Uniq
     int ret = ctx->session_->PublishFile(fileInfo);
     if (ret != 0) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, "PublishFile error");
-    }
-    if (fileInfo.fileName != BConstants::RESTORE_INSTALL_PATH) {
-        ctx->UpdateBundleSentFiles(fileInfo.owner, fileInfo.fileName);
     }
     ctx->TryNotify();
 }
@@ -219,12 +202,6 @@ static void RestoreApp(shared_ptr<Session> restore, vector<BundleName> &bundleNa
         if (err != 0) {
             throw BError(BError::Codes::TOOL_INVAL_ARG, "error path");
         }
-        // install bundle.hap
-        string installPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + bundleName + ".hap";
-        if (access(installPath.data(), F_OK) == 0) {
-            printf("install bundle hap %s\n", installPath.c_str());
-            restore->session_->GetFileHandle(bundleName, string(BConstants::RESTORE_INSTALL_PATH));
-        }
         for (auto &filePath : filePaths) {
             string fileName = filePath.substr(filePath.rfind("/") + 1);
             restore->session_->GetFileHandle(bundleName, fileName);
@@ -249,36 +226,10 @@ static bool GetRealPath(string &path)
     return true;
 }
 
-static int32_t InitFd(UniqueFd &fd, const vector<string> &bundleNames)
-{
-    if (fd < 0) {
-        fprintf(stderr, "Failed to open file error: %d %s\n", errno, strerror(errno));
-        FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
-        return -errno;
-    }
-    if (access(BConstants::BACKUP_TOOL_INSTALL_DIR.data(), F_OK) == 0) {
-        BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
-        auto cache = cachedEntity.Structuralize();
-        vector<BJsonEntityCaps::BundleInfo> bundleInfos;
-        for (auto name : bundleNames) {
-            string installPath = string(BConstants::BACKUP_TOOL_INSTALL_DIR) + name + ".hap";
-            if (access(installPath.data(), F_OK) == 0) {
-                bool needToInstall = true;
-                bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {.name = name, .needToInstall = needToInstall});
-            }
-        }
-        cache.SetBundleInfos(bundleInfos);
-        cachedEntity.Persist();
-        fd = move(cachedEntity.GetFd());
-    }
-    return 0;
-}
-
 static int32_t InitRestoreSession(shared_ptr<Session> ctx)
 {
     if (!ctx) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
-        return -1;
     }
     ctx->session_ = BSessionRestore::Init(
         BSessionRestore::Callbacks {.onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2),
@@ -304,13 +255,8 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
     }
 
     UniqueFd fd(open(realPath.data(), O_RDWR, S_IRWXU));
-    int32_t ret = InitFd(fd, bundleNames);
-    if (ret != 0) {
-        printf("Failed to get fd error:%d\n", ret);
-        return ret;
-    }
     auto ctx = make_shared<Session>();
-    ret = InitRestoreSession(ctx);
+    int32_t ret = InitRestoreSession(ctx);
     if (ret != 0) {
         printf("Failed to init restore session error:%d\n", ret);
         return ret;
@@ -318,16 +264,16 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
 
     if (depMode) {
         for (auto &bundleName : bundleNames) {
-            UniqueFd fd(open(realPath.data(), O_RDWR, S_IRWXU));
-            if (fd < 0) {
+            UniqueFd fileFd(open(realPath.data(), O_RDWR, S_IRWXU));
+            if (fileFd < 0) {
                 fprintf(stderr, "Failed to open file error: %d %s\n", errno, strerror(errno));
                 FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
                 return -errno;
             }
-            int ret = ctx->session_->AppendBundles(move(fd), {bundleName});
-            if (ret != 0) {
-                printf("restore append bundles error: %d\n", ret);
-                return -ret;
+            int result = ctx->session_->AppendBundles(move(fileFd), {bundleName});
+            if (result != 0) {
+                printf("restore append bundles error: %d\n", result);
+                return -result;
             }
         }
     } else {

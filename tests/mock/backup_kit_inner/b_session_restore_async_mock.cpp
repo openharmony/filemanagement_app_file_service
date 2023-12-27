@@ -96,11 +96,5 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
 
 void BSessionRestoreAsync::OnBackupServiceDied() {}
 
-void BSessionRestoreAsync::PopBundleInfo() {}
-
-void BSessionRestoreAsync::AppendBundlesImpl(AppendBundleInfo info) {}
-
-void BSessionRestoreAsync::OnBundleStarted(ErrCode errCode, const vector<BundleName> &bundlesToRestore) {}
-
 void BSessionRestoreAsync::RegisterBackupServiceDied(function<void()> functor) {}
 } // namespace OHOS::FileManagement::Backup

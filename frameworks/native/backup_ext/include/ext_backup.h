@@ -106,7 +106,7 @@ public:
      *
      * @return allowed ro not
      */
-    virtual bool AllowToBackupRestore() const;
+    virtual bool AllowToBackupRestore();
 
     /**
      * @brief Get whether FullBackupOnly or not
