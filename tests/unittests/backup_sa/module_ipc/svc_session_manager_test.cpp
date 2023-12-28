@@ -492,4 +492,308 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBunleFileReady_0200, tes
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_OnBunleFileReady_0200";
 }
+/**
+ * @tc.number: SUB_backup_sa_session_GetBundleRestoreType_0100
+ * @tc.name: SUB_backup_sa_session_GetBundleRestoreType_0100
+ * @tc.desc: 测试 GetBundleRestoreType 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6VA38
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleRestoreType_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleRestoreType_0100";
+    try {
+        sessionManagerPtr_->SetBundleRestoreType(BUNDLE_NAME, RESTORE_DATA_READDY);
+        auto ret = sessionManagerPtr_->GetBundleRestoreType(BUNDLE_NAME);
+        EXPECT_EQ(ret, RESTORE_DATA_READDY);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBundleRestoreType.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetBundleRestoreType_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetBundleRestoreType_0101
+ * @tc.name: SUB_backup_sa_session_GetBundleRestoreType_0101
+ * @tc.desc: 测试 GetBundleRestoreType 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6VA38
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleRestoreType_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleRestoreType_0101";
+    try {
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 0;
+        sessionManagerPtr_->SetBundleRestoreType(BUNDLE_NAME, RESTORE_DATA_READDY);
+        auto ret = sessionManagerPtr_->GetBundleRestoreType(BUNDLE_NAME);
+        EXPECT_EQ(ret, RESTORE_DATA_READDY);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBundleRestoreType.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetBundleRestoreType_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetBundleVersionCode_0100
+ * @tc.name: SUB_backup_sa_session_GetBundleVersionCode_0100
+ * @tc.desc: 测试 GetBundleVersionCode 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6VA38
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleVersionCode_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleVersionCode_0100";
+    try {
+        sessionManagerPtr_->SetBundleVersionCode(BUNDLE_NAME, 1000000);
+        int ret = static_cast<int>(sessionManagerPtr_->GetBundleVersionCode(BUNDLE_NAME));
+        EXPECT_EQ(ret, 1000000);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBundleVersionCode.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetBundleVersionCode_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetBundleVersionCode_0101
+ * @tc.name: SUB_backup_sa_session_GetBundleVersionCode_0101
+ * @tc.desc: 测试 GetBundleVersionCode 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6VA38
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleVersionCode_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleVersionCode_0101";
+    try {
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 0;
+        sessionManagerPtr_->SetBundleVersionCode(BUNDLE_NAME, 1000000);
+        int ret = static_cast<int>(sessionManagerPtr_->GetBundleVersionCode(BUNDLE_NAME));
+        EXPECT_EQ(ret, 1000000);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBundleVersionCode.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetBundleVersionCode_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetBundleVersionName_0100
+ * @tc.name: SUB_backup_sa_session_GetBundleVersionName_0100
+ * @tc.desc: 测试 GetBundleVersionName 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6VA38
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleVersionName_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleVersionName_0100";
+    try {
+        sessionManagerPtr_->SetBundleVersionName(BUNDLE_NAME, "1.0.0");
+        auto ret = sessionManagerPtr_->GetBundleVersionName(BUNDLE_NAME);
+        EXPECT_EQ(ret, "1.0.0");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBundleVersionName.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetBundleVersionName_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetBundleVersionName_0101
+ * @tc.name: SUB_backup_sa_session_GetBundleVersionName_0101
+ * @tc.desc: 测试 GetBundleVersionName 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6VA38
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleVersionName_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleVersionName_0101";
+    try {
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 0;
+        sessionManagerPtr_->SetBundleVersionName(BUNDLE_NAME, "1.0.0");
+        auto ret = sessionManagerPtr_->GetBundleVersionName(BUNDLE_NAME);
+        EXPECT_EQ(ret, "1.0.0");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBundleVersionName.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetBundleVersionName_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_Start_0100
+ * @tc.name: SUB_backup_sa_session_Start_0100
+ * @tc.desc: 测试 Start
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Start_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_Start_0100";
+    try {
+        sessionManagerPtr_->Start();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by Start.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_Start_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_Start_0101
+ * @tc.name: SUB_backup_sa_session_Start_0101
+ * @tc.desc: 测试 Start
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Start_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_Start_0101";
+    try {
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 0;
+        sessionManagerPtr_->Start();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by Start.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_Start_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_IsOnOnStartSched_0100
+ * @tc.name: SUB_backup_sa_session_IsOnOnStartSched_0100
+ * @tc.desc: 测试 IsOnOnStartSched
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_IsOnOnStartSched_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_IsOnOnStartSched_0100";
+    try {
+        SvcSessionManager::Impl impl_;
+        impl_.isBackupStart = true;
+        auto res = impl_.backupExtNameMap.size();
+        EXPECT_FALSE(res);
+        bool ret = sessionManagerPtr_->IsOnOnStartSched();
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by IsOnOnStartSched.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_IsOnOnStartSched_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_IsOnOnStartSched_0101
+ * @tc.name: SUB_backup_sa_session_IsOnOnStartSched_0101
+ * @tc.desc: 测试 IsOnOnStartSched
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_IsOnOnStartSched_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_IsOnOnStartSched_0101";
+    try {
+        bool ret = sessionManagerPtr_->IsOnOnStartSched();
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by IsOnOnStartSched.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_IsOnOnStartSched_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_IsOnOnStartSched_0102
+ * @tc.name: SUB_backup_sa_session_IsOnOnStartSched_0102
+ * @tc.desc: 测试 IsOnOnStartSched
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_IsOnOnStartSched_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_IsOnOnStartSched_0102";
+    try {
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 0;
+        bool ret = sessionManagerPtr_->IsOnOnStartSched();
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by IsOnOnStartSched.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_IsOnOnStartSched_0102";
+}
+
+
+/**
+ * @tc.number: SUB_backup_sa_session_SetBundleDataSize_0100
+ * @tc.name: SUB_backup_sa_session_SetBundleDataSize_0100
+ * @tc.desc: 测试 SetBundleDataSize
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleDataSize_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetBundleDataSize_0100";
+    try {
+        sessionManagerPtr_->SetBundleDataSize(BUNDLE_NAME, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetBundleDataSize.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetBundleDataSize_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_SetBundleDataSize_0101
+ * @tc.name: SUB_backup_sa_session_SetBundleDataSize_0101
+ * @tc.desc: 测试 SetBundleDataSize
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleDataSize_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetBundleDataSize_0101";
+    try {
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 0;
+        sessionManagerPtr_->SetBundleDataSize(BUNDLE_NAME, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetBundleDataSize.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetBundleDataSize_0101";
+}
 } // namespace OHOS::FileManagement::Backup
