@@ -57,7 +57,6 @@ struct PolicyErrorResult {
 
 class FilePermission {
 public:
-    static int32_t GrantPermission(uint32_t tokenId, const vector<UriPolicyInfo> &uriPolicies, uint32_t policyFlag);
     static int32_t PersistPermission(const vector<UriPolicyInfo> &uriPolicies,
                                      deque<struct PolicyErrorResult> &errorResults);
     static int32_t RevokePermission(const vector<UriPolicyInfo> &uriPolicies,
