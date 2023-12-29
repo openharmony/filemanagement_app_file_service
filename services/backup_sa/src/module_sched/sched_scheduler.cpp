@@ -183,6 +183,5 @@ void SchedScheduler::ClearSchedulerData()
         extTime_.Unregister(iTime);
     }
     bundleTimeVec_.clear();
-    threadPool_.Stop();
 }
 }; // namespace OHOS::FileManagement::Backup
