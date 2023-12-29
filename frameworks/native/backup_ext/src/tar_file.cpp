@@ -208,8 +208,8 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
     bool isFilled = false;
 
     while (remain > 0) {
-        size_t read = ioBuffer_.size();
-        if (size < ioBuffer_.size()) {
+        off_t read = ioBuffer_.size();
+        if (size < static_cast<off_t>(ioBuffer_.size())) {
             read = size;
         } else {
             if (read > remain) {
@@ -241,13 +241,13 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
     return false;
 }
 
-int TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, int read, bool &isFilled)
+off_t TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, off_t read, bool &isFilled)
 {
-    size_t len = ioBuffer.size();
+    off_t len = ioBuffer.size();
     if (len > read) {
         len = read;
     }
-    size_t count = 0;
+    off_t count = 0;
     while (count < len) {
         auto writeBytes = fwrite(&ioBuffer[count], sizeof(uint8_t), len - count, currentTarFile_);
         if (writeBytes < 1) {
@@ -322,10 +322,10 @@ bool TarFile::FillSplitTailBlocks()
 void TarFile::SetCheckSum(TarHeader &hdr)
 {
     int sum = 0;
-    vector<uint8_t> buffer {};
+    vector<uint32_t> buffer {};
     buffer.resize(sizeof(hdr));
     buffer.assign(reinterpret_cast<uint8_t *>(&hdr), reinterpret_cast<uint8_t *>(&hdr) + sizeof(hdr));
-    for (int index = 0; index < BLOCK_SIZE; index++) {
+    for (uint32_t index = 0; index < BLOCK_SIZE; index++) {
         if (index < CHKSUM_BASE || index > CHKSUM_BASE + CHKSUM_LEN - 1) {
             sum += (buffer[index] & 0xFF);
         } else {
@@ -339,7 +339,7 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
 {
     struct passwd *pw = getpwuid(st.st_uid);
     if (pw != nullptr) {
-        int ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%s", pw->pw_name);
+        size_t ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%s", pw->pw_name);
         if (ret < 0 || ret >= sizeof(hdr.uname)) {
             HILOGE("Fill pw_name failed, err = %{public}d", errno);
         }
@@ -364,10 +364,10 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
     }
 }
 
-int TarFile::ReadAll(int fd, vector<uint8_t> &ioBuffer, off_t size)
+off_t TarFile::ReadAll(int fd, vector<uint8_t> &ioBuffer, off_t size)
 {
-    size_t count = 0;
-    size_t len = ioBuffer.size();
+    off_t count = 0;
+    off_t len = ioBuffer.size();
     if (len > size) {
         len = size;
     }

@@ -389,11 +389,18 @@ HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0004, testing::ext::TestSize.
 HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0005, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0005";
-    std::string fileUri = "file://media/Photo/12/IMG_12345_999999/test.jpg";
+    std::string strPrefix = "file://media/";
+    std::string fileUri = "Photo/12/IMG_12345_999999/test.jpg";
     std::string physicalPath;
-    int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+    int32_t ret = SandboxHelper::GetPhysicalPath(strPrefix + SandboxHelper::Encode(fileUri), "100", physicalPath);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(physicalPath, "/mnt/hmdfs/100/account/cloud_merge_view/files/Photo/575/IMG_12345_999999.jpg");
+
+    std::string fileUri2 = "Photo/12/IMG_12345_999999/test .jpg";
+    std::string physicalPath2;
+    ret = SandboxHelper::GetPhysicalPath(strPrefix + SandboxHelper::Encode(fileUri2), "100", physicalPath2);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(physicalPath2, "/mnt/hmdfs/100/account/cloud_merge_view/files/Photo/575/IMG_12345_999999.jpg");
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0005";
 }
 

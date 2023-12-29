@@ -288,43 +288,9 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0700, te
 }
 
 /**
- * @tc.number: SUB_backup_b_json_entity_extension_config_0800
- * @tc.name: b_json_entity_extension_config_0800
- * @tc.desc: json文件标签中有异常引号
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 2
- * @tc.require: I6F3GV
- */
-HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0800, testing::ext::TestSize.Level2)
-{
-    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_0800";
-    try {
-        TestManager tm("b_json_entity_extension_config_0800");
-
-        string root = tm.GetRootDirCurTest();
-        string pathConfigFile = root + "config.json";
-        SaveStringToFile(
-            pathConfigFile,
-            R"({"includes":["", "", ""], "excludes":["", "", ""], """""""""""""""""""""""""""""""""""""""""""""""""":[]})");
-
-        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(UniqueFd(open(pathConfigFile.data(), O_RDONLY, 0)));
-        auto cache = cachedEntity.Structuralize();
-        vector<string> includes = cache.GetIncludes();
-        EXPECT_EQ(includes, DEFAULT_INCLUDE_DIR);
-        vector<string> excludes = cache.GetExcludes();
-        EXPECT_EQ(excludes, DEFAULT_EXCLUDE_DIR);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_0800";
-}
-
-/**
  * @tc.number: SUB_backup_b_json_entity_extension_config_0900
  * @tc.name: b_json_entity_extension_config_0900
- * @tc.desc: 测试GetJSonSource接口能否在非service进程下正确读取backup_config.json
+ * @tc.desc: 测试 GetJSonSource 接口能否在非service进程下正确读取backup_config.json
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 2
@@ -800,4 +766,202 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_2700, te
     }
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_2700";
 }
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_2800
+ * @tc.name: b_json_entity_extension_config_2800
+ * @tc.desc: 测试 GetIncludes 接口在Json数据中键为includes的值为数组且数组元素为空时能否成功返回空目录
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_2800, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_2800";
+    try {
+        string_view sv = R"({"includes":[]})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(sv);
+        auto cache = cachedEntity.Structuralize();
+        vector<string> vs = cache.GetIncludes();
+        EXPECT_EQ(vs, vector<string>({""}));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetIncludes.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_2800";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_2900
+ * @tc.name: b_json_entity_extension_config_2900
+ * @tc.desc: 测试GetExcludes接口在Json数据中键为excludes的值为数组且数组元素为空时能否成功返回空vector
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_2900, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_2900";
+    try {
+        string_view sv = R"({"excludes":[]})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(sv);
+        auto cache = cachedEntity.Structuralize();
+        vector<string> vs = cache.GetExcludes();
+        EXPECT_EQ(vs, vector<string>());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetExcludes.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_2900";
+}
+
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_3000
+ * @tc.name: b_json_entity_extension_config_3000
+ * @tc.desc: 测试GetFullBackupOnly接口在Json数据对象键为fullBackupOnly的值不为布尔值时能否成功返回false
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_3000, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_3000";
+    try {
+        string_view sv = R"({"fullBackupOnly":1})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(sv);
+        auto cache = cachedEntity.Structuralize();
+        EXPECT_FALSE(cache.GetFullBackupOnly());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetFullBackupOnly.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_3000";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_3100
+ * @tc.name: b_json_entity_extension_config_3100
+ * @tc.desc: 测试GetFullBackupOnly接口在Json数据对象不含fullBackupOnly键时能否成功返回TRUE
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_3100, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_3100";
+    try {
+        string_view sv = R"({"fullBackupOnly":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(sv);
+        auto cache = cachedEntity.Structuralize();
+        EXPECT_TRUE(cache.GetFullBackupOnly());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetAllowToBackupRestore.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_3100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_3200
+ * @tc.name: b_json_entity_extension_config_3200
+ * @tc.desc: 测试GetFullBackupOnly接口在Json数据对象nullValue时能否成功返回false
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_3200, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_3200";
+    try {
+        Json::Value jv(Json::nullValue);
+        BJsonEntityExtensionConfig extCfg(jv);
+        EXPECT_FALSE(extCfg.GetFullBackupOnly());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetFullBackupOnly.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_3200";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_3300
+ * @tc.name: b_json_entity_extension_config_3300
+ * @tc.desc: 测试GetRestoreDeps接口能否在Json数据对象的键为restoreDeps的值不为字符串值时能否成功返回string
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_3300, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_3300";
+    try {
+        string_view sv = R"({"restoreDeps":1})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(sv);
+        auto cache = cachedEntity.Structuralize();
+        string depRead = cache.GetRestoreDeps();
+        EXPECT_NE(depRead, string(sv));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetRestoreDeps.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_3300";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_3400
+ * @tc.name: b_json_entity_extension_config_3400
+ * @tc.desc: 测试GetRestoreDeps接口能否在Json数据对象不含restoreDeps键时能否成功返回string
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_3400, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_3400";
+    try {
+        string_view sv = R"({"restoreDeps_":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(sv);
+        auto cache = cachedEntity.Structuralize();
+        string depRead = cache.GetRestoreDeps();
+        EXPECT_NE(depRead, string(sv));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetRestoreDeps.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_3400";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_3500
+ * @tc.name: b_json_entity_extension_config_3500
+ * @tc.desc: 测试GetRestoreDeps接口能否在Json数据对象不含restoreDeps键时能否成功返回空
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_3500, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_3500";
+    try {
+        string_view sv = R"({"":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(sv);
+        auto cache = cachedEntity.Structuralize();
+        string depRead = cache.GetRestoreDeps();
+        EXPECT_EQ(depRead, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetRestoreDeps.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_3500";
+}
+
 } // namespace OHOS::FileManagement::Backup

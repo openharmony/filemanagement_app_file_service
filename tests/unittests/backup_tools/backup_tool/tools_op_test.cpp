@@ -93,4 +93,60 @@ HWTEST_F(ToolsOpTest, SUB_backup_tools_op_0200, testing::ext::TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "ToolsOpTest-end SUB_backup_tools_op_0200";
 }
+
+/**
+ * @tc.number: SUB_backup_tools_op_0300
+ * @tc.name: SUB_backup_tools_op_0300
+ * @tc.desc: 测试GetName分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpTest, SUB_backup_tools_op_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpTest-begin SUB_backup_tools_op_0300";
+    try {
+        GTEST_LOG_(INFO) << "ToolsOpTest-info";
+        ToolsOp obj({ToolsOp::Descriptor {
+            .opName = {"abcd", "hijk"},
+            .funcGenHelpMsg = nullptr,
+            .funcExec = nullptr,
+        }});
+        obj.GetName();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpTest-end SUB_backup_tools_op_0300";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_0400
+ * @tc.name: SUB_backup_tools_op_0400
+ * @tc.desc: 测试Execute分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpTest, SUB_backup_tools_op_0400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpTest-begin SUB_backup_tools_op_0400";
+    try {
+        map<string, vector<string>> mapArgToVal;
+        vector<string_view> curOp;
+        curOp.emplace_back("test");
+        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
+        auto &&opeartions = ToolsOp::GetAllOperations();
+        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
+        if (matchedOp != opeartions.end()) {
+            matchedOp->Execute(mapArgToVal);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpTest-end SUB_backup_tools_op_0400";
+}
 } // namespace OHOS::FileManagement::Backup

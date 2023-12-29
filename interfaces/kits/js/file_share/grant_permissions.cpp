@@ -34,11 +34,11 @@ using namespace std;
 namespace {
 const std::string FILE_ACCESS_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
 const std::string SET_SANDBOX_POLICY_PERMISSION = "ohos.permission.SET_SANDBOX_POLICY";
-const char *g_fullMountEnableParameter = "const.filemanager.full_mout.enable";
+const char *g_fullMountEnableParameter = "const.filemanager.full_mount.enable";
 
 static bool IsSystemApp()
 {
-    uint32_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
+    uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
     return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
 }
 
@@ -164,7 +164,7 @@ napi_value GrantPermission(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-    int32_t tokenId = id;
+    uint32_t tokenId = id;
     uint32_t policyFlag = flag;
     std::vector<UriPolicyInfo> uriPolicies;
     napi_status status = GetUriPoliciesArg(env, funcArg[NARG_POS::SECOND], uriPolicies);

@@ -27,6 +27,9 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+namespace {
+const int32_t DEFAULT_MODE = 0100660; // 0660
+}
 
 static bool CheckBigFile(const string &tarFile)
 {
@@ -49,21 +52,18 @@ static bool CheckUserTar(const string &fileName)
         HILOGI("file does not exists");
         return false;
     }
-
     return (ExtractFileExt(fileName) == "tar") && CheckBigFile(fileName);
 }
 
 Json::Value Stat2JsonValue(struct stat sta)
 {
     Json::Value value;
-
     value["st_size"] = static_cast<int64_t>(sta.st_size);
     value["st_mode"] = static_cast<int32_t>(sta.st_mode);
     value["st_atim"]["tv_sec"] = static_cast<int64_t>(sta.st_atim.tv_sec);
     value["st_atim"]["tv_nsec"] = static_cast<int64_t>(sta.st_atim.tv_nsec);
     value["st_mtim"]["tv_sec"] = static_cast<int64_t>(sta.st_mtim.tv_sec);
     value["st_mtim"]["tv_nsec"] = static_cast<int64_t>(sta.st_mtim.tv_nsec);
-
     return value;
 }
 
@@ -76,7 +76,7 @@ struct stat JsonValue2Stat(const Json::Value &value)
     }
 
     sta.st_size = value.isMember("st_size") && value["st_size"].isInt64() ? value["st_size"].asInt64() : 0;
-    sta.st_mode = value.isMember("st_mode") && value["st_mode"].isInt() ? value["st_mode"].asInt() : 0;
+    sta.st_mode = value.isMember("st_mode") && value["st_mode"].isInt() ? value["st_mode"].asInt() : DEFAULT_MODE;
     if (value.isMember("st_atim")) {
         sta.st_atim.tv_sec = value["st_atim"].isMember("tv_sec") && value["st_atim"]["tv_sec"].isInt64()
                                  ? value["st_atim"]["tv_sec"].asInt64()
@@ -135,9 +135,6 @@ void BJsonEntityExtManage::SetExtManage(const map<string, tuple<string, struct s
 
         Json::Value value;
         value["fileName"] = item->first;
-        if (std::get<0>(item->second) == BConstants::RESTORE_INSTALL_PATH) {
-            throw BError(BError::Codes::UTILS_INVAL_JSON_ENTITY, "Failed to set ext manage, invalid path");
-        }
         auto [path, sta, isBeforeTar] = item->second;
         value["information"]["path"] = path;
         value["information"]["stat"] = Stat2JsonValue(sta);
@@ -194,9 +191,6 @@ std::vector<ExtManageInfo> BJsonEntityExtManage::GetExtManageInfo() const
         string path = item["information"].isMember("path") && item["information"]["path"].isString()
                           ? item["information"]["path"].asString()
                           : "";
-        if (path == BConstants::RESTORE_INSTALL_PATH) {
-            throw BError(BError::Codes::UTILS_INVAL_JSON_ENTITY, "Failed to get ext manage info, invalid path");
-        }
         if (item["information"].isMember("stat")) {
             sta = JsonValue2Stat(item["information"]["stat"]);
         }

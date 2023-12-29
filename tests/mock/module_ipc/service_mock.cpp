@@ -100,7 +100,7 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
     return BError(BError::Codes::OK);
 }
 
-void Service::OnBackupExtensionDied(const string &&bundleName, ErrCode ret) {}
+void Service::OnBackupExtensionDied(const string &&bundleName) {}
 
 void Service::ExtStart(const string &bundleName) {}
 
@@ -127,4 +127,6 @@ void Service::OnAllBundlesFinished(ErrCode errCode) {}
 void Service::OnStartSched() {}
 
 void Service::SendAppGalleryNotify(const BundleName &bundleName) {}
+
+void Service::SessionDeactive() {}
 } // namespace OHOS::FileManagement::Backup

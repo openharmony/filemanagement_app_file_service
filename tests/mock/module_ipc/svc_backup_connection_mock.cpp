@@ -32,7 +32,7 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
                                                int resultCode)
 {
     isConnected_.store(true);
-    backupProxy_ = iface_cast<SvcExtensionProxy>(remoteObject);
+    backupProxy_ = iface_cast<IExtension>(remoteObject);
     string bundleName = "";
     callConnDone_(move(bundleName));
 }

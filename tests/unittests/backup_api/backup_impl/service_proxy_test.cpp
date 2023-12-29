@@ -366,6 +366,49 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilitySuccess_0100, te
 }
 
 /**
+ * @tc.number: SUB_Service_proxy_OnLoadSystemAbilitySuccess_0101
+ * @tc.name: SUB_Service_proxy_OnLoadSystemAbilitySuccess_0101
+ * @tc.desc: 测试 OnLoadSystemAbilitySuccess 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilitySuccess_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_OnLoadSystemAbilitySuccess_0101";
+    sptr<ServiceProxy::ServiceProxyLoadCallback> loadCallback = new ServiceProxy::ServiceProxyLoadCallback();
+    EXPECT_NE(loadCallback, nullptr);
+    int32_t systemAbilityId = 0;
+    // const OHOS::sptr<IRemoteObject> &remoteObject = make_shared<IRemoteObject>();
+    // shared_ptr<MockIRemoteObject> remoteObject = make_shared<MockIRemoteObject>();
+    sptr<MockIRemoteObject> remoteObject = new MockIRemoteObject();
+    loadCallback->OnLoadSystemAbilitySuccess(systemAbilityId, remoteObject);
+    loadCallback = nullptr;
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_OnLoadSystemAbilitySuccess_0101";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_OnLoadSystemAbilitySuccess_0102
+ * @tc.name: SUB_Service_proxy_OnLoadSystemAbilitySuccess_0102
+ * @tc.desc: 测试 OnLoadSystemAbilitySuccess 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilitySuccess_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_OnLoadSystemAbilitySuccess_0102";
+    sptr<ServiceProxy::ServiceProxyLoadCallback> loadCallback = new ServiceProxy::ServiceProxyLoadCallback();
+    EXPECT_NE(loadCallback, nullptr);
+    int32_t systemAbilityId = 0;
+    loadCallback->OnLoadSystemAbilitySuccess(systemAbilityId, nullptr);
+    loadCallback = nullptr;
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_OnLoadSystemAbilitySuccess_0102";
+}
+
+/**
  * @tc.number: SUB_Service_proxy_OnLoadSystemAbilityFail_0100
  * @tc.name: SUB_Service_proxy_OnLoadSystemAbilityFail_0100
  * @tc.desc: 测试 OnLoadSystemAbilityFail 接口
@@ -411,5 +454,21 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetInstance_0100, testing::ext::Tes
     proxy = ServiceProxy::GetInstance();
     EXPECT_NE(proxy, nullptr);
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_GetInstance_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_InvaildInstance_0100
+ * @tc.name: SUB_Service_proxy_InvaildInstance_0100
+ * @tc.desc: 测试 InvaildInstance 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InvaildInstance_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_InvaildInstance_0100";
+    ServiceProxy::InvaildInstance();
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_InvaildInstance_0100";
 }
 } // namespace OHOS::FileManagement::Backup

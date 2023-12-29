@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
-ohos_unittest("untar_file_test") {
+ohos_unittest("tar_file_test") {
   module_out_path = path_module_out_tests
 
   sources = [
@@ -25,7 +25,7 @@ ohos_unittest("untar_file_test") {
     "${path_backup}/frameworks/native/backup_ext/src/ext_extension_stub.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/untar_file.cpp",
-    "untar_file_test.cpp",
+    "tar_file_test.cpp",
   ]
   sources += backup_mock_proxy_src
 
@@ -77,5 +77,5 @@ ohos_unittest("untar_file_test") {
 group("backup_ext_test") {
   testonly = true
 
-  deps = [ ":untar_file_test" ]
+  deps = [ ":tar_file_test" ]
 }

@@ -41,12 +41,29 @@ ohos_unittest("b_session_test") {
     "${path_backup}/utils:backup_utils",
   ]
 
+  cflags = [ "--coverage" ]
+
+  ldflags = [ "--coverage" ]
+
+  cflags_cc = [ "--coverage" ]
+
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
+
+  defines = [
+    "private=public",
+    "protect=public",
+  ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
 
   use_exceptions = true
 }

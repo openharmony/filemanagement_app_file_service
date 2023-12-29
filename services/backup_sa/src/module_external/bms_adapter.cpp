@@ -25,7 +25,6 @@
 #include "filemgmt_libhilog.h"
 #include "install_param.h"
 #include "iservice_registry.h"
-#include "module_external/inner_receiver_impl.h"
 #include "module_external/sms_adapter.h"
 #include "module_ipc/service.h"
 #include "module_ipc/svc_session_manager.h"
@@ -61,7 +60,8 @@ static sptr<AppExecFwk::IBundleMgr> GetBundleManager()
     return iface_cast<AppExecFwk::IBundleMgr>(bundleObj);
 }
 
-static tuple<bool, string, string> GetAllowAndExtName(const vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
+static tuple<bool, string, string, string> GetAllowAndExtName(
+    const vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
 {
     for (auto &&ext : extensionInfos) {
         if (ext.type != AppExecFwk::ExtensionAbilityType::BACKUP) {
@@ -74,10 +74,10 @@ static tuple<bool, string, string> GetAllowAndExtName(const vector<AppExecFwk::E
         }
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(out[0], ext.bundleName);
         auto cache = cachedEntity.Structuralize();
-        return {cache.GetAllowToBackupRestore(), ext.name, cache.GetRestoreDeps()};
+        return {cache.GetAllowToBackupRestore(), ext.name, cache.GetRestoreDeps(), cache.GetSupportScene()};
     }
     HILOGI("No backup extension ability found");
-    return {false, "", ""};
+    return {false, "", "", ""};
 }
 
 static int64_t GetBundleStats(const string &bundleName, int32_t userId)
@@ -117,11 +117,11 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(int32_t use
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
         }
-        auto [allToBackup, extName, restoreDeps] = GetAllowAndExtName(installedBundle.extensionInfos);
+        auto [allToBackup, extName, restoreDeps, supportScene] = GetAllowAndExtName(installedBundle.extensionInfos);
         auto dataSize = GetBundleStats(installedBundle.name, userId);
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, dataSize, allToBackup,
-                                                              extName, false, restoreDeps});
+                                                              extName, restoreDeps, supportScene});
     }
     return bundleInfos;
 }
@@ -141,41 +141,13 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
         }
-        auto [allToBackup, extName, restoreDeps] = GetAllowAndExtName(installedBundle.extensionInfos);
+        auto [allToBackup, extName, restoreDeps, supportScene] = GetAllowAndExtName(installedBundle.extensionInfos);
         auto dataSize = GetBundleStats(installedBundle.name, userId);
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, dataSize, allToBackup,
-                                                              extName, false, restoreDeps});
+                                                              extName, restoreDeps, supportScene});
     }
     return bundleInfos;
-}
-
-ErrCode BundleMgrAdapter::Install(wptr<InnerReceiverImpl> statusReceiver, const string &bundleFilePath, int32_t userId)
-{
-    HILOGI("Begin");
-    auto bms = GetBundleManager();
-    AppExecFwk::BundleInfo bundleInfo;
-    if (!bms->GetBundleArchiveInfo(bundleFilePath, AppExecFwk::BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo)) {
-        return BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle archive info").GetCode();
-    }
-    auto receiver = statusReceiver.promote();
-    if (receiver == nullptr) {
-        return BError(BError::Codes::SA_BROKEN_IPC, "Failed to get receiver").GetCode();
-    }
-    // check bundle name
-    if (bundleInfo.name != receiver->GetBundleName()) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Bundle name is not match").GetCode();
-    }
-
-    auto install = bms->GetBundleInstaller();
-    if (!install) {
-        return BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle installer").GetCode();
-    }
-
-    AppExecFwk::InstallParam installParam;
-    installParam.installFlag = AppExecFwk::InstallFlag::REPLACE_EXISTING;
-    installParam.userId = userId;
-    return install->StreamInstall({bundleFilePath}, installParam, receiver);
 }
 
 string BundleMgrAdapter::GetAppGalleryBundleName()

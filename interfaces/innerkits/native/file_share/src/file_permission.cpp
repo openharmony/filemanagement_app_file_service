@@ -52,7 +52,7 @@ void FilePermission::GetErrorResults(const vector<uint32_t> &resultCodes,
                                      const vector<PathPolicyInfo> &pathPolicies,
                                      deque<struct PolicyErrorResult> &errorResults)
 {
-    for (int i = 0; i < resultCodes.size(); i++) {
+    for (size_t i = 0; i < resultCodes.size(); i++) {
         PolicyErrorResult result;
         Uri uri(pathPolicies[i].path);
         switch (resultCodes[i]) {
