@@ -33,7 +33,6 @@ public:
     explicit FileUri(const std::string &uriOrPath);
     ~FileUri() = default;
 
-private:
     Uri uri_;
 };
 }  // ModuleFileUri
