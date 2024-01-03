@@ -24,7 +24,6 @@
 namespace OHOS {
 namespace AppFileService {
 namespace ModuleFileShare {
-napi_value GrantPermission(napi_env env, napi_callback_info info);
 napi_value PersistPermission(napi_env env, napi_callback_info info);
 napi_value RevokePermission(napi_env env, napi_callback_info info);
 napi_value ActivatePermission(napi_env env, napi_callback_info info);

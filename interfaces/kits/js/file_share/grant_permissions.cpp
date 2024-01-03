@@ -33,14 +33,7 @@ using namespace std;
 
 namespace {
 const std::string FILE_ACCESS_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
-const std::string SET_SANDBOX_POLICY_PERMISSION = "ohos.permission.SET_SANDBOX_POLICY";
 const char *g_fullMountEnableParameter = "const.filemanager.full_mount.enable";
-
-static bool IsSystemApp()
-{
-    uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
-    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
-}
 
 static bool CheckPermission(const string &permission)
 {
@@ -133,58 +126,6 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
         }
     }
     return napi_ok;
-}
-
-napi_value GrantPermission(napi_env env, napi_callback_info info)
-{
-    if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this api");
-        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
-        return nullptr;
-    }
-    NFuncArg funcArg(env, info);
-    if (!IsSystemApp()) {
-        LOGE("GrantPermission is not System App!");
-        NError(E_PERMISSION_SYS).ThrowErr(env);
-        return nullptr;
-    }
-    if (!CheckPermission(SET_SANDBOX_POLICY_PERMISSION)) {
-        LOGE("GrantPermission has not ohos permission!");
-        NError(E_PERMISSION).ThrowErr(env);
-        return nullptr;
-    }
-    if (!funcArg.InitArgs(NARG_CNT::THREE)) {
-        LOGE("GrantPermission Number of arguments unmatched");
-        NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
-    }
-    auto [succTokenId, id] = NVal(env, funcArg[NARG_POS::FIRST]).ToUint32();
-    auto [succPolicyFlag, flag] = NVal(env, funcArg[NARG_POS::THIRD]).ToUint32();
-    if (!succTokenId || !succPolicyFlag) {
-        NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
-    }
-    uint32_t tokenId = id;
-    uint32_t policyFlag = flag;
-    std::vector<UriPolicyInfo> uriPolicies;
-    napi_status status = GetUriPoliciesArg(env, funcArg[NARG_POS::SECOND], uriPolicies);
-    if (status != napi_ok) {
-        NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
-    }
-    auto cbExec = [tokenId, uriPolicies, policyFlag]() -> NError {
-        int32_t ret = FilePermission::GrantPermission(tokenId, uriPolicies, policyFlag);
-        return NError(ret);
-    };
-    auto cbCompl = [](napi_env env, NError err) -> NVal {
-        if (err) {
-            return {env, err.GetNapiErr(env)};
-        }
-        return NVal::CreateUndefined(env);
-    };
-    const string procedureName = "grant_permission";
-    NVal thisVar(env, funcArg.GetThisVar());
-    return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
 napi_value PersistPermission(napi_env env, napi_callback_info info)

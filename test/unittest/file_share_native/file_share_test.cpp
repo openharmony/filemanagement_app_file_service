@@ -423,55 +423,6 @@ HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0006, testing::ext::TestSize.
 }
 
 /**
- * @tc.name: GrantPermission_test_0000
- * @tc.desc: Test function of GrantPermission() interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require:
- */
-HWTEST_F(FileShareTest, GrantPermission_test_0000, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FileShareTest-begin GrantPermission";
-    string uri = "file://" + BUNDLE_A + "/data/test";
-    std::vector<UriPolicyInfo> uriPolicies;
-    UriPolicyInfo uriPolicyInfo;
-    uriPolicyInfo.uri = uri;
-    uriPolicyInfo.mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE;
-    uint32_t policyFlag = PolicyFlag::ALLOW_PERSISTENCE;
-    uriPolicies.emplace_back(uriPolicyInfo);
-    int32_t ret = FilePermission::GrantPermission(0, uriPolicies, policyFlag);
-    EXPECT_EQ(ret, 0);
-    GTEST_LOG_(INFO) << "FileShareTest-end GrantPermission";
-}
-
-/**
- * @tc.name: GrantPermission_test_0001
- * @tc.desc: Test function of GrantPermission() interface for error URI.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require:
- */
-HWTEST_F(FileShareTest, GrantPermission_test_0001, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FileShareTest-begin GrantPermission_test_0001";
-    string inexistentUri = "file://" + BUNDLE_A + "/data/storage/el2/base/files/inexistentTest.txt";
-    string mediaUri = "file://media/data/storage/el2/base";
-    std::vector<UriPolicyInfo> uriPolicies;
-    UriPolicyInfo uriPolicyInfo;
-    uriPolicyInfo.uri = inexistentUri;
-    uriPolicyInfo.mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE;
-    uint32_t policyFlag = PolicyFlag::ALLOW_PERSISTENCE;
-    uriPolicies.emplace_back(uriPolicyInfo);
-    uriPolicyInfo.uri = mediaUri;
-    uriPolicies.emplace_back(uriPolicyInfo);
-    int32_t ret = FilePermission::GrantPermission(0, uriPolicies, policyFlag);
-    EXPECT_EQ(ret, EPERM);
-    GTEST_LOG_(INFO) << "FileShareTest-end GrantPermission_test_0001";
-}
-
-/**
  * @tc.name: PersistPermission_test_0000
  * @tc.desc: Test function of PersistPermission() interface for SUCCESS.
  * @tc.size: MEDIUM

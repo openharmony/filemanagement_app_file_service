@@ -94,24 +94,6 @@ private:
     /** @brief 注册备份服务意外死亡时执行的回调函数 */
     void OnBackupServiceDied();
 
-    /** @brief 从暂存队列中取出一次待恢复应用请求 */
-    void PopBundleInfo();
-
-    /**
-     * @brief 执行待恢复应用请求
-     *
-     * @param info 待恢复应用请求信息
-     */
-    void AppendBundlesImpl(AppendBundleInfo info);
-
-    /**
-     * @brief IPC请求异常时通知回调
-     *
-     * @param errCode
-     * @param bundlesToRestore
-     */
-    void OnBundleStarted(ErrCode errCode, const std::vector<BundleName> &bundlesToRestore);
-
     /**
      * @brief 注册备份服务意外死亡时执行的回调函数
      *
