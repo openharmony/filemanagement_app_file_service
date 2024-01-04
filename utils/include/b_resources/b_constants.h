@@ -108,7 +108,7 @@ static inline std::string GetSaBundleBackupToolDir(int32_t userId)
 }
 
 // 备份恢复配置文件暂存路径
-static inline std::string_view BACKUP_CONFIG_EXTENSION_PATH = "/data/storage/el2/base/temp/";
+static inline std::string_view BACKUP_CONFIG_EXTENSION_PATH = "/data/storage/el2/base/cache/";
 
 // 应用备份恢复所需的索引文件
 static inline std::string_view EXT_BACKUP_MANAGE = "manage.json";

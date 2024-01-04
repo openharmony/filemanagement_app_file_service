@@ -53,6 +53,25 @@ static bool IsEmptyDirectory(const string &path)
     return isEmpty;
 }
 
+static tuple<ErrCode, map<string, struct stat>, vector<string>> GetFile(const string &path, off_t size = -1)
+{
+    map<string, struct stat> files;
+    vector<string> smallFiles;
+    struct stat sta = {};
+    if (stat(path.data(), &sta) == -1) {
+        return {BError(errno).GetCode(), files, smallFiles};
+    }
+    if (path == "/") {
+        return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
+    }
+    if (sta.st_size <= size) {
+        smallFiles.emplace_back(path);
+    } else {
+        files.try_emplace(path, sta);
+    }
+    return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
+}
+
 static tuple<ErrCode, map<string, struct stat>, vector<string>> GetDirFilesDetail(const string &path,
                                                                                   bool recursion,
                                                                                   off_t size = -1)
@@ -61,16 +80,19 @@ static tuple<ErrCode, map<string, struct stat>, vector<string>> GetDirFilesDetai
     vector<string> smallFiles;
 
     if (IsEmptyDirectory(path)) {
-        smallFiles.emplace_back(path);
+        string newPath = path;
+        if (path.at(path.size()-1) != '/') {
+            newPath += '/';
+        }
+        smallFiles.emplace_back(newPath);
         return {ERR_OK, files, smallFiles};
     }
 
     unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(path.c_str()), closedir};
     if (!dir) {
         HILOGE("Invalid directory path: %{private}s", path.c_str());
-        return {BError(errno).GetCode(), files, smallFiles};
+        return GetFile(path, size);
     }
-
     struct dirent *ptr = nullptr;
     while (!!(ptr = readdir(dir.get()))) {
         // current dir OR parent dir
@@ -104,7 +126,6 @@ static tuple<ErrCode, map<string, struct stat>, vector<string>> GetDirFilesDetai
             files.try_emplace(fileName, sta);
         }
     }
-
     return {ERR_OK, files, smallFiles};
 }
 
@@ -132,7 +153,7 @@ tuple<ErrCode, vector<string>> BDir::GetDirFiles(const string &path)
     return {ERR_OK, files};
 }
 
-static set<string> ExpandPathWildcard(const vector<string> &vec)
+static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
 {
     unique_ptr<glob_t, function<void(glob_t *)>> gl {new glob_t, [](glob_t *ptr) { globfree(ptr); }};
     *gl = {};
@@ -152,7 +173,7 @@ static set<string> ExpandPathWildcard(const vector<string> &vec)
 
     for (auto it = expandPath.begin(); it != expandPath.end(); ++it) {
         filteredPath.insert(*it);
-        if (*it->rbegin() != '/') {
+        if (onlyPath && *it->rbegin() != '/') {
             continue;
         }
         auto jt = it;
@@ -168,18 +189,16 @@ static set<string> ExpandPathWildcard(const vector<string> &vec)
 tuple<ErrCode, map<string, struct stat>, vector<string>> BDir::GetBigFiles(const vector<string> &includes,
                                                                            const vector<string> &excludes)
 {
-    set<string> inc = ExpandPathWildcard(includes);
+    set<string> inc = ExpandPathWildcard(includes, false);
 
     map<string, struct stat> incFiles;
     vector<string> incSmallFiles;
     for (const auto &item : inc) {
-        auto [errCode, files, smallFiles] =
-            OHOS::FileManagement::Backup::GetDirFilesDetail(item, true, BConstants::BIG_FILE_BOUNDARY);
+        auto [errCode, files, smallFiles] = GetDirFilesDetail(item, true, BConstants::BIG_FILE_BOUNDARY);
         if (errCode == 0) {
             int32_t num = static_cast<int32_t>(files.size());
-            HILOGI("found big files. total number is : %{public}d", num);
             incFiles.merge(move(files));
-            HILOGI("found small files. total number is : %{public}d", static_cast<int32_t>(smallFiles.size()));
+            HILOGI("big files: %{public}d; small files: %{public}d", num, static_cast<int32_t>(smallFiles.size()));
             incSmallFiles.insert(incSmallFiles.end(), smallFiles.begin(), smallFiles.end());
         }
     }
@@ -189,13 +208,27 @@ tuple<ErrCode, map<string, struct stat>, vector<string>> BDir::GetBigFiles(const
             return false;
         }
         for (const string &item : s) {
-            if (!item.empty() && (fnmatch(item.data(), str.data(), FNM_LEADING_DIR) == 0)) {
-                HILOGI("file %{public}s matchs exclude condition", str.c_str());
+            if (item.empty()) {
+                continue;
+            }
+            string excludeItem = item;
+            if (excludeItem.at(item.size() - 1) == '/') {
+                excludeItem += "*";
+            }
+            if (!item.empty() && fnmatch(excludeItem.data(), str.data(), FNM_LEADING_DIR) == 0) {
                 return true;
             }
         }
         return false;
     };
+
+    vector<string> resSmallFiles;
+    for (const auto &item : incSmallFiles) {
+        if (!isMatch(excludes, item)) {
+            HILOGI("smallfile %{public}s matchs include condition and unmatchs exclude condition", item.c_str());
+            resSmallFiles.emplace_back(item);
+        }
+    }
 
     map<string, struct stat> bigFiles;
     for (const auto &item : incFiles) {
@@ -205,14 +238,14 @@ tuple<ErrCode, map<string, struct stat>, vector<string>> BDir::GetBigFiles(const
         }
     }
     HILOGI("total number of big files is %{public}d", static_cast<int32_t>(bigFiles.size()));
-    HILOGI("total number of small files is %{public}d", static_cast<int32_t>(incSmallFiles.size()));
-    return {ERR_OK, move(bigFiles), move(incSmallFiles)};
+    HILOGI("total number of small files is %{public}d", static_cast<int32_t>(resSmallFiles.size()));
+    return {ERR_OK, move(bigFiles), move(resSmallFiles)};
 }
 
 vector<string> BDir::GetDirs(const vector<string_view> &paths)
 {
     vector<string> wildcardPath(paths.begin(), paths.end());
-    set<string> inc = ExpandPathWildcard(wildcardPath);
+    set<string> inc = ExpandPathWildcard(wildcardPath, true);
     vector<string> dirs(inc.begin(), inc.end());
     return dirs;
 }
