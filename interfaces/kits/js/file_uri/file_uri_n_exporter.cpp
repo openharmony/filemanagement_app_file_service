@@ -218,7 +218,16 @@ napi_value FileUriNExporter::Normalize(napi_env env, napi_callback_info info)
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
-    return NVal::CreateUTF8String(env, NormalizeUri(fileuriEntity->fileUri_.uri_)).val_;
+
+    napi_value uriObj = NClass::InstantiateClass(env, FileUriNExporter::className,
+        {NVal::CreateUTF8String(env, NormalizeUri(fileuriEntity->fileUri_.uri_)).val_});
+    if (!uriObj) {
+        LOGE("Failed to construct FileUriNExporter.");
+        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        return nullptr;
+    }
+
+    return uriObj;
 }
 
 napi_value FileUriNExporter::Equals(napi_env env, napi_callback_info info)
