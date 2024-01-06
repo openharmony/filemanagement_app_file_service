@@ -707,6 +707,12 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
     });
 }
 
+void BackupExtExtension::ExtClear()
+{
+    HILOGI("ext begin clear");
+    DoClear();
+}
+
 void BackupExtExtension::DoClear()
 {
     try {

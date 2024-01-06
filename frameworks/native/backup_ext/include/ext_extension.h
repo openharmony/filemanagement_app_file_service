@@ -36,6 +36,7 @@ public:
     ErrCode HandleRestore() override;
 
     void AsyncTaskRestoreForUpgrade(void);
+    void ExtClear(void);
 
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension) : extension_(extension)
