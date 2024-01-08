@@ -49,7 +49,7 @@ TarFile &TarFile::GetInstance()
 
 bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, const string &pkPath, TarMap &tarMap)
 {
-    if (srcFiles.empty() || tarFileName.empty() || pkPath.empty()) {
+    if (tarFileName.empty() || pkPath.empty()) {
         HILOGE("Invalid parameter");
         return false;
     }
