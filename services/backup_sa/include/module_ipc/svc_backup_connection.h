@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -69,6 +69,13 @@ public:
      * @return the proxy of backup extension ability.
      */
     sptr<IExtension> GetBackupExtProxy();
+
+    /**
+     * @brief Set the Callback object
+     *
+     * @param callConnDone
+     */
+    void SetCallback(std::function<void(const std::string &&)> callConnDone);
 
 public:
     SvcBackupConnection(std::function<void(const std::string &&)> callDied,

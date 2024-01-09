@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -567,6 +567,43 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
 
         /* Standard Log Output, for testers */
         HILOGE("Backup <%{public}s> Extension Process Died", callName.data());
+        string versionName = session_->GetBundleVersionName(bundleName);   /* old device app version name */
+        uint32_t versionCode = session_->GetBundleVersionCode(bundleName); /* old device app version code */
+        if (versionCode == BConstants::DEFAULT_VERSION_CODE && versionName == BConstants::DEFAULT_VERSION_NAME) {
+            ExtConnectDied(bundleName);
+            return;
+        }
+        // 重新连接清理缓存
+        HILOGE("Clear backup extension data, bundleName: %{public}s", bundleName.data());
+        auto backUpConnection = session_->GetExtConnection(bundleName);
+        auto callConnDone = [ptr {wptr(this)}](const string &&bundleName) {
+            auto thisPtr = ptr.promote();
+            if (!thisPtr) {
+                HILOGW("this pointer is null.");
+                return;
+            }
+            auto sessionConnection = thisPtr->session_->GetExtConnection(bundleName);
+            if (sessionConnection->IsExtAbilityConnected()) {
+                sessionConnection->DisconnectBackupExtAbility();
+            }
+            thisPtr->ExtConnectDied(bundleName);
+        };
+        backUpConnection->SetCallback(callConnDone);
+        auto ret = LaunchBackupExtension(bundleName);
+        if (ret) {
+            ExtConnectDied(bundleName);
+            return;
+        }
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        return;
+    }
+}
+
+void Service::ExtConnectDied(const string &callName)
+{
+    try {
+        HILOGI("Begin");
         /* Clear Timer */
         session_->BundleExtTimerStop(callName);
         auto backUpConnection = session_->GetExtConnection(callName);
@@ -577,13 +614,8 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
         ClearSessionAndSchedInfo(callName);
         /* Notice Client Ext Ability Process Died */
         NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
-    } catch (const BError &e) {
-        return;
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return;
     } catch (...) {
-        HILOGI("Unexpected exception");
+        HILOGE("Unexpected exception");
         return;
     }
 }

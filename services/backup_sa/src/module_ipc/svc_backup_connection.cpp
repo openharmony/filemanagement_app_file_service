@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,13 +47,14 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
 void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode)
 {
     HILOGI("called begin");
+    isConnected_.store(false);
+    backupProxy_ = nullptr;
     if (isConnectedDone_ == false) {
+        isConnectedDone_.store(true);
         string bundleName = element.GetBundleName();
         HILOGE("It's error that the backup extension dies before the backup sa. name : %{public}s", bundleName.data());
         callDied_(move(bundleName));
     }
-    backupProxy_ = nullptr;
-    isConnected_.store(false);
     condition_.notify_all();
     HILOGI("called end");
 }
@@ -62,8 +63,7 @@ ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t 
 {
     HILOGI("called begin");
     std::unique_lock<std::mutex> lock(mutex_);
-    ErrCode ret =
-        AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, userId);
+    ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, userId);
     HILOGI("called end, ret=%{public}d", ret);
     return ret;
 }
@@ -97,5 +97,10 @@ bool SvcBackupConnection::IsExtAbilityConnected()
 sptr<IExtension> SvcBackupConnection::GetBackupExtProxy()
 {
     return backupProxy_;
+}
+
+void SvcBackupConnection::SetCallback(function<void(const std::string &&)> callConnDone)
+{
+    callConnDone_ = callConnDone;
 }
 } // namespace OHOS::FileManagement::Backup
