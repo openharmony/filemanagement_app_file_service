@@ -71,7 +71,7 @@ static int32_t GetTargetInfo(uint32_t tokenId, string &bundleName, string &curre
 
     int index = hapInfo.instIndex;
     if (index != 0) {
-        bundleName += "_" + to_string(index);
+        bundleName = to_string(index) + "_" + bundleName;
     }
     return 0;
 }
