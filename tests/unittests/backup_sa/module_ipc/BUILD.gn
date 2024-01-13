@@ -18,6 +18,7 @@ ohos_unittest("module_ipc_test") {
   module_out_path = path_module_out_tests
 
   sources = [
+    "${path_backup_mock}/module_ipc/app_gallery_dispose_proxy_mock.cpp",
     "${path_backup_mock}/timer/timer_mock.cpp",
     "service_reverse_proxy_test.cpp",
     "service_stub_test.cpp",
