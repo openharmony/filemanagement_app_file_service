@@ -24,4 +24,9 @@ StorageManager::BundleStats StorageMgrAdapter::GetBundleStats(const std::string 
     StorageManager::BundleStats bundleStats;
     return bundleStats;
 }
+
+int32_t StorageMgrAdapter::UpdateMemPara(int32_t size)
+{
+    return 0;
+}
 } // namespace OHOS::FileManagement::Backup

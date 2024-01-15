@@ -628,4 +628,14 @@ void SvcSessionManager::ClearSessionData()
     }
     impl_.backupExtNameMap.clear();
 }
+
+int32_t SvcSessionManager::GetMemParaCurSize()
+{
+    return memoryParaCurSize_;
+}
+
+void SvcSessionManager::SetMemParaCurSize(int32_t size)
+{
+    memoryParaCurSize_ = size;
+}
 } // namespace OHOS::FileManagement::Backup

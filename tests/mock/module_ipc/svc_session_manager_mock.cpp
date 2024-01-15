@@ -313,5 +313,12 @@ void SvcSessionManager::IncreaseSessionCnt() {}
 
 void SvcSessionManager::DecreaseSessionCnt() {}
 
+int32_t SvcSessionManager::GetMemParaCurSize()
+{
+    return 0;
+}
+
+void SvcSessionManager::SetMemParaCurSize(int32_t size) {}
+
 void SvcSessionManager::ClearSessionData() {}
 } // namespace OHOS::FileManagement::Backup

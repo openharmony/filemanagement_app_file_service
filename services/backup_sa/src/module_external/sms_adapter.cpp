@@ -18,6 +18,7 @@
 #include <refbase.h>
 
 #include "b_error/b_error.h"
+#include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
@@ -68,5 +69,16 @@ int64_t StorageMgrAdapter::GetUserStorageStats(const std::string &bundleName, in
         return bundleStats.file_;
     }
     return 0;
+}
+
+int32_t StorageMgrAdapter::UpdateMemPara(int32_t size)
+{
+    auto storageMgr = GetStorageManager();
+    int32_t oldSize = BConstants::DEFAULT_VFS_CACHE_PRESSURE;
+    if (storageMgr->UpdateMemoryPara(size, oldSize)) {
+        HILOGE("An error occured StorageMgrAdapter UpdateMemPara");
+        return BConstants::DEFAULT_VFS_CACHE_PRESSURE;
+    }
+    return oldSize;
 }
 } // namespace OHOS::FileManagement::Backup

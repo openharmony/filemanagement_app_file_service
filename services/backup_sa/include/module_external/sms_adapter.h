@@ -37,6 +37,13 @@ public:
      * @param userId user id
      */
     static int64_t GetUserStorageStats(const std::string &bundleName, int32_t userId);
+
+    /**
+     * @brief update memory para
+     *
+     * @param size para data
+    */
+    static int32_t UpdateMemPara(int32_t size);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_STORAGE_MGR_ADAPTER_H
