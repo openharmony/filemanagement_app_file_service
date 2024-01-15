@@ -345,7 +345,7 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
             HILOGE("Fill pw_name failed, err = %{public}d", errno);
         }
     } else {
-        int ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%d", st.st_uid);
+        size_t ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%d", st.st_uid);
         if (ret < 0 || ret >= sizeof(hdr.uname)) {
             HILOGE("Fill uid failed, err = %{public}d", errno);
         }
@@ -353,12 +353,12 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
 
     struct group *gr = getgrgid(st.st_gid);
     if (gr != nullptr) {
-        int ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%s", gr->gr_name);
+        size_t ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%s", gr->gr_name);
         if (ret < 0 || ret >= sizeof(hdr.gname)) {
             HILOGE("Fill gr_name failed, err = %{public}d", errno);
         }
     } else {
-        int ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%d", st.st_gid);
+        size_t ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%d", st.st_gid);
         if (ret < 0 || ret >= sizeof(hdr.gname)) {
             HILOGE("Fill gid failed, err = %{public}d", errno);
         }
