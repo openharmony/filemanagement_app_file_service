@@ -88,8 +88,6 @@ public:
     ~SchedScheduler() override
     {
         extTime_.Shutdown();
-        reversePtr_ = nullptr;
-        sessionPtr_ = nullptr;
         bundleTimeVec_.clear();
     }
 

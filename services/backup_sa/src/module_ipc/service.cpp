@@ -95,8 +95,6 @@ void Service::OnStop()
         oldMemoryParaSize = session_->GetMemParaCurSize();
     }
     StorageMgrAdapter::UpdateMemPara(oldMemoryParaSize);
-    sched_ = nullptr;
-    session_ = nullptr;
 }
 
 UniqueFd Service::GetLocalCapabilities()
