@@ -218,6 +218,13 @@ void UntarFile::ParseRegularFile(FileStatInfo &info, char typeFlag, bool &isSkip
         fclose(destFile);
         chmod(info.fullPath.data(), info.mode);
         struct utimbuf times;
+        struct stat attr;
+        if (stat(info.fullPath.c_str(), &attr) != 0) {
+            HILOGE("Failed to get stat of %{public}s, err = %{public}d", info.fullPath.c_str(), errno);
+            times.actime = info.mtime;
+        } else {
+            times.actime = attr.st_atime;
+        }
         times.modtime = info.mtime;
         if (utime(info.fullPath.c_str(), &times) != 0) {
             HILOGE("Failed to set mtime of %{public}s, err = %{public}d", info.fullPath.c_str(), errno);
