@@ -377,6 +377,19 @@ public:
      */
     void ClearSessionData();
 
+    /**
+     * @brief 获取备份前内存参数
+     *
+    */
+    int32_t GetMemParaCurSize();
+
+    /**
+     * @brief 记录备份前内存参数
+     *
+     * @param size
+    */
+    void SetMemParaCurSize(int32_t size);
+
 private:
     /**
      * @brief 获取backup extension ability
@@ -431,6 +444,7 @@ private:
     uint32_t extConnectNum_ {0};
     Utils::Timer extBundleTimer {"backupBundleExtTimer"};
     std::atomic<int> sessionCnt_ {0};
+    int32_t memoryParaCurSize_ {BConstants::DEFAULT_VFS_CACHE_PRESSURE};
 };
 } // namespace OHOS::FileManagement::Backup
 

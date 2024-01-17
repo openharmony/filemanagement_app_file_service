@@ -37,6 +37,8 @@ const uint64_t MAX_FILE_SIZE = 0777777777777L;
 const uint32_t OCTSTR_LEN = sizeof(off_t) * 3 + 1;
 const uint32_t DEFAULT_SLICE_SIZE = 100 * MB_TO_BYTE; // 分片文件大小为100M
 const uint32_t MAX_FILE_COUNT = 6000;                 // 单个tar包最多包含6000个文件
+const uint32_t WAIT_INDEX = 100000;
+const uint32_t WAIT_TIME = 5;
 const string VERSION = "1.0";
 const string LONG_LINK_SYMBOL = "longLinkSymbol";
 } // namespace
@@ -65,10 +67,17 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
         return false;
     }
 
+    size_t index = 0;
     for (auto &filePath : srcFiles) {
         rootPath_ = filePath;
         if (!TraversalFile(rootPath_)) {
             HILOGE("Failed to traversal file");
+        }
+        index++;
+        if (index >= WAIT_INDEX) {
+            HILOGD("Sleep to wait");
+            sleep(WAIT_TIME);
+            index = 0;
         }
     }
 

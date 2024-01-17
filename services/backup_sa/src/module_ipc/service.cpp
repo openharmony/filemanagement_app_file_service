@@ -50,6 +50,7 @@
 #include "ipc_skeleton.h"
 #include "module_app_gallery/app_gallery_dispose_proxy.h"
 #include "module_external/bms_adapter.h"
+#include "module_external/sms_adapter.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "module_ipc/svc_restore_deps_manager.h"
 #include "parameter.h"
@@ -89,6 +90,11 @@ void Service::OnStart()
 void Service::OnStop()
 {
     HILOGI("Called");
+    int32_t oldMemoryParaSize = BConstants::DEFAULT_VFS_CACHE_PRESSURE;
+    if (session_ != nullptr) {
+        oldMemoryParaSize = session_->GetMemParaCurSize();
+    }
+    StorageMgrAdapter::UpdateMemPara(oldMemoryParaSize);
     sched_ = nullptr;
     session_ = nullptr;
 }
@@ -214,6 +220,9 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
 {
     try {
         VerifyCaller();
+        int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
+        HILOGE("InitBackupSession oldSize %{public}d", oldSize);
+        session_->SetMemParaCurSize(oldSize);
         session_->Active({
             .clientToken = IPCSkeleton::GetCallingTokenID(),
             .scenario = IServiceReverse::Scenario::BACKUP,
