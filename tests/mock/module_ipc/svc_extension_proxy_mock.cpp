@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,5 +41,25 @@ ErrCode SvcExtensionProxy::PublishFile(const string &fileName)
 ErrCode SvcExtensionProxy::HandleRestore()
 {
     return 0;
+}
+
+ErrCode SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
+{
+    return 0;
+}
+
+ErrCode SvcExtensionProxy::PublishIncrementalFile(const string &fileName)
+{
+    return 0;
+}
+
+ErrCode SvcExtensionProxy::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
+{
+    return 0;
+}
+
+tuple<UniqueFd, UniqueFd> SvcExtensionProxy::GetIncrementalBackupFileHandle()
+{
+    return {UniqueFd(-1), UniqueFd(-1)};
 }
 } // namespace OHOS::FileManagement::Backup

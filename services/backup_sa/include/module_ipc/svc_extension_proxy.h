@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
 
 #include "i_extension.h"
 #include "iremote_proxy.h"
+#include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
 class SvcExtensionProxy : public IRemoteProxy<IExtension> {
@@ -27,6 +28,10 @@ public:
     ErrCode HandleBackup() override;
     ErrCode PublishFile(const std::string &fileName) override;
     ErrCode HandleRestore() override;
+    ErrCode GetIncrementalFileHandle(const std::string &fileName) override;
+    ErrCode PublishIncrementalFile(const std::string &fileName) override;
+    ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) override;
+    std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
 
 public:
     explicit SvcExtensionProxy(const sptr<IRemoteObject> &remote) : IRemoteProxy<IExtension>(remote) {}

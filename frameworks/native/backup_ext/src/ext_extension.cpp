@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -124,6 +124,11 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
         DoClear();
         return UniqueFd(-1);
     }
+}
+
+ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
+{
+    return ERR_OK;
 }
 
 ErrCode BackupExtExtension::HandleClear()
@@ -261,6 +266,11 @@ ErrCode BackupExtExtension::PublishFile(const string &fileName)
         DoClear();
         return BError(BError::Codes::EXT_BROKEN_FRAMEWORK).GetCode();
     }
+}
+
+ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
+{
+    return ERR_OK;
 }
 
 ErrCode BackupExtExtension::HandleBackup()
@@ -810,5 +820,15 @@ ErrCode BackupExtExtension::HandleRestore()
     }
 
     return 0;
+}
+
+ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
+{
+    return 0;
+}
+
+tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
+{
+    return {UniqueFd(-1), UniqueFd(-1)};
 }
 } // namespace OHOS::FileManagement::Backup

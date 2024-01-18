@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,6 +37,14 @@ ExtExtensionStub::ExtExtensionStub()
         &ExtExtensionStub::CmdPublishFile;
     opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_HANDLE_RESTORE)] =
         &ExtExtensionStub::CmdHandleRestore;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_GET_INCREMENTAL_FILE_HANDLE)] =
+        &ExtExtensionStub::CmdGetIncrementalFileHandle;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_PUBLISH_INCREMENTAL_FILE)] =
+        &ExtExtensionStub::CmdPublishIncrementalFile;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_HANDLE_INCREMENTAL_BACKUP)] =
+        &ExtExtensionStub::CmdHandleIncrementalBackup;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_GET_INCREMENTAL_BACKUP_FILE_HANDLE)] =
+        &ExtExtensionStub::CmdGetIncrementalBackupFileHandle;
 }
 
 int32_t ExtExtensionStub::OnRemoteRequest(uint32_t code,
@@ -125,6 +133,65 @@ ErrCode ExtExtensionStub::CmdHandleRestore(MessageParcel &data, MessageParcel &r
         stringstream ss;
         ss << "Failed to send the result " << res;
         return BError(BError::Codes::EXT_BROKEN_IPC, ss.str()).GetCode();
+    }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ExtExtensionStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("Begin");
+    string fileName;
+    if (!data.ReadString(fileName)) {
+        return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive fileName").GetCode();
+    }
+
+    ErrCode res = GetIncrementalFileHandle(fileName);
+    if (!reply.WriteInt32(res)) {
+        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the file").GetCode();
+    }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ExtExtensionStub::CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("Begin");
+    string fileName;
+    if (!data.ReadString(fileName)) {
+        return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive fileName");
+    }
+
+    ErrCode res = PublishIncrementalFile(fileName);
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::EXT_BROKEN_IPC, ss.str()).GetCode();
+    }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ExtExtensionStub::CmdHandleIncrementalBackup(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("Begin");
+    UniqueFd incrementalFd(data.ReadFileDescriptor());
+    UniqueFd manifestFd(data.ReadFileDescriptor());
+    ErrCode res = HandleIncrementalBackup(move(incrementalFd), move(manifestFd));
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::EXT_BROKEN_IPC, ss.str()).GetCode();
+    }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ExtExtensionStub::CmdGetIncrementalBackupFileHandle(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("Begin");
+    auto [incrementalFd, manifestFd] = GetIncrementalBackupFileHandle();
+    if (!reply.WriteFileDescriptor(incrementalFd)) {
+        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the file").GetCode();
+    }
+    if (!reply.WriteFileDescriptor(manifestFd)) {
+        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the file").GetCode();
     }
     return BError(BError::Codes::OK);
 }

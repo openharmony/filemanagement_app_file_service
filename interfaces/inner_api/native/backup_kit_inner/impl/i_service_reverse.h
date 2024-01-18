@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,6 +40,19 @@ public:
     virtual void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
     virtual void RestoreOnAllBundlesFinished(int32_t errCode) = 0;
     virtual void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd) = 0;
+
+    virtual void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd) = 0;
+    virtual void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) = 0;
+    virtual void IncrementalBackupOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
+    virtual void IncrementalBackupOnAllBundlesFinished(int32_t errCode) = 0;
+
+    virtual void IncrementalRestoreOnBundleStarted(int32_t errCode, std::string bundleName) = 0;
+    virtual void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
+    virtual void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) = 0;
+    virtual void IncrementalRestoreOnFileReady(std::string bundleName,
+                                               std::string fileName,
+                                               int fd,
+                                               int manifestFd) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.FileManagement.Backup.IServiceReverse")
 };

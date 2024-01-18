@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,8 @@
 
 #include "b_session_backup.h"
 #include "b_session_restore.h"
+#include "b_incremental_backup_session.h"
+#include "b_incremental_restore_session.h"
 #include "service_reverse_stub.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -33,16 +35,30 @@ public:
     void RestoreOnAllBundlesFinished(int32_t errCode) override;
     void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd) override;
 
+    void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd) override;
+    void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) override;
+    void IncrementalBackupOnBundleFinished(int32_t errCode, std::string bundleName) override;
+    void IncrementalBackupOnAllBundlesFinished(int32_t errCode) override;
+
+    void IncrementalRestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
+    void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
+    void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) override;
+    void IncrementalRestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd) override;
+
 public:
     ServiceReverse() = delete;
     explicit ServiceReverse(BSessionRestore::Callbacks callbacks);
     explicit ServiceReverse(BSessionBackup::Callbacks callbacks);
+    explicit ServiceReverse(BIncrementalBackupSession::Callbacks callbacks);
+    explicit ServiceReverse(BIncrementalRestoreSession::Callbacks callbacks);
     ~ServiceReverse() override = default;
 
 private:
     Scenario scenario_ {Scenario::UNDEFINED};
     BSessionBackup::Callbacks callbacksBackup_;
     BSessionRestore::Callbacks callbacksRestore_;
+    BIncrementalBackupSession::Callbacks callbacksIncrementalBackup_;
+    BIncrementalRestoreSession::Callbacks callbacksIncrementalRestore_;
 };
 } // namespace OHOS::FileManagement::Backup
 

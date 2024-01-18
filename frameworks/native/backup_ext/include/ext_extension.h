@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,12 +19,14 @@
 #include <shared_mutex>
 #include <string>
 #include <vector>
+#include <tuple>
 
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_resources/b_constants.h"
 #include "ext_backup_js.h"
 #include "ext_extension_stub.h"
 #include "thread_pool.h"
+#include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
 class BackupExtExtension : public ExtExtensionStub {
@@ -34,6 +36,10 @@ public:
     ErrCode PublishFile(const std::string &fileName) override;
     ErrCode HandleBackup() override;
     ErrCode HandleRestore() override;
+    ErrCode GetIncrementalFileHandle(const std::string &fileName) override;
+    ErrCode PublishIncrementalFile(const std::string &fileName) override;
+    ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) override;
+    std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
 
     void AsyncTaskRestoreForUpgrade(void);
     void ExtClear(void);

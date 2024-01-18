@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,16 @@ public:
     void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void RestoreOnAllBundlesFinished(int32_t errCode) override;
     void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd) override;
+
+    void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd) override;
+    void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) override;
+    void IncrementalBackupOnBundleFinished(int32_t errCode, std::string bundleName) override;
+    void IncrementalBackupOnAllBundlesFinished(int32_t errCode) override;
+
+    void IncrementalRestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
+    void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
+    void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) override;
+    void IncrementalRestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd) override;
 
 public:
     explicit ServiceReverseProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IServiceReverse>(impl) {}

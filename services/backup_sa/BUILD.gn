@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -30,9 +30,11 @@ ohos_shared_library("backup_sa") {
     "src/module_external/bms_adapter.cpp",
     "src/module_external/sms_adapter.cpp",
     "src/module_ipc/service.cpp",
+    "src/module_ipc/service_incremental_reverse_proxy.cpp",
     "src/module_ipc/service_reverse_proxy.cpp",
     "src/module_ipc/service_stub.cpp",
     "src/module_ipc/svc_backup_connection.cpp",
+    "src/module_ipc/svc_extension_incremental_proxy.cpp",
     "src/module_ipc/svc_extension_proxy.cpp",
     "src/module_ipc/svc_restore_deps_manager.cpp",
     "src/module_ipc/svc_session_manager.cpp",
