@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -62,6 +62,7 @@ constexpr int EXT_CONNECT_MAX_COUNT = 3;      // extension 最大启动数
 constexpr int EXT_CONNECT_MAX_TIME = 15000;   // SA 启动 extension 等待连接最大时间
 
 constexpr int IPC_MAX_WAIT_TIME = 3000; // IPC通讯最大等待时间(s)
+constexpr int MAX_PARCELABLE_VECTOR_NUM = 10000;
 
 constexpr int DEFAULT_VFS_CACHE_PRESSURE = 100; // 默认内存回收参数
 constexpr int BACKUP_VFS_CACHE_PRESSURE = 10000; // 备份过程修改参数
@@ -73,6 +74,21 @@ static inline std::string BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_KEY = "backup.d
 static inline std::string BACKUP_DEBUG_OVERRIDE_ACCOUNT_CONFIG_KEY = "backup.debug.overrideAccountConfig";
 static inline std::string BACKUP_DEBUG_OVERRIDE_ACCOUNT_NUMBER_KEY = "backup.debug.overrideAccountNumber";
 
+// 增量备份相关处理目录
+constexpr char FILE_SEPARATOR_CHAR = '/';
+static const std::string BACKUP_PATH_PREFIX = "/data/service/el2/";
+static const std::string BACKUP_PATH_SURFFIX = "/backup/backup_sa/";
+static const std::string BACKUP_INCEXC_SYMBOL = "incExc_";
+static const std::string BACKUP_STAT_SYMBOL = "stat_";
+static const std::string BACKUP_INCLUDE = "INCLUDES";
+static const std::string BACKUP_EXCLUDE = "EXCLUDES";
+
+// backup.para内配置项的名称，该配置项为true时备份恢复支持Release接口调用
+static inline std::string BACKUP_OVERRIDE_BACKUP_SA_RELEASE_KEY = "backup.overrideBackupSARelease";
+
+// backup.para内配置项的名称，该配置项为true时备份恢复支持增量恢复
+static inline std::string BACKUP_OVERRIDE_INCREMENTAL_KEY = "backup.overrideIncrementalRestore";
+
 // 应用备份数据暂存路径
 static inline std::string_view SA_BUNDLE_BACKUP_BACKUP = "/backup/";
 static inline std::string_view SA_BUNDLE_BACKUP_RESTORE = "/restore/";
@@ -81,6 +97,9 @@ static inline std::string_view BACKUP_TOOL_RECEIVE_DIR = "/data/backup/received/
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/backup";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/backup";
 static inline std::string_view BACKUP_TOOL_LINK_DIR = "/data/backup";
+static inline std::string_view BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR = "/data/backup/incrementalreceived/";
+static inline std::string_view BACKUP_TOOL_MANIFEST = "/manifest";
+static inline std::string_view BACKUP_TOOL_INCREMENTAL = "/incremental";
 
 // 多用户场景应用备份数据路径
 static inline std::string GetSaBundleBackupDir(int32_t userId)
@@ -118,6 +137,9 @@ static inline std::string_view EXT_BACKUP_MANAGE = "manage.json";
 
 // 包管理元数据配置文件
 static inline std::string_view BACKUP_CONFIG_JSON = "backup_config.json";
+
+// 简报文件名后缀
+static inline std::string_view REPORT_FILE_EXT = "rp";
 
 // 特殊版本信息
 constexpr int DEFAULT_VERSION_CODE = 0;
