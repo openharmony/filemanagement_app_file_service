@@ -92,20 +92,6 @@ void FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyIn
     }
 }
 
-int32_t FilePermission::GrantPermission(uint32_t tokenId, const vector<UriPolicyInfo> &uriPolicies, uint32_t policyFlag)
-{
-    vector<PathPolicyInfo> pathPolicies;
-    deque<struct PolicyErrorResult> errorResults;
-    GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, pathPolicies);
-    // SandboxManager interface call
-    if (!errorResults.empty()) {
-        LOGE("There are some URI operations that fail");
-        return EPERM;
-    }
-    LOGD("GrantPermission success");
-    return 0;
-}
-
 int32_t FilePermission::PersistPermission(const vector<UriPolicyInfo> &uriPolicies,
                                           deque<struct PolicyErrorResult> &errorResults)
 {

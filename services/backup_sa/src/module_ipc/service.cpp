@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -50,6 +50,7 @@
 #include "ipc_skeleton.h"
 #include "module_app_gallery/app_gallery_dispose_proxy.h"
 #include "module_external/bms_adapter.h"
+#include "module_external/sms_adapter.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "module_ipc/svc_restore_deps_manager.h"
 #include "parameter.h"
@@ -89,6 +90,11 @@ void Service::OnStart()
 void Service::OnStop()
 {
     HILOGI("Called");
+    int32_t oldMemoryParaSize = BConstants::DEFAULT_VFS_CACHE_PRESSURE;
+    if (session_ != nullptr) {
+        oldMemoryParaSize = session_->GetMemParaCurSize();
+    }
+    StorageMgrAdapter::UpdateMemPara(oldMemoryParaSize);
     sched_ = nullptr;
     session_ = nullptr;
 }
@@ -214,6 +220,9 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
 {
     try {
         VerifyCaller();
+        int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
+        HILOGE("InitBackupSession oldSize %{public}d", oldSize);
+        session_->SetMemParaCurSize(oldSize);
         session_->Active({
             .clientToken = IPCSkeleton::GetCallingTokenID(),
             .scenario = IServiceReverse::Scenario::BACKUP,
@@ -567,6 +576,43 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
 
         /* Standard Log Output, for testers */
         HILOGE("Backup <%{public}s> Extension Process Died", callName.data());
+        string versionName = session_->GetBundleVersionName(bundleName);   /* old device app version name */
+        uint32_t versionCode = session_->GetBundleVersionCode(bundleName); /* old device app version code */
+        if (versionCode == BConstants::DEFAULT_VERSION_CODE && versionName == BConstants::DEFAULT_VERSION_NAME) {
+            ExtConnectDied(bundleName);
+            return;
+        }
+        // 重新连接清理缓存
+        HILOGE("Clear backup extension data, bundleName: %{public}s", bundleName.data());
+        auto backUpConnection = session_->GetExtConnection(bundleName);
+        auto callConnDone = [ptr {wptr(this)}](const string &&bundleName) {
+            auto thisPtr = ptr.promote();
+            if (!thisPtr) {
+                HILOGW("this pointer is null.");
+                return;
+            }
+            auto sessionConnection = thisPtr->session_->GetExtConnection(bundleName);
+            if (sessionConnection->IsExtAbilityConnected()) {
+                sessionConnection->DisconnectBackupExtAbility();
+            }
+            thisPtr->ExtConnectDied(bundleName);
+        };
+        backUpConnection->SetCallback(callConnDone);
+        auto ret = LaunchBackupExtension(bundleName);
+        if (ret) {
+            ExtConnectDied(bundleName);
+            return;
+        }
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        return;
+    }
+}
+
+void Service::ExtConnectDied(const string &callName)
+{
+    try {
+        HILOGI("Begin");
         /* Clear Timer */
         session_->BundleExtTimerStop(callName);
         auto backUpConnection = session_->GetExtConnection(callName);
@@ -577,13 +623,8 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
         ClearSessionAndSchedInfo(callName);
         /* Notice Client Ext Ability Process Died */
         NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
-    } catch (const BError &e) {
-        return;
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return;
     } catch (...) {
-        HILOGI("Unexpected exception");
+        HILOGE("Unexpected exception");
         return;
     }
 }
@@ -597,11 +638,6 @@ void Service::ExtStart(const string &bundleName)
         auto proxy = backUpConnection->GetBackupExtProxy();
         if (!proxy) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
-        }
-        if (session_->GetBundleVersionCode(bundleName) != BConstants::DEFAULT_VERSION_CODE &&
-            session_->GetBundleVersionName(bundleName) != BConstants::DEFAULT_VERSION_NAME &&
-            session_->GetBundleRestoreType(bundleName) != RestoreTypeEnum::RESTORE_DATA_READDY) {
-            proxy->HandleClear();
         }
         if (scenario == IServiceReverse::Scenario::BACKUP) {
             auto ret = proxy->HandleBackup();
@@ -819,8 +855,6 @@ void Service::SessionDeactive()
         sched_->ClearSchedulerData();
         // 清除缓存数据
         session_->ClearSessionData();
-        // 清除session
-        session_->Deactive(nullptr, true);
         // 卸载服务
         sched_->TryUnloadService();
     } catch (...) {

@@ -47,7 +47,7 @@ vector<string> BJsonEntityExtensionConfig::GetIncludes() const
 
     vector<string> dirs;
     for (auto &&item : obj_["includes"]) {
-        if (!item.isString()) {
+        if (!item.isString() || item.empty()) {
             HILOGE("Each item of array 'includes' must be of the type string");
             continue;
         }
@@ -77,9 +77,9 @@ vector<string> BJsonEntityExtensionConfig::GetExcludes() const
 
     vector<string> dirs;
     for (auto &&item : obj_["excludes"]) {
-        if (!item.isString()) {
+        if (!item.isString() || item.empty()) {
             HILOGE("Each item of array 'excludes' must be of the type string");
-            return {};
+            continue;
         }
         dirs.push_back(item.asString());
     }

@@ -109,6 +109,28 @@ HWTEST_F(ServiceTest, SUB_Service_GetLocalCapabilities_0100, testing::ext::TestS
 }
 
 /**
+ * @tc.number: SUB_Service_GetLocalCapabilities_0101
+ * @tc.name: SUB_Service_GetLocalCapabilities_0101
+ * @tc.desc: 测试 GetLocalCapabilities 获取本地能力文件
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetLocalCapabilities_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetLocalCapabilities_0101";
+    try {
+        UniqueFd fd = servicePtr_->GetLocalCapabilities();
+        EXPECT_GT(fd, -EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetLocalCapabilities.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetLocalCapabilities_0101";
+}
+
+/**
  * @tc.number: SUB_Service_OnStart_0100
  * @tc.name: SUB_Service_OnStart_0100
  * @tc.desc: 测试 OnStart 接口
@@ -181,6 +203,64 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0100, testing::ext::TestSize.Level
 }
 
 /**
+ * @tc.number: SUB_Service_PublishFile_0101
+ * @tc.name: SUB_Service_PublishFile_0101
+ * @tc.desc: 测试 PublishFile 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_PublishFile_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_PublishFile_0101";
+    try {
+        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        BFileInfo fileInfo {BUNDLE_NAME, FILE_NAME, 0};
+        ret = servicePtr_->PublishFile(fileInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        GTEST_LOG_(INFO) << "ServiceTest-PublishFile Branches";
+        fileInfo.fileName = "/data/storage/el2/restore/bundle.hap";
+        ret = servicePtr_->PublishFile(fileInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by PublishFile.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_PublishFile_0101";
+}
+
+/**
+ * @tc.number: SUB_Service_PublishFile_0102
+ * @tc.name: SUB_Service_PublishFile_0102
+ * @tc.desc: 测试 PublishFile 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_PublishFile_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_PublishFile_0102";
+    try {
+        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        BFileInfo fileInfo {BUNDLE_NAME, FILE_NAME, 0};
+        ret = servicePtr_->PublishFile(fileInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        GTEST_LOG_(INFO) << "ServiceTest-PublishFile Branches";
+        string bundleName = "";
+        ret = servicePtr_->PublishFile(fileInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by PublishFile.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_PublishFile_0102";
+}
+
+/**
  * @tc.number: SUB_Service_AppFileReady_0100
  * @tc.name: SUB_Service_AppFileReady_0100
  * @tc.desc: 测试 AppFileReady 接口
@@ -208,6 +288,52 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0100, testing::ext::TestSize.Leve
 }
 
 /**
+ * @tc.number: SUB_Service_AppFileReady_0101
+ * @tc.name: SUB_Service_AppFileReady_0101
+ * @tc.desc: 测试 AppFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppFileReady_0101";
+    try {
+        string fileName = "";
+        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1));
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppFileReady_0101";
+}
+
+/**
+ * @tc.number: SUB_Service_AppFileReady_0102
+ * @tc.name: SUB_Service_AppFileReady_0102
+ * @tc.desc: 测试 AppFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppFileReady_0102";
+    try {
+        string fileName = "manage.json";
+        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1));
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppFileReady_0102";
+}
+
+/**
  * @tc.number: SUB_Service_AppDone_0100
  * @tc.name: SUB_Service_AppDone_0100
  * @tc.desc: 测试 AppDone 接口
@@ -220,7 +346,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppDone_0100";
     try {
-        GTEST_LOG_(INFO) << "SUB_Service_AppDone_0100 RESTORE";
+        GTEST_LOG_(INFO) << "SUB_Service_AppDone Branches Start";
         auto ret = servicePtr_->AppDone(BError(BError::Codes::OK));
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "SUB_Service_AppDone_0100 BACKUP";
@@ -237,6 +363,58 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0100, testing::ext::TestSize.Level1)
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppDone.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppDone_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_AppDone_0101
+ * @tc.name: SUB_Service_AppDone_0101
+ * @tc.desc: 测试 AppDone 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppDone_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppDone_0101";
+    try {
+        GTEST_LOG_(INFO) << "SUB_Service_AppDone Branches Start";
+        auto ret = servicePtr_->AppDone(BError(BError::Codes::OK));
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        GTEST_LOG_(INFO) << "SUB_Service_AppDone_0101 RESTORE";
+        ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        ret = servicePtr_->AppDone(BError(BError::Codes::OK));
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppDone.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppDone_0101";
+}
+
+/**
+ * @tc.number: SUB_Service_AppDone_0102
+ * @tc.name: SUB_Service_AppDone_0102
+ * @tc.desc: 测试 AppDone 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppDone_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppDone_0102";
+    try {
+        GTEST_LOG_(INFO) << "SUB_Service_AppDone Branches Start";
+        string bundleName = "";
+        auto ret = servicePtr_->AppDone(BError(BError::Codes::OK));
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppDone.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppDone_0102";
 }
 
 /**
@@ -270,6 +448,31 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0100, testing::ext::Test
 }
 
 /**
+ * @tc.number: SUB_Service_LaunchBackupExtension_0101
+ * @tc.name: SUB_Service_LaunchBackupExtension_0101
+ * @tc.desc: 测试 LaunchBackupExtension 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_LaunchBackupExtension_0101";
+    try {
+        GTEST_LOG_(INFO) << "SUB_Service_LaunchBackupExtension_0100 UNDEFINED";
+        ErrCode ret = Init(IServiceReverse::Scenario::UNDEFINED);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        ret = servicePtr_->LaunchBackupExtension(BUNDLE_NAME);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by LaunchBackupExtension.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_LaunchBackupExtension_0101";
+}
+
+/**
  * @tc.number: SUB_Service_GetFileHandle_0100
  * @tc.name: SUB_Service_GetFileHandle_0100
  * @tc.desc: 测试 GetFileHandle 接口
@@ -284,10 +487,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0100, testing::ext::TestSize.Lev
     try {
         ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-
-        string bundleName = BUNDLE_NAME;
-        string fileName = FILE_NAME;
-        ret = servicePtr_->GetFileHandle(bundleName, fileName);
+        ret = servicePtr_->GetFileHandle(BUNDLE_NAME, FILE_NAME);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -381,6 +581,50 @@ HWTEST_F(ServiceTest, SUB_Service_Dump_0100, testing::ext::TestSize.Level1)
 }
 
 /**
+ * @tc.number: SUB_Service_Dump_0101
+ * @tc.name: SUB_Service_Dump_0101
+ * @tc.desc: 测试 Dump 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_Dump_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_Dump_0101";
+    try {
+        int ret = servicePtr_->Dump(1, {});
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by Dump.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_Dump_0101";
+}
+
+/**
+ * @tc.number: SUB_Service_Dump_0102
+ * @tc.name: SUB_Service_Dump_0102
+ * @tc.desc: 测试 Dump 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_Dump_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_Dump_0102";
+    try {
+        int ret = servicePtr_->Dump(-1, {});
+        EXPECT_EQ(ret, -1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by Dump.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_Dump_0102";
+}
+
+/**
  * @tc.number: SUB_Service_ExtConnectFailed_0100
  * @tc.name: SUB_Service_ExtConnectFailed_0100
  * @tc.desc: 测试 ExtConnectFailed 接口
@@ -442,12 +686,107 @@ HWTEST_F(ServiceTest, SUB_Service_StopAll_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StopAll_0100";
     try {
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 0;
         servicePtr_->StopAll(nullptr, true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by StopAll.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StopAll_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_StopAll_0101
+ * @tc.name: SUB_Service_StopAll_0101
+ * @tc.desc: 测试 StopAll 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_StopAll_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StopAll_0101";
+    try {
+        SvcSessionManager::Impl impl_;
+        impl_.clientProxy = nullptr;
+        servicePtr_->StopAll(nullptr, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by StopAll.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StopAll_0101";
+}
+
+/**
+ * @tc.number: SUB_Service_StopAll_0102
+ * @tc.name: SUB_Service_StopAll_0102
+ * @tc.desc: 测试 StopAll 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_StopAll_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StopAll_0102";
+    try {
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 0;
+        servicePtr_->StopAll(nullptr, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by StopAll.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StopAll_0102";
+}
+
+/**
+ * @tc.number: SUB_Service_StopAll_0103
+ * @tc.name: SUB_Service_StopAll_0103
+ * @tc.desc: 测试 StopAll 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_StopAll_0103, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StopAll_0103";
+    try {
+        SvcSessionManager::Impl impl_;
+        impl_.clientProxy = nullptr;
+        servicePtr_->StopAll(nullptr, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by StopAll.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StopAll_0103";
+}
+
+/**
+ * @tc.number: SUB_Service_StopAll_0104
+ * @tc.name: SUB_Service_StopAll_0104
+ * @tc.desc: 测试 StopAll 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_StopAll_0104, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StopAll_0104";
+    try {
+        SvcSessionManager::Impl impl_;
+        impl_.clientProxy = nullptr;
+        const wptr<IRemoteObject> obj = nullptr;
+        servicePtr_->StopAll(obj, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by StopAll.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StopAll_0104";
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -153,10 +153,6 @@ void SchedScheduler::TryUnloadServiceTimer(bool force)
         extTime_.Unregister(tmpTimerEventId);
     }
 
-    // When force is true, the timer is unregistered immediately and then try to unload the service.
-    if (auto tmp = timerEventId.exchange(0); tmp != 0) {
-        extTime_.Unregister(tmp);
-    }
     tryUnload();
 }
 
@@ -183,6 +179,5 @@ void SchedScheduler::ClearSchedulerData()
         extTime_.Unregister(iTime);
     }
     bundleTimeVec_.clear();
-    threadPool_.Stop();
 }
 }; // namespace OHOS::FileManagement::Backup

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,20 +13,9 @@
  * limitations under the License.
  */
 
-#include "module_external/sms_adapter.h"
+#ifndef FULLSHARE_FUZZER_H
+#define FULLSHARE_FUZZER_H
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#define FUZZ_PROJECT_NAME "fileshare_fuzzer"
 
-namespace OHOS::FileManagement::Backup {
-StorageManager::BundleStats StorageMgrAdapter::GetBundleStats(const std::string &bundleName)
-{
-    StorageManager::BundleStats bundleStats;
-    return bundleStats;
-}
-
-int32_t StorageMgrAdapter::UpdateMemPara(int32_t size)
-{
-    return 0;
-}
-} // namespace OHOS::FileManagement::Backup
+#endif

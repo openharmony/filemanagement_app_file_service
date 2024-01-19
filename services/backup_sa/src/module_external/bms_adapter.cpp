@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -118,7 +118,10 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(int32_t use
             continue;
         }
         auto [allToBackup, extName, restoreDeps, supportScene] = GetAllowAndExtName(installedBundle.extensionInfos);
-        auto dataSize = GetBundleStats(installedBundle.name, userId);
+        int64_t dataSize = 0;
+        if (allToBackup) {
+            dataSize = GetBundleStats(installedBundle.name, userId);
+        }
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, dataSize, allToBackup,
                                                               extName, restoreDeps, supportScene});
@@ -142,7 +145,10 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
             continue;
         }
         auto [allToBackup, extName, restoreDeps, supportScene] = GetAllowAndExtName(installedBundle.extensionInfos);
-        auto dataSize = GetBundleStats(installedBundle.name, userId);
+        int64_t dataSize = 0;
+        if (allToBackup) {
+            dataSize = GetBundleStats(installedBundle.name, userId);
+        }
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, dataSize, allToBackup,
                                                               extName, restoreDeps, supportScene});

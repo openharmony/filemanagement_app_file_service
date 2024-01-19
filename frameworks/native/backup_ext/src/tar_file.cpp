@@ -37,6 +37,8 @@ const uint64_t MAX_FILE_SIZE = 0777777777777L;
 const uint32_t OCTSTR_LEN = sizeof(off_t) * 3 + 1;
 const uint32_t DEFAULT_SLICE_SIZE = 100 * MB_TO_BYTE; // 分片文件大小为100M
 const uint32_t MAX_FILE_COUNT = 6000;                 // 单个tar包最多包含6000个文件
+const uint32_t WAIT_INDEX = 100000;
+const uint32_t WAIT_TIME = 5;
 const string VERSION = "1.0";
 const string LONG_LINK_SYMBOL = "longLinkSymbol";
 } // namespace
@@ -49,7 +51,7 @@ TarFile &TarFile::GetInstance()
 
 bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, const string &pkPath, TarMap &tarMap)
 {
-    if (srcFiles.empty() || tarFileName.empty() || pkPath.empty()) {
+    if (tarFileName.empty() || pkPath.empty()) {
         HILOGE("Invalid parameter");
         return false;
     }
@@ -65,10 +67,17 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
         return false;
     }
 
+    size_t index = 0;
     for (auto &filePath : srcFiles) {
         rootPath_ = filePath;
         if (!TraversalFile(rootPath_)) {
             HILOGE("Failed to traversal file");
+        }
+        index++;
+        if (index >= WAIT_INDEX) {
+            HILOGD("Sleep to wait");
+            sleep(WAIT_TIME);
+            index = 0;
         }
     }
 
@@ -164,10 +173,11 @@ bool TarFile::AddFile(string &fileName, const struct stat &st, bool isSplit)
         return false;
     }
 
-    if (strncpy_s(hdr.name, sizeof(hdr.name), fileName.c_str(), sizeof(hdr.name) - 1) == 0) {
-        if (fileName.length() >= sizeof(hdr.name)) {
-            WriteLongName(fileName, GNUTYPE_LONGNAME);
-        }
+    if (fileName.length() < TNAME_LEN) {
+        memcpy_s(hdr.name, sizeof(hdr.name), fileName.c_str(), sizeof(hdr.name) - 1);
+    } else {
+        WriteLongName(fileName, GNUTYPE_LONGNAME);
+        memcpy_s(hdr.name, sizeof(hdr.name), LONG_LINK_SYMBOL.c_str(), sizeof(hdr.name) - 1);
     }
     memcpy_s(hdr.magic, sizeof(hdr.magic), TMAGIC.c_str(), sizeof(hdr.magic) - 1);
     memcpy_s(hdr.version, sizeof(hdr.version), VERSION.c_str(), sizeof(hdr.version) - 1);
@@ -344,7 +354,7 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
             HILOGE("Fill pw_name failed, err = %{public}d", errno);
         }
     } else {
-        int ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%d", st.st_uid);
+        size_t ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%d", st.st_uid);
         if (ret < 0 || ret >= sizeof(hdr.uname)) {
             HILOGE("Fill uid failed, err = %{public}d", errno);
         }
@@ -352,12 +362,12 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
 
     struct group *gr = getgrgid(st.st_gid);
     if (gr != nullptr) {
-        int ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%s", gr->gr_name);
+        size_t ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%s", gr->gr_name);
         if (ret < 0 || ret >= sizeof(hdr.gname)) {
             HILOGE("Fill gr_name failed, err = %{public}d", errno);
         }
     } else {
-        int ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%d", st.st_gid);
+        size_t ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%d", st.st_gid);
         if (ret < 0 || ret >= sizeof(hdr.gname)) {
             HILOGE("Fill gid failed, err = %{public}d", errno);
         }
@@ -451,14 +461,16 @@ bool TarFile::WriteLongName(string &name, char type)
 
     // write long name head to archive
     if (WriteTarHeader(tmp) != BLOCK_SIZE) {
+        HILOGE("Failed to write long name header");
         return false;
     }
 
     // write name to archive
     vector<uint8_t> buffer {};
     buffer.resize(sz);
-    buffer.assign(reinterpret_cast<uint8_t *>(&name), reinterpret_cast<uint8_t *>(&name) + sz);
+    buffer.assign(name.begin(), name.end());
     if (WriteAll(buffer, sz) != sz) {
+        HILOGE("Failed to write long name buffer");
         return false;
     }
 

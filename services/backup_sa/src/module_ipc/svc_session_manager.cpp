@@ -613,16 +613,29 @@ void SvcSessionManager::DecreaseSessionCnt()
 void SvcSessionManager::ClearSessionData()
 {
     unique_lock<shared_mutex> lock(lock_);
-    for (auto it = impl_.backupExtNameMap.begin(); it != impl_.backupExtNameMap.end();) {
+    for (auto &&it : impl_.backupExtNameMap) {
         // clear timer
-        extBundleTimer.Unregister(it->second.extTimerId);
+        if (it.second.timerStatus == true) {
+            it.second.timerStatus = false;
+            extBundleTimer.Unregister(it.second.extTimerId);
+        }
         // disconnect extension
-        if (it->second.schedAction == BConstants::ServiceSchedAction::RUNNING) {
-            it->second.backUpConnection->DisconnectBackupExtAbility();
+        if (it.second.schedAction == BConstants::ServiceSchedAction::RUNNING) {
+            it.second.backUpConnection->DisconnectBackupExtAbility();
         }
         // clear data
-        it->second.schedAction = BConstants::ServiceSchedAction::FINISH;
+        it.second.schedAction = BConstants::ServiceSchedAction::FINISH;
     }
     impl_.backupExtNameMap.clear();
+}
+
+int32_t SvcSessionManager::GetMemParaCurSize()
+{
+    return memoryParaCurSize_;
+}
+
+void SvcSessionManager::SetMemParaCurSize(int32_t size)
+{
+    memoryParaCurSize_ = size;
 }
 } // namespace OHOS::FileManagement::Backup

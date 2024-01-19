@@ -255,9 +255,7 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0600, testing::ext::T
         const string fileName = "1.tar";
         TestManager tm("SUB_backup_b_session_restore_0600");
         string filePath = tm.GetRootDirCurTest().append(fileName);
-        UniqueFd remoteCap(
-            open(filePath.data(), O_RDONLY | O_CREAT,
-                 S_IRUSR | S_IWUSR));
+        UniqueFd remoteCap(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
         string bundleName = "";
         vector<string> bundlesToRestore;
         bundlesToRestore.emplace_back(bundleName);

@@ -32,6 +32,18 @@ public:
     static napi_value GetFileUriName(napi_env env, napi_callback_info info);
     static napi_value GetFileUriPath(napi_env env, napi_callback_info info);
     static napi_value GetFullDirectoryUri(napi_env env, napi_callback_info info);
+    static napi_value Normalize(napi_env env, napi_callback_info info);
+    static napi_value Equals(napi_env env, napi_callback_info info);
+    static napi_value EqualsTo(napi_env env, napi_callback_info info);
+    static napi_value IsAbsolute(napi_env env, napi_callback_info info);
+    static napi_value GetScheme(napi_env env, napi_callback_info info);
+    static napi_value GetAuthority(napi_env env, napi_callback_info info);
+    static napi_value GetSsp(napi_env env, napi_callback_info info);
+    static napi_value GetUserInfo(napi_env env, napi_callback_info info);
+    static napi_value GetHost(napi_env env, napi_callback_info info);
+    static napi_value GetPort(napi_env env, napi_callback_info info);
+    static napi_value GetQuery(napi_env env, napi_callback_info info);
+    static napi_value GetFragment(napi_env env, napi_callback_info info);
 
     FileUriNExporter(napi_env env, napi_value exports);
     ~FileUriNExporter() override;
