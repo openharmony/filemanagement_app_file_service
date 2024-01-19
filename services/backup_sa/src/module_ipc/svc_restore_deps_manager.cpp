@@ -151,13 +151,15 @@ bool SvcRestoreDepsManager::IsAllBundlesRestored() const
     return toRestoreBundleMap_.empty();
 }
 
-void SvcRestoreDepsManager::UpdateToRestoreBundleMap(const string &bundleName, const string &fileName)
+bool SvcRestoreDepsManager::UpdateToRestoreBundleMap(const string &bundleName, const string &fileName)
 {
     unique_lock<shared_mutex> lock(lock_);
     auto it = toRestoreBundleMap_.find(bundleName);
     if (it != toRestoreBundleMap_.end()) {
         it->second.fileNames_.insert(fileName);
+        return true;
     }
+    return false;
 }
 
 } // namespace OHOS::FileManagement::Backup

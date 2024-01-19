@@ -43,7 +43,7 @@ public:
     void AddRestoredBundles(const string &bundleName);
     vector<BJsonEntityCaps::BundleInfo> GetAllBundles() const;
     bool IsAllBundlesRestored() const;
-    void UpdateToRestoreBundleMap(const string &bundleName, const string &fileName);
+    bool UpdateToRestoreBundleMap(const string &bundleName, const string &fileName);
 
 private:
     SvcRestoreDepsManager() {}

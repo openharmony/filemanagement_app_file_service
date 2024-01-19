@@ -282,7 +282,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
                                             .spaceOccupied = (*it).spaceOccupied,
                                             .allToBackup = (*it).allToBackup,
                                             .extensionName = restoreInfo.extensionName,
-                                            .restoreDeps = (*it).restoreDeps};
+                                            .restoreDeps = restoreInfo.restoreDeps};
         restoreBundleInfos.emplace_back(info);
     }
     return restoreBundleInfos;
@@ -540,6 +540,11 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
     try {
         HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
+
+        bool updateRes = SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);
+        if (updateRes) {
+            return BError(BError::Codes::OK);
+        }
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {
             auto backUpConnection = session_->GetExtConnection(bundleName);
@@ -553,7 +558,6 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
             }
             session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd));
         } else {
-            SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);
             session_->SetExtFileNameRequest(bundleName, fileName);
         }
         return BError(BError::Codes::OK);
