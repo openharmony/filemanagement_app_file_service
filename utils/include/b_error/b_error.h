@@ -85,6 +85,7 @@ public:
         EXT_ABILITY_DIED = 0x5004,
         EXT_ABILITY_TIMEOUT = 0x5005,
         EXT_FORBID_BACKUP_RESTORE = 0x5006,
+        EXT_BACKUP_PACKET_ERROR = 0x5007,
     };
 
     enum BackupErrorCode {
@@ -100,6 +101,7 @@ public:
         E_ETO = 13500003,
         E_DIED = 13500004,
         E_EMPTY = 13500005,
+        E_PACKET = 13500006,
     };
 
 public:
@@ -220,6 +222,7 @@ private:
         {Codes::EXT_ABILITY_TIMEOUT, "Extension process timeout"},
         {Codes::EXT_ABILITY_DIED, "Extension process died"},
         {Codes::EXT_FORBID_BACKUP_RESTORE, "forbid backup or restore"},
+        {Codes::EXT_BACKUP_PACKET_ERROR, "Backup packet error"},
     };
 
     static inline const std::map<int, int> errCodeTable_ {
@@ -247,6 +250,7 @@ private:
         {static_cast<int>(Codes::EXT_ABILITY_DIED), BackupErrorCode::E_DIED},
         {static_cast<int>(Codes::EXT_ABILITY_TIMEOUT), BackupErrorCode::E_ETO},
         {static_cast<int>(Codes::EXT_FORBID_BACKUP_RESTORE), BackupErrorCode::E_FORBID},
+        {static_cast<int>(Codes::EXT_BACKUP_PACKET_ERROR), BackupErrorCode::E_PACKET},
         {BackupErrorCode::E_IPCSS, BackupErrorCode::E_IPCSS},
         {BackupErrorCode::E_INVAL, BackupErrorCode::E_INVAL},
         {BackupErrorCode::E_UKERR, BackupErrorCode::E_UKERR},
@@ -259,6 +263,7 @@ private:
         {BackupErrorCode::E_ETO, BackupErrorCode::E_ETO},
         {BackupErrorCode::E_DIED, BackupErrorCode::E_DIED},
         {BackupErrorCode::E_EMPTY, BackupErrorCode::E_EMPTY},
+        {BackupErrorCode::E_PACKET, BackupErrorCode::E_PACKET},
     };
 
 private:

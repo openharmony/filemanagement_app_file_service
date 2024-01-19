@@ -16,9 +16,13 @@
 #include "ext_extension.h"
 
 #include <algorithm>
+#include <chrono>
+#include <fstream>
 #include <iomanip>
+#include <map>
 #include <regex>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include <sys/stat.h>
@@ -36,8 +40,10 @@
 #include "b_error/b_excep_utils.h"
 #include "b_filesystem/b_dir.h"
 #include "b_filesystem/b_file.h"
+#include "b_filesystem/b_file_hash.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_ext_manage.h"
+#include "b_json/b_report_entity.h"
 #include "b_resources/b_constants.h"
 #include "b_tarball/b_tarball_factory.h"
 #include "filemgmt_libhilog.h"
@@ -53,7 +59,14 @@ const string INDEX_FILE_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
 const string INDEX_FILE_RESTORE = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
                                   append(BConstants::SA_BUNDLE_BACKUP_RESTORE).
                                   append(BConstants::EXT_BACKUP_MANAGE);
+const string INDEX_FILE_INCREMENTAL_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
+                                             append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
 using namespace std;
+
+namespace {
+const int64_t DEFAULT_SLICE_SIZE = 100 * 1024 * 1024; // 分片文件大小为100M
+const uint32_t MAX_FILE_COUNT = 6000;                 // 单个tar包最多包含6000个文件
+} // namespace
 
 void BackupExtExtension::VerifyCaller()
 {
@@ -612,7 +625,7 @@ static void RestoreBigFiles(bool appendTargetPath)
             HILOGE("failed to copy the file. err = %{public}d", errno);
             continue;
         }
-        
+
         RestoreBigFileAfter(fileName, filePath, item.sta, cache.GetHardLinkInfo(item.hashName));
     }
 }
@@ -848,13 +861,363 @@ ErrCode BackupExtExtension::HandleRestore()
     return 0;
 }
 
+static string GetReportFileName(const string &fileName)
+{
+    string reportName = fileName + "." + string(BConstants::REPORT_FILE_EXT);
+    return reportName;
+}
+
+using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
+                                 map<string, struct ReportFileInfo>,
+                                 map<string, struct stat>,
+                                 map<string, struct ReportFileInfo>>;
+
+static CompareFilesResult CompareFiles(const UniqueFd &cloudFd, const UniqueFd &storageFd)
+{
+    BReportEntity cloudRp(UniqueFd(cloudFd.Get()));
+    map<string, struct ReportFileInfo> cloudFiles = cloudRp.GetReportInfos();
+    BReportEntity storageRp(UniqueFd(storageFd.Get()));
+    map<string, struct ReportFileInfo> storageFiles = storageRp.GetReportInfos();
+    map<string, struct ReportFileInfo> allFiles;
+    map<string, struct ReportFileInfo> smallFiles;
+    map<string, struct stat> bigFiles;
+    map<string, struct ReportFileInfo> bigInfos;
+    for (auto &item : storageFiles) {
+        // 进行文件对比
+        string path = item.first;
+        if (item.second.isIncremental == true && item.second.isDir == true) {
+            smallFiles.try_emplace(path, item.second);
+        }
+        if (item.second.isIncremental == true && item.second.isDir == false) {
+            auto [res, fileHash] = BFileHash::HashWithSHA256(path);
+            if (fileHash.empty()) {
+                continue;
+            }
+            item.second.hash = fileHash;
+            item.second.isIncremental = true;
+        } else {
+            item.second.hash = (cloudFiles.find(path) == cloudFiles.end()) ? cloudFiles[path].hash : "";
+        }
+
+        allFiles.try_emplace(path, item.second);
+        if (cloudFiles.find(path) == cloudFiles.end() ||
+            (item.second.isDir == false && item.second.isIncremental == true &&
+             cloudFiles.find(path)->second.hash != item.second.hash)) {
+            // 在云空间简报里不存在或者hash不一致
+            if (item.second.size < BConstants::BIG_FILE_BOUNDARY) {
+                smallFiles.try_emplace(path, item.second);
+                continue;
+            }
+            struct stat sta = {};
+            if (stat(path.c_str(), &sta) == -1) {
+                continue;
+            }
+            bigFiles.try_emplace(path, sta);
+            bigInfos.try_emplace(path, item.second);
+        }
+    }
+    HILOGI("compareFiles Find small files total: %{public}d", smallFiles.size());
+    HILOGI("compareFiles Find big files total: %{public}d", bigFiles.size());
+    return {allFiles, smallFiles, bigFiles, bigInfos};
+}
+
 ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
 {
+    string usrConfig = extension_->GetUsrConfig();
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
+    auto cache = cachedEntity.Structuralize();
+    if (!cache.GetAllowToBackupRestore()) {
+        HILOGE("Application does not allow backup or restore");
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+            .GetCode();
+    }
+    auto [allFiles, smallFiles, bigFiles, bigInfos] = CompareFiles(move(manifestFd), move(incrementalFd));
+    AsyncTaskOnIncrementalBackup(allFiles, smallFiles, bigFiles, bigInfos);
     return 0;
 }
 
 tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
 {
     return {UniqueFd(-1), UniqueFd(-1)};
+}
+
+static void WriteFile(const string &filename, const map<string, struct ReportFileInfo> &srcFiles)
+{
+    fstream f;
+    f.open(filename.data(), ios::out);
+    // 前面2行先填充进去
+    f << "version=1.0&attrNum=6" << endl;
+    f << "path;mode;dir;size;mtime;hash" << endl;
+    for (auto item : srcFiles) {
+        struct ReportFileInfo info = item.second;
+        string str = item.first + ";" + info.mode + ";" + to_string(info.isDir) + ";" + to_string(info.size);
+        str += ";" + to_string(info.mtime) + ";" + info.hash;
+        f << str << endl;
+    }
+    f.close();
+    HILOGI("WriteFile path: %{public}s", filename.c_str());
+}
+
+/**
+ * 获取增量的大文件的信息
+ */
+static TarMap GetIncrmentBigInfos(const map<string, struct stat> &files)
+{
+    auto getStringHash = [](const TarMap &m, const string &str) -> string {
+        ostringstream strHex;
+        strHex << hex;
+
+        hash<string> strHash;
+        size_t szHash = strHash(str);
+        strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
+        string name = strHex.str();
+        for (int i = 0; m.find(name) != m.end(); ++i, strHex.str("")) {
+            szHash = strHash(str + to_string(i));
+            strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
+            name = strHex.str();
+        }
+
+        return name;
+    };
+
+    TarMap bigFiles;
+    for (const auto &item : files) {
+        string md5Name = getStringHash(bigFiles, item.first);
+        if (!md5Name.empty()) {
+            bigFiles.emplace(md5Name, make_tuple(item.first, item.second, true));
+        }
+    }
+
+    return bigFiles;
+}
+
+/**
+ * 增量tar包和简报信息回传
+ */
+static ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo,
+                                       const map<string, struct ReportFileInfo> &srcFiles,
+                                       sptr<IService> proxy)
+{
+    string tarFile = bigFileInfo.begin()->first;
+    string manageFile = GetReportFileName(tarFile);
+    string file = string(INDEX_FILE_INCREMENTAL_BACKUP).append(manageFile);
+    WriteFile(file, srcFiles);
+
+    string tarName = string(INDEX_FILE_INCREMENTAL_BACKUP).append(tarFile);
+    ErrCode ret = proxy->AppIncrementalFileReady(tarFile, UniqueFd(open(tarName.data(), O_RDONLY)),
+                                                 UniqueFd(open(file.data(), O_RDONLY)));
+    if (SUCCEEDED(ret)) {
+        HILOGI("IncrementalTarFileReady: The application is packaged successfully");
+        // 删除文件
+        RemoveFile(file);
+        RemoveFile(tarName);
+    } else {
+        HILOGE("IncrementalTarFileReady interface fails to be invoked: %{public}d", ret);
+    }
+    return ret;
+}
+
+/**
+ * 增量大文件和简报信息回传
+ */
+static ErrCode IncrementalBigFileReady(const TarMap &pkgInfo,
+                                       const map<string, struct ReportFileInfo> &bigInfos,
+                                       sptr<IService> proxy)
+{
+    ErrCode ret {ERR_OK};
+    for (auto &item : pkgInfo) {
+        if (item.first.empty()) {
+            continue;
+        }
+        auto [path, sta, isBeforeTar] = item.second;
+
+        UniqueFd fd(open(path.data(), O_RDONLY));
+        if (fd < 0) {
+            HILOGE("IncrementalBigFileReady open file failed, file name is %{public}s, err = %{public}d", path.c_str(),
+                   errno);
+            continue;
+        }
+
+        struct ReportFileInfo info = bigInfos.find(path)->second;
+        string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append(item.first));
+        map<string, struct ReportFileInfo> bigInfo;
+        bigInfo.try_emplace(path, info);
+        WriteFile(file, bigInfo);
+
+        ret = proxy->AppIncrementalFileReady(item.first, std::move(fd), UniqueFd(open(file.data(), O_RDONLY)));
+        if (SUCCEEDED(ret)) {
+            HILOGI("IncrementalBigFileReady：The application is packaged successfully, package name is %{public}s",
+                   item.first.c_str());
+            RemoveFile(file);
+        } else {
+            HILOGE("IncrementalBigFileReady interface fails to be invoked: %{public}d", ret);
+        }
+    }
+    return ret;
+}
+
+void BackupExtExtension::AsyncTaskOnIncrementalBackup(const map<string, struct ReportFileInfo> &allFiles,
+                                                      const map<string, struct ReportFileInfo> &smallFiles,
+                                                      const map<string, struct stat> &bigFiles,
+                                                      const map<string, struct ReportFileInfo> &bigInfos)
+{
+    auto task = [obj {wptr<BackupExtExtension>(this)}, allFiles, smallFiles, bigFiles, bigInfos]() {
+        auto ptr = obj.promote();
+        try {
+            BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                                  "Ext extension handle have been already released");
+            BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
+                                  "extension handle have been already released");
+
+            auto ret = ptr->DoIncrementalBackup(allFiles, smallFiles, bigFiles, bigInfos);
+            ptr->AppIncrementalDone(ret);
+            HILOGE("Incremental backup app done %{public}d", ret);
+        } catch (const BError &e) {
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+static string GetIncrmentPartName()
+{
+    auto now = chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    auto milliseconds = chrono::duration_cast<chrono::milliseconds>(duration);
+
+    return to_string(milliseconds.count()) + "_part";
+}
+
+static void IncrementalPacket(const map<string, struct ReportFileInfo> &infos, TarMap &tar, sptr<IService> proxy)
+{
+    HILOGI("IncrementalPacket begin");
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    int64_t totalSize = 0;
+    uint32_t fileCount = 0;
+    vector<string> packFiles;
+    map<string, struct ReportFileInfo> tarInfos;
+    // 设置下打包模式
+    TarFile::GetInstance().SetPacketMode(true);
+    string partName = GetIncrmentPartName();
+    for (auto small : infos) {
+        totalSize += small.second.size;
+        fileCount += 1;
+        packFiles.emplace_back(small.first);
+        tarInfos.try_emplace(small.first, small.second);
+        if (totalSize >= DEFAULT_SLICE_SIZE || fileCount >= MAX_FILE_COUNT) {
+            TarMap tarMap {};
+            TarFile::GetInstance().Packet(packFiles, partName, path, tarMap);
+            tar.insert(tarMap.begin(), tarMap.end());
+            // 执行tar包回传功能
+            IncrementalTarFileReady(tarMap, tarInfos, proxy);
+            totalSize = 0;
+            fileCount = 0;
+            packFiles.clear();
+            tarInfos.clear();
+        }
+    }
+    if (fileCount > 0) {
+        // 打包回传
+        TarMap tarMap {};
+        TarFile::GetInstance().Packet(packFiles, partName, path, tarMap);
+        IncrementalTarFileReady(tarMap, tarInfos, proxy);
+        tar.insert(tarMap.begin(), tarMap.end());
+        packFiles.clear();
+        tarInfos.clear();
+    }
+}
+
+static ErrCode IncrementalAllFileReady(const TarMap &pkgInfo,
+                                       const map<string, struct ReportFileInfo> &srcFiles,
+                                       sptr<IService> proxy)
+{
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(
+        UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)));
+    auto cache = cachedEntity.Structuralize();
+    cache.SetExtManage(pkgInfo);
+    cachedEntity.Persist();
+    close(cachedEntity.GetFd().Release());
+
+    string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append("all"));
+    WriteFile(file, srcFiles);
+    UniqueFd fd(open(INDEX_FILE_BACKUP.data(), O_RDONLY));
+    UniqueFd manifestFd(open(file.data(), O_RDONLY));
+    ErrCode ret =
+        proxy->AppIncrementalFileReady(string(BConstants::EXT_BACKUP_MANAGE), std::move(fd), std::move(manifestFd));
+    if (SUCCEEDED(ret)) {
+        HILOGI("IncrementalAllFileReady successfully");
+        RemoveFile(file);
+    } else {
+        HILOGI("successfully but the IncrementalAllFileReady interface fails to be invoked: %{public}d", ret);
+    }
+    return ret;
+}
+
+int BackupExtExtension::DoIncrementalBackup(const map<string, struct ReportFileInfo> &allFiles,
+                                            const map<string, struct ReportFileInfo> &smallFiles,
+                                            const map<string, struct stat> &bigFiles,
+                                            const map<string, struct ReportFileInfo> &bigInfos)
+{
+    HILOGI("Do increment backup");
+    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
+        return EPERM;
+    }
+
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
+        throw BError(errno);
+    }
+
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
+    }
+    // 获取增量文件和全量数据
+    if (smallFiles.size() == 0 && bigFiles.size() == 0) {
+        // 没有增量，则不需要上传
+        TarMap tMap;
+        IncrementalAllFileReady(tMap, allFiles, proxy);
+        HILOGI("Do increment backup, IncrementalAllFileReady end, file empty");
+        return ERR_OK;
+    }
+
+    // tar包数据
+    TarMap tarMap;
+    IncrementalPacket(smallFiles, tarMap, proxy);
+    HILOGI("Do increment backup, IncrementalPacket end");
+
+    // 最后回传大文件
+    TarMap bigMap = GetIncrmentBigInfos(bigFiles);
+    IncrementalBigFileReady(bigMap, bigInfos, proxy);
+    HILOGI("Do increment backup, IncrementalBigFileReady end");
+    bigMap.insert(tarMap.begin(), tarMap.end());
+
+    // 回传manage.json和全量文件
+    IncrementalAllFileReady(bigMap, allFiles, proxy);
+    HILOGI("Do increment backup, IncrementalAllFileReady end");
+    return ERR_OK;
+}
+
+void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+    auto ret = proxy->AppIncrementalDone(errCode);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to notify the app done. err = %{public}d", ret);
+    }
 }
 } // namespace OHOS::FileManagement::Backup

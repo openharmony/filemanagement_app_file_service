@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "b_error/b_error.h"
 #include "b_resources/b_constants.h"
 #include "directory_ex.h"
 #include "filemgmt_libhilog.h"
@@ -62,10 +63,7 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
         packagePath_ = packagePath_.substr(0, packagePath_.length() - 1);
     }
 
-    if (!CreateSplitTarFile()) {
-        HILOGE("Failed to create split tar file");
-        return false;
-    }
+    CreateSplitTarFile();
 
     size_t index = 0;
     for (auto &filePath : srcFiles) {
@@ -81,9 +79,8 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
         }
     }
 
-    if (!FillSplitTailBlocks()) {
-        HILOGE("Failed to fill split tail blocks");
-    }
+    FillSplitTailBlocks();
+
     tarMap = tarMap_;
 
     if (currentTarFile_ != nullptr) {
@@ -109,13 +106,14 @@ bool TarFile::TraversalFile(string &filePath)
     }
     if (!AddFile(filePath, curFileStat, false)) {
         HILOGE("Failed to add file to tar package");
-        return false;
+        throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "TraversalFile Failed to add file to tar package");
     }
 
     if (currentTarFileSize_ >= DEFAULT_SLICE_SIZE) {
         fileCount_ = 0;
         FillSplitTailBlocks();
         CreateSplitTarFile();
+        return true;
     }
 
     // tar包内文件数量大于6000，分片打包
@@ -282,7 +280,7 @@ bool TarFile::CreateSplitTarFile()
     currentTarFile_ = fopen(currentTarName_.c_str(), "wb+");
     if (currentTarFile_ == nullptr) {
         HILOGE("Failed to open file %{public}s, err = %{public}d", currentTarName_.c_str(), errno);
-        return false;
+        throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "CreateSplitTarFile Failed to open file");
     }
     currentTarFileSize_ = 0;
 
@@ -302,13 +300,17 @@ bool TarFile::CompleteBlock(off_t size)
 
 bool TarFile::FillSplitTailBlocks()
 {
+    if (currentTarFile_ == nullptr) {
+        throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "FillSplitTailBlocks currentTarFile_ is null");
+    }
+
     struct stat staTar {};
     int ret = stat(currentTarName_.c_str(), &staTar);
     if (ret != 0) {
         HILOGE("Failed to stat file %{public}s, err = %{public}d", currentTarName_.c_str(), errno);
-        return false;
+        throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "FillSplitTailBlocks Failed to stat file");
     }
-    if (staTar.st_size == 0 && tarFileCount_ > 0 && currentTarFile_ != nullptr) {
+    if (staTar.st_size == 0 && tarFileCount_ > 0) {
         fclose(currentTarFile_);
         currentTarFile_ = nullptr;
         remove(currentTarName_.c_str());
@@ -319,6 +321,11 @@ bool TarFile::FillSplitTailBlocks()
     vector<uint8_t> buff {};
     buff.resize(BLOCK_SIZE);
     WriteAll(buff, END_BLOCK_SIZE);
+
+    if (isReset_) {
+        tarMap_.clear();
+    }
+
     tarMap_.emplace(tarFileName_, make_tuple(currentTarName_, staTar, false));
 
     fflush(currentTarFile_);
@@ -477,4 +484,8 @@ bool TarFile::WriteLongName(string &name, char type)
     return CompleteBlock(sz);
 }
 
+void TarFile::SetPacketMode(bool isReset)
+{
+    isReset_ = isReset;
+}
 } // namespace OHOS::FileManagement::Backup
