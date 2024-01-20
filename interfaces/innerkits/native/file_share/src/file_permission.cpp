@@ -17,6 +17,15 @@
 
 #include "log.h"
 #include "uri.h"
+#ifdef SANDBOX_MANAGER
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
+#include "hap_token_info.h"
+#include "ipc_skeleton.h"
+#include "n_error.h"
+#include "sandbox_helper.h"
+#include "sandbox_manager_err_code.h"
+#endif
 
 namespace OHOS {
 namespace AppFileService {
@@ -27,6 +36,7 @@ const std::string INVALID_MODE_MESSAGE = "Invalid operation mode!";
 const std::string INVALID_PATH_MESSAGE = "Invalid path!";
 const std::string FILE_SCHEME_PREFIX = "file://";
 
+#ifdef SANDBOX_MANAGER
 namespace {
 bool CheckValidUri(const string &uriStr)
 {
@@ -46,11 +56,42 @@ bool CheckValidUri(const string &uriStr)
     }
     return true;
 }
+int32_t ErrorCodeConversion(int32_t sandboxManagerErrorCode,
+                            const deque<struct PolicyErrorResult> &errorResults,
+                            const vector<uint32_t> &resultCodes)
+{
+    if (sandboxManagerErrorCode == PERMISSION_DENIED) {
+        LOGE("The app does not have the authorization URI permission");
+        return FileManagement::LibN::E_PERMISSION;
+    }
+    if (sandboxManagerErrorCode == INVALID_PARAMTER) {
+        if (resultCodes.size() != 0) {
+            LOGE("The number of incoming URIs is too many");
+            return FileManagement::LibN::E_PARAMS;
+        } else {
+            LOGE("The incoming URI is invalid");
+            return EPERM;
+        }
+    }
+    if (!errorResults.empty()) {
+        LOGE("Some of the incoming URIs failed");
+        return EPERM;
+    }
+    for (size_t i = 0; i < resultCodes.size(); i++) {
+        if (resultCodes[i] != 0) {
+            LOGE("Reason for URI authorization failure");
+            return EPERM;
+        }
+    }
+    if (sandboxManagerErrorCode == SANDBOX_MANAGER_OK) {
+        return 0;
+    }
+    return FileManagement::LibN::E_UNKNOWN_ERROR;
+}
 } // namespace
-
-void FilePermission::GetErrorResults(const vector<uint32_t> &resultCodes,
-                                     const vector<PathPolicyInfo> &pathPolicies,
-                                     deque<struct PolicyErrorResult> &errorResults)
+void FilePermission::ParseErrorResults(const vector<uint32_t> &resultCodes,
+                                       const vector<PolicyInfo> &pathPolicies,
+                                       deque<struct PolicyErrorResult> &errorResults)
 {
     for (size_t i = 0; i < resultCodes.size(); i++) {
         PolicyErrorResult result;
@@ -74,10 +115,10 @@ void FilePermission::GetErrorResults(const vector<uint32_t> &resultCodes,
     }
 }
 
-void FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
-                                                        deque<struct PolicyErrorResult> &errorResults,
-                                                        vector<struct PathPolicyInfo> &pathPolicies)
+vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
+                                                                      deque<struct PolicyErrorResult> &errorResults)
 {
+    vector<PolicyInfo> pathPolicies;
     for (auto uriPolicy : uriPolicies) {
         Uri uri(uriPolicy.uri);
         string path = uri.GetPath();
@@ -86,74 +127,80 @@ void FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyIn
             PolicyErrorResult result = {uriPolicy.uri, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
             errorResults.emplace_back(result);
         } else {
-            PathPolicyInfo policyInfo = {path, uriPolicy.mode};
+            string currentUserId = to_string(IPCSkeleton::GetCallingTokenID() / AppExecFwk::Constants::BASE_USER_RANGE);
+            int32_t ret = SandboxHelper::GetPhysicalPath(uri.ToString(), currentUserId, path);
+            if (ret != 0) {
+                LOGE("Failed to get physical path, errorcode: %{public}d", ret);
+            }
+            PolicyInfo policyInfo = {path, uriPolicy.mode};
             pathPolicies.emplace_back(policyInfo);
         }
     }
+    return pathPolicies;
 }
-
+#endif
 int32_t FilePermission::PersistPermission(const vector<UriPolicyInfo> &uriPolicies,
                                           deque<struct PolicyErrorResult> &errorResults)
 {
-    vector<PathPolicyInfo> pathPolicies;
+    int errorCode = 0;
+#ifdef SANDBOX_MANAGER
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
     vector<uint32_t> resultCodes;
-    GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, pathPolicies);
-    // SandboxManager interface call
-    GetErrorResults(resultCodes, pathPolicies, errorResults);
-    if (!errorResults.empty()) {
-        LOGE("There are some URI operations that fail");
-        return EPERM;
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::PersistPolicy(pathPolicies, resultCodes);
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
+    if (errorCode == EPERM) {
+        ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
-    LOGD("PersistPermission success");
-    return 0;
+#endif
+    return errorCode;
 }
 
 int32_t FilePermission::RevokePermission(const vector<UriPolicyInfo> &uriPolicies,
                                          deque<struct PolicyErrorResult> &errorResults)
 {
-    vector<PathPolicyInfo> pathPolicies;
+    int errorCode = 0;
+#ifdef SANDBOX_MANAGER
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
     vector<uint32_t> resultCodes;
-    GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, pathPolicies);
-    // SandboxManager interface call
-    GetErrorResults(resultCodes, pathPolicies, errorResults);
-    if (!errorResults.empty()) {
-        LOGE("There are some URI operations that fail");
-        return EPERM;
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::UnPersistPolicy(pathPolicies, resultCodes);
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
+    if (errorCode == EPERM) {
+        ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
-    LOGD("RevokePermission success");
-    return 0;
+#endif
+    return errorCode;
 }
 
 int32_t FilePermission::ActivatePermission(const vector<UriPolicyInfo> &uriPolicies,
                                            deque<struct PolicyErrorResult> &errorResults)
 {
-    vector<PathPolicyInfo> pathPolicies;
+    int errorCode = 0;
+#ifdef SANDBOX_MANAGER
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
     vector<uint32_t> resultCodes;
-    GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, pathPolicies);
-    // SandboxManager interface call
-    GetErrorResults(resultCodes, pathPolicies, errorResults);
-    if (!errorResults.empty()) {
-        LOGE("There are some URI operations that fail");
-        return EPERM;
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::StartAccessingPolicy(pathPolicies, resultCodes);
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
+    if (errorCode == EPERM) {
+        ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
-    LOGD("ActivatePermission success");
-    return 0;
+#endif
+    return errorCode;
 }
 
 int32_t FilePermission::DeactivatePermission(const vector<UriPolicyInfo> &uriPolicies,
                                              deque<struct PolicyErrorResult> &errorResults)
 {
-    vector<PathPolicyInfo> pathPolicies;
+    int errorCode = 0;
+#ifdef SANDBOX_MANAGER
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
     vector<uint32_t> resultCodes;
-    GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, pathPolicies);
-    // SandboxManager interface call
-    GetErrorResults(resultCodes, pathPolicies, errorResults);
-    if (!errorResults.empty()) {
-        LOGE("There are some URI operations that fail");
-        return EPERM;
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::StopAccessingPolicy(pathPolicies, resultCodes);
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
+    if (errorCode == EPERM) {
+        ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
-    LOGD("DeactivatePermission success");
-    return 0;
+#endif
+    return errorCode;
 }
 } // namespace AppFileService
 } // namespace OHOS

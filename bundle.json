@@ -39,7 +39,7 @@
                 "safwk",
                 "samgr",
                 "storage_service",
-                "os_account"
+                "sandbox_manager"
             ],
             "third_party": [
                 "bounds_checking_function",

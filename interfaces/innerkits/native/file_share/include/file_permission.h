@@ -19,10 +19,16 @@
 #include <deque>
 #include <string>
 #include <vector>
+#ifdef SANDBOX_MANAGER
+#include "sandbox_manager_kit.h"
+#endif
 
 namespace OHOS {
 namespace AppFileService {
 using namespace std;
+#ifdef SANDBOX_MANAGER
+using namespace AccessControl::SandboxManager;
+#endif
 typedef enum OperationMode {
     READ_MODE = 1 << 0,
     WRITE_MODE = 1 << 1,
@@ -65,14 +71,14 @@ public:
                                       deque<struct PolicyErrorResult> &errorResults);
     static int32_t DeactivatePermission(const vector<UriPolicyInfo> &uriPolicies,
                                         deque<struct PolicyErrorResult> &errorResults);
-
+#ifdef SANDBOX_MANAGER
 private:
-    static void GetErrorResults(const vector<uint32_t> &resultCodes,
-                                const vector<PathPolicyInfo> &pathPolicies,
+    static void ParseErrorResults(const vector<uint32_t> &resultCodes,
+                                const vector<PolicyInfo> &pathPolicies,
                                 deque<struct PolicyErrorResult> &errorResults);
-    static void GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
-                                                   deque<struct PolicyErrorResult> &errorResults,
-                                                   vector<struct PathPolicyInfo> &pathPolicies);
+    static vector<PolicyInfo> GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
+                                                   deque<struct PolicyErrorResult> &errorResults);
+#endif
 };
 } // namespace AppFileService
 } // namespace OHOS

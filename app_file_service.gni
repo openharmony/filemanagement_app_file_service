@@ -16,3 +16,10 @@ utils_system_safwk_path = "//utils/system/safwk"
 path_base = "//commonlibrary/c_utils/base"
 path_napi = "//foundation/arkui/napi"
 app_file_service_path = "//foundation/filemanagement/app_file_service"
+declare_args() {
+  sandbox_manarer = false
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.accesscontrol_sandbox_manager)) {
+    sandbox_manarer = true
+  }
+}

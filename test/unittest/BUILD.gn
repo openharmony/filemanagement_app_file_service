@@ -14,6 +14,7 @@
 group("unittest") {
   testonly = true
   deps = [
+    "file_permission_native:file_permission_test",
     "file_share_native:file_share_test",
     "file_uri_native:file_uri_test",
     "remote_file_share:remote_file_share_test",

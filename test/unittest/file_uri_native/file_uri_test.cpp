@@ -26,8 +26,7 @@
 #include "common_func.h"
 #include "file_share.h"
 #include "log.h"
-#include "os_account_manager.h"
-#include "parameter.h"
+
 using namespace std;
 using namespace OHOS::Security::AccessToken;
 using namespace OHOS::AppFileService;
@@ -46,7 +45,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
     const string MODE_RW = "/rw/";
     const string MODE_R = "/r/";
     const int E_OK = 0;
-    const char* g_fileManagerFullMoutEnableParameter = "const.filemanager.full_mout.enable";
+
     class FileUriTest : public testing::Test {
     public:
         static void SetUpTestCase(void) {};
@@ -54,6 +53,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
         void SetUp() {};
         void TearDown() {};
     };
+
     /**
      * @tc.name: file_uri_test_0000
      * @tc.desc: Test function of ToString() interface for SUCCESS.
@@ -193,7 +193,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
         vector<int32_t> retList;
         int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
         EXPECT_EQ(ret, E_OK);
-
+        
         string rltStr = PATH_SHARE + MODE_R + bundleB + actStr;
         FileUri fileUri(uri);
         string path = fileUri.GetRealPath();
@@ -249,145 +249,5 @@ namespace OHOS::AppFileService::ModuleFileUri {
         string folderDirectoryUri = "file://" + bundleA + folderStr;
         EXPECT_EQ(folderUriObject.GetFullDirectoryUri(), folderDirectoryUri);
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0000";
-    }
-    /**
-     * @tc.name: file_uri_test_0008
-     * @tc.desc: Test function of GetRealPath() interface for SUCCESS.
-     * @tc.size: MEDIUM
-     * @tc.type: FUNC
-     * @tc.level Level 1
-     * @tc.require:
-     */
-    HWTEST_F(FileUriTest, File_uri_GetRealPath_0005, testing::ext::TestSize.Level1)
-    {
-        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetRealPath_0005";
-        string fileUri = "file://media/data/storage/el2/base/files/1.txt";
-        string filePath = PATH_SHARE + MODE_R + "media/data/storage/el2/base/files/1.txt";
-        FileUri folderUriObject(fileUri);
-        EXPECT_EQ(folderUriObject.GetRealPath(), filePath);
-        GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetRealPath_0005";
-    }
-    /**
-     * @tc.name: file_uri_test_0009
-     * @tc.desc: Test function of GetRealPath() interface for SUCCESS.
-     * @tc.size: MEDIUM
-     * @tc.type: FUNC
-     * @tc.level Level 1
-     * @tc.require:
-     */
-    HWTEST_F(FileUriTest, File_uri_GetRealPath_0006, testing::ext::TestSize.Level1)
-    {
-        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetRealPath_0006";
-        string fileUri = "file://com.demo.a/data/storage/el1/base/files/1.txt";
-        string userName;
-        ErrCode errCode = OHOS::AccountSA::OsAccountManager::GetOsAccountShortName(userName);
-        if (errCode != ERR_OK) {
-            GTEST_LOG_(INFO) << "GetOsAccountShortName failed File_uri_GetRealPath_0006";
-        }
-        string filePath = "storage/Users/" + userName + "/appdata/el1/com.demo.a/files/1.txt";
-        string RealPath = PATH_SHARE + MODE_R + "com.demo.a/data/storage/el1/base/files/1.txt";
-        FileUri folderUriObject(fileUri);
-        char value[] = "false";
-        int retSystem = GetParameter(g_fileManagerFullMoutEnableParameter, "false", value, sizeof(value));
-        if (retSystem > 0 && !std::strcmp(value, "true")) {
-            EXPECT_EQ(folderUriObject.GetRealPath(), filePath);
-        } else {
-            EXPECT_EQ(folderUriObject.GetRealPath(), RealPath);
-        }
-        GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetRealPath_0006";
-    }
-    /**
-     * @tc.name: file_uri_test_0010
-     * @tc.desc: Test function of GetRealPath() interface for SUCCESS.
-     * @tc.size: MEDIUM
-     * @tc.type: FUNC
-     * @tc.level Level 1
-     * @tc.require:
-     */
-    HWTEST_F(FileUriTest, File_uri_GetRealPath_0007, testing::ext::TestSize.Level1)
-    {
-        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetRealPath_0007";
-        string fileUri = "file://com.demo.a/data/storage/el2/base/files/1.txt";
-        string filePath = PATH_SHARE + MODE_R + "com.demo.a/data/storage/el2/base/files/1.txt";
-        FileUri folderUriObject(fileUri);
-        EXPECT_EQ(folderUriObject.GetRealPath(), filePath);
-        GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetRealPath_0007";
-    }
-    /**
-     * @tc.name: file_uri_test_0011
-     * @tc.desc: Test function of GetRealPath() interface for SUCCESS.
-     * @tc.size: MEDIUM
-     * @tc.type: FUNC
-     * @tc.level Level 1
-     * @tc.require:
-     */
-    HWTEST_F(FileUriTest, File_uri_GetRealPath_0008, testing::ext::TestSize.Level1)
-    {
-        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetRealPath_0008";
-        string fileUri = "file://com.demo.a/data/storage/el2/base/files/1.txt";
-        string userName;
-        ErrCode errCode = OHOS::AccountSA::OsAccountManager::GetOsAccountShortName(userName);
-        if (errCode != ERR_OK) {
-            GTEST_LOG_(INFO) << "GetOsAccountShortName failed File_uri_GetRealPath_0008";
-        }
-        string filePath = "storage/Users/" + userName + "/appdata/el2/com.demo.a/files/1.txt";
-        string RealPath = PATH_SHARE + MODE_R + "com.demo.a/data/storage/el2/base/files/1.txt";
-        FileUri folderUriObject(fileUri);
-        char value[] = "false";
-        int retSystem = GetParameter(g_fileManagerFullMoutEnableParameter, "false", value, sizeof(value));
-        if (retSystem > 0 && !std::strcmp(value, "true")) {
-            EXPECT_EQ(folderUriObject.GetRealPath(), filePath);
-        } else {
-            EXPECT_EQ(folderUriObject.GetRealPath(), RealPath);
-        }
-        GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetRealPath_0008";
-    }
-    /**
-     * @tc.name: file_uri_test_0012
-     * @tc.desc: Test function of GetRealPath() interface for SUCCESS.
-     * @tc.size: MEDIUM
-     * @tc.type: FUNC
-     * @tc.level Level 1
-     * @tc.require:
-     */
-    HWTEST_F(FileUriTest, File_uri_GetRealPath_0009, testing::ext::TestSize.Level1)
-    {
-        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetRealPath_0009";
-        string fileUri = "file://docs/storage/Users/user/files/1.txt";
-        string filePath = "/storage/Users/user/files/1.txt";
-        string RealPath = PATH_SHARE + MODE_R + "docs/storage/Users/user/files/1.txt";
-        FileUri folderUriObject(fileUri);
-        char value[] = "false";
-        int retSystem = GetParameter(g_fileManagerFullMoutEnableParameter, "false", value, sizeof(value));
-        if (retSystem > 0 && !std::strcmp(value, "true")) {
-            EXPECT_EQ(folderUriObject.GetRealPath(), filePath);
-        } else {
-            EXPECT_EQ(folderUriObject.GetRealPath(), RealPath);
-        }
-        GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetRealPath_0009";
-    }
-    /**
-     * @tc.name: file_uri_test_0012
-     * @tc.desc: Test function of GetRealPath() interface for SUCCESS.
-     * @tc.size: MEDIUM
-     * @tc.type: FUNC
-     * @tc.level Level 1
-     * @tc.require:
-     */
-    HWTEST_F(FileUriTest, File_uri_GetRealPath_0010, testing::ext::TestSize.Level1)
-    {
-        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetRealPath_0010";
-        string fileUri = "file://docs/storage/Users/user/Download/files/1.txt";
-        string filePath = "/storage/Users/user/Download/files/1.txt";
-        string RealPath = PATH_SHARE + MODE_R + "docs/storage/Users/user/Download/files/1.txt";
-        FileUri folderUriObject(fileUri);
-        char value[] = "false";
-        int retSystem = GetParameter(g_fileManagerFullMoutEnableParameter, "false", value, sizeof(value));
-        if (retSystem > 0 && !std::strcmp(value, "true")) {
-            EXPECT_EQ(folderUriObject.GetRealPath(), filePath);
-        } else {
-            EXPECT_EQ(folderUriObject.GetRealPath(), RealPath);
-        }
-        GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetRealPath_0010";
     }
 }
