@@ -49,6 +49,7 @@ const string SHARE_R_PATH = "/r/";
 const string SHARE_RW_PATH = "/rw/";
 const string SHARE_PATH = "/share/";
 const string EXTERNAL_PATH = "file://docs/storage/External";
+const string NETWORK_PARA = "networkid=";
 }
 
 struct FileShareInfo {
@@ -107,7 +108,7 @@ static bool IsExistFile(const string &path)
     return S_ISREG(buf.st_mode);
 }
 
-static bool CheckIfNeedShare(ShareFileType type, const string &path)
+static bool CheckIfNeedShare(const string &uriStr, ShareFileType type, const string &path)
 {
     if (type == ShareFileType::DIR_TYPE) {
         return true;
@@ -118,7 +119,9 @@ static bool CheckIfNeedShare(ShareFileType type, const string &path)
         return true;
     }
 
-    if (buf.st_nlink != 0) {
+    Uri uri(uriStr);
+    string networkIdInfo = uri.GetQuery();
+    if (buf.st_nlink != 0 || (!networkIdInfo.empty() && networkIdInfo.find(NETWORK_PARA) == 0)) {
         LOGI("no need create again");
         return false;
     }
@@ -126,7 +129,7 @@ static bool CheckIfNeedShare(ShareFileType type, const string &path)
     return true;
 }
 
-static int32_t GetSharePath(FileShareInfo &info, uint32_t flag)
+static int32_t GetSharePath(const string &uri, FileShareInfo &info, uint32_t flag)
 {
     string shareRPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH + info.targetBundleName_ +
                         SHARE_R_PATH + info.providerBundleName_ + info.providerSandboxPath_;
@@ -138,12 +141,12 @@ static int32_t GetSharePath(FileShareInfo &info, uint32_t flag)
         return -EINVAL;
     }
 
-    if (CheckIfNeedShare(info.type_, shareRPath)) {
+    if (CheckIfNeedShare(uri, info.type_, shareRPath)) {
         info.sharePath_.push_back(shareRPath);
     }
 
     if ((flag & WRITE_URI_PERMISSION) == WRITE_URI_PERMISSION &&
-        CheckIfNeedShare(info.type_, shareRWPath)) {
+        CheckIfNeedShare(uri, info.type_, shareRWPath)) {
         info.sharePath_.push_back(shareRWPath);
     }
 
@@ -184,7 +187,7 @@ static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t fl
         return ret;
     }
 
-    ret = GetSharePath(info, flag);
+    ret = GetSharePath(uri, info, flag);
     if (ret != 0) {
         LOGE("Failed to get share path %{public}d", ret);
         return ret;
