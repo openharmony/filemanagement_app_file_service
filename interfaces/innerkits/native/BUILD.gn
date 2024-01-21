@@ -96,6 +96,13 @@ ohos_prebuilt_etc("file_share_sandbox.json") {
   module_install_dir = "etc/app_file_service"
 }
 
+ohos_prebuilt_etc("backup_sandbox.json") {
+  source = "../../common/backup_sandbox.json"
+  part_name = "app_file_service"
+  subsystem_name = "filemanagement"
+  module_install_dir = "etc/app_file_service"
+}
+
 config("remote_file_share_config") {
   visibility = [ ":*" ]
   include_dirs = [
@@ -176,5 +183,8 @@ group("app_file_service_native") {
 }
 
 group("etc_files") {
-  deps = [ ":file_share_sandbox.json" ]
+  deps = [
+    ":backup_sandbox.json",
+    ":file_share_sandbox.json",
+  ]
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,13 +26,17 @@ class SandboxHelper {
 private:
     static std::mutex mapMutex_;
     static std::unordered_map<std::string, std::string> sandboxPathMap_;
+    static std::unordered_map<std::string, std::string> backupSandboxPathMap_;
     static bool GetSandboxPathMap();
+    static bool GetBackupSandboxPathMap();
 public:
     static std::string Encode(const std::string &uri);
     static std::string Decode(const std::string &uri);
     static bool CheckValidPath(const std::string &filePath);
     static int32_t GetPhysicalPath(const std::string &fileUri, const std::string &userId,
                                    std::string &physicalPath);
+    static int32_t GetBackupPhysicalPath(const std::string &fileUri, const std::string &userId,
+                                         std::string &physicalPath);
     static bool IsValidPath(const std::string &path);
 };
 } // namespace AppFileService

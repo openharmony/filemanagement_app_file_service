@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,7 @@ namespace {
     const string SANDBOX_PATH_KEY = "sandbox-path";
     const string MOUNT_PATH_MAP_KEY = "mount-path-map";
     const string SANDBOX_JSON_FILE_PATH = "/etc/app_file_service/file_share_sandbox.json";
+    const string BACKUP_SANDBOX_JSON_FILE_PATH = "/etc/app_file_service/backup_sandbox.json";
     const std::string SHAER_PATH_HEAD = "/mnt/hmdfs/";
     const std::string SHAER_PATH_MID = "/account/cloud_merge_view/files/";
     const string FILE_MANAGER_URI_HEAD = "/storage/";
@@ -57,6 +58,7 @@ struct MediaUriInfo {
 };
 
 std::unordered_map<std::string, std::string> SandboxHelper::sandboxPathMap_;
+std::unordered_map<std::string, std::string> SandboxHelper::backupSandboxPathMap_;
 std::mutex SandboxHelper::mapMutex_;
 
 string SandboxHelper::Encode(const string &uri)
@@ -153,6 +155,39 @@ bool SandboxHelper::GetSandboxPathMap()
     }
 
     if (sandboxPathMap_.size() == 0) {
+        return false;
+    }
+
+    return true;
+}
+
+bool SandboxHelper::GetBackupSandboxPathMap()
+{
+    lock_guard<mutex> lock(mapMutex_);
+    if (backupSandboxPathMap_.size() > 0) {
+        return true;
+    }
+
+    nlohmann::json jsonObj;
+    int ret = JsonUtils::GetJsonObjFromPath(jsonObj, BACKUP_SANDBOX_JSON_FILE_PATH);
+    if (ret != 0) {
+        LOGE("Get json object failed with %{public}d", ret);
+        return false;
+    }
+
+    if (jsonObj.find(MOUNT_PATH_MAP_KEY) == jsonObj.end()) {
+        LOGE("Json object find mount path map failed");
+        return false;
+    }
+
+    nlohmann::json mountPathMap = jsonObj[MOUNT_PATH_MAP_KEY];
+    for (size_t i = 0; i < mountPathMap.size(); i++) {
+        string srcPath = mountPathMap[i][PHYSICAL_PATH_KEY];
+        string sandboxPath = mountPathMap[i][SANDBOX_PATH_KEY];
+        backupSandboxPathMap_[sandboxPath] = srcPath;
+    }
+
+    if (backupSandboxPathMap_.size() == 0) {
         return false;
     }
 
@@ -275,6 +310,24 @@ static void GetNetworkIdFromUri(const std::string &fileUri, string &networkId)
     networkId = networkIdInfo.substr(posIndex + 1);
 }
 
+static void DoGetPhysicalPath(string &lowerPathTail, string &lowerPathHead, const string &sandboxPath,
+    std::unordered_map<std::string, std::string> &sandboxPathMap)
+{
+    string::size_type curPrefixMatchLen = 0;
+    for (auto it = sandboxPathMap.begin(); it != sandboxPathMap.end(); it++) {
+        string sandboxPathPrefix = it->first;
+        string::size_type prefixMatchLen = sandboxPathPrefix.length();
+        if (sandboxPath.length() >= prefixMatchLen) {
+            string sandboxPathTemp = sandboxPath.substr(0, prefixMatchLen);
+            if (sandboxPathTemp == sandboxPathPrefix && curPrefixMatchLen <= prefixMatchLen) {
+                curPrefixMatchLen = prefixMatchLen;
+                lowerPathHead = it->second;
+                lowerPathTail = sandboxPath.substr(prefixMatchLen);
+            }
+        }
+    }
+}
+
 int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::string &userId,
                                        std::string &physicalPath)
 {
@@ -297,19 +350,43 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
 
     string lowerPathTail = "";
     string lowerPathHead = "";
-    string::size_type curPrefixMatchLen = 0;
-    for (auto it = sandboxPathMap_.begin(); it != sandboxPathMap_.end(); it++) {
-        string sandboxPathPrefix = it->first;
-        string::size_type prefixMatchLen = sandboxPathPrefix.length();
-        if (sandboxPath.length() >= prefixMatchLen) {
-            string sandboxPathTemp = sandboxPath.substr(0, prefixMatchLen);
-            if (sandboxPathTemp == sandboxPathPrefix && curPrefixMatchLen <= prefixMatchLen) {
-                curPrefixMatchLen = prefixMatchLen;
-                lowerPathHead = it->second;
-                lowerPathTail = sandboxPath.substr(prefixMatchLen);
-            }
-        }
+    DoGetPhysicalPath(lowerPathTail, lowerPathHead, sandboxPath, sandboxPathMap_);
+
+    if (lowerPathHead == "") {
+        LOGE("lowerPathHead is invalid");
+        return -EINVAL;
     }
+
+    string networkId = LOCAL;
+    GetNetworkIdFromUri(fileUri, networkId);
+
+    physicalPath = GetLowerPath(lowerPathHead, lowerPathTail, userId, bundleName, networkId);
+    return 0;
+}
+
+int32_t SandboxHelper::GetBackupPhysicalPath(const std::string &fileUri, const std::string &userId,
+                                             std::string &physicalPath)
+{
+    Uri uri(fileUri);
+    string bundleName = uri.GetAuthority();
+    if (bundleName == MEDIA) {
+        return GetMediaPhysicalPath(uri.GetPath(), userId, physicalPath);
+    }
+
+    string sandboxPath = SandboxHelper::Decode(uri.GetPath());
+    if ((sandboxPath.find(FILE_MANAGER_URI_HEAD) == 0 && bundleName != FILE_MANAGER_AUTHORITY) ||
+        (sandboxPath.find(FUSE_URI_HEAD) == 0 && bundleName != DLP_MANAGER_BUNDLE_NAME)) {
+        return -EINVAL;
+    }
+
+    if (!GetBackupSandboxPathMap()) {
+        LOGE("GetBackupSandboxPathMap failed");
+        return -EINVAL;
+    }
+
+    string lowerPathTail = "";
+    string lowerPathHead = "";
+    DoGetPhysicalPath(lowerPathTail, lowerPathHead, sandboxPath, backupSandboxPathMap_);
 
     if (lowerPathHead == "") {
         LOGE("lowerPathHead is invalid");
