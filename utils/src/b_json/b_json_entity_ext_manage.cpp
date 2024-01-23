@@ -241,7 +241,7 @@ std::vector<ExtManageInfo> BJsonEntityExtManage::GetExtManageInfo() const
         }
         HILOGI("GetExtManageInfo, fileName:%{public}s, isUserTar:%{public}d, isBigFile:%{public}d", fileName.data(),
                isUserTar, isBigFile);
-        if (!fileName.empty() && !path.empty()) {
+        if (!fileName.empty()) {
             ExtManageInfo info = {
                 .hashName = fileName, .fileName = path, .sta = sta, .isUserTar = isUserTar, .isBigFile = isBigFile};
             infos.emplace_back(info);
