@@ -62,6 +62,7 @@ constexpr int EXT_CONNECT_MAX_COUNT = 3;      // extension 最大启动数
 constexpr int EXT_CONNECT_MAX_TIME = 15000;   // SA 启动 extension 等待连接最大时间
 
 constexpr int IPC_MAX_WAIT_TIME = 3000; // IPC通讯最大等待时间(s)
+constexpr char FILE_SEPARATOR_CHAR = '/';
 constexpr int MAX_PARCELABLE_VECTOR_NUM = 10000;
 
 constexpr int DEFAULT_VFS_CACHE_PRESSURE = 100; // 默认内存回收参数
@@ -75,7 +76,6 @@ static inline std::string BACKUP_DEBUG_OVERRIDE_ACCOUNT_CONFIG_KEY = "backup.deb
 static inline std::string BACKUP_DEBUG_OVERRIDE_ACCOUNT_NUMBER_KEY = "backup.debug.overrideAccountNumber";
 
 // 增量备份相关处理目录
-constexpr char FILE_SEPARATOR_CHAR = '/';
 static const std::string BACKUP_PATH_PREFIX = "/data/service/el2/";
 static const std::string BACKUP_PATH_SURFFIX = "/backup/backup_sa/";
 static const std::string BACKUP_INCEXC_SYMBOL = "incExc_";
