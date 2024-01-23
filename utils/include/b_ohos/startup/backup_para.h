@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,20 @@ public:
      * @return int32_t值为配置项backup.debug.overrideAccountNumber值
      */
     std::tuple<bool, int32_t> GetBackupDebugOverrideAccount();
+
+    /**
+     * @brief 获取backup.para配置项backup.overrideBackupSARelease的值
+     *
+     * @return 获取的配置项backup.overrideBackupSARelease的值为true时则返回true，否则返回false
+     */
+    bool GetBackupOverrideBackupSARelease();
+
+    /**
+     * @brief 获取backup.para配置项backup.overrideIncrementalRestore的值
+     *
+     * @return 获取的配置项backup.overrideIncrementalRestore的值为true时则返回true，否则返回false
+     */
+    bool GetBackupOverrideIncrementalRestore();
 };
 } // namespace OHOS::FileManagement::Backup
 

@@ -66,6 +66,26 @@ bool BackupPara::GetBackupDebugOverrideExtensionConfig()
     return value == "true";
 }
 
+bool BackupPara::GetBackupOverrideBackupSARelease()
+{
+    auto [getCfgParaValSucc, value] =
+        GetConfigParameterValue(BConstants::BACKUP_OVERRIDE_BACKUP_SA_RELEASE_KEY, BConstants::BACKUP_PARA_VALUE_MAX);
+    if (!getCfgParaValSucc) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "Fail to get configuration parameter value of backup.para");
+    }
+    return value == "true";
+}
+
+bool BackupPara::GetBackupOverrideIncrementalRestore()
+{
+    auto [getCfgParaValSucc, value] =
+        GetConfigParameterValue(BConstants::BACKUP_OVERRIDE_INCREMENTAL_KEY, BConstants::BACKUP_PARA_VALUE_MAX);
+    if (!getCfgParaValSucc) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "Fail to get configuration parameter value of backup.para");
+    }
+    return value == "true";
+}
+
 tuple<bool, int32_t> BackupPara::GetBackupDebugOverrideAccount()
 {
     auto [getCfgParaValSucc, value] = GetConfigParameterValue(BConstants::BACKUP_DEBUG_OVERRIDE_ACCOUNT_CONFIG_KEY,
