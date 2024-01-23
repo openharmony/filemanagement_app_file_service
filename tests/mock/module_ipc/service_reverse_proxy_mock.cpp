@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,4 +35,20 @@ void ServiceReverseProxy::RestoreOnBundleFinished(int32_t errCode, string bundle
 void ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode) {}
 
 void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName, int fd) {}
+
+void ServiceReverseProxy::IncrementalBackupOnFileReady(string bundleName, string fileName, int fd, int manifestFd) {}
+
+void ServiceReverseProxy::IncrementalBackupOnBundleStarted(int32_t errCode, string bundleName) {}
+
+void ServiceReverseProxy::IncrementalBackupOnBundleFinished(int32_t errCode, string bundleName) {}
+
+void ServiceReverseProxy::IncrementalBackupOnAllBundlesFinished(int32_t errCode) {}
+
+void ServiceReverseProxy::IncrementalRestoreOnBundleStarted(int32_t errCode, string bundleName) {}
+
+void ServiceReverseProxy::IncrementalRestoreOnBundleFinished(int32_t errCode, string bundleName) {}
+
+void ServiceReverseProxy::IncrementalRestoreOnAllBundlesFinished(int32_t errCode) {}
+
+void ServiceReverseProxy::IncrementalRestoreOnFileReady(string bundleName, string fileName, int fd, int manifestFd) {}
 } // namespace OHOS::FileManagement::Backup

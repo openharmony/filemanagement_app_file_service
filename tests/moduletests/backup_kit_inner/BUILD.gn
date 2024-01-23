@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -21,6 +21,7 @@ ohos_unittest("b_session_test") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_backup.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore_async.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",
     "b_session_backup_test.cpp",

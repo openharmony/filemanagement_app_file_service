@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,6 +47,14 @@ public:
     MOCK_METHOD2(RestoreOnBundleFinished, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(RestoreOnAllBundlesFinished, void(int32_t errCode));
     MOCK_METHOD3(RestoreOnFileReady, void(string bundleName, string fileName, int fd));
+    MOCK_METHOD4(IncrementalBackupOnFileReady, void(string bundleName, string fileName, int fd, int manifestFd));
+    MOCK_METHOD2(IncrementalBackupOnBundleStarted, void(int32_t errCode, string bundleName));
+    MOCK_METHOD2(IncrementalBackupOnBundleFinished, void(int32_t errCode, string bundleName));
+    MOCK_METHOD1(IncrementalBackupOnAllBundlesFinished, void(int32_t errCode));
+    MOCK_METHOD2(IncrementalRestoreOnBundleStarted, void(int32_t errCode, std::string bundleName));
+    MOCK_METHOD2(IncrementalRestoreOnBundleFinished, void(int32_t errCode, string bundleName));
+    MOCK_METHOD1(IncrementalRestoreOnAllBundlesFinished, void(int32_t errCode));
+    MOCK_METHOD4(IncrementalRestoreOnFileReady, void(string bundleName, string fileName, int fd, int manifestFd));
 };
 
 class ServiceReverseStubTest : public testing::Test {

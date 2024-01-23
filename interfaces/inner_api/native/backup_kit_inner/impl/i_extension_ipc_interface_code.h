@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,10 @@ enum class IExtensionInterfaceCode {
     CMD_PUBLISH_FILE,
     CMD_HANDLE_BACKUP,
     CMD_HANDLE_RESTORE,
+    CMD_GET_INCREMENTAL_FILE_HANDLE,
+    CMD_PUBLISH_INCREMENTAL_FILE,
+    CMD_HANDLE_INCREMENTAL_BACKUP,
+    CMD_GET_INCREMENTAL_BACKUP_FILE_HANDLE,
 };
 } // namespace OHOS::FileManagement::Backup
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,6 +63,30 @@ ServiceReverseStub::ServiceReverseStub()
         &ServiceReverseStub::CmdRestoreOnAllBundlesFinished;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_FILE_READY)] =
         &ServiceReverseStub::CmdRestoreOnFileReady;
+
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_FILE_READY)] =
+        &ServiceReverseStub::CmdIncrementalBackupOnFileReady;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_SUB_TASK_STARTED)] =
+        &ServiceReverseStub::CmdIncrementalBackupOnBundleStarted;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_SUB_TASK_FINISHED)] =
+        &ServiceReverseStub::CmdIncrementalBackupOnBundleFinished;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_TASK_FINISHED)] =
+        &ServiceReverseStub::CmdIncrementalBackupOnAllBundlesFinished;
+
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_SUB_TASK_STARTED)] =
+        &ServiceReverseStub::CmdIncrementalRestoreOnBundleStarted;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_SUB_TASK_FINISHED)] =
+        &ServiceReverseStub::CmdIncrementalRestoreOnBundleFinished;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_TASK_FINISHED)] =
+        &ServiceReverseStub::CmdIncrementalRestoreOnAllBundlesFinished;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_FILE_READY)] =
+        &ServiceReverseStub::CmdIncrementalRestoreOnFileReady;
 }
 
 int32_t ServiceReverseStub::CmdBackupOnFileReady(MessageParcel &data, MessageParcel &reply)
@@ -126,6 +150,72 @@ int32_t ServiceReverseStub::CmdRestoreOnFileReady(MessageParcel &data, MessagePa
     auto fileName = data.ReadString();
     int fd = data.ReadFileDescriptor();
     RestoreOnFileReady(bundleName, fileName, fd);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceReverseStub::CmdIncrementalBackupOnFileReady(MessageParcel &data, MessageParcel &reply)
+{
+    auto bundleName = data.ReadString();
+    auto fileName = data.ReadString();
+    int fd = data.ReadFileDescriptor();
+    int manifestFd = data.ReadFileDescriptor();
+    IncrementalBackupOnFileReady(bundleName, fileName, fd, manifestFd);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceReverseStub::CmdIncrementalBackupOnBundleStarted(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t errCode = data.ReadInt32();
+    auto bundleName = data.ReadString();
+    IncrementalBackupOnBundleStarted(errCode, bundleName);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceReverseStub::CmdIncrementalBackupOnBundleFinished(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t errCode = data.ReadInt32();
+    auto bundleName = data.ReadString();
+    IncrementalBackupOnBundleFinished(errCode, bundleName);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceReverseStub::CmdIncrementalBackupOnAllBundlesFinished(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t errCode = data.ReadInt32();
+    IncrementalBackupOnAllBundlesFinished(errCode);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceReverseStub::CmdIncrementalRestoreOnBundleStarted(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t errCode = data.ReadInt32();
+    auto bundleName = data.ReadString();
+    IncrementalRestoreOnBundleStarted(errCode, bundleName);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceReverseStub::CmdIncrementalRestoreOnBundleFinished(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t errCode = data.ReadInt32();
+    auto bundleName = data.ReadString();
+    IncrementalRestoreOnBundleFinished(errCode, bundleName);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceReverseStub::CmdIncrementalRestoreOnAllBundlesFinished(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t errCode = data.ReadInt32();
+    IncrementalRestoreOnAllBundlesFinished(errCode);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceReverseStub::CmdIncrementalRestoreOnFileReady(MessageParcel &data, MessageParcel &reply)
+{
+    auto bundleName = data.ReadString();
+    auto fileName = data.ReadString();
+    int fd = data.ReadFileDescriptor();
+    int manifestFd = data.ReadFileDescriptor();
+    IncrementalRestoreOnFileReady(bundleName, fileName, fd, manifestFd);
     return BError(BError::Codes::OK);
 }
 } // namespace OHOS::FileManagement::Backup

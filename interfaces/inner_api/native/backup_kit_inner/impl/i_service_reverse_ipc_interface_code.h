@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,14 @@ enum class IServiceReverseInterfaceCode {
     SERVICER_RESTORE_ON_SUB_TASK_FINISHED,
     SERVICER_RESTORE_ON_TASK_FINISHED,
     SERVICER_RESTORE_ON_FILE_READY,
+    SERVICER_INCREMENTAL_BACKUP_ON_FILE_READY,
+    SERVICER_INCREMENTAL_BACKUP_ON_SUB_TASK_STARTED,
+    SERVICER_INCREMENTAL_BACKUP_ON_SUB_TASK_FINISHED,
+    SERVICER_INCREMENTAL_BACKUP_ON_TASK_FINISHED,
+    SERVICER_INCREMENTAL_RESTORE_ON_SUB_TASK_STARTED,
+    SERVICER_INCREMENTAL_RESTORE_ON_SUB_TASK_FINISHED,
+    SERVICER_INCREMENTAL_RESTORE_ON_TASK_FINISHED,
+    SERVICER_INCREMENTAL_RESTORE_ON_FILE_READY,
 };
 
 } // namespace OHOS::FileManagement::Backup

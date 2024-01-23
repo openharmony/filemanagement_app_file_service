@@ -36,6 +36,10 @@ private:
     ErrCode CmdHandleBackup(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdPublishFile(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdHandleRestore(MessageParcel &data, MessageParcel &reply);
+    ErrCode CmdGetIncrementalFileHandle(MessageParcel &data, MessageParcel &reply);
+    ErrCode CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply);
+    ErrCode CmdHandleIncrementalBackup(MessageParcel &data, MessageParcel &reply);
+    ErrCode CmdGetIncrementalBackupFileHandle(MessageParcel &data, MessageParcel &reply);
 
 private:
     using ExtensionInterface = int32_t (ExtExtensionStub::*)(MessageParcel &data, MessageParcel &reply);
