@@ -218,16 +218,19 @@ static bool MakeDir(const string &path)
     return true;
 }
 
-static void DeleteExistShareFile(const string &path)
+static bool DeleteExistShareFile(const string &path)
 {
     if (access(path.c_str(), F_OK) == 0) {
-        if (umount2(path.c_str(), MNT_DETACH) != 0) {
+        if (umount2(path.c_str(), MNT_DETACH) != 0 && errno == EBUSY) {
             LOGE("Umount failed with %{public}d", errno);
+            return false;
         }
-        if (remove(path.c_str()) != 0) {
+        if (remove(path.c_str()) != 0 && errno == EBUSY) {
             LOGE("DeleteExistShareFile, remove failed with %{public}d", errno);
+            return false;
         }
     }
+    return true;
 }
 
 static void DelSharePath(const string &delPath)
@@ -275,7 +278,9 @@ static int32_t PreparePreShareDir(FileShareInfo &info)
                 return -errno;
             }
         } else {
-            DeleteExistShareFile(info.sharePath_[i]);
+            if (!DeleteExistShareFile(info.sharePath_[i])) {
+                return -errno;
+            }
         }
     }
     return 0;
