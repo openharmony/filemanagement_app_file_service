@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -39,6 +39,8 @@ ohos_executable("backup_tool") {
       "src/tools_op_backup.cpp",
       "src/tools_op_check_sa.cpp",
       "src/tools_op_help.cpp",
+      "src/tools_op_incremental_backup.cpp",
+      "src/tools_op_incremental_restore.cpp",
       "src/tools_op_restore.cpp",
       "src/tools_op_restore_async.cpp",
     ]

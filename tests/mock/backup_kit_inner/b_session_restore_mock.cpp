@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -92,6 +92,11 @@ ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bu
 }
 
 ErrCode BSessionRestore::Finish()
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode BSessionRestore::Release()
 {
     return BError(BError::Codes::OK);
 }

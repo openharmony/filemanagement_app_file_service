@@ -278,42 +278,136 @@ int32_t ServiceStub::CmdFinish(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdRelease(MessageParcel &data, MessageParcel &reply)
 {
+    HILOGI("Begin");
+    int res = Release();
+    if (!reply.WriteInt32(res)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
+    }
     return BError(BError::Codes::OK);
 }
 
 int32_t ServiceStub::CmdGetLocalCapabilitiesIncremental(MessageParcel &data, MessageParcel &reply)
 {
+    HILOGI("Begin");
+    vector<BIncrementalData> bundleNames;
+    if (!ReadParcelableVector(bundleNames, data)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
+    }
+
+    UniqueFd fd(GetLocalCapabilitiesIncremental(bundleNames));
+    if (!reply.WriteFileDescriptor(fd)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, "Failed to send out the file");
+    }
     return BError(BError::Codes::OK);
 }
 
 int32_t ServiceStub::CmdInitIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
 {
+    HILOGI("Begin");
+    auto remote = data.ReadRemoteObject();
+    if (!remote) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the reverse stub");
+    }
+    auto iremote = iface_cast<IServiceReverse>(remote);
+    if (!iremote) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the reverse stub");
+    }
+
+    int32_t res = InitIncrementalBackupSession(iremote);
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::SA_BROKEN_IPC, ss.str());
+    }
     return BError(BError::Codes::OK);
 }
 
 int32_t ServiceStub::CmdAppendBundlesIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
 {
+    HILOGI("Begin");
+    vector<BIncrementalData> bundlesToBackup;
+    if (!ReadParcelableVector(bundlesToBackup, data)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
+    }
+
+    int32_t res = AppendBundlesIncrementalBackupSession(bundlesToBackup);
+    if (!reply.WriteInt32(res)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
+    }
     return BError(BError::Codes::OK);
 }
 
 int32_t ServiceStub::CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply)
 {
+    HILOGI("Begin");
+    unique_ptr<BFileInfo> fileInfo(data.ReadParcelable<BFileInfo>());
+    if (!fileInfo) {
+        return BError(BError::Codes::SA_BROKEN_IPC, "Failed to receive fileInfo");
+    }
+    int res = PublishIncrementalFile(*fileInfo);
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::SA_BROKEN_IPC, ss.str());
+    }
     return BError(BError::Codes::OK);
 }
 
 int32_t ServiceStub::CmdAppIncrementalFileReady(MessageParcel &data, MessageParcel &reply)
 {
+    HILOGI("Begin");
+    string fileName;
+    if (!data.ReadString(fileName)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fileName");
+    }
+    UniqueFd fd(data.ReadFileDescriptor());
+    if (fd < 0) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
+    }
+
+    UniqueFd manifestFd(data.ReadFileDescriptor());
+    if (manifestFd < 0) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive manifestFd");
+    }
+
+    int res = AppIncrementalFileReady(fileName, move(fd), move(manifestFd));
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::SA_BROKEN_IPC, ss.str());
+    }
     return BError(BError::Codes::OK);
 }
 
 int32_t ServiceStub::CmdAppIncrementalDone(MessageParcel &data, MessageParcel &reply)
 {
+    HILOGI("Begin");
+    int32_t ret;
+    if (!data.ReadInt32(ret)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bool flag");
+    }
+    int res = AppIncrementalDone(ret);
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::SA_BROKEN_IPC, ss.str());
+    }
     return BError(BError::Codes::OK);
 }
 
 int32_t ServiceStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessageParcel &reply)
 {
-    return BError(BError::Codes::OK);
+    HILOGI("Begin");
+    string bundleName;
+    if (!data.ReadString(bundleName)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleName").GetCode();
+    }
+    string fileName;
+    if (!data.ReadString(fileName)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fileName").GetCode();
+    }
+
+    return GetIncrementalFileHandle(bundleName, fileName);
 }
 
 template <typename T>

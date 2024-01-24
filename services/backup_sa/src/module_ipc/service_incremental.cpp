@@ -284,11 +284,11 @@ bool Service::IncrementalBackup(const string &bundleName)
     }
     if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
         //  本地全量数据
-        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId())
-                          .append(bundleName)
-                          .append("/")
-                          .append(BConstants::BACKUP_STAT_SYMBOL)
-                          .append(to_string(session_->GetLastIncrementalTime(bundleName)));
+        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId()).
+                      append(bundleName).
+                      append("/").
+                      append(BConstants::BACKUP_STAT_SYMBOL).
+                      append(to_string(session_->GetLastIncrementalTime(bundleName)));
         HILOGI("path = %{public}s", path.c_str());
         UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP | S_IRGRP | S_IWGRP));
         // BFile::SendFile(incrementalFd, fdLocal);
