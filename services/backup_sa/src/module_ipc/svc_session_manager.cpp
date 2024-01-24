@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,7 @@
 #include "filemgmt_libhilog.h"
 #include "module_ipc/service.h"
 #include "module_ipc/svc_restore_deps_manager.h"
+#include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -621,12 +622,58 @@ void SvcSessionManager::ClearSessionData()
         }
         // disconnect extension
         if (it.second.schedAction == BConstants::ServiceSchedAction::RUNNING) {
+            auto proxy = it.second.backUpConnection->GetBackupExtProxy();
+            if (proxy && impl_.restoreDataType != RestoreTypeEnum::RESTORE_DATA_READDY) {
+                proxy->HandleClear();
+            }
             it.second.backUpConnection->DisconnectBackupExtAbility();
         }
         // clear data
         it.second.schedAction = BConstants::ServiceSchedAction::FINISH;
     }
     impl_.backupExtNameMap.clear();
+}
+
+bool SvcSessionManager::GetIsIncrementalBackup()
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    return impl_.isIncrementalBackup;
+}
+
+void SvcSessionManager::SetIncrementalData(const BIncrementalData &incrementalData)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    auto it = GetBackupExtNameMap(incrementalData.bundleName);
+    it->second.lastIncrementalTime = incrementalData.lastIncrementalTime;
+    it->second.manifestFd = incrementalData.manifestFd;
+    it->second.backupParameters = incrementalData.backupParameters;
+    it->second.backupPriority = incrementalData.backupPriority;
+}
+
+int32_t SvcSessionManager::GetIncrementalManifestFd(const string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    auto it = GetBackupExtNameMap(bundleName);
+    return it->second.manifestFd;
+}
+
+int64_t SvcSessionManager::GetLastIncrementalTime(const string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    auto it = GetBackupExtNameMap(bundleName);
+    return it->second.lastIncrementalTime;
 }
 
 int32_t SvcSessionManager::GetMemParaCurSize()

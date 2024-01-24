@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,12 +42,23 @@ public:
                                         int32_t userId = DEFAULT_INVAL_VALUE) override;
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
     ErrCode Finish() override;
+    ErrCode Release() override;
+    UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) override;
+    ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote) override;
+    ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) override;
+
+    ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) override;
+    ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd) override;
+    ErrCode AppIncrementalDone(ErrCode errCode) override;
+    ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
 
 public:
     explicit ServiceProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IService>(impl) {}
     ~ServiceProxy() override {}
 
 public:
+    template <typename T>
+    bool WriteParcelableVector(const std::vector<T> &parcelableVector, Parcel &data);
     static sptr<IService> GetInstance();
     static void InvaildInstance();
 

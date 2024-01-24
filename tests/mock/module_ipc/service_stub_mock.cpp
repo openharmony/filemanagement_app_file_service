@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,21 @@ ServiceStub::ServiceStub()
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION)] =
         &ServiceStub::CmdAppendBundlesBackupSession;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_FINISH)] = &ServiceStub::CmdFinish;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RELSEASE_SESSION)] =
+        &ServiceStub::CmdRelease;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES_INCREMENTAL)] =
+        &ServiceStub::CmdGetLocalCapabilitiesIncremental;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_INCREMENTAL_BACKUP_SESSION)] =
+        &ServiceStub::CmdInitIncrementalBackupSession;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION)] =
+        &ServiceStub::CmdAppendBundlesIncrementalBackupSession;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_INCREMENTAL_FILE)] =
+        &ServiceStub::CmdPublishIncrementalFile;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_INCREMENTAL_FILE_READY)] =
+        &ServiceStub::CmdAppIncrementalFileReady;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_INCREMENTAL_FILE_NAME)] =
+        &ServiceStub::CmdGetIncrementalFileHandle;
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -157,6 +172,43 @@ int32_t ServiceStub::CmdFinish(MessageParcel &data, MessageParcel &reply)
 {
     int res = Finish();
     reply.WriteInt32(res);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdRelease(MessageParcel &data, MessageParcel &reply)
+{
+    int res = Release();
+    reply.WriteInt32(res);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdGetLocalCapabilitiesIncremental(MessageParcel &data, MessageParcel &reply)
+{
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdInitIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
+{
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdAppendBundlesIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
+{
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply)
+{
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdAppIncrementalFileReady(MessageParcel &data, MessageParcel &reply)
+{
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessageParcel &reply)
+{
     return BError(BError::Codes::OK);
 }
 } // namespace OHOS::FileManagement::Backup

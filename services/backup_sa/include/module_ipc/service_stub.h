@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,6 +45,18 @@ private:
     int32_t CmdAppendBundlesRestoreSession(MessageParcel &data, MessageParcel &reply);
     int32_t CmdAppendBundlesBackupSession(MessageParcel &data, MessageParcel &reply);
     int32_t CmdFinish(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdRelease(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdGetLocalCapabilitiesIncremental(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdInitIncrementalBackupSession(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdAppendBundlesIncrementalBackupSession(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdAppIncrementalFileReady(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdAppIncrementalDone(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdGetIncrementalFileHandle(MessageParcel &data, MessageParcel &reply);
+
+public:
+    template <typename T>
+    bool ReadParcelableVector(std::vector<T> &parcelableInfos, MessageParcel &data);
 };
 } // namespace OHOS::FileManagement::Backup
 

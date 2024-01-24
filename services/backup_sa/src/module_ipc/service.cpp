@@ -635,6 +635,9 @@ void Service::ExtStart(const string &bundleName)
 {
     try {
         HILOGE("begin %{public}s", bundleName.data());
+        if (IncrementalBackup(bundleName)) {
+            return;
+        }
         IServiceReverse::Scenario scenario = session_->GetScenario();
         auto backUpConnection = session_->GetExtConnection(bundleName);
         auto proxy = backUpConnection->GetBackupExtProxy();
@@ -690,7 +693,16 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
     try {
         HILOGE("begin %{public}s", bundleName.data());
         IServiceReverse::Scenario scenario = session_->GetScenario();
-        if (scenario == IServiceReverse::Scenario::BACKUP) {
+        if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
+            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE &&
+                   BackupPara().GetBackupOverrideIncrementalRestore()) {
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(ret, bundleName);
+
+            DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
+            HILOGI("ExtConnectFailed EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+                   bundleName.c_str());
+        } else if (scenario == IServiceReverse::Scenario::BACKUP) {
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
@@ -715,7 +727,11 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
 void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
 {
     auto scenario = session_->GetScenario();
-    if (scenario == IServiceReverse::Scenario::BACKUP) {
+    if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
+        session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
+    } else if (scenario == IServiceReverse::Scenario::RESTORE && BackupPara().GetBackupOverrideIncrementalRestore()) {
+        session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
+    } else if (scenario == IServiceReverse::Scenario::BACKUP) {
         session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
     } else if (scenario == IServiceReverse::Scenario::RESTORE) {
         session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
@@ -821,12 +837,19 @@ void Service::OnAllBundlesFinished(ErrCode errCode)
 {
     if (session_->IsOnAllBundlesFinished()) {
         IServiceReverse::Scenario scenario = session_->GetScenario();
-        if (scenario == IServiceReverse::Scenario::BACKUP) {
+        if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
+            session_->GetServiceReverseProxy()->IncrementalBackupOnAllBundlesFinished(errCode);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE &&
+                   BackupPara().GetBackupOverrideIncrementalRestore()) {
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnAllBundlesFinished(errCode);
+        } else if (scenario == IServiceReverse::Scenario::BACKUP) {
             session_->GetServiceReverseProxy()->BackupOnAllBundlesFinished(errCode);
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->RestoreOnAllBundlesFinished(errCode);
         }
-        sched_->TryUnloadServiceTimer(true);
+        if (!BackupPara().GetBackupOverrideBackupSARelease()) {
+            sched_->TryUnloadServiceTimer(true);
+        }
     }
 }
 

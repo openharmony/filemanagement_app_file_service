@@ -131,4 +131,44 @@ void Service::OnStartSched() {}
 void Service::SendAppGalleryNotify(const BundleName &bundleName) {}
 
 void Service::SessionDeactive() {}
+
+ErrCode Service::Release()
+{
+    return BError(BError::Codes::OK);
+}
+
+UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames)
+{
+    return UniqueFd(-1);
+}
+
+ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::AppIncrementalFileReady(const string &fileName, UniqueFd fd, UniqueFd manifestFd)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::AppIncrementalDone(ErrCode errCode)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::GetIncrementalFileHandle(const string &bundleName, const string &fileName)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup
