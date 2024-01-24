@@ -59,6 +59,8 @@ ohos_shared_library("fileshare") {
   ]
 
   sources = [
+    "../../common/src/json_utils.cpp",
+    "../../common/src/sandbox_helper.cpp",
     "../../innerkits/native/file_share/src/file_permission.cpp",
     "file_share/fileshare_n_exporter.cpp",
     "file_share/grant_permissions.cpp",
@@ -72,6 +74,7 @@ ohos_shared_library("fileshare") {
     "ability_runtime:uri_permission_mgr",
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
+    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "data_share:datashare_common",
@@ -84,7 +87,11 @@ ohos_shared_library("fileshare") {
     "ipc:ipc_core",
     "napi:ace_napi",
   ]
-
+  defines = []
+  if (sandbox_manarer) {
+    external_deps += [ "sandbox_manager:libsandbox_manager_sdk" ]
+    defines += [ "SANDBOX_MANAGER" ]
+  }
   relative_install_dir = "module"
 
   part_name = "app_file_service"

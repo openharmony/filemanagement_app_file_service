@@ -57,10 +57,18 @@ ohos_shared_library("fileshare_native") {
     "ability_base:want",
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
+    "file_api:filemgmt_libn",
     "hilog:libhilog",
+    "ipc:ipc_core",
+    "napi:ace_napi",
   ]
-
+  defines = []
+  if (sandbox_manarer) {
+    external_deps += [ "sandbox_manager:libsandbox_manager_sdk" ]
+    defines += [ "SANDBOX_MANAGER" ]
+  }
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
 }

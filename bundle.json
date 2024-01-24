@@ -38,7 +38,8 @@
                 "napi",
                 "safwk",
                 "samgr",
-                "storage_service"
+                "storage_service",
+                "sandbox_manager"
             ],
             "third_party": [
                 "bounds_checking_function",
