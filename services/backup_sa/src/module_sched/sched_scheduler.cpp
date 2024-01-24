@@ -28,6 +28,7 @@
 #include <unique_fd.h>
 
 #include "b_error/b_error.h"
+#include "b_ohos/startup/backup_para.h"
 #include "filemgmt_libhilog.h"
 #include "iservice_registry.h"
 #include "module_external/bms_adapter.h"
@@ -114,6 +115,14 @@ void SchedScheduler::RemoveExtConn(const string &bundleName)
         HILOGE("bundleName = %{public}s , iTime = %{public}d", bName.data(), iTime);
         extTime_.Unregister(iTime);
         bundleTimeVec_.erase(iter);
+    }
+}
+
+void SchedScheduler::StartTimer()
+{
+    extTime_.Setup();
+    if (!BackupPara().GetBackupOverrideBackupSARelease()) {
+        TryUnloadServiceTimer();
     }
 }
 

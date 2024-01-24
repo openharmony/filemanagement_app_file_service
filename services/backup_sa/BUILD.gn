@@ -30,6 +30,7 @@ ohos_shared_library("backup_sa") {
     "src/module_external/bms_adapter.cpp",
     "src/module_external/sms_adapter.cpp",
     "src/module_ipc/service.cpp",
+    "src/module_ipc/service_incremental.cpp",
     "src/module_ipc/service_incremental_reverse_proxy.cpp",
     "src/module_ipc/service_reverse_proxy.cpp",
     "src/module_ipc/service_stub.cpp",

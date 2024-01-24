@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,7 @@
 #include <refbase.h>
 
 #include "b_file_info.h"
+#include "b_incremental_data.h"
 #include "b_resources/b_constants.h"
 #include "i_service.h"
 #include "i_service_reverse.h"
@@ -57,6 +58,10 @@ struct BackupExtInfo {
     /* Timer Status: true is start & false is stop */
     bool timerStatus {false};
     int64_t dataSize;
+    int64_t lastIncrementalTime;
+    int32_t manifestFd;
+    std::string backupParameters;
+    int32_t backupPriority;
 };
 
 class Service;
@@ -75,6 +80,7 @@ public:
         */
         int32_t userId {100};
         RestoreTypeEnum restoreDataType {RESTORE_DATA_WAIT_SEND};
+        bool isIncrementalBackup {false};
     };
 
 public:
@@ -376,6 +382,37 @@ public:
      *
      */
     void ClearSessionData();
+
+    /**
+     * @brief Get the Is Incremental Backup object
+     *
+     * @return true
+     * @return false
+     */
+    bool GetIsIncrementalBackup();
+
+    /**
+     * @brief Set the Incremental Data object
+     *
+     * @param incrementalData
+     */
+    void SetIncrementalData(const BIncrementalData &incrementalData);
+
+    /**
+     * @brief Get the Manifest Fd object
+     *
+     * @param bundleName 应用名称
+     * @return int32_t
+     */
+    int32_t GetIncrementalManifestFd(const std::string &bundleName);
+
+    /**
+     * @brief Get the Last Incremental Time object
+     *
+     * @param bundleName
+     * @return int64_t
+     */
+    int64_t GetLastIncrementalTime(const std::string &bundleName);
 
     /**
      * @brief 获取备份前内存参数

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -94,6 +94,46 @@ ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundl
 }
 
 ErrCode ServiceProxy::Finish()
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::Release()
+{
+    return BError(BError::Codes::OK);
+}
+
+UniqueFd ServiceProxy::GetLocalCapabilitiesIncremental(const vector<BIncrementalData> &bundleNames)
+{
+    return UniqueFd(-1);
+}
+
+ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrementalData> &bundlesToBackup)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::PublishIncrementalFile(const BFileInfo &fileInfo)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::AppIncrementalFileReady(const string &fileName, UniqueFd fd, UniqueFd manifestFd)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::AppIncrementalDone(ErrCode errCode)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName)
 {
     return BError(BError::Codes::OK);
 }

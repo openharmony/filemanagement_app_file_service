@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,14 @@ enum class IServiceInterfaceCode {
     SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION,
     SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION,
     SERVICE_CMD_FINISH,
+    SERVICE_CMD_RELSEASE_SESSION,
+    SERVICE_CMD_GET_LOCAL_CAPABILITIES_INCREMENTAL,
+    SERVICE_CMD_INIT_INCREMENTAL_BACKUP_SESSION,
+    SERVICE_CMD_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION,
+    SERVICE_CMD_PUBLISH_INCREMENTAL_FILE,
+    SERVICE_CMD_APP_INCREMENTAL_FILE_READY,
+    SERVICE_CMD_APP_INCREMENTAL_DONE,
+    SERVICE_CMD_GET_INCREMENTAL_FILE_NAME,
 };
 } // namespace OHOS::FileManagement::Backup
 

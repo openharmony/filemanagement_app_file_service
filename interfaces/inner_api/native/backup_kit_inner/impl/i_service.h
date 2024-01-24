@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@
 #include <unique_fd.h>
 
 #include "b_file_info.h"
+#include "b_incremental_data.h"
 #include "i_service_ipc_interface_code.h"
 #include "i_service_reverse.h"
 #include "iremote_broker.h"
@@ -50,6 +51,15 @@ public:
                                                 int32_t userId = DEFAULT_INVAL_VALUE) = 0;
     virtual ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) = 0;
     virtual ErrCode Finish() = 0;
+    virtual ErrCode Release() = 0;
+    virtual UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) = 0;
+    virtual ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote) = 0;
+    virtual ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) = 0;
+
+    virtual ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) = 0;
+    virtual ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd) = 0;
+    virtual ErrCode AppIncrementalDone(ErrCode errCode) = 0;
+    virtual ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Backup.IService")
 };

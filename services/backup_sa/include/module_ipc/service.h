@@ -46,6 +46,16 @@ public:
                                         int32_t userId = DEFAULT_INVAL_VALUE) override;
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
     ErrCode Finish() override;
+    ErrCode Release() override;
+
+    UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) override;
+    ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote) override;
+    ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) override;
+
+    ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) override;
+    ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd) override;
+    ErrCode AppIncrementalDone(ErrCode errCode) override;
+    ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
 
     // 以下都是非IPC接口
 public:
@@ -167,6 +177,15 @@ private:
      *
      */
     void HandleRestoreDepsBundle(const std::string &bundleName);
+
+    /**
+     * @brief 增量备份恢复逻辑处理
+     *
+     * @param bundleName
+     * @return true
+     * @return false
+     */
+    bool IncrementalBackup(const std::string &bundleName);
 
     /**
      * @brief extension连接断开

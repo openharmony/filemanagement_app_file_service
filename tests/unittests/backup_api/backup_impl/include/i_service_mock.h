@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -107,6 +107,46 @@ public:
     }
 
     ErrCode Finish() override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode Release() override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) override
+    {
+        return UniqueFd(-1);
+    }
+
+    ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode PublishIncrementalFile(const BFileInfo &fileInfo)
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd)
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode AppIncrementalDone(ErrCode errCode)
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName)
     {
         return BError(BError::Codes::OK);
     }

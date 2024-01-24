@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -321,4 +321,21 @@ int32_t SvcSessionManager::GetMemParaCurSize()
 void SvcSessionManager::SetMemParaCurSize(int32_t size) {}
 
 void SvcSessionManager::ClearSessionData() {}
+
+bool SvcSessionManager::GetIsIncrementalBackup()
+{
+    return true;
+}
+
+void SvcSessionManager::SetIncrementalData(const BIncrementalData &incrementalData) {}
+
+int32_t SvcSessionManager::GetIncrementalManifestFd(const string &bundleName)
+{
+    return 0;
+}
+
+int64_t SvcSessionManager::GetLastIncrementalTime(const string &bundleName)
+{
+    return 0;
+}
 } // namespace OHOS::FileManagement::Backup

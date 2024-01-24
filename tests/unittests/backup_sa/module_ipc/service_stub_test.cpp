@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -53,6 +53,15 @@ public:
         ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, RestoreTypeEnum restoreType, int32_t userId));
     MOCK_METHOD1(AppendBundlesBackupSession, ErrCode(const std::vector<BundleName> &bundleNames));
     MOCK_METHOD0(Finish, ErrCode());
+    MOCK_METHOD0(Release, ErrCode());
+    MOCK_METHOD1(GetLocalCapabilitiesIncremental, UniqueFd(const std::vector<BIncrementalData> &bundleNames));
+    MOCK_METHOD1(InitIncrementalBackupSession, ErrCode(sptr<IServiceReverse> remote));
+    MOCK_METHOD1(AppendBundlesIncrementalBackupSession, ErrCode(const std::vector<BIncrementalData> &bundlesToBackup));
+
+    MOCK_METHOD1(PublishIncrementalFile, ErrCode(const BFileInfo &fileInfo));
+    MOCK_METHOD3(AppIncrementalFileReady, ErrCode(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd));
+    MOCK_METHOD1(AppIncrementalDone, ErrCode(ErrCode errCode));
+    MOCK_METHOD2(GetIncrementalFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
     UniqueFd InvokeGetLocalCapabilities()
     {
         if (bCapabilities_) {
