@@ -94,6 +94,26 @@ int UntarFile::UnPacket(const string &tarFile, const string &rootPath)
     return 0;
 }
 
+int UntarFile::IncrementalUnPacket(const string &tarFile, const string &rootPath,
+                                   const unordered_map<string, struct ReportFileInfo> &includes)
+{
+    includes_ = includes;
+    tarFilePtr_ = fopen(tarFile.c_str(), "rb");
+    if (tarFilePtr_ == nullptr) {
+        HILOGE("Failed to open tar file %{public}s, err = %{public}d", tarFile.c_str(), errno);
+        return errno;
+    }
+
+    if (ParseIncrementalTarFile(rootPath) != 0) {
+        HILOGE("Failed to parse tar file");
+    }
+
+    fclose(tarFilePtr_);
+    tarFilePtr_ = nullptr;
+
+    return 0;
+}
+
 void UntarFile::HandleTarBuffer(const string &buff, const string &name, FileStatInfo &info)
 {
     info.mode = static_cast<mode_t>(ParseOctalStr(&buff[0] + TMODE_BASE, TMODE_LEN));
@@ -164,6 +184,67 @@ int UntarFile::ParseTarFile(const string &rootPath)
     return ret;
 }
 
+int UntarFile::ParseIncrementalTarFile(const string &rootPath)
+{
+    // re-parse tar header
+    rootPath_ = rootPath;
+    char buff[BLOCK_SIZE] = {0};
+    bool isSkip = false;
+    FileStatInfo info {};
+
+    // tarFileSize
+    int ret = fseeko(tarFilePtr_, 0L, SEEK_END);
+    if (ret != 0) {
+        HILOGE("Failed to fseeko tarFile SEEK_END, err = %{public}d", errno);
+        return ret;
+    }
+    tarFileSize_ = ftello(tarFilePtr_);
+    // reback file to begin
+    if ((ret = fseeko(tarFilePtr_, 0L, SEEK_SET)) != 0) {
+        HILOGE("Failed to fseeko tarFile SEEK_SET, err = %{public}d", errno);
+        return ret;
+    }
+
+    bool finished = false;
+    while (!finished) {
+        readCnt_ = fread(buff, 1, BLOCK_SIZE, tarFilePtr_);
+        if (readCnt_ < BLOCK_SIZE) {
+            HILOGE("Parsing tar file completed, read data count is less then block size.");
+            return 0;
+        }
+        // two empty continuous block indicate end of file
+        if (IsEmptyBlock(buff)) {
+            char tailBuff[BLOCK_SIZE] = {0};
+            size_t tailRead = fread(tailBuff, 1, BLOCK_SIZE, tarFilePtr_);
+            if (tailRead == BLOCK_SIZE && IsEmptyBlock(tailBuff)) {
+                HILOGE("Parsing tar file completed, tailBuff is empty.");
+                return 0;
+            }
+        }
+        // check header
+        TarHeader *header = reinterpret_cast<TarHeader *>(buff);
+        if (!IsValidTarBlock(*header)) {
+            // when split unpack, ftell size is over than file really size [0,READ_BUFF_SIZE]
+            if (ftello(tarFilePtr_) > (tarFileSize_ + READ_BUFF_SIZE) || !IsEmptyBlock(buff)) {
+                HILOGE("Invalid tar file format");
+                ret = ERR_FORMAT;
+            }
+            return ret;
+        }
+        HandleTarBuffer(string(buff, BLOCK_SIZE), header->name, info);
+        if ((ret = ParseIncrementalFileByTypeFlag(header->typeFlag, isSkip, info)) != 0) {
+            HILOGE("Failed to parse incremental file by type flag");
+            return ret;
+        }
+        ret = HandleFileProperties(isSkip, info);
+        if (ret != 0) {
+            HILOGE("Failed to handle file property");
+        }
+    }
+
+    return ret;
+}
+
 void UntarFile::ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &info)
 {
     switch (typeFlag) {
@@ -197,6 +278,59 @@ void UntarFile::ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &i
             break;
         }
     }
+}
+
+int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &info)
+{
+    switch (typeFlag) {
+        case REGTYPE:
+        case AREGTYPE:
+            if (!includes_.empty() && includes_.find(info.fullPath) == includes_.end()) { // not in includes
+                isSkip = true;
+                if (fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET) != 0) {
+                    HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
+                    return -1;
+                }
+                break;
+            }
+            ParseRegularFile(info, typeFlag, isSkip);
+            break;
+        case SYMTYPE:
+            isSkip = false;
+            break;
+        case DIRTYPE:
+            CreateDir(info.fullPath, info.mode);
+            isSkip = false;
+            break;
+        case GNUTYPE_LONGNAME: {
+            size_t nameLen = static_cast<size_t>(tarFileSize_);
+            if (nameLen < PATH_MAX_LEN) {
+                size_t read = fread(&(info.longName[0]), sizeof(char), nameLen, tarFilePtr_);
+                if (read < nameLen) {
+                    HILOGE("Failed to fread longName of %{private}s, nameLen = %{public}ud, read = %{public}ud",
+                        info.fullPath.c_str(), nameLen, read);
+                    return -1;
+                }
+            }
+            isSkip = true;
+            if (fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET) != 0) {
+                HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
+                return -1;
+            }
+            break;
+        }
+        default: {
+            // Ignoring, skip
+            isSkip = true;
+            if (fseeko(tarFilePtr_, tarFileBlockCnt_ * BLOCK_SIZE, SEEK_CUR) != 0) {
+                HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
+                return -1;
+            }
+            break;
+        }
+    }
+
+    return 0;
 }
 
 void UntarFile::ParseRegularFile(FileStatInfo &info, char typeFlag, bool &isSkip)
