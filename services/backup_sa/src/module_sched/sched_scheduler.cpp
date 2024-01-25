@@ -45,10 +45,6 @@ void SchedScheduler::Sched(string bundleName)
         if (!sessionPtr_->GetSchedBundleName(bundleName)) {
             return;
         }
-        BConstants::ServiceSchedAction action = sessionPtr_->GetServiceSchedAction(bundleName);
-        if (action == BConstants::ServiceSchedAction::WAIT) {
-            sessionPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::START);
-        }
     }
     HILOGE("Sched bundleName %{public}s", bundleName.data());
     auto callStart = [schedPtr {wptr(this)}, bundleName]() {

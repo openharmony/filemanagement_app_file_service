@@ -320,7 +320,7 @@ map<BundleName, BackupExtInfo>::iterator SvcSessionManager::GetBackupExtNameMap(
 bool SvcSessionManager::GetSchedBundleName(string &bundleName)
 {
     HILOGI("Begin");
-    shared_lock<shared_mutex> lock(lock_);
+    unique_lock<shared_mutex> lock(lock_);
     if (extConnectNum_ >= BConstants::EXT_CONNECT_MAX_COUNT) {
         return false;
     }
@@ -328,6 +328,8 @@ bool SvcSessionManager::GetSchedBundleName(string &bundleName)
     for (auto &&it : impl_.backupExtNameMap) {
         if (it.second.schedAction == BConstants::ServiceSchedAction::WAIT) {
             bundleName = it.first;
+            it.second.schedAction = BConstants::ServiceSchedAction::START;
+            extConnectNum_++;
             return true;
         }
     }
