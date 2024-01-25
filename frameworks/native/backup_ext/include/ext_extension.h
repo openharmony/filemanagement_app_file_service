@@ -46,6 +46,7 @@ public:
 
     void AsyncTaskRestoreForUpgrade(void);
     void ExtClear(void);
+    void AsyncTaskIncrementalRestoreForUpgrade(void);
 
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension) : extension_(extension)
@@ -78,6 +79,13 @@ private:
      */
     int DoRestore(const string &fileName);
 
+    /**
+     * @brief incremental restore
+     *
+     * @param fileName name of the file that to be untar
+     */
+    int DoIncrementalRestore(const string &fileName);
+
     /** @brief clear backup restore data */
     void DoClear();
 
@@ -102,6 +110,12 @@ private:
      *
      */
     void AsyncTaskRestore();
+
+    /**
+     * @brief Executing Incremental Restoration Tasks Asynchronously
+     *
+     */
+    void AsyncTaskIncrementalRestore();
 
     void AsyncTaskOnBackup();
 

@@ -157,10 +157,62 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
     }
 }
 
+static string GetReportFileName(const string &fileName)
+{
+    string reportName = fileName + "." + string(BConstants::REPORT_FILE_EXT);
+    return reportName;
+}
+
 ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    return ERR_OK;
+    try {
+        if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
+            HILOGE("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
+        }
+
+        VerifyCaller();
+
+        string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+        if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
+            string str = string("Failed to create restore folder. ").append(std::generic_category().message(errno));
+            throw BError(BError::Codes::EXT_INVAL_ARG, str);
+        }
+
+        string tarName = path + fileName;
+        if (access(tarName.c_str(), F_OK) == 0) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, string("The file already exists"));
+        }
+        UniqueFd fd (open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+        if (fd < 0) {
+            HILOGE("Failed to open tar file = %{private}s, err = %{public}d", tarName.c_str(), errno);
+            throw BError(BError::Codes::EXT_INVAL_ARG, string("open tar file failed"));
+        }
+
+        // 对应的简报文件
+        string reportName = GetReportFileName(tarName);
+        if (access(reportName.c_str(), F_OK) == 0) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, string("The report file already exists"));
+        }
+        UniqueFd reportFd (open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+        if (reportFd < 0) {
+            HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
+            throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
+        }
+
+        auto proxy = ServiceProxy::GetInstance();
+        auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd));
+        if (ret != ERR_OK) {
+            HILOGI("Failed to AppIncrementalFileReady %{public}d", ret);
+        }
+
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to get incremental file handle");
+        DoClear();
+        return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+    }
 }
 
 ErrCode BackupExtExtension::HandleClear()
@@ -313,7 +365,45 @@ ErrCode BackupExtExtension::PublishFile(const string &fileName)
 ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    return ERR_OK;
+    HILOGI("begin publish incremental file. fileName is %{private}s", fileName.data());
+    try {
+        if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
+        }
+        VerifyCaller();
+
+        string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+        string tarName = path + fileName;
+        {
+            BExcepUltils::VerifyPath(tarName, true);
+            unique_lock<shared_mutex> lock(lock_);
+            if (find(tars_.begin(), tars_.end(), fileName) != tars_.end() || access(tarName.data(), F_OK) != 0) {
+                throw BError(BError::Codes::EXT_INVAL_ARG, "The file does not exist");
+            }
+            tars_.push_back(fileName);
+            if (!IsAllFileReceived(tars_, false)) {
+                return ERR_OK;
+            }
+        }
+
+        // 异步执行解压操作
+        if (extension_->AllowToBackupRestore()) {
+            AsyncTaskIncrementalRestore();
+        }
+
+        return ERR_OK;
+    } catch (const BError &e) {
+        DoClear();
+        return e.GetCode();
+    } catch (const exception &e) {
+        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        DoClear();
+        return BError(BError::Codes::EXT_BROKEN_FRAMEWORK).GetCode();
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        DoClear();
+        return BError(BError::Codes::EXT_BROKEN_FRAMEWORK).GetCode();
+    }
 }
 
 ErrCode BackupExtExtension::HandleBackup()
@@ -447,6 +537,38 @@ int BackupExtExtension::DoRestore(const string &fileName)
         UntarFile::GetInstance().UnPacket(tarName, path);
     } else {
         UntarFile::GetInstance().UnPacket(tarName, "/");
+    }
+    HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
+
+    return ERR_OK;
+}
+
+static map<string, struct ReportFileInfo> GetTarIncludes(const string &tarName)
+{
+    // 获取简报文件内容
+    string reportName = GetReportFileName(tarName);
+
+    // 获取简报内容
+    BReportEntity rp(UniqueFd(open(reportName.data(), O_RDONLY)));
+    return rp.GetReportInfos();
+}
+
+int BackupExtExtension::DoIncrementalRestore(const string &fileName)
+{
+    HILOGI("Do incremental restore");
+    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
+        return EPERM;
+    }
+    // REM: 给定version
+    // REM: 解压启动Extension时即挂载好的备份目录中的数据
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    string tarName = path + fileName;
+
+    // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
+    if (extension_->SpeicalVersionForCloneAndCloud() || extension_->UseFullBackupOnly()) {
+        UntarFile::GetInstance().IncrementalUnPacket(tarName, path, GetTarIncludes(tarName));
+    } else {
+        UntarFile::GetInstance().IncrementalUnPacket(tarName, "/", GetTarIncludes(tarName));
     }
     HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
 
@@ -672,6 +794,36 @@ static void DeleteBackupTars()
     }
 }
 
+static void DeleteBackupIncrementalTars()
+{
+    // The directory include tars and manage.json which would be deleted
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
+    auto cache = cachedEntity.Structuralize();
+    auto info = cache.GetExtManage();
+    auto path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    for (auto &item : info) {
+        if (ExtractFileExt(item) != "tar" || IsUserTar(item, INDEX_FILE_RESTORE)) {
+            continue;
+        }
+        string tarPath = path + item;
+        if (!RemoveFile(tarPath)) {
+            HILOGE("Failed to delete the backup tar %{private}s, err = %{public}d", tarPath.c_str(), errno);
+        }
+        // 删除简报文件
+        string reportPath = GetReportFileName(tarPath);
+        if (!RemoveFile(reportPath)) {
+            HILOGE("Failed to delete the backup report %{private}s, err = %{public}d", reportPath.c_str(), errno);
+        }
+    }
+    if (!RemoveFile(INDEX_FILE_RESTORE)) {
+        HILOGE("Failed to delete the backup index %{public}s", INDEX_FILE_RESTORE.c_str());
+    }
+    string reportManagePath = GetReportFileName(INDEX_FILE_RESTORE); // GetIncrementalFileHandle创建的空fd
+    if (!RemoveFile(reportManagePath)) {
+        HILOGE("Failed to delete the backup report index %{public}s", reportManagePath.c_str());
+    }
+}
+
 void BackupExtExtension::AsyncTaskRestore()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}, tars {tars_}]() {
@@ -719,6 +871,61 @@ void BackupExtExtension::AsyncTaskRestore()
         } catch (...) {
             HILOGE("Failed to restore the ext bundle");
             ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    // REM: 这里异步化了，需要做并发控制
+    // 在往线程池中投入任务之前将需要的数据拷贝副本到参数中，保证不发生读写竞争，
+    // 由于拷贝参数时尚运行在主线程中，故在参数拷贝过程中是线程安全的。
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+void BackupExtExtension::AsyncTaskIncrementalRestore()
+{
+    auto task = [obj {wptr<BackupExtExtension>(this)}, tars {tars_}]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                              "Ext extension handle have been already released");
+        BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
+                              "extension handle have been already released");
+        try {
+            // 解压
+            int ret = ERR_OK;
+            for (auto item : tars) { // 处理要解压的tar文件
+                if (ExtractFileExt(item) == "tar" && !IsUserTar(item, INDEX_FILE_RESTORE)) {
+                    ret = ptr->DoIncrementalRestore(item);
+                }
+            }
+            // 恢复用户tar包以及大文件
+            // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景
+            bool appendTargetPath = ptr->extension_->UseFullBackupOnly() &&
+                                    !ptr->extension_->SpeicalVersionForCloneAndCloud();
+            RestoreBigFiles(appendTargetPath);
+
+            // delete 1.tar/manage.json
+            DeleteBackupIncrementalTars();
+
+            if (ret == ERR_OK) {
+                HILOGI("after extra, do incremental restore.");
+                ptr->AsyncTaskIncrementalRestoreForUpgrade();
+            } else {
+                ptr->AppIncrementalDone(ret);
+                ptr->DoClear();
+            }
+        } catch (const BError &e) {
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         }
     };
 
@@ -782,6 +989,49 @@ void BackupExtExtension::ExtClear()
 {
     HILOGI("ext begin clear");
     DoClear();
+}
+
+void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
+{
+    auto task = [obj {wptr<BackupExtExtension>(this)}]() {
+        auto ptr = obj.promote();
+        try {
+            BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                                  "Ext extension handle have been already released");
+            BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
+                                  "extension handle have been already released");
+
+            auto callBackup = [obj]() {
+                HILOGI("begin call restore");
+                auto extensionPtr = obj.promote();
+                BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                                      "Ext extension handle have been already released");
+                extensionPtr->AppIncrementalDone(BError(BError::Codes::OK));
+                // 清空恢复目录
+                extensionPtr->DoClear();
+            };
+            ptr->extension_->OnRestore(callBackup);
+        } catch (const BError &e) {
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    // REM: 这里异步化了，需要做并发控制
+    // 在往线程池中投入任务之前将需要的数据拷贝副本到参数中，保证不发生读写竞争，
+    // 由于拷贝参数时尚运行在主线程中，故在参数拷贝过程中是线程安全的。
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
 }
 
 void BackupExtExtension::DoClear()
@@ -887,12 +1137,6 @@ ErrCode BackupExtExtension::HandleRestore()
     return 0;
 }
 
-static string GetReportFileName(const string &fileName)
-{
-    string reportName = fileName + "." + string(BConstants::REPORT_FILE_EXT);
-    return reportName;
-}
-
 using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
                                  map<string, struct ReportFileInfo>,
                                  map<string, struct stat>,
@@ -942,8 +1186,6 @@ static CompareFilesResult CompareFiles(const UniqueFd &cloudFd, const UniqueFd &
             bigInfos.try_emplace(path, item.second);
         }
     }
-    HILOGI("compareFiles Find small files total: %{public}d", smallFiles.size());
-    HILOGI("compareFiles Find big files total: %{public}d", bigFiles.size());
     return {allFiles, smallFiles, bigFiles, bigInfos};
 }
 

@@ -95,7 +95,7 @@ int UntarFile::UnPacket(const string &tarFile, const string &rootPath)
 }
 
 int UntarFile::IncrementalUnPacket(const string &tarFile, const string &rootPath,
-                                   const unordered_map<string, struct ReportFileInfo> &includes)
+                                   const map<string, struct ReportFileInfo> &includes)
 {
     includes_ = includes;
     tarFilePtr_ = fopen(tarFile.c_str(), "rb");
@@ -307,8 +307,7 @@ int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileS
             if (nameLen < PATH_MAX_LEN) {
                 size_t read = fread(&(info.longName[0]), sizeof(char), nameLen, tarFilePtr_);
                 if (read < nameLen) {
-                    HILOGE("Failed to fread longName of %{private}s, nameLen = %{public}ud, read = %{public}ud",
-                        info.fullPath.c_str(), nameLen, read);
+                    HILOGE("Failed to fread longName of %{private}s", info.fullPath.c_str());
                     return -1;
                 }
             }
