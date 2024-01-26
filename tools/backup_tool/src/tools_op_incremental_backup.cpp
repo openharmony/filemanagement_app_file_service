@@ -169,8 +169,7 @@ static void OnFileReady(shared_ptr<SessionBckup> ctx, const BFileInfo &fileInfo,
     BFile::SendFile(fdManifest, manifestFd);
     if (fileInfo.fileName == BConstants::EXT_BACKUP_MANAGE) {
         UniqueFd fullDatFd(open((string(BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR) + fileInfo.owner +
-                                 string(BConstants::BACKUP_TOOL_MANIFEST).append(".rp"))
-                                    .data(),
+                                string(BConstants::BACKUP_TOOL_MANIFEST).append(".rp")).data(),
                                 O_RDWR | O_CREAT | O_TRUNC, S_IRWXU));
         BFile::SendFile(fullDatFd, fdManifest);
         ctx->SetIndexFiles(fileInfo.owner, move(fd));

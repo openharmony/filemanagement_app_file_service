@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,8 @@
 #ifndef OHOS_FILEMGMT_BACKUP_BACKUP_KIT_INNER_H
 #define OHOS_FILEMGMT_BACKUP_BACKUP_KIT_INNER_H
 
+#include "impl/b_incremental_backup_session.h"
+#include "impl/b_incremental_restore_session.h"
 #include "impl/b_session_backup.h"
 #include "impl/b_session_restore.h"
 #include "impl/b_session_restore_async.h"

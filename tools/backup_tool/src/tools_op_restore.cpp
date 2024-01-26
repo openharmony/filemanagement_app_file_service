@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -160,8 +160,8 @@ static void OnBundleFinished(shared_ptr<Session> ctx, ErrCode err, const BundleN
     ctx->UpdateBundleFinishedCount();
     if (err != 0) {
         ctx->isAllBundelsFinished.store(true);
-        ctx->ClearBundleOfMap(name);
     }
+    ctx->ClearBundleOfMap(name);
     ctx->TryNotify();
 }
 
@@ -286,6 +286,7 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
     ctx->SetBundleFinishedCount(bundleNames.size());
     RestoreApp(ctx, bundleNames);
     ctx->Wait();
+    ctx->session_->Release();
     return 0;
 }
 
