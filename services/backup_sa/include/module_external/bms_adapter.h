@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,8 @@
 
 #include "b_json/b_json_entity_caps.h"
 #include "bundlemgr/bundle_mgr_interface.h"
+#include "b_incremental_data.h"
+#include "istorage_manager.h"
 
 namespace OHOS::FileManagement::Backup {
 class InnerReceiverImpl;
@@ -49,6 +51,16 @@ public:
      * @brief Get app gallery bundle name
      */
     static std::string GetAppGalleryBundleName();
+
+    /**
+     * @brief Get the bundle infos object for incremental backup
+     *
+     * @param incrementalDataList bundle Name and time list
+     * @param userId User ID
+     * @return std::vector<BJsonEntityCaps::BundleInfo>
+     */
+    static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForIncremental(
+        const std::vector<BIncrementalData> &incrementalDataList, int32_t userId);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_BUNDLE_MGR_ADAPTER_H
