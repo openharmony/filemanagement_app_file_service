@@ -21,7 +21,10 @@
 #include <vector>
 #include <tuple>
 
+#include <sys/stat.h>
+
 #include "b_json/b_json_entity_extension_config.h"
+#include "b_json/b_report_entity.h"
 #include "b_resources/b_constants.h"
 #include "ext_backup_js.h"
 #include "ext_extension_stub.h"
@@ -102,6 +105,22 @@ private:
 
     void AsyncTaskOnBackup();
 
+    int DoIncrementalBackup(const std::map<std::string, struct ReportFileInfo> &allFiles,
+        const std::map<std::string, struct ReportFileInfo> &smallFiles,
+        const std::map<std::string, struct stat> &bigFiles,
+        const std::map<std::string, struct ReportFileInfo> &bigInfos);
+
+    void AsyncTaskOnIncrementalBackup(const std::map<std::string, struct ReportFileInfo> &allFiles,
+        const std::map<std::string, struct ReportFileInfo> &smallFiles,
+        const std::map<std::string, struct stat> &bigFiles,
+        const std::map<std::string, struct ReportFileInfo> &bigInfos);
+
+    /**
+     * @brief extension incremental backup restore is done
+     *
+     * @param errCode
+     */
+    void AppIncrementalDone(ErrCode errCode);
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
