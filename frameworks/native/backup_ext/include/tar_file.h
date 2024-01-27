@@ -87,6 +87,13 @@ public:
                 const std::string &tarFileName,
                 const std::string &pkPath,
                 TarMap &tarMap);
+    
+    /**
+     * @brief set packet mode
+     *
+     * @param isReset 是否每次重置 tarMap_
+     */
+    void SetPacketMode(bool isReset);
 
 private:
     TarFile() {}
@@ -226,6 +233,8 @@ private:
     uint32_t tarFileCount_ {0};
 
     std::string currentFileName_ {};
+
+    bool isReset_ = false;
 };
 } // namespace OHOS::FileManagement::Backup
 
