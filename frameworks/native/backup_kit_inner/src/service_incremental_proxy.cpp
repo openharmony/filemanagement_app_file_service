@@ -24,12 +24,14 @@
 #include "filemgmt_libhilog.h"
 #include "svc_death_recipient.h"
 #include "unique_fd.h"
+#include "hitrace_meter.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
 ErrCode ServiceProxy::Release()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -50,6 +52,7 @@ ErrCode ServiceProxy::Release()
 
 UniqueFd ServiceProxy::GetLocalCapabilitiesIncremental(const vector<BIncrementalData> &bundleNames)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -79,6 +82,7 @@ UniqueFd ServiceProxy::GetLocalCapabilitiesIncremental(const vector<BIncremental
 
 ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "remote is nullptr");
     MessageParcel data;
@@ -110,6 +114,7 @@ ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 
 ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrementalData> &bundlesToBackup)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "remote is nullptr");
     MessageParcel data;
@@ -138,6 +143,7 @@ ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrem
 
 ErrCode ServiceProxy::PublishIncrementalFile(const BFileInfo &fileInfo)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -163,6 +169,7 @@ ErrCode ServiceProxy::PublishIncrementalFile(const BFileInfo &fileInfo)
 
 ErrCode ServiceProxy::AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -193,6 +200,7 @@ ErrCode ServiceProxy::AppIncrementalFileReady(const std::string &fileName, Uniqu
 
 ErrCode ServiceProxy::AppIncrementalDone(ErrCode errCode)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -217,6 +225,7 @@ ErrCode ServiceProxy::AppIncrementalDone(ErrCode errCode)
 
 ErrCode ServiceProxy::GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -246,6 +255,7 @@ ErrCode ServiceProxy::GetIncrementalFileHandle(const std::string &bundleName, co
 template <typename T>
 bool ServiceProxy::WriteParcelableVector(const std::vector<T> &parcelableVector, Parcel &data)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (!data.WriteUint32(parcelableVector.size())) {
         HILOGE("failed to WriteInt32 for parcelableVector.size()");
         return false;

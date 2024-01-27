@@ -42,6 +42,7 @@
 #include "b_tarball/b_tarball_factory.h"
 #include "filemgmt_libhilog.h"
 #include "service_proxy.h"
+#include "hitrace_meter.h"
 #include "tar_file.h"
 #include "untar_file.h"
 
@@ -88,6 +89,7 @@ static bool CheckAndCreateDirectory(const string& filePath)
 
 static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGE("GetFileHandleForSpecialCloneCloud: fileName is %{public}s", fileName.data());
     string filePath = fileName;
     if (fileName.front() != BConstants::FILE_SEPARATOR_CHAR) {
@@ -111,6 +113,7 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
 
 UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
             HILOGI("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
@@ -143,11 +146,13 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
 
 ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     return ERR_OK;
 }
 
 ErrCode BackupExtExtension::HandleClear()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("begin clear");
     if (extension_->GetExtensionAction() == BConstants::ExtensionAction::INVALID) {
         throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
@@ -159,6 +164,7 @@ ErrCode BackupExtExtension::HandleClear()
 
 static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(
         UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)));
     auto cache = cachedEntity.Structuralize();
@@ -181,6 +187,7 @@ static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
 
 static ErrCode BigFileReady(sptr<IService> proxy)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDONLY)));
     auto cache = cachedEntity.Structuralize();
     auto pkgInfo = cache.GetExtManageInfo();
@@ -212,6 +219,7 @@ static ErrCode BigFileReady(sptr<IService> proxy)
 
 static bool IsAllFileReceived(vector<string> tars, bool isSpeicalVersion)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     // 是否已收到索引文件
     if (isSpeicalVersion) {
         HILOGI("Check if manage.json is received for SpeicalVersion.");
@@ -246,6 +254,7 @@ static bool IsAllFileReceived(vector<string> tars, bool isSpeicalVersion)
 
 ErrCode BackupExtExtension::PublishFile(const string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGE("begin publish file. fileName is %{public}s", fileName.data());
     try {
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
@@ -290,11 +299,13 @@ ErrCode BackupExtExtension::PublishFile(const string &fileName)
 
 ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     return ERR_OK;
 }
 
 ErrCode BackupExtExtension::HandleBackup()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     string usrConfig = extension_->GetUsrConfig();
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
     auto cache = cachedEntity.Structuralize();
@@ -309,6 +320,7 @@ ErrCode BackupExtExtension::HandleBackup()
 
 static bool IsUserTar(const string &tarFile, const string &indexFile)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (tarFile.empty()) {
         return false;
     }
@@ -328,6 +340,7 @@ static bool IsUserTar(const string &tarFile, const string &indexFile)
 
 static pair<TarMap, vector<string>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto [errCode, files, smallFiles] = BDir::GetBigFiles(includes, excludes);
     if (errCode != 0) {
         return {};
@@ -363,6 +376,7 @@ static pair<TarMap, vector<string>> GetFileInfos(const vector<string> &includes,
 
 int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Do backup");
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
         return EPERM;
@@ -405,6 +419,7 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
 
 int BackupExtExtension::DoRestore(const string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Do restore");
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
         return EPERM;
@@ -427,6 +442,7 @@ int BackupExtExtension::DoRestore(const string &fileName)
 
 void BackupExtExtension::AsyncTaskBackup(const string config)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto task = [obj {wptr<BackupExtExtension>(this)}, config]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
@@ -465,6 +481,7 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
 
 static void RestoreBigFilesForSpecialCloneCloud(ExtManageInfo item)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     struct stat& sta = item.sta;
     string fileName = item.hashName;
     if (chmod(fileName.c_str(), sta.st_mode) != 0) {
@@ -480,6 +497,7 @@ static void RestoreBigFilesForSpecialCloneCloud(ExtManageInfo item)
 
 static ErrCode RestoreTarForSpeicalCloneCloud(ExtManageInfo item)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     string tarName = item.hashName;
     if (item.fileName.empty()) {
         HILOGE("Invalid untar path info for tar %{public}s", tarName.c_str());
@@ -499,6 +517,7 @@ static ErrCode RestoreTarForSpeicalCloneCloud(ExtManageInfo item)
 
 static ErrCode RestoreFilesForSpecialCloneCloud()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     // 获取索引文件内容
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
@@ -590,6 +609,7 @@ static void RestoreBigFileAfter(const string& fileName, const string& filePath, 
 
 static void RestoreBigFiles(bool appendTargetPath)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     // 获取索引文件内容
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
@@ -619,6 +639,7 @@ static void RestoreBigFiles(bool appendTargetPath)
 
 static void DeleteBackupTars()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     // The directory include tars and manage.json which would be deleted
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
     auto cache = cachedEntity.Structuralize();
@@ -702,6 +723,7 @@ void BackupExtExtension::AsyncTaskRestore()
 
 void BackupExtExtension::AsyncTaskRestoreForUpgrade()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         try {
@@ -751,6 +773,7 @@ void BackupExtExtension::ExtClear()
 
 void BackupExtExtension::DoClear()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         string backupCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
         string restoreCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
@@ -776,6 +799,7 @@ void BackupExtExtension::DoClear()
 
 void BackupExtExtension::AppDone(ErrCode errCode)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto proxy = ServiceProxy::GetInstance();
     BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
     auto ret = proxy->AppDone(errCode);
@@ -786,6 +810,7 @@ void BackupExtExtension::AppDone(ErrCode errCode)
 
 void BackupExtExtension::AsyncTaskOnBackup()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         try {
@@ -827,6 +852,7 @@ void BackupExtExtension::AsyncTaskOnBackup()
 
 ErrCode BackupExtExtension::HandleRestore()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     VerifyCaller();
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
         HILOGI("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
@@ -850,11 +876,13 @@ ErrCode BackupExtExtension::HandleRestore()
 
 ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     return 0;
 }
 
 tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     return {UniqueFd(-1), UniqueFd(-1)};
 }
 } // namespace OHOS::FileManagement::Backup

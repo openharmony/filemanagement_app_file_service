@@ -20,12 +20,14 @@
 #include "filemgmt_libhilog.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
+#include "hitrace_meter.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
 ErrCode SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -51,6 +53,7 @@ ErrCode SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
 
 ErrCode SvcExtensionProxy::PublishIncrementalFile(const string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -76,6 +79,7 @@ ErrCode SvcExtensionProxy::PublishIncrementalFile(const string &fileName)
 
 ErrCode SvcExtensionProxy::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -99,6 +103,7 @@ ErrCode SvcExtensionProxy::HandleIncrementalBackup(UniqueFd incrementalFd, Uniqu
 
 tuple<UniqueFd, UniqueFd> SvcExtensionProxy::GetIncrementalBackupFileHandle()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;

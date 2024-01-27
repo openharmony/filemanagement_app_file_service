@@ -67,6 +67,7 @@ ohos_shared_library("backup_kit_inner") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

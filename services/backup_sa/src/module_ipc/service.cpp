@@ -55,6 +55,7 @@
 #include "module_ipc/svc_restore_deps_manager.h"
 #include "parameter.h"
 #include "system_ability_definition.h"
+#include "hitrace_meter.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -81,6 +82,7 @@ static inline int32_t GetUserIdDefault()
 
 void Service::OnStart()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     bool res = SystemAbility::Publish(sptr(this));
     sched_ = sptr(new SchedScheduler(wptr(this), wptr(session_)));
     sched_->StartTimer();
@@ -89,6 +91,7 @@ void Service::OnStart()
 
 void Service::OnStop()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Called");
     int32_t oldMemoryParaSize = BConstants::DEFAULT_VFS_CACHE_PRESSURE;
     if (session_ != nullptr) {
@@ -99,6 +102,7 @@ void Service::OnStop()
 
 UniqueFd Service::GetLocalCapabilities()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         /*
@@ -139,11 +143,13 @@ UniqueFd Service::GetLocalCapabilities()
 
 void Service::StopAll(const wptr<IRemoteObject> &obj, bool force)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     session_->Deactive(obj, force);
 }
 
 string Service::VerifyCallerAndGetCallerName()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
     int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
     if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_HAP) {
@@ -161,6 +167,7 @@ string Service::VerifyCallerAndGetCallerName()
 
 void Service::VerifyCaller()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
     int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
     switch (tokenType) {
@@ -187,12 +194,14 @@ void Service::VerifyCaller()
 
 void Service::VerifyCaller(IServiceReverse::Scenario scenario)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     session_->VerifyCallerAndScenario(IPCSkeleton::GetCallingTokenID(), scenario);
     VerifyCaller();
 }
 
 ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         VerifyCaller();
         session_->Active({
@@ -216,6 +225,7 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
 
 ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         VerifyCaller();
         int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
@@ -236,6 +246,7 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
 
 ErrCode Service::Start()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     VerifyCaller(session_->GetScenario());
     session_->Start();
@@ -257,6 +268,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
                                                                  sptr<SvcSessionManager> session,
                                                                  const vector<BundleName> &bundleNames)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     // BundleMgrAdapter::GetBundleInfos可能耗时
     auto restoreInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session->GetSessionUserId());
     BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
@@ -291,6 +303,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              RestoreTypeEnum restoreType,
                                              int32_t userId)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         session_->IncreaseSessionCnt();
@@ -342,6 +355,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 
 ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
@@ -377,6 +391,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
 
 ErrCode Service::Finish()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     VerifyCaller(session_->GetScenario());
     session_->Finish();
@@ -386,6 +401,7 @@ ErrCode Service::Finish()
 
 ErrCode Service::PublishFile(const BFileInfo &fileInfo)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
@@ -415,6 +431,7 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
 
 ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         string callerName = VerifyCallerAndGetCallerName();
@@ -458,6 +475,7 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd)
 
 ErrCode Service::AppDone(ErrCode errCode)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         string callerName = VerifyCallerAndGetCallerName();
@@ -493,6 +511,7 @@ ErrCode Service::AppDone(ErrCode errCode)
 
 ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGE("begin %{public}s", bundleName.data());
         IServiceReverse::Scenario scenario = session_->GetScenario();
@@ -535,6 +554,7 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
 
 ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
@@ -572,6 +592,7 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 
 void Service::OnBackupExtensionDied(const string &&bundleName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         string callName = move(bundleName);
         session_->VerifyBundleName(callName);
@@ -613,6 +634,7 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
 
 void Service::ExtConnectDied(const string &callName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         /* Clear Timer */
@@ -633,6 +655,7 @@ void Service::ExtConnectDied(const string &callName)
 
 void Service::ExtStart(const string &bundleName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGE("begin %{public}s", bundleName.data());
         if (IncrementalBackup(bundleName)) {
@@ -690,6 +713,7 @@ int Service::Dump(int fd, const vector<u16string> &args)
 
 void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGE("begin %{public}s", bundleName.data());
         IServiceReverse::Scenario scenario = session_->GetScenario();
@@ -726,6 +750,7 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
 
 void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto scenario = session_->GetScenario();
     if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
@@ -742,6 +767,7 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
 
 void Service::ExtConnectDone(string bundleName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     /* Callback for App Ext Timeout Process. */
     auto timeoutCallback = [ptr {wptr(this)}, bundleName]() {
         auto thisPtr = ptr.promote();
@@ -778,6 +804,7 @@ void Service::ExtConnectDone(string bundleName)
 
 void Service::ClearSessionAndSchedInfo(const string &bundleName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         session_->RemoveExtInfo(bundleName);
         sched_->RemoveExtConn(bundleName);
@@ -796,6 +823,7 @@ void Service::ClearSessionAndSchedInfo(const string &bundleName)
 
 void Service::HandleRestoreDepsBundle(const string &bundleName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (session_->GetScenario() != IServiceReverse::Scenario::RESTORE) {
         return;
     }
@@ -835,6 +863,7 @@ void Service::HandleRestoreDepsBundle(const string &bundleName)
 
 void Service::OnAllBundlesFinished(ErrCode errCode)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (session_->IsOnAllBundlesFinished()) {
         IServiceReverse::Scenario scenario = session_->GetScenario();
         if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
@@ -855,6 +884,7 @@ void Service::OnAllBundlesFinished(ErrCode errCode)
 
 void Service::OnStartSched()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (session_->IsOnOnStartSched()) {
         for (int num = 0; num < BConstants::EXT_CONNECT_MAX_COUNT; num++) {
             sched_->Sched();
@@ -864,6 +894,7 @@ void Service::OnStartSched()
 
 void Service::SendAppGalleryNotify(const BundleName &bundleName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     IServiceReverse::Scenario scenario = session_->GetScenario();
     if (scenario == IServiceReverse::Scenario::RESTORE) {
         DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
@@ -874,6 +905,7 @@ void Service::SendAppGalleryNotify(const BundleName &bundleName)
 
 void Service::SessionDeactive()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         // 结束定时器
