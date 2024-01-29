@@ -189,8 +189,6 @@ static int CreateShareFile(struct HmdfsShareControl &shareControl, const char* f
 
     if (ioctl(dirFd, HMDFS_IOC_SET_SHARE_PATH, &shareControl) < 0) {
         LOGE("RemoteFileShare::CreateShareFile, ioctl failed with %{public}d", errno);
-        close(dirFd);
-        return errno;
     }
     close(dirFd);
     return 0;

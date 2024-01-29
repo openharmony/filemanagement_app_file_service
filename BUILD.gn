@@ -13,10 +13,6 @@
 
 import("//build/ohos.gni")
 
-group("libremotefileshare") {
-  deps = [ "interfaces/kits/js:remotefileshare" ]
-}
-
 group("tgt_backup_extension") {
   deps = [
     "frameworks/native/backup_ext:backup_extension_ability_native",
