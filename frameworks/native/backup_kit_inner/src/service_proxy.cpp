@@ -23,12 +23,14 @@
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
 #include "svc_death_recipient.h"
+#include "hitrace_meter.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
 ErrCode ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -56,6 +58,7 @@ ErrCode ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
 
 ErrCode ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -83,6 +86,7 @@ ErrCode ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
 
 ErrCode ServiceProxy::Start()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -103,6 +107,7 @@ ErrCode ServiceProxy::Start()
 
 UniqueFd ServiceProxy::GetLocalCapabilities()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -126,6 +131,7 @@ UniqueFd ServiceProxy::GetLocalCapabilities()
 
 ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -151,6 +157,7 @@ ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
 
 ErrCode ServiceProxy::AppFileReady(const string &fileName, UniqueFd fd)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -178,6 +185,7 @@ ErrCode ServiceProxy::AppFileReady(const string &fileName, UniqueFd fd)
 
 ErrCode ServiceProxy::AppDone(ErrCode errCode)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -202,6 +210,7 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
 
 ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -233,6 +242,7 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
                                                   RestoreTypeEnum restoreType,
                                                   int32_t userId)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -267,6 +277,7 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
 
 ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -292,6 +303,7 @@ ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundl
 
 ErrCode ServiceProxy::Finish()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -312,6 +324,7 @@ ErrCode ServiceProxy::Finish()
 
 sptr<IService> ServiceProxy::GetInstance()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     unique_lock<mutex> lock(proxyMutex_);
     if (serviceProxy_ != nullptr) {
         return serviceProxy_;
@@ -346,6 +359,7 @@ sptr<IService> ServiceProxy::GetInstance()
 
 void ServiceProxy::InvaildInstance()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("invalid instance");
     unique_lock<mutex> lock(proxyMutex_);
     serviceProxy_ = nullptr;
@@ -354,6 +368,7 @@ void ServiceProxy::InvaildInstance()
 void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
                                                                         const OHOS::sptr<IRemoteObject> &remoteObject)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Load backup sa success, systemAbilityId: %{private}d, remoteObject result:%{private}s", systemAbilityId,
            (remoteObject != nullptr) ? "true" : "false");
     if (systemAbilityId != FILEMANAGEMENT_BACKUP_SERVICE_SA_ID || remoteObject == nullptr) {
@@ -384,6 +399,7 @@ void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t 
 
 void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGE("Load backup sa failed, systemAbilityId:%{private}d", systemAbilityId);
     unique_lock<mutex> lock(proxyMutex_);
     serviceProxy_ = nullptr;

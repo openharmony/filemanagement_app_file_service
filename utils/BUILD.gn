@@ -103,6 +103,7 @@ ohos_shared_library("backup_utils") {
     "c_utils:utils",
     "faultloggerd:libdfx_dumpcatcher",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
   ]
 
