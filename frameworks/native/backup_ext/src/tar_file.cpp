@@ -303,6 +303,13 @@ bool TarFile::FillSplitTailBlocks()
     if (currentTarFile_ == nullptr) {
         throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "FillSplitTailBlocks currentTarFile_ is null");
     }
+    
+    // write tar file tail
+    const int END_BLOCK_SIZE = 1024;
+    vector<uint8_t> buff {};
+    buff.resize(BLOCK_SIZE);
+    WriteAll(buff, END_BLOCK_SIZE);
+    fflush(currentTarFile_);
 
     struct stat staTar {};
     int ret = stat(currentTarName_.c_str(), &staTar);
@@ -310,17 +317,13 @@ bool TarFile::FillSplitTailBlocks()
         HILOGE("Failed to stat file %{public}s, err = %{public}d", currentTarName_.c_str(), errno);
         throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "FillSplitTailBlocks Failed to stat file");
     }
-    if (staTar.st_size == 0 && tarFileCount_ > 0) {
+
+    if (staTar.st_size == 0 && tarFileCount_ > 0 && fileCount_ == 0) {
         fclose(currentTarFile_);
         currentTarFile_ = nullptr;
         remove(currentTarName_.c_str());
         return true;
     }
-    // write tar file tail
-    const int END_BLOCK_SIZE = 1024;
-    vector<uint8_t> buff {};
-    buff.resize(BLOCK_SIZE);
-    WriteAll(buff, END_BLOCK_SIZE);
 
     if (isReset_) {
         tarMap_.clear();
@@ -328,7 +331,6 @@ bool TarFile::FillSplitTailBlocks()
 
     tarMap_.emplace(tarFileName_, make_tuple(currentTarName_, staTar, false));
 
-    fflush(currentTarFile_);
     fclose(currentTarFile_);
     currentTarFile_ = nullptr;
     tarFileCount_++;
