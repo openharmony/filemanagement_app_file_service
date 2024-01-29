@@ -43,6 +43,7 @@
 #include "module_ipc/svc_restore_deps_manager.h"
 #include "parameter.h"
 #include "system_ability_definition.h"
+#include "hitrace_meter.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -53,6 +54,7 @@ constexpr int32_t DEBUG_ID = 100;
 
 static inline int32_t GetUserIdDefault()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto [isDebug, debugId] = BackupPara().GetBackupDebugOverrideAccount();
     if (isDebug && debugId > DEBUG_ID) {
         return debugId;
@@ -66,6 +68,7 @@ static inline int32_t GetUserIdDefault()
 
 ErrCode Service::Release()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("KILL");
     VerifyCaller(session_->GetScenario());
     SessionDeactive();
@@ -74,6 +77,7 @@ ErrCode Service::Release()
 
 UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         /*
@@ -119,6 +123,7 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
 
 ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     try {
         VerifyCaller();
@@ -136,6 +141,7 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 
 ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
@@ -174,6 +180,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
 
 ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
@@ -202,6 +209,7 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
 
 ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         string callerName = VerifyCallerAndGetCallerName();
@@ -249,6 +257,7 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
 
 ErrCode Service::AppIncrementalDone(ErrCode errCode)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         string callerName = VerifyCallerAndGetCallerName();
@@ -284,6 +293,7 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
 
 ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
@@ -316,6 +326,7 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
 
 bool Service::IncrementalBackup(const string &bundleName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     IServiceReverse::Scenario scenario = session_->GetScenario();
     auto backUpConnection = session_->GetExtConnection(bundleName);
     auto proxy = backUpConnection->GetBackupExtProxy();
@@ -324,11 +335,11 @@ bool Service::IncrementalBackup(const string &bundleName)
     }
     if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
         //  本地全量数据
-        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId())
-                          .append(bundleName)
-                          .append("/")
-                          .append(BConstants::BACKUP_STAT_SYMBOL)
-                          .append(to_string(session_->GetLastIncrementalTime(bundleName)));
+        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId()).
+                      append(bundleName).
+                      append("/").
+                      append(BConstants::BACKUP_STAT_SYMBOL).
+                      append(to_string(session_->GetLastIncrementalTime(bundleName)));
         HILOGI("path = %{public}s", path.c_str());
         UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP | S_IRGRP | S_IWGRP));
         // BFile::SendFile(incrementalFd, fdLocal);

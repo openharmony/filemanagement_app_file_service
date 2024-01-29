@@ -20,12 +20,14 @@
 #include "filemgmt_libhilog.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
+#include "hitrace_meter.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
 UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -52,6 +54,7 @@ UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
 
 ErrCode SvcExtensionProxy::HandleClear()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -72,6 +75,7 @@ ErrCode SvcExtensionProxy::HandleClear()
 
 ErrCode SvcExtensionProxy::HandleBackup()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -92,6 +96,7 @@ ErrCode SvcExtensionProxy::HandleBackup()
 
 ErrCode SvcExtensionProxy::PublishFile(const string &fileName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
@@ -117,6 +122,7 @@ ErrCode SvcExtensionProxy::PublishFile(const string &fileName)
 
 ErrCode SvcExtensionProxy::HandleRestore()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;

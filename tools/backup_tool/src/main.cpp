@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,8 @@ int main()
 #include "tools_op_help.h"
 #include "tools_op_restore.h"
 #include "tools_op_restore_async.h"
+#include "tools_op_incremental_backup.h"
+#include "tools_op_incremental_restore.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -83,6 +85,8 @@ void ToolRegister()
     OHOS::FileManagement::Backup::CheckSaRegister();
     OHOS::FileManagement::Backup::RestoreRegister();
     OHOS::FileManagement::Backup::RestoreAsyncRegister();
+    OHOS::FileManagement::Backup::IncrementalBackUpRegister();
+    OHOS::FileManagement::Backup::IncrementalRestoreRegister();
 }
 
 int ParseOpAndExecute(const int argc, char *const argv[])

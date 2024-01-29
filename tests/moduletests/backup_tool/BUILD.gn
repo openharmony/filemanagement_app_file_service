@@ -24,7 +24,10 @@ ohos_unittest("tools_op_test") {
     "${path_backup}/utils/:backup_utils",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+  ]
 
   use_exceptions = true
 }

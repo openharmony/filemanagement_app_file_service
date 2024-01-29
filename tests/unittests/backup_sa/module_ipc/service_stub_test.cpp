@@ -475,4 +475,34 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Finish_0100, testing::ext::T
     }
     GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_Finish_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_Release_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_Release_0100
+ * @tc.desc: Test function of Release interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Release_0100, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_Release_0100";
+    try {
+        MockService service;
+        EXPECT_CALL(service, Release()).WillOnce(Return(BError(BError::Codes::OK)));
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
+        EXPECT_EQ(BError(BError::Codes::OK),
+                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RELSEASE_SESSION),
+                                          data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by Release.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_Release_0100";
+}
 } // namespace OHOS::FileManagement::Backup

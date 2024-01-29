@@ -43,7 +43,9 @@
             ],
             "third_party": [
                 "bounds_checking_function",
-                "jsoncpp"
+                "googletest",
+                "jsoncpp",
+                "openssl"
             ]
         },
         "adapted_system_type": [ "small", "standard" ],
@@ -110,6 +112,9 @@
                         "header_base": "//foundation/filemanagement/app_file_service/interfaces/inner_api/native/backup_kit_inner",
                         "header_files": [
                             "backup_kit_inner.h",
+                            "impl/b_incremental_backup_session.h",
+                            "impl/b_incremental_data.h",
+                            "impl/b_incremental_restore_session.h",
                             "impl/b_session_restore.h",
                             "impl/b_session_restore_async.h",
                             "impl/b_file_info.h",

@@ -277,14 +277,14 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     auto bms = GetBundleManager();
     for (auto const &bundleNameTime : incrementalDataList) {
         auto bundleName = bundleNameTime.bundleName;
-        HILOGI("Begin Get bundleName:%{public}s", bundleName.c_str());
+        HILOGI("Begin Get bundleName:%{private}s", bundleName.c_str());
         AppExecFwk::BundleInfo installedBundle;
         if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
             throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle info");
         }
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
-            HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
+            HILOGI("Unsupported applications, name : %{private}s", installedBundle.name.data());
             continue;
         }
         struct BJsonEntityCaps::BundleBackupConfigPara backupPara;
@@ -298,7 +298,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
                                                               backupPara.supportScene});
         if (!CreateIPCInteractionFiles(userId, bundleName, bundleNameTime.lastIncrementalTime, backupPara.includes,
             backupPara.excludes)) {
-            HILOGE("Failed to write include/exclude files, name : %{public}s", installedBundle.name.data());
+            HILOGE("Failed to write include/exclude files, name : %{private}s", installedBundle.name.data());
             continue;
         }
         bundleNames.emplace_back(bundleName);
