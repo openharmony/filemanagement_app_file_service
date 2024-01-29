@@ -320,7 +320,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         session_->AppendBundles(restoreBundleNames);
         for (auto restoreInfo : restoreInfos) {
             auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
-                              [&restoreInfo](auto &bundleName) { return bundleName == restoreInfo.name; });
+                              [&restoreInfo](const auto &bundleName) { return bundleName == restoreInfo.name; });
             if (it == restoreBundleNames.end()) {
                 throw BError(BError::Codes::SA_BUNDLE_INFO_EMPTY, "Can't find bundle name");
             }
@@ -842,7 +842,7 @@ void Service::HandleRestoreDepsBundle(const string &bundleName)
         restoreBundleNames.emplace_back(bundle.first);
     }
     session_->AppendBundles(restoreBundleNames);
-    for (auto &bundle : restoreBundleMap) {
+    for (const auto &bundle : restoreBundleMap) {
         for (auto &bundleInfo : SvcRestoreDepsManager::GetInstance().GetAllBundles()) {
             if (bundle.first != bundleInfo.name) {
                 continue;

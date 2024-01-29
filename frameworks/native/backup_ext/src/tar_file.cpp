@@ -66,7 +66,7 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
     CreateSplitTarFile();
 
     size_t index = 0;
-    for (auto &filePath : srcFiles) {
+    for (const auto &filePath : srcFiles) {
         rootPath_ = filePath;
         if (!TraversalFile(rootPath_)) {
             HILOGE("Failed to traversal file");
@@ -358,26 +358,26 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
 {
     struct passwd *pw = getpwuid(st.st_uid);
     if (pw != nullptr) {
-        size_t ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%s", pw->pw_name);
-        if (ret < 0 || ret >= sizeof(hdr.uname)) {
+        auto ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%s", pw->pw_name);
+        if (ret < 0 || ret >= static_cast<int>(sizeof(hdr.uname))) {
             HILOGE("Fill pw_name failed, err = %{public}d", errno);
         }
     } else {
-        size_t ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%d", st.st_uid);
-        if (ret < 0 || ret >= sizeof(hdr.uname)) {
+        auto ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%d", st.st_uid);
+        if (ret < 0 || ret >= static_cast<int>(sizeof(hdr.uname))) {
             HILOGE("Fill uid failed, err = %{public}d", errno);
         }
     }
 
     struct group *gr = getgrgid(st.st_gid);
     if (gr != nullptr) {
-        size_t ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%s", gr->gr_name);
-        if (ret < 0 || ret >= sizeof(hdr.gname)) {
+        auto ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%s", gr->gr_name);
+        if (ret < 0 || static_cast<int>(sizeof(hdr.gname))) {
             HILOGE("Fill gr_name failed, err = %{public}d", errno);
         }
     } else {
-        size_t ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%d", st.st_gid);
-        if (ret < 0 || ret >= sizeof(hdr.gname)) {
+        auto ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%d", st.st_gid);
+        if (ret < 0 || ret >= static_cast<int>(sizeof(hdr.gname))) {
             HILOGE("Fill gid failed, err = %{public}d", errno);
         }
     }
