@@ -328,8 +328,6 @@ bool SvcSessionManager::GetSchedBundleName(string &bundleName)
     for (auto &&it : impl_.backupExtNameMap) {
         if (it.second.schedAction == BConstants::ServiceSchedAction::WAIT) {
             bundleName = it.first;
-            it.second.schedAction = BConstants::ServiceSchedAction::START;
-            extConnectNum_++;
             return true;
         }
     }
