@@ -208,15 +208,15 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
     HILOGI("called SessionRestore::Constructor begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
-        HILOGE("Number of arguments unmatched");
-        NError(EINVAL).ThrowErr(env);
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
     NVal callbacks(env, funcArg[NARG_POS::FIRST]);
     if (!callbacks.TypeIs(napi_object)) {
         HILOGE("First argument is not an object.");
-        NError(EINVAL).ThrowErr(env);
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not an object.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
@@ -234,8 +234,8 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
         return nullptr;
     }
     if (!NClass::SetEntityFor<RestoreEntity>(env, funcArg.GetThisVar(), move(restoreEntity))) {
-        HILOGE("Failed to set SessionRestore entity");
-        NError(EINVAL).ThrowErr(env);
+        HILOGE("Failed to set SessionRestore entity.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to set SessionRestore entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
@@ -248,8 +248,8 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
     HILOGI("called SessionRestore::AppendBundles begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::TWO, NARG_CNT::THREE)) {
-        HILOGE("Number of arguments unmatched");
-        NError(EINVAL).ThrowErr(env);
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
@@ -257,7 +257,8 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
     auto [err, fd] = remoteCap.ToInt32();
     if (!err) {
         HILOGE("First argument is not remote capabilitily file number.");
-        NError(EINVAL).ThrowErr(env);
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not remote capabilitily file number.").GetCode())
+            .ThrowErr(env);
         return nullptr;
     }
 
@@ -265,14 +266,14 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
     auto [succ, bundles, ignore] = jsBundles.ToStringArray();
     if (!succ) {
         HILOGE("First argument is not bundles array.");
-        NError(EINVAL).ThrowErr(env);
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not bundles array.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
     auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
     if (!(restoreEntity && restoreEntity->session)) {
         HILOGE("Failed to get RestoreSession entity.");
-        NError(EPERM).ThrowErr(env);
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
@@ -286,7 +287,7 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
 
-    HILOGE("Called SessionRestore::AppendBundles end.");
+    HILOGI("Called SessionRestore::AppendBundles end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::TWO) {
@@ -323,29 +324,29 @@ napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info
     HILOGI("called SessionRestore::PublishFile begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
-        HILOGE("Number of arguments unmatched");
-        NError(EINVAL).ThrowErr(env);
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
     NVal fileMeta(env, funcArg[NARG_POS::FIRST]);
     if (!fileMeta.TypeIs(napi_object)) {
-        HILOGE("First arguments is not an object");
-        NError(EINVAL).ThrowErr(env);
+        HILOGE("First arguments is not an object.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "First arguments is not an object.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
     auto [succ, bundleName, fileName] = ParseFileMeta(env, fileMeta);
     if (!succ) {
         HILOGE("ParseFileMeta failed.");
-        NError(EINVAL).ThrowErr(env);
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "ParseFileMeta failed.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
     auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
     if (!(restoreEntity && restoreEntity->session)) {
         HILOGE("Failed to get RestoreSession entity.");
-        NError(EPERM).ThrowErr(env);
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
@@ -361,7 +362,7 @@ napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
 
-    HILOGE("Called SessionRestore::PublishFile end.");
+    HILOGI("Called SessionRestore::PublishFile end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::ONE) {
@@ -377,29 +378,29 @@ napi_value SessionRestoreNExporter::GetFileHandle(napi_env env, napi_callback_in
     HILOGI("called SessionRestore::GetFileHandle begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
-        HILOGE("Number of arguments unmatched");
-        NError(EINVAL).ThrowErr(env);
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
     NVal fileMeta(env, funcArg[NARG_POS::FIRST]);
     if (!fileMeta.TypeIs(napi_object)) {
-        HILOGE("First arguments is not an object");
-        NError(EINVAL).ThrowErr(env);
+        HILOGE("First arguments is not an object.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "First arguments is not an object.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
     auto [succ, bundleName, fileName] = ParseFileMeta(env, fileMeta);
     if (!succ) {
         HILOGE("ParseFileMeta failed.");
-        NError(EINVAL).ThrowErr(env);
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "ParseFileMeta failed.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
     auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
     if (!(restoreEntity && restoreEntity->session)) {
         HILOGE("Failed to get RestoreSession entity.");
-        NError(EPERM).ThrowErr(env);
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
@@ -416,7 +417,7 @@ napi_value SessionRestoreNExporter::GetFileHandle(napi_env env, napi_callback_in
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
 
-    HILOGE("Called SessionRestore::GetFileHandle end.");
+    HILOGI("Called SessionRestore::GetFileHandle end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::ONE) {

@@ -208,15 +208,15 @@ napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info 
     HILOGI("called SessionBackup::Constructor begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
-        HILOGE("Number of arguments unmatched");
-        NError(EINVAL).ThrowErr(env);
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
     NVal callbacks(env, funcArg[NARG_POS::FIRST]);
     if (!callbacks.TypeIs(napi_object)) {
         HILOGE("First argument is not an object.");
-        NError(EINVAL).ThrowErr(env);
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not an object.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
@@ -234,8 +234,8 @@ napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info 
         return nullptr;
     }
     if (!NClass::SetEntityFor<BackupEntity>(env, funcArg.GetThisVar(), move(backupEntity))) {
-        HILOGE("Failed to set BackupEntity entity");
-        NError(EINVAL).ThrowErr(env);
+        HILOGE("Failed to set BackupEntity entity.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to set BackupEntity entity").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
@@ -248,8 +248,8 @@ napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_inf
     HILOGI("called SessionBackup::AppendBundles begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
-        HILOGE("Number of arguments unmatched");
-        NError(EINVAL).ThrowErr(env);
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
@@ -257,14 +257,14 @@ napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_inf
     auto [succ, bundles, ignore] = jsBundles.ToStringArray();
     if (!succ) {
         HILOGE("First argument is not bundles array.");
-        NError(EINVAL).ThrowErr(env);
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not bundles array.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
     auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
     if (!(backupEntity && backupEntity->session)) {
         HILOGE("Failed to get backupSession entity.");
-        NError(EPERM).ThrowErr(env);
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get backupSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
 
@@ -278,7 +278,7 @@ napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_inf
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
 
-    HILOGE("Called SessionBackup::AppendBundles end.");
+    HILOGI("Called SessionBackup::AppendBundles end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::ONE) {
