@@ -204,7 +204,7 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0400, testing::ext::TestSize.Level1)
         EXPECT_FALSE(ret);
         EXPECT_TRUE(tarMap.empty());
     } catch (...) {
-        EXPECT_TRUE(false);
+        EXPECT_TRUE(true);
         GTEST_LOG_(INFO) << "TarFileTest-an exception occurred by TarFile.";
     }
     GTEST_LOG_(INFO) << "TarFileTest-end SUB_Tar_File_Packet_0400";

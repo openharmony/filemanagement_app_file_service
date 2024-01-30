@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_BACKUP_UNTAR_FILE_H
 
 #include "tar_file.h"
+#include "b_json/b_report_entity.h"
 
 namespace OHOS::FileManagement::Backup {
 struct FileStatInfo {
@@ -32,6 +33,8 @@ public:
     typedef enum { ERR_FORMAT = -1 } ErrorCode;
     static UntarFile &GetInstance();
     int UnPacket(const std::string &tarFile, const std::string &rootPath);
+    int IncrementalUnPacket(const std::string &tarFile, const std::string &rootPath,
+                            const std::unordered_map<std::string, struct ReportFileInfo> &includes);
 
 private:
     UntarFile() = default;
@@ -45,6 +48,13 @@ private:
      * @param rootpath 解包的目标路径
      */
     int ParseTarFile(const std::string &rootPath);
+
+    /**
+     * @brief parse incremental tar file
+     *
+     * @param rootpath 解包的目标路径
+     */
+    int ParseIncrementalTarFile(const std::string &rootPath);
 
     /**
      * @brief verfy check sum
@@ -113,6 +123,15 @@ private:
     void ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &info);
 
     /**
+     * @brief parse incremental file by typeFlag
+     *
+     * @param typeFlag 文件类型标志
+     * @param isSkip 是否跳过当前文件
+     * @param info 文件属性结构体
+     */
+    int ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &info);
+
+    /**
      * @brief Handle file ownership groups
      *
      * @param isSkip 是否跳过当前文件
@@ -128,6 +147,7 @@ private:
     off_t tarFileBlockCnt_ {0};
     off_t pos_ {0};
     size_t readCnt_ {0};
+    std::unordered_map<std::string, struct ReportFileInfo> includes_;
 };
 } // namespace OHOS::FileManagement::Backup
 
