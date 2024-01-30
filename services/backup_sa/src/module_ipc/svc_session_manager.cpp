@@ -320,7 +320,7 @@ map<BundleName, BackupExtInfo>::iterator SvcSessionManager::GetBackupExtNameMap(
 bool SvcSessionManager::GetSchedBundleName(string &bundleName)
 {
     HILOGI("Begin");
-    unique_lock<shared_mutex> lock(lock_);
+    shared_lock<shared_mutex> lock(lock_);
     if (extConnectNum_ >= BConstants::EXT_CONNECT_MAX_COUNT) {
         return false;
     }
