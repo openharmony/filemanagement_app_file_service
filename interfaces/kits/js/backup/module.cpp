@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include "filemgmt_libn.h"
 #include "prop_n_exporter.h"
 #include "session_backup_n_exporter.h"
+#include "session_incremental_backup_n_exporter.h"
 #include "session_restore_n_exporter.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -32,6 +33,7 @@ static napi_value Export(napi_env env, napi_value exports)
     products.emplace_back(make_unique<PropNExporter>(env, exports));
     products.emplace_back(make_unique<SessionBackupNExporter>(env, exports));
     products.emplace_back(make_unique<SessionRestoreNExporter>(env, exports));
+    products.emplace_back(make_unique<SessionIncrementalBackupNExporter>(env, exports));
     for (auto &&product : products) {
         if (!product->Export()) {
             HILOGE("INNER BUG. Failed to export class %{public}s for module file.backup",

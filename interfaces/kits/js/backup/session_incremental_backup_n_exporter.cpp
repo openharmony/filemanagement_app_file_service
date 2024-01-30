@@ -263,7 +263,7 @@ static bool CheckDataList(const LibN::NVal &data)
     if (time.val_ == nullptr) {
         return false;
     }
-    auto [succ, tm] = time.ToInt64();
+    tie(succ, ignore) = time.ToInt64();
     if (!succ) {
         return false;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,7 @@ public:
     static napi_value AppendBundles(napi_env env, napi_callback_info cbinfo);
     static napi_value PublishFile(napi_env env, napi_callback_info cbinfo);
     static napi_value GetFileHandle(napi_env env, napi_callback_info cbinfo);
+    static napi_value Release(napi_env env, napi_callback_info cbinfo);
 
     SessionRestoreNExporter(napi_env env, napi_value exports);
     ~SessionRestoreNExporter() override;
