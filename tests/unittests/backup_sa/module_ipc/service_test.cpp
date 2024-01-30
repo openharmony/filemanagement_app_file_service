@@ -809,4 +809,47 @@ HWTEST_F(ServiceTest, SUB_Service_OnStop_0100, testing::ext::TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnStop_0100";
 }
+
+/**
+ * @tc.number: SUB_Service_SendAppGalleryNotify_0100
+ * @tc.name: SUB_Service_SendAppGalleryNotify_0100
+ * @tc.desc: 测试 SendAppGalleryNotify 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_SendAppGalleryNotify_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SendAppGalleryNotify_0100";
+    try {
+        BundleName bundleName = "";
+        servicePtr_->SendAppGalleryNotify(bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SendAppGalleryNotify.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SendAppGalleryNotify_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SessionDeactive_0100
+ * @tc.name: SUB_Service_SessionDeactive_0100
+ * @tc.desc: 测试 SessionDeactive 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_SessionDeactive_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SessionDeactive_0100";
+    try {
+        servicePtr_->SessionDeactive();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SessionDeactive.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SessionDeactive_0100";
+}
 } // namespace OHOS::FileManagement::Backup
