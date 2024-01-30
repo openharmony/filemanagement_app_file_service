@@ -78,7 +78,47 @@ ErrCode Service::Release()
 UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    return UniqueFd(-EPERM);
+    try {
+        HILOGI("Begin");
+        /*
+         Only called by restore app before InitBackupSession,
+           so there must be set init userId.
+        */
+        session_->IncreaseSessionCnt();
+        session_->SetSessionUserId(GetUserIdDefault());
+        VerifyCaller();
+        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
+        BExcepUltils::VerifyPath(path, false);
+        UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
+        if (fd < 0) {
+            HILOGE("GetLocalCapabilitiesIncremental: open file failed, err = %{public}d", errno);
+            session_->DecreaseSessionCnt();
+            return UniqueFd(-ENOENT);
+        }
+        BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
+        auto cache = cachedEntity.Structuralize();
+
+        cache.SetSystemFullName(GetOSFullName());
+        cache.SetDeviceType(GetDeviceType());
+        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session_->GetSessionUserId());
+        cache.SetBundleInfos(bundleInfos);
+        cachedEntity.Persist();
+        HILOGI("Service GetLocalCapabilitiesIncremental persist");
+        session_->DecreaseSessionCnt();
+        return move(cachedEntity.GetFd());
+    } catch (const BError &e) {
+        session_->DecreaseSessionCnt();
+        HILOGE("GetLocalCapabilitiesIncremental failed, errCode = %{public}d", e.GetCode());
+        return UniqueFd(-e.GetCode());
+    } catch (const exception &e) {
+        session_->DecreaseSessionCnt();
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
+        return UniqueFd(-EPERM);
+    } catch (...) {
+        session_->DecreaseSessionCnt();
+        HILOGI("Unexpected exception");
+        return UniqueFd(-EPERM);
+    }
 }
 
 ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)

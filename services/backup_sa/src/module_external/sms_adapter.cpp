@@ -86,4 +86,14 @@ int32_t StorageMgrAdapter::UpdateMemPara(int32_t size)
     }
     return oldSize;
 }
+
+int32_t StorageMgrAdapter::GetBundleStatsForIncrease(uint32_t userId, const std::vector<std::string> &bundleNames,
+    const std::vector<int64_t> &incrementalBackTimes, std::vector<int64_t> &pkgFileSizes)
+{
+    auto storageMgr = GetStorageManager();
+    if (storageMgr->GetBundleStatsForIncrease(userId, bundleNames, incrementalBackTimes, pkgFileSizes)) {
+        throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get user storage stats");
+    }
+    return 0;
+}
 } // namespace OHOS::FileManagement::Backup

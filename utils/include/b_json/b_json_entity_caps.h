@@ -32,7 +32,14 @@ public:
         std::string restoreDeps;
         std::string supportScene;
     };
-
+    struct BundleBackupConfigPara {
+        bool allToBackup;
+        std::string extensionName;
+        std::string restoreDeps;
+        std::string supportScene;
+        std::vector<std::string> includes;
+        std::vector<std::string> excludes;
+    };
 public:
     void SetSystemFullName(std::string systemFullName)
     {

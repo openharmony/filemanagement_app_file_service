@@ -29,4 +29,10 @@ int32_t StorageMgrAdapter::UpdateMemPara(int32_t size)
 {
     return 0;
 }
+
+int32_t StorageMgrAdapter::GetBundleStatsForIncrease(uint32_t userId, const std::vector<std::string> &bundleNames,
+    const std::vector<int64_t> &incrementalBackTimes, std::vector<int64_t> &pkgFileSizes)
+{
+    return 0;
+}
 } // namespace OHOS::FileManagement::Backup

@@ -48,4 +48,13 @@ string BundleMgrAdapter::GetAppGalleryBundleName()
 {
     return "";
 }
+
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncremental(
+    const vector<BIncrementalData> &incrementalDataList, int32_t userId)
+{
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    bundleInfos.emplace_back(
+        BJsonEntityCaps::BundleInfo {"com.example.app2backup", {}, {}, 0, true, "com.example.app2backup"});
+    return bundleInfos;
+}
 } // namespace OHOS::FileManagement::Backup
