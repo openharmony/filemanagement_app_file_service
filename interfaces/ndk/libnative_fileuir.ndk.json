@@ -1,0 +1,11 @@
+[
+    {"name":"OH_FileUri_GetUriFromPath" },
+    {"name":"OH_FileUri_GetPathFromUri" },
+    {"name":"OH_FileUri_GetFullDirectoryUri" },
+    {"name":"OH_FileUri_IsFileUri" },
+    {"name":"OH_PersistPermission" },
+    {"name":"OH_RevokePermission" },
+    {"name":"OH_ActivatePermission" },
+    {"name":"OH_DeactivatePermission" },
+    {"name":"OH_CheckPermission" }
+]
