@@ -15,42 +15,6 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
-ohos_shared_library("remotefileshare") {
-  stack_protector_ret = true
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
-  include_dirs = [
-    "${path_napi}/interfaces/kits",
-    "//third_party/bounds_checking_function/include",
-  ]
-
-  sources = [
-    "remote_file_share/remotefileshare_n_exporter.cpp",
-    "remote_file_share/remotefileshare_napi.cpp",
-  ]
-
-  deps = [ "${third_party_path}/bounds_checking_function:libsec_shared" ]
-
-  external_deps = [
-    "file_api:filemgmt_libhilog",
-    "file_api:filemgmt_libn",
-    "hilog:libhilog",
-    "napi:ace_napi",
-  ]
-
-  relative_install_dir = "module"
-
-  part_name = "app_file_service"
-  subsystem_name = "filemanagement"
-}
-
 ohos_shared_library("fileshare") {
   include_dirs = [
     ".",
