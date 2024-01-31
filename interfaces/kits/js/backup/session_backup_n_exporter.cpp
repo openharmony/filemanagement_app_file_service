@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -289,10 +289,46 @@ napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_inf
     }
 }
 
+napi_value SessionBackupNExporter::Release(napi_env env, napi_callback_info cbinfo)
+{
+    HILOGI("called SessionBackup::Release begin");
+    NFuncArg funcArg(env, cbinfo);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
+    if (!(backupEntity && backupEntity->session)) {
+        HILOGE("Failed to get backupSession entity.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get backupSession entity.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto cbExec = [session {backupEntity->session.get()}]() -> NError {
+        if (!session) {
+            return NError(BError(BError::Codes::SDK_INVAL_ARG, "backup session is nullptr").GetCode());
+        }
+        return NError(session->Release());
+    };
+    auto cbCompl = [](napi_env env, NError err) -> NVal {
+        return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
+    };
+
+    HILOGI("Called SessionBackup::Release end.");
+
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+}
+
 bool SessionBackupNExporter::Export()
 {
     HILOGI("called SessionBackupNExporter::Export begin");
-    vector<napi_property_descriptor> props = {NVal::DeclareNapiFunction("appendBundles", AppendBundles)};
+    vector<napi_property_descriptor> props = {
+        NVal::DeclareNapiFunction("appendBundles", AppendBundles),
+        NVal::DeclareNapiFunction("release", Release),
+    };
 
     auto [succ, classValue] = NClass::DefineClass(exports_.env_, className, Constructor, std::move(props));
     if (!succ) {
