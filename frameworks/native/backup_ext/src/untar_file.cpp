@@ -41,14 +41,14 @@ static off_t ParseOctalStr(const string &octalStr, size_t destLen)
     string::const_iterator it = octalStr.begin();
 
     while (it != octalStr.end() && (*it < '0' || *it > '7') && destLen > 0) {
-        it++;
+        ++it;
         --destLen;
     }
 
     while (it != octalStr.end() && *it >= '0' && *it <= '7' && destLen > 0) {
         ret *= OCTAL;
         ret += *it - '0';
-        it++;
+        ++it;
         --destLen;
     }
 

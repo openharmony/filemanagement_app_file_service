@@ -215,7 +215,7 @@ tuple<ErrCode, map<string, struct stat>, vector<string>> BDir::GetBigFiles(const
             if (excludeItem.at(item.size() - 1) == '/') {
                 excludeItem += "*";
             }
-            if (!item.empty() && fnmatch(excludeItem.data(), str.data(), FNM_LEADING_DIR) == 0) {
+            if (fnmatch(excludeItem.data(), str.data(), FNM_LEADING_DIR) == 0) {
                 return true;
             }
         }
