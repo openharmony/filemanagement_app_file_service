@@ -302,26 +302,29 @@ bool TarFile::CompleteBlock(off_t size)
 
 bool TarFile::FillSplitTailBlocks()
 {
+    // write tar file tail
+    const int END_BLOCK_SIZE = 1024;
+    vector<uint8_t> buff {};
+    buff.resize(BLOCK_SIZE);
+    WriteAll(buff, END_BLOCK_SIZE);
+    fflush(currentTarFile_);
+
     struct stat staTar {};
     int ret = stat(currentTarName_.c_str(), &staTar);
     if (ret != 0) {
         HILOGE("Failed to stat file %{public}s, err = %{public}d", currentTarName_.c_str(), errno);
         return false;
     }
-    if (staTar.st_size == 0 && tarFileCount_ > 0 && currentTarFile_ != nullptr) {
+    
+    if (staTar.st_size == 0 && tarFileCount_ > 0 && fileCount_ == 0) {
         fclose(currentTarFile_);
         currentTarFile_ = nullptr;
         remove(currentTarName_.c_str());
         return true;
     }
-    // write tar file tail
-    const int END_BLOCK_SIZE = 1024;
-    vector<uint8_t> buff {};
-    buff.resize(BLOCK_SIZE);
-    WriteAll(buff, END_BLOCK_SIZE);
+    
     tarMap_.emplace(tarFileName_, make_tuple(currentTarName_, staTar, false));
 
-    fflush(currentTarFile_);
     fclose(currentTarFile_);
     currentTarFile_ = nullptr;
     tarFileCount_++;

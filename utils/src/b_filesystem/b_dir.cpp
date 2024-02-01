@@ -118,11 +118,10 @@ static tuple<ErrCode, map<string, struct stat>, vector<string>> GetDirFilesDetai
                 continue;
             }
             if (sta.st_size <= size) {
-                HILOGI("Find small file %{public}s", fileName.data());
                 smallFiles.emplace_back(fileName);
                 continue;
             }
-            HILOGI("Find big file");
+
             files.try_emplace(fileName, sta);
         }
     }
@@ -225,7 +224,6 @@ tuple<ErrCode, map<string, struct stat>, vector<string>> BDir::GetBigFiles(const
     vector<string> resSmallFiles;
     for (const auto &item : incSmallFiles) {
         if (!isMatch(excludes, item)) {
-            HILOGI("smallfile %{public}s matchs include condition and unmatchs exclude condition", item.c_str());
             resSmallFiles.emplace_back(item);
         }
     }
@@ -233,7 +231,6 @@ tuple<ErrCode, map<string, struct stat>, vector<string>> BDir::GetBigFiles(const
     map<string, struct stat> bigFiles;
     for (const auto &item : incFiles) {
         if (!isMatch(excludes, item.first)) {
-            HILOGI("file %{public}s matchs include condition and unmatchs exclude condition", item.first.c_str());
             bigFiles[item.first] = item.second;
         }
     }
