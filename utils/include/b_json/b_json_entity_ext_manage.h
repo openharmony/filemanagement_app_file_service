@@ -42,6 +42,13 @@ public:
     void SetExtManage(const map<string, tuple<string, struct stat, bool>> &info) const;
 
     /**
+     * @brief 设置索引文件(克隆)
+     *
+     * @param info map<string, tuple<string, struct stat, bool, bool>>
+     */
+    void SetExtManageForClone(const map<string, tuple<string, struct stat, bool, bool>> &info) const;
+
+    /**
      * @brief 获取索引文件
      *
      * @return std::set<std::string>
