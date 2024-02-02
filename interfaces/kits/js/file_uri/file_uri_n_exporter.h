@@ -32,6 +32,7 @@ public:
     static napi_value GetFileUriName(napi_env env, napi_callback_info info);
     static napi_value GetFileUriPath(napi_env env, napi_callback_info info);
     static napi_value GetFullDirectoryUri(napi_env env, napi_callback_info info);
+    static napi_value IsRemoteUri(napi_env env, napi_callback_info info);
     static napi_value Normalize(napi_env env, napi_callback_info info);
     static napi_value Equals(napi_env env, napi_callback_info info);
     static napi_value EqualsTo(napi_env env, napi_callback_info info);
