@@ -42,7 +42,7 @@ namespace AppFileService {
 const char *g_fileManagerFullMountEnableParameter = "const.filemanager.full_mount.enable";
 const std::string SET_POLICY_PERMISSION = "ohos.permission.SET_SANDBOX_POLICY";
 const std::string ACCESS_PERSIST_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
-const std::string BundleName = "com.example.filesharea";
+const std::string BUNDLE_A = "com.example.filesharea";
 uint64_t g_mockToken;
 OHOS::Security::AccessToken::PermissionStateFull g_testState1 = {
     .permissionName = SET_POLICY_PERMISSION,
@@ -130,7 +130,7 @@ static bool CheckFileManagerFullMountEnable()
 HWTEST_F(FilePermissionTest, PersistPermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_0000";
-    UriPolicyInfo infoA = {.uri = "file://" + BundleName + "/storage",
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage",
                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
@@ -150,9 +150,9 @@ HWTEST_F(FilePermissionTest, PersistPermission_test_0000, testing::ext::TestSize
 HWTEST_F(FilePermissionTest, PersistPermission_test_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_0001";
-    UriPolicyInfo infoA = {.uri = "file://" + BundleName + "/storage",
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage",
                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
-    UriPolicyInfo infoB = {.uri = "file://" + BundleName + "/storage", .mode = -1};
+    UriPolicyInfo infoB = {.uri = "file://" + BUNDLE_A + "/storage", .mode = -1};
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     uriPolicies.emplace_back(infoB);
@@ -177,7 +177,7 @@ HWTEST_F(FilePermissionTest, PersistPermission_test_0001, testing::ext::TestSize
 HWTEST_F(FilePermissionTest, PersistPermission_test_0002, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_0002";
-    UriPolicyInfo infoA = {.uri = "file://" + BundleName + "/storage/test01.test",
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage/test01.test",
                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
@@ -203,7 +203,7 @@ HWTEST_F(FilePermissionTest, PersistPermission_test_0002, testing::ext::TestSize
 HWTEST_F(FilePermissionTest, ActivatePermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_0000";
-    UriPolicyInfo infoA = {.uri = "file://" + BundleName + "/storage",
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage",
                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
@@ -223,9 +223,9 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0000, testing::ext::TestSiz
 HWTEST_F(FilePermissionTest, ActivatePermission_test_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_0001";
-    UriPolicyInfo infoA = {.uri = "file://" + BundleName + "/storage",
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage",
                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
-    UriPolicyInfo infoB = {.uri = "file://" + BundleName + "/storage", .mode = -1};
+    UriPolicyInfo infoB = {.uri = "file://" + BUNDLE_A + "/storage", .mode = -1};
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     uriPolicies.emplace_back(infoB);
@@ -250,7 +250,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0001, testing::ext::TestSiz
 HWTEST_F(FilePermissionTest, ActivatePermission_test_0002, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_0002";
-    UriPolicyInfo infoA = {.uri = "file://" + BundleName + "/storage/test01.test",
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage/test01.test",
                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
@@ -276,7 +276,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0002, testing::ext::TestSiz
 HWTEST_F(FilePermissionTest, DeactivatePermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_0000";
-    UriPolicyInfo infoA = {.uri = "file://" + BundleName + "/storage",
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage",
                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
@@ -296,9 +296,9 @@ HWTEST_F(FilePermissionTest, DeactivatePermission_test_0000, testing::ext::TestS
 HWTEST_F(FilePermissionTest, DeactivatePermission_test_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_0001";
-    UriPolicyInfo infoA = {.uri = "file://" + BundleName + "/storage",
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage",
                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
-    UriPolicyInfo infoB = {.uri = "file://" + BundleName + "/storage", .mode = -1};
+    UriPolicyInfo infoB = {.uri = "file://" + BUNDLE_A + "/storage", .mode = -1};
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     uriPolicies.emplace_back(infoB);
@@ -323,7 +323,7 @@ HWTEST_F(FilePermissionTest, DeactivatePermission_test_0001, testing::ext::TestS
 HWTEST_F(FilePermissionTest, DeactivatePermission_test_0002, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_0002";
-    UriPolicyInfo infoA = {.uri = "file://" + BundleName + "/storage/test01.test",
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage/test01.test",
                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
@@ -349,7 +349,7 @@ HWTEST_F(FilePermissionTest, DeactivatePermission_test_0002, testing::ext::TestS
 HWTEST_F(FilePermissionTest, RevokePermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin RevokePermission_test_0000";
-    UriPolicyInfo infoA = {.uri = "file://" + BundleName + "/storage",
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage",
                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
@@ -369,9 +369,9 @@ HWTEST_F(FilePermissionTest, RevokePermission_test_0000, testing::ext::TestSize.
 HWTEST_F(FilePermissionTest, RevokePermission_test_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin RevokePermission_test_0001";
-    UriPolicyInfo infoA = {.uri = "file://" + BundleName + "/storage",
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage",
                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
-    UriPolicyInfo infoB = {.uri = "file://" + BundleName + "/storage", .mode = -1};
+    UriPolicyInfo infoB = {.uri = "file://" + BUNDLE_A + "/storage", .mode = -1};
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     uriPolicies.emplace_back(infoB);
@@ -396,7 +396,7 @@ HWTEST_F(FilePermissionTest, RevokePermission_test_0001, testing::ext::TestSize.
 HWTEST_F(FilePermissionTest, RevokePermission_test_0002, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin RevokePermission_test_0002";
-    UriPolicyInfo infoA = {.uri = "file://" + BundleName + "/storage/test01.test",
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage/test01.test",
                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
