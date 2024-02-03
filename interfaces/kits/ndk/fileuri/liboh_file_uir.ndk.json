@@ -1,0 +1,17 @@
+[
+    {   "first_introduced": "12",
+        "name":"OH_FileUri_GetUriFromPath"
+    },
+    {
+        "first_introduced": "12",
+        "name":"OH_FileUri_GetPathFromUri"
+    },
+    {
+        "first_introduced": "12",
+        "name":"OH_FileUri_GetFullDirectoryUri"
+    },
+    {
+        "first_introduced": "12",
+        "name":"OH_FileUri_IsValidUri"
+    }
+]
