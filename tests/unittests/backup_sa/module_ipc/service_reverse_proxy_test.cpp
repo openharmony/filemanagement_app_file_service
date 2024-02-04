@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,7 @@ using namespace testing;
 namespace {
 const string BUNDLE_NAME = "com.example.app2backup";
 const string FILE_NAME = "1.tar";
+const string FILE_NAME_MANIFEST = "manifest.rp";
 } // namespace
 
 class ServiceReverseProxyTest : public testing::Test {
@@ -259,5 +260,232 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnFileReady_01
         GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by RestoreOnFileReady.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_RestoreOnFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalBackupOnFileReady_0100
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalBackupOnFileReady_0100
+ * @tc.desc: Test function of IncrementalBackupOnFileReady interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I911LB
+ */
+HWTEST_F(ServiceReverseProxyTest,
+         SUB_ServiceReverse_proxy_IncrementalBackupOnFileReady_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalBackupOnFileReady_0100";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+
+        TestManager tm("ServiceReverseProxyTest_GetFd_0300");
+        std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
+        UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        TestManager tm1("ServiceReverseProxyTest_GetFd_0301");
+        std::string manifestFilePath = tm1.GetRootDirCurTest().append(FILE_NAME_MANIFEST);
+        UniqueFd manifestFd(open(manifestFilePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        proxy_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, fd, manifestFd);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalBackupOnFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalBackupOnFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalBackupOnBundleStarted_0100
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalBackupOnBundleStarted_0100
+ * @tc.desc: Test function of IncrementalBackupOnBundleStarted interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I911LB
+ */
+HWTEST_F(ServiceReverseProxyTest,
+         SUB_ServiceReverse_proxy_IncrementalBackupOnBundleStarted_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalBackupOnBundleStarted_0100";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        proxy_->IncrementalBackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalBackupOnBundleStarted.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalBackupOnBundleStarted_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalBackupOnBundleFinished_0100
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalBackupOnBundleFinished_0100
+ * @tc.desc: Test function of IncrementalBackupOnBundleFinished interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I911LB
+ */
+HWTEST_F(ServiceReverseProxyTest,
+         SUB_ServiceReverse_proxy_IncrementalBackupOnBundleFinished_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalBackupOnBundleFinished_0100";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        proxy_->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalBackupOnBundleFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalBackupOnBundleFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalBackupOnAllBundlesFinished_0100
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalBackupOnAllBundlesFinished_0100
+ * @tc.desc: Test function of IncrementalBackupOnAllBundlesFinished interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I911LB
+ */
+HWTEST_F(ServiceReverseProxyTest,
+         SUB_ServiceReverse_proxy_IncrementalBackupOnAllBundlesFinished_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO)
+        << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalBackupOnAllBundlesFinished_0100";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        proxy_->IncrementalBackupOnAllBundlesFinished(BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalBackupOnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO)
+        << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalBackupOnAllBundlesFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleStarted_0100
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleStarted_0100
+ * @tc.desc: Test function of IncrementalRestoreOnBundleStarted interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I911LB
+ */
+HWTEST_F(ServiceReverseProxyTest,
+         SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleStarted_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleStarted_0100";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        proxy_->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalRestoreOnBundleStarted.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleStarted_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleFinished_0100
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleFinished_0100
+ * @tc.desc: Test function of IncrementalRestoreOnBundleFinished interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I911LB
+ */
+HWTEST_F(ServiceReverseProxyTest,
+         SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleFinished_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO)
+        << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleFinished_0100";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        proxy_->IncrementalRestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalRestoreOnBundleFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalRestoreOnAllBundlesFinished_0100
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalRestoreOnAllBundlesFinished_0100
+ * @tc.desc: Test function of IncrementalRestoreOnAllBundlesFinished interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I911LB
+ */
+HWTEST_F(ServiceReverseProxyTest,
+         SUB_ServiceReverse_proxy_IncrementalRestoreOnAllBundlesFinished_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO)
+        << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalRestoreOnAllBundlesFinished_0100";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        proxy_->IncrementalRestoreOnAllBundlesFinished(BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalRestoreOnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO)
+        << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalRestoreOnAllBundlesFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalRestoreOnFileReady_0100
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalRestoreOnFileReady_0100
+ * @tc.desc: Test function of IncrementalRestoreOnFileReady interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I911LB
+ */
+HWTEST_F(ServiceReverseProxyTest,
+         SUB_ServiceReverse_proxy_IncrementalRestoreOnFileReady_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalRestoreOnFileReady_0100";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+
+        TestManager tm("ServiceReverseProxyTest_GetFd_0400");
+        std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
+        UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        TestManager tm1("ServiceReverseProxyTest_GetFd_0401");
+        std::string manifestFilePath = tm1.GetRootDirCurTest().append(FILE_NAME_MANIFEST);
+        UniqueFd manifestFd(open(manifestFilePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        proxy_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, fd, manifestFd);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalRestoreOnFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalRestoreOnFileReady_0100";
 }
 } // namespace OHOS::FileManagement::Backup
