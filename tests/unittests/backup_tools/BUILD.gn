@@ -24,9 +24,11 @@ ohos_unittest("backup_tool_test") {
     "${path_backup}/tools/backup_tool/src/tools_op_backup.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_check_sa.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_help.cpp",
+    "${path_backup}/tools/backup_tool/src/tools_op_incremental_backup.cpp",
     "backup_tool/tools_op_backup_test.cpp",
     "backup_tool/tools_op_check_sa_test.cpp",
     "backup_tool/tools_op_help_test.cpp",
+    "backup_tool/tools_op_incremental_backup_test.cpp",
     "backup_tool/tools_op_test.cpp",
   ]
   sources += backup_mock_proxy_src
@@ -77,8 +79,10 @@ ohos_unittest("backup_tool_restore_test") {
     "${path_backup}/tests/mock/backup_kit_inner/b_session_restore_async_mock.cpp",
     "${path_backup}/tests/mock/backup_kit_inner/b_session_restore_mock.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op.cpp",
+    "${path_backup}/tools/backup_tool/src/tools_op_incremental_restore.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_restore.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_restore_async.cpp",
+    "backup_tool/tools_op_incremental_restore_test.cpp",
     "backup_tool/tools_op_restore_async_test.cpp",
     "backup_tool/tools_op_restore_test.cpp",
   ]
