@@ -34,6 +34,7 @@ ohos_unittest("b_file_test") {
 
   sources = [
     "b_filesystem/b_dir_test.cpp",
+    "b_filesystem/b_file_hash_test.cpp",
     "b_filesystem/b_file_test.cpp",
   ]
 
@@ -59,6 +60,7 @@ ohos_unittest("b_json_test") {
     "b_json/b_json_cached_entity_test.cpp",
     "b_json/b_json_entity_ext_manage_test.cpp",
     "b_json/b_json_entity_extension_config_test.cpp",
+    "b_json/b_report_entity_test.cpp",
   ]
   sources += backup_mock_parameter_src
 
