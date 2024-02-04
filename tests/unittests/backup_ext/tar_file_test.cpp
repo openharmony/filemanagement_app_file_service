@@ -322,7 +322,7 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0700, testing::ext::TestSize.Level1)
         string fileName("");
         for (int i = 0; i < FILE_COUNT; i++) {
             fileName = root + "test_" + to_string(i);
-            cmd = "dd if=/dev/random of=" + fileName + " bs=1M count=1";
+            cmd = "dd if=/dev/urandom of=" + fileName + " bs=1M count=1";
             int ret = system(cmd.c_str());
             EXPECT_EQ(ret, 0);
             srcFiles.emplace_back(fileName);
