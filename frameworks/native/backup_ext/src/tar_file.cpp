@@ -109,6 +109,10 @@ bool TarFile::TraversalFile(string &filePath)
         throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "TraversalFile Failed to add file to tar package");
     }
 
+    if (isReset_) {
+        return true;
+    }
+
     if (currentTarFileSize_ >= DEFAULT_SLICE_SIZE) {
         fileCount_ = 0;
         FillSplitTailBlocks();
