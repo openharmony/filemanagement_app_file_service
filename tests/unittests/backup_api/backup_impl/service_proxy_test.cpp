@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -344,6 +344,221 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_Finish_0100, testing::ext::TestSize
     result = proxy_->Finish();
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_Finish_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_Release_0100
+ * @tc.name: SUB_Service_proxy_Release_0100
+ * @tc.desc: 测试 Release 调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_Release_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_Release_0100";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+
+    int32_t result = proxy_->Release();
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+    result = proxy_->Release();
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_Release_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_GetLocalCapabilitiesIncremental_0100
+ * @tc.name: SUB_Service_proxy_GetLocalCapabilitiesIncremental_0100
+ * @tc.desc: 测试 GetLocalCapabilitiesIncremental 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetLocalCapabilitiesIncremental_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetLocalCapabilitiesIncremental_0100";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeGetLocalSendRequest))
+        .WillOnce(Return(EPERM));
+
+    std::vector<BIncrementalData> bundleNames;
+    BIncrementalData data("com.example.app2backup", 0);
+    bundleNames.push_back(data);
+    UniqueFd fd = proxy_->GetLocalCapabilitiesIncremental(bundleNames);
+    EXPECT_GT(fd, BError(BError::Codes::OK));
+
+    UniqueFd fdErr = proxy_->GetLocalCapabilitiesIncremental(bundleNames);
+    EXPECT_LT(fdErr, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_GetLocalCapabilitiesIncremental_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_InitIncrementalBackupSession_0100
+ * @tc.name: SUB_Service_proxy_InitIncrementalBackupSession_0100
+ * @tc.desc: 测试 InitIncrementalBackupSession 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitIncrementalBackupSession_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_InitIncrementalBackupSession_0100";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(1)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
+
+    int32_t result = proxy_->InitIncrementalBackupSession(remote_);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->InitIncrementalBackupSession(nullptr);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_InitIncrementalBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_AppendBundlesIncrementalBackupSession_0100
+ * @tc.name: SUB_Service_proxy_AppendBundlesIncrementalBackupSession_0100
+ * @tc.desc: 测试 AppendBundlesIncrementalBackupSession 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesIncrementalBackupSession_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppendBundlesIncrementalBackupSession_0100";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+
+    std::vector<BIncrementalData> bundleNames;
+    int32_t result = proxy_->AppendBundlesIncrementalBackupSession(bundleNames);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->AppendBundlesIncrementalBackupSession(bundleNames);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppendBundlesIncrementalBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_PublishIncrementalFile_0100
+ * @tc.name: SUB_Service_proxy_PublishIncrementalFile_0100
+ * @tc.desc: 测试 PublishIncrementalFile 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishIncrementalFile_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_PublishIncrementalFile_0100";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+
+    string bundleName = "com.example.app2backup";
+    string fileName = "1.tar";
+    BFileInfo fileInfo(bundleName, fileName, -1);
+    int32_t result = proxy_->PublishIncrementalFile(fileInfo);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->PublishIncrementalFile(fileInfo);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_PublishIncrementalFile_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_AppIncrementalFileReady_0100
+ * @tc.name: SUB_Service_proxy_AppIncrementalFileReady_0100
+ * @tc.desc: 测试 AppIncrementalFileReady 接口成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppIncrementalFileReady_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppIncrementalFileReady_0100";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+
+    string bundleName = "com.example.app2backup";
+    TestManager tm("AppIncrementalFileReady_GetFd_0100");
+    std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
+    UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+    UniqueFd manifestFd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+
+    int32_t result = proxy_->AppIncrementalFileReady(bundleName, move(fd), move(manifestFd));
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    TestManager tmErr("AppIncrementalFileReady_GetFd_0200");
+    UniqueFd fdErr(open(tmErr.GetRootDirCurTest().append(FILE_NAME).data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+    UniqueFd manifestFdErr(
+        open(tmErr.GetRootDirCurTest().append(FILE_NAME).data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+    result = proxy_->AppIncrementalFileReady(bundleName, move(fdErr), move(manifestFdErr));
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppIncrementalFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_AppIncrementalDone_0100
+ * @tc.name: SUB_Service_proxy_AppIncrementalDone_0100
+ * @tc.desc: 测试 AppIncrementalDone 接口成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppIncrementalDone_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppIncrementalDone_0100";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+    int32_t result = proxy_->AppIncrementalDone(BError(BError::Codes::OK));
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->AppIncrementalDone(BError(BError::Codes::OK));
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppIncrementalDone_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_GetIncrementalFileHandle_0100
+ * @tc.name: SUB_Service_proxy_GetIncrementalFileHandle_0100
+ * @tc.desc: 测试 GetIncrementalFileHandle 接口成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetIncrementalFileHandle_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetIncrementalFileHandle_0100";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+    string bundleName = "com.example.app2backup";
+    string fileName = "1.tar";
+    int32_t result = proxy_->GetIncrementalFileHandle(bundleName, fileName);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->GetIncrementalFileHandle(bundleName, fileName);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_GetIncrementalFileHandle_0100";
 }
 
 /**
