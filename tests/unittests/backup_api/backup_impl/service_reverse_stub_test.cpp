@@ -35,6 +35,7 @@ using namespace testing;
 namespace {
 const string BUNDLE_NAME = "com.example.app2backup";
 const string FILE_NAME = "1.tar";
+const string FILE_NAME_MANIFEST = "1.fr";
 } // namespace
 
 class MockServiceReverse final : public ServiceReverseStub {
@@ -385,5 +386,325 @@ HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_error_0100, testi
         GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_error_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverseStub_IncrementalBackupOnFileReady_0100
+ * @tc.name: SUB_backup_ServiceReverseStub_IncrementalBackupOnFileReady_0100
+ * @tc.desc: Test function of IncrementalBackupOnFileReady interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZZX
+ */
+HWTEST_F(ServiceReverseStubTest,
+         SUB_backup_ServiceReverseStub_IncrementalBackupOnFileReady_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_IncrementalBackupOnFileReady_0100";
+    try {
+        MockServiceReverse service;
+        EXPECT_CALL(service, IncrementalBackupOnFileReady(_, _, _, _)).WillOnce(Return());
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
+        EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
+        EXPECT_TRUE(data.WriteString(FILE_NAME));
+        TestManager tm("ServiceReverseStub_0300");
+        string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
+        UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        data.WriteFileDescriptor(fd);
+        TestManager tm2("ServiceReverseStub_0301");
+        string filePathManifest = tm2.GetRootDirCurTest().append(FILE_NAME_MANIFEST);
+        UniqueFd fdManifest(open(filePathManifest.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        data.WriteFileDescriptor(fdManifest);
+
+        EXPECT_EQ(BError(BError::Codes::OK),
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_FILE_READY),
+                      data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by IncrementalBackupOnFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_IncrementalBackupOnFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverseStub_IncrementalBackupOnBundleStarted_0100
+ * @tc.name: SUB_backup_ServiceReverseStub_IncrementalBackupOnBundleStarted_0100
+ * @tc.desc: Test function of IncrementalBackupOnBundleStarted interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZZX
+ */
+HWTEST_F(ServiceReverseStubTest,
+         SUB_backup_ServiceReverseStub_IncrementalBackupOnBundleStarted_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_IncrementalBackupOnBundleStarted_0100";
+    try {
+        MockServiceReverse service;
+        EXPECT_CALL(service, IncrementalBackupOnBundleStarted(_, _)).WillOnce(Return());
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
+        EXPECT_TRUE(data.WriteInt32(BError(BError::Codes::OK)));
+        EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
+
+        EXPECT_EQ(
+            BError(BError::Codes::OK),
+            service.OnRemoteRequest(
+                static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_SUB_TASK_STARTED),
+                data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by IncrementalBackupOnBundleStarted.";
+    }
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_IncrementalBackupOnBundleStarted_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverseStub_IncrementalBackupOnBundleFinished_0100
+ * @tc.name: SUB_backup_ServiceReverseStub_IncrementalBackupOnBundleFinished_0100
+ * @tc.desc: Test function of IncrementalBackupOnBundleFinished interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZZX
+ */
+HWTEST_F(ServiceReverseStubTest,
+         SUB_backup_ServiceReverseStub_IncrementalBackupOnBundleFinished_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_IncrementalBackupOnBundleFinished_0100";
+    try {
+        MockServiceReverse service;
+        EXPECT_CALL(service, IncrementalBackupOnBundleFinished(_, _)).WillOnce(Return());
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
+        EXPECT_TRUE(data.WriteInt32(BError(BError::Codes::OK)));
+        EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
+
+        EXPECT_EQ(
+            BError(BError::Codes::OK),
+            service.OnRemoteRequest(
+                static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_SUB_TASK_FINISHED),
+                data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by IncrementalBackupOnBundleFinished.";
+    }
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_IncrementalBackupOnBundleFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverseStub_IncrementalBackupOnAllBundlesFinished_0100
+ * @tc.name: SUB_backup_ServiceReverseStub_IncrementalBackupOnAllBundlesFinished_0100
+ * @tc.desc: Test function of IncrementalBackupOnAllBundlesFinished interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZZX
+ */
+
+HWTEST_F(ServiceReverseStubTest,
+         SUB_backup_ServiceReverseStub_IncrementalBackupOnAllBundlesFinished_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_IncrementalBackupOnAllBundlesFinished_0100";
+    try {
+        MockServiceReverse service;
+        EXPECT_CALL(service, IncrementalBackupOnAllBundlesFinished(_)).WillOnce(Return());
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
+        EXPECT_TRUE(data.WriteInt32(BError(BError::Codes::OK)));
+
+        EXPECT_EQ(BError(BError::Codes::OK),
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_TASK_FINISHED),
+                      data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by IncrementalBackupOnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_IncrementalBackupOnAllBundlesFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverseStub_IncrementalRestoreOnBundleStarted_0100
+ * @tc.name: SUB_backup_ServiceReverseStub_IncrementalRestoreOnBundleStarted_0100
+ * @tc.desc: Test function of IncrementalRestoreOnBundleStarted interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZZX
+ */
+HWTEST_F(ServiceReverseStubTest,
+         SUB_backup_ServiceReverseStub_IncrementalRestoreOnBundleStarted_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_IncrementalRestoreOnBundleStarted_0100";
+    try {
+        MockServiceReverse service;
+        EXPECT_CALL(service, IncrementalRestoreOnBundleStarted(_, _)).WillOnce(Return());
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
+        EXPECT_TRUE(data.WriteInt32(BError(BError::Codes::OK)));
+        EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
+
+        EXPECT_EQ(
+            BError(BError::Codes::OK),
+            service.OnRemoteRequest(
+                static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_SUB_TASK_STARTED),
+                data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by IncrementalRestoreOnBundleStarted.";
+    }
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_IncrementalRestoreOnBundleStarted_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverseStub_IncrementalRestoreOnBundleFinished_0100
+ * @tc.name: SUB_backup_ServiceReverseStub_IncrementalRestoreOnBundleFinished_0100
+ * @tc.desc: Test function of IncrementalRestoreOnBundleFinished interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZZX
+ */
+HWTEST_F(ServiceReverseStubTest,
+         SUB_backup_ServiceReverseStub_IncrementalRestoreOnBundleFinished_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_IncrementalRestoreOnBundleFinished_0100";
+    try {
+        MockServiceReverse service;
+        EXPECT_CALL(service, IncrementalRestoreOnBundleFinished(_, _)).WillOnce(Return());
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
+        EXPECT_TRUE(data.WriteInt32(BError(BError::Codes::OK)));
+        EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
+
+        EXPECT_EQ(
+            BError(BError::Codes::OK),
+            service.OnRemoteRequest(
+                static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_SUB_TASK_FINISHED),
+                data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by IncrementalRestoreOnBundleFinished.";
+    }
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_IncrementalRestoreOnBundleFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverseStub_IncrementalRestoreOnAllBundlesFinished_0100
+ * @tc.name: SUB_backup_ServiceReverseStub_IncrementalRestoreOnAllBundlesFinished_0100
+ * @tc.desc: Test function of IncrementalRestoreOnAllBundlesFinished interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZZX
+ */
+HWTEST_F(ServiceReverseStubTest,
+         SUB_backup_ServiceReverseStub_IncrementalRestoreOnAllBundlesFinished_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_IncrementalRestoreOnAllBundlesFinished_0100";
+    try {
+        MockServiceReverse service;
+        EXPECT_CALL(service, IncrementalRestoreOnAllBundlesFinished(_)).WillOnce(Return());
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
+        EXPECT_TRUE(data.WriteInt32(BError(BError::Codes::OK)));
+
+        EXPECT_EQ(
+            BError(BError::Codes::OK),
+            service.OnRemoteRequest(
+                static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_TASK_FINISHED),
+                data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by IncrementalRestoreOnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_IncrementalRestoreOnAllBundlesFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverseStub_IncrementalRestoreOnFileReady_0100
+ * @tc.name: SUB_backup_ServiceReverseStub_IncrementalRestoreOnFileReady_0100
+ * @tc.desc: Test function of IncrementalRestoreOnFileReady interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZZX
+ */
+HWTEST_F(ServiceReverseStubTest,
+         SUB_backup_ServiceReverseStub_IncrementalRestoreOnFileReady_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_IncrementalRestoreOnFileReady_0100";
+    try {
+        MockServiceReverse service;
+        EXPECT_CALL(service, IncrementalRestoreOnFileReady(_, _, _, _)).WillOnce(Return());
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
+        EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
+        EXPECT_TRUE(data.WriteString(FILE_NAME));
+        TestManager tm("ServiceReverseStub_0400");
+        string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
+        UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        data.WriteFileDescriptor(fd);
+        TestManager tm2("ServiceReverseStub_0401");
+        string filePathManifest = tm2.GetRootDirCurTest().append(FILE_NAME_MANIFEST);
+        UniqueFd fdManifest(open(filePathManifest.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        data.WriteFileDescriptor(fdManifest);
+
+        EXPECT_EQ(BError(BError::Codes::OK),
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_FILE_READY),
+                      data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by IncrementalRestoreOnFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_IncrementalRestoreOnFileReady_0100";
 }
 } // namespace OHOS::FileManagement::Backup
