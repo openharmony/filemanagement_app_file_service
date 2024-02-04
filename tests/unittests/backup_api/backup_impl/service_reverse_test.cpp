@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,6 +46,7 @@ public:
     void TearDown() override;
 
     void Init(IServiceReverse::Scenario scenario, int nType = 0);
+    void IncrementalInit(IServiceReverse::Scenario scenario, int nType = 0);
     sptr<ServiceReverse> service_ = nullptr;
 };
 
@@ -107,6 +108,41 @@ void ServiceReverseTest::Init(IServiceReverse::Scenario scenario, int nType)
                                                                       .onBackupServiceDied = nullptr});
         } else {
             service_ = new ServiceReverse(BSessionRestore::Callbacks {
+                .onFileReady = bind(OnFileReadyTest, placeholders::_1, placeholders::_2),
+                .onBundleStarted = bind(OnBundleStartedTest, placeholders::_1, placeholders::_2),
+                .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
+                .onAllBundlesFinished = bind(OnAllBundlesFinishedTest, placeholders::_1),
+                .onBackupServiceDied = bind(OnBackupServiceDiedTest)});
+        }
+    }
+}
+
+void ServiceReverseTest::IncrementalInit(IServiceReverse::Scenario scenario, int nType)
+{
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        if (nType) {
+            service_ = new ServiceReverse(BIncrementalBackupSession::Callbacks {.onFileReady = nullptr,
+                                                                                .onBundleStarted = nullptr,
+                                                                                .onBundleFinished = nullptr,
+                                                                                .onAllBundlesFinished = nullptr,
+                                                                                .onBackupServiceDied = nullptr});
+        } else {
+            service_ = new ServiceReverse(BIncrementalBackupSession::Callbacks {
+                .onFileReady = bind(OnFileReadyTest, placeholders::_1, placeholders::_2),
+                .onBundleStarted = bind(OnBundleStartedTest, placeholders::_1, placeholders::_2),
+                .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
+                .onAllBundlesFinished = bind(OnAllBundlesFinishedTest, placeholders::_1),
+                .onBackupServiceDied = bind(OnBackupServiceDiedTest)});
+        }
+    } else {
+        if (nType) {
+            service_ = new ServiceReverse(BIncrementalRestoreSession::Callbacks {.onFileReady = nullptr,
+                                                                                 .onBundleStarted = nullptr,
+                                                                                 .onBundleFinished = nullptr,
+                                                                                 .onAllBundlesFinished = nullptr,
+                                                                                 .onBackupServiceDied = nullptr});
+        } else {
+            service_ = new ServiceReverse(BIncrementalRestoreSession::Callbacks {
                 .onFileReady = bind(OnFileReadyTest, placeholders::_1, placeholders::_2),
                 .onBundleStarted = bind(OnBundleStartedTest, placeholders::_1, placeholders::_2),
                 .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
@@ -750,5 +786,419 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_0301, testing::ext::TestS
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_0301";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0100
+ * @tc.desc: 测试 IncrementalBackupOnFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0100";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+        service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by RestoreOnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0101
+ * @tc.desc: 测试 IncrementalBackupOnFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0101";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+
+        IncrementalInit(IServiceReverse::Scenario::BACKUP, 1);
+        service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalBackupOnFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0100
+ * @tc.desc: 测试 IncrementalBackupOnBundleStarted 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0100";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        service_->IncrementalBackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+        service_->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalBackupOnBundleStarted.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0101
+ * @tc.desc: 测试 IncrementalBackupOnBundleStarted 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0101,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0101";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        service_->IncrementalBackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+
+        IncrementalInit(IServiceReverse::Scenario::BACKUP, 1);
+        service_->IncrementalBackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalBackupOnBundleStarted.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0100
+ * @tc.desc: 测试 IncrementalBackupOnBundleFinished 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0100";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        service_->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+        service_->IncrementalRestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalBackupOnBundleFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0101
+ * @tc.desc: 测试 IncrementalBackupOnBundleFinished 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0101,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0101";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        service_->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+
+        IncrementalInit(IServiceReverse::Scenario::BACKUP, 1);
+        service_->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalBackupOnBundleFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0100
+ * @tc.desc: 测试 IncrementalBackupOnAllBundlesFinished 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0100";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        service_->IncrementalBackupOnAllBundlesFinished(BError(BError::Codes::OK));
+        service_->IncrementalRestoreOnAllBundlesFinished(BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalBackupOnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0101
+ * @tc.desc: 测试 IncrementalBackupOnAllBundlesFinished 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0101,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0101";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        service_->IncrementalBackupOnAllBundlesFinished(BError(BError::Codes::OK));
+
+        IncrementalInit(IServiceReverse::Scenario::BACKUP, 1);
+        service_->IncrementalBackupOnAllBundlesFinished(BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalBackupOnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0100
+ * @tc.desc: 测试 IncrementalRestoreOnFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0100";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+        service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0101
+ * @tc.desc: 测试 IncrementalRestoreOnFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0101,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0101";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+
+        IncrementalInit(IServiceReverse::Scenario::RESTORE, 1);
+        service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0100
+ * @tc.desc: 测试 IncrementalRestoreOnBundleStarted 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0100";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        service_->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+        service_->IncrementalBackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnBundleStarted.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0101
+ * @tc.desc: 测试 IncrementalRestoreOnBundleStarted 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0101,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0101";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        service_->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+
+        IncrementalInit(IServiceReverse::Scenario::RESTORE, 1);
+        service_->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnBundleStarted.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0100
+ * @tc.desc: 测试 IncrementalRestoreOnBundleFinished 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0100";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        service_->IncrementalRestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+        service_->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnBundleFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0101
+ * @tc.desc: 测试 IncrementalRestoreOnBundleFinished 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0101,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0101";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        service_->IncrementalRestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+
+        IncrementalInit(IServiceReverse::Scenario::RESTORE, 1);
+        service_->IncrementalRestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnBundleFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0100
+ * @tc.desc: 测试 IncrementalRestoreOnAllBundlesFinished 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO)
+        << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0100";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        service_->IncrementalRestoreOnAllBundlesFinished(BError(BError::Codes::OK));
+        service_->IncrementalBackupOnAllBundlesFinished(BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0101
+ * @tc.desc: 测试 IncrementalRestoreOnAllBundlesFinished 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9116W
+ */
+HWTEST_F(ServiceReverseTest,
+         SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0101,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO)
+        << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0101";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        service_->IncrementalRestoreOnAllBundlesFinished(BError(BError::Codes::OK));
+
+        IncrementalInit(IServiceReverse::Scenario::RESTORE, 1);
+        service_->IncrementalRestoreOnAllBundlesFinished(BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0101";
 }
 } // namespace OHOS::FileManagement::Backup
