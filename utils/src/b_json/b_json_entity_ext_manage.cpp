@@ -135,6 +135,24 @@ struct stat JsonValue2Stat(const Json::Value &value)
     return sta;
 }
 
+void BJsonEntityExtManage::SetExtManageForClone(const map<string, tuple<string, struct stat, bool, bool>> &info) const
+{
+    obj_.clear();
+
+    unsigned long index = 0;
+    for (auto item = info.begin(); item != info.end(); ++item, ++index) {
+        Json::Value value;
+        value["fileName"] = item->first;
+        auto [path, sta, isBigFile, isUserTar] = item->second;
+        value["information"]["path"] = path;
+        value["information"]["stat"] = Stat2JsonValue(sta);
+        value["isUserTar"] = isUserTar;
+        value["isBigFile"] = isBigFile;
+
+        obj_.append(value);
+    }
+}
+
 void BJsonEntityExtManage::SetExtManage(const map<string, tuple<string, struct stat, bool>> &info) const
 {
     obj_.clear();
