@@ -34,6 +34,7 @@
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_resources/b_constants.h"
 #include "backup_kit_inner.h"
+#include "directory_ex.h"
 #include "errors.h"
 #include "hitrace_meter.h"
 #include "service_proxy.h"
@@ -96,10 +97,14 @@ static void OnFileReady(shared_ptr<SessionAsync> ctx, const BFileInfo &fileInfo,
 {
     printf("FileReady owner = %s, fileName = %s, sn = %u, fd = %d\n", fileInfo.owner.c_str(), fileInfo.fileName.c_str(),
            fileInfo.sn, fd.Get());
-    if (fileInfo.fileName.find('/') != string::npos) {
-        throw BError(BError::Codes::TOOL_INVAL_ARG, "Filename is not valid");
+    string formatFileName = fileInfo.fileName;
+    // Only manage.json was in data/backup/receive;
+    // Other flles and tars was in data/backup/receive + bundle + path is manage.json
+    if (formatFileName.rfind(string(BConstants::EXT_BACKUP_MANAGE)) != string::npos) {
+        formatFileName = string(BConstants::EXT_BACKUP_MANAGE);
     }
-    string tmpPath = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + fileInfo.owner + "/" + fileInfo.fileName;
+    printf("OnFileReady formatFileName = %s\n", formatFileName.c_str());
+    string tmpPath = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + fileInfo.owner + "/" + formatFileName;
     if (access(tmpPath.data(), F_OK) != 0) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
@@ -145,6 +150,60 @@ static void OnBackupServiceDied(shared_ptr<SessionAsync> ctx)
     ctx->TryNotify(true);
 }
 
+static void AdapteCloneOptimize(const string &path)
+{
+    string manageJosnStr = path;
+    manageJosnStr = manageJosnStr + BConstants::FILE_SEPARATOR_CHAR + string(BConstants::EXT_BACKUP_MANAGE);
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntityOld(UniqueFd(open(manageJosnStr.data(), O_RDWR)));
+    auto cacheOld = cachedEntityOld.Structuralize();
+    auto pkgInfo = cacheOld.GetExtManageInfo();
+    close(cachedEntityOld.GetFd().Release());
+
+    map<string, tuple<string, struct stat, bool, bool>> info;
+    for (auto &item : pkgInfo) {
+        string fileName = item.hashName;
+        string filePath = item.fileName;
+        if (fileName.empty() || filePath.empty()) {
+            continue;
+        }
+
+        // Rename big file with real name in backup/receive directory
+        // To support file with different path but same name, create directories in /data/backup/receive
+        string realNameInReceive = path + BConstants::FILE_SEPARATOR_CHAR + filePath;
+        string realPathInReceive = realNameInReceive.substr(0, realNameInReceive.rfind("/"));
+        string currentNameInReceive = path + BConstants::FILE_SEPARATOR_CHAR + fileName;
+        if (access(realPathInReceive.c_str(), F_OK) != 0) {
+            if (!ForceCreateDirectory(realPathInReceive.data())) {
+                printf("err create directory %d %s\n", errno, strerror(errno));
+            }
+        }
+        if (rename(currentNameInReceive.data(), realNameInReceive.data()) != 0) {
+            printf("err rename %d %s\n", errno, strerror(errno));
+        }
+
+        // update fileName with filePath according to clone optimize
+        item.hashName = filePath;
+        if (item.hashName.front() == BConstants::FILE_SEPARATOR_CHAR) {
+            item.hashName = item.hashName.substr(1);
+        }
+
+        // update filePath
+        if (!item.isBigFile && !item.isUserTar) {
+            item.fileName = "/";
+        } else {
+            item.fileName = "";
+        }
+        info.emplace(item.hashName, make_tuple(item.fileName, item.sta, item.isBigFile, item.isUserTar));
+    }
+
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(manageJosnStr.data(),
+        O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)));
+    auto cache = cachedEntity.Structuralize();
+    cache.SetExtManageForClone(info);
+    cachedEntity.Persist();
+    close(cachedEntity.GetFd().Release());
+}
+
 static void RestoreApp(shared_ptr<SessionAsync> restore, vector<BundleName> &bundleNames)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "RestoreApp");
@@ -159,13 +218,25 @@ static void RestoreApp(shared_ptr<SessionAsync> restore, vector<BundleName> &bun
         if (access(path.data(), F_OK) != 0) {
             throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
         }
-        const auto [err, filePaths] = BDir::GetDirFiles(path);
-        if (err != 0) {
-            throw BError(BError::Codes::TOOL_INVAL_ARG, "error path");
+
+        // update manage.json and fileName
+        AdapteCloneOptimize(path);
+
+        // manage.json first
+        string manageJsonPath = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
+            append(BConstants::SA_BUNDLE_BACKUP_RESTORE).append(BConstants::EXT_BACKUP_MANAGE);
+        if (manageJsonPath.front() == BConstants::FILE_SEPARATOR_CHAR) {
+            manageJsonPath = manageJsonPath.substr(1);
         }
-        for (auto &filePath : filePaths) {
-            string fileName = filePath.substr(filePath.rfind("/") + 1);
-            restore->session_->GetFileHandle(bundleName, fileName);
+        restore->session_->GetFileHandle(bundleName, manageJsonPath);
+
+        string manageJsonStr = path + BConstants::FILE_SEPARATOR_CHAR + string(BConstants::EXT_BACKUP_MANAGE);
+        BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(manageJsonStr.data(), O_RDONLY)));
+        auto cache = cachedEntity.Structuralize();
+        auto pkgInfo = cache.GetExtManageInfo();
+        for (auto &item : pkgInfo) {
+            printf("New FileName %s\n", item.hashName.data());
+            restore->session_->GetFileHandle(bundleName, item.hashName);
         }
     }
     FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
