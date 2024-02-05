@@ -88,6 +88,18 @@ int32_t ErrorCodeConversion(int32_t sandboxManagerErrorCode,
     }
     return FileManagement::LibN::E_UNKNOWN_ERROR;
 }
+
+int32_t ErrorCodeConversion(int32_t sandboxManagerErrorCode)
+{
+    if (sandboxManagerErrorCode == INVALID_PARAMTER) {
+        LOGE("The number of incoming URIs is too many");
+        return FileManagement::LibN::E_PARAMS;
+    }
+    if (sandboxManagerErrorCode == SANDBOX_MANAGER_OK) {
+        return 0;
+    }
+    return FileManagement::LibN::E_UNKNOWN_ERROR;
+}
 } // namespace
 void FilePermission::ParseErrorResults(const vector<uint32_t> &resultCodes,
                                        const vector<PolicyInfo> &pathPolicies,
@@ -115,6 +127,16 @@ void FilePermission::ParseErrorResults(const vector<uint32_t> &resultCodes,
     }
 }
 
+void FilePermission::ParseErrorResults(const vector<bool> &resultCodes,
+                                       vector<bool> &errorResults)
+{
+    for (size_t i = 0, j = 0; i < errorResults.size(); i++) {
+       if (errorResults[i]) {
+           errorResults[i] = resultCodes[j++];
+       }
+    }
+}
+
 vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
                                                                       deque<struct PolicyErrorResult> &errorResults)
 {
@@ -134,6 +156,30 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
             }
             PolicyInfo policyInfo = {path, uriPolicy.mode};
             pathPolicies.emplace_back(policyInfo);
+        }
+    }
+    return pathPolicies;
+}
+
+vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
+                                                                      vector<bool> &errorResults)
+{
+    vector<PolicyInfo> pathPolicies;
+    for (auto uriPolicy : uriPolicies) {
+        Uri uri(uriPolicy.uri);
+        string path = uri.GetPath();
+        if (!CheckValidUri(uriPolicy.uri) || access(path.c_str(), F_OK) != 0) {
+            LOGE("Not correct uri!");
+            errorResults.emplace_back(false);
+        } else {
+            string currentUserId = to_string(IPCSkeleton::GetCallingTokenID() / AppExecFwk::Constants::BASE_USER_RANGE);
+            int32_t ret = SandboxHelper::GetPhysicalPath(uri.ToString(), currentUserId, path);
+            if (ret != 0) {
+                LOGE("Failed to get physical path, errorcode: %{public}d", ret);
+            }
+            PolicyInfo policyInfo = {path, uriPolicy.mode};
+            pathPolicies.emplace_back(policyInfo);
+            errorResults.emplace_back(true);
         }
     }
     return pathPolicies;
@@ -199,6 +245,24 @@ int32_t FilePermission::DeactivatePermission(const vector<UriPolicyInfo> &uriPol
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
+#endif
+    return errorCode;
+}
+
+int32_t FilePermission::CheckPersistentPermission(const vector<UriPolicyInfo> &uriPolicies,
+                                             vector<bool> &errorResults)
+{
+    int errorCode = 0;
+#ifdef SANDBOX_MANAGER
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    vector<bool> resultCodes;
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    int32_t errorCode = SandboxManagerKit::CheckPersistPolicy(tokenId, pathPolicies, resultCodes);
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode);
+    if (errorCode != 0) {
+        resultCodes.resize(pathPolicies.size());
+    }
+    ParseErrorResults(resultCodes, pathPolicies, errorResults);
 #endif
     return errorCode;
 }

@@ -20,6 +20,7 @@
 #include "access_token.h"
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
+#include "js_native_api.h"
 #include "log.h"
 #include "n_napi.h"
 #include "parameter.h"
@@ -70,6 +71,27 @@ static napi_value GetErrData(napi_env env, deque<struct PolicyErrorResult> &erro
         obj.AddProp("code", NVal::CreateInt32(env, iter.code).val_);
         obj.AddProp("message", NVal::CreateUTF8String(env, iter.message).val_);
         status = napi_set_element(env, res, index++, obj.val_);
+        if (status != napi_ok) {
+            LOGE("Failed to set element on data");
+            return nullptr;
+        }
+    }
+    return res;
+}
+
+static napi_value GetResultData(napi_env env, vector<bool> &results)
+{
+    napi_value res = nullptr;
+    napi_status status = napi_create_array(env, &res);
+    if (status != napi_ok) {
+        LOGE("Failed to create array");
+        return nullptr;
+    }
+    size_t index = 0;
+    for (const auto &iter : results) {
+        napi_value value;
+        napi_get_boolean(env, iter, &value);
+        status = napi_set_element(env, res, index++, value);
         if (status != napi_ok) {
             LOGE("Failed to set element on data");
             return nullptr;
@@ -319,6 +341,50 @@ napi_value DeactivatePermission(napi_env env, napi_callback_info info)
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
 }
+
+napi_value CheckPersistentPermission(napi_env env, napi_callback_info info)
+{
+    if (!CheckFileManagerFullMountEnable()) {
+        LOGE("The device doesn't support this api");
+        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
+        return nullptr;
+    }
+    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
+        LOGE("PersistPermission has not ohos permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        LOGE("ActivatePermission Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    std::vector<UriPolicyInfo> uriPolicies;
+    if (GetUriPoliciesArg(env, funcArg[NARG_POS::FIRST], uriPolicies) != napi_ok) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    shared_ptr<PolicyInfoResultArgs> arg = make_shared<PolicyInfoResultArgs>();
+    if (arg == nullptr) {
+        NError(EILSEQ).ThrowErr(env);
+        return nullptr;
+    }
+    auto cbExec = [uriPolicies, arg]() -> NError {
+        arg->errNo = FilePermission::CheckPersistentPermission(uriPolicies, arg->resultData);
+        return NError(arg->errNo);
+    };
+    auto cbCompl = [arg](napi_env env, NError err) -> NVal {
+        if (arg->errNo != 0) {
+            return {env, err.GetNapiErr(env)};
+        }
+        return {env, GetResultData(env, arg->resultData)};
+    };
+    const string procedureName = "check_persist_permission";
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
+}
+
 } // namespace ModuleFileShare
 } // namespace AppFileService
 } // namespace OHOS

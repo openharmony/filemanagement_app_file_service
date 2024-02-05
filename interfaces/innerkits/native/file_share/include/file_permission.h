@@ -71,6 +71,8 @@ public:
                                       deque<struct PolicyErrorResult> &errorResults);
     static int32_t DeactivatePermission(const vector<UriPolicyInfo> &uriPolicies,
                                         deque<struct PolicyErrorResult> &errorResults);
+    static int32_t CheckPersistentPermission(const vector<UriPolicyInfo> &uriPolicies,
+                                        vector<bool> &errorResults);                                       
 #ifdef SANDBOX_MANAGER
 private:
     static void ParseErrorResults(const vector<uint32_t> &resultCodes,
