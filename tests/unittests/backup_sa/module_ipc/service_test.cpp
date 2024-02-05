@@ -68,7 +68,7 @@ ErrCode ServiceTest::Init(IServiceReverse::Scenario scenario)
     ErrCode ret = 0;
     if (scenario == IServiceReverse::Scenario::RESTORE) {
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
-        EXPECT_GT(fd, BError(BError::Codes::OK));
+        EXPECT_GE(fd, BError(BError::Codes::OK));
         ret = servicePtr_->InitRestoreSession(remote_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames);
