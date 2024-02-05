@@ -95,7 +95,7 @@ int UntarFile::UnPacket(const string &tarFile, const string &rootPath)
 }
 
 int UntarFile::IncrementalUnPacket(const string &tarFile, const string &rootPath,
-                                   const map<string, struct ReportFileInfo> &includes)
+                                   const unordered_map<string, struct ReportFileInfo> &includes)
 {
     includes_ = includes;
     tarFilePtr_ = fopen(tarFile.c_str(), "rb");
