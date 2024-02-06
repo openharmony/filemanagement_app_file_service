@@ -153,6 +153,15 @@ static bool DeleteShareDir(const std::string &PACKAGE_PATH, const std::string &S
     return result;
 }
 
+static bool IsValidPath(const std::string &path)
+{
+    if (path.find("/./") != std::string::npos ||
+        path.find("/../") != std::string::npos) {
+        return false;
+    }
+    return true;
+}
+
 static int CreateShareFile(struct HmdfsShareControl &shareControl, const char* file,
                            const std::string &deviceId)
 {
@@ -202,6 +211,11 @@ int RemoteFileShare::CreateSharePath(const int &fd, std::string &sharePath,
     }
 
     const std::string PACKAGE_PATH = GetLowerSharePath(userId, processName);
+    if (!IsValidPath(PACKAGE_PATH)) {
+        LOGE("RemoteFileShare::CreateSharePath, GetLowerSharePath failed with %{private}s", PACKAGE_PATH.c_str());
+        return EACCES;
+    }
+
     const std::string LOWER_SHARE_PATH = PACKAGE_PATH + SHARE_PATH_DIR;
     if (CreateShareDir(PACKAGE_PATH) != 0)
         return errno;
@@ -249,15 +263,6 @@ static int GetDistributedPath(Uri &uri, const int &userId, std::string &distribu
     }
 
     return 0;
-}
-
-static bool IsValidPath(const std::string &path)
-{
-    if (path.find("/./") != std::string::npos ||
-        path.find("/../") != std::string::npos) {
-        return false;
-    }
-    return true;
 }
 
 static std::string GetPhysicalPath(Uri &uri, const std::string &userId)
