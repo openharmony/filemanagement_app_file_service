@@ -243,11 +243,6 @@ static void BackupToolDirSoftlinkToBackupDir()
                BConstants::BACKUP_TOOL_LINK_DIR.data(), errno);
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
-
-    if (access((BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR).data(), F_OK) != 0 &&
-        mkdir((BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR).data(), S_IRWXU) != 0) {
-        throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
-    }
 }
 
 static int GetLocalCapabilitiesIncremental(shared_ptr<SessionBckup> ctx,
@@ -291,6 +286,11 @@ static int32_t Init(const string &pathCapFile, vector<string> bundleNames, vecto
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "Init");
     // SELinux backup_tool工具/data/文件夹下创建文件夹 SA服务因root用户的自定义标签无写入权限 此处调整为软链接形式
     BackupToolDirSoftlinkToBackupDir();
+
+    if (access((BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR).data(), F_OK) != 0 &&
+        mkdir((BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR).data(), S_IRWXU) != 0) {
+        throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
+    }
 
     auto ctx = make_shared<SessionBckup>();
     ctx->session_ = BIncrementalBackupSession::Init(BIncrementalBackupSession::Callbacks {
