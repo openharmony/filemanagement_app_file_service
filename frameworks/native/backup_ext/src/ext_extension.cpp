@@ -23,8 +23,10 @@
 #include <regex>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
+#include <directory_ex.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -47,8 +49,8 @@
 #include "b_resources/b_constants.h"
 #include "b_tarball/b_tarball_factory.h"
 #include "filemgmt_libhilog.h"
-#include "service_proxy.h"
 #include "hitrace_meter.h"
+#include "service_proxy.h"
 #include "tar_file.h"
 #include "untar_file.h"
 
@@ -84,7 +86,7 @@ void BackupExtExtension::VerifyCaller()
     }
 }
 
-static bool CheckAndCreateDirectory(const string& filePath)
+static bool CheckAndCreateDirectory(const string &filePath)
 {
     size_t pos = filePath.rfind('/');
     if (pos == string::npos) {
@@ -184,7 +186,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         if (access(tarName.c_str(), F_OK) == 0) {
             throw BError(BError::Codes::EXT_INVAL_ARG, string("The file already exists"));
         }
-        UniqueFd fd (open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+        UniqueFd fd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("Failed to open tar file = %{private}s, err = %{public}d", tarName.c_str(), errno);
             throw BError(BError::Codes::EXT_INVAL_ARG, string("open tar file failed"));
@@ -195,7 +197,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         if (access(reportName.c_str(), F_OK) == 0) {
             throw BError(BError::Codes::EXT_INVAL_ARG, string("The report file already exists"));
         }
-        UniqueFd reportFd (open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+        UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (reportFd < 0) {
             HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
             throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
@@ -431,8 +433,7 @@ static bool IsUserTar(const string &tarFile, const string &indexFile)
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(filePath.data(), O_RDONLY)));
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManageInfo();
-    auto iter = find_if(info.begin(), info.end(),
-    [&tarFile](const auto& item) { return item.hashName == tarFile; });
+    auto iter = find_if(info.begin(), info.end(), [&tarFile](const auto &item) { return item.hashName == tarFile; });
     if (iter != info.end()) {
         HILOGI("tarFile:%{public}s isUserTar:%{public}d", tarFile.data(), iter->isUserTar);
         return iter->isUserTar;
@@ -543,7 +544,7 @@ int BackupExtExtension::DoRestore(const string &fileName)
     return ERR_OK;
 }
 
-static map<string, struct ReportFileInfo> GetTarIncludes(const string &tarName)
+static unordered_map<string, struct ReportFileInfo> GetTarIncludes(const string &tarName)
 {
     // 获取简报文件内容
     string reportName = GetReportFileName(tarName);
@@ -617,7 +618,7 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
 static void RestoreBigFilesForSpecialCloneCloud(ExtManageInfo item)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    struct stat& sta = item.sta;
+    struct stat &sta = item.sta;
     string fileName = item.hashName;
     if (chmod(fileName.c_str(), sta.st_mode) != 0) {
         HILOGE("Failed to chmod filePath, err = %{public}d", errno);
@@ -681,8 +682,7 @@ static ErrCode RestoreFilesForSpecialCloneCloud()
     return ERR_OK;
 }
 
-static bool RestoreBigFilePrecheck(string& fileName, const string& path,
-                                   const string& hashName, const string& filePath)
+static bool RestoreBigFilePrecheck(string &fileName, const string &path, const string &hashName, const string &filePath)
 {
     if (filePath.empty()) {
         HILOGE("file path is empty. %{public}s", filePath.c_str());
@@ -703,8 +703,9 @@ static bool RestoreBigFilePrecheck(string& fileName, const string& path,
     return true;
 }
 
-static void RestoreBigFileAfter(const string& fileName, const string& filePath, const struct stat& sta,
-                                const set<string>& lks)
+static void RestoreBigFileAfter(const string &fileName,
+                                const string &filePath,
+                                const struct stat &sta)
 {
     if (chmod(filePath.c_str(), sta.st_mode) != 0) {
         HILOGE("Failed to chmod filePath, err = %{public}d", errno);
@@ -726,12 +727,6 @@ static void RestoreBigFileAfter(const string& fileName, const string& filePath, 
             if (!RemoveFile(fileName)) {
                 HILOGE("Failed to delete the big file");
             }
-        }
-    }
-
-    for (const auto &lksPath : lks) {
-        if (link(filePath.data(), lksPath.data())) {
-            HILOGE("failed to create hard link file, errno : %{public}d", errno);
         }
     }
 
@@ -768,7 +763,7 @@ static void RestoreBigFiles(bool appendTargetPath)
             continue;
         }
 
-        RestoreBigFileAfter(fileName, filePath, item.sta, cache.GetHardLinkInfo(item.hashName));
+        RestoreBigFileAfter(fileName, filePath, item.sta);
     }
 }
 
@@ -849,8 +844,8 @@ void BackupExtExtension::AsyncTaskRestore()
             }
             // 恢复用户tar包以及大文件
             // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景
-            bool appendTargetPath = ptr->extension_->UseFullBackupOnly() &&
-                                    !ptr->extension_->SpeicalVersionForCloneAndCloud();
+            bool appendTargetPath =
+                ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpeicalVersionForCloneAndCloud();
             RestoreBigFiles(appendTargetPath);
 
             // delete 1.tar/manage.json
@@ -904,8 +899,8 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
             }
             // 恢复用户tar包以及大文件
             // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景
-            bool appendTargetPath = ptr->extension_->UseFullBackupOnly() &&
-                                    !ptr->extension_->SpeicalVersionForCloneAndCloud();
+            bool appendTargetPath =
+                ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpeicalVersionForCloneAndCloud();
             RestoreBigFiles(appendTargetPath);
 
             // delete 1.tar/manage.json
@@ -1137,6 +1132,11 @@ ErrCode BackupExtExtension::HandleRestore()
     return 0;
 }
 
+static bool CheckTar(const string &fileName)
+{
+    return ExtractFileExt(fileName) == "tar";
+}
+
 using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
                                  map<string, struct ReportFileInfo>,
                                  map<string, struct stat>,
@@ -1145,9 +1145,9 @@ using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
 static CompareFilesResult CompareFiles(const UniqueFd &cloudFd, const UniqueFd &storageFd)
 {
     BReportEntity cloudRp(UniqueFd(cloudFd.Get()));
-    map<string, struct ReportFileInfo> cloudFiles = cloudRp.GetReportInfos();
+    unordered_map<string, struct ReportFileInfo> cloudFiles = cloudRp.GetReportInfos();
     BReportEntity storageRp(UniqueFd(storageFd.Get()));
-    map<string, struct ReportFileInfo> storageFiles = storageRp.GetReportInfos();
+    unordered_map<string, struct ReportFileInfo> storageFiles = storageRp.GetReportInfos();
     map<string, struct ReportFileInfo> allFiles;
     map<string, struct ReportFileInfo> smallFiles;
     map<string, struct stat> bigFiles;
@@ -1155,7 +1155,8 @@ static CompareFilesResult CompareFiles(const UniqueFd &cloudFd, const UniqueFd &
     for (auto &item : storageFiles) {
         // 进行文件对比
         string path = item.first;
-        if (item.second.isIncremental == true && item.second.isDir == true) {
+        bool isExist = cloudFiles.find(path) != cloudFiles.end() ? true : false;
+        if (item.second.isIncremental == true && item.second.isDir == true && !isExist) {
             smallFiles.try_emplace(path, item.second);
         }
         if (item.second.isIncremental == true && item.second.isDir == false) {
@@ -1165,13 +1166,14 @@ static CompareFilesResult CompareFiles(const UniqueFd &cloudFd, const UniqueFd &
             }
             item.second.hash = fileHash;
             item.second.isIncremental = true;
-        } else {
-            item.second.hash = (cloudFiles.find(path) == cloudFiles.end()) ? cloudFiles[path].hash : "";
+        }
+
+        if (item.second.isDir == false && CheckTar(path)) {
+            item.second.userTar = 1;
         }
 
         allFiles.try_emplace(path, item.second);
-        if (cloudFiles.find(path) == cloudFiles.end() ||
-            (item.second.isDir == false && item.second.isIncremental == true &&
+        if (!isExist || (item.second.isDir == false && item.second.isIncremental == true &&
              cloudFiles.find(path)->second.hash != item.second.hash)) {
             // 在云空间简报里不存在或者hash不一致
             if (item.second.size < BConstants::BIG_FILE_BOUNDARY) {
@@ -1216,12 +1218,12 @@ static void WriteFile(const string &filename, const map<string, struct ReportFil
     fstream f;
     f.open(filename.data(), ios::out);
     // 前面2行先填充进去
-    f << "version=1.0&attrNum=6" << endl;
-    f << "path;mode;dir;size;mtime;hash" << endl;
+    f << "version=1.0&attrNum=7" << endl;
+    f << "path;mode;dir;size;mtime;hash;usertar" << endl;
     for (auto item : srcFiles) {
         struct ReportFileInfo info = item.second;
         string str = item.first + ";" + info.mode + ";" + to_string(info.isDir) + ";" + to_string(info.size);
-        str += ";" + to_string(info.mtime) + ";" + info.hash;
+        str += ";" + to_string(info.mtime) + ";" + info.hash + ";" + to_string(info.userTar);
         f << str << endl;
     }
     f.close();

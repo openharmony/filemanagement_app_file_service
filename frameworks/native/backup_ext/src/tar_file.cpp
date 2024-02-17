@@ -114,6 +114,8 @@ bool TarFile::TraversalFile(string &filePath)
     }
 
     if (currentTarFileSize_ >= DEFAULT_SLICE_SIZE) {
+        HILOGI("Current tar file size is over %{public}d, start to slice",
+               static_cast<int32_t>(DEFAULT_SLICE_SIZE / MB_TO_BYTE));
         fileCount_ = 0;
         FillSplitTailBlocks();
         CreateSplitTarFile();

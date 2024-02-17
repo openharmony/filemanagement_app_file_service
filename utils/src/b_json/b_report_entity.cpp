@@ -111,7 +111,7 @@ static ErrCode ParseReportInfo(struct ReportFileInfo &fileStat,
 static void DealLine(unordered_map<string, int> &keys,
                      int &num,
                      const string &line,
-                     map<string, struct ReportFileInfo> &infos)
+                     unordered_map<string, struct ReportFileInfo> &infos)
 {
     string currentLine = line;
     if (currentLine[currentLine.length() - 1] == LINE_WRAP) {
@@ -137,9 +137,9 @@ static void DealLine(unordered_map<string, int> &keys,
     }
 }
 
-map<string, struct ReportFileInfo> BReportEntity::GetReportInfos()
+unordered_map<string, struct ReportFileInfo> BReportEntity::GetReportInfos()
 {
-    map<string, struct ReportFileInfo> infos {};
+    unordered_map<string, struct ReportFileInfo> infos {};
 
     char buffer[HASH_BUFFER_SIZE];
     ssize_t bytesRead;
