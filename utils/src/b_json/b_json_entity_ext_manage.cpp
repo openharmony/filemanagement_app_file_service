@@ -32,15 +32,8 @@ namespace {
 const int32_t DEFAULT_MODE = 0100660; // 0660
 }
 
-static bool CheckBigFile(const string &tarFile)
+static bool CheckBigFile(struct stat sta)
 {
-    HILOGI("CheckBigFile tarFile:%{public}s", tarFile.data());
-    struct stat sta;
-    int ret = stat(tarFile.c_str(), &sta);
-    if (ret != 0) {
-        HILOGE("stat file failed, file:%{public}s", tarFile.c_str());
-        return false;
-    }
     if (sta.st_size > BConstants::BIG_FILE_BOUNDARY) {
         return true;
     }
@@ -54,8 +47,7 @@ static bool CheckBigFile(const string &tarFile)
  */
 static bool CheckOwnPackTar(const string &fileName)
 {
-    if (access(fileName.c_str(), F_OK) != 0) {
-        HILOGE("file does not exists");
+    if (ExtractFileExt(fileName) != "tar") {
         return false;
     }
     // 如果不是在默认路径下的文件包，不属于自身打包的tar文件
@@ -65,6 +57,8 @@ static bool CheckOwnPackTar(const string &fileName)
         absPath = IncludeTrailingPathDelimiter(BExcepUltils::Canonicalize(ExtractFilePath(fileName)));
     } catch (const BError &e) {
         HILOGE("file is not backup path");
+        return false;
+    } catch (...) {
         return false;
     }
 
@@ -80,17 +74,22 @@ static bool CheckOwnPackTar(const string &fileName)
     }
 
     string firstName = string(tarFile).substr(0, pos);
+    // 判断文件名是否包含part (兼容增量)
+    string::size_type partPos = firstName.find("part");
+    if (partPos == string::npos) {
+        return false;
+    }
 
-    return (firstName == "part") && (ExtractFileExt(tarFile) == "tar");
+    return true;
 }
 
-static bool CheckUserTar(const string &fileName)
+static bool CheckUserTar(const string &fileName, struct stat sta)
 {
     if (access(fileName.c_str(), F_OK) != 0) {
         HILOGI("file does not exists");
         return false;
     }
-    return (ExtractFileExt(fileName) == "tar") && CheckBigFile(fileName);
+    return (ExtractFileExt(fileName) == "tar") && CheckBigFile(sta);
 }
 
 Json::Value Stat2JsonValue(struct stat sta)
@@ -135,53 +134,36 @@ struct stat JsonValue2Stat(const Json::Value &value)
     return sta;
 }
 
+void BJsonEntityExtManage::SetExtManageForClone(const map<string, tuple<string, struct stat, bool, bool>> &info) const
+{
+    obj_.clear();
+
+    unsigned long index = 0;
+    for (auto item = info.begin(); item != info.end(); ++item, ++index) {
+        Json::Value value;
+        value["fileName"] = item->first;
+        auto [path, sta, isBigFile, isUserTar] = item->second;
+        value["information"]["path"] = path;
+        value["information"]["stat"] = Stat2JsonValue(sta);
+        value["isUserTar"] = isUserTar;
+        value["isBigFile"] = isBigFile;
+
+        obj_.append(value);
+    }
+}
+
 void BJsonEntityExtManage::SetExtManage(const map<string, tuple<string, struct stat, bool>> &info) const
 {
     obj_.clear();
 
-    vector<bool> vec(info.size(), false);
-
-    auto FindLinks = [&vec](map<string, tuple<string, struct stat, bool>>::const_iterator it,
-                            unsigned long index) -> set<string> {
-        if (std::get<1>(it->second).st_dev == 0 || std::get<1>(it->second).st_ino == 0) {
-            return {};
-        }
-
-        set<string> lks;
-        auto item = it;
-        item++;
-
-        for (auto i = index + 1; i < vec.size(); ++i, ++item) {
-            if (std::get<1>(it->second).st_dev == std::get<1>(item->second).st_dev &&
-                std::get<1>(it->second).st_ino == std::get<1>(item->second).st_ino) {
-                vec[i] = true;
-                lks.insert(std::get<0>(item->second));
-                HILOGI("lks insert %{public}s", std::get<0>(item->second).c_str());
-            }
-            HILOGI("lks doesn't insert %{public}s", std::get<0>(item->second).c_str());
-        }
-        return lks;
-    };
-
-    unsigned long index = 0;
-    for (auto item = info.begin(); item != info.end(); ++item, ++index) {
-        if (vec[index]) {
-            HILOGI("skipped file is %{public}s", item->first.c_str());
-            continue;
-        }
-        HILOGI("file name is %{public}s", item->first.c_str());
-
+    for (auto item = info.begin(); item != info.end(); ++item) {
         Json::Value value;
         value["fileName"] = item->first;
         auto [path, sta, isBeforeTar] = item->second;
         value["information"]["path"] = path;
         value["information"]["stat"] = Stat2JsonValue(sta);
-        value["isUserTar"] = isBeforeTar && CheckUserTar(path);
-        value["isBigFile"] = !CheckOwnPackTar(path) && CheckBigFile(path);
-        set<string> lks = FindLinks(item, index);
-        for (const auto &lk : lks) {
-            value["hardlinks"].append(lk);
-        }
+        value["isUserTar"] = isBeforeTar && CheckUserTar(path, sta);
+        value["isBigFile"] = !CheckOwnPackTar(path) && CheckBigFile(sta);
 
         obj_.append(value);
     }
@@ -249,72 +231,5 @@ std::vector<ExtManageInfo> BJsonEntityExtManage::GetExtManageInfo() const
     }
 
     return infos;
-}
-
-bool BJsonEntityExtManage::SetHardLinkInfo(const string origin, const set<string> hardLinks)
-{
-    if (origin.empty()) {
-        HILOGE("origin file name can not empty");
-        return false;
-    }
-    if (!obj_) {
-        HILOGE("Uninitialized JSon Object reference");
-        return false;
-    }
-    if (!obj_.isArray()) {
-        HILOGE("json object isn't an array");
-        return false;
-    }
-
-    for (Json::Value &item : obj_) {
-        string fileName = item.isObject() && item.isMember("fileName") && item["fileName"].isString()
-                              ? item["fileName"].asString()
-                              : "";
-        if (origin == fileName) {
-            for (const auto &lk : hardLinks) {
-                item["hardlinks"].append(lk);
-            }
-            return true;
-        }
-    }
-
-    return false;
-}
-
-const set<string> BJsonEntityExtManage::GetHardLinkInfo(const string origin)
-{
-    if (origin.empty()) {
-        HILOGE("origin file name can not empty");
-        return {};
-    }
-    if (!obj_) {
-        HILOGE("Uninitialized JSon Object reference");
-        return {};
-    }
-    if (!obj_.isArray()) {
-        HILOGE("json object isn't an array");
-        return {};
-    }
-
-    set<string> hardlinks;
-    for (const Json::Value &item : obj_) {
-        if (!item.isObject()) {
-            continue;
-        }
-        string fileName = item.isMember("fileName") && item["fileName"].isString() ? item["fileName"].asString() : "";
-        if (origin != fileName) {
-            continue;
-        }
-        if (!(item.isMember("hardlinks") && item["hardlinks"].isArray())) {
-            break;
-        }
-        for (const auto &lk : item["hardlinks"]) {
-            if (lk.isString()) {
-                hardlinks.emplace(lk.asString());
-            }
-        }
-    }
-
-    return hardlinks;
 }
 } // namespace OHOS::FileManagement::Backup

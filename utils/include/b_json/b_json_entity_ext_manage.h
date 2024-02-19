@@ -42,6 +42,13 @@ public:
     void SetExtManage(const map<string, tuple<string, struct stat, bool>> &info) const;
 
     /**
+     * @brief 设置索引文件(克隆)
+     *
+     * @param info map<string, tuple<string, struct stat, bool, bool>>
+     */
+    void SetExtManageForClone(const map<string, tuple<string, struct stat, bool, bool>> &info) const;
+
+    /**
      * @brief 获取索引文件
      *
      * @return std::set<std::string>
@@ -54,24 +61,6 @@ public:
      * @return map<string, pair<string, struct stat>>
      */
     std::vector<ExtManageInfo> GetExtManageInfo() const;
-
-    /**
-     * @brief Set the hard link Information
-     *
-     * @param origin 原始文件名
-     * @param hardLinks 硬链接文件名
-     * @return true 设置成功
-     * @return false 设置失败
-     */
-    bool SetHardLinkInfo(const std::string origin, const std::set<std::string> hardLinks);
-
-    /**
-     * @brief Get the hard link Information
-     *
-     * @param origin 原始文件名
-     * @return const 硬链接集合
-     */
-    const std::set<std::string> GetHardLinkInfo(const string origin);
 
 public:
     /**

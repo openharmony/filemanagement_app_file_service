@@ -78,7 +78,7 @@ HWTEST_F(BReportEntityTest, b_report_entity_GetReportInfos_0100, testing::ext::T
         const auto [filePath, res] = GetTestFile(tm, content);
 
         BReportEntity cloudRp(UniqueFd(open(filePath.data(), O_RDONLY, 0)));
-        map<string, struct ReportFileInfo> cloudFiles = cloudRp.GetReportInfos();
+        unordered_map<string, struct ReportFileInfo> cloudFiles = cloudRp.GetReportInfos();
 
         bool flag = false;
 

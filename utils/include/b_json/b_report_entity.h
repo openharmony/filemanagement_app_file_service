@@ -32,6 +32,7 @@ struct ReportFileInfo {
     off_t mtime {0};
     std::string hash;
     bool isIncremental {false};
+    off_t userTar {0};
 };
 
 class BReportEntity {
@@ -41,7 +42,7 @@ public:
      *
      * @return std::map<string, ReportFileInfo>
      */
-    std::map<std::string, struct ReportFileInfo> GetReportInfos();
+    std::unordered_map<std::string, struct ReportFileInfo> GetReportInfos();
 
 public:
     /**

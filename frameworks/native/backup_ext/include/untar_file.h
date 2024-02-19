@@ -34,7 +34,7 @@ public:
     static UntarFile &GetInstance();
     int UnPacket(const std::string &tarFile, const std::string &rootPath);
     int IncrementalUnPacket(const std::string &tarFile, const std::string &rootPath,
-                            const std::map<std::string, struct ReportFileInfo> &includes);
+                            const std::unordered_map<std::string, struct ReportFileInfo> &includes);
 
 private:
     UntarFile() = default;
@@ -147,7 +147,7 @@ private:
     off_t tarFileBlockCnt_ {0};
     off_t pos_ {0};
     size_t readCnt_ {0};
-    std::map<std::string, struct ReportFileInfo> includes_;
+    std::unordered_map<std::string, struct ReportFileInfo> includes_;
 };
 } // namespace OHOS::FileManagement::Backup
 
