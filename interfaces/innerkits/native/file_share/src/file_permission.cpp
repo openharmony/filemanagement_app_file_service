@@ -257,7 +257,7 @@ int32_t FilePermission::CheckPersistentPermission(const vector<UriPolicyInfo> &u
     vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
     vector<bool> resultCodes;
     auto tokenId = IPCSkeleton::GetCallingTokenID();
-    int32_t errorCode = SandboxManagerKit::CheckPersistPolicy(tokenId, pathPolicies, resultCodes);
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::CheckPersistPolicy(tokenId, pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode);
     if (errorCode != 0) {
         resultCodes.resize(pathPolicies.size());

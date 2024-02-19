@@ -10,11 +10,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import("//build/ohos.gni")
 import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 
-ohos_shared_library("file_share_ndk"){
+ohos_shared_library("ohfileshare"){
   branch_protector_ret = "pac_ret"
   sanitize = {
     cfi = true
@@ -26,21 +25,17 @@ ohos_shared_library("file_share_ndk"){
     "../include",
     "${app_file_service_path}/interfaces/innerkits/native/file_share/include/",
   ]
-  sources = [
-    "file_share_ndk.cpp",
-  ]
-  deps = [
-    "${app_file_service_path}/interfaces/innerkits/native:fileshare_native",
-  ]
+
+  sources = [ "oh_file_share.cpp" ]
+  deps = [ "${app_file_service_path}/interfaces/innerkits/native:fileshare_native" ]
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "access_token:libaccesstoken_sdk",
-    "access_token:libtokenid_sdk",
-    "init:libbegetutil",
+    "access_token:libtokenid_sdk"
   ]
-
+  output_extension = "so"
   relative_install_dir = "ndk"
   part_name = "app_file_service"
   subsystem_name = "filemanagement"

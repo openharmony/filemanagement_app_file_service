@@ -14,13 +14,21 @@
 import("//build/ohos.gni")
 import("//build/ohos/ndk/ndk.gni")
 
-ohos_ndk_library("libfile_share_ndk") {
+ohos_ndk_library("libohfileshare") {
   ndk_description_file = "./libfile_share.ndk.json"
   min_compact_version = "12"
-  output_name = "fileshare"
+  output_name = "ohfileshare"
+  output_extension = "so"
+  system_capability = "SystemCapability.FileManagement.AppFileService.FolderAuthorization"
+  system_capability_headers = [
+    "$ndk_headers_out_dir/filemanagement/fileshare/oh_file_share.h",
+  ]
 }
 
-ohos_ndk_headers("fileshare_header") {
-  dest_dir = "$ndk_headers_out_dir/fileshare/"
-  sources = [ "./include/file_share_ndk.h" ]
+ohos_ndk_headers("oh_file_share_header") {
+  dest_dir = "$ndk_headers_out_dir/filemanagement/fileshare/"
+  sources = [ 
+    "./include/oh_file_share.h",
+    "../fileio/include/error_code.h",
+  ]
 }
