@@ -44,6 +44,7 @@ ohos_unittest("module_ipc_test") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -98,6 +99,7 @@ ohos_unittest("backup_service_test") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -250,6 +252,7 @@ ohos_unittest("backup_restore_deps_manager_test") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
