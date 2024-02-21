@@ -34,6 +34,7 @@ const std::string NETWORK_PARA = "?networkid=";
 const std::string PERSISTENCE_FORBIDDEN_MESSAGE = "URI forbid to be persisted!";
 const std::string INVALID_MODE_MESSAGE = "Invalid operation mode!";
 const std::string INVALID_PATH_MESSAGE = "Invalid path!";
+const std::string PERMISSION_NOT_PERSISTED_MESSAGE = "The policy is no persistent capability!";
 const std::string FILE_SCHEME_PREFIX = "file://";
 
 #ifdef SANDBOX_MANAGER
@@ -91,9 +92,9 @@ int32_t ErrorCodeConversion(int32_t sandboxManagerErrorCode,
 
 int32_t ErrorCodeConversion(int32_t sandboxManagerErrorCode)
 {
-    if (sandboxManagerErrorCode == INVALID_PARAMTER) {
-        LOGE("The number of incoming URIs is too many");
-        return FileManagement::LibN::E_PARAMS;
+    if (sandboxManagerErrorCode == PERMISSION_DENIED) {
+        LOGE("The app does not have the authorization URI permission");
+        return FileManagement::LibN::E_PERMISSION;
     }
     if (sandboxManagerErrorCode == SANDBOX_MANAGER_OK) {
         return 0;
@@ -121,19 +122,26 @@ void FilePermission::ParseErrorResults(const vector<uint32_t> &resultCodes,
                 result = {uri.ToString(), PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
                 errorResults.emplace_back(result);
                 break;
+            case static_cast<PolicyErrorCode>(PolicyErrorCode::PERMISSION_NOT_PERSISTED):
+                result = {uri.ToString(), PolicyErrorCode::PERMISSION_NOT_PERSISTED, PERMISSION_NOT_PERSISTED_MESSAGE};
+                errorResults.emplace_back(result);
+                break;
             default:
                 break;
         }
     }
 }
 
-void FilePermission::ParseErrorResults(const vector<bool> &resultCodes,
-                                       vector<bool> &errorResults)
+void FilePermission::ParseErrorResults(const vector<bool> &resultCodes, vector<bool> &errorResults)
 {
-    for (size_t i = 0, j = 0; i < errorResults.size(); i++) {
-       if (errorResults[i]) {
-           errorResults[i] = resultCodes[j++];
-       }
+    auto count = resultCodes.size();
+    if (count == 0) {
+        return;
+    }
+    for (size_t i = 0, j = 0; i < errorResults.size() && j < count; i++) {
+        if (errorResults[i]) {
+            errorResults[i] = resultCodes[j++];
+        }
     }
 }
 
@@ -249,20 +257,19 @@ int32_t FilePermission::DeactivatePermission(const vector<UriPolicyInfo> &uriPol
     return errorCode;
 }
 
-int32_t FilePermission::CheckPersistentPermission(const vector<UriPolicyInfo> &uriPolicies,
-                                             vector<bool> &errorResults)
+int32_t FilePermission::CheckPersistentPermission(const vector<UriPolicyInfo> &uriPolicies, vector<bool> &errorResults)
 {
     int errorCode = 0;
 #ifdef SANDBOX_MANAGER
     vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    if (pathPolicies.size() == 0) {
+        return errorCode;
+    }
     vector<bool> resultCodes;
     auto tokenId = IPCSkeleton::GetCallingTokenID();
     int32_t sandboxManagerErrorCode = SandboxManagerKit::CheckPersistPolicy(tokenId, pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode);
-    if (errorCode != 0) {
-        resultCodes.resize(pathPolicies.size());
-    }
-    ParseErrorResults(resultCodes, pathPolicies, errorResults);
+    ParseErrorResults(resultCodes, errorResults);
 #endif
     return errorCode;
 }

@@ -43,6 +43,7 @@ enum PolicyErrorCode {
     PERSISTENCE_FORBIDDEN = 1,
     INVALID_MODE = 2,
     INVALID_PATH = 3,
+    PERMISSION_NOT_PERSISTED = 4,
 };
 
 struct UriPolicyInfo {
@@ -71,15 +72,17 @@ public:
                                       deque<struct PolicyErrorResult> &errorResults);
     static int32_t DeactivatePermission(const vector<UriPolicyInfo> &uriPolicies,
                                         deque<struct PolicyErrorResult> &errorResults);
-    static int32_t CheckPersistentPermission(const vector<UriPolicyInfo> &uriPolicies,
-                                        vector<bool> &errorResults);                                       
+    static int32_t CheckPersistentPermission(const vector<UriPolicyInfo> &uriPolicies, vector<bool> &errorResults);
 #ifdef SANDBOX_MANAGER
 private:
     static void ParseErrorResults(const vector<uint32_t> &resultCodes,
-                                const vector<PolicyInfo> &pathPolicies,
-                                deque<struct PolicyErrorResult> &errorResults);
+                                  const vector<PolicyInfo> &pathPolicies,
+                                  deque<struct PolicyErrorResult> &errorResults);
+    static void ParseErrorResults(const vector<bool> &resultCodes, vector<bool> &errorResults);
     static vector<PolicyInfo> GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
-                                                   deque<struct PolicyErrorResult> &errorResults);
+                                                                 deque<struct PolicyErrorResult> &errorResults);
+    static vector<PolicyInfo> GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
+                                                                 vector<bool> &errorResults);
 #endif
 };
 } // namespace AppFileService
