@@ -283,7 +283,8 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
 
 int32_t DeleteShareFile(uint32_t tokenId, vector<string> sharePathList)
 {
-    string bundleName, currentUid;
+    string bundleName;
+    string currentUid;
     int32_t ret = GetTargetInfo(tokenId, bundleName, currentUid);
     if (ret != 0) {
         LOGE("Failed to delete share file %{public}d", -EINVAL);
