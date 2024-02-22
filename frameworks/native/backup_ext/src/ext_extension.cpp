@@ -1173,10 +1173,10 @@ static CompareFilesResult CompareFiles(const UniqueFd &cloudFd, const UniqueFd &
         }
 
         allFiles.try_emplace(path, item.second);
-        if (!isExist || (item.second.isDir == false && item.second.isIncremental == true &&
+        if (item.second.isDir == false && item.second.isIncremental == true && (!isExist ||
              cloudFiles.find(path)->second.hash != item.second.hash)) {
             // 在云空间简报里不存在或者hash不一致
-            if (item.second.size < BConstants::BIG_FILE_BOUNDARY) {
+            if (item.second.size <= BConstants::BIG_FILE_BOUNDARY) {
                 smallFiles.try_emplace(path, item.second);
                 continue;
             }
