@@ -117,6 +117,12 @@ private:
      */
     void AsyncTaskIncrementalRestore();
 
+    /**
+     * @brief Executing Incremental Restoration Tasks Asynchronously for special clone & cloud
+     *
+     */
+    void AsyncTaskIncreRestoreSpecialVersion();
+
     void AsyncTaskOnBackup();
 
     int DoIncrementalBackup(const std::map<std::string, struct ReportFileInfo> &allFiles,
