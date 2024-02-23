@@ -35,31 +35,31 @@ using namespace std;
 namespace {
     constexpr int HMDFS_CID_SIZE = 64;
     constexpr unsigned HMDFS_IOC = 0xf2;
-    const std::string SHARE_PATH = "/data/storage/el2/distributedfiles/.share";
+    const std::string g_sharePath = "/data/storage/el2/distributedfiles/.share";
 }
 
-#define HMDFS_IOC_SET_SHARE_PATH    _IOW(HMDFS_IOC, 1, struct hmdfs_share_control)
+#define HMDFS_IOC_SET_SHARE_PATH    _IOW(HMDFS_IOC, 1, struct HmdfsShareControl)
 
-struct hmdfs_share_control {
-    int src_fd;
+struct HmdfsShareControl {
+    int srcFd;
     char cid[HMDFS_CID_SIZE];
 };
 
-static NError CreateSharePath(const int src_fd, const std::string &cid)
+static NError CreateSharePath(const int srcFd, const std::string &cid)
 {
-    struct hmdfs_share_control sc;
+    struct HmdfsShareControl sc;
     int32_t ret = 0;
     int32_t dirFd;
 
-    if (access(SHARE_PATH.c_str(), F_OK) != 0) {
-        ret = mkdir(SHARE_PATH.c_str(), S_IRWXU | S_IRWXG | S_IXOTH);
+    if (access(g_sharePath.c_str(), F_OK) != 0) {
+        ret = mkdir(g_sharePath.c_str(), S_IRWXU | S_IRWXG | S_IXOTH);
         if (ret < 0) {
             return NError(errno);
         }
     }
 
     char realPath[PATH_MAX] = {0};
-    if (!realpath(SHARE_PATH.c_str(), realPath)) {
+    if (!realpath(g_sharePath.c_str(), realPath)) {
         return NError(errno);
     }
     dirFd = open(realPath, O_RDONLY);
@@ -67,7 +67,7 @@ static NError CreateSharePath(const int src_fd, const std::string &cid)
         return NError(errno);
     }
 
-    sc.src_fd = src_fd;
+    sc.srcFd = srcFd;
     if (memcpy_s(sc.cid, HMDFS_CID_SIZE, cid.c_str(), cid.size()) != 0) {
         close(dirFd);
         return NError(ENOMEM);
@@ -92,10 +92,10 @@ napi_value CreateSharePath(napi_env env, napi_callback_info info)
     }
 
     bool succ = false;
-    int src_fd;
+    int srcFd;
     std::unique_ptr<char []> cid;
     size_t cidLen;
-    tie(succ, src_fd) = NVal(env, funcArg[static_cast<size_t>(NARG_POS::FIRST)]).ToInt32();
+    tie(succ, srcFd) = NVal(env, funcArg[static_cast<size_t>(NARG_POS::FIRST)]).ToInt32();
     if (!succ) {
         NError(EINVAL).ThrowErr(env, "Invalid fd");
         return nullptr;
@@ -107,14 +107,14 @@ napi_value CreateSharePath(napi_env env, napi_callback_info info)
     }
 
     std::string cidString(cid.get());
-    auto cbExec = [src_fd, cidString]() -> NError {
-        return CreateSharePath(src_fd, cidString);
+    auto cbExec = [srcFd, cidString]() -> NError {
+        return CreateSharePath(srcFd, cidString);
     };
     auto cbComplete = [](napi_env env, NError err) -> NVal {
         if (err) {
             return { env, err.GetNapiErr(env) };
         } else {
-            return NVal::CreateUTF8String(env, SHARE_PATH);
+            return NVal::CreateUTF8String(env, g_sharePath);
         }
     };
     std::string procedureName = "CreateSharePath";
