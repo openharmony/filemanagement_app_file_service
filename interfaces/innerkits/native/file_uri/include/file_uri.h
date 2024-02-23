@@ -29,6 +29,7 @@ public:
     std::string GetRealPath();
     std::string ToString();
     std::string GetFullDirectoryUri();
+    bool IsRemoteUri();
 
     explicit FileUri(const std::string &uriOrPath);
     ~FileUri() = default;

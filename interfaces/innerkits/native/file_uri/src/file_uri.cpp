@@ -24,6 +24,7 @@
 #include "common_func.h"
 #include "log.h"
 #include "sandbox_helper.h"
+#include "parameter.h"
 
 using namespace std;
 namespace OHOS {
@@ -36,6 +37,20 @@ const std::string FILE_SCHEME_PREFIX = "file://";
 const std::string FILE_MANAGER_AUTHORITY = "docs";
 const std::string MEDIA_AUTHORITY = "media";
 const std::string NETWORK_PARA = "?networkid=";
+const std::string BACKFLASH = "/";
+const char *g_fullMountEnableParameter = "const.filemanager.full_mount.enable";
+static bool CheckFileManagerFullMountEnable()
+{
+    char value[] = "false";
+    int retSystem = GetParameter(g_fullMountEnableParameter, "false", value, sizeof(value));
+    if (retSystem > 0 && !strcmp(value, "true")) {
+        LOGD("The full mount enable parameter is true");
+        return true;
+    }
+    LOGD("The full mount enable parameter is false");
+    return false;
+}
+
 string FileUri::GetName()
 {
     string sandboxPath = SandboxHelper::Decode(uri_.GetPath());
@@ -70,7 +85,7 @@ string FileUri::GetRealPath()
     string bundleName = uri_.GetAuthority();
     if (bundleName == FILE_MANAGER_AUTHORITY &&
         uri_.ToString().find(NETWORK_PARA) == string::npos &&
-        access(realPath.c_str(), F_OK) == 0) {
+        (access(realPath.c_str(), F_OK) == 0 || CheckFileManagerFullMountEnable())) {
         return realPath;
     }
 
@@ -107,6 +122,17 @@ string FileUri::GetFullDirectoryUri()
     }
     LOGD("uri's st_mode is not reg and dir");
     return "";
+}
+
+bool FileUri::IsRemoteUri()
+{
+    size_t pos = uri_.ToString().find(NETWORK_PARA);
+    if (pos != string::npos && pos > 0 && pos < uri_.ToString().size() - NETWORK_PARA.size()) {
+        if (uri_.ToString().substr(pos + NETWORK_PARA.size()).find(BACKFLASH) == string::npos) {
+            return true;
+        }
+    }
+    return false;
 }
 
 FileUri::FileUri(const string &uriOrPath): uri_(
