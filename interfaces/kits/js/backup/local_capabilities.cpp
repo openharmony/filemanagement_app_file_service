@@ -16,6 +16,7 @@
 
 #include "b_error/b_error.h"
 #include "b_incremental_data.h"
+#include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
 #include "filemgmt_libn.h"
 #include "incremental_backup_data.h"
@@ -46,7 +47,7 @@ static napi_value AsyncCallback(napi_env env, const NFuncArg& funcArg)
             return {env, err.GetNapiErr(env)};
         }
         NVal obj = NVal::CreateObject(env);
-        obj.AddProp({NVal::DeclareNapiProperty("fd", NVal::CreateInt32(env, fd->Release()).val_)});
+        obj.AddProp({NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
         return {obj};
     };
 
@@ -63,7 +64,7 @@ static napi_value AsyncCallback(napi_env env, const NFuncArg& funcArg)
 
 static bool CheckDataList(const LibN::NVal &data)
 {
-    LibN::NVal name = data.GetProp("bundleName");
+    LibN::NVal name = data.GetProp(BConstants::BUNDLE_NAME);
     if (name.val_ == nullptr) {
         return false;
     }
@@ -72,7 +73,7 @@ static bool CheckDataList(const LibN::NVal &data)
         return false;
     }
 
-    LibN::NVal time = data.GetProp("lastIncrementalTime");
+    LibN::NVal time = data.GetProp(BConstants::LAST_INCREMENTAL_TIME);
     if (time.val_ == nullptr) {
         return false;
     }
@@ -148,7 +149,7 @@ static napi_value AsyncDataList(napi_env env, const NFuncArg& funcArg)
             return {env, err.GetNapiErr(env)};
         }
         NVal obj = NVal::CreateObject(env);
-        obj.AddProp({NVal::DeclareNapiProperty("fd", NVal::CreateInt32(env, fd->Release()).val_)});
+        obj.AddProp({NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
         return {obj};
     };
 

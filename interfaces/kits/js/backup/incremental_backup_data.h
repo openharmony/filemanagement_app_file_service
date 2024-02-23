@@ -20,13 +20,14 @@
 #include <string>
 #include <tuple>
 
+#include "b_resources/b_constants.h"
 #include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::Backup {
 struct IncrementalBackupTime {
     explicit IncrementalBackupTime(const LibN::NVal &data)
     {
-        LibN::NVal name = data.GetProp("bundleName");
+        LibN::NVal name = data.GetProp(BConstants::BUNDLE_NAME);
         if (name.val_ != nullptr) {
             auto [succ, str, ignore] = name.ToUTF8String();
             if (succ) {
@@ -34,7 +35,7 @@ struct IncrementalBackupTime {
             }
         }
 
-        LibN::NVal time = data.GetProp("lastIncrementalTime");
+        LibN::NVal time = data.GetProp(BConstants::LAST_INCREMENTAL_TIME);
         if (time.val_ != nullptr) {
             auto [succ, tm] = time.ToInt64();
             if (succ) {
@@ -49,7 +50,7 @@ struct IncrementalBackupTime {
 struct FileManifestData {
     explicit FileManifestData(const LibN::NVal &data)
     {
-        LibN::NVal fd = data.GetProp("manifestFd");
+        LibN::NVal fd = data.GetProp(BConstants::MANIFEST_FD);
         if (fd.val_ != nullptr) {
             auto [succ, tmp] = fd.ToInt32();
             if (succ) {
@@ -63,7 +64,7 @@ struct FileManifestData {
 struct BackupParams {
     explicit BackupParams(const LibN::NVal &data)
     {
-        LibN::NVal para = data.GetProp("parameters");
+        LibN::NVal para = data.GetProp(BConstants::PARAMETERS);
         if (para.val_ != nullptr) {
             auto [succ, str, ignore] = para.ToUTF8String();
             if (succ) {
@@ -77,7 +78,7 @@ struct BackupParams {
 struct BackupPriority {
     explicit BackupPriority(const LibN::NVal &data)
     {
-        LibN::NVal pr = data.GetProp("priority");
+        LibN::NVal pr = data.GetProp(BConstants::PRIORITY);
         if (pr.val_ != nullptr) {
             auto [succ, tmp] = pr.ToInt32();
             if (succ) {
