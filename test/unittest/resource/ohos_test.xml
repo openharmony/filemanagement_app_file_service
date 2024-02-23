@@ -44,4 +44,9 @@
             <option name="shell" value="bm uninstall -n com.example.fileshareb"/>
         </cleaner>
     </target>
+    <target name="file_uri_ndk_test">
+        <preparer>
+            <option name="push" value="file_uri_test.txt -> /data/test" src="res"/>
+        </preparer>
+    </target>
 </configuration>
