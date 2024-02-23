@@ -299,7 +299,8 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0800, te
         string pathConfigFile = root + "config.json";
         SaveStringToFile(
             pathConfigFile,
-            R"({"includes":["", "", ""], "excludes":["", "", ""], """""""""""""""""""""""""""""""""""""""""""""""""":[]})");
+            R"({"includes":["", "", ""], "excludes":["", "", ""], 
+            """""""""""""""""""""""""""""""""""""""""""""""""":[]})");
 
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(UniqueFd(open(pathConfigFile.data(), O_RDONLY, 0)));
         auto cache = cachedEntity.Structuralize();
