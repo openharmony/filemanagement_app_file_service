@@ -384,7 +384,8 @@ int32_t FileShare::CreateShareFile(const vector<string> &uriList,
 int32_t FileShare::DeleteShareFile(uint32_t tokenId, const vector<string> &uriList)
 {
     lock_guard<mutex> lock(mapMutex_);
-    string bundleName, currentUid;
+    string bundleName;
+    string currentUid;
     int32_t ret = GetTargetInfo(tokenId, bundleName, currentUid);
     if (ret != 0) {
         LOGE("Failed to delete share file %{public}d", -EINVAL);
