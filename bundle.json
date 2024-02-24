@@ -59,7 +59,8 @@
                     "//foundation/filemanagement/app_file_service/interfaces/innerkits/native:app_file_service_native",
                     "//foundation/filemanagement/app_file_service/interfaces/kits/js:fileshare",
                     "//foundation/filemanagement/app_file_service/interfaces/kits/js:fileuri",
-                    "//foundation/filemanagement/app_file_service/interfaces/kits/js:backup"
+                    "//foundation/filemanagement/app_file_service/interfaces/kits/js:backup",
+                    "//foundation/filemanagement/app_file_service/interfaces/kits/ndk/fileuri/src:ohfileuri"
                 ],
                 "service_group": [
                     "//foundation/filemanagement/app_file_service:tgt_backup_extension",
@@ -85,6 +86,15 @@
                             "file_uri.h"
                         ],
                         "header_base": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native/file_uri/include"
+                    }
+                },
+                {
+                    "name": "//foundation/filemanagement/app_file_service/interfaces/kits/ndk/fileuri/src:ohfileuri",
+                    "header": {
+                        "header_files": [
+                            "oh_file_uri.h"
+                        ],
+                        "header_base": "//foundation/filemanagement/app_file_service/interfaces/kits/ndk/fileuri/include"
                     }
                 },
                 {

@@ -135,6 +135,15 @@ bool FileUri::IsRemoteUri()
     return false;
 }
 
+bool FileUri::CheckUriFormat(const std::string &uri)
+{
+    if (uri.find(FILE_SCHEME_PREFIX) != 0) {
+        LOGE("URI is missing file://");
+        return false;
+    }
+    return true;
+}
+
 FileUri::FileUri(const string &uriOrPath): uri_(
     (uriOrPath.find(FILE_SCHEME_PREFIX) == 0) ? uriOrPath : CommonFunc::GetUriFromPath(uriOrPath)
 )
