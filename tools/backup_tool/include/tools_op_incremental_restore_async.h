@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,14 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_BACKUP_BACKUP_KIT_INNER_H
-#define OHOS_FILEMGMT_BACKUP_BACKUP_KIT_INNER_H
+#ifndef OHOS_FILEMGMT_BACKUP_TOOLS_OP_INCREMENTAL_RESTORE_ASYNC_H
+#define OHOS_FILEMGMT_BACKUP_TOOLS_OP_INCREMENTAL_RESTORE_ASYNC_H
 
-#include "impl/b_incremental_backup_session.h"
-#include "impl/b_incremental_restore_session.h"
-#include "impl/b_incremental_session_restore_async.h"
-#include "impl/b_session_backup.h"
-#include "impl/b_session_restore.h"
-#include "impl/b_session_restore_async.h"
+namespace OHOS::FileManagement::Backup {
+    bool IncrementalRestoreAsyncRegister();
 
-#endif // OHOS_FILEMGMT_BACKUP_BACKUP_KIT_INNER_H
+} // namespace OHOS::FileManagement::Backup
+
+#endif // OHOS_FILEMGMT_BACKUP_TOOLS_OP_INCREMENTAL_RESTORE_ASYNC_H

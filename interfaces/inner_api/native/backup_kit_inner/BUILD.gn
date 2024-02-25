@@ -46,6 +46,7 @@ ohos_shared_library("backup_kit_inner") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_incremental_backup_session.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_incremental_data.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_incremental_restore_session.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_incremental_session_restore_async.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_backup.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore_async.cpp",

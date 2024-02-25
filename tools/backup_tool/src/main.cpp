@@ -29,6 +29,7 @@ int main()
 #include "tools_op_restore_async.h"
 #include "tools_op_incremental_backup.h"
 #include "tools_op_incremental_restore.h"
+#include "tools_op_incremental_restore_async.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -87,6 +88,7 @@ void ToolRegister()
     OHOS::FileManagement::Backup::RestoreAsyncRegister();
     OHOS::FileManagement::Backup::IncrementalBackUpRegister();
     OHOS::FileManagement::Backup::IncrementalRestoreRegister();
+    OHOS::FileManagement::Backup::IncrementalRestoreAsyncRegister();
 }
 
 int ParseOpAndExecute(const int argc, char *const argv[])
