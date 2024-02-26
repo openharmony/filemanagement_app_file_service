@@ -23,7 +23,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
-const int32_t PATH_MAX_LEN = 2048;
+const int32_t PATH_MAX_LEN = 4096;
 const int32_t OCTAL = 8;
 
 static bool IsEmptyBlock(const char *p)
@@ -68,6 +68,31 @@ static bool ForceCreateDirectoryWithMode(const string& path, mode_t mode)
         }
     } while (index != string::npos);
     return access(path.c_str(), F_OK) == 0;
+}
+
+static void RTrimNull(std::string &s)
+{
+    auto iter = std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) { return ch != '\0'; });
+    s.erase(iter.base(), s.end());
+}
+
+static int ReadLongName(FileStatInfo &info, FILE *tarFilePtr_, off_t tarFileSize_)
+{
+    size_t nameLen = static_cast<size_t>(tarFileSize_);
+    if (nameLen <= PATH_MAX_LEN) {
+        string tempName("");
+        tempName.resize(nameLen);
+        size_t read = fread(&(tempName[0]), sizeof(char), nameLen, tarFilePtr_);
+        if (read < nameLen) {
+            HILOGE("Failed to fread longName of %{private}s", info.fullPath.c_str());
+            return -1;
+        }
+        info.longName = tempName;
+    } else {
+        HILOGE("longName of %{private}s exceed PATH_MAX_LEN", info.fullPath.c_str());
+    }
+
+    return 0;
 }
 
 UntarFile &UntarFile::GetInstance()
@@ -260,13 +285,7 @@ void UntarFile::ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &i
             isSkip = false;
             break;
         case GNUTYPE_LONGNAME: {
-            size_t nameLen = static_cast<size_t>(tarFileSize_);
-            if (nameLen < PATH_MAX_LEN) {
-                string tempName("");
-                tempName.resize(nameLen);
-                fread(&(tempName[0]), sizeof(char), nameLen, tarFilePtr_);
-                info.longName = tempName;
-            }
+            ReadLongName(info, tarFilePtr_, tarFileSize_);
             isSkip = true;
             fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET);
             break;
@@ -282,10 +301,12 @@ void UntarFile::ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &i
 
 int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &info)
 {
+    string tmpFullPath = info.fullPath;
+    RTrimNull(tmpFullPath);
     switch (typeFlag) {
         case REGTYPE:
         case AREGTYPE:
-            if (!includes_.empty() && includes_.find(info.fullPath) == includes_.end()) { // not in includes
+            if (!includes_.empty() && includes_.find(tmpFullPath) == includes_.end()) { // not in includes
                 isSkip = true;
                 if (fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET) != 0) {
                     HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
@@ -303,13 +324,9 @@ int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileS
             isSkip = false;
             break;
         case GNUTYPE_LONGNAME: {
-            size_t nameLen = static_cast<size_t>(tarFileSize_);
-            if (nameLen < PATH_MAX_LEN) {
-                size_t read = fread(&(info.longName[0]), sizeof(char), nameLen, tarFilePtr_);
-                if (read < nameLen) {
-                    HILOGE("Failed to fread longName of %{private}s", info.fullPath.c_str());
-                    return -1;
-                }
+            int ret = ReadLongName(info, tarFilePtr_, tarFileSize_);
+            if (ret != 0) {
+                return ret;
             }
             isSkip = true;
             if (fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET) != 0) {
