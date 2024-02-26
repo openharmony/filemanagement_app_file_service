@@ -57,4 +57,12 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         BJsonEntityCaps::BundleInfo {"com.example.app2backup", {}, {}, 0, true, "com.example.app2backup"});
     return bundleInfos;
 }
+
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncremental(int32_t userId)
+{
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    bundleInfos.emplace_back(
+        BJsonEntityCaps::BundleInfo {"com.example.app2backup", {}, {}, 0, true, "com.example.app2backup"});
+    return bundleInfos;
+}
 } // namespace OHOS::FileManagement::Backup
