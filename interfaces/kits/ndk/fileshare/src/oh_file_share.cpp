@@ -23,12 +23,14 @@
 #include "securec.h"
 #include "tokenid_kit.h"
 #include <cstdint>
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 
-constexpr int32_t FOO_MAX_LEN = 24000;  // sizeof(FileShare_PolicyErrorResult) * 500
+constexpr int32_t MAX_ARRAY_SIZE = 500;
+constexpr int32_t FOO_MAX_LEN = 24000; // sizeof(FileShare_PolicyErrorResult) * MAX_ARRAY_SIZE
 const std::string FILE_ACCESS_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
-const char *g_fullMountEnableParameter = "const.filemanager.full_mount.enable";
+const std::string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
+
 using Exec = std::function<int(const std::vector<OHOS::AppFileService::UriPolicyInfo> &uriPolicies,
                                std::deque<struct OHOS::AppFileService::PolicyErrorResult> &errorResults)>;
 static bool CheckPermission(const std::string &permission)
@@ -41,7 +43,7 @@ static bool CheckPermission(const std::string &permission)
 static bool CheckFileManagerFullMountEnable()
 {
     char value[] = "false";
-    int retSystem = GetParameter(g_fullMountEnableParameter, "false", value, sizeof(value));
+    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER.c_str(), "false", value, sizeof(value));
     if (retSystem > 0 && !strcmp(value, "true")) {
         LOGI("The full mount enable parameter is true");
         return true;
@@ -50,12 +52,12 @@ static bool CheckFileManagerFullMountEnable()
     return false;
 }
 
-bool ConvertPolicyInfo(const FileShare_PolicyInfo *policies,
+static bool ConvertPolicyInfo(const FileShare_PolicyInfo *policies,
                        int policyNum,
                        std::vector<OHOS::AppFileService::UriPolicyInfo> &uriPolicies)
 {
-    if (policies == nullptr || policyNum <= 0) {
-        LOGE("The policies pointer is nullptr or policyNum is 0");
+    if (policies == nullptr || policyNum <= 0 || policyNum > MAX_ARRAY_SIZE) {
+        LOGE("The policies pointer is nullptr or policyNum is abnormal");
         return false;
     }
     for (int32_t i = 0; i < policyNum; i++) {
@@ -76,58 +78,66 @@ bool ConvertPolicyInfo(const FileShare_PolicyInfo *policies,
     return true;
 }
 
-bool ConvertPolicyErrorResult(const std::deque<OHOS::AppFileService::PolicyErrorResult> &errorResults,
+static bool ConvertPolicyErrorResult(const std::deque<OHOS::AppFileService::PolicyErrorResult> &errorResults,
                               FileShare_PolicyErrorResult **result,
-                              unsigned int *resultNum)
+                              unsigned int &resultNum)
 {
-    *resultNum = 0;
+    resultNum = 0;
     auto count = errorResults.size();
     auto memorySize = count * sizeof(FileShare_PolicyErrorResult);
     if (memorySize == 0 || memorySize > FOO_MAX_LEN) {
-        LOGE("malloc size is abnormal.");
+        LOGE("The size of the return value array is abnormal");
         return false;
     }
     *result = (FileShare_PolicyErrorResult *)malloc(memorySize);
     if (*result == nullptr) {
-        LOGE("*result is nullptr");
+        LOGE("Failed to apply for FileShare_PolicyErrorResult array memory");
         return false;
     }
     for (uint32_t i = 0; i < count; i++) {
         int size = errorResults[i].uri.size() + 1;
         (*result)[i].uri = (char *)malloc(size);
+        if ((*result)[i].uri == nullptr) {
+            LOGE("Failed to apply for URI memory");
+            return false;
+        }
         auto ret = strcpy_s((*result)[i].uri, size, errorResults[i].uri.c_str());
         if (ret != 0) {
-            LOGE("strcpy uri failed uri:%{public}s, errno:%{public}d", errorResults[i].uri.c_str(), ret);
-            *resultNum = i;
+            LOGE("Copy uri failed uri:%{public}s, errno:%{public}d", errorResults[i].uri.c_str(), ret);
             free((*result)[i].uri);
             return false;
         }
         (*result)[i].code = static_cast<FileShare_PolicyErrorCode>(errorResults[i].code);
         size = errorResults[i].message.size() + 1;
         (*result)[i].message = (char *)malloc(size);
+        if ((*result)[i].message == nullptr) {
+            LOGE("Failed to apply for message memory");
+            free((*result)[i].uri);
+            return false;
+        }
         ret = strcpy_s((*result)[i].message, size, errorResults[i].message.c_str());
         if (ret != 0) {
-            LOGE("strcpy message failed message:%{public}s, errno:%{public}d", errorResults[i].uri.c_str(), ret);
-            *resultNum = i;
+            LOGE("Copy message failed message:%{public}s, errno:%{public}d", errorResults[i].uri.c_str(), ret);
             free((*result)[i].uri);
             free((*result)[i].message);
             return false;
         }
+        resultNum++;
     }
-    *resultNum = count;
     return true;
 }
 
-bool ConvertPolicyErrorResultBool(const std::vector<bool> &errorResults, bool **result)
+static bool ConvertPolicyErrorResultBool(const std::vector<bool> &errorResults, bool **result)
 {
     auto count = errorResults.size();
     auto memorySize = count * sizeof(bool);
     if (memorySize == 0 || memorySize > FOO_MAX_LEN) {
-        LOGE("malloc size is abnormal.");
+        LOGE("The size of the return value array is abnormal");
         return false;
     }
     *result = (bool *)malloc(memorySize);
     if (*result == nullptr) {
+        LOGE("Failed to apply for bool array memory");
         return false;
     }
     for (uint32_t i = 0; i < count; i++) {
@@ -136,7 +146,7 @@ bool ConvertPolicyErrorResultBool(const std::vector<bool> &errorResults, bool **
     return true;
 }
 
-FileManagement_ErrCode ErrorCodeConversion(int32_t errorCode)
+static FileManagement_ErrCode ErrorCodeConversion(int32_t errorCode)
 {
     FileManagement_ErrCode errCode = E_UNKNOWN_ERROR;
     switch (errorCode) {
@@ -158,21 +168,20 @@ FileManagement_ErrCode ErrorCodeConversion(int32_t errorCode)
     return errCode;
 }
 
-FileManagement_ErrCode ExecAction(const FileShare_PolicyInfo *policies,
+void OH_FileShare_ReleasePolicyErrorResult(FileShare_PolicyErrorResult *result, unsigned int num);
+static FileManagement_ErrCode ExecAction(const FileShare_PolicyInfo *policies,
                                   unsigned int policyNum,
                                   FileShare_PolicyErrorResult **result,
                                   unsigned int *resultNum,
                                   Exec exec)
 {
     (*resultNum) = 0;
-    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
-        return E_PERMISSION;
-    }
-
     if (!CheckFileManagerFullMountEnable()) {
         return E_DEVICE_NOT_SUPPORT;
     }
-
+    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
+        return E_PERMISSION;
+    }
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (!ConvertPolicyInfo(policies, policyNum, uriPolicies)) {
         return E_PARAMS;
@@ -182,8 +191,9 @@ FileManagement_ErrCode ExecAction(const FileShare_PolicyInfo *policies,
     if (ret == E_NO_ERROR) {
         return E_NO_ERROR;
     }
-    if (!ConvertPolicyErrorResult(errorResults, result, resultNum)) {
-        return E_UNKNOWN_ERROR;
+    if (!ConvertPolicyErrorResult(errorResults, result, *resultNum)) {
+        OH_FileShare_ReleasePolicyErrorResult(*result, *resultNum);
+        return E_ENOMEM;
     }
     return ret;
 }
@@ -227,12 +237,11 @@ FileManagement_ErrCode OH_FileShare_CheckPersistentPermission(const FileShare_Po
                                                               unsigned int *resultNum)
 {
     *resultNum = 0;
-    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
-        return E_PERMISSION;
-    }
-
     if (!CheckFileManagerFullMountEnable()) {
         return E_DEVICE_NOT_SUPPORT;
+    }
+    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
+        return E_PERMISSION;
     }
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (!ConvertPolicyInfo(policies, policyNum, uriPolicies)) {
@@ -244,7 +253,7 @@ FileManagement_ErrCode OH_FileShare_CheckPersistentPermission(const FileShare_Po
         return ErrorCodeConversion(ret);
     }
     if (!ConvertPolicyErrorResultBool(errorResults, result)) {
-        return E_UNKNOWN_ERROR;
+        return E_ENOMEM;
     }
     *resultNum = errorResults.size();
     return E_NO_ERROR;

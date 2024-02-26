@@ -92,12 +92,12 @@ int32_t ErrorCodeConversion(int32_t sandboxManagerErrorCode,
 
 int32_t ErrorCodeConversion(int32_t sandboxManagerErrorCode)
 {
+    if (sandboxManagerErrorCode == SANDBOX_MANAGER_OK) {
+        return 0;
+    }
     if (sandboxManagerErrorCode == PERMISSION_DENIED) {
         LOGE("The app does not have the authorization URI permission");
         return FileManagement::LibN::E_PERMISSION;
-    }
-    if (sandboxManagerErrorCode == SANDBOX_MANAGER_OK) {
-        return 0;
     }
     return FileManagement::LibN::E_UNKNOWN_ERROR;
 }
@@ -134,11 +134,12 @@ void FilePermission::ParseErrorResults(const vector<uint32_t> &resultCodes,
 
 void FilePermission::ParseErrorResults(const vector<bool> &resultCodes, vector<bool> &errorResults)
 {
-    auto count = resultCodes.size();
-    if (count == 0) {
+    auto resultCodeSize = resultCodes.size();
+    if (resultCodeSize == 0) {
         return;
     }
-    for (size_t i = 0, j = 0; i < errorResults.size() && j < count; i++) {
+    auto errorResultSize = errorResults.size();
+    for (size_t i = 0, j = 0; i < errorResultSize && j < resultCodeSize; i++) {
         if (errorResults[i]) {
             errorResults[i] = resultCodes[j++];
         }
@@ -173,7 +174,7 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
                                                                       vector<bool> &errorResults)
 {
     vector<PolicyInfo> pathPolicies;
-    for (auto uriPolicy : uriPolicies) {
+    for (const auto &uriPolicy : uriPolicies) {
         Uri uri(uriPolicy.uri);
         string path = uri.GetPath();
         if (!CheckValidUri(uriPolicy.uri) || access(path.c_str(), F_OK) != 0) {
@@ -183,7 +184,9 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
             string currentUserId = to_string(IPCSkeleton::GetCallingTokenID() / AppExecFwk::Constants::BASE_USER_RANGE);
             int32_t ret = SandboxHelper::GetPhysicalPath(uri.ToString(), currentUserId, path);
             if (ret != 0) {
+                errorResults.emplace_back(false);
                 LOGE("Failed to get physical path, errorcode: %{public}d", ret);
+                continue;
             }
             PolicyInfo policyInfo = {path, uriPolicy.mode};
             pathPolicies.emplace_back(policyInfo);

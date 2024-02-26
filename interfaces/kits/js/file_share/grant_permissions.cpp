@@ -35,6 +35,7 @@ using namespace std;
 namespace {
 const std::string FILE_ACCESS_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
 const char *g_fullMountEnableParameter = "const.filemanager.full_mount.enable";
+constexpr int32_t MAX_ARRAY_SIZE = 500;
 
 static bool CheckPermission(const string &permission)
 {
@@ -108,6 +109,10 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
         LOGE("get array length failed");
         return status;
     }
+    if (count > MAX_ARRAY_SIZE) {
+        LOGE("The length of the array is extra-long");
+        return napi_invalid_arg;
+    }
     for (uint32_t i = 0; i < count; i++) {
         napi_handle_scope scope;
         status = napi_open_handle_scope(env, &scope);
@@ -120,7 +125,6 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
             LOGE("get element failed");
             return status;
         }
-        UriPolicyInfo uriPolicy;
         napi_value uriValue;
         napi_value modeValue;
         status = napi_get_named_property(env, object, "uri", &uriValue);
@@ -139,8 +143,7 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
             LOGE("the argument error");
             return napi_invalid_arg;
         }
-        uriPolicy.uri = str.get();
-        uriPolicy.mode = mode;
+        UriPolicyInfo uriPolicy {.uri = str.get(), .mode = mode};
         uriPolicies.emplace_back(uriPolicy);
         status = napi_close_handle_scope(env, scope);
         if (status != napi_ok) {
