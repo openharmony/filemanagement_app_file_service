@@ -40,14 +40,14 @@ static tuple<bool, ErrCode> WaitForChild(pid_t pid,
                                          unique_ptr<FILE, function<void(FILE *)>> pipeStream,
                                          function<bool(string_view)> DetectFatalLog)
 {
-    const int BUF_LEN = 1024;
-    auto buf = make_unique<char[]>(BUF_LEN);
+    const int bufLen = 1024;
+    auto buf = make_unique<char[]>(bufLen);
     int status = 0;
 
     do {
         regex reg("^\\W*$");
-        while ((void)memset_s(buf.get(), BUF_LEN, 0, BUF_LEN),
-               fgets(buf.get(), BUF_LEN - 1, pipeStream.get()) != nullptr) {
+        while ((void)memset_s(buf.get(), bufLen, 0, bufLen),
+               fgets(buf.get(), bufLen - 1, pipeStream.get()) != nullptr) {
             if (regex_match(buf.get(), reg)) {
                 continue;
             }
