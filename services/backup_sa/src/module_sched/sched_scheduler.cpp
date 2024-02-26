@@ -165,17 +165,21 @@ void SchedScheduler::TryUnloadServiceTimer(bool force)
 
 void SchedScheduler::TryUnloadService()
 {
-    HILOGI("Unload system ability");
-    sptr<ISystemAbilityManager> saManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (saManager == nullptr) {
-        HILOGE("UnloadSA, GetSystemAbilityManager is null.");
-        return;
-    }
-    int32_t result = saManager->UnloadSystemAbility(FILEMANAGEMENT_BACKUP_SERVICE_SA_ID);
-    if (result != ERR_OK) {
-        HILOGE("UnloadSA, UnloadSystemAbility result: %{public}d", result);
-        return;
-    }
+    auto tryUnload = []() {
+        HILOGI("Unload system ability");
+        sptr<ISystemAbilityManager> saManager =
+            OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (saManager == nullptr) {
+            HILOGE("UnloadSA, GetSystemAbilityManager is null.");
+            return;
+        }
+        int32_t result = saManager->UnloadSystemAbility(FILEMANAGEMENT_BACKUP_SERVICE_SA_ID);
+        if (result != ERR_OK) {
+            HILOGE("UnloadSA, UnloadSystemAbility result: %{public}d", result);
+            return;
+        }
+    };
+    threadPool_.AddTask(tryUnload);
 }
 
 void SchedScheduler::ClearSchedulerData()
