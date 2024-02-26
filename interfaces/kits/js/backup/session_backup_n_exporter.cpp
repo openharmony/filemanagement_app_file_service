@@ -58,9 +58,10 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
             return {env, err.GetNapiErr(env)};
         }
         NVal obj = NVal::CreateObject(env);
-        obj.AddProp({NVal::DeclareNapiProperty("bundleName", NVal::CreateUTF8String(env, bundleName).val_),
-                     NVal::DeclareNapiProperty("uri", NVal::CreateUTF8String(env, fileName).val_),
-                     NVal::DeclareNapiProperty("fd", NVal::CreateInt32(env, fd->Release()).val_)});
+        obj.AddProp({
+            NVal::DeclareNapiProperty(BConstants::BUNDLE_NAME.c_str(), NVal::CreateUTF8String(env, bundleName).val_),
+            NVal::DeclareNapiProperty(BConstants::URI.c_str(), NVal::CreateUTF8String(env, fileName).val_),
+            NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
 
         return {obj};
     };

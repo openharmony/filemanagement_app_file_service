@@ -21,6 +21,7 @@
 #include "file_utils.h"
 #include "log.h"
 #include "uri.h"
+#include "sandbox_helper.h"
 
 using namespace std;
 namespace OHOS {
@@ -28,7 +29,7 @@ namespace AppFileService {
 namespace ModuleFileUri {
 using namespace FileManagement;
 using namespace FileManagement::LibN;
-
+const std::string MEDIA_AUTHORITY = "media";
 napi_value FileUriNExporter::Constructor(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -113,6 +114,24 @@ napi_value FileUriNExporter::GetFullDirectoryUri(napi_env env, napi_callback_inf
     return NVal::CreateUTF8String(env, uri).val_;
 }
 
+napi_value FileUriNExporter::IsRemoteUri(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+        LOGE("Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    auto fileuriEntity = NClass::GetEntityOf<FileUriEntity>(env, funcArg.GetThisVar());
+    if (!fileuriEntity) {
+        LOGE("Failed to get file entity");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    bool isRemoteUri = fileuriEntity->fileUri_.IsRemoteUri();
+    return NVal::CreateBool(env, isRemoteUri).val_;
+}
+
 napi_value FileUriNExporter::GetFileUriPath(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -127,7 +146,12 @@ napi_value FileUriNExporter::GetFileUriPath(napi_env env, napi_callback_info inf
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
-    return NVal::CreateUTF8String(env, fileuriEntity->fileUri_.GetPath()).val_;
+    string sandboxPath = SandboxHelper::Decode(fileuriEntity->fileUri_.uri_.GetPath());
+    string bundleName = fileuriEntity->fileUri_.uri_.GetAuthority();
+    if (bundleName == MEDIA_AUTHORITY) {
+        return NVal::CreateUTF8String(env, fileuriEntity->fileUri_.GetPath()).val_;
+    }
+    return NVal::CreateUTF8String(env, fileuriEntity->fileUri_.GetRealPath()).val_;
 }
 
 static std::string Split(const std::string &path, Uri &uri)
@@ -447,6 +471,7 @@ bool FileUriNExporter::Export()
         NVal::DeclareNapiGetter("name", GetFileUriName),
         NVal::DeclareNapiGetter("path", GetFileUriPath),
         NVal::DeclareNapiFunction("getFullDirectoryUri", GetFullDirectoryUri),
+        NVal::DeclareNapiFunction("isRemoteUri", IsRemoteUri),
         NVal::DeclareNapiFunction("normalize", Normalize),
         NVal::DeclareNapiFunction("equals", Equals),
         NVal::DeclareNapiFunction("equalsTo", EqualsTo),

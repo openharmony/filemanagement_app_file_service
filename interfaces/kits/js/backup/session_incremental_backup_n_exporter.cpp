@@ -62,10 +62,12 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
             return {env, err.GetNapiErr(env)};
         }
         NVal obj = NVal::CreateObject(env);
-        obj.AddProp({NVal::DeclareNapiProperty("bundleName", NVal::CreateUTF8String(env, bundleName).val_),
-                     NVal::DeclareNapiProperty("uri", NVal::CreateUTF8String(env, fileName).val_),
-                     NVal::DeclareNapiProperty("fd", NVal::CreateInt32(env, fd->Release()).val_),
-                     NVal::DeclareNapiProperty("manifestFd", NVal::CreateInt32(env, manifestFd->Release()).val_)});
+        obj.AddProp({
+            NVal::DeclareNapiProperty(BConstants::BUNDLE_NAME.c_str(), NVal::CreateUTF8String(env, bundleName).val_),
+            NVal::DeclareNapiProperty(BConstants::URI.c_str(), NVal::CreateUTF8String(env, fileName).val_),
+            NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_),
+            NVal::DeclareNapiProperty(BConstants::MANIFEST_FD.c_str(),
+                NVal::CreateInt32(env, manifestFd->Release()).val_)});
 
         return {obj};
     };
@@ -250,7 +252,7 @@ napi_value SessionIncrementalBackupNExporter::Constructor(napi_env env, napi_cal
 
 static bool CheckDataList(const LibN::NVal &data)
 {
-    LibN::NVal name = data.GetProp("bundleName");
+    LibN::NVal name = data.GetProp(BConstants::BUNDLE_NAME);
     if (name.val_ == nullptr) {
         return false;
     }
@@ -259,7 +261,7 @@ static bool CheckDataList(const LibN::NVal &data)
         return false;
     }
 
-    LibN::NVal time = data.GetProp("lastIncrementalTime");
+    LibN::NVal time = data.GetProp(BConstants::LAST_INCREMENTAL_TIME);
     if (time.val_ == nullptr) {
         return false;
     }

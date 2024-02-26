@@ -164,6 +164,15 @@ static inline std::array<std::string_view, PATHES_TO_BACKUP_SIZE> PATHES_TO_BACK
     "data/storage/el2/base/haps/*/files/", "data/storage/el2/base/haps/*/preferences/",
     "data/storage/el2/distributedfiles/",
 };
+
+// napi 层代码引用到的常量，对应js接口声明(@ohos.file.backup.d.ts)中的属性字段
+static inline std::string BUNDLE_NAME = "bundleName";
+static inline std::string URI = "uri";
+static inline std::string FD = "fd";
+static inline std::string MANIFEST_FD = "manifestFd";
+static inline std::string LAST_INCREMENTAL_TIME = "lastIncrementalTime";
+static inline std::string PARAMETERS = "parameters";
+static inline std::string PRIORITY = "priority";
 } // namespace OHOS::FileManagement::Backup::BConstants
 
 #endif // OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H

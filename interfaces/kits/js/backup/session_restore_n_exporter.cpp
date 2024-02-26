@@ -61,9 +61,10 @@ static void OnFileReadyWhole(weak_ptr<GeneralCallbacks> pCallbacks, const BFileI
             return {env, err.GetNapiErr(env)};
         }
         NVal obj = NVal::CreateObject(env);
-        obj.AddProp({NVal::DeclareNapiProperty("bundleName", NVal::CreateUTF8String(env, bundleName).val_),
-                     NVal::DeclareNapiProperty("uri", NVal::CreateUTF8String(env, fileName).val_),
-                     NVal::DeclareNapiProperty("fd", NVal::CreateInt32(env, fd->Release()).val_)});
+        obj.AddProp({
+            NVal::DeclareNapiProperty(BConstants::BUNDLE_NAME.c_str(), NVal::CreateUTF8String(env, bundleName).val_),
+            NVal::DeclareNapiProperty(BConstants::URI.c_str(), NVal::CreateUTF8String(env, fileName).val_),
+            NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
 
         return {obj};
     };
@@ -98,10 +99,12 @@ static void OnFileReadySheet(weak_ptr<GeneralCallbacks> pCallbacks,
             return {env, err.GetNapiErr(env)};
         }
         NVal obj = NVal::CreateObject(env);
-        obj.AddProp({NVal::DeclareNapiProperty("bundleName", NVal::CreateUTF8String(env, bundleName).val_),
-                     NVal::DeclareNapiProperty("uri", NVal::CreateUTF8String(env, fileName).val_),
-                     NVal::DeclareNapiProperty("fd", NVal::CreateInt32(env, fd->Release()).val_),
-                     NVal::DeclareNapiProperty("manifestFd", NVal::CreateInt32(env, manifestFd->Release()).val_)});
+        obj.AddProp({
+            NVal::DeclareNapiProperty(BConstants::BUNDLE_NAME.c_str(), NVal::CreateUTF8String(env, bundleName).val_),
+            NVal::DeclareNapiProperty(BConstants::URI.c_str(), NVal::CreateUTF8String(env, fileName).val_),
+            NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_),
+            NVal::DeclareNapiProperty(BConstants::MANIFEST_FD.c_str(),
+                NVal::CreateInt32(env, manifestFd->Release()).val_)});
 
         return {obj};
     };
@@ -360,14 +363,14 @@ static std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> ParseF
 {
     bool succ = false;
     std::unique_ptr<char[]> bundleName = nullptr;
-    tie(succ, bundleName, ignore) = fileMeta.GetProp("bundleName").ToUTF8String();
+    tie(succ, bundleName, ignore) = fileMeta.GetProp(BConstants::BUNDLE_NAME).ToUTF8String();
     if (!succ) {
         HILOGE("First argument is not have property bundle name.");
         return { false, nullptr, nullptr };
     }
 
     std::unique_ptr<char[]> fileName = nullptr;
-    tie(succ, fileName, ignore) = fileMeta.GetProp("uri").ToUTF8String();
+    tie(succ, fileName, ignore) = fileMeta.GetProp(BConstants::URI).ToUTF8String();
     if (!succ) {
         HILOGE("First argument is not have property file name.");
         return { false, nullptr, nullptr };
