@@ -73,7 +73,7 @@ const uint32_t MAX_FILE_COUNT = 6000;                 // 单个tar包最多包�
 
 void BackupExtExtension::VerifyCaller()
 {
-    HILOGI("begin");
+    HILOGD("begin");
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
     int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
     if (tokenType != Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {

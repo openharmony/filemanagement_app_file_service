@@ -35,7 +35,7 @@ int32_t ServiceReverseStub::OnRemoteRequest(uint32_t code,
         return BError(BError::Codes::SA_INVAL_ARG, "Invalid remote descriptor");
     }
 
-    HILOGI("Begin to call procedure indexed %{public}u", code);
+    HILOGD("Begin to call procedure indexed %{public}u", code);
     auto interfaceIndex = opToInterfaceMap_.find(code);
     if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {
         HILOGE("Cannot response request %{public}d : unknown procedure", code);
