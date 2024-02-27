@@ -403,7 +403,7 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
+        HILOGD("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
 
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
@@ -556,7 +556,7 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
+        HILOGD("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
 
         bool updateRes = SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);

@@ -80,7 +80,7 @@ int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Message
         return BError(BError::Codes::SA_INVAL_ARG, "Invalid remote descriptor");
     }
 
-    HILOGI("Begin to call procedure indexed %{public}u", code);
+    HILOGD("Begin to call procedure indexed %{public}u", code);
     auto interfaceIndex = opToInterfaceMap_.find(code);
     if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {
         HILOGE("Cannot response request %{public}d : unknown procedure", code);
@@ -156,7 +156,7 @@ int32_t ServiceStub::CmdGetLocalCapabilities(MessageParcel &data, MessageParcel 
 
 int32_t ServiceStub::CmdPublishFile(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
+    HILOGD("Begin");
     unique_ptr<BFileInfo> fileInfo(data.ReadParcelable<BFileInfo>());
     if (!fileInfo) {
         return BError(BError::Codes::SA_BROKEN_IPC, "Failed to receive fileInfo");
@@ -209,7 +209,7 @@ int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
+    HILOGD("Begin");
     string bundleName;
     if (!data.ReadString(bundleName)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleName").GetCode();
