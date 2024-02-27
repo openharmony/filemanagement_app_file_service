@@ -123,7 +123,12 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
             throw BError(BError::Codes::EXT_INVAL_ARG, str);
         }
     }
-    return UniqueFd(open(fileName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    UniqueFd fd(open(fileName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    if (fd < 0) {
+        HILOGE("Open file failed, file name is %{private}s, err = %{public}d", fileName.data(), errno);
+        return UniqueFd(-1);
+    }
+    return fd;
 }
 
 UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
@@ -165,6 +170,38 @@ static string GetReportFileName(const string &fileName)
     return reportName;
 }
 
+static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
+{
+    UniqueFd fd = GetFileHandleForSpecialCloneCloud(fileName);
+    if (fd < 0) {
+        HILOGE("Failed to open file = %{private}s, err = %{public}d", fileName.c_str(), errno);
+        throw BError(BError::Codes::EXT_INVAL_ARG, string("open tar file failed"));
+    }
+
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
+        string str = string("Failed to create restore folder. ").append(std::generic_category().message(errno));
+        throw BError(BError::Codes::EXT_INVAL_ARG, str);
+    }
+    string reportName = path + BConstants::BLANK_REPORT_NAME;
+    UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    if (reportFd < 0) {
+        HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
+        throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
+    }
+
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
+    }
+    auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd));
+    if (ret != ERR_OK) {
+        HILOGI("Failed to AppIncrementalFileReady %{public}d", ret);
+    }
+
+    return ERR_OK;
+}
+
 ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -175,6 +212,10 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         }
 
         VerifyCaller();
+
+        if (extension_->SpeicalVersionForCloneAndCloud()) {
+            return GetIncreFileHandleForSpecialVersion(fileName);
+        }
 
         string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
@@ -374,23 +415,29 @@ ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
         }
         VerifyCaller();
 
+        bool isSpeicalVersion = extension_->SpeicalVersionForCloneAndCloud();
+
         string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
-        string tarName = path + fileName;
+        string tarName = isSpeicalVersion ? fileName : path + fileName;
         {
-            BExcepUltils::VerifyPath(tarName, true);
+            BExcepUltils::VerifyPath(tarName, !isSpeicalVersion);
             unique_lock<shared_mutex> lock(lock_);
             if (find(tars_.begin(), tars_.end(), fileName) != tars_.end() || access(tarName.data(), F_OK) != 0) {
                 throw BError(BError::Codes::EXT_INVAL_ARG, "The file does not exist");
             }
             tars_.push_back(fileName);
-            if (!IsAllFileReceived(tars_, false)) {
+            if (!IsAllFileReceived(tars_, isSpeicalVersion)) {
                 return ERR_OK;
             }
         }
 
         // 异步执行解压操作
         if (extension_->AllowToBackupRestore()) {
-            AsyncTaskIncrementalRestore();
+            if (isSpeicalVersion) {
+                AsyncTaskIncreRestoreSpecialVersion();
+            } else {
+                AsyncTaskIncrementalRestore();
+            }
         }
 
         return ERR_OK;
@@ -908,6 +955,45 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
 
             if (ret == ERR_OK) {
                 HILOGI("after extra, do incremental restore.");
+                ptr->AsyncTaskIncrementalRestoreForUpgrade();
+            } else {
+                ptr->AppIncrementalDone(ret);
+                ptr->DoClear();
+            }
+        } catch (const BError &e) {
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    // REM: 这里异步化了，需要做并发控制
+    // 在往线程池中投入任务之前将需要的数据拷贝副本到参数中，保证不发生读写竞争，
+    // 由于拷贝参数时尚运行在主线程中，故在参数拷贝过程中是线程安全的。
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+void BackupExtExtension::AsyncTaskIncreRestoreSpecialVersion()
+{
+    auto task = [obj {wptr<BackupExtExtension>(this)}, tars {tars_}]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                              "Ext extension handle have been already released");
+        BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
+                              "extension handle have been already released");
+        try {
+            int ret = RestoreFilesForSpecialCloneCloud();
+            if (ret == ERR_OK) {
                 ptr->AsyncTaskIncrementalRestoreForUpgrade();
             } else {
                 ptr->AppIncrementalDone(ret);
