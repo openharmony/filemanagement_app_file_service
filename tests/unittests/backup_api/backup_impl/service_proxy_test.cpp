@@ -380,8 +380,6 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilitySuccess_0101, te
     sptr<ServiceProxy::ServiceProxyLoadCallback> loadCallback = new ServiceProxy::ServiceProxyLoadCallback();
     EXPECT_NE(loadCallback, nullptr);
     int32_t systemAbilityId = 0;
-    // const OHOS::sptr<IRemoteObject> &remoteObject = make_shared<IRemoteObject>();
-    // shared_ptr<MockIRemoteObject> remoteObject = make_shared<MockIRemoteObject>();
     sptr<MockIRemoteObject> remoteObject = new MockIRemoteObject();
     loadCallback->OnLoadSystemAbilitySuccess(systemAbilityId, remoteObject);
     loadCallback = nullptr;
