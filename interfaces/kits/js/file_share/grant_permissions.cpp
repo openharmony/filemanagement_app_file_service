@@ -33,7 +33,7 @@ using namespace std;
 
 namespace {
 const std::string FILE_ACCESS_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
-const char *g_fullMountEnableParameter = "const.filemanager.full_mount.enable";
+const std::string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
 
 static bool CheckPermission(const string &permission)
 {
@@ -45,7 +45,7 @@ static bool CheckPermission(const string &permission)
 static bool CheckFileManagerFullMountEnable()
 {
     char value[] = "false";
-    int retSystem = GetParameter(g_fullMountEnableParameter, "false", value, sizeof(value));
+    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER.c_str(), "false", value, sizeof(value));
     if (retSystem > 0 && !strcmp(value, "true")) {
         LOGE("The full mount enable parameter is true");
         return true;
@@ -165,7 +165,7 @@ napi_value PersistPermission(napi_env env, napi_callback_info info)
             if (arg->errNo == EPERM) {
                 napi_value data = err.GetNapiErr(env);
                 napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
-                return {env, data};
+                return NVal(env, data);
             }
             return {env, err.GetNapiErr(env)};
         }
@@ -213,7 +213,7 @@ napi_value RevokePermission(napi_env env, napi_callback_info info)
             if (arg->errNo == EPERM) {
                 napi_value data = err.GetNapiErr(env);
                 napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
-                return {env, data};
+                return NVal(env, data);
             }
             return {env, err.GetNapiErr(env)};
         }
@@ -261,7 +261,7 @@ napi_value ActivatePermission(napi_env env, napi_callback_info info)
             if (arg->errNo == EPERM) {
                 napi_value data = err.GetNapiErr(env);
                 napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
-                return {env, data};
+                return NVal(env, data);
             }
             return {env, err.GetNapiErr(env)};
         }
@@ -309,7 +309,7 @@ napi_value DeactivatePermission(napi_env env, napi_callback_info info)
             if (arg->errNo == EPERM) {
                 napi_value data = err.GetNapiErr(env);
                 napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
-                return {env, data};
+                return NVal(env, data);
             }
             return {env, err.GetNapiErr(env)};
         }
