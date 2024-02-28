@@ -141,6 +141,9 @@ static inline std::string_view BACKUP_CONFIG_JSON = "backup_config.json";
 // 简报文件名后缀
 static inline std::string_view REPORT_FILE_EXT = "rp";
 
+// 空简报
+static inline std::string BLANK_REPORT_NAME = "blankReport.rp";
+
 // 特殊版本信息
 constexpr int DEFAULT_VERSION_CODE = 0;
 static inline std::string_view DEFAULT_VERSION_NAME = "0.0.0.0";

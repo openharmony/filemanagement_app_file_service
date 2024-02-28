@@ -28,7 +28,7 @@ using namespace std;
 UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Start");
+    HILOGD("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     data.WriteInterfaceToken(GetDescriptor());
@@ -97,7 +97,7 @@ ErrCode SvcExtensionProxy::HandleBackup()
 ErrCode SvcExtensionProxy::PublishFile(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Start");
+    HILOGD("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     data.WriteInterfaceToken(GetDescriptor());
@@ -116,7 +116,7 @@ ErrCode SvcExtensionProxy::PublishFile(const string &fileName)
         return ErrCode(ret);
     }
 
-    HILOGI("Successful");
+    HILOGD("Successful");
     return reply.ReadInt32();
 }
 

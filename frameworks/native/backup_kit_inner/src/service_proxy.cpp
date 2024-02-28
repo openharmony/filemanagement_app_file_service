@@ -132,7 +132,7 @@ UniqueFd ServiceProxy::GetLocalCapabilities()
 ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
+    HILOGD("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -211,7 +211,7 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
 ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
+    HILOGD("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {

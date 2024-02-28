@@ -44,7 +44,7 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
     if (impl_.clientToken != clientToken) {
         throw BError(BError::Codes::SA_REFUSED_ACT, "Caller mismatched");
     }
-    HILOGE("Succeed to verify the caller");
+    HILOGD("Succeed to verify the caller");
 }
 
 void SvcSessionManager::Active(Impl newImpl)
@@ -205,7 +205,7 @@ void SvcSessionManager::RemoveExtInfo(const string &bundleName)
 
 wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &bundleName)
 {
-    HILOGI("Begin");
+    HILOGD("Begin");
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -338,7 +338,7 @@ bool SvcSessionManager::GetSchedBundleName(string &bundleName)
 
 BConstants::ServiceSchedAction SvcSessionManager::GetServiceSchedAction(const std::string &bundleName)
 {
-    HILOGI("Begin");
+    HILOGD("Begin");
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");

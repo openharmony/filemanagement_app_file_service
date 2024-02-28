@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -223,21 +223,17 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
 
     while (remain > 0) {
         off_t read = ioBuffer_.size();
-        if (size < static_cast<off_t>(ioBuffer_.size())) {
-            read = size;
-        } else {
-            if (read > remain) {
-                read = remain;
-            }
+        if (remain < read) {
+            read = remain;
         }
         // read buffer from src file
-        if (ReadAll(fd, ioBuffer_, size) != read) {
+        if (ReadAll(fd, ioBuffer_, read) != read) {
             HILOGE("Failed to read all");
             break;
         }
 
         // write buffer to tar file
-        if (SplitWriteAll(ioBuffer_, read, isFilled) != read) {
+        if (SplitWriteAll(ioBuffer_, read) != read) {
             HILOGE("Failed to split write all");
             break;
         }
@@ -255,7 +251,7 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
     return false;
 }
 
-off_t TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, off_t read, bool &isFilled)
+off_t TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, off_t read)
 {
     off_t len = ioBuffer.size();
     if (len > read) {
@@ -265,8 +261,12 @@ off_t TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, off_t read, bool &
     while (count < len) {
         auto writeBytes = fwrite(&ioBuffer[count], sizeof(uint8_t), len - count, currentTarFile_);
         if (writeBytes < 1) {
-            HILOGE("Failed to fwrite tar file, err = %{public}d", errno);
-            return writeBytes;
+            // 再执行一遍
+            auto writeBytes = fwrite(&ioBuffer[count], sizeof(uint8_t), len - count, currentTarFile_);
+            if (writeBytes < 1) {
+                HILOGE("Failed to fwrite tar file, err = %{public}d", errno);
+                return count;
+            }
         }
         count += writeBytes;
         currentTarFileSize_ += writeBytes;
@@ -378,7 +378,7 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
     struct group *gr = getgrgid(st.st_gid);
     if (gr != nullptr) {
         auto ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%s", gr->gr_name);
-        if (ret < 0 || static_cast<int>(sizeof(hdr.gname))) {
+        if (ret < 0 || ret >= static_cast<int>(sizeof(hdr.gname))) {
             HILOGE("Fill gr_name failed, err = %{public}d", errno);
         }
     } else {
@@ -418,7 +418,11 @@ int TarFile::WriteAll(const vector<uint8_t> &buf, size_t len)
 {
     size_t count = 0;
     while (count < len) {
-        auto i = fwrite(&buf[0] + count, sizeof(char), len - count, currentTarFile_);
+        auto i = fwrite(&buf[0] + count, sizeof(uint8_t), len - count, currentTarFile_);
+        if (i < 1) {
+            HILOGE("Failed to fwrite tar file, err = %{public}d", errno);
+            return count;
+        }
         count += i;
         currentTarFileSize_ += i;
     }

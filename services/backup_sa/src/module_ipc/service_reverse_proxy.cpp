@@ -161,7 +161,7 @@ void ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode)
 
 void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName, int fd)
 {
-    HILOGI("Begin");
+    HILOGD("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(fileName) ||
