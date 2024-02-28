@@ -45,7 +45,11 @@ const string INFO_SIZE = "size";
 static vector<string> SplitStringByChar(const string &str, const char &sep)
 {
     vector<string> splits;
-    stringstream ss(str);
+    string newStr = str;
+    if (str.rfind(sep) == str.size() - 1) {
+        newStr += sep;
+    }
+    stringstream ss(newStr);
     string res;
     while (getline(ss, res, sep)) {
         splits.push_back(res);
