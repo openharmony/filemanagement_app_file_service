@@ -68,7 +68,7 @@ typedef enum FileManagement_ErrCode {
     /**
      * out of memory.
      */
-    ERR_ENOMEM = 139000011,
+    ERR_ENOMEM = 13900011,
     /**
      * unknown error.
      */

@@ -38,11 +38,11 @@ const std::string FILE_MANAGER_AUTHORITY = "docs";
 const std::string MEDIA_AUTHORITY = "media";
 const std::string NETWORK_PARA = "?networkid=";
 const std::string BACKFLASH = "/";
-const char *g_fullMountEnableParameter = "const.filemanager.full_mount.enable";
+const std::string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
 static bool CheckFileManagerFullMountEnable()
 {
     char value[] = "false";
-    int retSystem = GetParameter(g_fullMountEnableParameter, "false", value, sizeof(value));
+    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER.c_str(), "false", value, sizeof(value));
     if (retSystem > 0 && !strcmp(value, "true")) {
         LOGD("The full mount enable parameter is true");
         return true;
