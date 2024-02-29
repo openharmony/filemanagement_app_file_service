@@ -152,7 +152,7 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
     vector<PolicyInfo> pathPolicies;
     for (auto uriPolicy : uriPolicies) {
         Uri uri(uriPolicy.uri);
-        string path = uri.GetPath();
+        string path = SandboxHelper::Decode(uri.GetPath());
         if (!CheckValidUri(uriPolicy.uri) || access(path.c_str(), F_OK) != 0) {
             LOGE("Not correct uri!");
             PolicyErrorResult result = {uriPolicy.uri, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
@@ -161,7 +161,10 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
             string currentUserId = to_string(IPCSkeleton::GetCallingTokenID() / AppExecFwk::Constants::BASE_USER_RANGE);
             int32_t ret = SandboxHelper::GetPhysicalPath(uri.ToString(), currentUserId, path);
             if (ret != 0) {
+                PolicyErrorResult result = {uriPolicy.uri, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
+                errorResults.emplace_back(result);
                 LOGE("Failed to get physical path, errorcode: %{public}d", ret);
+                continue;
             }
             PolicyInfo policyInfo = {path, uriPolicy.mode};
             pathPolicies.emplace_back(policyInfo);
@@ -176,7 +179,7 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
     vector<PolicyInfo> pathPolicies;
     for (const auto &uriPolicy : uriPolicies) {
         Uri uri(uriPolicy.uri);
-        string path = uri.GetPath();
+        string path = SandboxHelper::Decode(uri.GetPath());
         if (!CheckValidUri(uriPolicy.uri) || access(path.c_str(), F_OK) != 0) {
             LOGE("Not correct uri!");
             errorResults.emplace_back(false);

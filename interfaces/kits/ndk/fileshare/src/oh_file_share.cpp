@@ -53,8 +53,8 @@ static bool CheckFileManagerFullMountEnable()
 }
 
 static bool ConvertPolicyInfo(const FileShare_PolicyInfo *policies,
-                       int policyNum,
-                       std::vector<OHOS::AppFileService::UriPolicyInfo> &uriPolicies)
+                              int policyNum,
+                              std::vector<OHOS::AppFileService::UriPolicyInfo> &uriPolicies)
 {
     if (policies == nullptr || policyNum <= 0 || policyNum > MAX_ARRAY_SIZE) {
         LOGE("The policies pointer is nullptr or policyNum is abnormal");
@@ -79,8 +79,8 @@ static bool ConvertPolicyInfo(const FileShare_PolicyInfo *policies,
 }
 
 static bool ConvertPolicyErrorResult(const std::deque<OHOS::AppFileService::PolicyErrorResult> &errorResults,
-                              FileShare_PolicyErrorResult **result,
-                              unsigned int &resultNum)
+                                     FileShare_PolicyErrorResult **result,
+                                     unsigned int &resultNum)
 {
     resultNum = 0;
     auto count = errorResults.size();
@@ -170,10 +170,10 @@ static FileManagement_ErrCode ErrorCodeConversion(int32_t errorCode)
 
 void OH_FileShare_ReleasePolicyErrorResult(FileShare_PolicyErrorResult *result, unsigned int num);
 static FileManagement_ErrCode ExecAction(const FileShare_PolicyInfo *policies,
-                                  unsigned int policyNum,
-                                  FileShare_PolicyErrorResult **result,
-                                  unsigned int *resultNum,
-                                  Exec exec)
+                                         unsigned int policyNum,
+                                         FileShare_PolicyErrorResult **result,
+                                         unsigned int *resultNum,
+                                         Exec exec)
 {
     (*resultNum) = 0;
     if (!CheckFileManagerFullMountEnable()) {

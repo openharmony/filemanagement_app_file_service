@@ -22,16 +22,16 @@
  * @addtogroup fileShare
  * @{
  *
- * @brief This module provides file sharing capabilities and provides an interface for system applications to authorize
- * the Uniform Resource Identifier (URI) of public directory files with read and write permissions to other
- * applications.
+ * @brief This module provides file sharing capabilities to authorize Uniform Resource Identifiers (URIs)
+ * for public directory files that have read and write access to other applications.
  * @since 12
  */
 
 /**
  * @file oh_file_share.h
  *
- * @brief Provides fileShare APIS.
+ * @brief Provides URI-based file and directory authorization and persistence, permission activation, permission query,
+ * and other methods.
  * @library libohfileshare.so
  * @syscap SystemCapability.FileManagement.AppFileService.FolderAuthorization
  * @since 12
