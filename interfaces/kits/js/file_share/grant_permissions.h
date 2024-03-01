@@ -28,11 +28,18 @@ napi_value PersistPermission(napi_env env, napi_callback_info info);
 napi_value RevokePermission(napi_env env, napi_callback_info info);
 napi_value ActivatePermission(napi_env env, napi_callback_info info);
 napi_value DeactivatePermission(napi_env env, napi_callback_info info);
+napi_value CheckPersistentPermission(napi_env env, napi_callback_info info);
 
 struct PolicyErrorArgs {
     deque<PolicyErrorResult> errorResults;
     int32_t errNo = 0;
     ~PolicyErrorArgs() = default;
+};
+
+struct PolicyInfoResultArgs {
+    vector<bool> resultData;
+    int32_t errNo = 0;
+    ~PolicyInfoResultArgs() = default;
 };
 } // namespace ModuleFileShare
 } // namespace AppFileService

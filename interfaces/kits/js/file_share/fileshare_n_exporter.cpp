@@ -39,6 +39,7 @@ napi_value FileShareExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("revokePermission", RevokePermission),
         DECLARE_NAPI_FUNCTION("activatePermission", ActivatePermission),
         DECLARE_NAPI_FUNCTION("deactivatePermission", DeactivatePermission),
+        DECLARE_NAPI_FUNCTION("checkPersistentPermission", CheckPersistentPermission),
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;

@@ -34,6 +34,7 @@ const std::string NETWORK_PARA = "?networkid=";
 const std::string PERSISTENCE_FORBIDDEN_MESSAGE = "URI forbid to be persisted!";
 const std::string INVALID_MODE_MESSAGE = "Invalid operation mode!";
 const std::string INVALID_PATH_MESSAGE = "Invalid path!";
+const std::string PERMISSION_NOT_PERSISTED_MESSAGE = "The policy is no persistent capability!";
 const std::string FILE_SCHEME_PREFIX = "file://";
 
 #ifdef SANDBOX_MANAGER
@@ -88,6 +89,18 @@ int32_t ErrorCodeConversion(int32_t sandboxManagerErrorCode,
     }
     return FileManagement::LibN::E_UNKNOWN_ERROR;
 }
+
+int32_t ErrorCodeConversion(int32_t sandboxManagerErrorCode)
+{
+    if (sandboxManagerErrorCode == SANDBOX_MANAGER_OK) {
+        return 0;
+    }
+    if (sandboxManagerErrorCode == PERMISSION_DENIED) {
+        LOGE("The app does not have the authorization URI permission");
+        return FileManagement::LibN::E_PERMISSION;
+    }
+    return FileManagement::LibN::E_UNKNOWN_ERROR;
+}
 } // namespace
 void FilePermission::ParseErrorResults(const vector<uint32_t> &resultCodes,
                                        const vector<PolicyInfo> &pathPolicies,
@@ -109,8 +122,26 @@ void FilePermission::ParseErrorResults(const vector<uint32_t> &resultCodes,
                 result = {uri.ToString(), PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
                 errorResults.emplace_back(result);
                 break;
+            case static_cast<PolicyErrorCode>(PolicyErrorCode::PERMISSION_NOT_PERSISTED):
+                result = {uri.ToString(), PolicyErrorCode::PERMISSION_NOT_PERSISTED, PERMISSION_NOT_PERSISTED_MESSAGE};
+                errorResults.emplace_back(result);
+                break;
             default:
                 break;
+        }
+    }
+}
+
+void FilePermission::ParseErrorResults(const vector<bool> &resultCodes, vector<bool> &errorResults)
+{
+    auto resultCodeSize = resultCodes.size();
+    if (resultCodeSize == 0) {
+        return;
+    }
+    auto errorResultSize = errorResults.size();
+    for (size_t i = 0, j = 0; i < errorResultSize && j < resultCodeSize; i++) {
+        if (errorResults[i]) {
+            errorResults[i] = resultCodes[j++];
         }
     }
 }
@@ -121,7 +152,7 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
     vector<PolicyInfo> pathPolicies;
     for (auto uriPolicy : uriPolicies) {
         Uri uri(uriPolicy.uri);
-        string path = uri.GetPath();
+        string path = SandboxHelper::Decode(uri.GetPath());
         if (!CheckValidUri(uriPolicy.uri) || access(path.c_str(), F_OK) != 0) {
             LOGE("Not correct uri!");
             PolicyErrorResult result = {uriPolicy.uri, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
@@ -130,10 +161,39 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
             string currentUserId = to_string(IPCSkeleton::GetCallingTokenID() / AppExecFwk::Constants::BASE_USER_RANGE);
             int32_t ret = SandboxHelper::GetPhysicalPath(uri.ToString(), currentUserId, path);
             if (ret != 0) {
+                PolicyErrorResult result = {uriPolicy.uri, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
+                errorResults.emplace_back(result);
                 LOGE("Failed to get physical path, errorcode: %{public}d", ret);
+                continue;
             }
             PolicyInfo policyInfo = {path, uriPolicy.mode};
             pathPolicies.emplace_back(policyInfo);
+        }
+    }
+    return pathPolicies;
+}
+
+vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
+                                                                      vector<bool> &errorResults)
+{
+    vector<PolicyInfo> pathPolicies;
+    for (const auto &uriPolicy : uriPolicies) {
+        Uri uri(uriPolicy.uri);
+        string path = SandboxHelper::Decode(uri.GetPath());
+        if (!CheckValidUri(uriPolicy.uri) || access(path.c_str(), F_OK) != 0) {
+            LOGE("Not correct uri!");
+            errorResults.emplace_back(false);
+        } else {
+            string currentUserId = to_string(IPCSkeleton::GetCallingTokenID() / AppExecFwk::Constants::BASE_USER_RANGE);
+            int32_t ret = SandboxHelper::GetPhysicalPath(uri.ToString(), currentUserId, path);
+            if (ret != 0) {
+                errorResults.emplace_back(false);
+                LOGE("Failed to get physical path, errorcode: %{public}d", ret);
+                continue;
+            }
+            PolicyInfo policyInfo = {path, uriPolicy.mode};
+            pathPolicies.emplace_back(policyInfo);
+            errorResults.emplace_back(true);
         }
     }
     return pathPolicies;
@@ -199,6 +259,23 @@ int32_t FilePermission::DeactivatePermission(const vector<UriPolicyInfo> &uriPol
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
+#endif
+    return errorCode;
+}
+
+int32_t FilePermission::CheckPersistentPermission(const vector<UriPolicyInfo> &uriPolicies, vector<bool> &errorResults)
+{
+    int errorCode = 0;
+#ifdef SANDBOX_MANAGER
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    if (pathPolicies.size() == 0) {
+        return errorCode;
+    }
+    vector<bool> resultCodes;
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::CheckPersistPolicy(tokenId, pathPolicies, resultCodes);
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode);
+    ParseErrorResults(resultCodes, errorResults);
 #endif
     return errorCode;
 }

@@ -1,0 +1,49 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/ohos.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
+
+ohos_shared_library("ohfileshare") {
+  stack_protector_ret = true
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "../include",
+    "${app_file_service_path}/interfaces/innerkits/native/file_share/include/",
+    "${app_file_service_path}/interfaces/common/include/",
+  ]
+
+  sources = [ "oh_file_share.cpp" ]
+  deps = [
+    "${app_file_service_path}/interfaces/innerkits/native:fileshare_native",
+  ]
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+  ]
+  output_extension = "so"
+  relative_install_dir = "ndk"
+  part_name = "app_file_service"
+  subsystem_name = "filemanagement"
+}
