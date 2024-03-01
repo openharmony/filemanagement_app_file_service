@@ -29,6 +29,7 @@ using namespace std;
 #ifdef SANDBOX_MANAGER
 using namespace AccessControl::SandboxManager;
 #endif
+constexpr const int32_t MAX_ARRAY_SIZE = 500;
 typedef enum OperationMode {
     READ_MODE = 1 << 0,
     WRITE_MODE = 1 << 1,

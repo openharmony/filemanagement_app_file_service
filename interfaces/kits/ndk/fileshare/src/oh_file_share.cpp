@@ -14,6 +14,11 @@
  */
 
 #include "oh_file_share.h"
+
+#include <cstdint>
+#include <cstdlib>
+#include <iostream>
+
 #include "access_token.h"
 #include "accesstoken_kit.h"
 #include "file_permission.h"
@@ -22,13 +27,9 @@
 #include "parameter.h"
 #include "securec.h"
 #include "tokenid_kit.h"
-#include <cstdint>
-#include <cstdlib>
-#include <iostream>
 
-constexpr int32_t MAX_ARRAY_SIZE = 500;
-constexpr int32_t FOO_MAX_LEN = 24000; // sizeof(FileShare_PolicyErrorResult) * MAX_ARRAY_SIZE
-const std::string FILE_ACCESS_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
+const int32_t FOO_MAX_LEN = sizeof(FileShare_PolicyErrorResult) * OHOS::AppFileService::MAX_ARRAY_SIZE;
+const std::string FILE_ACCESS_PERSIST_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
 const std::string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
 
 using Exec = std::function<int(const std::vector<OHOS::AppFileService::UriPolicyInfo> &uriPolicies,
@@ -56,10 +57,6 @@ static bool ConvertPolicyInfo(const FileShare_PolicyInfo *policies,
                               int policyNum,
                               std::vector<OHOS::AppFileService::UriPolicyInfo> &uriPolicies)
 {
-    if (policies == nullptr || policyNum <= 0 || policyNum > MAX_ARRAY_SIZE) {
-        LOGE("The policies pointer is nullptr or policyNum is abnormal");
-        return false;
-    }
     for (int32_t i = 0; i < policyNum; i++) {
         OHOS::AppFileService::UriPolicyInfo policyInfo;
         if (policies[i].uri == nullptr || policies[i].length == 0) {
@@ -179,7 +176,7 @@ static FileManagement_ErrCode ExecAction(const FileShare_PolicyInfo *policies,
     if (!CheckFileManagerFullMountEnable()) {
         return E_DEVICE_NOT_SUPPORT;
     }
-    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
+    if (!CheckPermission(FILE_ACCESS_PERSIST_PERMISSION)) {
         return E_PERMISSION;
     }
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
@@ -203,6 +200,14 @@ FileManagement_ErrCode OH_FileShare_PersistPermission(const FileShare_PolicyInfo
                                                       FileShare_PolicyErrorResult **result,
                                                       unsigned int *resultNum)
 {
+    if (policies == nullptr || result == nullptr || resultNum == nullptr) {
+        LOGE("The external input pointer is abnormal");
+        return E_PARAMS;
+    }
+    if (policyNum <= 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
+        LOGE("The policyNum is abnormal");
+        return E_PARAMS;
+    }
     return ExecAction(policies, policyNum, result, resultNum, OHOS::AppFileService::FilePermission::PersistPermission);
 }
 
@@ -211,6 +216,14 @@ FileManagement_ErrCode OH_FileShare_RevokePermission(const FileShare_PolicyInfo 
                                                      FileShare_PolicyErrorResult **result,
                                                      unsigned int *resultNum)
 {
+    if (policies == nullptr || result == nullptr || resultNum == nullptr) {
+        LOGE("The external input pointer is abnormal");
+        return E_PARAMS;
+    }
+    if (policyNum <= 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
+        LOGE("The policyNum is abnormal");
+        return E_PARAMS;
+    }
     return ExecAction(policies, policyNum, result, resultNum, OHOS::AppFileService::FilePermission::RevokePermission);
 }
 
@@ -219,6 +232,14 @@ FileManagement_ErrCode OH_FileShare_ActivatePermission(const FileShare_PolicyInf
                                                        FileShare_PolicyErrorResult **result,
                                                        unsigned int *resultNum)
 {
+    if (policies == nullptr || result == nullptr || resultNum == nullptr) {
+        LOGE("The external input pointer is abnormal");
+        return E_PARAMS;
+    }
+    if (policyNum <= 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
+        LOGE("The policyNum is abnormal");
+        return E_PARAMS;
+    }
     return ExecAction(policies, policyNum, result, resultNum, OHOS::AppFileService::FilePermission::ActivatePermission);
 }
 
@@ -227,6 +248,14 @@ FileManagement_ErrCode OH_FileShare_DeactivatePermission(const FileShare_PolicyI
                                                          FileShare_PolicyErrorResult **result,
                                                          unsigned int *resultNum)
 {
+    if (policies == nullptr || result == nullptr || resultNum == nullptr) {
+        LOGE("The external input pointer is abnormal");
+        return E_PARAMS;
+    }
+    if (policyNum <= 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
+        LOGE("The policyNum is abnormal");
+        return E_PARAMS;
+    }
     return ExecAction(policies, policyNum, result, resultNum,
                       OHOS::AppFileService::FilePermission::DeactivatePermission);
 }
@@ -236,11 +265,19 @@ FileManagement_ErrCode OH_FileShare_CheckPersistentPermission(const FileShare_Po
                                                               bool **result,
                                                               unsigned int *resultNum)
 {
+    if (policies == nullptr || result == nullptr || resultNum == nullptr) {
+        LOGE("The external input pointer is abnormal");
+        return E_PARAMS;
+    }
+    if (policyNum <= 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
+        LOGE("The policyNum is abnormal");
+        return E_PARAMS;
+    }
     *resultNum = 0;
     if (!CheckFileManagerFullMountEnable()) {
         return E_DEVICE_NOT_SUPPORT;
     }
-    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
+    if (!CheckPermission(FILE_ACCESS_PERSIST_PERMISSION)) {
         return E_PERMISSION;
     }
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
@@ -261,9 +298,16 @@ FileManagement_ErrCode OH_FileShare_CheckPersistentPermission(const FileShare_Po
 
 void OH_FileShare_ReleasePolicyErrorResult(FileShare_PolicyErrorResult *result, unsigned int num)
 {
+    if (result == nullptr) {
+        return;
+    }
     for (unsigned i = 0; i < num; i++) {
-        free(result[i].uri);
-        free(result[i].message);
+        if (result[i].uri != nullptr) {
+            free(result[i].uri);
+        }
+        if (result[i].message != nullptr) {
+            free(result[i].message);
+        }
     }
     free(result);
 }

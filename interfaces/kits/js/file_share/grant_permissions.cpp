@@ -35,7 +35,6 @@ using namespace std;
 namespace {
 const std::string FILE_ACCESS_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
 const std::string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
-constexpr int32_t MAX_ARRAY_SIZE = 500;
 
 static bool CheckPermission(const string &permission)
 {
