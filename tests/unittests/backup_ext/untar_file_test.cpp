@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -219,5 +219,56 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_UnPacket_0400, testing::ext::TestSize.Lev
         GTEST_LOG_(INFO) << "UntarFileTest-an exception occurred by UntarFile.";
     }
     GTEST_LOG_(INFO) << "UntarFileTest-end SUB_Untar_File_UnPacket_0400";
+}
+
+/**
+ * @tc.number: SUB_Untar_File_UnPacket_0500
+ * @tc.name: SUB_Untar_File_UnPacket_0500
+ * @tc.desc: 测试 UnPacket 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileTest, SUB_Untar_File_UnPacket_0500, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileTest-begin SUB_Untar_File_UnPacket_0500";
+    try {
+        // 预置文件和目录
+        TestManager tm("SUB_Untar_File_UnPacket_0500");
+        string root = tm.GetRootDirCurTest();
+        string testDir = root + "/testdir/";
+        if (mkdir(testDir.data(), S_IRWXU) && errno != EEXIST) {
+            GTEST_LOG_(INFO) << " invoked mkdir failure, errno :" << errno;
+            throw BError(errno);
+        }
+        string aFile = testDir;
+        string bFile = testDir;
+        // 循环100次，用来构造超长路径和超长文件名
+        for (int i = 0; i < 100; i++) {
+            aFile += "test001/test002/test003/test004/test005/";
+            bFile += "ab";
+        }
+        aFile += "a.txt";
+        bFile += ".txt";
+        SaveStringToFile(aFile, "hello");
+        SaveStringToFile(bFile, "world");
+
+        string tarFile = root + "/test.0.tar";
+        TarMap tarMap {};
+        vector<string> smallFiles;
+        smallFiles.emplace_back(aFile);
+        smallFiles.emplace_back(bFile);
+        TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap);
+
+        string rootPath(root);
+        int ret = UntarFile::GetInstance().UnPacket(tarFile, rootPath);
+        EXPECT_EQ(ret, 0);
+        ClearCache();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileTest-an exception occurred by UntarFile.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileTest-end SUB_Untar_File_UnPacket_0500";
 }
 } // namespace OHOS::FileManagement::Backup

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+const int32_t PATH_MAX_LEN = 4096;
 
 static bool IsEmptyDirectory(const string &path)
 {
@@ -70,6 +71,17 @@ static tuple<ErrCode, map<string, struct stat>, vector<string>> GetFile(const st
         files.try_emplace(path, sta);
     }
     return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
+}
+
+static uint32_t CheckOverLongPath(const string &path)
+{
+    uint32_t len = path.length();
+    if (len >= PATH_MAX_LEN) {
+        size_t found = path.find_last_of('/');
+        string sub = path.substr(found + 1);
+        HILOGE("Path over long, length:%{public}d, fileName:%{public}s.", len, sub.c_str());
+    }
+    return len;
 }
 
 static tuple<ErrCode, map<string, struct stat>, vector<string>> GetDirFilesDetail(const string &path,
@@ -114,7 +126,7 @@ static tuple<ErrCode, map<string, struct stat>, vector<string>> GetDirFilesDetai
         } else {
             struct stat sta = {};
             string fileName = IncludeTrailingPathDelimiter(path) + string(ptr->d_name);
-            if (stat(fileName.data(), &sta) == -1) {
+            if (CheckOverLongPath(fileName) >= PATH_MAX_LEN || stat(fileName.data(), &sta) == -1) {
                 continue;
             }
             if (sta.st_size <= size) {
