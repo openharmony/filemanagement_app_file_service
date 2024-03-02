@@ -16,5 +16,5 @@ backup.debug.overrideExtensionConfig=false
 backup.debug.overrideAccountConfig=false
 backup.debug.overrideAccountNumber=0
 
-backup.overrideBackupSARelease=false
-backup.overrideIncrementalRestore=false
+backup.overrideBackupSARelease=true
+backup.overrideIncrementalRestore=true
