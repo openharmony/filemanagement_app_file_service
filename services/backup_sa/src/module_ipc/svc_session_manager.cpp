@@ -687,4 +687,9 @@ void SvcSessionManager::SetMemParaCurSize(int32_t size)
 {
     memoryParaCurSize_ = size;
 }
+
+bool SvcSessionManager::ValidRestoreDataType(RestoreTypeEnum restoreDataType)
+{
+    return impl_.restoreDataType == restoreDataType;
+}
 } // namespace OHOS::FileManagement::Backup
