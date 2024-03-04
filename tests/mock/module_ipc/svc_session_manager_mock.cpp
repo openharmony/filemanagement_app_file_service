@@ -327,6 +327,11 @@ bool SvcSessionManager::GetIsIncrementalBackup()
     return true;
 }
 
+bool SvcSessionManager::ValidRestoreDataType(RestoreTypeEnum restoreDataType)
+{
+    return impl_.restoreDataType == restoreDataType;
+}
+
 void SvcSessionManager::SetIncrementalData(const BIncrementalData &incrementalData) {}
 
 int32_t SvcSessionManager::GetIncrementalManifestFd(const string &bundleName)

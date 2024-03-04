@@ -264,6 +264,17 @@ static bool SpeicalVersion(const string &versionName, uint32_t versionCode)
     return false;
 }
 
+static void OnBundleStarted(BError error, sptr<SvcSessionManager> session, const BundleName &bundleName)
+{
+    IServiceReverse::Scenario scenario = session->GetScenario();
+    if (scenario == IServiceReverse::Scenario::RESTORE && BackupPara().GetBackupOverrideIncrementalRestore() &&
+        session->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
+        session->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(error, bundleName);
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        session->GetServiceReverseProxy()->RestoreOnBundleStarted(error, bundleName);
+    }
+}
+
 static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
                                                                  sptr<SvcSessionManager> session,
                                                                  const vector<BundleName> &bundleNames)
@@ -282,8 +293,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
         auto it = find_if(bundleInfos.begin(), bundleInfos.end(),
                           [&restoreInfo](const auto &obj) { return obj.name == restoreInfo.name; });
         if (it == bundleInfos.end()) {
-            session->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_BUNDLE_INFO_EMPTY),
-                                                                      restoreInfo.name);
+            OnBundleStarted(BError(BError::Codes::SA_BUNDLE_INFO_EMPTY), session, restoreInfo.name);
             continue;
         }
         BJsonEntityCaps::BundleInfo info = {.name = (*it).name,
@@ -329,8 +339,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             if ((restoreInfo.allToBackup == false &&
                  !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) ||
                 restoreInfo.extensionName.empty()) {
-                session_->GetServiceReverseProxy()->RestoreOnBundleStarted(
-                    BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), restoreInfo.name);
+                OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, restoreInfo.name);
                 session_->RemoveExtInfo(restoreInfo.name);
                 continue;
             }
@@ -720,7 +729,8 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
         if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
         } else if (scenario == IServiceReverse::Scenario::RESTORE &&
-                   BackupPara().GetBackupOverrideIncrementalRestore()) {
+                   BackupPara().GetBackupOverrideIncrementalRestore() &&
+                   session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(ret, bundleName);
 
             DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
@@ -754,7 +764,8 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
     auto scenario = session_->GetScenario();
     if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
-    } else if (scenario == IServiceReverse::Scenario::RESTORE && BackupPara().GetBackupOverrideIncrementalRestore()) {
+    } else if (scenario == IServiceReverse::Scenario::RESTORE && BackupPara().GetBackupOverrideIncrementalRestore() &&
+               session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
     } else if (scenario == IServiceReverse::Scenario::BACKUP) {
         session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
@@ -869,7 +880,8 @@ void Service::OnAllBundlesFinished(ErrCode errCode)
         if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnAllBundlesFinished(errCode);
         } else if (scenario == IServiceReverse::Scenario::RESTORE &&
-                   BackupPara().GetBackupOverrideIncrementalRestore()) {
+                   BackupPara().GetBackupOverrideIncrementalRestore() &&
+                   session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnAllBundlesFinished(errCode);
         } else if (scenario == IServiceReverse::Scenario::BACKUP) {
             session_->GetServiceReverseProxy()->BackupOnAllBundlesFinished(errCode);

@@ -351,7 +351,8 @@ bool Service::IncrementalBackup(const string &bundleName)
             ClearSessionAndSchedInfo(bundleName);
         }
         return true;
-    } else if (scenario == IServiceReverse::Scenario::RESTORE && BackupPara().GetBackupOverrideIncrementalRestore()) {
+    } else if (scenario == IServiceReverse::Scenario::RESTORE && BackupPara().GetBackupOverrideIncrementalRestore() &&
+               session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
         auto ret = proxy->HandleRestore();
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(ret, bundleName);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);

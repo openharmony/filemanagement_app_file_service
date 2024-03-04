@@ -417,15 +417,17 @@ public:
     /**
      * @brief 获取备份前内存参数
      *
-    */
+     */
     int32_t GetMemParaCurSize();
 
     /**
      * @brief 记录备份前内存参数
      *
      * @param size
-    */
+     */
     void SetMemParaCurSize(int32_t size);
+
+    bool ValidRestoreDataType(RestoreTypeEnum restoreType);
 
 private:
     /**
