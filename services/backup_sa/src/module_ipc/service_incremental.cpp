@@ -341,7 +341,7 @@ bool Service::IncrementalBackup(const string &bundleName)
                       append(BConstants::BACKUP_STAT_SYMBOL).
                       append(to_string(session_->GetLastIncrementalTime(bundleName)));
         HILOGI("path = %{public}s", path.c_str());
-        UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP | S_IRGRP | S_IWGRP));
+        UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP));
         // BFile::SendFile(incrementalFd, fdLocal);
         //  云上存在的数据
         UniqueFd lastManifestFd(session_->GetIncrementalManifestFd(bundleName));

@@ -96,13 +96,6 @@ private:
         set<string> sentFile;
     };
 
-    void TryClearBundleOfMap(const BundleName &bundleName)
-    {
-        if (bundleStatusMap_[bundleName].sendFile == bundleStatusMap_[bundleName].sentFile) {
-            bundleStatusMap_.erase(bundleName);
-        }
-    }
-
     map<string, BundleStatus> bundleStatusMap_;
     mutable condition_variable cv_;
     mutex lock_;

@@ -146,7 +146,6 @@ napi_value FileUriNExporter::GetFileUriPath(napi_env env, napi_callback_info inf
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
-    string sandboxPath = SandboxHelper::Decode(fileuriEntity->fileUri_.uri_.GetPath());
     string bundleName = fileuriEntity->fileUri_.uri_.GetAuthority();
     if (bundleName == MEDIA_AUTHORITY) {
         return NVal::CreateUTF8String(env, fileuriEntity->fileUri_.GetPath()).val_;

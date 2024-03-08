@@ -265,7 +265,7 @@ static int GetLocalCapabilitiesIncremental(shared_ptr<SessionBckup> ctx,
         return -EPERM;
     }
     int num = 0;
-    for (auto &bundleName : bundleNames) {
+    for (const auto &bundleName : bundleNames) {
         BIncrementalData data;
         data.bundleName = bundleName;
         data.lastIncrementalTime = atoi(times[num].c_str());
@@ -281,7 +281,7 @@ static int GetLocalCapabilitiesIncremental(shared_ptr<SessionBckup> ctx,
     return 0;
 }
 
-static int32_t Init(const string &pathCapFile, vector<string> bundleNames, vector<string> times)
+static int32_t Init(const string &pathCapFile, const vector<string>& bundleNames, const vector<string>& times)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "Init");
     // SELinux backup_tool工具/data/文件夹下创建文件夹 SA服务因root用户的自定义标签无写入权限 此处调整为软链接形式
@@ -308,7 +308,6 @@ static int32_t Init(const string &pathCapFile, vector<string> bundleNames, vecto
     if (int ret = GetLocalCapabilitiesIncremental(ctx, pathCapFile, bundleNames, times); ret != 0) {
         return ret;
     }
-    vector<BIncrementalData> bundlesToBackup;
     for (auto &data : ctx->lastIncrementalData) {
         string tmpPath = string(BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR) + data.bundleName;
         if (access(tmpPath.data(), F_OK) != 0 && mkdir(tmpPath.data(), S_IRWXU) != 0) {

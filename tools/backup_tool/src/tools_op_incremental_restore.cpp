@@ -95,15 +95,7 @@ public:
 private:
     struct BundleStatus {
         set<string> sendFile;
-        set<string> sentFile;
     };
-
-    void TryClearBundleOfMap(const BundleName &bundleName)
-    {
-        if (bundleStatusMap_[bundleName].sendFile == bundleStatusMap_[bundleName].sentFile) {
-            bundleStatusMap_.erase(bundleName);
-        }
-    }
 
     map<string, BundleStatus> bundleStatusMap_;
     mutable condition_variable cv_;
@@ -242,7 +234,7 @@ static bool GetRealPath(string &path)
 }
 
 static int32_t InitRestoreSession(shared_ptr<SessionRestore> ctx,
-                                  vector<BundleName> &bundleNames,
+                                  const vector<BundleName> &bundleNames,
                                   vector<string> &times)
 {
     if (bundleNames.size() != times.size()) {
@@ -265,7 +257,7 @@ static int32_t InitRestoreSession(shared_ptr<SessionRestore> ctx,
     }
 
     int num = 0;
-    for (auto &bundleName : bundleNames) {
+    for (const auto &bundleName : bundleNames) {
         BIncrementalData data;
         data.bundleName = bundleName;
         data.lastIncrementalTime = atoi(times[num].c_str());

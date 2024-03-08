@@ -220,11 +220,11 @@ static bool CreateIPCInteractionFiles(int32_t userId, const string &bundleName, 
         return false;
     }
     incExcFile << BConstants::BACKUP_INCLUDE << endl;
-    for (auto &include : includes) {
+    for (const auto &include : includes) {
         incExcFile << include << endl;
     }
     incExcFile << BConstants::BACKUP_EXCLUDE << endl;
-    for (auto &exclude : excludes) {
+    for (const auto &exclude : excludes) {
         incExcFile << exclude << endl;
     }
     incExcFile.close();
