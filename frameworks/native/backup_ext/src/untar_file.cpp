@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -178,8 +178,9 @@ int UntarFile::ParseTarFile(const string &rootPath)
             HILOGE("Parsing tar file completed, read data count is less then block size.");
             return 0;
         }
+        TarHeader *header = reinterpret_cast<TarHeader *>(buff);
         // two empty continuous block indicate end of file
-        if (IsEmptyBlock(buff)) {
+        if (IsEmptyBlock(buff) && header->typeFlag != GNUTYPE_LONGNAME) {
             char tailBuff[BLOCK_SIZE] = {0};
             size_t tailRead = fread(tailBuff, 1, BLOCK_SIZE, tarFilePtr_);
             if (tailRead == BLOCK_SIZE && IsEmptyBlock(tailBuff)) {
@@ -188,7 +189,6 @@ int UntarFile::ParseTarFile(const string &rootPath)
             }
         }
         // check header
-        TarHeader *header = reinterpret_cast<TarHeader *>(buff);
         if (!IsValidTarBlock(*header)) {
             // when split unpack, ftell size is over than file really size [0,READ_BUFF_SIZE]
             if (ftello(tarFilePtr_) > (tarFileSize_ + READ_BUFF_SIZE) || !IsEmptyBlock(buff)) {
@@ -442,6 +442,9 @@ string UntarFile::GenRealPath(const string &rootPath, const string &realName)
         realPath = realPath.substr(0, len - 1);
     }
     realPath.append((realName[0] == '/') ? realName : ("/" + realName));
+    if (realPath[0] == '/') {
+        realPath = realPath.substr(1, realPath.length());
+    }
     return realPath;
 }
 
