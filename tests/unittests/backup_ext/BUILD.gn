@@ -47,7 +47,6 @@ ohos_unittest("tar_file_test") {
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags = [ "--coverage" ]
@@ -66,6 +65,7 @@ ohos_unittest("tar_file_test") {
     "c_utils:utils",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
@@ -116,7 +116,6 @@ ohos_unittest("untar_file_test") {
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags = [ "--coverage" ]
@@ -135,6 +134,7 @@ ohos_unittest("untar_file_test") {
     "c_utils:utils",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]

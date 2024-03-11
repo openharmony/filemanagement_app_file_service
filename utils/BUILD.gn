@@ -25,7 +25,6 @@ config("utils_public_config") {
   include_dirs = [
     "include",
     "include/b_hilog",
-    "${path_base}/include",
   ]
 }
 
@@ -99,6 +98,7 @@ ohos_shared_library("backup_utils") {
 
   configs = [ ":utils_private_config" ]
   public_configs = [ ":utils_public_config" ]
+  public_external_deps = [ "c_utils:utilsbase" ]
 
   external_deps = [
     "cJSON:cjson",
@@ -107,12 +107,13 @@ ohos_shared_library("backup_utils") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "json:nlohmann_json_static",
+    "jsoncpp:jsoncpp",
+    "openssl:libcrypto_shared",
   ]
 
   include_dirs = [
-    "${path_init}/interfaces/innerkits/include/syspara",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
-    "${path_rust}/crates/cxx/include",
     "${target_gen_dir}/rust/src",
   ]
 
@@ -120,8 +121,6 @@ ohos_shared_library("backup_utils") {
     ":backup_cxx_cppdeps",
     ":backup_cxx_gen",
     ":backup_cxx_rust",
-    "${path_jsoncpp}:jsoncpp",
-    "//third_party/openssl:libcrypto_shared",
   ]
 
   use_exceptions = true

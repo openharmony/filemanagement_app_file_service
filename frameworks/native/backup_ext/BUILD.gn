@@ -40,18 +40,11 @@ ohos_shared_library("backup_extension_ability_native") {
     "LOG_TAG=\"BackupExt\"",
   ]
 
-  include_dirs = [
-    "include",
-    "${path_napi}/native_engine",
-    "${path_ability_runtime}/services/common/include",
-    "${path_ability_runtime}/interfaces/kits/napi/aafwk/inner/napi_common",
-    "${path_ability_runtime}/interfaces/kits/native/appkit/ability_runtime",
-  ]
+  include_dirs = [ "include" ]
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/utils:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -60,6 +53,7 @@ ohos_shared_library("backup_extension_ability_native") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:app_context",
     "ability_runtime:appkit_native",
+    "ability_runtime:napi_common",
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
@@ -67,6 +61,7 @@ ohos_shared_library("backup_extension_ability_native") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
   ]
 

@@ -108,8 +108,6 @@ ohos_shared_library("backup") {
   subsystem_name = "filemanagement"
   part_name = "app_file_service"
 
-  include_dirs = [ "${path_napi}/interfaces/kits" ]
-
   defines = [
     "LOG_DOMAIN=0xD004306",
     "LOG_TAG=\"BackupNAPI\"",
@@ -127,7 +125,6 @@ ohos_shared_library("backup") {
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/utils:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -136,6 +133,7 @@ ohos_shared_library("backup") {
     "file_api:filemgmt_libn",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
   ]
 }
