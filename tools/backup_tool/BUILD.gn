@@ -31,7 +31,6 @@ ohos_executable("backup_tool") {
     deps += [
       "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
       "${path_backup}/utils/:backup_utils",
-      "${path_jsoncpp}:jsoncpp",
     ]
 
     sources += [
@@ -51,6 +50,7 @@ ohos_executable("backup_tool") {
       "hilog:libhilog",
       "hitrace:hitrace_meter",
       "ipc:ipc_core",
+      "jsoncpp:jsoncpp",
     ]
 
     defines += [ "BACKUP_TOOL_ENABLE=1" ]

@@ -56,7 +56,6 @@ ohos_shared_library("backup_sa") {
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/utils:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -71,6 +70,7 @@ ohos_shared_library("backup_sa") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
