@@ -60,6 +60,7 @@ struct FileShareInfo {
     vector<string> sharePath_;
     string currentUid_;
     ShareFileType type_;
+    ino_t stIno_;
 };
 
 mutex FileShare::mapMutex_;
@@ -89,26 +90,28 @@ static void GetProviderInfo(string uriStr, FileShareInfo &info)
     info.providerSandboxPath_ = SandboxHelper::Decode(uri.GetPath());
 }
 
-static bool IsExistDir(const string &path)
+static bool IsExistDir(const string &path, FileShareInfo &info)
 {
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
         return false;
     }
+    info.stIno_ = buf.st_ino;
     return S_ISDIR(buf.st_mode);
 }
 
-static bool IsExistFile(const string &path)
+static bool IsExistFile(const string &path, FileShareInfo &info)
 {
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
         LOGE("Get path stat failed, err %{public}d", errno);
         return false;
     }
+    info.stIno_ = buf.st_ino;
     return S_ISREG(buf.st_mode);
 }
 
-static bool CheckIfNeedShare(const string &uriStr, ShareFileType type, const string &path)
+static bool CheckIfNeedShare(const string &uriStr, ShareFileType type, FileShareInfo &info, const string &path)
 {
     if (type == ShareFileType::DIR_TYPE) {
         return true;
@@ -121,7 +124,8 @@ static bool CheckIfNeedShare(const string &uriStr, ShareFileType type, const str
 
     Uri uri(uriStr);
     string networkIdInfo = uri.GetQuery();
-    if (buf.st_nlink != 0 || (!networkIdInfo.empty() && networkIdInfo.find(NETWORK_PARA) == 0)) {
+    if ((buf.st_nlink != 0 || (!networkIdInfo.empty() && networkIdInfo.find(NETWORK_PARA) == 0)) &&
+        buf.st_ino == info.stIno_) {
         LOGI("no need create again");
         return false;
     }
@@ -141,12 +145,12 @@ static int32_t GetSharePath(const string &uri, FileShareInfo &info, uint32_t fla
         return -EINVAL;
     }
 
-    if (CheckIfNeedShare(uri, info.type_, shareRPath)) {
+    if (CheckIfNeedShare(uri, info.type_, info, shareRPath)) {
         info.sharePath_.push_back(shareRPath);
     }
 
     if ((flag & WRITE_URI_PERMISSION) == WRITE_URI_PERMISSION &&
-        CheckIfNeedShare(uri, info.type_, shareRWPath)) {
+        CheckIfNeedShare(uri, info.type_, info, shareRWPath)) {
         info.sharePath_.push_back(shareRWPath);
     }
 
@@ -160,10 +164,10 @@ static int32_t GetShareFileType(FileShareInfo &info)
         return -EINVAL;
     }
 
-    if (IsExistFile(info.providerLowerPath_)) {
+    if (IsExistFile(info.providerLowerPath_, info)) {
         info.type_ = ShareFileType::FILE_TYPE;
         return 0;
-    } else if (IsExistDir(info.providerLowerPath_)) {
+    } else if (IsExistDir(info.providerLowerPath_, info)) {
         info.type_ = ShareFileType::DIR_TYPE;
         return 0;
     }
