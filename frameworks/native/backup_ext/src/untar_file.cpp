@@ -230,8 +230,7 @@ int UntarFile::ParseIncrementalTarFile(const string &rootPath)
         return ret;
     }
 
-    bool finished = false;
-    while (!finished) {
+    do {
         readCnt_ = fread(buff, 1, BLOCK_SIZE, tarFilePtr_);
         if (readCnt_ < BLOCK_SIZE) {
             HILOGE("Parsing tar file completed, read data count is less then block size.");
@@ -265,7 +264,7 @@ int UntarFile::ParseIncrementalTarFile(const string &rootPath)
         if (ret != 0) {
             HILOGE("Failed to handle file property");
         }
-    }
+    } while (readCnt_ >= BLOCK_SIZE);
 
     return ret;
 }

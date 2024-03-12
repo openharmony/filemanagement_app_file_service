@@ -218,9 +218,8 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
         HILOGE("Failed to open file %{public}s, err = %{public}d", fileName.data(), errno);
         return false;
     }
-    off_t remain = size;
-    bool isFilled = false;
 
+    off_t remain = size;
     while (remain > 0) {
         off_t read = ioBuffer_.size();
         if (remain < read) {
@@ -242,11 +241,7 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
 
     close(fd);
     if (remain == 0) {
-        if (!isFilled) {
-            return CompleteBlock(size);
-        } else {
-            return true;
-        }
+        return CompleteBlock(size);
     }
     return false;
 }
@@ -262,7 +257,7 @@ off_t TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, off_t read)
         auto writeBytes = fwrite(&ioBuffer[count], sizeof(uint8_t), len - count, currentTarFile_);
         if (writeBytes < 1) {
             // 再执行一遍
-            auto writeBytes = fwrite(&ioBuffer[count], sizeof(uint8_t), len - count, currentTarFile_);
+            writeBytes = fwrite(&ioBuffer[count], sizeof(uint8_t), len - count, currentTarFile_);
             if (writeBytes < 1) {
                 HILOGE("Failed to fwrite tar file, err = %{public}d", errno);
                 return count;

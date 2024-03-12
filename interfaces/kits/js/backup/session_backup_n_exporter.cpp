@@ -90,7 +90,7 @@ static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, co
         if (!err && errCode == 0) {
             return bundleName;
         }
-        
+
         NVal res;
         if (err) {
             res = NVal {env, err.GetNapiErr(env)};
@@ -129,7 +129,7 @@ static void onBundleEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, cons
         if (!err && errCode == 0) {
             return bundleName;
         }
-        
+
         NVal res;
         if (err) {
             res = NVal {env, err.GetNapiErr(env)};

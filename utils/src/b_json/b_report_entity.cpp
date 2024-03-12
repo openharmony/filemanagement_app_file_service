@@ -119,7 +119,7 @@ static void DealLine(unordered_map<string, int> &keys,
 {
     string currentLine = line;
     if (currentLine[currentLine.length() - 1] == LINE_WRAP) {
-        currentLine = currentLine.substr(0, currentLine.length() - 1);
+        currentLine.pop_back();
     }
 
     vector<string> splits = SplitStringByChar(currentLine, ATTR_SEP);
