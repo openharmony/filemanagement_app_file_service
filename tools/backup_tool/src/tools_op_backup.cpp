@@ -249,13 +249,12 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
         return -EPERM;
     }
+    ctx->SetBundleFinishedCount(bundleNames.size());
     int ret = ctx->session_->AppendBundles(bundleNames);
     if (ret != 0) {
         printf("backup append bundles error: %d\n", ret);
         throw BError(BError::Codes::TOOL_INVAL_ARG, "backup append bundles error");
     }
-
-    ctx->SetBundleFinishedCount(bundleNames.size());
     ctx->Wait();
     FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
     ctx->session_->Release();
