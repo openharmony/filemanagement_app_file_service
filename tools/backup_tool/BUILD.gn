@@ -41,6 +41,7 @@ ohos_executable("backup_tool") {
       "src/tools_op_help.cpp",
       "src/tools_op_incremental_backup.cpp",
       "src/tools_op_incremental_restore.cpp",
+      "src/tools_op_incremental_restore_async.cpp",
       "src/tools_op_restore.cpp",
       "src/tools_op_restore_async.cpp",
     ]
