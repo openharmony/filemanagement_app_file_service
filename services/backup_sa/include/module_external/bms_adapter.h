@@ -61,6 +61,8 @@ public:
      */
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForIncremental(
         const std::vector<BIncrementalData> &incrementalDataList, int32_t userId);
+
+    static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForIncremental(int32_t userId);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_BUNDLE_MGR_ADAPTER_H

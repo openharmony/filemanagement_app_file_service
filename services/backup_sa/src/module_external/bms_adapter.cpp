@@ -314,4 +314,26 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     HILOGI("BundleMgrAdapter GetBundleInfosForIncremental end ");
     return newBundleInfos;
 }
+
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncremental(int32_t userId)
+{
+    vector<BIncrementalData> bundleNames;
+    vector<AppExecFwk::BundleInfo> installedBundles;
+    auto bms = GetBundleManager();
+    if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles, userId)) {
+        throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle infos");
+    }
+    for (auto const &installedBundle : installedBundles) {
+        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+            installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
+            HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
+            continue;
+        }
+        auto [allToBackup, extName, restoreDeps, supportScene] = GetAllowAndExtName(installedBundle.extensionInfos);
+        if (allToBackup) {
+            bundleNames.emplace_back(BIncrementalData {installedBundle.name, 0});
+        }
+    }
+    return BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, userId);
+}
 } // namespace OHOS::FileManagement::Backup
