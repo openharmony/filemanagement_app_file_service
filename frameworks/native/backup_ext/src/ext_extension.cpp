@@ -1033,6 +1033,18 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
             BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
                                   "extension handle have been already released");
 
+            auto callBackupEx = [obj](const std::string &restoreRetInfo) {
+                HILOGI("begin call restoreEx");
+                auto extensionPtr = obj.promote();
+                BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                                      "Ext extension handle have been already released");
+                if (restoreRetInfo.size()) {
+                    extensionPtr->AppResultReport(restoreRetInfo);
+                }
+                extensionPtr->AppDone(BError(BError::Codes::OK));
+                // 清空恢复目录
+                extensionPtr->DoClear();
+            };
             auto callBackup = [obj]() {
                 HILOGI("begin call restore");
                 auto extensionPtr = obj.promote();
@@ -1042,7 +1054,7 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
                 // 清空恢复目录
                 extensionPtr->DoClear();
             };
-            ptr->extension_->OnRestore(callBackup);
+            ptr->extension_->OnRestore(callBackupEx, callBackup);
         } catch (const BError &e) {
             ptr->AppDone(e.GetCode());
         } catch (const exception &e) {
@@ -1082,6 +1094,18 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
             BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
                                   "extension handle have been already released");
 
+            auto callBackupEx = [obj](const std::string &restoreRetInfo) {
+                HILOGI("begin call restore");
+                auto extensionPtr = obj.promote();
+                BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                                      "Ext extension handle have been already released");
+                if (restoreRetInfo.size()) {
+                    extensionPtr->AppResultReport(restoreRetInfo);
+                }
+                extensionPtr->AppIncrementalDone(BError(BError::Codes::OK));
+                // 清空恢复目录
+                extensionPtr->DoClear();
+            };
             auto callBackup = [obj]() {
                 HILOGI("begin call restore");
                 auto extensionPtr = obj.promote();
@@ -1091,7 +1115,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
                 // 清空恢复目录
                 extensionPtr->DoClear();
             };
-            ptr->extension_->OnRestore(callBackup);
+            ptr->extension_->OnRestore(callBackupEx, callBackup);
         } catch (const BError &e) {
             ptr->AppIncrementalDone(e.GetCode());
         } catch (const exception &e) {
@@ -1149,6 +1173,17 @@ void BackupExtExtension::AppDone(ErrCode errCode)
     auto ret = proxy->AppDone(errCode);
     if (ret != ERR_OK) {
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
+    }
+}
+
+void BackupExtExtension::AppResultReport(const std::string restoreRetInfo)
+{
+    HILOGI("Begin");
+    auto proxy = ServiceProxy::GetInstance();
+    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+    auto ret = proxy->ServiceResultReport(restoreRetInfo);
+    if (ret != ERR_OK) {
+        HILOGE("Failed notify app restoreResultReport, errCode: %{public}d", ret);
     }
 }
 

@@ -239,7 +239,7 @@ ErrCode ExtBackupJs::OnBackup(function<void()> callback)
 {
     HILOGI("BackupExtensionAbility(JS) OnBackup.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the onRestore interface.");
+                          "The app does not provide the onBackup interface.");
     callbackInfo_ = std::make_shared<CallBackInfo>(callback);
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env,
                                                                              napi_value result) -> bool {
@@ -258,37 +258,52 @@ ErrCode ExtBackupJs::OnBackup(function<void()> callback)
     return errCode;
 }
 
-ErrCode ExtBackupJs::OnRestore(function<void()> callback)
+ErrCode ExtBackupJs::OnRestore(std::function<void(const std::string &restoreRetInfo)> callbackEx,
+    function<void()> callback)
 {
     HILOGI("BackupExtensionAbility(JS) OnRestore.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
                           "The app does not provide the onRestore interface.");
 
-    auto argParser = [appVersionCode(appVersionCode_),
-                      appVersionStr(appVersionStr_)](napi_env env, vector<napi_value> &argv) -> bool {
-        napi_value objValue = nullptr;
-        napi_create_object(env, &objValue);
-        napi_set_named_property(env, objValue, "code", AbilityRuntime::CreateJsValue(env, appVersionCode));
-        napi_set_named_property(env, objValue, "name", AbilityRuntime::CreateJsValue(env, appVersionStr.c_str()));
-        argv.push_back(objValue);
-        return true;
-    };
+    callbackInfoEx_ = std::make_shared<CallBackInfo>(callbackEx);
     callbackInfo_ = std::make_shared<CallBackInfo>(callback);
-    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env,
-                                                                             napi_value result) -> bool {
+    callbackInfo_ = std::make_shared<CallBackInfo>(callback);
+    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfoEx {callbackInfoEx_},
+        callbackInfo {callbackInfo_}](napi_env env, napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
+            napi_valuetype valueType = napi_undefined;
+            napi_typeof(env, result, &valueType);
+            if (valueType == napi_string) {
+                size_t strLen = 0;
+                napi_status status = napi_get_value_string_utf8(env, result, nullptr, -1, &strLen);
+                if (status != napi_ok) {
+                    HILOGE("Args result length is empty");
+                    return false;
+                }
+                size_t bufLen = strLen + 1;
+                unique_ptr<char[]> restoreRetStr = make_unique<char[]>(bufLen);
+                HILOGI("Will callBack onRestoreEx, restoreRetStr is: %{public}s", restoreRetStr.get());
+                callbackInfoEx->callbackEx(restoreRetStr.get());
+                return true;
+            }
+            HILOGI("Will callBack onRestore");
             callbackInfo->callback();
             return true;
         }
         HILOGI("CheckPromise(JS) OnRestore ok.");
         return CallPromise(*jsRuntime, result, callbackInfo.get());
     };
-
-    auto errCode = CallJsMethod("onRestore", jsRuntime_, jsObj_.get(), argParser, retParser);
+    HILOGI("Start execute call Js onRestoreEx method");
+    auto errCode = CallJsMethod("onRestoreEx", jsRuntime_, jsObj_.get(), ParseRestoreExInfo(), retParser);
     if (errCode != ERR_OK) {
-        HILOGE("CallJsMethod error, code:%{public}d.", errCode);
+        HILOGI("Start execute call Js onRestore method");
+        errCode = CallJsMethod("onRestore", jsRuntime_, jsObj_.get(), ParseRestoreInfo(), retParser);
     }
-    return errCode;
+    if (errCode != ERR_OK) {
+        HILOGE("Execute call Js method failed, errorCode is: %{public}d", errCode);
+        return errCode;
+    }
+    return ERR_OK;
 }
 
 static int DoCallJsMethod(CallJsParam *param)
@@ -383,4 +398,37 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
 
     return ERR_OK;
 }
+
+std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::ParseRestoreExInfo()
+{
+    auto onRestoreExFun = [appVersionCode(appVersionCode_), appVersionStr(appVersionStr_),
+        restoreRetInfo(restoreRetInfo_)](napi_env env, vector<napi_value> &argv) -> bool {
+        napi_value objValue = nullptr;
+        napi_value restoreRetValue = nullptr;
+        napi_create_object(env, &objValue);
+        napi_create_object(env, &restoreRetValue);
+        napi_set_named_property(env, objValue, "code", AbilityRuntime::CreateJsValue(env, appVersionCode));
+        napi_set_named_property(env, objValue, "name", AbilityRuntime::CreateJsValue(env, appVersionStr.c_str()));
+        napi_create_string_utf8(env, restoreRetInfo.c_str(), restoreRetInfo.size(), &restoreRetValue);
+        argv.push_back(objValue);
+        argv.push_back(restoreRetValue);
+        return true;
+    };
+    return onRestoreExFun;
+}
+
+std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::ParseRestoreInfo()
+{
+    auto onRestoreFun = [appVersionCode(appVersionCode_), appVersionStr(appVersionStr_)](napi_env env,
+        vector<napi_value> &argv) -> bool {
+        napi_value objValue = nullptr;
+        napi_create_object(env, &objValue);
+        napi_set_named_property(env, objValue, "code", AbilityRuntime::CreateJsValue(env, appVersionCode));
+        napi_set_named_property(env, objValue, "name", AbilityRuntime::CreateJsValue(env, appVersionStr.c_str()));
+        argv.push_back(objValue);
+        return true;
+    };
+    return onRestoreFun;
+}
+
 } // namespace OHOS::FileManagement::Backup

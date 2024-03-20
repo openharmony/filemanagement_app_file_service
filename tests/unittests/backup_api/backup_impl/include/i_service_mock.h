@@ -88,6 +88,11 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode ServiceResultReport(const std::string &restoreRetInfo) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override
     {
         return BError(BError::Codes::OK);

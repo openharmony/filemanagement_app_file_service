@@ -97,6 +97,13 @@ private:
     void AppDone(ErrCode errCode);
 
     /**
+     * @brief extension backup restore is done
+     *
+     * @param restoreRetInfo
+     */
+    void AppResultReport(const std::string &restoreRetInfo);
+
+    /**
      * @brief Executing Backup Tasks Asynchronously
      *
      * @param extAction action
