@@ -40,7 +40,9 @@ gen_js_obj("backup_extension_ability_abc") {
 # 即，尝试加载/system/lib64/application/backupextensionability.z.so或/system//lib64/application/backupextensionability_napi.z.so
 # 具体请参考//foundation/arkui/napi/module_manager/native_module_manager.cpp
 ohos_shared_library("backupextensionability_napi") {
-  stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
+
+#  stack_protector_ret = true
   sanitize = {
     integer_overflow = true
     ubsan = true
