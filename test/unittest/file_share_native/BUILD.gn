@@ -14,6 +14,14 @@
 import("//build/test.gni")
 
 ohos_unittest("file_share_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = "filemanagement/app_file_service"
   resource_config_file = "../resource/ohos_test.xml"
   sources = [ "file_share_test.cpp" ]
