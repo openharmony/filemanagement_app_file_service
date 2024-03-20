@@ -16,6 +16,7 @@ group("fuzztest") {
 
   deps = [
     # deps file
+    "backupext_fuzzer:BackupExtFuzzTest",
     "backupsa_fuzzer:BackupSaFuzzTest",
     "fileshare_fuzzer:FileShareFuzzTest",
     "remotefileshare_fuzzer:RemoteFileShareFuzzTest",
