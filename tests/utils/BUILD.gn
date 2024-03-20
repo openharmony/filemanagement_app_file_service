@@ -21,7 +21,6 @@ config("test_util_public_config") {
 ohos_static_library("backup_test_utils") {
   branch_protector_ret = "pac_ret"
 
-#  stack_protector_ret = true
   sanitize = {
     integer_overflow = true
     ubsan = true

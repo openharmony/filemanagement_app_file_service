@@ -42,7 +42,6 @@ gen_js_obj("backup_extension_ability_abc") {
 ohos_shared_library("backupextensionability_napi") {
   branch_protector_ret = "pac_ret"
 
-#  stack_protector_ret = true
   sanitize = {
     integer_overflow = true
     ubsan = true
