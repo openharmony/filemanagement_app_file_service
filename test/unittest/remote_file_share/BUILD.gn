@@ -15,6 +15,14 @@ import("//build/test.gni")
 import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 
 ohos_unittest("remote_file_share_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = "filemanagement/app_file_service"
   fuzz_config_file =
       "${app_file_service_path}/test/fuzztest/remotefileshare_fuzzer"
