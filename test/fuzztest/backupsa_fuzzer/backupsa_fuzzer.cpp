@@ -33,7 +33,7 @@ using namespace OHOS::FileManagement::Backup;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
-constexpr uint8_t MAX_CALL_TRANSACTION = 16;
+constexpr uint8_t MAX_CALL_TRANSACTION = 24;
 constexpr int32_t SERVICE_ID = 5203;
 
 uint32_t GetU32Data(const char* ptr)
