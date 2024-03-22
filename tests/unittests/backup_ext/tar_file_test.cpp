@@ -133,9 +133,9 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0200, testing::ext::TestSize.Level1)
         }
 
         vector<string> srcFiles = {testDir};
+        TarMap tarMap;
         string tarFileName = "part";
         string pkPath = root;
-        TarMap tarMap;
         bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap);
         EXPECT_TRUE(ret);
         EXPECT_EQ(tarMap.size(), 1);
@@ -169,8 +169,8 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0300, testing::ext::TestSize.Level1)
         }
 
         vector<string> srcFiles = {testDir};
-        string tarFileName = "part";
         string pkPath = root;
+        string tarFileName = "part";
         TarMap tarMap;
         bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap);
         EXPECT_TRUE(ret);
@@ -231,8 +231,8 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0500, testing::ext::TestSize.Level1)
             GTEST_LOG_(INFO) << " invoked mkdir failure, errno :" << errno;
             throw BError(errno);
         }
-        string aFile = testDir + "/a.txt";
         string bFile = testDir + "/b.txt";
+        string aFile = testDir + "/a.txt";
         SaveStringToFile(aFile, "hello");
         SaveStringToFile(bFile, "world");
 
@@ -281,9 +281,9 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0600, testing::ext::TestSize.Level1)
             srcFiles.emplace_back(file);
         }
         // 调用Packet打包
+        TarMap tarMap;
         string tarFileName = "part";
         string pkPath = root;
-        TarMap tarMap;
         bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap);
         EXPECT_TRUE(ret);
         EXPECT_EQ(tarMap.size(), 2);

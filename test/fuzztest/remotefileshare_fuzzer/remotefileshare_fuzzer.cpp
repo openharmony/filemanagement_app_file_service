@@ -45,8 +45,8 @@ struct HmdfsShareControl {
 bool ShareFilePathIoctlFdAndCidFuzzTest(const uint8_t* data, size_t size)
 {
     struct HmdfsShareControl sc;
-    int32_t ret = 0;
     int32_t dirFd;
+    int32_t ret = 0;
 
     if (size == 0) {
         return false;
@@ -59,11 +59,11 @@ bool ShareFilePathIoctlFdAndCidFuzzTest(const uint8_t* data, size_t size)
         }
     }
 
-    char realPath[PATH_MAX] = {0};
-    if (!realpath(g_sharePATH, realPath)) {
+    char path[PATH_MAX] = {0};
+    if (!realpath(g_sharePATH, path)) {
         return false;
     }
-    dirFd = open(realPath, O_RDONLY);
+    dirFd = open(path, O_RDONLY);
     if (dirFd < 0) {
         return false;
     }
@@ -102,11 +102,11 @@ bool ShareFilePathIoctlCidFuzzTest(const uint8_t* data, size_t size)
         }
     }
 
-    char realPath[PATH_MAX] = {0};
-    if (!realpath(g_sharePATH, realPath)) {
+    char realLocation[PATH_MAX] = {0};
+    if (!realpath(g_sharePATH, realLocation)) {
         return false;
     }
-    dirFd = open(realPath, O_RDONLY);
+    dirFd = open(realLocation, O_RDONLY);
     if (dirFd < 0) {
         return false;
     }

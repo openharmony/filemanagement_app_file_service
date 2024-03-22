@@ -270,8 +270,8 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0007, testing::ext::TestSize.
     int32_t uid = 100;
 
     string bundleNameA = "com.example.filesharea";
-    string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
-    int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
+    string file = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
+    int32_t fd = open(file.c_str(), O_RDWR | O_CREAT);
     ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
     close(fd);
     string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
@@ -281,14 +281,14 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0007, testing::ext::TestSize.
 
     int32_t flag = 3;
     vector<string> uriList(1, uri);
-    vector<int32_t> retList;
-    int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
+    vector<int32_t> retLists;
+    int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retLists);
     EXPECT_EQ(ret, E_OK);
 
-    vector<string> sharePathList;
+    vector<string> sharePathLists;
     string uriErr = "file://" + bundleNameA + "/data/storage/el2/base/files/abc/../test.txt";
-    sharePathList.push_back(uriErr);
-    ret = FileShare::DeleteShareFile(tokenId, sharePathList);
+    sharePathLists.push_back(uriErr);
+    ret = FileShare::DeleteShareFile(tokenId, sharePathLists);
     EXPECT_EQ(ret, E_OK);
 
     string sharePath = "/data/service/el2/" + to_string(uid) + "/share/" + bundleNameB + "/rw/" + bundleNameA +
@@ -296,8 +296,8 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0007, testing::ext::TestSize.
     ret = access(sharePath.c_str(), F_OK);
     EXPECT_EQ(ret, E_OK);
 
-    sharePathList.push_back(uri);
-    ret = FileShare::DeleteShareFile(tokenId, sharePathList);
+    sharePathLists.push_back(uri);
+    ret = FileShare::DeleteShareFile(tokenId, sharePathLists);
     EXPECT_EQ(ret, E_OK);
 
     ret = access(sharePath.c_str(), F_OK);

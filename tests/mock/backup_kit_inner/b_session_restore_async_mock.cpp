@@ -80,7 +80,7 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
     string fileManagePath = tm.GetRootDirCurTest().append("manage.json");
     UniqueFd fdManage(open(fileManagePath.data(), O_RDWR | O_CREAT, S_IRWXU));
     bFileInfo.fileName = "manage.json";
-    GTEST_LOG_(INFO) << "callbacks_::onFileReady manage.json";
+    GTEST_LOG_(INFO) << "File ready callback for manage.json";
     callbacks_.onFileReady(bFileInfo, move(fdManage));
 
     callbacks_.onBundleFinished(0, "com.example.app2backup");

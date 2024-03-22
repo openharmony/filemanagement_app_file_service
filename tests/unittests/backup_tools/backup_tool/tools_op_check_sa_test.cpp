@@ -58,7 +58,7 @@ HWTEST_F(ToolsOpCheckSaTest, SUB_backup_tools_op_check_sa_0100, testing::ext::Te
             ret = matchedOp->Execute(mapArgToVal);
             EXPECT_EQ(ret, 0);
         }
-        GTEST_LOG_(INFO) << "GetInstance is false";
+        GTEST_LOG_(INFO) << "Setting GetInstance to return false";
         SetMockGetInstance(false);
         if (matchedOp != opeartions.end()) {
             ret = matchedOp->Execute(mapArgToVal);

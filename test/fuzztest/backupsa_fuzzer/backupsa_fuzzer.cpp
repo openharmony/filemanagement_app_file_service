@@ -62,7 +62,7 @@ bool BackupSaFuzzTest(std::unique_ptr<char[]> data, size_t size)
 } // namespace OHOS
 
 /* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t dataSize)
 {
     /* Run your code on data */
     if (data == nullptr) {
@@ -70,15 +70,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     /* Validate the length of size */
-    if (size < OHOS::U32_AT_SIZE || size > OHOS::FOO_MAX_LEN) {
+    if (dataSize < OHOS::U32_AT_SIZE || dataSize > OHOS::FOO_MAX_LEN) {
         return 0;
     }
 
-    auto str = std::make_unique<char[]>(size + 1);
-    (void)memset_s(str.get(), size + 1, 0x00, size + 1);
-    if (memcpy_s(str.get(), size, data, size) != EOK) {
+    auto str = std::make_unique<char[]>(dataSize + 1);
+    (void)memset_s(str.get(), dataSize + 1, 0x00, dataSize + 1);
+    if (memcpy_s(str.get(), dataSize, data, dataSize) != EOK) {
         return 0;
     }
-    OHOS::BackupSaFuzzTest(move(str), size);
+    OHOS::BackupSaFuzzTest(move(str), dataSize);
     return 0;
 }

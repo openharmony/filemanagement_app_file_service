@@ -192,7 +192,7 @@ namespace {
         ASSERT_TRUE((ret != -1) || (ret == -1 && errno == EEXIST)) << "RemoteFileShareTest mkdir failed! " << errno;
 
         int fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
-        ASSERT_TRUE(fd != -1) << "RemoteFileShareTest open file failed! " << errno;
+        ASSERT_TRUE(fd != -1) << "Failed to open file in RemoteFileShareTest! " << errno;
         close(fd);
 
         HmdfsUriInfo hui;
@@ -200,7 +200,7 @@ namespace {
         EXPECT_EQ(ret, E_OK);
 
         ret = unlink(fileStr.c_str());
-        ASSERT_TRUE(ret != -1) << "RemoteFileShareTest delete file failed! " << errno;
+        ASSERT_TRUE(ret != -1) << "Failed to delete file in RemoteFileShareTest! " << errno;
 
         ret = rmdir(dirPath.c_str());
         ASSERT_TRUE(ret != -1) << "RemoteFileShareTest rmdir failed! " << errno;

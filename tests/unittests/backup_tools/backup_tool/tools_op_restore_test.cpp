@@ -113,23 +113,23 @@ HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0200, testing::ext::Tes
         curOp.emplace_back("restore");
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
-        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
+        auto matchedOperation = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
         int ret = 0;
-        if (matchedOp != opeartions.end()) {
-            ret = matchedOp->Execute(mapArgToVal);
+        if (matchedOperation != opeartions.end()) {
+            ret = matchedOperation->Execute(mapArgToVal);
             EXPECT_NE(ret, 0);
         }
         GTEST_LOG_(INFO) << "ToolsOpRestoreTest-The bundles field is not contained.";
         mapArgToVal.clear();
         mapArgToVal.insert(make_pair("pathCapFile", path));
-        if (matchedOp != opeartions.end()) {
-            ret = matchedOp->Execute(mapArgToVal);
+        if (matchedOperation != opeartions.end()) {
+            ret = matchedOperation->Execute(mapArgToVal);
             EXPECT_NE(ret, 0);
         }
 
         mapArgToVal.clear();
-        if (matchedOp != opeartions.end()) {
-            ret = matchedOp->Execute(mapArgToVal);
+        if (matchedOperation != opeartions.end()) {
+            ret = matchedOperation->Execute(mapArgToVal);
             EXPECT_NE(ret, 0);
         }
     } catch (...) {
@@ -225,23 +225,23 @@ HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0400, testing::ext::Tes
         curOp.emplace_back("restore");
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
-        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
+        auto matchedOpIterator = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
         int ret = 0;
-        if (matchedOp != opeartions.end()) {
-            ret = matchedOp->Execute(mapArgToVal);
+        if (matchedOpIterator != opeartions.end()) {
+            ret = matchedOpIterator->Execute(mapArgToVal);
             EXPECT_NE(ret, 0);
         }
         GTEST_LOG_(INFO) << "ToolsOpRestoreTest-The bundles field is not contained.";
         mapArgToVal.clear();
         mapArgToVal.insert(make_pair("pathCapFile", path));
-        if (matchedOp != opeartions.end()) {
-            ret = matchedOp->Execute(mapArgToVal);
+        if (matchedOpIterator != opeartions.end()) {
+            ret = matchedOpIterator->Execute(mapArgToVal);
             EXPECT_NE(ret, 0);
         }
 
         mapArgToVal.clear();
-        if (matchedOp != opeartions.end()) {
-            ret = matchedOp->Execute(mapArgToVal);
+        if (matchedOpIterator != opeartions.end()) {
+            ret = matchedOpIterator->Execute(mapArgToVal);
             EXPECT_NE(ret, 0);
         }
     } catch (...) {

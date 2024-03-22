@@ -32,8 +32,8 @@ using namespace std;
 using namespace testing;
 
 namespace {
-const string BUNDLE_NAME = "com.example.app2backup";
 const string FILE_NAME = "1.tar";
+const string BUNDLE_NAME = "com.example.app2backup";
 const string FILE_NAME_MANIFEST = "manifest.rp";
 } // namespace
 

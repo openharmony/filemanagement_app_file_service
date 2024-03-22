@@ -82,10 +82,10 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0100, te
 
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(UniqueFd(open(pathConfigFile.data(), O_RDONLY, 0)));
         auto cache = cachedEntity.Structuralize();
-        vector<string> includes = cache.GetIncludes();
-        EXPECT_EQ(includes, DEFAULT_INCLUDE_DIR);
         vector<string> excludes = cache.GetExcludes();
         EXPECT_EQ(excludes, DEFAULT_EXCLUDE_DIR);
+        vector<string> includes = cache.GetIncludes();
+        EXPECT_EQ(includes, DEFAULT_INCLUDE_DIR);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by construction.";
@@ -245,8 +245,8 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0600, te
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(UniqueFd(open(pathConfigFile.data(), O_RDONLY, 0)));
         auto cache = cachedEntity.Structuralize();
         vector<string> includes = cache.GetIncludes();
-        EXPECT_EQ(includes, DEFAULT_INCLUDE_DIR);
         vector<string> excludes = cache.GetExcludes();
+        EXPECT_EQ(includes, DEFAULT_INCLUDE_DIR);
         EXPECT_EQ(excludes, DEFAULT_EXCLUDE_DIR);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -423,8 +423,8 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1300, te
         string_view sv = R"({"includes":[1]})";
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(sv);
         auto cache = cachedEntity.Structuralize();
-        vector<string> vs = cache.GetIncludes();
-        EXPECT_EQ(vs, vector<string>({""}));
+        vector<string> includes = cache.GetIncludes();
+        EXPECT_EQ(includes, vector<string>({""}));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetIncludes.";
@@ -448,8 +448,8 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1400, te
         string_view sv = R"({"excludes":1})";
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(sv);
         auto cache = cachedEntity.Structuralize();
-        vector<string> vs = cache.GetExcludes();
-        EXPECT_EQ(vs, vector<string>());
+        vector<string> excludes = cache.GetExcludes();
+        EXPECT_EQ(excludes, vector<string>());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetExcludes.";
@@ -473,8 +473,8 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_1500, te
         string_view sv = R"({"excludes":[1]})";
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(sv);
         auto cache = cachedEntity.Structuralize();
-        vector<string> vs = cache.GetExcludes();
-        EXPECT_EQ(vs, vector<string>());
+        vector<string> cludes = cache.GetExcludes();
+        EXPECT_EQ(cludes, vector<string>());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetExcludes.";
@@ -905,8 +905,8 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_3300, te
         string_view sv = R"({"restoreDeps":1})";
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(sv);
         auto cache = cachedEntity.Structuralize();
-        string depRead = cache.GetRestoreDeps();
-        EXPECT_NE(depRead, string(sv));
+        string restoreDeps = cache.GetRestoreDeps();
+        EXPECT_NE(restoreDeps, string(sv));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetRestoreDeps.";
