@@ -36,22 +36,36 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "backupext_fuzzer.cpp" ]
+  sources = [
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_extension.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_extension_stub.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/untar_file.cpp",
+    "backupext_fuzzer.cpp",
+  ]
 
   deps = [
-    "${app_file_service_path}/frameworks/native/backup_ext:backup_extension_ability_native",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/utils:backup_utils",
     "${path_jsoncpp}:jsoncpp",
     "${third_party_path}/bounds_checking_function:libsec_shared",
   ]
 
   external_deps = [
-    "ability_runtime:ability_manager",
+    "ability_base:want",
+    "ability_runtime:ability_context_native",
     "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:appkit_native",
     "ability_runtime:runtime",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
-    "file_api:filemgmt_libn",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "napi:ace_napi",
   ]
