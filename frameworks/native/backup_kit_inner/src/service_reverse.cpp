@@ -103,6 +103,12 @@ void ServiceReverse::RestoreOnFileReady(string bundleName, string fileName, int 
     callbacksRestore_.onFileReady(bFileInfo, UniqueFd(fd));
 }
 
+void ServiceReverse::RestoreOnResultReport(string result)
+{
+    HILOGI("ServiceReverse RestoreOnResultReport begin with result: %s", result.c_str());
+    callbacksRestore_.onResultReport(BError(BError::Codes::OK), result);
+}
+
 ServiceReverse::ServiceReverse(BSessionBackup::Callbacks callbacks)
     : scenario_(Scenario::BACKUP), callbacksBackup_(callbacks)
 {

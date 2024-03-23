@@ -140,4 +140,35 @@ ErrCode SvcExtensionProxy::HandleRestore()
     HILOGI("Successful");
     return reply.ReadInt32();
 }
+
+ErrCode SvcExtensionProxy::GetBackupInfo(std::string &result)
+{
+    HILOGD("SvcExtensionProxy::GetBackupInfo begin.");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    data.WriteInterfaceToken(GetDescriptor());
+
+    MessageParcel reply;
+    MessageOption option;
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(IExtensionInterfaceCode::CMD_GET_BACKUP_INFO), data, reply, option);
+    if (ret != NO_ERROR) {
+        HILOGE("Received error %{public}d when doing IPC", ret);
+        return ErrCode(ret);
+    }
+    if (!reply.ReadInt32(ret)) {
+        HILOGE("fail to ReadInt32 ret");
+        return ErrCode(ret);
+    }
+    if (ret != NO_ERROR) {
+        HILOGE("ret is not NO_ERROR. ret = %d", ret);
+        return ErrCode(ret);
+    }
+    if (!reply.ReadString(result)) {
+        HILOGE("fail to ReadInt32 ret");
+        return ErrCode(ret);
+    }
+    HILOGI("SvcExtensionProxy::GetBackupInfo end. result: %s", result.c_str());
+    return ret;
+}
 } // namespace OHOS::FileManagement::Backup

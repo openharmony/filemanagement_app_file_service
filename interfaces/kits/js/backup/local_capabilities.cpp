@@ -178,4 +178,49 @@ napi_value LocalCapabilities::Async(napi_env env, napi_callback_info info)
 
     return AsyncCallback(env, funcArg);
 }
+
+napi_value LocalCapabilities::DoGetBackupInfo(napi_env env, napi_callback_info info)
+{
+    HILOGI("called DoGetBackupInfo begin");
+    std::string result;
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    NVal jsBundle(env, funcArg[NARG_POS::FIRST]);
+    auto [succ, bundle, size] = jsBundle.ToUTF8String();
+    if (succ) {
+        HILOGE(First argument is not string.);
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+
+    ServiceProxy::InvaildInstance();
+    auto proxy = ServiceProxy::GetInstance();
+    if (!proxy) {
+        HILOGE("called DoGetBackupInfo,failed to get proxy");
+        return nullptr;
+    }
+    std::string bundleName = bundle.get();
+    ErrCode errcode = proxy->GetBackupInfo(bundelName, result);
+    if (errcode != 0) {
+        HILOGE("proxy->GetBackupInfo faild.");
+        return nullptr;
+    }
+    if (result.size() == 0) {
+        HILOGE("proxy->GetBackupInfo result is empty.");
+        return nullptr;
+    }
+
+    napi_value nResult;
+    napi_status status = napi_create_string_utf8(env, result.c_str(), result.size(), &nResult);
+    if (status != napi_ok) {
+        HILOGE("napi_create_string_utf8 faild.");
+        return nullptr;
+    }
+    HILOGI("DoGetBackupInfo success with result: %s", result.c_str());
+    return nResult;
+}
 } // namespace OHOS::FileManagement::Backup

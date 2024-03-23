@@ -24,6 +24,7 @@ bool PropNExporter::Export()
 {
     return exports_.AddProp({
         NVal::DeclareNapiFunction("getLocalCapabilities", LocalCapabilities::Async),
+        NVal::DeclareNapiFunction("getBackupInfo", LocalCapabilities::DoGetBackupInfo),
     });
 }
 

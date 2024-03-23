@@ -36,6 +36,7 @@ public:
     virtual ErrCode PublishIncrementalFile(const std::string &fileName) = 0;
     virtual ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) = 0;
     virtual std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() = 0;
+    virtual ErrCode GetBackupInfo(std::string &result) = 0;
 };
 } // namespace OHOS::FileManagement::Backup
 

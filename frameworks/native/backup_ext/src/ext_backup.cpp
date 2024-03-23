@@ -256,4 +256,10 @@ ErrCode ExtBackup::OnRestore(function<void()> callback)
     return ERR_OK;
 }
 
+ErrCode ExtBackup::GetBackupInfo(function<void(std::string)> callback)
+{
+    HILOGI("BackupExtensionAbility(base) GetBackupInfo.");
+    return ERR_OK;
+}
+
 } // namespace OHOS::FileManagement::Backup

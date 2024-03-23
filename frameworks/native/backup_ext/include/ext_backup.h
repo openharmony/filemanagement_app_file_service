@@ -133,6 +133,11 @@ public:
     virtual ErrCode OnRestore(std::function<void()> callback);
 
     /**
+     * @brief Called do GetBackupInfo.
+     */
+    virtual ErrCode GetBackupInfo(std::function<void(std::string)> callback);
+
+    /**
      * @brief 数据迁移判断
      *
      * @return true

@@ -37,6 +37,7 @@ public:
         std::function<void(ErrCode, const BundleName)>
             onBundleFinished; // 当某个应用的恢复流程结束或意外中止时执行的回调函数
         std::function<void(ErrCode)> onAllBundlesFinished; // 当整个恢复流程结束或意外中止时执行的回调函数
+        std::function<void(ErrCode, const std::string)> onResultReport;
         std::function<void()> onBackupServiceDied;         // 当备份服务意外死亡时执行的回调函数
     };
 

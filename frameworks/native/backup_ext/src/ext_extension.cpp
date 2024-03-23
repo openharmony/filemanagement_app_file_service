@@ -69,6 +69,7 @@ using namespace std;
 namespace {
 const int64_t DEFAULT_SLICE_SIZE = 100 * 1024 * 1024; // 分片文件大小为100M
 const uint32_t MAX_FILE_COUNT = 6000;                 // 单个tar包最多包含6000个文件
+const int32_t CONNECT_WAIT_TIME = 5;
 } // namespace
 
 void BackupExtExtension::VerifyCaller()
@@ -1578,4 +1579,34 @@ void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
     }
 }
+
+ErrCode GetBackupInfo(std::string &result)
+{
+    try {
+        auto obj = wptr<BackupExtExtension>(this);
+        auto ptr = obj.promote();
+        auto callbackup = [ptr](std::string result) {
+            HILOGI("GetBackupInfo callbackup start. result = %s", result);
+            ptr->backupInfo_ = result;
+            ptr->getEtsInfoCondition_.notify_one();
+        }
+        auto ret = ptr->extension_->GetBackupInfo(callBackup);
+        if (ret != ERR_OK) {
+            HILOGE("Failed to notify the app done. err = %{public}d", ret);
+            BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
+        }
+        HILOGD("GetBackupInfo getEtsInfoMtx_ lock.");
+        std::unique_lock<std::mutex> lock(getEtsInfoMtx_);
+        getEtsInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME));
+        HILOGD("GetBackupInfo getEtsInfoMtx_ unlock.");
+
+        result = backupInfo_;
+        backupInfo.clear();
+
+        return ERR_OK;
+    } catch (const Errpr &e) {
+        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
+    }
+} 
 } // namespace OHOS::FileManagement::Backup
