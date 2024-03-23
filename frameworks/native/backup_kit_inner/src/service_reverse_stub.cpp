@@ -159,7 +159,7 @@ int32_t ServiceReverseStub::CmdRestoreOnResultReport(MessageParcel &data, Messag
 {
     std::string result;
     if (!data.ReadString(result)) {
-        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to read result").GetCode();
+        return BError(BError::Codes::EXT_INVAL_ARG, "Failed to read result").GetCode();
     }
     RestoreOnResultReport(result);
     return BError(BError::Codes::OK);

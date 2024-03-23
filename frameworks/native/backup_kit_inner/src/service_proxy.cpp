@@ -415,15 +415,12 @@ ErrCode ServiceProxy::GetBackupInfo(BundleName &bundleName, std::string &result)
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
     }
-    if (!remote) {
-        return BError(BError::Codes::SDK_INVAL_ARG, "Empty reverse stub").GetCode();
-    }
     if (!data.WriteString(bundleName)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleName").GetCode();
     }
     MessageParcel reply;
     MessageOption option;
-    option.SetWaitTime(BContants::IPC_MAX_WAIT_TIME);
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_INFO),
                                         data, reply, option);
     if (ret != NO_ERROR) {

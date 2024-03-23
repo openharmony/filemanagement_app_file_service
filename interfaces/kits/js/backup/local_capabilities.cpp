@@ -191,7 +191,7 @@ napi_value LocalCapabilities::DoGetBackupInfo(napi_env env, napi_callback_info i
     }
     NVal jsBundle(env, funcArg[NARG_POS::FIRST]);
     auto [succ, bundle, size] = jsBundle.ToUTF8String();
-    if (succ) {
+    if (!succ) {
         HILOGE(First argument is not string.);
         NError(EINVAL).ThrowErr(env);
         return nullptr;
@@ -204,7 +204,7 @@ napi_value LocalCapabilities::DoGetBackupInfo(napi_env env, napi_callback_info i
         return nullptr;
     }
     std::string bundleName = bundle.get();
-    ErrCode errcode = proxy->GetBackupInfo(bundelName, result);
+    ErrCode errcode = proxy->GetBackupInfo(bundleName, result);
     if (errcode != 0) {
         HILOGE("proxy->GetBackupInfo faild.");
         return nullptr;

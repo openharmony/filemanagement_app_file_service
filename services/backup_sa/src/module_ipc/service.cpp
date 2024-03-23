@@ -949,7 +949,7 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
             }
             thisPtr->getBackupInfoCondition_.notify_one();
         };
-        backupConnection->setCallback(callConnDone);
+        backupConnection->SetCallback(callConnDone);
 
         IServiceReverse::Scenario scenario = session_->GetScenario();
         BConstants::ExtensionAction action;
@@ -977,7 +977,7 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
         backUpConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
 
         HILOGD("GetBackupInfo getBackupInfoMtx_ lock.");
-        std::unique_lock<std::mutex> lock(getBackupInfoMtx_);
+        std::unique_lock<std::mutex> lock(getBackupInfoMutx_);
         getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME));
         HILOGD("GetBackupInfo getBackupInfoMtx_ unlock.");
         auto proxy = backupConnection->GetBackupExtProxy();

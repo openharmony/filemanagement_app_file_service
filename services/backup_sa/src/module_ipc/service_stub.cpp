@@ -291,9 +291,6 @@ int32_t ServiceStub::CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply)
     if (ret != ERR_OK) {
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to call GetBackupInfo"));
     }
-    if (!data.ReadString(bundleName)) {
-        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive bundleName"));
-    }
     if (!reply.WriteString(result)) {
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to write result"));
     }

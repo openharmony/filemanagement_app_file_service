@@ -147,7 +147,7 @@ private:
     std::shared_ptr<ExtBackup> extension_;
     std::vector<std::string> tars_;
     std::mutex getEtsInfoMtx_;
-    std::condition_veriable getEtsInfoCondition_;
+    std::condition_variable getEtsInfoCondition_;
     std::string backupInfo_;
     OHOS::ThreadPool threadPool_;
 };

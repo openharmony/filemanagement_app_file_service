@@ -51,7 +51,7 @@ public:
     ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd) override;
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
-    Errcode GetBackupInfo(BundleName &BundleName, std::string &result) override;
+    ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;
 
 public:
     explicit ServiceProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IService>(impl) {}

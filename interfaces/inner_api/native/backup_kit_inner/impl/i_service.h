@@ -60,7 +60,7 @@ public:
     virtual ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd) = 0;
     virtual ErrCode AppIncrementalDone(ErrCode errCode) = 0;
     virtual ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) = 0;
-    virtual Errcode GetBackupInfo(BundleName &BundleName, std::string &result) = 0;
+    virtual ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Backup.IService")
 };

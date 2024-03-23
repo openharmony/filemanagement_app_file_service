@@ -29,8 +29,8 @@ public:
           onBundleBegin(env, thisPtr, jsCallbacks.GetProp("onBundleBegin")),
           onBundleEnd(env, thisPtr, jsCallbacks.GetProp("onBundleEnd")),
           onAllBundlesEnd(env, thisPtr, jsCallbacks.GetProp("onAllBundlesEnd")),
-          onBackupServiceDied(env, thisPtr, jsCallbacks.GetProp("onBackupServiceDied"),
-          onResultReport(env, thisPtr, jsCallbacks.GetProp("onResultReport"))) {};
+          onBackupServiceDied(env, thisPtr, jsCallbacks.GetProp("onBackupServiceDied")),
+          onResultReport(env, thisPtr, jsCallbacks.GetProp("onResultReport")) {};
 
 public:
     LibN::NAsyncWorkCallback onFileReady;
