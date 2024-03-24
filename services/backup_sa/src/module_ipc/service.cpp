@@ -977,7 +977,6 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
             throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
         }
         auto ret = proxy->GetBackupInfo(result);
-
         backupConnection->DisconnectBackupExtAbility();
         if (ret != ERR_OK) {
             HILOGE("Call Ext GetBackupInfo faild.");
