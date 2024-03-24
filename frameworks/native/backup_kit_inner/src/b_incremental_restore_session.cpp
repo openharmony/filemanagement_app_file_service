@@ -83,14 +83,15 @@ ErrCode BIncrementalRestoreSession::GetFileHandle(const string &bundleName, cons
     return proxy->GetIncrementalFileHandle(bundleName, fileName);
 }
 
-ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)
+ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore,
+    std::vector<std::string> detailInfos)
 {
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
-    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore);
+    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos);
 }
 
 ErrCode BIncrementalRestoreSession::Release()

@@ -78,11 +78,13 @@ public:
      *
      * @param remoteCap 已打开的保存远端设备能力的Json文件。可使用GetLocalCapabilities方法获取
      * @param bundlesToRestore 待恢复的应用清单
+     * @param detailInfos bundle对应的单双映射的json串
      * @param userId 用户ID
      * @return ErrCode 规范错误码
      */
     ErrCode AppendBundles(UniqueFd remoteCap,
                           std::vector<BundleName> bundlesToRestore,
+                          std::vector<std::string> detailInfos,
                           RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
                           int32_t userId = DEFAULT_INVAL_VALUE);
 

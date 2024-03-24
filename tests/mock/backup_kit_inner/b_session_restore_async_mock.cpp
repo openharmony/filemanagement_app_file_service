@@ -60,6 +60,7 @@ ErrCode BSessionRestoreAsync::GetFileHandle(const string &bundleName, const stri
 
 ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
                                             vector<BundleName> bundlesToRestore,
+                                            vector<string> detailInfos,
                                             RestoreTypeEnum restoreType,
                                             int32_t userId)
 {

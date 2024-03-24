@@ -298,7 +298,9 @@ static int32_t AppendBundles(shared_ptr<SessionAsync> restore,
         restoreType = RestoreTypeEnum::RESTORE_DATA_READDY;
     }
     try {
-        int ret = restore->session_->AppendBundles(move(fd), bundleNames, restoreType, atoi(userId.data()));
+        std::vector<std::string> detailInfos;
+        int ret = restore->session_->AppendBundles(move(fd), bundleNames, detailInfos,
+            restoreType, atoi(userId.data()));
         if (ret != 0) {
             printf("restore append bundles error: %d\n", ret);
             return -ret;

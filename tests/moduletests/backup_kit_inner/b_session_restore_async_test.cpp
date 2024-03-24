@@ -213,9 +213,10 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0500, test
         SetMockGetInstance(true);
         SetMockLoadSystemAbility(true);
         vector<string> bundleNames;
-        ErrCode ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames);
+        vector<string> detailInfos;
+        ErrCode ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames, detailInfos);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
-        ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames);
+        ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames, detailInfos);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
         restorePtr_ = nullptr;
     } catch (...) {

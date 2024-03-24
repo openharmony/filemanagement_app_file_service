@@ -234,6 +234,11 @@ int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, Message
     if (!data.ReadStringVector(&bundleNames)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
     }
+    vector<string> detailInfos;
+    if (!data.ReadStringVector(&detailInfos)) {
+        HILOGE("Failed to receive bundle detailInfos");
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive detailInfos");
+    }
     int32_t type;
     if (!data.ReadInt32(type)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive restoreType");
@@ -244,7 +249,7 @@ int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, Message
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive userId");
     }
 
-    int res = AppendBundlesRestoreSession(move(fd), bundleNames, restoreType, userId);
+    int res = AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos, restoreType, userId);
     if (!reply.WriteInt32(res)) {
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
     }

@@ -258,16 +258,17 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0600, testing::ext::T
         UniqueFd remoteCap(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
         string bundleName = "";
         vector<string> bundlesToRestore;
+        vector<string> detailInfos;
         bundlesToRestore.emplace_back(bundleName);
 
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
-        auto ret = restorePtr_->AppendBundles(move(remoteCap), bundlesToRestore);
+        auto ret = restorePtr_->AppendBundles(move(remoteCap), bundlesToRestore, detailInfos);
         EXPECT_NE(ret, ErrCode(BError::Codes::OK));
 
         GTEST_LOG_(INFO) << "GetInstance is true";
         SetMockGetInstance(true);
-        ret = restorePtr_->AppendBundles(move(remoteCap), bundlesToRestore);
+        ret = restorePtr_->AppendBundles(move(remoteCap), bundlesToRestore, detailInfos);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);

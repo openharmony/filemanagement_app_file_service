@@ -327,6 +327,19 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
         return nullptr;
     }
 
+    NVal jsDetails(env, funcArg[NARG_POS::THIRD]);
+    std::vector<std::string> bundleDetails;
+    if (jsDetails.TypeIs(napi_undefined) || jsDetails.TypeIs(napi_null)) {
+        HILOGW("Third param is not exist");
+    } else {
+        auto [deSuc, bundleDetails, deIgnore] = jsDetails.ToStringArray();
+        if (!deSuc) {
+            HILOGE("Third argument is not bundles array.");
+            NError(BError(BError::Codes::SDK_INVAL_ARG, "Third argument is not bundles array.").GetCode())
+                .ThrowErr(env);
+            return nullptr;
+        }
+    }
     auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
     if (!(restoreEntity && (restoreEntity->sessionWhole || restoreEntity->sessionSheet))) {
         HILOGE("Failed to get RestoreSession entity.");
@@ -334,14 +347,14 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
         return nullptr;
     }
 
-    auto cbExec = [entity {restoreEntity}, fd {fd}, bundles {bundles}]() -> NError {
+    auto cbExec = [entity {restoreEntity}, fd {fd}, bundles {bundles}, bundleDetails {bundleDetails}]() -> NError {
         if (!(entity && (entity->sessionWhole || entity->sessionSheet))) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
         }
         if (entity->sessionWhole) {
-            return NError(entity->sessionWhole->AppendBundles(UniqueFd(fd), bundles));
+            return NError(entity->sessionWhole->AppendBundles(UniqueFd(fd), bundles, bundleDetails));
         }
-        return NError(entity->sessionSheet->AppendBundles(UniqueFd(fd), bundles));
+        return NError(entity->sessionSheet->AppendBundles(UniqueFd(fd), bundles, bundleDetails));
     };
     auto cbCompl = [](napi_env env, NError err) -> NVal {
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);

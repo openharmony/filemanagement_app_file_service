@@ -239,6 +239,7 @@ ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &file
 
 ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
                                                   const vector<BundleName> &bundleNames,
+                                                  const std::vector<std::string> &detailInfos,
                                                   RestoreTypeEnum restoreType,
                                                   int32_t userId)
 {
@@ -258,6 +259,9 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
     }
     if (!data.WriteStringVector(bundleNames)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();
+    }
+    if (!detailInfos.empty() && !data.WriteStringVector(detailInfos)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send detailInfos").GetCode();
     }
     if (!data.WriteInt32(static_cast<int32_t>(restoreType))) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send restoreType").GetCode();

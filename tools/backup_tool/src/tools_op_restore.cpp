@@ -263,14 +263,16 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
                 FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
                 return -errno;
             }
-            int result = ctx->session_->AppendBundles(move(fileFd), {bundleName});
+            std::string bundleDetail = "";
+            int result = ctx->session_->AppendBundles(move(fileFd), {bundleName}, {bundleDetail});
             if (result != 0) {
                 printf("restore append bundles error: %d\n", result);
                 return -result;
             }
         }
     } else {
-        ret = ctx->session_->AppendBundles(move(fd), bundleNames);
+        std::vector<std::string> detailInfos;
+        ret = ctx->session_->AppendBundles(move(fd), bundleNames, detailInfos);
         if (ret != 0) {
             printf("restore append bundles error: %d\n", ret);
             return -ret;

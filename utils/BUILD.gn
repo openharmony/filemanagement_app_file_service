@@ -93,6 +93,7 @@ ohos_shared_library("backup_utils") {
     "src/b_process/b_process.cpp",
     "src/b_tarball/b_tarball_cmdline.cpp",
     "src/b_tarball/b_tarball_factory.cpp",
+    "src/b_jsonutil/b_jsonutil.cpp",
   ]
   sources += get_target_outputs(":backup_cxx_gen")
 
@@ -120,6 +121,7 @@ ohos_shared_library("backup_utils") {
     ":backup_cxx_rust",
     "${path_jsoncpp}:jsoncpp",
     "//third_party/openssl:libcrypto_shared",
+    "//third_party/cJSON:cjson",
   ]
 
   use_exceptions = true
