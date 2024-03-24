@@ -950,7 +950,6 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
             thisPtr->getBackupInfoCondition_.notify_one();
         };
         backupConnection->SetCallback(callConnDone);
-
         IServiceReverse::Scenario scenario = session_->GetScenario();
         BConstants::ExtensionAction action;
         if (scenario == IServiceReverse::Scenario::BACKUP) {
@@ -960,26 +959,19 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
         } else {
             throw BError(BError::Codes::SA_INVAL_ARG, "Failed to scenario");
         }
-
         AAFwk::Want want;
         string backupExtName = session_->GetBackupExtName(bundleName); /* new device app ext name */
-        HILOGD("backupExtName: %{public}s, bundleName: %{public}s", backupExtName.data(), bundleName.data());
         string versionName = session_->GetBundleVersionName(bundleName);          /* old device app version name */
         uint32_t versionCode = session_->GetBundleVersionCode(bundleName);        /* old device app version code */
         RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
-
         want.SetElementName(bundleName, backupExtName);
         want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
         want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<int>(versionCode));
         want.SetParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, static_cast<int>(restoreType));
         want.SetParam(BConstants::EXTENSION_VERSION_NAME_PARA, versionName);
-
         backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
-
-        HILOGD("GetBackupInfo getBackupInfoMtx_ lock.");
         std::unique_lock<std::mutex> lock(getBackupInfoMutx_);
         getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME));
-        HILOGD("GetBackupInfo getBackupInfoMtx_ unlock.");
         auto proxy = backupConnection->GetBackupExtProxy();
         if (!proxy) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
@@ -991,18 +983,9 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
             HILOGE("Call Ext GetBackupInfo faild.");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-
         HILOGI("Service::GetBackupInfo end. result: %s", result.c_str());
         session_->DecreaseSessionCnt();
         return BError(BError::Codes::OK);
-    } catch (const BError &e) {
-        session_->DecreaseSessionCnt();
-        HILOGE("GetBackupInfo failed, errCode = %{public}d", e.GetCode());
-        return UniqueFd(-e.GetCode());
-    } catch (const exception &e) {
-        session_->DecreaseSessionCnt();
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return UniqueFd(-EPERM);
     } catch (...) {
         session_->DecreaseSessionCnt();
         HILOGI("Unexpected exception");
