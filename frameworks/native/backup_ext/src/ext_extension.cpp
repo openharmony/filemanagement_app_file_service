@@ -1585,8 +1585,8 @@ ErrCode GetBackupInfo(std::string &result)
     try {
         auto obj = wptr<BackupExtExtension>(this);
         auto ptr = obj.promote();
-        auto callbackup = [ptr](std::string result) {
-            HILOGI("GetBackupInfo callbackup start. result = %s", result);
+        auto callBackup = [ptr](std::string result) {
+            HILOGI("GetBackupInfo callBackup start. result = %s", result.c_str());
             ptr->backupInfo_ = result;
             ptr->getEtsInfoCondition_.notify_one();
         }
@@ -1601,10 +1601,10 @@ ErrCode GetBackupInfo(std::string &result)
         HILOGD("GetBackupInfo getEtsInfoMtx_ unlock.");
 
         result = backupInfo_;
-        backupInfo.clear();
+        backupInfo_.clear();
 
         return ERR_OK;
-    } catch (const Errpr &e) {
+    } catch (const BError &e) {
         HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
         return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
     }

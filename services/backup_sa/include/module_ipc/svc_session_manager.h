@@ -258,7 +258,7 @@ public:
      *
      * @param bundleName 应用名称
      */
-    void CreateBackupConnection(const std::string &bundleName);
+    void CreateBackupConnection(BundleName &bundleName);
     
     /**
      * @brief 开始备份

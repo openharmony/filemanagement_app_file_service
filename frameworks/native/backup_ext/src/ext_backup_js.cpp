@@ -293,32 +293,34 @@ ErrCode ExtBackupJs::OnRestore(function<void()> callback)
 
 ErrCode ExtBackupJs::GetBackupInfo(std::function<void(std::string)> callback)
 {
-    HILOGI("BackupExtensionAbulity(JS) GetBackupInfo begin.");
+    HILOGI("BackupExtensionAbility(JS) GetBackupInfo begin.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
                           "The app does not provide the GetBackupInfo interface.");
-    callbackInfo_ = std::make_share<CallBackInfo>(callbcak);
+    callbackInfo_ = std::make_shared<CallBackInfo>(callback);
     auto retParser = [jsRuntime {&jsRuntime_}, callBackInfo {callbackInfo_}](napi_env env,
                                                                              napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
             size_t strLen = 0;
-            napi_status = napi_get_value_string_utf8(env, result, nullptr, -1, &strLen);
+            napi_status status = napi_get_value_string_utf8(env, result, nullptr, -1, &strLen);
             if (status != napi_ok) {
                 return false;
             }
             size_t bufLen = strLen + 1;
-            unique_ptr<char[]> str = make_unique<char[]>(buflen);
+            unique_ptr<char[]> str = make_unique<char[]>(bufLen);
             status = napi_get_value_string_utf8(env, result, str.get(), bufLen, &strLen);
             callBackInfo->callbackParam(str.get());
             return true;
         }
         HILOGI("BackupExtensionAbulity(JS) GetBackupInfo ok.");
-    }
+        return CallPromise(*jsRuntime, result, callBackInfo.get());
+    };
 
     auto errCode = CallJsMethod("getBackupInfo", jsRuntime_, jsObj_.get(), {}, retParser);
     if (errCode != ERR_OK) {
         HILOGE("CallJsMethod error, code:%{public}d.", errCode);
     }
     HILOGI("BackupExtensionAbulity(JS) GetBackupInfo end.");
+    return errCode;
 }
 
 static int DoCallJsMethod(CallJsParam *param)

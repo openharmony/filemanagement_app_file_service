@@ -324,7 +324,7 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
             .onBundleStarted = bind(onBundleBegin, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onBundleFinished = bind(onBundleEnd, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
-            .onResultReport = bind(onResultReport, backupEntity->callbacks, placeholders::_1, placeholders::_2),
+            .onResultReport = bind(onResultReport, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onBackupServiceDied = bind(OnBackupServiceDied, restoreEntity->callbacks)});
     }
     if (!restoreEntity->sessionWhole && !restoreEntity->sessionSheet) {

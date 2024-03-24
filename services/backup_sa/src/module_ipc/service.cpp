@@ -938,10 +938,10 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
     try {
         HILOGI("Service::GetBackupInfo begin.");
         session_->IncreaseSessionCnt();
-        session->CreateBackupConnection(bundleName);
+        session_->CreateBackupConnection(bundleName);
         auto backupConnection = session_->GetExtConnection(bundleName);
         auto callConnDone = [ptr {wptr(this)}](const string &&bundleName) {
-            HILOGI(callConnDone begin.);
+            HILOGI("callConnDone begin.");
             auto thisPtr = ptr.promote();
             if (!thisPtr) {
                 HILOGW("this pointer is null.");
@@ -974,7 +974,7 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
         want.SetParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, static_cast<int>(restoreType));
         want.SetParam(BConstants::EXTENSION_VERSION_NAME_PARA, versionName);
 
-        backUpConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
+        backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
 
         HILOGD("GetBackupInfo getBackupInfoMtx_ lock.");
         std::unique_lock<std::mutex> lock(getBackupInfoMutx_);
@@ -986,14 +986,14 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
         }
         auto ret = proxy->GetBackupInfo(result);
 
-        backUpConnection->DisconnectBackupExtAbility();
+        backupConnection->DisconnectBackupExtAbility();
         if (ret != ERR_OK) {
             HILOGE("Call Ext GetBackupInfo faild.");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
 
         HILOGI("Service::GetBackupInfo end. result: %s", result.c_str());
-        session_->DeceaseSessionCnt();
+        session_->DecreaseSessionCnt();
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         session_->DecreaseSessionCnt();

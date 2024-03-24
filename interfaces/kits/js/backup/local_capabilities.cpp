@@ -192,7 +192,7 @@ napi_value LocalCapabilities::DoGetBackupInfo(napi_env env, napi_callback_info i
     NVal jsBundle(env, funcArg[NARG_POS::FIRST]);
     auto [succ, bundle, size] = jsBundle.ToUTF8String();
     if (!succ) {
-        HILOGE(First argument is not string.);
+        HILOGE("First argument is not string.");
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
