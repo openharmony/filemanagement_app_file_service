@@ -120,7 +120,7 @@ private:
     AbilityRuntime::JsRuntime &jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
     std::shared_ptr<CallBackInfo> callbackInfo_;
-    std::shared_ptr<CallBackInfo> CallBackInfoEx_;
+    std::shared_ptr<CallBackInfo> callbackInfoEx_;
 };
 } // namespace OHOS::FileManagement::Backup
 

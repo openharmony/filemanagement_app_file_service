@@ -1580,7 +1580,7 @@ void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
     }
 }
 
-ErrCode GetBackupInfo(std::string &result)
+ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
 {
     try {
         auto obj = wptr<BackupExtExtension>(this);
@@ -1589,7 +1589,7 @@ ErrCode GetBackupInfo(std::string &result)
             HILOGI("GetBackupInfo callBackup start. result = %s", result.c_str());
             ptr->backupInfo_ = result;
             ptr->getEtsInfoCondition_.notify_one();
-        }
+        };
         auto ret = ptr->extension_->GetBackupInfo(callBackup);
         if (ret != ERR_OK) {
             HILOGE("Failed to notify the app done. err = %{public}d", ret);
