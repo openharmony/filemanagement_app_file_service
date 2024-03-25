@@ -114,6 +114,13 @@ public:
      *
      */
     void SessionDeactive();
+    /**
+     * @brief 构造拉起应用所需的want
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    AAFwk::Want CreateConnectWant (BundleName &bundleName);
 
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)

@@ -950,25 +950,7 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
             thisPtr->getBackupInfoCondition_.notify_one();
         };
         backupConnection->SetCallback(callConnDone);
-        IServiceReverse::Scenario scenario = session_->GetScenario();
-        BConstants::ExtensionAction action;
-        if (scenario == IServiceReverse::Scenario::BACKUP) {
-            action = BConstants::ExtensionAction::BACKUP;
-        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-            action = BConstants::ExtensionAction::RESTORE;
-        } else {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Failed to scenario");
-        }
-        AAFwk::Want want;
-        string backupExtName = session_->GetBackupExtName(bundleName); /* new device app ext name */
-        string versionName = session_->GetBundleVersionName(bundleName);          /* old device app version name */
-        uint32_t versionCode = session_->GetBundleVersionCode(bundleName);        /* old device app version code */
-        RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
-        want.SetElementName(bundleName, backupExtName);
-        want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
-        want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<int>(versionCode));
-        want.SetParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, static_cast<int>(restoreType));
-        want.SetParam(BConstants::EXTENSION_VERSION_NAME_PARA, versionName);
+        AAFwk::Want want = CreateConnectWant(bundleName);
         backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
         std::unique_lock<std::mutex> lock(getBackupInfoMutx_);
         getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME));
@@ -990,5 +972,29 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
         HILOGI("Unexpected exception");
         return UniqueFd(-EPERM);
     }
+}
+
+AAFwk::Want Service::CreateConnectWant (BundleName &bundleName)
+{
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    BConstants::ExtensionAction action;
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        action = BConstants::ExtensionAction::BACKUP;
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        action = BConstants::ExtensionAction::RESTORE;
+    } else {
+        throw BError(BError::Codes::SA_INVAL_ARG, "Failed to scenario");
+    }
+    AAFwk::Want want;
+    string backupExtName = session_->GetBackupExtName(bundleName); /* new device app ext name */
+    string versionName = session_->GetBundleVersionName(bundleName);          /* old device app version name */
+    uint32_t versionCode = session_->GetBundleVersionCode(bundleName);        /* old device app version code */
+    RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
+    want.SetElementName(bundleName, backupExtName);
+    want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
+    want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<int>(versionCode));
+    want.SetParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, static_cast<int>(restoreType));
+    want.SetParam(BConstants::EXTENSION_VERSION_NAME_PARA, versionName);
+    return want;
 }
 } // namespace OHOS::FileManagement::Backup

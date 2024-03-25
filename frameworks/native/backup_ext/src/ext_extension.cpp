@@ -1608,5 +1608,5 @@ ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
         HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
         return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
     }
-} 
+}
 } // namespace OHOS::FileManagement::Backup
