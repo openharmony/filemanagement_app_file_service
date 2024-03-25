@@ -53,7 +53,7 @@
 #include "module_external/sms_adapter.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "module_ipc/svc_restore_deps_manager.h"
-#include "notify_work_service.h"
+#include "module_notify/notify_work_service.h"
 #include "parameter.h"
 #include "system_ability_definition.h"
 #include "hitrace_meter.h"

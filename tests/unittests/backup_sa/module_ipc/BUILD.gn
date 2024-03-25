@@ -248,6 +248,7 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
     "svc_restore_deps_manager_test.cpp",
   ]
   sources += backup_mock_src

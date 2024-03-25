@@ -74,6 +74,7 @@ ErrCode Service::AppDone(ErrCode errCode)
 
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              const std::vector<BundleName> &bundleNames,
+                                             const std::vector<std::string> &detailInfos,
                                              RestoreTypeEnum restoreType,
                                              int32_t userId)
 {

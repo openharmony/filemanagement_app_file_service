@@ -152,8 +152,9 @@ int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, Message
     UniqueFd fd(data.ReadFileDescriptor());
     std::vector<string> bundleNames;
     data.ReadStringVector(&bundleNames);
-
-    int res = AppendBundlesRestoreSession(move(fd), bundleNames);
+    std::vector<string> detailInfos;
+    data.ReadStringVector(&detailInfos);
+    int res = AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos;);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }

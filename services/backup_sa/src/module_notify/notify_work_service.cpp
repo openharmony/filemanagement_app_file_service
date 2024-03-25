@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "notify_work_service.h"
+#include "module_notify/notify_work_service.h"
 
 #include "common_event_data.h"
 #include "common_event_manager.h"

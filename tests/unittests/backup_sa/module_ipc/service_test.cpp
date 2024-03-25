@@ -64,6 +64,7 @@ void ServiceTest::TearDownTestCase()
 ErrCode ServiceTest::Init(IServiceReverse::Scenario scenario)
 {
     vector<string> bundleNames;
+    vector<string> detailInfos;
     bundleNames.emplace_back(BUNDLE_NAME);
     ErrCode ret = 0;
     if (scenario == IServiceReverse::Scenario::RESTORE) {
@@ -71,7 +72,7 @@ ErrCode ServiceTest::Init(IServiceReverse::Scenario scenario)
         EXPECT_GE(fd, BError(BError::Codes::OK));
         ret = servicePtr_->InitRestoreSession(remote_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-        ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames);
+        ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->Finish();
         EXPECT_EQ(ret, BError(BError::Codes::OK));
