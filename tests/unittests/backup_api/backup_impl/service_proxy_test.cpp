@@ -701,9 +701,8 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetBackupInfo_0100, testing::ext::T
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetBackupInfo_0100";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
-        .Times(2)
-        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeGetLocalSendRequest))
-        .WillOnce(Return(EPERM));
+        .Times(1)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
     std::string result;
     std::string bundleName = "com.example.app2backup";
     int32_t ret = proxy_->GetBackupInfo(bundleName, result);
