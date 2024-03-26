@@ -112,7 +112,8 @@ void ServiceReverseTest::Init(IServiceReverse::Scenario scenario, int nType)
                 .onBundleStarted = bind(OnBundleStartedTest, placeholders::_1, placeholders::_2),
                 .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
                 .onAllBundlesFinished = bind(OnAllBundlesFinishedTest, placeholders::_1),
-                .onBackupServiceDied = bind(OnBackupServiceDiedTest)});
+                .onBackupServiceDied = bind(OnBackupServiceDiedTest),
+                .onResultReport = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2)});
         }
     }
 }
@@ -1200,5 +1201,28 @@ HWTEST_F(ServiceReverseTest,
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnAllBundlesFinished.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_RestoreOnResultReport_0100
+ * @tc.name: SUB_backup_ServiceReverse_RestoreOnResultReport_0100
+ * @tc.desc: 测试 RestoreOnResultReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnResultReport_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnResultReport_0100";
+    try {
+        Init(IServiceReverse::Scenario::BACKUP);
+        std::string resultReport = "result_report";
+        service_->RestoreOnResultReport(resultReport);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by RestoreOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_RestoreOnResultReport_0100";
 }
 } // namespace OHOS::FileManagement::Backup

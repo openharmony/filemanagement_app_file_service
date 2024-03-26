@@ -117,6 +117,11 @@ public:
         return {UniqueFd(-1), UniqueFd(-1)};
     };
 
+    ErrCode GetBackupInfo(std::string &result) override
+    {
+        return BError(BError::Codes::OK);
+    };
+
 private:
     int32_t nHandleBackupNum_ = 0;
 };

@@ -32,6 +32,7 @@ using namespace std;
 using namespace testing;
 
 namespace {
+const string BUNDLE_NAME = "com.example.app2backup";
 const string FILE_NAME = "1.tar";
 constexpr int32_t SERVICE_ID = 5203;
 } // namespace
@@ -685,5 +686,28 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InvaildInstance_0100, testing::ext:
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_InvaildInstance_0100";
     ServiceProxy::InvaildInstance();
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_InvaildInstance_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_GetBackupInfo_0100
+ * @tc.name: SUB_Service_proxy_GetBackupInfo_0100
+ * @tc.desc: 测试 GetBackupInfo 获取应用信息接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetBackupInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetBackupInfo_0100";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeGetLocalSendRequest))
+        .WillOnce(Return(EPERM));
+    std::string result;
+    std::string bundleName = "com.example.app2backup";
+    int32_t ret = proxy_->GetBackupInfo(bundleName, result);
+    EXPECT_EQ(ret, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_GetBackupInfo_0100";
 }
 } // namespace OHOS::FileManagement::Backup

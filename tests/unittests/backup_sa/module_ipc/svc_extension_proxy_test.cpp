@@ -144,4 +144,29 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_PublishFile_0100, testin
     EXPECT_NE(BError(BError::Codes::OK), ret);
     GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_PublishFile_0100";
 }
+
+/**
+ * @tc.number: SUB_Ext_Extension_proxy_GetBackupInfo_0100
+ * @tc.name: SUB_Ext_Extension_proxy_GetBackupInfo_0100
+ * @tc.desc: 测试 GetBackupInfo 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetBackupInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_GetBackupInfo_0100";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &BackupExtExtensionMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+    string result = "result report";
+    ErrCode ret = proxy_->GetBackupInfo(result);
+    EXPECT_EQ(BError(BError::Codes::OK), ret);
+
+    ret = proxy_->GetBackupInfo(result);
+    EXPECT_NE(BError(BError::Codes::OK), ret);
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_GetBackupInfo_0100";
+}
 } // namespace OHOS::FileManagement::Backup
