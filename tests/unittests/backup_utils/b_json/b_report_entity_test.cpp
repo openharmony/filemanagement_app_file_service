@@ -81,7 +81,7 @@ HWTEST_F(BReportEntityTest, b_report_entity_GetReportInfos_0100, testing::ext::T
         unordered_map<string, struct ReportFileInfo> cloudFiles = cloudRp.GetReportInfos();
 
         bool flag = false;
-
+        fileName = fileName.substr(1, fileName.length() - 1);
         EXPECT_EQ(cloudFiles.size(), 1);
         for (auto &item : cloudFiles) {
             if (item.first == fileName) {

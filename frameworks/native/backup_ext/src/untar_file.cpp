@@ -155,7 +155,11 @@ void UntarFile::HandleTarBuffer(const string &buff, const string &name, FileStat
         realName = info.longName;
         info.longName.clear();
     }
-    info.fullPath = GenRealPath(rootPath_, realName);
+    if (realName.length() > 0 && realName[0] == '/') {
+        info.fullPath = realName.substr(0, realName.length() - 1);
+        return;
+    }
+    info.fullPath = realName;
 }
 
 int UntarFile::ParseTarFile(const string &rootPath)
@@ -236,8 +240,9 @@ int UntarFile::ParseIncrementalTarFile(const string &rootPath)
             HILOGE("Parsing tar file completed, read data count is less then block size.");
             return 0;
         }
+        TarHeader *header = reinterpret_cast<TarHeader *>(buff);
         // two empty continuous block indicate end of file
-        if (IsEmptyBlock(buff)) {
+        if (IsEmptyBlock(buff) && header->typeFlag != GNUTYPE_LONGNAME) {
             char tailBuff[BLOCK_SIZE] = {0};
             size_t tailRead = fread(tailBuff, 1, BLOCK_SIZE, tarFilePtr_);
             if (tailRead == BLOCK_SIZE && IsEmptyBlock(tailBuff)) {
@@ -246,7 +251,6 @@ int UntarFile::ParseIncrementalTarFile(const string &rootPath)
             }
         }
         // check header
-        TarHeader *header = reinterpret_cast<TarHeader *>(buff);
         if (!IsValidTarBlock(*header)) {
             // when split unpack, ftell size is over than file really size [0,READ_BUFF_SIZE]
             if (ftello(tarFilePtr_) > (tarFileSize_ + READ_BUFF_SIZE) || !IsEmptyBlock(buff)) {
@@ -274,6 +278,7 @@ void UntarFile::ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &i
     switch (typeFlag) {
         case REGTYPE:
         case AREGTYPE:
+            info.fullPath = GenRealPath(rootPath_, info.fullPath);
             ParseRegularFile(info, typeFlag, isSkip);
             break;
         case SYMTYPE:
@@ -313,6 +318,7 @@ int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileS
                 }
                 break;
             }
+            info.fullPath = GenRealPath(rootPath_, info.fullPath);
             ParseRegularFile(info, typeFlag, isSkip);
             break;
         case SYMTYPE:
@@ -468,7 +474,8 @@ FILE *UntarFile::CreateFile(string &filePath, mode_t mode, char fileType)
         return f;
     }
 
-    HILOGE("Failed to open file %{public}s, err = %{public}d", filePath.c_str(), errno);
+    uint32_t len = filePath.length();
+    HILOGE("Failed to open file %{public}d, %{public}s, err = %{public}d", len, filePath.c_str(), errno);
     size_t pos = filePath.rfind('/');
     if (pos == string::npos) {
         return nullptr;

@@ -63,14 +63,13 @@ static ErrCode ParseReportInfo(struct ReportFileInfo &fileStat,
                                const unordered_map<string, int> &keys)
 {
     // 根据数据拼接结构体
-    int len = keys.size();
     int splitsLen = (int)splits.size();
     // 处理path路径
     string path;
     vector<string> residue;
     try {
         for (int i = 0; i < splitsLen; i++) {
-            if (i <= splitsLen - len) {
+            if (i <= splitsLen - keys.size()) {
                 path += splits[i] + ";";
             } else {
                 residue.emplace_back(splits[i]);
@@ -80,6 +79,7 @@ static ErrCode ParseReportInfo(struct ReportFileInfo &fileStat,
             HILOGE("Error residue size");
             return EPERM;
         }
+        path = (path.length() > 0 && path[0] == '/') ? path.substr(1, path.length() - 1) : path;
         fileStat.filePath = path.substr(0, path.length() - 1);
         if (keys.find(INFO_MODE) != keys.end()) {
             fileStat.mode = residue[keys.find(INFO_MODE)->second];
