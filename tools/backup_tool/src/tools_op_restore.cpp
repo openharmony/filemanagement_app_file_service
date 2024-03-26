@@ -196,6 +196,9 @@ static void RestoreApp(shared_ptr<Session> restore, vector<BundleName> &bundleNa
             throw BError(BError::Codes::TOOL_INVAL_ARG, "error path");
         }
         for (auto &filePath : filePaths) {
+            if (filePath.rfind("/") == string::npos) {
+                continue;
+            }
             string fileName = filePath.substr(filePath.rfind("/") + 1);
             restore->session_->GetFileHandle(bundleName, fileName);
             if (updateSendFiles) {
