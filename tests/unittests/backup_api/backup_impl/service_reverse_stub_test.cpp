@@ -730,7 +730,7 @@ HWTEST_F(ServiceReverseStubTest,
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
-        std::string resultReport = "resultReport";
+        std::string resultReport = "result_report";
         EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
         EXPECT_TRUE(data.WriteString(resultReport));
 

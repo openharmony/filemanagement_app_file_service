@@ -35,7 +35,7 @@ namespace {
 const string BUNDLE_NAME = "com.example.app2backup";
 const string FILE_NAME = "1.tar";
 const string FILE_NAME_MANIFEST = "manifest.rp";
-const string RESULT_REPORT = "result report";
+const string RESULT_REPORT = "result_report";
 } // namespace
 
 class ServiceReverseProxyTest : public testing::Test {

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "local_capabilities.h"
+#include "prop_n_operation.h"
 
 #include "b_error/b_error.h"
 #include "b_incremental_data.h"
@@ -158,7 +158,7 @@ static napi_value AsyncDataList(napi_env env, const NFuncArg& funcArg)
     return NAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_LOCALCAPABILITIES_NAME, cbExec, cbCompl).val_;
 }
 
-napi_value LocalCapabilities::Async(napi_env env, napi_callback_info info)
+napi_value PropNOperation::Async(napi_env env, napi_callback_info info)
 {
     HILOGI("called LocalCapabilities::Async begin");
     NFuncArg funcArg(env, info);
@@ -179,7 +179,7 @@ napi_value LocalCapabilities::Async(napi_env env, napi_callback_info info)
     return AsyncCallback(env, funcArg);
 }
 
-napi_value LocalCapabilities::DoGetBackupInfo(napi_env env, napi_callback_info info)
+napi_value PropNOperation::DoGetBackupInfo(napi_env env, napi_callback_info info)
 {
     HILOGI("called DoGetBackupInfo begin");
     std::string result;

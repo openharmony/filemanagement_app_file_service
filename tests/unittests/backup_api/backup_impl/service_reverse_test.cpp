@@ -77,6 +77,12 @@ static void OnAllBundlesFinishedTest(ErrCode err)
 
 static void OnBackupServiceDiedTest() {}
 
+static void OnResultReportTest(std::string result)
+{
+    EXPECT_EQ(result, "result_report");
+    GTEST_LOG_(INFO) << "ServiceReverseTest-OnResultReportTest SUCCESS";
+}
+
 void ServiceReverseTest::TearDown()
 {
     service_ = nullptr;
@@ -113,7 +119,7 @@ void ServiceReverseTest::Init(IServiceReverse::Scenario scenario, int nType)
                 .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
                 .onAllBundlesFinished = bind(OnAllBundlesFinishedTest, placeholders::_1),
                 .onBackupServiceDied = bind(OnBackupServiceDiedTest),
-                .onResultReport = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2)});
+                .onResultReport = bind(OnResultReportTest, placeholders::_1)});
         }
     }
 }

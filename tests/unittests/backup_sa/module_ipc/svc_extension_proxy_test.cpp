@@ -161,7 +161,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetBackupInfo_0100, test
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &BackupExtExtensionMock::InvokeSendRequest))
         .WillOnce(Return(EPERM));
-    string result = "result report";
+    string result = "result_report";
     ErrCode ret = proxy_->GetBackupInfo(result);
     EXPECT_EQ(BError(BError::Codes::OK), ret);
 

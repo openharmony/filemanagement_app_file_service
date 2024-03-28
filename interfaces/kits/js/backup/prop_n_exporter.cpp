@@ -14,7 +14,7 @@
  */
 #include "prop_n_exporter.h"
 
-#include "local_capabilities.h"
+#include "prop_n_operation.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -23,8 +23,8 @@ using namespace LibN;
 bool PropNExporter::Export()
 {
     return exports_.AddProp({
-        NVal::DeclareNapiFunction("getLocalCapabilities", LocalCapabilities::Async),
-        NVal::DeclareNapiFunction("getBackupInfo", LocalCapabilities::DoGetBackupInfo),
+        NVal::DeclareNapiFunction("getLocalCapabilities", PropNOperation::Async),
+        NVal::DeclareNapiFunction("getBackupInfo", PropNOperation::DoGetBackupInfo),
     });
 }
 

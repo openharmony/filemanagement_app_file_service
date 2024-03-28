@@ -22,7 +22,7 @@
 namespace OHOS::FileManagement::Backup {
 class PropNExporter final : public LibN::NExporter {
 public:
-    inline static const std::string className = "LocalCapabilities";
+    inline static const std::string className = "propNOperation";
 
     bool Export() override;
     std::string GetClassName() override;

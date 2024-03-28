@@ -19,7 +19,7 @@
 #include <string>
 
 namespace OHOS::FileManagement::Backup {
-class LocalCapabilities final {
+class PropNOperation final {
 public:
     static napi_value Async(napi_env env, napi_callback_info info);
     static napi_value DoGetBackupInfo(napi_env env, napi_callback_info info);
