@@ -89,7 +89,7 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
     callbacks_.onBundleStarted(1, "com.example.app2backup");
     callbacks_.onBundleFinished(1, "com.example.app2backup");
     callbacks_.onAllBundlesFinished(1);
-    callbacks_.onResultReport(0, "com.example.app2backup");
+    callbacks_.onResultReport("com.example.app2backup");
     callbacks_.onBackupServiceDied();
     return BError(BError::Codes::OK);
 }

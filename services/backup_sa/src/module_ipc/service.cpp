@@ -64,7 +64,7 @@ REGISTER_SYSTEM_ABILITY_BY_ID(Service, FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, fals
 
 namespace {
 constexpr int32_t DEBUG_ID = 100;
-const int32_t CONNECT_WAIT_TIME = 5;
+const int32_t CONNECT_WAIT_TIME_S = 15;
 } // namespace
 
 /* Shell/Xts user id equal to 0/1, we need set default 100 */
@@ -953,7 +953,7 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
         AAFwk::Want want = CreateConnectWant(bundleName);
         backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
         std::unique_lock<std::mutex> lock(getBackupInfoMutx_);
-        getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME));
+        getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
         auto proxy = backupConnection->GetBackupExtProxy();
         if (!proxy) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");

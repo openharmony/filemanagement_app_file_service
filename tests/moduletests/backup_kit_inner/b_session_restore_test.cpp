@@ -55,7 +55,7 @@ static void OnBackupServiceDied()
     GTEST_LOG_(INFO) << "BSessionRestoreTest OnBackupServiceDied OK";
 }
 
-static void OnResultReport(ErrCode err, const std::string result)
+static void OnResultReport(const std::string result)
 {
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest OnResultReport OK";
 }

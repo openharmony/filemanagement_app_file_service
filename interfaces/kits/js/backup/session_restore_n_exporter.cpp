@@ -247,7 +247,7 @@ static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
     callbacks->onBackupServiceDied.ThreadSafeSchedule(cbCompl);
 }
 
-static void onResultReport(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, const std::string result)
+static void onResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::string result)
 {
     HILOGI("callback function onResultReport begin.");
     if (pCallbacks.expired()) {
@@ -264,17 +264,15 @@ static void onResultReport(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, c
         return;
     }
 
-    auto cbCompl = [result {result}, errCode {err}](napi_env env, NError err) -> NVal {
+    auto cbCompl = [result {result}](napi_env env, NError err) -> NVal {
         NVal resultStr = NVal::CreateUTF8String(env, result);
-        if (!err && errCode == 0) {
+        if (!err) {
             return resultStr;
         }
 
         NVal res;
         if (err) {
             res = NVal {env, err.GetNapiErr(env)};
-        } else {
-            res = NVal {env, NError(errCode).GetNapiErr(env)};
         }
         napi_status status = napi_set_named_property(env, res.val_, FILEIO_TAG_ERR_DATA.c_str(), resultStr.val_);
         if (status != napi_ok) {
@@ -324,7 +322,7 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
             .onBundleStarted = bind(onBundleBegin, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onBundleFinished = bind(onBundleEnd, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
-            .onResultReport = bind(onResultReport, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
+            .onResultReport = bind(onResultReport, restoreEntity->callbacks, placeholders::_1),
             .onBackupServiceDied = bind(OnBackupServiceDied, restoreEntity->callbacks)});
     }
     if (!restoreEntity->sessionWhole && !restoreEntity->sessionSheet) {
