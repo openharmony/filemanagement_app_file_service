@@ -116,9 +116,9 @@ ohos_shared_library("backup") {
   ]
 
   sources = [
-    "${path_backup_js}/backup/prop_n_operation.cpp",
     "${path_backup_js}/backup/module.cpp",
     "${path_backup_js}/backup/prop_n_exporter.cpp",
+    "${path_backup_js}/backup/prop_n_operation.cpp",
     "${path_backup_js}/backup/session_backup_n_exporter.cpp",
     "${path_backup_js}/backup/session_incremental_backup_n_exporter.cpp",
     "${path_backup_js}/backup/session_restore_n_exporter.cpp",
