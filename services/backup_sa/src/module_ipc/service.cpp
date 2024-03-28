@@ -497,6 +497,7 @@ ErrCode Service::AppDone(ErrCode errCode)
             proxy->HandleClear();
             session_->BundleExtTimerStop(callerName);
             IServiceReverse::Scenario scenario = session_->GetScenario();
+            HILOGI("will notify clone data, scenario is: %d", scenario);
             if (scenario == IServiceReverse::Scenario::BACKUP) {
                 session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, callerName);
             } else if (scenario == IServiceReverse::Scenario::RESTORE) {

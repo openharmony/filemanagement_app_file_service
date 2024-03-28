@@ -264,9 +264,8 @@ ErrCode ExtBackupJs::OnRestore(std::function<void(const std::string &restoreRetI
     HILOGI("BackupExtensionAbility(JS) OnRestore.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
                           "The app does not provide the onRestore interface.");
-
+    std::atomic<ErrCode> atoRetCode;
     callbackInfoEx_ = std::make_shared<CallBackInfo>(callbackEx);
-    callbackInfo_ = std::make_shared<CallBackInfo>(callback);
     callbackInfo_ = std::make_shared<CallBackInfo>(callback);
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfoEx {callbackInfoEx_},
         callbackInfo {callbackInfo_}](napi_env env, napi_value result) -> bool {
@@ -283,6 +282,12 @@ ErrCode ExtBackupJs::OnRestore(std::function<void(const std::string &restoreRetI
                 size_t bufLen = strLen + 1;
                 unique_ptr<char[]> restoreRetStr = make_unique<char[]>(bufLen);
                 HILOGI("Will callBack onRestoreEx, restoreRetStr is: %{public}s", restoreRetStr.get());
+                // 逻辑待修改,onrestoreEx和onrestore对应callback
+                if (strlen(restoreRetStr.get()) == 0) {
+                std::unique_lock<std::mutex> lock(extJsRetMutex_);
+                atoRetCode = CallJsMethod("onRestore", jsRuntime_, jsObj_.get(), ParseRestoreInfo(), retParser);
+                extJsRetCon_.notify_one();
+                }
                 callbackInfoEx->callbackEx(restoreRetStr.get());
                 return true;
             }
@@ -294,14 +299,11 @@ ErrCode ExtBackupJs::OnRestore(std::function<void(const std::string &restoreRetI
         return CallPromise(*jsRuntime, result, callbackInfo.get());
     };
     HILOGI("Start execute call Js onRestoreEx method");
-    auto errCode = CallJsMethod("onRestoreEx", jsRuntime_, jsObj_.get(), ParseRestoreExInfo(), retParser);
-    if (errCode != ERR_OK) {
-        HILOGI("Start execute call Js onRestore method");
-        errCode = CallJsMethod("onRestore", jsRuntime_, jsObj_.get(), ParseRestoreInfo(), retParser);
-    }
-    if (errCode != ERR_OK) {
-        HILOGE("Execute call Js method failed, errorCode is: %{public}d", errCode);
-        return errCode;
+    uint32_t interval = 5;
+    std::unique_lock<std::mutex> lock(extJsRetMutex_);
+    atoRetCode = CallJsMethod("onRestoreEx", jsRuntime_, jsObj_.get(), ParseRestoreExInfo(), retParser);
+    extJsRetCon_.wait_for(lock, std::chrono::seconds(interval), [atoRetCode]) {
+        return atoRetCode.get() != ERR_OK;
     }
     return ERR_OK;
 }

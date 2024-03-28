@@ -124,6 +124,8 @@ private:
     std::unique_ptr<NativeReference> jsObj_;
     std::shared_ptr<CallBackInfo> callbackInfoEx_;
     std::shared_ptr<CallBackInfo> callbackInfo_;
+    std::condition_variable extJsRetCon_;
+    std::mutex extJsRetMutex_;
 };
 } // namespace OHOS::FileManagement::Backup
 
