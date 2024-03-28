@@ -89,7 +89,8 @@ string FileUri::GetRealPath()
         return realPath;
     }
 
-    if ((bundleName != "") && (bundleName != CommonFunc::GetSelfBundleName())) {
+    if (((bundleName != "") && (bundleName != CommonFunc::GetSelfBundleName())) ||
+        uri_.ToString().find(NETWORK_PARA) != string::npos) {
         realPath = PATH_SHARE + MODE_RW + bundleName + sandboxPath;
         if (access(realPath.c_str(), F_OK) != 0) {
             realPath = PATH_SHARE + MODE_R + bundleName + sandboxPath;

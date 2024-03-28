@@ -151,7 +151,8 @@ HWTEST_F(NDKFileUriTest, get_path_from_uri_test_004, TestSize.Level1)
     fileUriStr += "data/storage/el2/base/haps/entry/files/GetPathFromUri004.txt";
     fileUriStr += "?networkid=64799ecdf70788e396f454ff4a6e6ae4b09e20227c39c21f6e67a2aacbcef7b9";
     const char *fileUri = fileUriStr.c_str();
-    std::string filePathStr = "/data/storage/el2/distributedfiles/.remote_share/";
+    std::string filePathStr =
+        "/data/storage/el2/share/r/" + BUNDLE_A + "/data/storage/el2/distributedfiles/.remote_share/";
     filePathStr += "data/storage/el2/base/haps/entry/files/GetPathFromUri004.txt";
     const char *filePath = filePathStr.c_str();
     char *result = nullptr;
