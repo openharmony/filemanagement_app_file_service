@@ -105,7 +105,8 @@ public:
 
         bool res = jsonReader->parse(sv.data(), sv.data() + sv.length(), &jValue, &errs);
         if (!res || !errs.empty()) {
-            throw BError(BError::Codes::UTILS_INVAL_JSON_ENTITY, errs);
+            HILOGE("Json utils operated on an invalid file");
+            return;
         }
 
         obj_ = std::move(jValue);

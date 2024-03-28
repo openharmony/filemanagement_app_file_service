@@ -82,7 +82,7 @@ ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &file
 
 ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
                                                   const vector<BundleName> &bundleNames,
-                                                  const verctor<std::string> &detailInfos,
+                                                  const vector<std::string> &detailInfos,
                                                   RestoreTypeEnum restoreType,
                                                   int32_t userId)
 {
