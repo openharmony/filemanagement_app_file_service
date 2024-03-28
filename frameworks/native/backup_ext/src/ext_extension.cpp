@@ -1176,7 +1176,7 @@ void BackupExtExtension::AppDone(ErrCode errCode)
     }
 }
 
-void BackupExtExtension::AppResultReport(const std::string restoreRetInfo)
+void BackupExtExtension::AppResultReport(const std::string &restoreRetInfo)
 {
     HILOGI("Begin");
     auto proxy = ServiceProxy::GetInstance();

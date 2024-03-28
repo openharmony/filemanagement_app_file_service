@@ -99,7 +99,7 @@ private:
     /**
      * @brief extension backup restore is done
      *
-     * @param restoreRetInfo
+     * @param restoreRetInfo app restore reportInfo
      */
     void AppResultReport(const std::string &restoreRetInfo);
 
