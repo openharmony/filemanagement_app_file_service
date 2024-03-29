@@ -43,6 +43,11 @@ ErrCode SvcExtensionProxy::HandleRestore()
     return 0;
 }
 
+ErrCode SvcExtensionProxy::GetBackupInfo(std::string &result)
+{
+    return 0;
+}
+
 ErrCode SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
 {
     return 0;

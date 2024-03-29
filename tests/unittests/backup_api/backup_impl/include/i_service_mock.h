@@ -111,6 +111,11 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode Release() override
     {
         return BError(BError::Codes::OK);

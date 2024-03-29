@@ -43,6 +43,7 @@ private:
     int32_t CmdRestoreOnBundleFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdRestoreOnAllBundlesFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdRestoreOnFileReady(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdRestoreOnResultReport(MessageParcel &data, MessageParcel &reply);
 
     int32_t CmdIncrementalBackupOnFileReady(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalBackupOnBundleStarted(MessageParcel &data, MessageParcel &reply);

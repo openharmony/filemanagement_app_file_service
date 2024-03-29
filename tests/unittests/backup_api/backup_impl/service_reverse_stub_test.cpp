@@ -48,6 +48,7 @@ public:
     MOCK_METHOD2(RestoreOnBundleFinished, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(RestoreOnAllBundlesFinished, void(int32_t errCode));
     MOCK_METHOD3(RestoreOnFileReady, void(string bundleName, string fileName, int fd));
+    MOCK_METHOD1(RestoreOnResultReport, void(string result));
     MOCK_METHOD4(IncrementalBackupOnFileReady, void(string bundleName, string fileName, int fd, int manifestFd));
     MOCK_METHOD2(IncrementalBackupOnBundleStarted, void(int32_t errCode, string bundleName));
     MOCK_METHOD2(IncrementalBackupOnBundleFinished, void(int32_t errCode, string bundleName));
@@ -706,5 +707,43 @@ HWTEST_F(ServiceReverseStubTest,
         GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by IncrementalRestoreOnFileReady.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_IncrementalRestoreOnFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverseStub_RestoreOnResultReport_0100
+ * @tc.name: SUB_backup_ServiceReverseStub_RestoreOnResultReport_0100
+ * @tc.desc: Test function of RestoreOnResultReport interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZZX
+ */
+HWTEST_F(ServiceReverseStubTest,
+         SUB_backup_ServiceReverseStub_RestoreOnResultReport_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_RestoreOnResultReport_0100";
+    try {
+        MockServiceReverse service;
+        EXPECT_CALL(service, RestoreOnResultReport(_)).WillOnce(Return());
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        std::string resultReport = "result_report";
+        EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
+        EXPECT_TRUE(data.WriteString(resultReport));
+
+        EXPECT_EQ(
+            BError(BError::Codes::OK),
+            service.OnRemoteRequest(
+                static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_RESULT_REPORT),
+                data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by RestoreOnResultReport.";
+    }
+    GTEST_LOG_(INFO)
+        << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_RestoreOnResultReport_0100";
 }
 } // namespace OHOS::FileManagement::Backup

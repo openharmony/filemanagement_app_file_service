@@ -36,6 +36,8 @@ void ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode) {}
 
 void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName, int fd) {}
 
+void ServiceReverseProxy::RestoreOnResultReport(string result) {}
+
 void ServiceReverseProxy::IncrementalBackupOnFileReady(string bundleName, string fileName, int fd, int manifestFd) {}
 
 void ServiceReverseProxy::IncrementalBackupOnBundleStarted(int32_t errCode, string bundleName) {}

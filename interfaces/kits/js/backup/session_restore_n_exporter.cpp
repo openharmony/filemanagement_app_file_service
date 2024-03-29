@@ -247,6 +247,37 @@ static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
     callbacks->onBackupServiceDied.ThreadSafeSchedule(cbCompl);
 }
 
+static void onResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::string result)
+{
+    HILOGI("callback function onResultReport begin.");
+    if (pCallbacks.expired()) {
+        HILOGI("callbacks is unbound");
+        return;
+    }
+    auto callbacks = pCallbacks.lock();
+    if (!callbacks) {
+        HILOGI("callback function onResultReport has already been released");
+        return;
+    }
+    if (!bool(callbacks->onResultReport)) {
+        HILOGI("callback function onResultReport is undefined");
+        return;
+    }
+
+    auto cbCompl = [result {result}](napi_env env, NError err) -> NVal {
+        NVal resultStr = NVal::CreateUTF8String(env, result);
+        NVal res;
+        napi_status status = napi_set_named_property(env, res.val_, FILEIO_TAG_ERR_DATA.c_str(), resultStr.val_);
+        if (status != napi_ok) {
+            HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s", status, result.c_str());
+        }
+
+        return res;
+    };
+
+    callbacks->onResultReport.ThreadSafeSchedule(cbCompl);
+}
+
 napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info cbinfo)
 {
     HILOGI("called SessionRestore::Constructor begin");
@@ -284,6 +315,7 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
             .onBundleStarted = bind(onBundleBegin, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onBundleFinished = bind(onBundleEnd, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
+            .onResultReport = bind(onResultReport, restoreEntity->callbacks, placeholders::_1),
             .onBackupServiceDied = bind(OnBackupServiceDied, restoreEntity->callbacks)});
     }
     if (!restoreEntity->sessionWhole && !restoreEntity->sessionSheet) {

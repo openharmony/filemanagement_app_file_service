@@ -57,6 +57,7 @@ shared_ptr<BSessionRestoreAsync> BSessionRestoreAsync::Init(Callbacks callbacks)
                                                  .onBundleStarted = callbacks.onBundleStarted,
                                                  .onBundleFinished = callbacks.onBundleFinished,
                                                  .onAllBundlesFinished = callbacks.onAllBundlesFinished,
+                                                 .onResultReport = callbacks.onResultReport,
                                                  .onBackupServiceDied = callbacks.onBackupServiceDied};
         int32_t res = proxy->InitRestoreSession(new ServiceReverse(callbacksTmp));
         if (res != 0) {
