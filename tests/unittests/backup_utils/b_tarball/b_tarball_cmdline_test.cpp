@@ -112,20 +112,20 @@ HWTEST_F(BTarballCmdlineTest, b_tarball_cmdline_0200, testing::ext::TestSize.Lev
         string_view tarballName = "test.tar";
         string testDir = root + "/testdir";
         if (mkdir(testDir.data(), S_IRWXU) && errno != EEXIST) {
-            GTEST_LOG_(INFO) << " invoked mkdir failure, errno :" << errno;
+            GTEST_LOG_(INFO) << "Failed to create directory, errno :" << errno;
             throw BError(errno);
         }
         string strFile = root + tarballName.data();
         UniqueFd fd(open(strFile.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
         if (fd < 0) {
-            GTEST_LOG_(INFO) << " invoked open failure, errno :" << errno;
+            GTEST_LOG_(INFO) << "Failed to open file, errno :" << errno;
             throw BError(errno);
         }
 
         string aFile = testDir + "/a.txt";
         string bFile = testDir + "/b.txt";
-        SaveStringToFile(aFile, "hello");
-        SaveStringToFile(bFile, "world");
+        SaveStringToFile(aFile, "Hello");
+        SaveStringToFile(bFile, "World");
         vector<string_view> includes {testDir};
         vector<string_view> excludes {bFile};
 
@@ -159,7 +159,7 @@ HWTEST_F(BTarballCmdlineTest, b_tarball_cmdline_0201, testing::ext::TestSize.Lev
         string_view tarballName = "test.tar";
         string testDir = root + "/testdir";
         if (mkdir(testDir.data(), S_IRWXU) && errno != EEXIST) {
-            GTEST_LOG_(INFO) << " invoked mkdir failure, errno :" << errno;
+            GTEST_LOG_(INFO) << " create directory failed, errno :" << errno;
             throw BError(errno);
         }
         string strFile = root + tarballName.data();
@@ -171,10 +171,10 @@ HWTEST_F(BTarballCmdlineTest, b_tarball_cmdline_0201, testing::ext::TestSize.Lev
 
         string aFile = testDir + "";
         string bFile = testDir + "/b.txt";
-        SaveStringToFile(aFile, "hello");
+        SaveStringToFile(aFile, "Hello");
         SaveStringToFile(bFile, "world");
-        vector<string_view> includes {testDir};
         vector<string_view> excludes {bFile};
+        vector<string_view> includes {testDir};
 
         // 调用tar打包
         BTarballCmdline tarballCmdline(tarballDir, tarballName);
@@ -253,7 +253,7 @@ HWTEST_F(BTarballCmdlineTest, b_tarball_cmdline_0300, testing::ext::TestSize.Lev
         string_view tarballName = "test.tar";
         string testUntarDir = root + "/untardir";
         if (mkdir(testUntarDir.data(), S_IRWXU) && errno != EEXIST) {
-            GTEST_LOG_(INFO) << " invoked mkdir failure, errno :" << errno;
+            GTEST_LOG_(INFO) << "Failed to create directory, errno :" << errno;
             throw BError(errno);
         }
         // 调用tar打包

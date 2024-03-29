@@ -131,12 +131,11 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_UnPacket_0200, testing::ext::TestSize.Lev
 
         string tarFile = root + "test.tar";
         string cmd = "tar -cvf " + tarFile + " " + testDir;
+        string rootPath(root);
         if (system(cmd.c_str()) != 0) {
             GTEST_LOG_(INFO) << " execute tar failure, errno :" << errno;
             throw BError(errno);
         }
-
-        string rootPath(root);
         int ret = UntarFile::GetInstance().UnPacket(tarFile, rootPath);
         EXPECT_EQ(ret, 0);
         ClearCache();

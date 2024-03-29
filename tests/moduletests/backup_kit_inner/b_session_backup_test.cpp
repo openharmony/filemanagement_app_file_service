@@ -182,8 +182,8 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0400, testing::ext::Tes
     GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_0400";
     try {
         Init();
-        BFileInfo bFileInfo("", "", 0);
-        callbacks_.onFileReady(bFileInfo, UniqueFd(-1));
+        BFileInfo backupFileInfo("", "", 0);
+        callbacks_.onFileReady(backupFileInfo, UniqueFd(-1));
         callbacks_.onBundleStarted(ErrCode(BError::Codes::OK), "");
         callbacks_.onBundleFinished(ErrCode(BError::Codes::OK), "");
         callbacks_.onAllBundlesFinished(ErrCode(BError::Codes::OK));

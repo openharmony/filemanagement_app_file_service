@@ -109,8 +109,8 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0100, test
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0100";
     try {
         Init();
-        BFileInfo bFileInfo("", "", 0);
-        callbacks_.onFileReady(bFileInfo, UniqueFd(-1));
+        BFileInfo backupFile("", "", 0);
+        callbacks_.onFileReady(backupFile, UniqueFd(-1));
         callbacks_.onBundleStarted(ErrCode(BError::Codes::OK), "");
         callbacks_.onBundleFinished(ErrCode(BError::Codes::OK), "");
         callbacks_.onAllBundlesFinished(ErrCode(BError::Codes::OK));
@@ -158,12 +158,12 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0300, test
 {
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0300";
     try {
-        GTEST_LOG_(INFO) << "GetInstance is false";
+        GTEST_LOG_(INFO) << "Mock instance set to false";
         SetMockGetInstance(false);
         BFileInfo bFileInfo("", "", 0);
         auto ret = restorePtr_->PublishFile(bFileInfo);
         EXPECT_NE(ret, ErrCode(BError::Codes::OK));
-        GTEST_LOG_(INFO) << "GetInstance is true";
+        GTEST_LOG_(INFO) << "Mock instance set to true";
         SetMockGetInstance(true);
         ret = restorePtr_->PublishFile(bFileInfo);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
@@ -187,13 +187,13 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0400, test
 {
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0400";
     try {
-        GTEST_LOG_(INFO) << "GetInstance is false";
+        GTEST_LOG_(INFO) << "Mock instance set to false";
         SetMockGetInstance(false);
         string bundleName = "";
         string fileName = "";
         auto ret = restorePtr_->GetFileHandle(bundleName, fileName);
         EXPECT_NE(ret, ErrCode(BError::Codes::OK));
-        GTEST_LOG_(INFO) << "GetInstance is true";
+        GTEST_LOG_(INFO) << "Mock instance set to true";
         SetMockGetInstance(true);
         ret = restorePtr_->GetFileHandle(bundleName, fileName);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));

@@ -246,23 +246,23 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0300, testing::ext::
         SaveStringToFile(pathTestFile2, "hello");
         SaveStringToFile(pathTestFile3, "hello world");
         BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(pathManageFile.data(), O_RDONLY, 0)));
-        auto cache = cachedEntity.Structuralize();
+        auto newCache = cachedEntity.Structuralize();
 
         // 生成三条有用数据并写入索引文件
         map<string, tuple<string, struct stat, bool>> info;
         info.emplace(testFile1HexName, make_tuple(pathTestFile1, GetFileStat(pathTestFile1), true));
         info.emplace(testFile2HexName, make_tuple(pathTestFile2, GetFileStat(pathTestFile2), true));
         info.emplace(testFile3HexName, make_tuple(pathTestFile3, GetFileStat(pathTestFile3), true));
-        cache.SetExtManage(info);
+        newCache.SetExtManage(info);
 
         // 预置结果集，用以在读取索引文件后做结果判断
         set<string> resultFileName {testFile1HexName, testFile2HexName, testFile3HexName};
 
         // 读取索引文件内容并做结果判断
-        auto fileNames = cache.GetExtManage();
+        auto fileNames = newCache.GetExtManage();
         EXPECT_EQ(fileNames.size(), info.size());
         EXPECT_EQ(fileNames, resultFileName);
-        auto fileInfo = cache.GetExtManageInfo();
+        auto fileInfo = newCache.GetExtManageInfo();
         EXPECT_EQ(fileInfo.size(), info.size());
         EXPECT_TRUE(IsEqual(fileInfo, info));
     } catch (...) {
@@ -299,12 +299,12 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0400, testing::ext::
         // 索引文件pathManageFile1/2/3, 测试文件路径pathTestFile1/2/3, 测试文件名testFile1/2/3HexName
         string root = tm.GetRootDirCurTest();
         string pathManageFile = root + "manage.json";
-        string pathTestFile1 = root + "test1.txt";
-        string pathTestFile2 = root + "test2.txt";
-        string pathTestFile3 = root + "test3.txt";
-        string testFile1HexName = "1234567890abcde1";
-        string testFile2HexName = "1234567890abcde2";
-        string testFile3HexName = "1234567890abcde3";
+        string pathTestFile1 = root + "test4.txt";
+        string pathTestFile2 = root + "test5.txt";
+        string pathTestFile3 = root + "test6.txt";
+        string testFile1HexName = "1234567890abcde4";
+        string testFile2HexName = "1234567890abcde5";
+        string testFile3HexName = "1234567890abcde6";
         SaveStringToFile(pathTestFile1, "h");
         SaveStringToFile(pathTestFile2, "hello");
         SaveStringToFile(pathTestFile3, "hello world");
@@ -362,12 +362,12 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0500, testing::ext::
         TestManager tm("b_json_entity_ext_manage_0500");
         string root = tm.GetRootDirCurTest();
         string pathManageFile = root + "manage.json";
-        string pathTestFile1 = root + "test1.txt";
-        string pathTestFile2 = root + "test2.txt";
-        string pathTestFile3 = root + "test3.txt";
-        string testFile1HexName = "1234567890abcde1";
-        string testFile2HexName = "1234567890abcde2";
-        string testFile3HexName = "1234567890abcde3";
+        string pathTestFile1 = root + "test7.txt";
+        string pathTestFile2 = root + "test8.txt";
+        string pathTestFile3 = root + "test9.txt";
+        string testFile1HexName = "1234567890abcde7";
+        string testFile2HexName = "1234567890abcde8";
+        string testFile3HexName = "1234567890abcde9";
         SaveStringToFile(pathTestFile1, "h");
         SaveStringToFile(pathTestFile2, "hello");
         SaveStringToFile(pathTestFile3, "hello world");

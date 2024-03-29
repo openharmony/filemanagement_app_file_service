@@ -59,8 +59,8 @@ HWTEST_F(BDirTest, b_dir_GetDirFiles_0100, testing::ext::TestSize.Level0)
         system(touchFilePrefix.append("b.txt").c_str());
         system(touchFilePrefix.append("c.txt").c_str());
 
-        bool bSucc;
         vector<string> out;
+        bool bSucc;
         tie(bSucc, out) = BDir::GetDirFiles(preparedDir);
 
         vector<string> expectedRes = {preparedDir.append("a.txt"), preparedDir.append("b.txt"),
@@ -93,16 +93,16 @@ HWTEST_F(BDirTest, b_dir_GetDirFiles_0104, testing::ext::TestSize.Level0)
 
         string preparedDir = "/data/app/";
         string touchFilePrefix = string("touch ") + preparedDir;
-        system(touchFilePrefix.append("a.txt").c_str());
-        system(touchFilePrefix.append("b.txt").c_str());
-        system(touchFilePrefix.append("c.txt").c_str());
+        system(touchFilePrefix.append("d.txt").c_str());
+        system(touchFilePrefix.append("e.txt").c_str());
+        system(touchFilePrefix.append("f.txt").c_str());
 
         bool bSucc;
         vector<string> out;
         tie(bSucc, out) = BDir::GetDirFiles(preparedDir);
 
-        vector<string> expectedRes = {preparedDir.append("a.txt"), preparedDir.append("b.txt"),
-                                      preparedDir.append("c.txt")};
+        vector<string> expectedRes = {preparedDir.append("d.txt"), preparedDir.append("e.txt"),
+                                      preparedDir.append("f.txt")};
         EXPECT_EQ(out, expectedRes);
 
         tie(bSucc, out) = BDir::GetDirFiles("dev");
