@@ -44,7 +44,7 @@
 #include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
-namespace{
+namespace {
     const static uint32_t WAIT_ONRESTORE_EX_TIMEOUT = 10;
 }
 using namespace std;
@@ -276,7 +276,7 @@ ErrCode ExtBackupJs::OnRestore(std::function<void(const std::string)> callbackEx
     int32_t errCode = CallJsMethod("onRestoreEx", jsRuntime_, jsObj_.get(), ParseRestoreExInfo(), retParser);
     extJsRetCon_.wait_for(lock, std::chrono::seconds(WAIT_ONRESTORE_EX_TIMEOUT));
 
-    auto retParserBase = [jsRuntime {&jsRuntime_}, callbackInfoEx {callbackInfoEx_},callbackInfo {callbackInfo_}]
+    auto retParserBase = [jsRuntime {&jsRuntime_}, callbackInfoEx {callbackInfoEx_}, callbackInfo {callbackInfo_}]
         (napi_env env, napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
             HILOGI("Will callBack onRestore");
@@ -286,11 +286,11 @@ ErrCode ExtBackupJs::OnRestore(std::function<void(const std::string)> callbackEx
         HILOGI("CheckPromise(JS) OnRestore ok.");
         return CallPromise(*jsRuntime, result, callbackInfo.get());
     };
-    if (atoRet_.load()){
+    if (atoRet_.load()) {
         errCode = CallJsMethod("onRestore", jsRuntime_, jsObj_.get(), ParseRestoreInfo(), retParserBase);
     }
     if (errCode != ERR_OK) {
-        HILOGE("exe js mothod onrestore error,errcode: %{public}d", errCcode);
+        HILOGE("exe js method onRestore error,errCode: %{public}d", errCode);
         return errCode;
     }
     return ERR_OK;
@@ -453,7 +453,7 @@ std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::Pa
     return onRestoreFun;
 }
 
-std::function<bool(napi_env env, napi_value &result)> ExtBackupJs::ParseOnRestoreExRet()
+std::function<bool(napi_env env, napi_value result)> ExtBackupJs::ParseOnRestoreExRet()
 {
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfoEx {callbackInfoEx_},
         callbackInfo {callbackInfo_}, ptr {wptr<ExtBackupJs>(this)}](napi_env env, napi_value result) -> bool {
@@ -477,15 +477,15 @@ std::function<bool(napi_env env, napi_value &result)> ExtBackupJs::ParseOnRestor
                 HILOGI("Will callBack onRestoreEx, restoreRetStr is: %{public}s", restoreRetStr.get());
                 if (strlen(restoreRetStr.get()) == 0) {
                     HILOGI("app restore ret is empty,will call on restore");
-                    thisptr->atoRet_.store(true);
-                    thisptr->extJsRetCon_.notify_one();
+                    thisPtr->atoRet_.store(true);
+                    thisPtr->extJsRetCon_.notify_one();
                     return false;
                 }
                 callbackInfoEx->callbackParam(restoreRetStr.get());
                 return true;
             }
-            thisptr->atoRet_.store(true);
-            thisptr->extJsRetCon_.notify_one();
+            thisPtr->atoRet_.store(true);
+            thisPtr->extJsRetCon_.notify_one();
             return false;
         }
         HILOGI("CheckPromise(JS) OnRestore ok.");
