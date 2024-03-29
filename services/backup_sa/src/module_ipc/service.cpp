@@ -498,7 +498,7 @@ ErrCode Service::AppDone(ErrCode errCode)
             proxy->HandleClear();
             session_->BundleExtTimerStop(callerName);
             IServiceReverse::Scenario scenario = session_->GetScenario();
-            HILOGI("will notify clone data, scenario is: %d", scenario);
+            HILOGI("will notify clone data, scenario is: %{public}d", scenario);
             if (scenario == IServiceReverse::Scenario::BACKUP) {
                 session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, callerName);
             } else if (scenario == IServiceReverse::Scenario::RESTORE) {
@@ -525,7 +525,7 @@ ErrCode Service::ServiceResultReport(const std::string &restoreRetInfo)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
-        // session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo);
+        session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         return e.GetCode(); // 任意异常产生，终止监听该任务

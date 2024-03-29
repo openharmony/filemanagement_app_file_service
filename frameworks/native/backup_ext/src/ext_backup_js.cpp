@@ -44,6 +44,9 @@
 #include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
+namespace{
+    const static uint32_t WAIT_ONRESTORE_EX_TIMEOUT = 10;
+}
 using namespace std;
 
 static string GetSrcPath(const AppExecFwk::AbilityInfo &info)
@@ -258,39 +261,24 @@ ErrCode ExtBackupJs::OnBackup(function<void()> callback)
     return errCode;
 }
 
-ErrCode ExtBackupJs::OnRestore(std::function<void(const std::string &restoreRetInfo)> callbackEx,
+ErrCode ExtBackupJs::OnRestore(std::function<void(const std::string)> callbackEx,
     function<void()> callback)
 {
     HILOGI("BackupExtensionAbility(JS) OnRestore.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
                           "The app does not provide the onRestore interface.");
-    std::atomic<ErrCode> atoRetCode;
+    atoRet_.store(false);
     callbackInfoEx_ = std::make_shared<CallBackInfo>(callbackEx);
     callbackInfo_ = std::make_shared<CallBackInfo>(callback);
-    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfoEx {callbackInfoEx_},
-        callbackInfo {callbackInfo_}](napi_env env, napi_value result) -> bool {
+    auto retParser = ParseOnRestoreExRet();
+    HILOGI("Start execute call Js onRestoreEx method");
+    std::unique_lock<std::mutex> lock(extJsRetMutex_);
+    int32_t errCode = CallJsMethod("onRestoreEx", jsRuntime_, jsObj_.get(), ParseRestoreExInfo(), retParser);
+    extJsRetCon_.wait_for(lock, std::chrono::seconds(WAIT_ONRESTORE_EX_TIMEOUT));
+
+    auto retParserBase = [jsRuntime {&jsRuntime_}, callbackInfoEx {callbackInfoEx_},callbackInfo {callbackInfo_}]
+        (napi_env env, napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
-            napi_valuetype valueType = napi_undefined;
-            napi_typeof(env, result, &valueType);
-            if (valueType == napi_string) {
-                size_t strLen = 0;
-                napi_status status = napi_get_value_string_utf8(env, result, nullptr, -1, &strLen);
-                if (status != napi_ok) {
-                    HILOGE("Args result length is empty");
-                    return false;
-                }
-                size_t bufLen = strLen + 1;
-                unique_ptr<char[]> restoreRetStr = make_unique<char[]>(bufLen);
-                HILOGI("Will callBack onRestoreEx, restoreRetStr is: %{public}s", restoreRetStr.get());
-                // 逻辑待修改,onrestoreEx和onrestore对应callback
-                if (strlen(restoreRetStr.get()) == 0) {
-                std::unique_lock<std::mutex> lock(extJsRetMutex_);
-                atoRetCode = CallJsMethod("onRestore", jsRuntime_, jsObj_.get(), ParseRestoreInfo(), retParser);
-                extJsRetCon_.notify_one();
-                }
-                callbackInfoEx->callbackEx(restoreRetStr.get());
-                return true;
-            }
             HILOGI("Will callBack onRestore");
             callbackInfo->callback();
             return true;
@@ -298,17 +286,17 @@ ErrCode ExtBackupJs::OnRestore(std::function<void(const std::string &restoreRetI
         HILOGI("CheckPromise(JS) OnRestore ok.");
         return CallPromise(*jsRuntime, result, callbackInfo.get());
     };
-    HILOGI("Start execute call Js onRestoreEx method");
-    uint32_t interval = 5;
-    std::unique_lock<std::mutex> lock(extJsRetMutex_);
-    atoRetCode = CallJsMethod("onRestoreEx", jsRuntime_, jsObj_.get(), ParseRestoreExInfo(), retParser);
-    extJsRetCon_.wait_for(lock, std::chrono::seconds(interval), [atoRetCode]) {
-        return atoRetCode.get() != ERR_OK;
+    if (atoRet_.load()){
+        errCode = CallJsMethod("onRestore", jsRuntime_, jsObj_.get(), ParseRestoreInfo(), retParserBase);
+    }
+    if (errCode != ERR_OK) {
+        HILOGE("exe js mothod onrestore error,errcode: %{public}d", errCcode);
+        return errCode;
     }
     return ERR_OK;
 }
 
-ErrCode ExtBackupJs::GetBackupInfo(std::function<void(std::string)> callback)
+ErrCode ExtBackupJs::GetBackupInfo(std::function<void(const std::string)> callback)
 {
     HILOGI("BackupExtensionAbility(JS) GetBackupInfo begin.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
@@ -463,6 +451,47 @@ std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::Pa
         return true;
     };
     return onRestoreFun;
+}
+
+std::function<bool(napi_env env, napi_value &result)> ExtBackupJs::ParseOnRestoreExRet()
+{
+    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfoEx {callbackInfoEx_},
+        callbackInfo {callbackInfo_}, ptr {wptr<ExtBackupJs>(this)}](napi_env env, napi_value result) -> bool {
+        auto thisPtr = ptr.promote();
+        if (!thisPtr) {
+            HILOGE("this pointer is null");
+            return false;
+        }
+        if (!CheckPromise(env, result)) {
+            napi_valuetype valueType = napi_undefined;
+            napi_typeof(env, result, &valueType);
+            if (valueType == napi_string) {
+                size_t strLen = 0;
+                napi_status status = napi_get_value_string_utf8(env, result, nullptr, -1, &strLen);
+                if (status != napi_ok) {
+                    HILOGE("Args result length is empty");
+                    return false;
+                }
+                size_t bufLen = strLen + 1;
+                unique_ptr<char[]> restoreRetStr = make_unique<char[]>(bufLen);
+                HILOGI("Will callBack onRestoreEx, restoreRetStr is: %{public}s", restoreRetStr.get());
+                if (strlen(restoreRetStr.get()) == 0) {
+                    HILOGI("app restore ret is empty,will call on restore");
+                    thisptr->atoRet_.store(true);
+                    thisptr->extJsRetCon_.notify_one();
+                    return false;
+                }
+                callbackInfoEx->callbackParam(restoreRetStr.get());
+                return true;
+            }
+            thisptr->atoRet_.store(true);
+            thisptr->extJsRetCon_.notify_one();
+            return false;
+        }
+        HILOGI("CheckPromise(JS) OnRestore ok.");
+        return CallPromise(*jsRuntime, result, callbackInfo.get());
+    };
+    return retParser;
 }
 
 } // namespace OHOS::FileManagement::Backup

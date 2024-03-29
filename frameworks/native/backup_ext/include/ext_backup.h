@@ -130,7 +130,7 @@ public:
     /**
      * @brief Called do restore.
      */
-    virtual ErrCode OnRestore(std::function<void(const std::string &restoreRetInfo)> callbackEx,
+    virtual ErrCode OnRestore(std::function<void(const std::string)> callbackEx,
         std::function<void()> callback);
 
     /**
