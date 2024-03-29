@@ -300,35 +300,32 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
     return funcArg.GetThisVar();
 }
 
-napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_info cbinfo)
+bool SessionRestoreNExporter::DealArgs(NFuncArg funcArg,
+    int32 &fd, std::vector<std::string> &bundles, std::vector<std::string> &bundleDetails)
 {
-    HILOGI("called SessionRestore::AppendBundles begin");
-    NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::TWO, NARG_CNT::THREE)) {
         HILOGE("Number of arguments unmatched.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
-        return nullptr;
+        return false;
     }
-
     NVal remoteCap(env, funcArg[NARG_POS::FIRST]);
     auto [err, fd] = remoteCap.ToInt32();
+    fd = fd;
     if (!err) {
         HILOGE("First argument is not remote capabilitily file number.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not remote capabilitily file number.").GetCode())
             .ThrowErr(env);
-        return nullptr;
+        return false;
     }
-
     NVal jsBundles(env, funcArg[NARG_POS::SECOND]);
     auto [succ, bundles, ignore] = jsBundles.ToStringArray();
     if (!succ) {
         HILOGE("First argument is not bundles array.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not bundles array.").GetCode()).ThrowErr(env);
-        return nullptr;
+        return false;
     }
-
+    bundles = bundles;
     NVal jsDetails(env, funcArg[NARG_POS::THIRD]);
-    std::vector<std::string> bundleDetails;
     if (jsDetails.TypeIs(napi_undefined) || jsDetails.TypeIs(napi_null)) {
         HILOGW("Third param is not exist");
     } else {
@@ -337,8 +334,22 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
             HILOGE("Third argument is not bundles array.");
             NError(BError(BError::Codes::SDK_INVAL_ARG, "Third argument is not bundles array.").GetCode())
                 .ThrowErr(env);
-            return nullptr;
+            return false;
         }
+    }
+    bundleDetails = bundleDetails;
+    return true;
+}
+
+napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_info cbinfo)
+{
+    HILOGI("called SessionRestore::AppendBundles begin");
+    int32 fd = -1;
+    std::vector<std::string> bundles;
+    std::vector<std::string> bundleDetails;
+    NFuncArg funcArg(env, cbinfo);
+    if (!DealArgs(funcArg, fd, bundles, bundleDetails)) {
+        return nullptr;
     }
     auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
     if (!(restoreEntity && (restoreEntity->sessionWhole || restoreEntity->sessionSheet))) {
@@ -346,7 +357,6 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-
     auto cbExec = [entity {restoreEntity}, fd {fd}, bundles {bundles}, bundleDetails {bundleDetails}]() -> NError {
         if (!(entity && (entity->sessionWhole || entity->sessionSheet))) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
@@ -359,9 +369,7 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
     auto cbCompl = [](napi_env env, NError err) -> NVal {
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
-
     HILOGI("Called SessionRestore::AppendBundles end.");
-
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::TWO) {
         return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
