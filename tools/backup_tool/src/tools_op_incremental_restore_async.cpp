@@ -222,7 +222,9 @@ static void RestoreApp(shared_ptr<InrementalSessionAsync> restore, vector<Bundle
         }
         string tmpPath = string(BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR) + bundleName;
         if (access(tmpPath.data(), F_OK) != 0) {
-            throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
+            HILOGE("bundleName tar does not exist, file %{public}s  errno : %{public}d",
+                tmpPath.c_str(), errno);
+            continue;
         }
         // For Special clone, timestamp is always 0
         tmpPath = tmpPath + "/0";

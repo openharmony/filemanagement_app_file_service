@@ -254,6 +254,13 @@ public:
     void AppendBundles(const std::vector<std::string> &bundleNames);
 
     /**
+     * @brief 添加指定应用
+     *
+     * @param bundleName 应用名称
+     */
+    void CreateBackupConnection(BundleName &bundleName);
+    
+    /**
      * @brief 开始备份
      *
      * @return ErrCode

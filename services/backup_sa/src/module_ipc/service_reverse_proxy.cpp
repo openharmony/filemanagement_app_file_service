@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -173,6 +173,25 @@ void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName,
     MessageOption option;
     if (int err = Remote()->SendRequest(
         static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_FILE_READY), data, reply, option);
+        err != ERR_OK) {
+        throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
+    }
+}
+
+void ServiceReverseProxy::RestoreOnResultReport(string result)
+{
+    HILOGI("ServiceReverseProxy::RestoreOnResultReport Begin with result: %s", result.c_str());
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(result)) {
+        throw BError(BError::Codes::SA_BROKEN_IPC);
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_RESULT_REPORT), data, reply,
+        option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }

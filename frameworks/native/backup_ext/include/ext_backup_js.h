@@ -55,10 +55,10 @@ struct CallJsParam {
 
 struct CallBackInfo {
     std::function<void()> callback;
-    std::function<void(const std::string &restoreRetInfo)> callbackEx;
+	std::function<void(std::string)> callbackParam;
 
     CallBackInfo(std::function<void()> callbackIn) : callback(callbackIn) {}
-    CallBackInfo( std::function<void(const std::string &restoreRetInfo)> callbackEx) : callbackEx(callbackEx) {}
+	CallBackInfo(std::function<void(std::string)> callbackIn) : callbackParam(callbackIn) {}
 };
 
 class ExtBackupJs : public ExtBackup {
@@ -100,6 +100,7 @@ public:
      */
     ErrCode OnRestore(std::function<void(const std::string &restoreRetInfo)> callbackEx,
         std::function<void()> callback) override;
+    ErrCode GetBackupInfo(std::function<void(std::string)> callback) override;
 
 public:
     explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
@@ -124,8 +125,8 @@ private:
     std::unique_ptr<NativeReference> jsObj_;
     std::shared_ptr<CallBackInfo> callbackInfoEx_;
     std::shared_ptr<CallBackInfo> callbackInfo_;
-    std::condition_variable extJsRetCon_;
-    std::mutex extJsRetMutex_;
+	std::condition_variable extJsRetCon_;
+	std::mutex extJsRetMutex_;
 };
 } // namespace OHOS::FileManagement::Backup
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -101,6 +101,12 @@ void ServiceReverse::RestoreOnFileReady(string bundleName, string fileName, int 
     }
     BFileInfo bFileInfo(bundleName, fileName, 0);
     callbacksRestore_.onFileReady(bFileInfo, UniqueFd(fd));
+}
+
+void ServiceReverse::RestoreOnResultReport(string result)
+{
+    HILOGI("ServiceReverse RestoreOnResultReport begin with result: %s", result.c_str());
+    callbacksRestore_.onResultReport(result);
 }
 
 ServiceReverse::ServiceReverse(BSessionBackup::Callbacks callbacks)

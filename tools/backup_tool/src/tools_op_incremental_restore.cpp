@@ -209,7 +209,9 @@ static void RestoreApp(shared_ptr<SessionRestore> restore)
         string path = string(BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR) + data.bundleName + "/" +
                       to_string(data.lastIncrementalTime) + string(BConstants::BACKUP_TOOL_INCREMENTAL);
         if (access(path.data(), F_OK) != 0) {
-            throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
+            HILOGE("bundleName tar does not exist, file %{public}s  errno : %{public}d",
+                path.c_str(), errno);
+            continue;
         }
         const auto [err, filePaths] = BDir::GetDirFiles(path);
         if (err != 0) {

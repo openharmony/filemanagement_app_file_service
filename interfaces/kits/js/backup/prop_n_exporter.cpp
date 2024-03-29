@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,7 +14,7 @@
  */
 #include "prop_n_exporter.h"
 
-#include "local_capabilities.h"
+#include "prop_n_operation.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -23,7 +23,8 @@ using namespace LibN;
 bool PropNExporter::Export()
 {
     return exports_.AddProp({
-        NVal::DeclareNapiFunction("getLocalCapabilities", LocalCapabilities::Async),
+        NVal::DeclareNapiFunction("getLocalCapabilities", PropNOperation::Async),
+        NVal::DeclareNapiFunction("getBackupInfo", PropNOperation::DoGetBackupInfo),
     });
 }
 

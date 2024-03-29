@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,7 +24,6 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
-
 string BError::WrapMessageWithExtraInfos(const char *fileName,
                                          int lineNo,
                                          const char *functionName,
@@ -47,7 +46,7 @@ string BError::WrapMessageWithExtraInfos(const char *fileName,
     }
 
     string res = ss.str();
-    HiviewDFX::HiLog::Error(FILEMGMT_LOG_LABEL, "%{public}s", res.c_str());
+    (void)HILOG_IMPL(LOG_CORE, LOG_ERROR, LOG_DOMAIN, LOG_TAG, "%{public}s", res.c_str());
     return res;
 }
 

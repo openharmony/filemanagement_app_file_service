@@ -45,6 +45,8 @@ ExtExtensionStub::ExtExtensionStub()
         &ExtExtensionStub::CmdHandleIncrementalBackup;
     opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_GET_INCREMENTAL_BACKUP_FILE_HANDLE)] =
         &ExtExtensionStub::CmdGetIncrementalBackupFileHandle;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_GET_BACKUP_INFO)] =
+        &ExtExtensionStub::CmdGetBackupInfo;
 }
 
 int32_t ExtExtensionStub::OnRemoteRequest(uint32_t code,
@@ -192,6 +194,20 @@ ErrCode ExtExtensionStub::CmdGetIncrementalBackupFileHandle(MessageParcel &data,
     }
     if (!reply.WriteFileDescriptor(manifestFd)) {
         return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the file").GetCode();
+    }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ExtExtensionStub::CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("CmdGetBackupInfo Begin");
+    std::string result;
+    int ret = GetBackupInfo(result);
+    if (!reply.WriteInt32(ret)) {
+        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the ret").GetCode();
+    }
+    if (!reply.WriteString(result)) {
+        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the result").GetCode();
     }
     return BError(BError::Codes::OK);
 }

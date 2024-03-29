@@ -43,6 +43,7 @@ public:
     ErrCode PublishIncrementalFile(const std::string &fileName) override;
     ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) override;
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
+    ErrCode GetBackupInfo(std::string &result) override;
 
     void AsyncTaskRestoreForUpgrade(void);
     void ExtClear(void);
@@ -152,6 +153,9 @@ private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
     std::vector<std::string> tars_;
+    std::mutex getExtInfoMtx_;
+    std::condition_variable getExtInfoCondition_;
+    std::string backupInfo_;
     OHOS::ThreadPool threadPool_;
 };
 } // namespace OHOS::FileManagement::Backup

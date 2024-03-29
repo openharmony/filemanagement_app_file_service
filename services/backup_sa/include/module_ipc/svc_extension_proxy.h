@@ -32,6 +32,7 @@ public:
     ErrCode PublishIncrementalFile(const std::string &fileName) override;
     ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) override;
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
+    ErrCode GetBackupInfo(std::string &result) override;
 
 public:
     explicit SvcExtensionProxy(const sptr<IRemoteObject> &remote) : IRemoteProxy<IExtension>(remote) {}
