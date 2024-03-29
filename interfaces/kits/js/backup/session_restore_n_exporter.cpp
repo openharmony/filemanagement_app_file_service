@@ -266,14 +266,7 @@ static void onResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::str
 
     auto cbCompl = [result {result}](napi_env env, NError err) -> NVal {
         NVal resultStr = NVal::CreateUTF8String(env, result);
-        if (!err) {
-            return resultStr;
-        }
-
         NVal res;
-        if (err) {
-            res = NVal {env, err.GetNapiErr(env)};
-        }
         napi_status status = napi_set_named_property(env, res.val_, FILEIO_TAG_ERR_DATA.c_str(), resultStr.val_);
         if (status != napi_ok) {
             HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s", status, result.c_str());
