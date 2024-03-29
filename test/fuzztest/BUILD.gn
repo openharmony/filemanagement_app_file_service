@@ -22,5 +22,6 @@ group("fuzztest") {
     "fileshare_fuzzer:FileShareFuzzTest",
     "remotefileshare_fuzzer:RemoteFileShareFuzzTest",
     "servicereverse_fuzzer:ServiceReverseFuzzTest",
+    "svcrestoredepsmanager_fuzzer:SvcRestoreDepsManagerFuzzTest",
   ]
 }
