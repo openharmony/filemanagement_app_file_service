@@ -90,15 +90,15 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_GetRestoreBundleNa
     GTEST_LOG_(INFO) << "SvcRestoreDepsManagerTest-begin SUB_SvcRestoreDepsManager_GetRestoreBundleNames_0200";
     BJsonEntityCaps::BundleInfo info1 = {.name = "com.example.app1",
                                          .versionCode = 1000000,
-                                         .versionName = "1.0.0",
                                          .spaceOccupied = 0,
+                                         .versionName = "1.0.0",
                                          .allToBackup = false,
                                          .extensionName = "",
                                          .restoreDeps = ""};
     BJsonEntityCaps::BundleInfo info2 = {.name = "com.example.app2",
                                          .versionCode = 1000000,
-                                         .versionName = "1.0.0",
                                          .spaceOccupied = 0,
+                                         .versionName = "1.0.0",
                                          .allToBackup = false,
                                          .extensionName = "",
                                          .restoreDeps = "com.example.app1"};

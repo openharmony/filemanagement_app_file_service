@@ -34,6 +34,33 @@ public:
     void TearDown() {};
 };
 
+static void PerformBackupOperation(map<string, vector<string>> &mapArgToVal)
+{
+    GTEST_LOG_(INFO) << "ToolsOpBackupTest-backup";
+    vector<string_view> curOp;
+    curOp.emplace_back("backup");
+    auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
+    auto &&opeartions = ToolsOp::GetAllOperations();
+    auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
+    if (matchedOp != opeartions.end()) {
+        auto ret = matchedOp->Execute(mapArgToVal);
+        EXPECT_EQ(ret, 0);
+    }
+}
+
+static map<string, vector<string>> PrepareBackupArguments()
+{
+    map<string, vector<string>> mapArgToVal;
+    vector<string> path = {"/data/backup/tmp"};
+    mapArgToVal.insert(make_pair("pathCapFile", path));
+    vector<string> bundles = {"com.example.app2backup"};
+    mapArgToVal.insert(make_pair("bundles", bundles));
+    vector<string> local = {"false"};
+    mapArgToVal.insert(make_pair("isLocal", local));
+
+    return mapArgToVal;
+}
+
 /**
  * @tc.number: SUB_backup_tools_op_backup_0100
  * @tc.name: SUB_backup_tools_op_backup_0100
@@ -59,16 +86,7 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_0100, testing::ext::TestS
         mapArgToVal.insert(make_pair("isLocal", local));
 
         // 尝试匹配当前命令，成功后执行
-        GTEST_LOG_(INFO) << "ToolsOpBackupTest-backup";
-        vector<string_view> curOp;
-        curOp.emplace_back("backup");
-        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
-        auto &&opeartions = ToolsOp::GetAllOperations();
-        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        if (matchedOp != opeartions.end()) {
-            auto ret = matchedOp->Execute(mapArgToVal);
-            EXPECT_EQ(ret, 0);
-        }
+        PerformBackupOperation(mapArgToVal);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-an exception occurred by construction.";
@@ -152,25 +170,10 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_0300, testing::ext::TestS
     GTEST_LOG_(INFO) << "ToolsOpBackupTest-begin SUB_backup_tools_op_backup_0300";
     try {
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-info";
-        map<string, vector<string>> mapArgToVal;
-        vector<string> path = {"/data/backup/tmp"};
-        mapArgToVal.insert(make_pair("pathCapFile", path));
-        vector<string> bundles = {"com.example.app2backup"};
-        mapArgToVal.insert(make_pair("bundles", bundles));
-        vector<string> local = {"false"};
-        mapArgToVal.insert(make_pair("isLocal", local));
+        map<string, vector<string>> mapArgToVal = PrepareBackupArguments();
 
         // 尝试匹配当前命令，成功后执行
-        GTEST_LOG_(INFO) << "ToolsOpBackupTest-backup";
-        vector<string_view> curOp;
-        curOp.emplace_back("backup");
-        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
-        auto &&opeartions = ToolsOp::GetAllOperations();
-        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        if (matchedOp != opeartions.end()) {
-            auto ret = matchedOp->Execute(mapArgToVal);
-            EXPECT_EQ(ret, 0);
-        }
+        PerformBackupOperation(mapArgToVal);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-an exception occurred by construction.";
@@ -202,16 +205,7 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_0400, testing::ext::TestS
         mapArgToVal.insert(make_pair("isLocal", local));
 
         // 尝试匹配当前命令，成功后执行
-        GTEST_LOG_(INFO) << "ToolsOpBackupTest-backup";
-        vector<string_view> curOp;
-        curOp.emplace_back("backup");
-        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
-        auto &&opeartions = ToolsOp::GetAllOperations();
-        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        if (matchedOp != opeartions.end()) {
-            auto ret = matchedOp->Execute(mapArgToVal);
-            EXPECT_EQ(ret, 0);
-        }
+        PerformBackupOperation(mapArgToVal);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-an exception occurred by construction.";
@@ -234,25 +228,10 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_0500, testing::ext::TestS
     try {
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-info";
         BackUpRegister();
-        map<string, vector<string>> mapArgToVal;
-        vector<string> path = {"/data/backup/tmp"};
-        mapArgToVal.insert(make_pair("pathCapFile", path));
-        vector<string> bundles = {"com.example.app2backup"};
-        mapArgToVal.insert(make_pair("bundles", bundles));
-        vector<string> local = {"false"};
-        mapArgToVal.insert(make_pair("isLocal", local));
+        map<string, vector<string>> mapArgToVal = PrepareBackupArguments();
 
         // 尝试匹配当前命令，成功后执行
-        GTEST_LOG_(INFO) << "ToolsOpBackupTest-backup";
-        vector<string_view> curOp;
-        curOp.emplace_back("backup");
-        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
-        auto &&opeartions = ToolsOp::GetAllOperations();
-        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        if (matchedOp != opeartions.end()) {
-            auto ret = matchedOp->Execute(mapArgToVal);
-            EXPECT_EQ(ret, 0);
-        }
+        PerformBackupOperation(mapArgToVal);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-an exception occurred by construction.";
@@ -277,25 +256,10 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_0600, testing::ext::TestS
         BackUpRegister();
         rmdir((BConstants::BACKUP_TOOL_LINK_DIR).data());
         mkdir((BConstants::BACKUP_TOOL_LINK_DIR).data(), S_IRWXO);
-        map<string, vector<string>> mapArgToVal;
-        vector<string> path = {"/data/backup/tmp"};
-        mapArgToVal.insert(make_pair("pathCapFile", path));
-        vector<string> bundles = {"com.example.app2backup"};
-        mapArgToVal.insert(make_pair("bundles", bundles));
-        vector<string> local = {"false"};
-        mapArgToVal.insert(make_pair("isLocal", local));
+        map<string, vector<string>> mapArgToVal = PrepareBackupArguments();
 
         // 尝试匹配当前命令，成功后执行
-        GTEST_LOG_(INFO) << "ToolsOpBackupTest-backup";
-        vector<string_view> curOp;
-        curOp.emplace_back("backup");
-        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
-        auto &&opeartions = ToolsOp::GetAllOperations();
-        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        if (matchedOp != opeartions.end()) {
-            auto ret = matchedOp->Execute(mapArgToVal);
-            EXPECT_EQ(ret, 0);
-        }
+        PerformBackupOperation(mapArgToVal);
         rmdir((BConstants::BACKUP_TOOL_LINK_DIR).data());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -319,25 +283,10 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_0700, testing::ext::TestS
     try {
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-info";
         BackUpRegister();
-        map<string, vector<string>> mapArgToVal;
-        vector<string> path = {"/data/backup/tmp"};
-        mapArgToVal.insert(make_pair("pathCapFile", path));
-        vector<string> bundles = {"com.example.app2backup"};
-        mapArgToVal.insert(make_pair("bundles", bundles));
-        vector<string> local = {"false"};
-        mapArgToVal.insert(make_pair("isLocal", local));
+        map<string, vector<string>> mapArgToVal = PrepareBackupArguments();
 
         // 尝试匹配当前命令，成功后执行
-        GTEST_LOG_(INFO) << "ToolsOpBackupTest-backup";
-        vector<string_view> curOp;
-        curOp.emplace_back("backup");
-        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
-        auto &&opeartions = ToolsOp::GetAllOperations();
-        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        if (matchedOp != opeartions.end()) {
-            auto ret = matchedOp->Execute(mapArgToVal);
-            EXPECT_EQ(ret, 0);
-        }
+        PerformBackupOperation(mapArgToVal);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-an exception occurred by construction.";
@@ -361,25 +310,10 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_0900, testing::ext::TestS
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-info";
         BackUpRegister();
         rmdir(BConstants::BACKUP_TOOL_LINK_DIR.data());
-        map<string, vector<string>> mapArgToVal;
-        vector<string> path = {"/data/backup/tmp"};
-        mapArgToVal.insert(make_pair("pathCapFile", path));
-        vector<string> bundles = {"com.example.app2backup"};
-        mapArgToVal.insert(make_pair("bundles", bundles));
-        vector<string> local = {"false"};
-        mapArgToVal.insert(make_pair("isLocal", local));
+        map<string, vector<string>> mapArgToVal = PrepareBackupArguments();
 
         // 尝试匹配当前命令，成功后执行
-        GTEST_LOG_(INFO) << "ToolsOpBackupTest-backup";
-        vector<string_view> curOp;
-        curOp.emplace_back("backup");
-        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
-        auto &&opeartions = ToolsOp::GetAllOperations();
-        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        if (matchedOp != opeartions.end()) {
-            auto ret = matchedOp->Execute(mapArgToVal);
-            EXPECT_EQ(ret, 0);
-        }
+        PerformBackupOperation(mapArgToVal);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-an exception occurred by construction.";
@@ -404,25 +338,10 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_1000, testing::ext::TestS
         BackUpRegister();
         string cmdusermod = string("usermod -u 1000") + BConstants::BACKUP_TOOL_RECEIVE_DIR.data();
         system(cmdusermod.c_str());
-        map<string, vector<string>> mapArgToVal;
-        vector<string> path = {"/data/backup/tmp"};
-        mapArgToVal.insert(make_pair("pathCapFile", path));
-        vector<string> bundles = {"com.example.app2backup"};
-        mapArgToVal.insert(make_pair("bundles", bundles));
-        vector<string> local = {"false"};
-        mapArgToVal.insert(make_pair("isLocal", local));
+        map<string, vector<string>> mapArgToVal = PrepareBackupArguments();
 
         // 尝试匹配当前命令，成功后执行
-        GTEST_LOG_(INFO) << "ToolsOpBackupTest-backup";
-        vector<string_view> curOp;
-        curOp.emplace_back("backup");
-        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
-        auto &&opeartions = ToolsOp::GetAllOperations();
-        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        if (matchedOp != opeartions.end()) {
-            auto ret = matchedOp->Execute(mapArgToVal);
-            EXPECT_EQ(ret, 0);
-        }
+        PerformBackupOperation(mapArgToVal);
         rmdir((BConstants::BACKUP_TOOL_RECEIVE_DIR).data());
     } catch (...) {
         EXPECT_TRUE(false);

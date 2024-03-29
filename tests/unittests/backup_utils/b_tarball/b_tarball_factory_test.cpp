@@ -81,11 +81,11 @@ HWTEST_F(BTarballFactoryTest, b_tarball_factory_0200, testing::ext::TestSize.Lev
         // 预置路径
         TestManager tm("b_tarball_factory_0200");
         string root = tm.GetRootDirCurTest();
-        string implType = "";
+        string type = "";
         string tarballPath = root + "/test.tar";
         SaveStringToFile(tarballPath, "data/storage/el2/database/");
         // 调用create获取打包解包能力
-        auto tarballTar = BTarballFactory::Create(implType, tarballPath);
+        auto tarballTar = BTarballFactory::Create(type, tarballPath);
         GTEST_LOG_(INFO) << "BTarballFactoryTest-tar";
         (tarballTar->tar)("/", {}, {"/data/storage/el2/database/", {}});
         GTEST_LOG_(INFO) << "BTarballFactoryTest-untar";
@@ -114,10 +114,10 @@ HWTEST_F(BTarballFactoryTest, b_tarball_factory_0300, testing::ext::TestSize.Lev
         TestManager tm("b_tarball_factory_0300");
         string root = tm.GetRootDirCurTest();
         string implType = "cmdline";
-        string tarballPath = root + "";
-        SaveStringToFile(tarballPath, "data/storage/el2/database/");
+        string path = root + "";
+        SaveStringToFile(path, "data/storage/el2/database/");
         // 调用create获取打包解包能力
-        auto tarballTar = BTarballFactory::Create(implType, tarballPath);
+        auto tarballTar = BTarballFactory::Create(implType, path);
         GTEST_LOG_(INFO) << "BTarballFactoryTest-tar";
         (tarballTar->tar)("/", {}, {"/data/storage/el2/database/", {}});
         GTEST_LOG_(INFO) << "BTarballFactoryTest-untar";

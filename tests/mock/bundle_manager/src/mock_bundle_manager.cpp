@@ -34,7 +34,7 @@ bool BundleMgrProxy::GetBundleInfo(const string &bundleName,
                                    BundleInfo &bundleInfo,
                                    int32_t userId)
 {
-    GTEST_LOG_(INFO) << "GetBundleInfo is ok";
+    GTEST_LOG_(INFO) << "BundleMgrProxy:GetBundleInfo is ok";
     ExtensionAbilityInfo info;
     info.type = AppExecFwk::ExtensionAbilityType::BACKUP;
     info.name = "com.example.app2backup";
@@ -52,7 +52,7 @@ bool BundleMgrStub::GetBundleInfo(const string &bundleName,
                                   BundleInfo &bundleInfo,
                                   int32_t userId)
 {
-    GTEST_LOG_(INFO) << "GetBundleInfo is ok";
+    GTEST_LOG_(INFO) << "BundleMgrStub:GetBundleInfo is ok";
     ExtensionAbilityInfo info;
     info.type = AppExecFwk::ExtensionAbilityType::BACKUP;
     info.name = "com.example.app2backup";

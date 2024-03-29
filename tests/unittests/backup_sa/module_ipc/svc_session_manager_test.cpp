@@ -664,8 +664,8 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_DumpInfo_0100, testing::ex
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_DumpInfo_0100";
     try {
         TestManager tm("SvcSessionManagerTest_GetFd_0100");
-        string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
-        UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        string fileUri = tm.GetRootDirCurTest().append(FILE_NAME);
+        UniqueFd fd(open(fileUri.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
         sessionManagerPtr_->DumpInfo(fd, {});
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1128,9 +1128,9 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBunleExtManageInfo_0100,
         UniqueFd fd(open(filePath.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
         sessionManagerPtr_->OnBunleExtManageInfo(BUNDLE_NAME, move(fd));
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-OnBunleFileReady Branches";
-        ret = sessionManagerPtr_->OnBunleFileReady(BUNDLE_NAME, FILE_NAME);
-        EXPECT_FALSE(ret);
         ret = sessionManagerPtr_->OnBunleFileReady(BUNDLE_NAME);
+        EXPECT_FALSE(ret);
+        ret = sessionManagerPtr_->OnBunleFileReady(BUNDLE_NAME, FILE_NAME);
         EXPECT_FALSE(ret);
         ret = sessionManagerPtr_->OnBunleFileReady(BUNDLE_NAME, MANAGE_JSON);
         EXPECT_FALSE(ret);
@@ -1164,7 +1164,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBunleExtManageInfo_0101,
         ret = sessionManagerPtr_->OnBunleFileReady(BUNDLE_NAME, FILE_NAME);
         EXPECT_FALSE(ret);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-OnBunleFileReady Branches End";
-        TestManager tm("SvcSessionManagerTest_GetFd_0100");
+        TestManager tm("SvcSessionManagerTest_GetFd_0101");
         string filePath = tm.GetRootDirCurTest().append(MANAGE_JSON);
         SaveStringToFile(filePath, R"({"fileName" : "1.tar"})");
         UniqueFd fd(open(filePath.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
@@ -1172,11 +1172,11 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBunleExtManageInfo_0101,
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-OnBunleFileReady Branches";
         ret = sessionManagerPtr_->OnBunleFileReady(BUNDLE_NAME, FILE_NAME);
         EXPECT_FALSE(ret);
+            ret = sessionManagerPtr_->OnBunleFileReady(BUNDLE_NAME, FILE_NAME);
+        EXPECT_FALSE(ret);
         ret = sessionManagerPtr_->OnBunleFileReady(BUNDLE_NAME);
         EXPECT_FALSE(ret);
         ret = sessionManagerPtr_->OnBunleFileReady(BUNDLE_NAME, MANAGE_JSON);
-        EXPECT_FALSE(ret);
-        ret = sessionManagerPtr_->OnBunleFileReady(BUNDLE_NAME, FILE_NAME);
         EXPECT_FALSE(ret);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-OnBunleFileReady Branches End";
     } catch (...) {
@@ -1208,7 +1208,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBunleExtManageInfo_0102,
         ret = sessionManagerPtr_->OnBunleFileReady(BUNDLE_NAME, FILE_NAME);
         EXPECT_FALSE(ret);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-OnBunleFileReady Branches End";
-        TestManager tm("SvcSessionManagerTest_GetFd_0100");
+        TestManager tm("SvcSessionManagerTest_GetFd_0102");
         string filePath = tm.GetRootDirCurTest().append(MANAGE_JSON);
         SaveStringToFile(filePath, R"({"fileName" : "1.tar"})");
         UniqueFd fd(open(filePath.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));

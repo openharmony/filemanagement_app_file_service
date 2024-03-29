@@ -26,9 +26,9 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 
 namespace {
+const string FILE_NAME = "1.tar";
 const string BUNDLE_NAME = "com.example.app2backup/";
 const string MANAGE_JSON = "manage.json";
-const string FILE_NAME = "1.tar";
 } // namespace
 
 class ToolsOpRestoreAsyncTest : public testing::Test {
