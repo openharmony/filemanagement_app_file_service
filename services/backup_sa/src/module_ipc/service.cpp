@@ -65,6 +65,7 @@ REGISTER_SYSTEM_ABILITY_BY_ID(Service, FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, fals
 
 namespace {
 constexpr int32_t DEBUG_ID = 100;
+const static string COMMON_EVENT_TYPE = "broadcast";
 } // namespace
 
 /* Shell/Xts user id equal to 0/1, we need set default 100 */
@@ -323,12 +324,12 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             session_->SetSessionUserId(userId);
         }
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
-        std::vector<std::string> realBundleNames;
+        std::vector<std::string> hosBundleNames;
         std::vector<BJsonUtil::BundleDetailInfo> bundleDetails =
-            BJsonUtil::ConvertBundleDetailInfos(bundleNames, detailInfos, ":", realBundleNames);
+            BJsonUtil::ConvertBundleDetailInfos(bundleNames, detailInfos, ":", hosBundleNames, userId);
         std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap;
         BJsonUtil::RecordBundleDetailRelation(bundleNameDetailMap, bundleDetails);
-        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, realBundleNames);
+        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, hosBundleNames);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         if (restoreBundleNames.empty()) {
             session_->DecreaseSessionCnt();
@@ -368,19 +369,21 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
             session_->RemoveExtInfo(restoreInfo.name);
             continue;
         }
-        if (restoreType == TypeRestoreTypeEnum::RESTORE_DATA_READDY ||
-            SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) {
-            BJsonUtil::BundleDetailInfo bundleDetailInfo = bundleNameDetailMap[restoreInfo.name];
-            if (bundleDetailInfo.type == "broadcast") {
-                DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(bundleDetailInfo);
-            }
-
-        }
         session_->SetBundleRestoreType(restoreInfo.name, restoreType);
         session_->SetBundleVersionCode(restoreInfo.name, restoreInfo.versionCode);
         session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
         session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
         session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
+        if (restoreType == TypeRestoreTypeEnum::RESTORE_DATA_READDY ||
+            SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) {
+            auto iter = bundleNameDetailMap.find(restoreInfo.name);
+            if (iter != bundleNameDetailMap.end()) {
+                BJsonUtil::BundleDetailInfo bundetailInfo = iter->second;
+                if (bundleDetailInfo.type == COMMON_EVENT_TYPE) {
+                    DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(bundleDetailInfo);
+                }
+            }
+        }
     }
     HILOGI("End");
 }

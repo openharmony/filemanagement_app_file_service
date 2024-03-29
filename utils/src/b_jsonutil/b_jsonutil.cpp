@@ -49,32 +49,33 @@ BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string
 }
 
 std::vector<BJsonUtil::BundleDetailInfo> BJsonUtil::ConvertBundleDetailInfos(
-    const std::vector<std::string> &bundleNameIndexStrs,
-    const std::vector<std::string> &details, const std::string &patternInfo, std::vector<std::string> &realBundleNames)
+    const std::vector<std::string> &bundleNameIndexStrs, const std::vector<std::string> &details,
+    const std::string &patternInfo, std::vector<std::string> &realBundleNames, int32_t userId)
 {
     std::vector<BundleDetailInfo> bundleDetailInfoList;
     for (size_t pos = 0; pos < bundleNameIndexStrs.size(); pos++)
     {
         std::string bundleNameIndexStr = bundleNameIndexStrs[pos];
         BundleDetailInfo bundleDetailInfo;
+        bundleDetailInfo.userId = userId;
         size_t hasPos = bundleNameIndexStr.find(patternInfo);
         if (hasPos == std::string::npos) {
             bundleDetailInfo.bundleName = bundleNameIndexStr;
             bundleDetailInfo.bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
-            realBundleNames.push_back(bundleNameIndexStr);
+            realBundleNames.emplace_back(bundleNameIndexStr);
         } else {
             std::string bundleName = bundleNameIndexStr.substr(0, hasPos);
             std::string indexStr = bundleNameIndexStr.substr(hasPos + 1);
             int index = std::stoi(indexStr);
             bundleDetailInfo.bundleName = bundleName;
             bundleDetailInfo.bundleIndex = index;
-            realBundleNames.push_back(bundleNameIndexStr);
+            realBundleNames.emplace_back(bundleName);
         }
         if (pos < details.size()) {
             std::string bundleDetailStr = details[pos];
             ParseBundleDetailInfo(bundleDetailStr, bundleDetailInfo);
         }
-        bundleDetailInfoList.push_back(bundleDetailInfo);
+        bundleDetailInfoList.emplace_back(bundleDetailInfo);
     }
     return bundleDetailInfoList;
 }

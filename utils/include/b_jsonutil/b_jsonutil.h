@@ -27,6 +27,7 @@ public:
         std::string type;
         std::string detail;
         int bundleIndex;
+        int32_t userId;
     }BundleDetailInfo;
     /**
      * @brief 带有拼接字符的bundleName按照拼接字符进行分割
@@ -45,13 +46,14 @@ public:
      * @param details infos的集合
      * @param patternInfo 拼接的字符
      * @param realBundleNames 分割后真正的bundleNames
+     * @param userId userId
      *
      * @return 结构体集合
      *
      */
     static std::vector<BundleDetailInfo> ConvertBundleDetailInfos(const std::vector<std::string> &bundleNames,
         const std::vector<std::string> &details, const std::string &patternInfo,
-        std::vector<std::string> &realBundleNames);
+        std::vector<std::string> &realBundleNames, int32_t userId);
 
     /**
      * @brief 解析单个bundle对应的json串
