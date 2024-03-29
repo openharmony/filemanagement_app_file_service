@@ -172,4 +172,9 @@ ErrCode Service::GetIncrementalFileHandle(const string &bundleName, const string
 {
     return BError(BError::Codes::OK);
 }
+
+ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

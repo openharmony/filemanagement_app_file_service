@@ -70,6 +70,8 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdAppIncrementalDone;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_INCREMENTAL_FILE_NAME)] =
         &ServiceStub::CmdGetIncrementalFileHandle;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_INFO)] =
+        &ServiceStub::CmdGetBackupInfo;
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -278,6 +280,26 @@ int32_t ServiceStub::CmdFinish(MessageParcel &data, MessageParcel &reply)
     if (!reply.WriteInt32(res)) {
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
     }
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("ServiceStub::CmdGetBackupInfo Begin.");
+    int ret = ERR_OK;
+    string bundleName;
+    if (!data.ReadString(bundleName)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive bundleName"));
+    }
+    string result;
+    ret = GetBackupInfo(bundleName, result);
+    if (ret != ERR_OK) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to call GetBackupInfo"));
+    }
+    if (!reply.WriteString(result)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to write result"));
+    }
+    HILOGI("ServiceStub::CmdGetBackupInfo end.");
     return BError(BError::Codes::OK);
 }
 

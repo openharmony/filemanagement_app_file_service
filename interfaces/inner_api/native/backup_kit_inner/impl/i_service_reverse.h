@@ -40,6 +40,7 @@ public:
     virtual void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
     virtual void RestoreOnAllBundlesFinished(int32_t errCode) = 0;
     virtual void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd) = 0;
+    virtual void RestoreOnResultReport(std::string result) = 0;
 
     virtual void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd) = 0;
     virtual void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) = 0;

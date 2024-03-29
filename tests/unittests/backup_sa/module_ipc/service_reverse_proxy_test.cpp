@@ -32,9 +32,10 @@ using namespace std;
 using namespace testing;
 
 namespace {
-const string BUNDLE_NAME = "com.example.app2backup";
 const string FILE_NAME = "1.tar";
+const string BUNDLE_NAME = "com.example.app2backup";
 const string FILE_NAME_MANIFEST = "manifest.rp";
+const string RESULT_REPORT = "result_report";
 } // namespace
 
 class ServiceReverseProxyTest : public testing::Test {
@@ -487,5 +488,29 @@ HWTEST_F(ServiceReverseProxyTest,
         GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalRestoreOnFileReady.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalRestoreOnFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_RestoreOnResultReport_0100
+ * @tc.name: SUB_ServiceReverse_proxy_RestoreOnResultReport_0100
+ * @tc.desc: Test function of RestoreOnResultReport interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnResultReport_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_RestoreOnResultReport_0100";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        proxy_->RestoreOnResultReport(RESULT_REPORT);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by RestoreOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_RestoreOnResultReport_0100";
 }
 } // namespace OHOS::FileManagement::Backup

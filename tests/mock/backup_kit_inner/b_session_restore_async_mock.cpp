@@ -81,7 +81,7 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
     string fileManagePath = tm.GetRootDirCurTest().append("manage.json");
     UniqueFd fdManage(open(fileManagePath.data(), O_RDWR | O_CREAT, S_IRWXU));
     bFileInfo.fileName = "manage.json";
-    GTEST_LOG_(INFO) << "callbacks_::onFileReady manage.json";
+    GTEST_LOG_(INFO) << "File ready callback for manage.json";
     callbacks_.onFileReady(bFileInfo, move(fdManage));
 
     callbacks_.onBundleFinished(0, "com.example.app2backup");
@@ -90,7 +90,7 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
     callbacks_.onBundleStarted(1, "com.example.app2backup");
     callbacks_.onBundleFinished(1, "com.example.app2backup");
     callbacks_.onAllBundlesFinished(1);
-
+    callbacks_.onResultReport("com.example.app2backup");
     callbacks_.onBackupServiceDied();
     return BError(BError::Codes::OK);
 }

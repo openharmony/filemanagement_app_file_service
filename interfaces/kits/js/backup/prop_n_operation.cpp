@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "local_capabilities.h"
+#include "prop_n_operation.h"
 
 #include "b_error/b_error.h"
 #include "b_incremental_data.h"
@@ -158,7 +158,7 @@ static napi_value AsyncDataList(napi_env env, const NFuncArg& funcArg)
     return NAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_LOCALCAPABILITIES_NAME, cbExec, cbCompl).val_;
 }
 
-napi_value LocalCapabilities::Async(napi_env env, napi_callback_info info)
+napi_value PropNOperation::Async(napi_env env, napi_callback_info info)
 {
     HILOGI("called LocalCapabilities::Async begin");
     NFuncArg funcArg(env, info);
@@ -177,5 +177,46 @@ napi_value LocalCapabilities::Async(napi_env env, napi_callback_info info)
     }
 
     return AsyncCallback(env, funcArg);
+}
+
+napi_value PropNOperation::DoGetBackupInfo(napi_env env, napi_callback_info info)
+{
+    HILOGI("called DoGetBackupInfo begin");
+    std::string result;
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    NVal jsBundle(env, funcArg[NARG_POS::FIRST]);
+    auto [succ, bundle, size] = jsBundle.ToUTF8String();
+    if (!succ) {
+        HILOGE("First argument is not string.");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+
+    ServiceProxy::InvaildInstance();
+    auto proxy = ServiceProxy::GetInstance();
+    if (!proxy) {
+        HILOGE("called DoGetBackupInfo,failed to get proxy");
+        return nullptr;
+    }
+    std::string bundleName = bundle.get();
+    ErrCode errcode = proxy->GetBackupInfo(bundleName, result);
+    if (errcode != 0) {
+        HILOGE("proxy->GetBackupInfo faild.");
+        return nullptr;
+    }
+
+    napi_value nResult;
+    napi_status status = napi_create_string_utf8(env, result.c_str(), result.size(), &nResult);
+    if (status != napi_ok) {
+        HILOGE("napi_create_string_utf8 faild.");
+        return nullptr;
+    }
+    HILOGI("DoGetBackupInfo success with result: %{public}s", result.c_str());
+    return nResult;
 }
 } // namespace OHOS::FileManagement::Backup

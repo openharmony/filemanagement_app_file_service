@@ -77,11 +77,11 @@ void NativeTokenGet()
     const char **perms = new const char *[1];
     perms[0] = "ohos.permission.DISTRIBUTED_DATASYNC";
     NativeTokenInfoParams infoInstance = {
-        .dcapsNum = 0,
         .permsNum = 1,
         .aclsNum = 0,
         .dcaps = nullptr,
         .perms = perms,
+        .dcapsNum = 0,
         .acls = nullptr,
         .aplStr = "system_core",
     };

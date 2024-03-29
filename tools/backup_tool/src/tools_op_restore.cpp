@@ -177,7 +177,7 @@ static void OnBackupServiceDied(shared_ptr<Session> ctx)
     ctx->TryNotify(true);
 }
 
-static void RestoreApp(shared_ptr<Session> restore, vector<BundleName> &bundleNames)
+static void RestoreApp(shared_ptr<Session> restore, vector<BundleName> &bundleNames, bool updateSendFiles)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "RestoreApp");
     if (!restore || !restore->session_) {
@@ -189,16 +189,23 @@ static void RestoreApp(shared_ptr<Session> restore, vector<BundleName> &bundleNa
         }
         string path = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + bundleName;
         if (access(path.data(), F_OK) != 0) {
-            throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
+            HILOGE("bundleName tar does not exist, file %{public}s  errno : %{public}d",
+                path.c_str(), errno);
+            continue;
         }
         const auto [err, filePaths] = BDir::GetDirFiles(path);
         if (err != 0) {
             throw BError(BError::Codes::TOOL_INVAL_ARG, "error path");
         }
         for (auto &filePath : filePaths) {
+            if (filePath.rfind("/") == string::npos) {
+                continue;
+            }
             string fileName = filePath.substr(filePath.rfind("/") + 1);
             restore->session_->GetFileHandle(bundleName, fileName);
-            restore->UpdateBundleSendFiles(bundleName, fileName);
+            if (updateSendFiles) {
+                restore->UpdateBundleSendFiles(bundleName, fileName);
+            }
         }
     }
     FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
@@ -254,7 +261,8 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
         printf("Failed to init restore session error:%d\n", ret);
         return ret;
     }
-
+    ctx->SetBundleFinishedCount(bundleNames.size());
+    RestoreApp(ctx, bundleNames, true);
     if (depMode) {
         for (auto &bundleName : bundleNames) {
             UniqueFd fileFd(open(realPath.data(), O_RDWR, S_IRWXU));
@@ -278,8 +286,7 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
             return -ret;
         }
     }
-    ctx->SetBundleFinishedCount(bundleNames.size());
-    RestoreApp(ctx, bundleNames);
+    RestoreApp(ctx, bundleNames, false);
     ctx->Wait();
     ctx->session_->Release();
     return 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -131,6 +131,11 @@ public:
      * @brief Called do restore.
      */
     virtual ErrCode OnRestore(std::function<void()> callback);
+
+    /**
+     * @brief Called do GetBackupInfo.
+     */
+    virtual ErrCode GetBackupInfo(std::function<void(std::string)> callback);
 
     /**
      * @brief 数据迁移判断

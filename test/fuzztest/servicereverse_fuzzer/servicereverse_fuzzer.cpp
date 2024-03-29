@@ -155,11 +155,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         return 0;
     }
 
-    auto str = std::make_unique<char[]>(size + 1);
-    (void)memset_s(str.get(), size + 1, 0x00, size + 1);
-    if (memcpy_s(str.get(), size, data, size) != EOK) {
-        return 0;
-    }
     OHOS::BackupFuzzTest(data, size);
     OHOS::RestoreFuzzTest(data, size);
     OHOS::IncrementalBackupFuzzTest(data, size);

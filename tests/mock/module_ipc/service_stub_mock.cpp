@@ -25,16 +25,19 @@ using namespace std;
 
 ServiceStub::ServiceStub()
 {
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_FINISH)] = &ServiceStub::CmdFinish;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RELSEASE_SESSION)] =
+        &ServiceStub::CmdRelease;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_RESTORE_SESSION)] =
         &ServiceStub::CmdInitRestoreSession;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_BACKUP_SESSION)] =
         &ServiceStub::CmdInitBackupSession;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES)] =
         &ServiceStub::CmdGetLocalCapabilities;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_FILE)] =
-        &ServiceStub::CmdPublishFile;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY)] =
         &ServiceStub::CmdAppFileReady;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_FILE)] =
+        &ServiceStub::CmdPublishFile;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_DONE)] = &ServiceStub::CmdAppDone;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START)] = &ServiceStub::CmdStart;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_FILE_NAME)] =
@@ -43,9 +46,6 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdAppendBundlesRestoreSession;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION)] =
         &ServiceStub::CmdAppendBundlesBackupSession;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_FINISH)] = &ServiceStub::CmdFinish;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RELSEASE_SESSION)] =
-        &ServiceStub::CmdRelease;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES_INCREMENTAL)] =
         &ServiceStub::CmdGetLocalCapabilitiesIncremental;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_INCREMENTAL_BACKUP_SESSION)] =
@@ -59,6 +59,8 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdAppIncrementalFileReady;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_INCREMENTAL_FILE_NAME)] =
         &ServiceStub::CmdGetIncrementalFileHandle;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_INFO)] =
+        &ServiceStub::CmdGetBackupInfo;
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -173,6 +175,18 @@ int32_t ServiceStub::CmdFinish(MessageParcel &data, MessageParcel &reply)
 {
     int res = Finish();
     reply.WriteInt32(res);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply)
+{
+    int ret = ERR_OK;
+    string bundleName;
+    if (!data.ReadString(bundleName)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive bundleName"));
+    }
+    std::string result;
+    ret = GetBackupInfo(bundleName, result);
     return BError(BError::Codes::OK);
 }
 

@@ -62,13 +62,13 @@ bool SvcBackupConnection::IsExtAbilityConnected()
     return bFlag;
 }
 
-sptr<IExtension> SvcBackupConnection::GetBackupExtProxy()
-{
-    return backupProxy_;
-}
-
 void SvcBackupConnection::SetCallback(function<void(const std::string &&)> callConnDone)
 {
     callConnDone_ = callConnDone;
+}
+
+sptr<IExtension> SvcBackupConnection::GetBackupExtProxy()
+{
+    return backupProxy_;
 }
 } // namespace OHOS::FileManagement::Backup

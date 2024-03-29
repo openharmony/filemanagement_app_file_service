@@ -59,6 +59,7 @@ public:
     ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd) override;
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
+    ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;
 
     // 以下都是非IPC接口
 public:
@@ -116,6 +117,13 @@ public:
      *
      */
     void SessionDeactive();
+    /**
+     * @brief 构造拉起应用所需的want
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    AAFwk::Want CreateConnectWant (BundleName &bundleName);
 
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
@@ -212,6 +220,8 @@ private:
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
+    std::mutex getBackupInfoMutx_;
+    std::condition_variable getBackupInfoCondition_;
     static inline std::atomic<uint32_t> seed {1};
 
     sptr<SvcSessionManager> session_;

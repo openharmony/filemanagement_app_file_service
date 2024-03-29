@@ -18,8 +18,10 @@ group("fuzztest") {
     # deps file
     "backupext_fuzzer:BackupExtFuzzTest",
     "backupsa_fuzzer:BackupSaFuzzTest",
+    "backupsaappend_fuzzer:BackupSaAppendFuzzTest",
     "fileshare_fuzzer:FileShareFuzzTest",
     "remotefileshare_fuzzer:RemoteFileShareFuzzTest",
     "servicereverse_fuzzer:ServiceReverseFuzzTest",
+    "svcrestoredepsmanager_fuzzer:SvcRestoreDepsManagerFuzzTest",
   ]
 }

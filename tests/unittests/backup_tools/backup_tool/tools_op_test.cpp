@@ -56,9 +56,9 @@ HWTEST_F(ToolsOpTest, SUB_backup_tools_op_0100, testing::ext::TestSize.Level1)
         curOp.emplace_back("test");
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
-        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        if (matchedOp != opeartions.end()) {
-            matchedOp->Execute(mapArgToVal);
+        auto matchedOpIterator = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
+        if (matchedOpIterator != opeartions.end()) {
+            matchedOpIterator->Execute(mapArgToVal);
         }
     } catch (...) {
         EXPECT_TRUE(false);

@@ -63,6 +63,8 @@ ServiceReverseStub::ServiceReverseStub()
         &ServiceReverseStub::CmdRestoreOnAllBundlesFinished;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_FILE_READY)] =
         &ServiceReverseStub::CmdRestoreOnFileReady;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_RESULT_REPORT)] =
+        &ServiceReverseStub::CmdRestoreOnResultReport;
 
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_FILE_READY)] =
         &ServiceReverseStub::CmdIncrementalBackupOnFileReady;
@@ -150,6 +152,16 @@ int32_t ServiceReverseStub::CmdRestoreOnFileReady(MessageParcel &data, MessagePa
     auto fileName = data.ReadString();
     int fd = data.ReadFileDescriptor();
     RestoreOnFileReady(bundleName, fileName, fd);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceReverseStub::CmdRestoreOnResultReport(MessageParcel &data, MessageParcel &reply)
+{
+    std::string result;
+    if (!data.ReadString(result)) {
+        return BError(BError::Codes::EXT_INVAL_ARG, "Failed to read result").GetCode();
+    }
+    RestoreOnResultReport(result);
     return BError(BError::Codes::OK);
 }
 

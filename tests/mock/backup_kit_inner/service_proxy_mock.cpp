@@ -139,6 +139,11 @@ ErrCode ServiceProxy::GetIncrementalFileHandle(const std::string &bundleName, co
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::GetBackupInfo(std::string &bundleName, std::string &result)
+{
+    return BError(BError::Codes::OK);
+}
+
 sptr<IService> ServiceProxy::GetInstance()
 {
     if (!GetMockGetInstance()) {

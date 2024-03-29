@@ -216,7 +216,9 @@ static void RestoreApp(shared_ptr<SessionAsync> restore, vector<BundleName> &bun
         }
         string path = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + bundleName;
         if (access(path.data(), F_OK) != 0) {
-            throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
+            HILOGE("bundleName tar does not exist, file %{public}s  errno : %{public}d",
+                path.c_str(), errno);
+            continue;
         }
 
         // update manage.json and fileName

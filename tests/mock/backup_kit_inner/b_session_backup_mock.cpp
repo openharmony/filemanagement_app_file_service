@@ -22,8 +22,8 @@
 #include <file_ex.h>
 #include <gtest/gtest.h>
 
-#include "b_error/b_error.h"
 #include "test_manager.h"
+#include "b_error/b_error.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;

@@ -853,4 +853,27 @@ HWTEST_F(ServiceTest, SUB_Service_SessionDeactive_0100, testing::ext::TestSize.L
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SessionDeactive_0100";
 }
+
+/**
+ * @tc.number: SUB_Service_GetBackupInfo_0100
+ * @tc.name: SUB_Service_GetBackupInfo_0100
+ * @tc.desc: 测试 SessionDeactive 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetBackupInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetBackupInfo_0100";
+    try {
+        std::string bundleName = "com.example.app2backup";
+        std::string backupInfo = "backup info";
+        servicePtr_->GetBackupInfo(bundleName, backupInfo);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetBackupInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetBackupInfo_0100";
+}
 } // namespace OHOS::FileManagement::Backup
