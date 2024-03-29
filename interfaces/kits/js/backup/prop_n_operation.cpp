@@ -209,10 +209,6 @@ napi_value PropNOperation::DoGetBackupInfo(napi_env env, napi_callback_info info
         HILOGE("proxy->GetBackupInfo faild.");
         return nullptr;
     }
-    if (result.size() == 0) {
-        HILOGE("proxy->GetBackupInfo result is empty.");
-        return nullptr;
-    }
 
     napi_value nResult;
     napi_status status = napi_create_string_utf8(env, result.c_str(), result.size(), &nResult);
@@ -220,7 +216,7 @@ napi_value PropNOperation::DoGetBackupInfo(napi_env env, napi_callback_info info
         HILOGE("napi_create_string_utf8 faild.");
         return nullptr;
     }
-    HILOGI("DoGetBackupInfo success with result: %s", result.c_str());
+    HILOGI("DoGetBackupInfo success with result: %{public}s", result.c_str());
     return nResult;
 }
 } // namespace OHOS::FileManagement::Backup
