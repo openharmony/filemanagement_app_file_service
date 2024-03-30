@@ -27,7 +27,7 @@ using namespace std;
 BIncrementalSessionRestoreAsync::~BIncrementalSessionRestoreAsync()
 {
     if (!deathRecipient_) {
-        HILOGI("Death Recipient is nullptr");
+        HILOGE("Death Recipient is nullptr");
         return;
     }
     auto proxy = ServiceProxy::GetInstance();
@@ -49,7 +49,7 @@ shared_ptr<BIncrementalSessionRestoreAsync> BIncrementalSessionRestoreAsync::Ini
         ServiceProxy::InvaildInstance();
         auto proxy = ServiceProxy::GetInstance();
         if (proxy == nullptr) {
-            HILOGI("Failed to get backup service");
+            HILOGE("Failed to get backup service");
             return nullptr;
         }
         BIncrementalRestoreSession::Callbacks callbacksTmp {.onFileReady = callbacks.onFileReady,
