@@ -19,6 +19,8 @@
 #include <cstdint>
 #include <mutex>
 
+#include "b_jsonutil/b_jsonutil.h"
+#include "b_json/b_json_entity_caps.h"
 #include "i_service_reverse.h"
 #include "iremote_stub.h"
 #include "module_sched/sched_scheduler.h"
@@ -43,6 +45,7 @@ public:
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode AppendBundlesRestoreSession(UniqueFd fd,
                                         const std::vector<BundleName> &bundleNames,
+                                        const std::vector<std::string> &detailInfos,
                                         RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
                                         int32_t userId = DEFAULT_INVAL_VALUE) override;
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
@@ -202,6 +205,29 @@ private:
      * @param bundleName
      */
     void ExtConnectDied(const std::string &bundleName);
+
+    /**
+     * @brief 设置当前session的关键信息
+     *
+     * @param restoreBundleInfos 待恢复的应用
+     * @param restoreBundleNames 待恢复的应用包信息
+     * @param bundleNameDetailMap bundle和detail的对应关系
+     * @param restoreType 任务类型
+     */
+    void SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
+        std::vector<std::string> &restoreBundleNames,
+        std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap, RestoreTypeEnum restoreType);
+
+    /**
+     * @brief 通知权限模块
+     *
+     * @param bundleNameDetailMap bundle和detail的对应关系
+     * @param restoreInfo 待恢复的应用
+     * @param restoreType 任务类型
+     *
+    */
+    void NotifyBundleInfos(std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap,
+        BJsonEntityCaps::BundleInfo restoreInfo, RestoreTypeEnum restoreType);
 
 private:
     static sptr<Service> instance_;

@@ -41,7 +41,7 @@
 #include "b_error/b_excep_utils.h"
 #include "b_file_info.h"
 #include "b_json/b_json_cached_entity.h"
-#include "b_json/b_json_entity_caps.h"
+#include "b_jsonutil/b_jsonutil.h"
 #include "b_ohos/startup/backup_para.h"
 #include "b_process/b_multiuser.h"
 #include "b_resources/b_constants.h"
@@ -53,6 +53,7 @@
 #include "module_external/sms_adapter.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "module_ipc/svc_restore_deps_manager.h"
+#include "module_notify/notify_work_service.h"
 #include "parameter.h"
 #include "system_ability_definition.h"
 #include "hitrace_meter.h"
@@ -64,6 +65,7 @@ REGISTER_SYSTEM_ABILITY_BY_ID(Service, FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, fals
 
 namespace {
 constexpr int32_t DEBUG_ID = 100;
+const static string COMMON_EVENT_TYPE = "broadcast";
 const int32_t CONNECT_WAIT_TIME_S = 15;
 } // namespace
 
@@ -311,6 +313,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
 
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              const vector<BundleName> &bundleNames,
+                                             const std::vector<std::string> &detailInfos,
                                              RestoreTypeEnum restoreType,
                                              int32_t userId)
 {
@@ -322,34 +325,19 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             session_->SetSessionUserId(userId);
         }
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
-        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
+        std::vector<std::string> hosBundleNames;
+        std::vector<BJsonUtil::BundleDetailInfo> bundleDetails =
+            BJsonUtil::ConvertBundleDetailInfos(bundleNames, detailInfos, ":", hosBundleNames, userId);
+        std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap;
+        BJsonUtil::RecordBundleDetailRelation(bundleNameDetailMap, bundleDetails);
+        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, hosBundleNames);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         if (restoreBundleNames.empty()) {
             session_->DecreaseSessionCnt();
             return BError(BError::Codes::OK);
         }
         session_->AppendBundles(restoreBundleNames);
-        for (auto restoreInfo : restoreInfos) {
-            auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
-                              [&restoreInfo](const auto &bundleName) { return bundleName == restoreInfo.name; });
-            if (it == restoreBundleNames.end()) {
-                throw BError(BError::Codes::SA_BUNDLE_INFO_EMPTY, "Can't find bundle name");
-            }
-            HILOGD("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
-                   restoreInfo.extensionName.c_str());
-            if ((restoreInfo.allToBackup == false &&
-                 !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) ||
-                restoreInfo.extensionName.empty()) {
-                OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, restoreInfo.name);
-                session_->RemoveExtInfo(restoreInfo.name);
-                continue;
-            }
-            session_->SetBundleRestoreType(restoreInfo.name, restoreType);
-            session_->SetBundleVersionCode(restoreInfo.name, restoreInfo.versionCode);
-            session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
-            session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
-            session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
-        }
+        SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
         OnStartSched();
         session_->DecreaseSessionCnt();
         return BError(BError::Codes::OK);
@@ -362,6 +350,51 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         return EPERM;
     }
 }
+
+void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
+    std::vector<std::string> &restoreBundleNames,
+    std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap, RestoreTypeEnum restoreType)
+{
+    HILOGI("Start");
+    for (auto restoreInfo : restoreBundleInfos) {
+        auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
+            [&restoreInfo](const auto &bundleName) { return bundleName == restoreInfo.name; });
+        if (it == restoreBundleNames.end()) {
+            throw BError(BError::Codes::SA_BUNDLE_INFO_EMPTY, "Can't find bundle name");
+        }
+        HILOGD("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
+            restoreInfo.extensionName.c_str());
+        if ((restoreInfo.allToBackup == false && !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) ||
+            restoreInfo.extensionName.empty()) {
+            OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, restoreInfo.name);
+            session_->RemoveExtInfo(restoreInfo.name);
+            continue;
+        }
+        session_->SetBundleRestoreType(restoreInfo.name, restoreType);
+        session_->SetBundleVersionCode(restoreInfo.name, restoreInfo.versionCode);
+        session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
+        session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
+        session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
+        NotifyBundleInfos(bundleNameDetailMap, restoreInfo, restoreType);
+    }
+    HILOGI("End");
+}
+
+void Service::NotifyBundleInfos(std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap,
+    BJsonEntityCaps::BundleInfo restoreInfo, RestoreTypeEnum restoreType)
+{
+    if (restoreType == TypeRestoreTypeEnum::RESTORE_DATA_READDY ||
+        SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) {
+        auto iter = bundleNameDetailMap.find(restoreInfo.name);
+        if (iter != bundleNameDetailMap.end()) {
+            BJsonUtil::BundleDetailInfo bundleDetailInfo = iter->second;
+            if (bundleDetailInfo.type == COMMON_EVENT_TYPE) {
+                DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(bundleDetailInfo);
+            }
+        }
+    }
+}
+
 
 ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {

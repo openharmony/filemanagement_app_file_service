@@ -87,6 +87,7 @@ ohos_shared_library("backup_utils") {
     "src/b_json/b_json_entity_ext_manage.cpp",
     "src/b_json/b_json_entity_extension_config.cpp",
     "src/b_json/b_report_entity.cpp",
+    "src/b_jsonutil/b_jsonutil.cpp",
     "src/b_ohos/startup/backup_para.cpp",
     "src/b_process/b_guard_cwd.cpp",
     "src/b_process/b_guard_signal.cpp",
@@ -100,6 +101,7 @@ ohos_shared_library("backup_utils") {
   public_configs = [ ":utils_public_config" ]
 
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "faultloggerd:libdfx_dumpcatcher",
     "hilog:libhilog",

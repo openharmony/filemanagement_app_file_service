@@ -77,6 +77,7 @@ ohos_unittest("backup_service_test") {
     "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
     "service_test.cpp",
   ]
   sources += backup_mock_src
@@ -105,6 +106,7 @@ ohos_unittest("backup_service_test") {
     "ability_runtime:ability_manager",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
@@ -248,6 +250,7 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
     "svc_restore_deps_manager_test.cpp",
   ]
   sources += backup_mock_src
@@ -276,6 +279,7 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "ability_runtime:ability_manager",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",

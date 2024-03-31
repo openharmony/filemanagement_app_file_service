@@ -158,6 +158,12 @@ static void OnBundleFinished(shared_ptr<Session> ctx, ErrCode err, const BundleN
     ctx->TryNotify();
 }
 
+static void OnResultReport(shared_ptr<Session> ctx, const std::string resultInfo)
+{
+    printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
+    ctx->TryNotify(true);
+}
+
 static void OnAllBundlesFinished(shared_ptr<Session> ctx, ErrCode err)
 {
     ctx->isAllBundelsFinished.store(true);
@@ -236,6 +242,7 @@ static int32_t InitRestoreSession(shared_ptr<Session> ctx)
                                     .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
                                     .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
                                     .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
+                                    .onResultReport = bind(OnResultReport, ctx, placeholders::_1),
                                     .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init restore\n");
@@ -271,14 +278,16 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
                 FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
                 return -errno;
             }
-            int result = ctx->session_->AppendBundles(move(fileFd), {bundleName});
+            std::string bundleDetail = "";
+            int result = ctx->session_->AppendBundles(move(fileFd), {bundleName}, {bundleDetail});
             if (result != 0) {
                 printf("restore append bundles error: %d\n", result);
                 return -result;
             }
         }
     } else {
-        ret = ctx->session_->AppendBundles(move(fd), bundleNames);
+        std::vector<std::string> detailInfos;
+        ret = ctx->session_->AppendBundles(move(fd), bundleNames, detailInfos);
         if (ret != 0) {
             printf("restore append bundles error: %d\n", ret);
             return -ret;

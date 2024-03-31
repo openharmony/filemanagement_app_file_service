@@ -49,9 +49,10 @@ public:
     MOCK_METHOD1(AppDone, ErrCode(ErrCode errCode));
     MOCK_METHOD1(ServiceResultReport, ErrCode(const string &restoreRetInfo));
     MOCK_METHOD2(GetFileHandle, ErrCode(const string &bundleName, const string &fileName));
-    MOCK_METHOD4(
+    MOCK_METHOD5(
         AppendBundlesRestoreSession,
-        ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, RestoreTypeEnum restoreType, int32_t userId));
+        ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, const std::vector<std::string> &detailInfos,
+        RestoreTypeEnum restoreType, int32_t userId));
     MOCK_METHOD1(AppendBundlesBackupSession, ErrCode(const std::vector<BundleName> &bundleNames));
     MOCK_METHOD0(Finish, ErrCode());
     MOCK_METHOD0(Release, ErrCode());
@@ -386,7 +387,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100";
     try {
         MockService service;
-        EXPECT_CALL(service, AppendBundlesRestoreSession(_, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(service, AppendBundlesRestoreSession(_, _, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;

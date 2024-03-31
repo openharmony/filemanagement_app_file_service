@@ -39,6 +39,7 @@ ohos_shared_library("backup_sa") {
     "src/module_ipc/svc_extension_proxy.cpp",
     "src/module_ipc/svc_restore_deps_manager.cpp",
     "src/module_ipc/svc_session_manager.cpp",
+    "src/module_notify/notify_work_service.cpp",
     "src/module_sched/sched_scheduler.cpp",
   ]
 
@@ -47,7 +48,10 @@ ohos_shared_library("backup_sa") {
     "LOG_TAG=\"BackupSA\"",
   ]
 
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "include/module_notify",
+  ]
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
@@ -62,6 +66,7 @@ ohos_shared_library("backup_sa") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",

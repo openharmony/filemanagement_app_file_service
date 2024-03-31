@@ -26,6 +26,7 @@
                 "bundle_framework",
                 "build_framework",
                 "common_event_service",
+                "cJSON",
                 "c_utils",
                 "data_share",
                 "device_manager",
@@ -47,7 +48,10 @@
                 "openssl"
             ]
         },
-        "adapted_system_type": [ "small", "standard" ],
+        "adapted_system_type": [
+            "small",
+            "standard"
+        ],
         "rom": "1024KB",
         "ram": "1024KB",
         "build": {
