@@ -158,6 +158,12 @@ static void OnBundleFinished(shared_ptr<Session> ctx, ErrCode err, const BundleN
     ctx->TryNotify();
 }
 
+static void OnResultReport(shared_ptr<Session> ctx, ErrCode err, const std::string resultInfo)
+{
+    printf("BundleFinished errCode = %d, detailInfo = %s\n", err, resultInfo.c_str());
+    ctx->TryNotify(true);
+}
+
 static void OnAllBundlesFinished(shared_ptr<Session> ctx, ErrCode err)
 {
     ctx->isAllBundelsFinished.store(true);
@@ -235,6 +241,7 @@ static int32_t InitRestoreSession(shared_ptr<Session> ctx)
         BSessionRestore::Callbacks {.onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2),
                                     .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
                                     .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
+                                    .onResultReport = bind(OnResultReport, cxt, placeholders::_1, placeholders::_2);
                                     .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
                                     .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
     if (ctx->session_ == nullptr) {
