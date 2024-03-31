@@ -270,6 +270,7 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
             proxy->HandleClear();
             session_->BundleExtTimerStop(callerName);
             IServiceReverse::Scenario scenario = session_->GetScenario();
+            HILOGI("will notify clone data, scenario is: %{public}d", scenario);
             if (scenario == IServiceReverse::Scenario::BACKUP) {
                 session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, callerName);
             } else if (scenario == IServiceReverse::Scenario::RESTORE) {

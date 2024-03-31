@@ -72,6 +72,11 @@ ErrCode Service::AppDone(ErrCode errCode)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::ServiceResultReport(const std::string &restoreRetInfo)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              const std::vector<BundleName> &bundleNames,
                                              const std::vector<std::string> &detailInfos,

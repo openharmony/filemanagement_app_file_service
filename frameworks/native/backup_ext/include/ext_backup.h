@@ -130,7 +130,8 @@ public:
     /**
      * @brief Called do restore.
      */
-    virtual ErrCode OnRestore(std::function<void()> callback);
+    virtual ErrCode OnRestore(std::function<void(const std::string)> callbackEx,
+        std::function<void()> callback);
 
     /**
      * @brief Called do GetBackupInfo.
@@ -169,6 +170,7 @@ public:
 
 protected:
     std::string appVersionStr_;
+    std::string restoreRetInfo_;
     int appVersionCode_;
     int restoreType_;
 

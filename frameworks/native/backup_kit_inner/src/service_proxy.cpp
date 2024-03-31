@@ -208,6 +208,30 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
     return reply.ReadInt32();
 }
 
+ErrCode ServiceProxy::ServiceResultReport(const std::string &restoreRetInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("Begin");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    if (!data.WriteString(restoreRetInfo)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the restoreRetInfo").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RESULT_REPORT), data, reply,
+            option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
