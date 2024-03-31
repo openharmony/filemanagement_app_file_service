@@ -242,7 +242,7 @@ static int32_t InitRestoreSession(shared_ptr<Session> ctx)
                                     .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
                                     .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
                                     .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
-                                    .onResultReport = bind(OnResultReport, ctx, placeholders::_1);
+                                    .onResultReport = bind(OnResultReport, ctx, placeholders::_1),
                                     .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init restore\n");

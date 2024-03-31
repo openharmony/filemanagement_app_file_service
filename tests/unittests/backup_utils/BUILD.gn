@@ -85,10 +85,10 @@ ohos_unittest("b_jsonutil_test") {
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
     "${path_jsoncpp}:jsoncpp",
-    "//third_party/cJSON:cjson",
   ]
 
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "hilog:libhilog",
   ]

@@ -387,7 +387,7 @@ void Service::NotifyBundleInfos(std::map<std::string, BJsonUtil::BundleDetailInf
         SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) {
         auto iter = bundleNameDetailMap.find(restoreInfo.name);
         if (iter != bundleNameDetailMap.end()) {
-            BJsonUtil::BundleDetailInfo bundetailInfo = iter->second;
+            BJsonUtil::BundleDetailInfo bundleDetailInfo = iter->second;
             if (bundleDetailInfo.type == COMMON_EVENT_TYPE) {
                 DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(bundleDetailInfo);
             }
