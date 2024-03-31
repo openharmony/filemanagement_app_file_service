@@ -75,6 +75,11 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::ServiceResultReport(const std::string &restoreRetInfo)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &fileName)
 {
     return BError(BError::Codes::OK);

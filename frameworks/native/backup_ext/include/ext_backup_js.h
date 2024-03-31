@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,13 +55,13 @@ struct CallJsParam {
 
 struct CallBackInfo {
     std::function<void()> callback;
-    std::function<void(std::string)> callbackParam;
+    std::function<void(const std::string)> callbackParam;
 
     CallBackInfo(std::function<void()> callbackIn) : callback(callbackIn) {}
-    CallBackInfo(std::function<void(std::string)> callbackIn) : callbackParam(callbackIn) {}
+    CallBackInfo(std::function<void(const std::string)> callbackIn) : callbackParam(callbackIn) {}
 };
 
-class ExtBackupJs : public ExtBackup {
+class ExtBackupJs : public ExtBackup, public virtual RefBase {
 public:
     /**
      * @brief Init the extension.
@@ -95,10 +95,17 @@ public:
     /**
      * @brief Call the app's OnRestore.
      *
-     * @param callback The callback.
+     * @param callbackEx The callbackEx.
+     * @param callback The callBack.
      */
-    ErrCode OnRestore(std::function<void()> callback) override;
-    ErrCode GetBackupInfo(std::function<void(std::string)> callback) override;
+    ErrCode OnRestore(std::function<void(const std::string)> callbackEx,
+        std::function<void()> callback) override;
+    /**
+     * @brief get app backup detail
+     *
+     * @param callback The callBack.
+    */
+    ErrCode GetBackupInfo(std::function<void(const std::string)> callback) override;
 
 public:
     explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
@@ -114,13 +121,19 @@ private:
                      InputArgsParser argParser,
                      ResultValueParser retParser);
     std::tuple<ErrCode, napi_value> CallObjectMethod(std::string_view name, const std::vector<napi_value> &argv = {});
+    std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseRestoreExInfo();
+    std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseRestoreInfo();
+    std::function<bool(napi_env env, napi_value argv)> ParseOnRestoreExRet();
 
     void ExportJsContext(void);
 
     AbilityRuntime::JsRuntime &jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
-    std::shared_ptr<CallBackInfo> callbackInfo_;
     std::shared_ptr<CallBackInfo> callbackInfoEx_;
+    std::shared_ptr<CallBackInfo> callbackInfo_;
+    std::condition_variable extJsRetCon_;
+    std::mutex extJsRetMutex_;
+    std::atomic<bool> atoRet_;
 };
 } // namespace OHOS::FileManagement::Backup
 

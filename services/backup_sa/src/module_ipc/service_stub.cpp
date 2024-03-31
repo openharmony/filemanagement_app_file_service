@@ -45,6 +45,8 @@ ServiceStub::ServiceStub()
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY)] =
         &ServiceStub::CmdAppFileReady;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_DONE)] = &ServiceStub::CmdAppDone;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RESULT_REPORT)] =
+        &ServiceStub::CmdResultReport;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START)] = &ServiceStub::CmdStart;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_FILE_NAME)] =
         &ServiceStub::CmdGetFileHandle;
@@ -201,6 +203,22 @@ int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bool flag");
     }
     int res = AppDone(success);
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::SA_BROKEN_IPC, ss.str());
+    }
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdResultReport(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("Begin");
+    std::string restoreRetInfo;
+    if (!data.ReadString(restoreRetInfo)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive restoreRetInfo");
+    }
+    int res = ServiceResultReport(restoreRetInfo);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;

@@ -47,6 +47,7 @@ public:
     MOCK_METHOD1(PublishFile, ErrCode(const BFileInfo &fileInfo));
     MOCK_METHOD2(AppFileReady, ErrCode(const string &fileName, UniqueFd fd));
     MOCK_METHOD1(AppDone, ErrCode(ErrCode errCode));
+    MOCK_METHOD1(ServiceResultReport, ErrCode(const string &restoreRetInfo));
     MOCK_METHOD2(GetFileHandle, ErrCode(const string &bundleName, const string &fileName));
     MOCK_METHOD4(
         AppendBundlesRestoreSession,

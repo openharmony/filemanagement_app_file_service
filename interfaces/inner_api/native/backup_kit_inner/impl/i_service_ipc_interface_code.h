@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ enum class IServiceInterfaceCode {
     SERVICE_CMD_PUBLISH_FILE,
     SERVICE_CMD_APP_FILE_READY,
     SERVICE_CMD_APP_DONE,
+    SERVICE_CMD_RESULT_REPORT,
     SERVICE_CMD_START,
     SERVICE_CMD_GET_FILE_NAME,
     SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION,

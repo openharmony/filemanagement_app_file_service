@@ -44,6 +44,7 @@ public:
     virtual ErrCode PublishFile(const BFileInfo &fileInfo) = 0;
     virtual ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) = 0;
     virtual ErrCode AppDone(ErrCode errCode) = 0;
+    virtual ErrCode ServiceResultReport(const std::string &restoreRetInfo) = 0;
     virtual ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) = 0;
     virtual ErrCode AppendBundlesRestoreSession(UniqueFd fd,
                                                 const std::vector<BundleName> &bundleNames,

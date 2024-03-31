@@ -39,6 +39,8 @@ ServiceStub::ServiceStub()
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_FILE)] =
         &ServiceStub::CmdPublishFile;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_DONE)] = &ServiceStub::CmdAppDone;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RESULT_REPORT)] =
+        &ServiceStub::CmdResultReport;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START)] = &ServiceStub::CmdStart;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_FILE_NAME)] =
         &ServiceStub::CmdGetFileHandle;
@@ -135,6 +137,15 @@ int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
     bool success;
     data.ReadBool(success);
     int res = AppDone(success);
+    reply.WriteInt32(res);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdResultReport(MessageParcel &data, MessageParcel &reply)
+{
+    std::string restoreRetInfo;
+    data.ReadString(restoreRetInfo);
+    int res = ServiceResultReport(restoreRetInfo);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }
