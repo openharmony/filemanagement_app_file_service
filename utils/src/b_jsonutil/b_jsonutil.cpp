@@ -53,8 +53,7 @@ std::vector<BJsonUtil::BundleDetailInfo> BJsonUtil::ConvertBundleDetailInfos(
     const std::string &patternInfo, std::vector<std::string> &realBundleNames, int32_t userId)
 {
     std::vector<BundleDetailInfo> bundleDetailInfoList;
-    for (size_t pos = 0; pos < bundleNameIndexStrs.size(); pos++)
-    {
+    for (size_t pos = 0; pos < bundleNameIndexStrs.size(); pos++) {
         std::string bundleNameIndexStr = bundleNameIndexStrs[pos];
         BundleDetailInfo bundleDetailInfo;
         bundleDetailInfo.userId = userId;
@@ -117,7 +116,7 @@ void BJsonUtil::ParseBundleDetailInfo(const std::string &bundleDetailInfo, Bundl
     cJSON_Delete(root);
 }
 
-void BJsonUtil::RecordBundleDetailRelation(std::map<std::string,BundleDetailInfo> &bundleNameDetailMap,
+void BJsonUtil::RecordBundleDetailRelation(std::map<std::string, BundleDetailInfo> &bundleNameDetailMap,
     std::vector<BundleDetailInfo> &bundleDetailInfos)
 {
     for (auto &bundleDetail : bundleDetailInfos) {
@@ -126,6 +125,3 @@ void BJsonUtil::RecordBundleDetailRelation(std::map<std::string,BundleDetailInfo
     }
 }
 }
-
-
-

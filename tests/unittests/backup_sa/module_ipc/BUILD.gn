@@ -106,6 +106,7 @@ ohos_unittest("backup_service_test") {
     "ability_runtime:ability_manager",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
@@ -113,7 +114,6 @@ ohos_unittest("backup_service_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "common_event_service:cesfwk_innerkits",
   ]
 
   sanitize = {
@@ -279,6 +279,7 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "ability_runtime:ability_manager",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
@@ -286,7 +287,6 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "common_event_service:cesfwk_innerkits",
   ]
 
   use_exceptions = true

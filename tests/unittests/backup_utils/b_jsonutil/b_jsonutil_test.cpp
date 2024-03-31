@@ -83,22 +83,11 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ConvertBundleDetailInfos_0100, testing::ext::
         std::string pattern = ":";
         std::vector<std::string> detailInfos;
         std::string detail01 = "{
-            "infos" : [
-                {
-                    "details" : [
-                        {
-                            "detail" : [
-                                {
-                                    "source" : "com.ohos.app01",
-                                    "target" : "com.hos.app01"
-                                }
-                            ],
-                            "type" : "app_mapping_relation"
-                        }
-                    ],
-                    "type" : "broadcast"
-                }
-            ]
+            "infos" : [ {
+            "details" : [ {
+            "detail" : [ { "source" : "com.ohos.app01", "target" : "com.hos.app01" } ],
+            "type" : "app_mapping_relation" } ],
+            "type" : "broadcast" } ]
         }";
         detailInfos.push_back(detail01);
         int32_t userId = 100;

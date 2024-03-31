@@ -87,13 +87,13 @@ ohos_shared_library("backup_utils") {
     "src/b_json/b_json_entity_ext_manage.cpp",
     "src/b_json/b_json_entity_extension_config.cpp",
     "src/b_json/b_report_entity.cpp",
+    "src/b_jsonutil/b_jsonutil.cpp",
     "src/b_ohos/startup/backup_para.cpp",
     "src/b_process/b_guard_cwd.cpp",
     "src/b_process/b_guard_signal.cpp",
     "src/b_process/b_process.cpp",
     "src/b_tarball/b_tarball_cmdline.cpp",
     "src/b_tarball/b_tarball_factory.cpp",
-    "src/b_jsonutil/b_jsonutil.cpp",
   ]
   sources += get_target_outputs(":backup_cxx_gen")
 
@@ -113,6 +113,7 @@ ohos_shared_library("backup_utils") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_rust}/crates/cxx/include",
     "${target_gen_dir}/rust/src",
+    "//third_party/cJSON:cjson",
   ]
 
   deps = [
@@ -120,8 +121,8 @@ ohos_shared_library("backup_utils") {
     ":backup_cxx_gen",
     ":backup_cxx_rust",
     "${path_jsoncpp}:jsoncpp",
-    "//third_party/openssl:libcrypto_shared",
     "//third_party/cJSON:cjson",
+    "//third_party/openssl:libcrypto_shared",
   ]
 
   use_exceptions = true
