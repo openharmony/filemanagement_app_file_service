@@ -242,7 +242,7 @@ static int32_t InitRestoreSession(shared_ptr<Session> ctx)
                                     .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
                                     .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
                                     .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
-                                    .onResultReport = bind(OnResultReport, ctx, placeholders::_1);
+                                    .onResultReport = bind(OnResultReport, ctx, placeholders::_1),
                                     .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init restore\n");
@@ -278,16 +278,14 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
                 FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
                 return -errno;
             }
-            std::string bundleDetail = "";
-            int result = ctx->session_->AppendBundles(move(fileFd), {bundleName}, {bundleDetail});
+            int result = ctx->session_->AppendBundles(move(fileFd), {bundleName});
             if (result != 0) {
                 printf("restore append bundles error: %d\n", result);
                 return -result;
             }
         }
     } else {
-        std::vector<std::string> detailInfos;
-        ret = ctx->session_->AppendBundles(move(fd), bundleNames, detailInfos);
+        ret = ctx->session_->AppendBundles(move(fd), bundleNames);
         if (ret != 0) {
             printf("restore append bundles error: %d\n", ret);
             return -ret;

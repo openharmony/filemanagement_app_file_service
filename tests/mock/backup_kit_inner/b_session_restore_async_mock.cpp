@@ -58,9 +58,42 @@ ErrCode BSessionRestoreAsync::GetFileHandle(const string &bundleName, const stri
     return BError(BError::Codes::OK);
 }
 
+ErrCode BSessionRestoreAsync::AppendBundlesDetails(UniqueFd remoteCap, vector<BundleName> bundlesToRestore,
+    vector<string> detailInfos, RestoreTypeEnum restoreType, int32_t userId)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreAsync::AppendBundles";
+    if (restoreType == RestoreTypeEnum::RESTORE_DATA_READDY) {
+        callbacks_.onBackupServiceDied();
+        return BError(BError::Codes::OK);
+    }
+    callbacks_.onBundleStarted(0, "com.example.app2backup");
+
+    BFileInfo bFileInfo("com.example.app2backup", "1.tar", 0);
+    TestManager tm("BSessionRestoreAsyncMock_GetFd_0100");
+    string filePath = tm.GetRootDirCurTest().append("1.tar");
+    UniqueFd fd(open(filePath.data(), O_RDWR | O_CREAT, S_IRWXU));
+    GTEST_LOG_(INFO) << "callbacks_::onFileReady 1.tar";
+    callbacks_.onFileReady(bFileInfo, move(fd));
+
+    string fileManagePath = tm.GetRootDirCurTest().append("manage.json");
+    UniqueFd fdManage(open(fileManagePath.data(), O_RDWR | O_CREAT, S_IRWXU));
+    bFileInfo.fileName = "manage.json";
+    GTEST_LOG_(INFO) << "File ready callback for manage.json";
+    callbacks_.onFileReady(bFileInfo, move(fdManage));
+
+    callbacks_.onBundleFinished(0, "com.example.app2backup");
+
+    callbacks_.onAllBundlesFinished(0);
+    callbacks_.onBundleStarted(1, "com.example.app2backup");
+    callbacks_.onBundleFinished(1, "com.example.app2backup");
+    callbacks_.onAllBundlesFinished(1);
+    callbacks_.onResultReport("com.example.app2backup");
+    callbacks_.onBackupServiceDied();
+    return BError(BError::Codes::OK);
+}
+
 ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
                                             vector<BundleName> bundlesToRestore,
-                                            vector<string> detailInfos,
                                             RestoreTypeEnum restoreType,
                                             int32_t userId)
 {

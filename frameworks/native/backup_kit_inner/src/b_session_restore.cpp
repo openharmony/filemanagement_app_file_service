@@ -93,7 +93,7 @@ ErrCode BSessionRestore::GetFileHandle(const string &bundleName, const string &f
     return proxy->GetFileHandle(bundleName, fileName);
 }
 
-ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore,
+ErrCode BSessionRestore::AppendBundlesDetails(UniqueFd remoteCap, vector<BundleName> bundlesToRestore,
     std::vector<std::string> detailInfos)
 {
     auto proxy = ServiceProxy::GetInstance();
@@ -101,7 +101,17 @@ ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bu
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
-    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos);
+    return proxy->AppendBundlesDetailsRestoreSession(move(remoteCap), bundlesToRestore, detailInfos);
+}
+
+ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+
+    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore);
 }
 
 ErrCode BSessionRestore::Finish()

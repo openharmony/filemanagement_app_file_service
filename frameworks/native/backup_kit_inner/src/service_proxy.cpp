@@ -261,11 +261,8 @@ ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &file
     return ret;
 }
 
-ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
-                                                  const vector<BundleName> &bundleNames,
-                                                  const std::vector<std::string> &detailInfos,
-                                                  RestoreTypeEnum restoreType,
-                                                  int32_t userId)
+ErrCode ServiceProxy::AppendBundlesDetailsRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames,
+    const std::vector<std::string> &detailInfos, RestoreTypeEnum restoreType, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
@@ -286,6 +283,45 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
     }
     if (!detailInfos.empty() && !data.WriteStringVector(detailInfos)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send detailInfos").GetCode();
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(restoreType))) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send restoreType").GetCode();
+    }
+    if (!data.WriteInt32(userId)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send userId").GetCode();
+    }
+
+    int32_t ret = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION_DETAILS),
+        data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
+                                                  const vector<BundleName> &bundleNames,
+                                                  RestoreTypeEnum restoreType,
+                                                  int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("Begin");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
+
+    if (!data.WriteFileDescriptor(fd)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the fd").GetCode();
+    }
+    if (!data.WriteStringVector(bundleNames)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();
     }
     if (!data.WriteInt32(static_cast<int32_t>(restoreType))) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send restoreType").GetCode();

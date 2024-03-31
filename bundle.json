@@ -26,6 +26,7 @@
                 "bundle_framework",
                 "build_framework",
                 "common_event_service",
+                "cJSON",
                 "c_utils",
                 "data_share",
                 "device_manager",
@@ -44,8 +45,7 @@
             "third_party": [
                 "bounds_checking_function",
                 "jsoncpp",
-                "openssl",
-                "cJSON"
+                "openssl"
             ]
         },
         "adapted_system_type": [

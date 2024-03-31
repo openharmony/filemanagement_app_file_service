@@ -90,9 +90,20 @@ ErrCode BIncrementalSessionRestoreAsync::GetFileHandle(const string &bundleName,
     return proxy->GetIncrementalFileHandle(bundleName, fileName);
 }
 
+ErrCode BIncrementalSessionRestoreAsync::AppendBundlesDetails(UniqueFd remoteCap, vector<BundleName> bundlesToRestore,
+    std::vector<std::string> detailInfos, RestoreTypeEnum restoreType, int32_t userId)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+
+    return proxy->AppendBundlesDetailsRestoreSession(move(remoteCap), bundlesToRestore, detailInfos, restoreType,
+        userId);
+}
+
 ErrCode BIncrementalSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
                                                        vector<BundleName> bundlesToRestore,
-                                                       std::vector<std::string> detailInfos,
                                                        RestoreTypeEnum restoreType,
                                                        int32_t userId)
 {
@@ -101,7 +112,7 @@ ErrCode BIncrementalSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
-    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos, restoreType, userId);
+    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, restoreType, userId);
 }
 
 ErrCode BIncrementalSessionRestoreAsync::Release()

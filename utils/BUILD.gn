@@ -101,6 +101,7 @@ ohos_shared_library("backup_utils") {
   public_configs = [ ":utils_public_config" ]
 
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "faultloggerd:libdfx_dumpcatcher",
     "hilog:libhilog",
@@ -113,7 +114,6 @@ ohos_shared_library("backup_utils") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_rust}/crates/cxx/include",
     "${target_gen_dir}/rust/src",
-    "//third_party/cJSON:cjson",
   ]
 
   deps = [
@@ -121,7 +121,6 @@ ohos_shared_library("backup_utils") {
     ":backup_cxx_gen",
     ":backup_cxx_rust",
     "${path_jsoncpp}:jsoncpp",
-    "//third_party/cJSON:cjson",
     "//third_party/openssl:libcrypto_shared",
   ]
 

@@ -46,6 +46,8 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdGetFileHandle;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION)] =
         &ServiceStub::CmdAppendBundlesRestoreSession;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION_DETAILS)]
+        = &ServiceStub::CmdAppendBundlesDetailsRestoreSession;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION)] =
         &ServiceStub::CmdAppendBundlesBackupSession;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES_INCREMENTAL)] =
@@ -165,9 +167,19 @@ int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, Message
     UniqueFd fd(data.ReadFileDescriptor());
     std::vector<string> bundleNames;
     data.ReadStringVector(&bundleNames);
+    int res = AppendBundlesRestoreSession(move(fd), bundleNames);
+    reply.WriteInt32(res);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdAppendBundlesDetailsRestoreSession(MessageParcel &data, MessageParcel &reply)
+{
+    UniqueFd fd(data.ReadFileDescriptor());
+    std::vector<string> bundleNames;
+    data.ReadStringVector(&bundleNames);
     std::vector<string> detailInfos;
     data.ReadStringVector(&detailInfos);
-    int res = AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos);
+    int res = AppendBundlesDetailsRestoreSession(move(fd), bundleNames, detailInfos);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }
