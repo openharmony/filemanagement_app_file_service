@@ -29,6 +29,7 @@ public:
         int bundleIndex;
         int32_t userId;
     }BundleDetailInfo;
+
     /**
      * @brief 带有拼接字符的bundleName按照拼接字符进行分割
      *
@@ -37,7 +38,7 @@ public:
      *
      * @return 分割好的结果赋值给结构体
      */
-    static BundleDetailInfo ParseBundleNameIndexStr(const std::string &bundleNameStr, const std::string &patternInfo);
+    static BundleDetailInfo ParseBundleNameIndexStr (const std::string &bundleNameStr, const std::string &patternInfo);
 
     /**
      * @brief 将传进来的bundleNames的集合进行按照拼接字符分割处理
@@ -63,7 +64,6 @@ public:
      *
      */
     static void ParseBundleDetailInfo(const std::string &bundleDetailInfo, BundleDetailInfo &bundleDetail);
-
 
     /**
      * @brief 根据bundleName获取对应的detailInfo

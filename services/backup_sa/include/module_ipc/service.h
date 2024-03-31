@@ -211,12 +211,23 @@ private:
      *
      * @param restoreBundleInfos 待恢复的应用
      * @param restoreBundleNames 待恢复的应用包信息
-     * @param bundleNameDetailMap bundle和detaild的对应关系
+     * @param bundleNameDetailMap bundle和detail的对应关系
      * @param restoreType 任务类型
      */
     void SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
         std::vector<std::string> &restoreBundleNames,
         std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap, RestoreTypeEnum restoreType);
+
+    /**
+     * @brief 通知权限模块
+     *
+     * @param bundleNameDetailMap bundle和detail的对应关系
+     * @param restoreInfo 待恢复的应用
+     * @param restoreType 任务类型
+     *
+    */
+    void NotifyBundleInfos(std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap,
+        BJsonEntityCaps::BundleInfo restoreInfo, RestoreTypeEnum restoreType);
 
 private:
     static sptr<Service> instance_;

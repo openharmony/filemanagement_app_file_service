@@ -158,9 +158,9 @@ static void OnBundleFinished(shared_ptr<Session> ctx, ErrCode err, const BundleN
     ctx->TryNotify();
 }
 
-static void OnResultReport(shared_ptr<Session> ctx, ErrCode err, const std::string resultInfo)
+static void OnResultReport(shared_ptr<Session> ctx, const std::string resultInfo)
 {
-    printf("BundleFinished errCode = %d, detailInfo = %s\n", err, resultInfo.c_str());
+    printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
     ctx->TryNotify(true);
 }
 
@@ -241,8 +241,8 @@ static int32_t InitRestoreSession(shared_ptr<Session> ctx)
         BSessionRestore::Callbacks {.onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2),
                                     .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
                                     .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
-                                    .onResultReport = bind(OnResultReport, cxt, placeholders::_1, placeholders::_2);
                                     .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
+                                    .onResultReport = bind(OnResultReport, ctx, placeholders::_1);
                                     .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init restore\n");

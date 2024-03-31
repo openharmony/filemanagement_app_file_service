@@ -387,7 +387,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100";
     try {
         MockService service;
-        EXPECT_CALL(service, AppendBundlesRestoreSession(_, _, _,_, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(service, AppendBundlesRestoreSession(_, _, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;

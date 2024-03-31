@@ -352,8 +352,8 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 }
 
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
-        std::vector<std::string> &restoreBundleNames,
-        std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap, RestoreTypeEnum restoreType)
+    std::vector<std::string> &restoreBundleNames,
+    std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap, RestoreTypeEnum restoreType)
 {
     HILOGI("Start");
     for (auto restoreInfo : restoreBundleInfos) {
@@ -375,19 +375,26 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
         session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
         session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
-        if (restoreType == TypeRestoreTypeEnum::RESTORE_DATA_READDY ||
-            SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) {
-            auto iter = bundleNameDetailMap.find(restoreInfo.name);
-            if (iter != bundleNameDetailMap.end()) {
-                BJsonUtil::BundleDetailInfo bundetailInfo = iter->second;
-                if (bundleDetailInfo.type == COMMON_EVENT_TYPE) {
-                    DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(bundleDetailInfo);
-                }
-            }
-        }
+        NotifyBundleInfos(bundleNameDetailMap, restoreInfo, restoreType);
     }
     HILOGI("End");
 }
+
+void Service::NotifyBundleInfos(std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap,
+    BJsonEntityCaps::BundleInfo restoreInfo, RestoreTypeEnum restoreType)
+{
+    if (restoreType == TypeRestoreTypeEnum::RESTORE_DATA_READDY ||
+        SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) {
+        auto iter = bundleNameDetailMap.find(restoreInfo.name);
+        if (iter != bundleNameDetailMap.end()) {
+            BJsonUtil::BundleDetailInfo bundetailInfo = iter->second;
+            if (bundleDetailInfo.type == COMMON_EVENT_TYPE) {
+                DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(bundleDetailInfo);
+            }
+        }
+    }
+}
+
 
 ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {

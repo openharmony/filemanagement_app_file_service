@@ -94,8 +94,7 @@ void BJsonUtil::ParseBundleDetailInfo(const std::string &bundleDetailInfo, Bundl
         return;
     }
     int infosCount = cJSON_GetArraySize(infos);
-    for (int i = 0; i < infosCount; i++)
-    {
+    for (int i = 0; i < infosCount; i++) {
         cJSON *infoItem = cJSON_GetArrayItem(infos, i);
         if (!cJSON_IsObject(infoItem)) {
             HILOGE("Parse json error, info item is not an object");
@@ -121,8 +120,7 @@ void BJsonUtil::ParseBundleDetailInfo(const std::string &bundleDetailInfo, Bundl
 void BJsonUtil::RecordBundleDetailRelation(std::map<std::string,BundleDetailInfo> &bundleNameDetailMap,
     std::vector<BundleDetailInfo> &bundleDetailInfos)
 {
-    for (auto &bundleDetail : bundleDetailInfos)
-    {
+    for (auto &bundleDetail : bundleDetailInfos) {
         std::string bundleName = bundleDetail.bundleName;
         bundleNameDetailMap[bundleName] = bundleDetail;
     }

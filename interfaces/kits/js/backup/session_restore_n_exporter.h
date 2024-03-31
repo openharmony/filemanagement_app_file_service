@@ -36,9 +36,6 @@ public:
 
     SessionRestoreNExporter(napi_env env, napi_value exports);
     ~SessionRestoreNExporter() override;
-private:
-   bool DealArgs(NFuncArg funcArg, int32 &fd,
-       std::vector<std::string> &bundles, std::vector<std::string> &bundleDetails);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // INTERFACES_KITS_JS_SRC_MOD_BACKUP_PROPERTIES_SESSION_RESTORE_N_EXPORTER_H
