@@ -368,7 +368,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             return BError(BError::Codes::OK);
         }
         session_->AppendBundles(restoreBundleNames);
-        std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap;
+        std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap;
         SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
         OnStartSched();
         session_->DecreaseSessionCnt();
