@@ -79,9 +79,7 @@ ohos_unittest("b_jsonutil_test") {
 
   module_out_path = path_module_out_tests
 
-  sources = [
-    "b_jsonutil/b_jsonutil_test.cpp",
-  ]
+  sources = [ "b_jsonutil/b_jsonutil_test.cpp" ]
 
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
