@@ -261,7 +261,7 @@ ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &file
     return ret;
 }
 
-ErrCode ServiceProxy::AppendBundlesDetailsRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames,
+ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames,
     const std::vector<std::string> &detailInfos, RestoreTypeEnum restoreType, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);

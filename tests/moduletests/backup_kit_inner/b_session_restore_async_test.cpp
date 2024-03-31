@@ -249,9 +249,9 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0501, test
         SetMockLoadSystemAbility(true);
         vector<string> bundleNames;
         vector<string> detailInfos;
-        ErrCode ret = restorePtr_->AppendBundlesDetails(UniqueFd(-1), bundleNames, detailInfos);
+        ErrCode ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames, detailInfos);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
-        ret = restorePtr_->AppendBundlesDetails(UniqueFd(-1), bundleNames, detailInfos);
+        ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames, detailInfos);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
         restorePtr_ = nullptr;
     } catch (...) {

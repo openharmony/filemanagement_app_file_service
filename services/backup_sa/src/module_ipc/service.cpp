@@ -311,7 +311,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     return restoreBundleInfos;
 }
 
-ErrCode Service::AppendBundlesDetailsRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames,
+ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames,
     const std::vector<std::string> &detailInfos, RestoreTypeEnum restoreType, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);

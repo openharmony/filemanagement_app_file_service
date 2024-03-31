@@ -85,7 +85,7 @@ ErrCode BSessionRestore::GetFileHandle(const string &bundleName, const string &f
     return BError(BError::Codes::OK);
 }
 
-ErrCode BSessionRestore::AppendBundlesDetails(UniqueFd remoteCap, vector<BundleName> bundlesToRestore,
+ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore,
     vector<string> detailInfos)
 {
     Start();

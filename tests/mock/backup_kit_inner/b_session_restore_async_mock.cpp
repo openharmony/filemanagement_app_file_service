@@ -58,7 +58,7 @@ ErrCode BSessionRestoreAsync::GetFileHandle(const string &bundleName, const stri
     return BError(BError::Codes::OK);
 }
 
-ErrCode BSessionRestoreAsync::AppendBundlesDetails(UniqueFd remoteCap, vector<BundleName> bundlesToRestore,
+ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore,
     vector<string> detailInfos, RestoreTypeEnum restoreType, int32_t userId)
 {
     GTEST_LOG_(INFO) << "BSessionRestoreAsync::AppendBundles";

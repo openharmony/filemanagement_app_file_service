@@ -269,12 +269,12 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0600, testing::ext::T
 
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
-        auto ret = restorePtr_->AppendBundlesDetails(move(remoteCap), bundlesToRestore, detailInfos);
+        auto ret = restorePtr_->AppendBundles(move(remoteCap), bundlesToRestore, detailInfos);
         EXPECT_NE(ret, ErrCode(BError::Codes::OK));
 
         GTEST_LOG_(INFO) << "GetInstance is true";
         SetMockGetInstance(true);
-        ret = restorePtr_->AppendBundlesDetails(move(remoteCap), bundlesToRestore, detailInfos);
+        ret = restorePtr_->AppendBundles(move(remoteCap), bundlesToRestore, detailInfos);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -304,7 +304,7 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0601, testing::ext::T
         vector<string> bundlesToRestore;
         bundlesToRestore.emplace_back(bundleName);
         GTEST_LOG_(INFO) << "GetInstance is false";
-        SetMockGetInstance(false); AppendBundlesDetails
+        SetMockGetInstance(false);
         auto ret = restorePtr_->AppendBundles(move(remoteCap), bundlesToRestore);
         EXPECT_NE(ret, ErrCode(BError::Codes::OK));
         GTEST_LOG_(INFO) << "GetInstance is true";

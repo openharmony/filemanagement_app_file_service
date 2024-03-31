@@ -71,7 +71,7 @@ public:
      * @param detailInfos bundle对应的单双映射关系json
      * @return ErrCode 规范错误码
      */
-    ErrCode AppendBundlesDetails(UniqueFd remoteCap, std::vector<BundleName> bundlesToRestore,
+    ErrCode AppendBundles(UniqueFd remoteCap, std::vector<BundleName> bundlesToRestore,
         std::vector<std::string> detailInfos);
 
     /**

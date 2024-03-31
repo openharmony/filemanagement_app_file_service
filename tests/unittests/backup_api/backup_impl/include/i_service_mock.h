@@ -106,7 +106,7 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppendBundlesDetailsRestoreSession(UniqueFd fd,
+    ErrCode AppendBundlesBackupSession(UniqueFd fd,
                                         const std::vector<BundleName> &bundleNames,
                                         const std::vector<std::string> &detailInfos,
                                         RestoreTypeEnum restoreType,

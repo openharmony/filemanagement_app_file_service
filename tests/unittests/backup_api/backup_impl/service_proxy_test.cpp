@@ -317,9 +317,9 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesRestoreSession_0101, t
     std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
     UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
     std::vector<std::string> detailInfos;
-    int32_t result = proxy_->AppendBundlesDetailsRestoreSession(move(fd), bundleNames, detailInfos);
+    int32_t result = proxy_->AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos);
     EXPECT_EQ(result, BError(BError::Codes::OK));
-    result = proxy_->AppendBundlesDetailsRestoreSession(UniqueFd(-1), bundleNames, detailInfos);
+    result = proxy_->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames, detailInfos);
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppendBundlesRestoreSession_0101";
 }

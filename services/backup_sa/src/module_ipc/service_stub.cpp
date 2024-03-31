@@ -271,7 +271,7 @@ int32_t ServiceStub::CmdAppendBundlesDetailsRestoreSession(MessageParcel &data, 
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive userId");
     }
 
-    int res = AppendBundlesDetailsRestoreSession(move(fd), bundleNames, detailInfos, restoreType, userId);
+    int res = AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos, restoreType, userId);
     if (!reply.WriteInt32(res)) {
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
     }

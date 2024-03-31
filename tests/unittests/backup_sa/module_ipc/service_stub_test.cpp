@@ -53,6 +53,9 @@ public:
         AppendBundlesRestoreSession,
         ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, const std::vector<std::string> &detailInfos,
         RestoreTypeEnum restoreType, int32_t userId));
+    MOCK_METHOD4(
+        AppendBundlesRestoreSession,
+        ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, RestoreTypeEnum restoreType, int32_t userId));
     MOCK_METHOD1(AppendBundlesBackupSession, ErrCode(const std::vector<BundleName> &bundleNames));
     MOCK_METHOD0(Finish, ErrCode());
     MOCK_METHOD0(Release, ErrCode());
@@ -383,6 +386,48 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetFileHandle_0100, testing:
  * @tc.require: I6URNZ
  */
 HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100";
+    try {
+        MockService service;
+        EXPECT_CALL(service, AppendBundlesRestoreSession(_, _, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        vector<BundleName> bundleNames;
+        bundleNames.push_back(BUNDLE_NAME);
+        TestManager tm("ServiceStub_GetFd_0300");
+        std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
+        UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
+        EXPECT_TRUE(data.WriteFileDescriptor(fd));
+        EXPECT_TRUE(data.WriteStringVector(bundleNames));
+        EXPECT_TRUE(data.WriteInt32(0));
+        EXPECT_TRUE(data.WriteInt32(-1));
+        EXPECT_EQ(BError(BError::Codes::OK),
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION), data,
+                      reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesRestoreSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100";
+}
+
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0101
+ * @tc.name: SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0101
+ * @tc.desc: Test function of AppendBundlesRestoreSession interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0101, testing::ext::TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100";
     try {

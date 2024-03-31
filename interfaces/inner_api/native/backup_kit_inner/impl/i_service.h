@@ -46,7 +46,7 @@ public:
     virtual ErrCode AppDone(ErrCode errCode) = 0;
     virtual ErrCode ServiceResultReport(const std::string &restoreRetInfo) = 0;
     virtual ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) = 0;
-    virtual ErrCode AppendBundlesDetailsRestoreSession(UniqueFd fd,
+    virtual ErrCode AppendBundlesRestoreSession(UniqueFd fd,
                                                 const std::vector<BundleName> &bundleNames,
                                                 const std::vector<std::string> &detailInfos,
                                                 RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,

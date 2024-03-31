@@ -37,7 +37,7 @@ public:
     ErrCode AppDone(ErrCode errCode) override;
     ErrCode ServiceResultReport(const std::string &restoreRetInfo) override;
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override;
-    ErrCode AppendBundlesDetailsRestoreSession(UniqueFd fd,
+    ErrCode AppendBundlesRestoreSession(UniqueFd fd,
                                         const std::vector<BundleName> &bundleNames,
                                         const std::vector<std::string> &detailInfos,
                                         RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
