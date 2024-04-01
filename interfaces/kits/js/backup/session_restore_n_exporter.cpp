@@ -394,7 +394,13 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
         }
         if (entity->sessionWhole) {
+            if (!bundleDetails.empty()) {
+                return NError(entity->sessionWhole->AppendBundles(UniqueFd(fd), bundles, bundleDetails));
+            }
             return NError(entity->sessionWhole->AppendBundles(UniqueFd(fd), bundles));
+        }
+        if (!bundleDetails.empty()) {
+            return NError(entity->sessionSheet->AppendBundles(UniqueFd(fd), bundles, bundleDetails));
         }
         return NError(entity->sessionSheet->AppendBundles(UniqueFd(fd), bundles));
     };
