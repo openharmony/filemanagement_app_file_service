@@ -265,14 +265,7 @@ static void onResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::str
     }
 
     auto cbCompl = [result {result}](napi_env env, NError err) -> NVal {
-        NVal resultStr = NVal::CreateUTF8String(env, result);
-        NVal res;
-        napi_status status = napi_set_named_property(env, res.val_, FILEIO_TAG_ERR_DATA.c_str(), resultStr.val_);
-        if (status != napi_ok) {
-            HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s", status, result.c_str());
-        }
-
-        return res;
+        return NVal::CreateUTF8String(env, result);
     };
 
     callbacks->onResultReport.ThreadSafeSchedule(cbCompl);
