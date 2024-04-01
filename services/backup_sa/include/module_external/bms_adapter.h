@@ -29,13 +29,6 @@ class InnerReceiverImpl;
 
 class BundleMgrAdapter {
 public:
-    /**
-     * @brief Get the Bundle Infos object
-     *
-     * @param userId User ID
-     * @return std::vector<BJsonEntityCaps::BundleInfo>
-     */
-    static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfos(int32_t userId);
 
     /**
      * @brief Get the bundle infos object

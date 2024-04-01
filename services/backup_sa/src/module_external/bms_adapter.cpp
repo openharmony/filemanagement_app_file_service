@@ -106,32 +106,6 @@ static int64_t GetBundleStats(const string &bundleName, int32_t userId)
     return dataSize_;
 }
 
-vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(int32_t userId)
-{
-    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
-    vector<AppExecFwk::BundleInfo> installedBundles;
-    auto bms = GetBundleManager();
-    if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles, userId)) {
-        throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle infos");
-    }
-    for (auto const &installedBundle : installedBundles) {
-        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
-            installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
-            HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
-            continue;
-        }
-        auto [allToBackup, extName, restoreDeps, supportScene] = GetAllowAndExtName(installedBundle.extensionInfos);
-        int64_t dataSize = 0;
-        if (allToBackup) {
-            dataSize = GetBundleStats(installedBundle.name, userId);
-        }
-        bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
-                                                              installedBundle.versionName, dataSize, allToBackup,
-                                                              extName, restoreDeps, supportScene});
-    }
-    return bundleInfos;
-}
-
 vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vector<string> &bundleNames, int32_t userId)
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
@@ -317,12 +291,14 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
 
 vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncremental(int32_t userId)
 {
-    vector<BIncrementalData> bundleNames;
     vector<AppExecFwk::BundleInfo> installedBundles;
     auto bms = GetBundleManager();
     if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles, userId)) {
         throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle infos");
     }
+
+    vector<BIncrementalData> bundleNames;
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     for (auto const &installedBundle : installedBundles) {
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
@@ -330,10 +306,15 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
             continue;
         }
         auto [allToBackup, extName, restoreDeps, supportScene] = GetAllowAndExtName(installedBundle.extensionInfos);
-        if (allToBackup) {
+        if (!allToBackup) {
+            bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
+                installedBundle.versionName, 0, allToBackup, extName, restoreDeps, supportScene});
+        } else {
             bundleNames.emplace_back(BIncrementalData {installedBundle.name, 0});
         }
     }
-    return BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, userId);
+    auto bundleInfosNew = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, userId);
+    copy(bundleInfosNew.begin(), bundleInfosNew.end(), back_inserter(bundleInfos));
+    return bundleInfos;
 }
 } // namespace OHOS::FileManagement::Backup
