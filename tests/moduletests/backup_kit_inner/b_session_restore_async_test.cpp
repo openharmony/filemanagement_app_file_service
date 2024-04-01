@@ -220,6 +220,34 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0500, test
         SetMockGetInstance(true);
         SetMockLoadSystemAbility(true);
         vector<string> bundleNames;
+        ErrCode ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+        ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+        restorePtr_ = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-an exception occurred by ~BSessionRestoreAsync.";
+    }
+    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-end SUB_backup_b_session_restore_async_0500";
+}
+
+/**
+ * @tc.number: SUB_backup_b_session_restore_async_0501
+ * @tc.name: SUB_backup_b_session_restore_async_0501
+ * @tc.desc: 测试AppendBundles接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7L7A6
+ */
+HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0501, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0500";
+    try {
+        SetMockGetInstance(true);
+        SetMockLoadSystemAbility(true);
+        vector<string> bundleNames;
         vector<string> detailInfos;
         ErrCode ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames, detailInfos);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));

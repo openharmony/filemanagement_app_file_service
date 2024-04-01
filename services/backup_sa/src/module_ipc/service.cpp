@@ -311,11 +311,8 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     return restoreBundleInfos;
 }
 
-ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
-                                             const vector<BundleName> &bundleNames,
-                                             const std::vector<std::string> &detailInfos,
-                                             RestoreTypeEnum restoreType,
-                                             int32_t userId)
+ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames,
+    const std::vector<std::string> &detailInfos, RestoreTypeEnum restoreType, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
@@ -337,6 +334,41 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             return BError(BError::Codes::OK);
         }
         session_->AppendBundles(restoreBundleNames);
+        SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+        OnStartSched();
+        session_->DecreaseSessionCnt();
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        session_->DecreaseSessionCnt();
+        return e.GetCode();
+    } catch (...) {
+        session_->DecreaseSessionCnt();
+        HILOGI("Unexpected exception");
+        return EPERM;
+    }
+}
+
+ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
+                                             const vector<BundleName> &bundleNames,
+                                             RestoreTypeEnum restoreType,
+                                             int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        HILOGI("Begin");
+        session_->IncreaseSessionCnt();
+        if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
+            session_->SetSessionUserId(userId);
+        }
+        VerifyCaller(IServiceReverse::Scenario::RESTORE);
+        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
+        auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
+        if (restoreBundleNames.empty()) {
+            session_->DecreaseSessionCnt();
+            return BError(BError::Codes::OK);
+        }
+        session_->AppendBundles(restoreBundleNames);
+        std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap;
         SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
         OnStartSched();
         session_->DecreaseSessionCnt();
@@ -375,6 +407,9 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
         session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
         session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
+        if (bundleNameDetailMap.empty()) {
+            continue;
+        }
         NotifyBundleInfos(bundleNameDetailMap, restoreInfo, restoreType);
     }
     HILOGI("End");

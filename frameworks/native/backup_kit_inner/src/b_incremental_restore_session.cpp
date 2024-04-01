@@ -90,8 +90,17 @@ ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<Bun
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-
     return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos);
+}
+
+ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+
+    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore);
 }
 
 ErrCode BIncrementalRestoreSession::Release()

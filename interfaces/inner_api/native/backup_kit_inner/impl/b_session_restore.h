@@ -75,6 +75,15 @@ public:
         std::vector<std::string> detailInfos);
 
     /**
+     * @brief 用于追加应用，现阶段仅支持在Start之前调用
+     *
+     * @param remoteCap 已打开的保存远端设备能力的Json文件。可使用GetLocalCapabilities方法获取
+     * @param bundlesToRestore 待恢复的应用清单
+     * @return ErrCode 规范错误码
+     */
+    ErrCode AppendBundles(UniqueFd remoteCap, std::vector<BundleName> bundlesToRestore);
+
+    /**
      * @brief 用于结束追加应用，结束后不可在调用AppendBundles
      *
      * @return ErrCode 规范错误码

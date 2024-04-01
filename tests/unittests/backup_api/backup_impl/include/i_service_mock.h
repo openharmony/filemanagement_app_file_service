@@ -100,6 +100,14 @@ public:
 
     ErrCode AppendBundlesRestoreSession(UniqueFd fd,
                                         const std::vector<BundleName> &bundleNames,
+                                        RestoreTypeEnum restoreType,
+                                        int32_t userId) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode AppendBundlesRestoreSession(UniqueFd fd,
+                                        const std::vector<BundleName> &bundleNames,
                                         const std::vector<std::string> &detailInfos,
                                         RestoreTypeEnum restoreType,
                                         int32_t userId) override

@@ -42,6 +42,10 @@ public:
                                         const std::vector<std::string> &detailInfos,
                                         RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
                                         int32_t userId = DEFAULT_INVAL_VALUE) override;
+    ErrCode AppendBundlesRestoreSession(UniqueFd fd,
+                                        const std::vector<BundleName> &bundleNames,
+                                        RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
+                                        int32_t userId = DEFAULT_INVAL_VALUE) override;
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
     ErrCode Finish() override;
     ErrCode Release() override;

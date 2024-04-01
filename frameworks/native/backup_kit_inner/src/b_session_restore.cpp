@@ -104,6 +104,16 @@ ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bu
     return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos);
 }
 
+ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+
+    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore);
+}
+
 ErrCode BSessionRestore::Finish()
 {
     auto proxy = ServiceProxy::GetInstance();

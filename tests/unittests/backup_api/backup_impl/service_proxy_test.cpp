@@ -289,12 +289,39 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesRestoreSession_0100, t
     TestManager tm("BackupSession_GetFd_0100");
     std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
     UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+    int32_t result = proxy_->AppendBundlesRestoreSession(move(fd), bundleNames);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+    result = proxy_->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppendBundlesRestoreSession_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_AppendBundlesRestoreSession_0101
+ * @tc.name: SUB_Service_proxy_AppendBundlesRestoreSession_0101
+ * @tc.desc: 测试 AppendBundlesRestoreSession 获取真实文件调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesRestoreSession_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppendBundlesRestoreSession_0101";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(1)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
+
+    std::vector<string> bundleNames;
+    TestManager tm("BackupSession_GetFd_0100");
+    std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
+    UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
     std::vector<std::string> detailInfos;
     int32_t result = proxy_->AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos);
     EXPECT_EQ(result, BError(BError::Codes::OK));
     result = proxy_->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames, detailInfos);
     EXPECT_NE(result, BError(BError::Codes::OK));
-    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppendBundlesRestoreSession_0100";
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppendBundlesRestoreSession_0101";
 }
 
 /**

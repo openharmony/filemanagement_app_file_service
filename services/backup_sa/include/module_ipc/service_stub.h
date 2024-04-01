@@ -44,6 +44,7 @@ private:
     int32_t CmdResultReport(MessageParcel &data, MessageParcel &reply);
     int32_t CmdGetFileHandle(MessageParcel &data, MessageParcel &reply);
     int32_t CmdAppendBundlesRestoreSession(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdAppendBundlesDetailsRestoreSession(MessageParcel &data, MessageParcel &reply);
     int32_t CmdAppendBundlesBackupSession(MessageParcel &data, MessageParcel &reply);
     int32_t CmdFinish(MessageParcel &data, MessageParcel &reply);
     int32_t CmdRelease(MessageParcel &data, MessageParcel &reply);

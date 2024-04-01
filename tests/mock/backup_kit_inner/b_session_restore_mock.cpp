@@ -92,6 +92,12 @@ ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bu
     return BError(BError::Codes::OK);
 }
 
+ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)
+{
+    Start();
+    return BError(BError::Codes::OK);
+}
+
 ErrCode BSessionRestore::Finish()
 {
     return BError(BError::Codes::OK);
