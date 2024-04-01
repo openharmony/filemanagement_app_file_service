@@ -281,7 +281,7 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<Bund
     if (!data.WriteStringVector(bundleNames)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();
     }
-    if (!detailInfos.empty() && !data.WriteStringVector(detailInfos)) {
+    if (!data.WriteStringVector(detailInfos)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send detailInfos").GetCode();
     }
     if (!data.WriteInt32(static_cast<int32_t>(restoreType))) {
