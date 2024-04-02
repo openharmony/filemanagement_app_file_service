@@ -202,7 +202,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
     impl_.backupExtNameMap.insert(make_pair("com.example.app2backup", info));
 }
 
-void SvcSessionManager::CreateBackupConnection(BundleName &bundleName)
+void SvcSessionManager::CreateBackupConnection(BundleName &bundleName, string extName)
 {
     GTEST_LOG_(INFO) << "CreateBackupConnection";
     BackupExtInfo info {};
