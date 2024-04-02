@@ -156,7 +156,7 @@ void UntarFile::HandleTarBuffer(const string &buff, const string &name, FileStat
         info.longName.clear();
     }
     if (realName.length() > 0 && realName[0] == '/') {
-        info.fullPath = realName.substr(0, realName.length() - 1);
+        info.fullPath = realName.substr(1, realName.length() - 1);
         return;
     }
     info.fullPath = realName;
@@ -275,6 +275,7 @@ int UntarFile::ParseIncrementalTarFile(const string &rootPath)
 
 void UntarFile::ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &info)
 {
+    HILOGI("untar file: %{public}s, rootPath: %{public}s", info.fullPath.c_str(), rootPath_.c_str());
     switch (typeFlag) {
         case REGTYPE:
         case AREGTYPE:
@@ -285,6 +286,7 @@ void UntarFile::ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &i
             isSkip = false;
             break;
         case DIRTYPE:
+            info.fullPath = GenRealPath(rootPath_, info.fullPath);
             CreateDir(info.fullPath, info.mode);
             isSkip = false;
             break;
@@ -305,6 +307,7 @@ void UntarFile::ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &i
 
 int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &info)
 {
+    HILOGI("untar file: %{public}s, rootPath: %{public}s", info.fullPath.c_str(), rootPath_.c_str());
     string tmpFullPath = info.fullPath;
     RTrimNull(tmpFullPath);
     switch (typeFlag) {
@@ -325,6 +328,7 @@ int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileS
             isSkip = false;
             break;
         case DIRTYPE:
+            info.fullPath = GenRealPath(rootPath_, info.fullPath);
             CreateDir(info.fullPath, info.mode);
             isSkip = false;
             break;
