@@ -938,7 +938,8 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
     try {
         HILOGI("Service::GetBackupInfo begin.");
         session_->IncreaseSessionCnt();
-        session_->CreateBackupConnection(bundleName);
+        std::string extName = BundleMgrAdapter::GetExtName(bundleName, session_->GetSessionUserId());
+        session_->CreateBackupConnection(bundleName, extName);
         auto backupConnection = session_->GetExtConnection(bundleName);
         auto callConnDone = [ptr {wptr(this)}](const string &&bundleName) {
             HILOGI("callConnDone begin.");

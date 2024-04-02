@@ -404,14 +404,14 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
     impl_.isAppendFinish = true;
 }
 
-void SvcSessionManager::CreateBackupConnection(BundleName &bundleName)
+void SvcSessionManager::CreateBackupConnection(BundleName &bundleName, string extName)
 {
     HILOGI("SvcSessionManager::CreateBackupConnection begin.");
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-    HILOGD("bundleName: %{public}s", bundleName.c_str());
+    HILOGD("bundleName: %{public}s, extName: %{public}s", bundleName.c_str(), extName.c_str());
     BackupExtInfo info {};
     info.backUpConnection = GetBackupExtAbility(bundleName);
     info.backupExtName = bundleName;
