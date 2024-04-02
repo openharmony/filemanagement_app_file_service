@@ -16,6 +16,14 @@ import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ohos_shared_library("fileshare") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   include_dirs = [
     ".",
     "../../common/include",
@@ -63,6 +71,14 @@ ohos_shared_library("fileshare") {
 }
 
 ohos_shared_library("fileuri") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   include_dirs = [
     ".",
     "../../common/include",
@@ -104,6 +120,14 @@ ohos_shared_library("fileuri") {
 }
 
 ohos_shared_library("backup") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   relative_install_dir = "module/file"
   subsystem_name = "filemanagement"
   part_name = "app_file_service"

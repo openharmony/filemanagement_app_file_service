@@ -33,7 +33,8 @@ config("file_uri_config") {
 }
 
 ohos_shared_library("fileshare_native") {
-  stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -74,6 +75,14 @@ ohos_shared_library("fileshare_native") {
 }
 
 ohos_shared_library("fileuri_native") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [
     "../../common/src/common_func.cpp",
     "../../common/src/json_utils.cpp",
@@ -127,6 +136,14 @@ config("remote_file_share_config") {
 }
 
 ohos_shared_library("remote_file_share_native") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [
     "../../common/src/json_utils.cpp",
     "../../common/src/sandbox_helper.cpp",
@@ -165,6 +182,14 @@ config("sandbox_helper_config") {
 }
 
 ohos_shared_library("sandbox_helper_native") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [
     "../../common/src/json_utils.cpp",
     "../../common/src/sandbox_helper.cpp",

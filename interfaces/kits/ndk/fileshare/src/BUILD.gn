@@ -14,7 +14,8 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 
 ohos_shared_library("ohfileshare") {
-  stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
     integer_overflow = true
     ubsan = true

@@ -15,7 +15,8 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ohos_shared_library("backup_extension_ability_native") {
-  stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
     integer_overflow = true
     ubsan = true

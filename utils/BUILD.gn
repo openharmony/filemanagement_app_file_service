@@ -41,7 +41,8 @@ ohos_rust_static_ffi("backup_cxx_rust") {
 }
 
 ohos_static_library("backup_cxx_cppdeps") {
-  stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -67,7 +68,8 @@ ohos_static_library("backup_cxx_cppdeps") {
 }
 
 ohos_shared_library("backup_utils") {
-  stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
     integer_overflow = true
     ubsan = true
