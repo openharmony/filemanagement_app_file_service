@@ -26,6 +26,7 @@ ohos_fuzztest("BackupSaAppendFuzzTest") {
     "${app_file_service_path}/services/backup_sa/include/module_ipc",
     "${app_file_service_path}/services/backup_sa/include",
     "${app_file_service_path}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${app_file_service_path}/frameworks/native/backup_kit_inner/include",
   ]
   cflags = [
     "-g",
@@ -37,6 +38,7 @@ ohos_fuzztest("BackupSaAppendFuzzTest") {
 
   deps = [
     "${app_file_service_path}/services/backup_sa:backup_sa",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/utils:backup_utils",
     "${third_party_path}/bounds_checking_function:libsec_shared",
   ]
