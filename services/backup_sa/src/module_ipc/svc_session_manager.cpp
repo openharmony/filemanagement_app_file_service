@@ -414,7 +414,7 @@ void SvcSessionManager::CreateBackupConnection(BundleName &bundleName, string ex
     HILOGD("bundleName: %{public}s, extName: %{public}s", bundleName.c_str(), extName.c_str());
     BackupExtInfo info {};
     info.backUpConnection = GetBackupExtAbility(bundleName);
-    info.backupExtName = bundleName;
+    info.backupExtName = extName;
     impl_.backupExtNameMap.insert(make_pair(bundleName, info));
 }
 
