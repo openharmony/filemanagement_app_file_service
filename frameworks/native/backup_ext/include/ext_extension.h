@@ -153,8 +153,6 @@ private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
     std::vector<std::string> tars_;
-    std::mutex getExtInfoMtx_;
-    std::condition_variable getExtInfoCondition_;
     std::string backupInfo_;
     OHOS::ThreadPool threadPool_;
 };
