@@ -57,12 +57,12 @@ ohos_unittest("b_file_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "jsoncpp:jsoncpp",
   ]
 
   use_exceptions = true
@@ -117,12 +117,12 @@ ohos_unittest("b_json_test") {
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
     "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "jsoncpp:jsoncpp",
   ]
 
   sanitize = {
@@ -219,11 +219,11 @@ ohos_unittest("b_process_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
   ]
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "jsoncpp:jsoncpp",
   ]
 
   use_exceptions = true
