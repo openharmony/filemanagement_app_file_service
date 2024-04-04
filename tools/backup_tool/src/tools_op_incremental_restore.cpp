@@ -199,6 +199,12 @@ static void OnBackupServiceDied(shared_ptr<SessionRestore> ctx)
     ctx->TryNotify(true);
 }
 
+static void OnResultReport(shared_ptr<SessionRestore> ctx, const std::string resultInfo)
+{
+    printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
+    ctx->TryNotify(true);
+}
+
 static void RestoreApp(shared_ptr<SessionRestore> restore)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "RestoreApp");
@@ -251,6 +257,7 @@ static int32_t InitRestoreSession(shared_ptr<SessionRestore> ctx,
         .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
         .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
+        .onResultReport = bind(OnResultReport, ctx, placeholders::_1),
         .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init restore\n");

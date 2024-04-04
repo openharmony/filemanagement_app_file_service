@@ -217,10 +217,15 @@ int32_t ServiceStub::CmdResultReport(MessageParcel &data, MessageParcel &reply)
 {
     HILOGI("Begin");
     std::string restoreRetInfo;
+    int32_t scenario;
     if (!data.ReadString(restoreRetInfo)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive restoreRetInfo");
     }
-    int res = ServiceResultReport(restoreRetInfo);
+    if (!data.ReadInt32(scenario)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive scenario");
+    }
+    BackupRestoreScenario secenrioInfo = static_cast<BackupRestoreScenario>(scenario);
+    int res = ServiceResultReport(restoreRetInfo, secenrioInfo);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;

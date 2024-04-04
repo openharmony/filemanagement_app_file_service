@@ -52,9 +52,8 @@ public:
      * @return 结构体集合
      *
      */
-    static std::vector<BundleDetailInfo> ConvertBundleDetailInfos(const std::vector<std::string> &bundleNames,
-        const std::vector<std::string> &details, const std::string &patternInfo,
-        std::vector<std::string> &realBundleNames, int32_t userId);
+    static std::map<std::string, BundleDetailInfo> BuildBundleInfos(const std::vector<std::string> &bundleNames,
+        const std::vector<std::string> &details, std::vector<std::string> &realBundleNames, int32_t userId);
 
     /**
      * @brief 解析单个bundle对应的json串
@@ -63,17 +62,7 @@ public:
      * @param bundleDetail 结构体对象
      *
      */
-    static void ParseBundleDetailInfo(const std::string &bundleDetailInfo, BundleDetailInfo &bundleDetail);
-
-    /**
-     * @brief 根据bundleName获取对应的detailInfo
-     *
-     * @param bundleNameDetailMap bundleName和detail的对应关系
-     * @param bundleDetailInfo 结构体对象
-     *
-    */
-    static void RecordBundleDetailRelation(std::map<std::string, BundleDetailInfo> &bundleNameDetailMap,
-        std::vector<BundleDetailInfo> &bundleDetailInfo);
+    static void ParseBundleInfoJson(const std::string &bundleInfo, BundleDetailInfo &bundleDetail);
 };
 } // namespace OHOS::FileManagement::Backup
 

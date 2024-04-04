@@ -63,17 +63,17 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext::T
 }
 
 /**
- * @tc.number: b_jsonutil_ConvertBundleDetailInfos_0100
- * @tc.name: b_jsonutil_ConvertBundleDetailInfos_0100
- * @tc.desc: Test function of ConvertBundleDetailInfos interface for SUCCESS.
+ * @tc.number: b_jsonutil_BuildBundleInfos_0100
+ * @tc.name: b_jsonutil_BuildBundleInfos_0100
+ * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_ConvertBundleDetailInfos_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0100, testing::ext::TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "BJsonUtilTest-begin ConvertBundleDetailInfoss_0100";
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0100";
     try {
         std::vector<std::string> bundleNames;
         std::string bundleName = "com.hos.app01:1";
@@ -92,14 +92,14 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ConvertBundleDetailInfos_0100, testing::ext::
         detailInfos.push_back(detail01);
         int32_t userId = 100;
         std::vector<std::string> realBundleNames;
-        std::vector<BJsonUtil::BundleDetailInfo> detailInfos =
-            BJsonUtil::ConvertBundleDetailInfos(bundleNames, detailInfos, pattern,
-            realBundleNames, userId);
-        EXPECT_EQ("com.hos.app01", detailInfos.at(0));
+        std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap =
+            BJsonUtil::BuildBundleInfos(bundleNames, detailInfos, realBundleNames, userId);
+        std::string key = "com.hos.app01";
+        EXPECT_EQ("com.hos.app01", bundleNameDetailMap[key].bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
     }
-    GTEST_LOG_(INFO) << "BJsonUtilTest-end b_dir_ConvertBundleDetailInfos_0100";
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end b_dir_BuildBundleInfos_0100";
 }
 } // namespace OHOS::FileManagement::Backup

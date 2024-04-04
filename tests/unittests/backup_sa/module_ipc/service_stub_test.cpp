@@ -23,6 +23,7 @@
 #include <sys/types.h>
 
 #include "b_error/b_error.h"
+#include "b_resources/b_constants.h"
 #include "i_service.h"
 #include "module_ipc/service_stub.h"
 #include "service_reverse_mock.h"
@@ -47,7 +48,7 @@ public:
     MOCK_METHOD1(PublishFile, ErrCode(const BFileInfo &fileInfo));
     MOCK_METHOD2(AppFileReady, ErrCode(const string &fileName, UniqueFd fd));
     MOCK_METHOD1(AppDone, ErrCode(ErrCode errCode));
-    MOCK_METHOD1(ServiceResultReport, ErrCode(const string &restoreRetInfo));
+    MOCK_METHOD2(ServiceResultReport, ErrCode(const string restoreRetInfo, BackupRestoreScenario scenario));
     MOCK_METHOD2(GetFileHandle, ErrCode(const string &bundleName, const string &fileName));
     MOCK_METHOD5(
         AppendBundlesRestoreSession,

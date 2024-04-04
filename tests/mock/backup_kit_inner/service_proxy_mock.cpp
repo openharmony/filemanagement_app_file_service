@@ -75,7 +75,7 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::ServiceResultReport(const std::string &restoreRetInfo)
+ErrCode ServiceProxy::ServiceResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario)
 {
     return BError(BError::Codes::OK);
 }

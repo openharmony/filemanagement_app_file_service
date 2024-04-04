@@ -15,19 +15,19 @@
 
 class BackupExtensionAbility {
     onBackup() {
-        console.log()
+        console.log();
     }
 
     onRestore(versionBackupedBundle) {
-        console.log(versionBackupedBundle)
+        console.log(versionBackupedBundle);
     }
 
     getBackupInfo() {
-        console.log()
+        console.log();
     }
 
     onRestoreEx(versionBackupedBundle, restoreInfo) {
-        console.log()
+        console.log();
     }
 }
 

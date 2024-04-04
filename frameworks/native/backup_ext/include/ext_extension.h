@@ -25,9 +25,9 @@
 
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_json/b_report_entity.h"
-#include "b_resources/b_constants.h"
 #include "ext_backup_js.h"
 #include "ext_extension_stub.h"
+#include "i_service.h"
 #include "thread_pool.h"
 #include "unique_fd.h"
 
@@ -102,7 +102,7 @@ private:
      *
      * @param restoreRetInfo app restore reportInfo
      */
-    void AppResultReport(const std::string &restoreRetInfo);
+    void AppResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario);
 
     /**
      * @brief Executing Backup Tasks Asynchronously
@@ -149,6 +149,13 @@ private:
      * @param errCode
      */
     void AppIncrementalDone(ErrCode errCode);
+
+    /**
+     * @brief get callbackEx for execute onRestore
+     *
+     * @param errCode
+     */
+    std::function<void(const std::string)> GetCallbackExFun(wptr<BackupExtExtension> obj);
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;

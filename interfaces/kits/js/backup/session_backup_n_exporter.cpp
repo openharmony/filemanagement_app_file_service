@@ -181,6 +181,29 @@ static void onAllBundlesEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err)
     callbacks->onAllBundlesEnd.ThreadSafeSchedule(cbCompl);
 }
 
+static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::string result)
+{
+    HILOGI("callback function onResultReport begin");
+    if (pCallbacks.expired()) {
+        HILOGI("callbacks is unbound");
+        return;
+    }
+    auto callbacks = pCallbacks.lock();
+    if (!callbacks) {
+        HILOGI("callback function onResultReport has already been released");
+        return;
+    }
+    if (!bool(callbacks->onResultReport)) {
+        HILOGI("callback function onResultReport is undefined");
+        return;
+    }
+    auto cbCompl = [res {result}](napi_env env, NError err) -> NVal {
+        NVal str = NVal::CreateUTF8String(env, res);
+        return str;
+    };
+    callbacks->onResultReport.ThreadSafeSchedule(cbCompl);
+}
+
 static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
 {
     if (pCallbacks.expired()) {
@@ -229,6 +252,7 @@ napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info 
         .onBundleStarted = bind(onBundleBegin, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBundleFinished = bind(onBundleEnd, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(onAllBundlesEnd, backupEntity->callbacks, placeholders::_1),
+        .onResultReport = bind(OnResultReport, backupEntity->callbacks, placeholders::_1),
         .onBackupServiceDied = bind(OnBackupServiceDied, backupEntity->callbacks)});
     if (!backupEntity->session) {
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to init backup").GetCode()).ThrowErr(env);

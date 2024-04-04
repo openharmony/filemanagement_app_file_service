@@ -208,7 +208,7 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
     return reply.ReadInt32();
 }
 
-ErrCode ServiceProxy::ServiceResultReport(const std::string &restoreRetInfo)
+ErrCode ServiceProxy::ServiceResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
@@ -219,6 +219,9 @@ ErrCode ServiceProxy::ServiceResultReport(const std::string &restoreRetInfo)
     }
     if (!data.WriteString(restoreRetInfo)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the restoreRetInfo").GetCode();
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(scenario))) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the scenario").GetCode();
     }
     MessageParcel reply;
     MessageOption option;

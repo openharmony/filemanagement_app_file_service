@@ -53,15 +53,17 @@ struct CallJsParam {
     }
 };
 
-struct CallBackInfo {
+struct CallbackInfo {
     std::function<void()> callback;
-    std::function<void(const std::string)> callbackParam;
-
-    CallBackInfo(std::function<void()> callbackIn) : callback(callbackIn) {}
-    CallBackInfo(std::function<void(const std::string)> callbackIn) : callbackParam(callbackIn) {}
+    CallbackInfo(std::function<void()> callbackIn) : callback(callbackIn) {}
 };
 
-class ExtBackupJs : public ExtBackup, public virtual RefBase {
+struct CallbackInfoEx {
+    std::function<void(const std::string)> callbackParam;
+    CallbackInfoEx(std::function<void(const std::string)> callbackIn) : callbackParam(callbackIn) {}
+};
+
+class ExtBackupJs : public ExtBackup {
 public:
     /**
      * @brief Init the extension.
@@ -100,12 +102,26 @@ public:
      */
     ErrCode OnRestore(std::function<void(const std::string)> callbackEx,
         std::function<void()> callback) override;
+
+    /**
+     * @brief Call the app's OnRestore.
+     *
+     * @param callback The callBack.
+     */
+    ErrCode OnRestore(std::function<void()> callback) override;
     /**
      * @brief get app backup detail
      *
      * @param callback The callBack.
     */
     ErrCode GetBackupInfo(std::function<void(const std::string)> callback) override;
+
+    /**
+     * @brief Called Notification containing extended information
+     *
+     * @param result The result.
+    */
+    ErrCode CallExtNotify(std::string result) override;
 
 public:
     explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
@@ -123,17 +139,19 @@ private:
     std::tuple<ErrCode, napi_value> CallObjectMethod(std::string_view name, const std::vector<napi_value> &argv = {});
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseRestoreExInfo();
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseRestoreInfo();
-    std::function<bool(napi_env env, napi_value argv)> ParseOnRestoreExRet();
+
+    ErrCode CallJSRestoreEx(napi_env env, napi_value val);
+    ErrCode CallJSRestore(napi_env env, napi_value val);
 
     void ExportJsContext(void);
 
     AbilityRuntime::JsRuntime &jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
-    std::shared_ptr<CallBackInfo> callbackInfoEx_;
-    std::shared_ptr<CallBackInfo> callbackInfo_;
-    std::condition_variable extJsRetCon_;
-    std::mutex extJsRetMutex_;
-    std::atomic<bool> atoRet_;
+    std::shared_ptr<CallbackInfoEx> callbackInfoEx_;
+    std::shared_ptr<CallbackInfo> callbackInfo_;
+    std::condition_variable callJsCon_;
+    std::mutex callJsMutex_;
+    std::atomic<bool> needCallOnRestore_;
 };
 } // namespace OHOS::FileManagement::Backup
 

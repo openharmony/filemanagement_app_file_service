@@ -102,8 +102,8 @@ static int64_t GetBundleStats(const string &bundleName, int32_t userId)
             bundleStats[i] = 0;
         }
     }
-    int64_t dataSize_ = bundleStats[LOCAL] + bundleStats[DISTRIBUTED] + bundleStats[DATABASE];
-    return dataSize_;
+    int64_t dataSize = bundleStats[LOCAL] + bundleStats[DISTRIBUTED] + bundleStats[DATABASE];
+    return dataSize;
 }
 
 vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vector<string> &bundleNames, int32_t userId)
@@ -114,7 +114,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
         HILOGI("Begin Get bundleName:%{public}s", bundleName.c_str());
         AppExecFwk::BundleInfo installedBundle;
         if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
-            throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle info");
+            throw BError(BError::Codes::SA_BUNDLE_INFO_EMPTY, "Failed to get bundle info");
         }
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {

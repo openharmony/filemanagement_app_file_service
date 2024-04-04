@@ -134,6 +134,11 @@ public:
         std::function<void()> callback);
 
     /**
+     * @brief Called do restore.
+     */
+    virtual ErrCode OnRestore(std::function<void()> callback);
+
+    /**
      * @brief Called do GetBackupInfo.
      */
     virtual ErrCode GetBackupInfo(std::function<void(std::string)> callback);
@@ -144,7 +149,7 @@ public:
      * @return true
      * @return false
      */
-    bool WasFromSpeicalVersion(void);
+    bool WasFromSpecialVersion(void);
 
     /**
      * @brief Version for clone and cloud
@@ -161,6 +166,11 @@ public:
      * @return false
      */
     bool RestoreDataReady();
+
+    /**
+     * @brief Called Notification containing extended information
+     */
+    virtual ErrCode CallExtNotify(std::string result);
 
 public:
     ExtBackup() = default;

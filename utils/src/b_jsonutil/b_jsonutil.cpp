@@ -25,6 +25,7 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 namespace {
     const static int BUNDLE_INDEX_DEFAULT_VAL = 0;
+    const static std::string BUNDLE_INDEX_SPLICE = ":";
     const static string COMMON_EVENT_TYPE = "broadcast";
 }
 
@@ -48,46 +49,52 @@ BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string
     return bundleDetailInfo;
 }
 
-std::vector<BJsonUtil::BundleDetailInfo> BJsonUtil::ConvertBundleDetailInfos(
-    const std::vector<std::string> &bundleNameIndexStrs, const std::vector<std::string> &details,
-    const std::string &patternInfo, std::vector<std::string> &realBundleNames, int32_t userId)
+std::map<std::string, BJsonUtil::BundleDetailInfo> BJsonUtil::BuildBundleInfos(
+    const std::vector<std::string> &bundleNames, const std::vector<std::string> &bundleInfos,
+    std::vector<std::string> &bundleNamesOnly, int32_t userId)
 {
-    std::vector<BundleDetailInfo> bundleDetailInfoList;
-    for (size_t pos = 0; pos < bundleNameIndexStrs.size(); pos++) {
-        std::string bundleNameIndexStr = bundleNameIndexStrs[pos];
-        BundleDetailInfo bundleDetailInfo;
+    std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
+    std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap;
+    for (size_t i = 0; i < bundleNames.size(); i++) {
+        std::string bundleName = bundleNames[i];
+        BJsonUtil::BundleDetailInfo bundleDetailInfo;
         bundleDetailInfo.userId = userId;
-        size_t hasPos = bundleNameIndexStr.find(patternInfo);
-        if (hasPos == std::string::npos) {
-            bundleDetailInfo.bundleName = bundleNameIndexStr;
-            bundleDetailInfo.bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
-            realBundleNames.emplace_back(bundleNameIndexStr);
-        } else {
-            std::string bundleName = bundleNameIndexStr.substr(0, hasPos);
-            std::string indexStr = bundleNameIndexStr.substr(hasPos + 1);
-            int index = std::stoi(indexStr);
+        size_t pos = bundleName.find(BUNDLE_INDEX_SPLICE);
+        if (pos == 0 || pos == (bundleName.size() - 1)) {
+            HILOGE("Current bundle name is wrong");
+            continue;
+        }
+        if (pos == std::string::npos) {
             bundleDetailInfo.bundleName = bundleName;
+            bundleDetailInfo.bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
+            bundleNamesOnly.emplace_back(bundleName);
+        } else {
+            std::string bundleNameSplit = bundleName.substr(0, pos);
+            std::string indexSplit = bundleName.substr(pos, bundleName.size() - 1);
+            int index = std::stoi(indexSplit);
+            bundleDetailInfo.bundleName = bundleNameSplit;
             bundleDetailInfo.bundleIndex = index;
-            realBundleNames.emplace_back(bundleName);
+            bundleNamesOnly.emplace_back(bundleNameSplit);
         }
-        if (pos < details.size()) {
-            std::string bundleDetailStr = details[pos];
-            ParseBundleDetailInfo(bundleDetailStr, bundleDetailInfo);
+        if (i < bundleInfos.size()) {
+            std::string bundleInfo = bundleInfos[i];
+            ParseBundleInfoJson(bundleInfo, bundleDetailInfo);
         }
-        bundleDetailInfoList.emplace_back(bundleDetailInfo);
+        bundleDetailInfos.emplace_back(bundleDetailInfo);
+        bundleNameDetailMap[bundleDetailInfo.bundleName] = bundleDetailInfo;
     }
-    return bundleDetailInfoList;
+    return bundleNameDetailMap;
 }
 
-void BJsonUtil::ParseBundleDetailInfo(const std::string &bundleDetailInfo, BundleDetailInfo &bundleDetail)
+void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, BundleDetailInfo &bundleDetail)
 {
-    cJSON *root = cJSON_Parse(bundleDetailInfo.c_str());
+    cJSON *root = cJSON_Parse(bundleInfo.c_str());
     if (root == nullptr) {
         HILOGE("Parse json error,root is null");
         return;
     }
     cJSON *infos = cJSON_GetObjectItem(root, "infos");
-    if (!cJSON_IsArray(infos)) {
+    if (infos == nullptr || !cJSON_IsArray(infos) || cJSON_GetArraySize(infos) == 0) {
         HILOGE("Parse json error, infos is not array");
         cJSON_Delete(root);
         return;
@@ -114,14 +121,5 @@ void BJsonUtil::ParseBundleDetailInfo(const std::string &bundleDetailInfo, Bundl
         }
     }
     cJSON_Delete(root);
-}
-
-void BJsonUtil::RecordBundleDetailRelation(std::map<std::string, BundleDetailInfo> &bundleNameDetailMap,
-    std::vector<BundleDetailInfo> &bundleDetailInfos)
-{
-    for (auto &bundleDetail : bundleDetailInfos) {
-        std::string bundleName = bundleDetail.bundleName;
-        bundleNameDetailMap[bundleName] = bundleDetail;
-    }
 }
 }
