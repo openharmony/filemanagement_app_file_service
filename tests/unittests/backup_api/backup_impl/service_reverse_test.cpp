@@ -1222,7 +1222,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnResultReport_010
 {
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnResultReport_0100";
     try {
-        Init(IServiceReverse::Scenario::BACKUP);
+        Init(IServiceReverse::Scenario::RESTORE);
         std::string resultReport = "result_report";
         service_->RestoreOnResultReport(resultReport);
     } catch (...) {

@@ -57,4 +57,9 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         BJsonEntityCaps::BundleInfo {"com.example.app2backup", {}, {}, 0, true, "com.example.app2backup"});
     return bundleInfos;
 }
+
+string BundleMgrAdapter::GetExtName(string bundleName, int32_t userId)
+{
+    return "BackupExtensionAbility";
+}
 } // namespace OHOS::FileManagement::Backup
