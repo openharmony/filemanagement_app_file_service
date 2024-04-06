@@ -53,7 +53,6 @@ describe('FileShareJSTest', function () {
             }).catch((err) => {
                 console.info(`persist_permission_test err : ${err.code}`);
                 expect(false).assertTrue();
-                done();
             })
         } catch (error) {
             console.info(`persist_permission_test error : ${error.code}`);
