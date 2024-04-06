@@ -46,10 +46,10 @@
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_json/b_report_entity.h"
-#include "b_resources/b_constants.h"
 #include "b_tarball/b_tarball_factory.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
+#include "i_service.h"
 #include "service_proxy.h"
 #include "tar_file.h"
 #include "untar_file.h"
@@ -1027,24 +1027,12 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
-        auto callBackupEx = [obj](const std::string &restoreRetInfo) {
-            HILOGI("begin call restoreEx");
-            auto extensionPtr = obj.promote();
-            BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                "Ext extension handle have been already released");
-            if (restoreRetInfo.size()) {
-                extensionPtr->AppResultReport(restoreRetInfo);
-            }
-            extensionPtr->AppDone(BError(BError::Codes::OK));
-            extensionPtr->DoClear();
-        };
+        auto callBackupEx = ptr->GetCallbackExFun(obj);
         auto callBackup = [obj]() {
-            HILOGI("begin call restore");
             auto extensionPtr = obj.promote();
             BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
                 "Ext extension handle have been already released");
             extensionPtr->AppDone(BError(BError::Codes::OK));
-            // 清空恢复目录
             extensionPtr->DoClear();
         };
         try {
@@ -1063,10 +1051,6 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
             ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         }
     };
-
-    // REM: 这里异步化了，需要做并发控制
-    // 在往线程池中投入任务之前将需要的数据拷贝副本到参数中，保证不发生读写竞争，
-    // 由于拷贝参数时尚运行在主线程中，故在参数拷贝过程中是线程安全的。
     threadPool_.AddTask([task]() {
         try {
             task();
@@ -1086,15 +1070,16 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
-        auto callBackupEx = [obj](const std::string &restoreRetInfo) {
-            HILOGI("begin call restore");
+        auto callBackupEx = [obj](const std::string restoreRetInfo) {
+            HILOGI("begin call restoreEx");
             auto extensionPtr = obj.promote();
             BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
                 "Ext extension handle have been already released");
+            extensionPtr->extension_->CallExtNotify(restoreRetInfo);
             if (restoreRetInfo.size()) {
-                extensionPtr->AppResultReport(restoreRetInfo);
+                extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
             }
-            extensionPtr->AppIncrementalDone(BError(BError::Codes::OK));
+            extensionPtr->AppDone(BError(BError::Codes::OK));
             extensionPtr->DoClear();
         };
         auto callBackup = [obj]() {
@@ -1172,12 +1157,12 @@ void BackupExtExtension::AppDone(ErrCode errCode)
     }
 }
 
-void BackupExtExtension::AppResultReport(const std::string &restoreRetInfo)
+void BackupExtExtension::AppResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario)
 {
     HILOGI("Begin");
     auto proxy = ServiceProxy::GetInstance();
     BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
-    auto ret = proxy->ServiceResultReport(restoreRetInfo);
+    auto ret = proxy->ServiceResultReport(restoreRetInfo, scenario);
     if (ret != ERR_OK) {
         HILOGE("Failed notify app restoreResultReport, errCode: %{public}d", ret);
     }
@@ -1241,7 +1226,7 @@ ErrCode BackupExtExtension::HandleRestore()
     }
 
     // async do restore.
-    if (extension_->WasFromSpeicalVersion() && extension_->RestoreDataReady()) {
+    if (extension_->WasFromSpecialVersion() && extension_->RestoreDataReady()) {
         HILOGI("Restore directly when upgrading.");
         AsyncTaskRestoreForUpgrade();
     }
@@ -1628,5 +1613,26 @@ ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
     backupInfo_.clear();
 
     return ERR_OK;
+}
+
+std::function<void(std::string)> BackupExtExtension::GetCallbackExFun(wptr<BackupExtExtension> obj)
+{
+    HILOGI("Begin get callbackEx");
+    return [obj](const std::string restoreRetInfo) {
+        auto extensionPtr = obj.promote();
+        BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+            "Ext extension handle have been already released");
+        extensionPtr->extension_->CallExtNotify(restoreRetInfo);
+        if (restoreRetInfo.size()) {
+            if (extensionPtr->extension_->WasFromSpecialVersion() && extensionPtr->extension_->RestoreDataReady()) {
+                    extensionPtr->AppResultReport(restoreRetInfo,
+                        BackupRestoreScenario::INCREMENTAL_RESTORE);
+            } else {
+                    extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::FULL_RESTORE);
+            }
+        }
+        extensionPtr->AppDone(BError(BError::Codes::OK));
+        extensionPtr->DoClear();
+    };
 }
 } // namespace OHOS::FileManagement::Backup

@@ -35,6 +35,13 @@ typedef enum TypeRestoreTypeEnum {
     RESTORE_DATA_READDY = 1,
 } RestoreTypeEnum;
 
+enum BackupRestoreScenario {
+    FULL_BACKUP = 0,
+    INCREMENTAL_BACKUP = 1,
+    FULL_RESTORE = 2,
+    INCREMENTAL_RESTORE = 3,
+};
+
 class IService : public IRemoteBroker {
 public:
     virtual ErrCode InitRestoreSession(sptr<IServiceReverse> remote) = 0;
@@ -44,7 +51,8 @@ public:
     virtual ErrCode PublishFile(const BFileInfo &fileInfo) = 0;
     virtual ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) = 0;
     virtual ErrCode AppDone(ErrCode errCode) = 0;
-    virtual ErrCode ServiceResultReport(const std::string &restoreRetInfo) = 0;
+    virtual ErrCode ServiceResultReport(const std::string restoreRetInfo,
+        BackupRestoreScenario scenario) = 0;
     virtual ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) = 0;
     virtual ErrCode AppendBundlesRestoreSession(UniqueFd fd,
                                                 const std::vector<BundleName> &bundleNames,

@@ -36,6 +36,7 @@ private:
 
     int32_t CmdBackupOnFileReady(MessageParcel &data, MessageParcel &reply);
     int32_t CmdBackupOnBundleStarted(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdBackupOnResultReport(MessageParcel &data, MessageParcel &reply);
     int32_t CmdBackupOnBundleFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdBackupOnAllBundlesFinished(MessageParcel &data, MessageParcel &reply);
 
@@ -47,6 +48,7 @@ private:
 
     int32_t CmdIncrementalBackupOnFileReady(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalBackupOnBundleStarted(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdIncrementalBackupOnResultReport(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalBackupOnBundleFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalBackupOnAllBundlesFinished(MessageParcel &data, MessageParcel &reply);
 
@@ -54,6 +56,7 @@ private:
     int32_t CmdIncrementalRestoreOnBundleFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalRestoreOnAllBundlesFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalRestoreOnFileReady(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdIncrementalRestoreOnResultReport(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::FileManagement::Backup
 

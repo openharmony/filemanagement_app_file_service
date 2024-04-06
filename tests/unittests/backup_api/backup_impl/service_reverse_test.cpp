@@ -96,6 +96,7 @@ void ServiceReverseTest::Init(IServiceReverse::Scenario scenario, int nType)
                                                                      .onBundleStarted = nullptr,
                                                                      .onBundleFinished = nullptr,
                                                                      .onAllBundlesFinished = nullptr,
+                                                                     .onResultReport = nullptr,
                                                                      .onBackupServiceDied = nullptr});
         } else {
             service_ = new ServiceReverse(BSessionBackup::Callbacks {
@@ -103,6 +104,7 @@ void ServiceReverseTest::Init(IServiceReverse::Scenario scenario, int nType)
                 .onBundleStarted = bind(OnBundleStartedTest, placeholders::_1, placeholders::_2),
                 .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
                 .onAllBundlesFinished = bind(OnAllBundlesFinishedTest, placeholders::_1),
+                .onResultReport = bind(OnResultReportTest, placeholders::_1),
                 .onBackupServiceDied = bind(OnBackupServiceDiedTest)});
         }
     } else {
@@ -111,6 +113,7 @@ void ServiceReverseTest::Init(IServiceReverse::Scenario scenario, int nType)
                                                                       .onBundleStarted = nullptr,
                                                                       .onBundleFinished = nullptr,
                                                                       .onAllBundlesFinished = nullptr,
+                                                                      .onResultReport = nullptr,
                                                                       .onBackupServiceDied = nullptr});
         } else {
             service_ = new ServiceReverse(BSessionRestore::Callbacks {
@@ -118,8 +121,8 @@ void ServiceReverseTest::Init(IServiceReverse::Scenario scenario, int nType)
                 .onBundleStarted = bind(OnBundleStartedTest, placeholders::_1, placeholders::_2),
                 .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
                 .onAllBundlesFinished = bind(OnAllBundlesFinishedTest, placeholders::_1),
-                .onBackupServiceDied = bind(OnBackupServiceDiedTest),
-                .onResultReport = bind(OnResultReportTest, placeholders::_1)});
+                .onResultReport = bind(OnResultReportTest, placeholders::_1),
+                .onBackupServiceDied = bind(OnBackupServiceDiedTest)});
         }
     }
 }
@@ -132,6 +135,7 @@ void ServiceReverseTest::IncrementalInit(IServiceReverse::Scenario scenario, int
                                                                                 .onBundleStarted = nullptr,
                                                                                 .onBundleFinished = nullptr,
                                                                                 .onAllBundlesFinished = nullptr,
+                                                                                .onResultReport = nullptr,
                                                                                 .onBackupServiceDied = nullptr});
         } else {
             service_ = new ServiceReverse(BIncrementalBackupSession::Callbacks {
@@ -139,6 +143,7 @@ void ServiceReverseTest::IncrementalInit(IServiceReverse::Scenario scenario, int
                 .onBundleStarted = bind(OnBundleStartedTest, placeholders::_1, placeholders::_2),
                 .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
                 .onAllBundlesFinished = bind(OnAllBundlesFinishedTest, placeholders::_1),
+                .onResultReport = bind(OnResultReportTest, placeholders::_1),
                 .onBackupServiceDied = bind(OnBackupServiceDiedTest)});
         }
     } else {
@@ -154,6 +159,7 @@ void ServiceReverseTest::IncrementalInit(IServiceReverse::Scenario scenario, int
                 .onBundleStarted = bind(OnBundleStartedTest, placeholders::_1, placeholders::_2),
                 .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
                 .onAllBundlesFinished = bind(OnAllBundlesFinishedTest, placeholders::_1),
+                .onResultReport = bind(OnResultReportTest, placeholders::_1),
                 .onBackupServiceDied = bind(OnBackupServiceDiedTest)});
         }
     }

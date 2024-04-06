@@ -18,6 +18,7 @@
 #include <sstream>
 
 #include "b_error/b_error.h"
+#include "b_resources/b_constants.h"
 #include "module_ipc/service_reverse_proxy.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -147,7 +148,10 @@ int32_t ServiceStub::CmdResultReport(MessageParcel &data, MessageParcel &reply)
 {
     std::string restoreRetInfo;
     data.ReadString(restoreRetInfo);
-    int res = ServiceResultReport(restoreRetInfo);
+    int32_t scenario;
+    data.ReadInt32(scenario);
+    BackupRestoreScenario type = static_cast<BackupRestoreScenario>(scenario);
+    int res = ServiceResultReport(restoreRetInfo, type);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }

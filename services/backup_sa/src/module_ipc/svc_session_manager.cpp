@@ -136,7 +136,7 @@ bool SvcSessionManager::OnBunleFileReady(const string &bundleName, const string 
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-
+    HILOGI("Begin, bundleName name is:%{public}s", bundleName.c_str());
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
         stringstream ss;
@@ -162,6 +162,7 @@ bool SvcSessionManager::OnBunleFileReady(const string &bundleName, const string 
             return true;
         }
     }
+    HILOGI("End, bundleName name is:%{public}s", bundleName.c_str());
     return false;
 }
 

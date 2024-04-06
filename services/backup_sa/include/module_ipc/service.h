@@ -21,6 +21,7 @@
 
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_json/b_json_entity_caps.h"
+#include "b_resources/b_constants.h"
 #include "i_service_reverse.h"
 #include "iremote_stub.h"
 #include "module_sched/sched_scheduler.h"
@@ -41,11 +42,11 @@ public:
     ErrCode PublishFile(const BFileInfo &fileInfo) override;
     ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) override;
     ErrCode AppDone(ErrCode errCode) override;
-    ErrCode ServiceResultReport(const std::string &restoreRetInfo) override;
+    ErrCode ServiceResultReport(const std::string restoreRetInfo, BackupRestoreScenario sennario) override;
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode AppendBundlesRestoreSession(UniqueFd fd,
                                         const std::vector<BundleName> &bundleNames,
-                                        const std::vector<std::string> &detailInfos,
+                                        const std::vector<std::string> &bundleInfos,
                                         RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
                                         int32_t userId = DEFAULT_INVAL_VALUE) override;
     ErrCode AppendBundlesRestoreSession(UniqueFd fd,

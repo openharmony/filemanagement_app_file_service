@@ -23,6 +23,7 @@
 
 #include "b_error/b_error.h"
 #include "i_service.h"
+#include "b_resources/b_constants.h"
 #include "iremote_stub.h"
 #include "test_manager.h"
 
@@ -88,7 +89,7 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode ServiceResultReport(const std::string &restoreRetInfo) override
+    ErrCode ServiceResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario) override
     {
         return BError(BError::Codes::OK);
     }

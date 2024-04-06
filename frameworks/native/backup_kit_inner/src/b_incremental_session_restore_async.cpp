@@ -52,10 +52,12 @@ shared_ptr<BIncrementalSessionRestoreAsync> BIncrementalSessionRestoreAsync::Ini
             HILOGE("Failed to get backup service");
             return nullptr;
         }
-        BIncrementalRestoreSession::Callbacks callbacksTmp {.onFileReady = callbacks.onFileReady,
+        BIncrementalRestoreSession::Callbacks callbacksTmp {
+            .onFileReady = callbacks.onFileReady,
             .onBundleStarted = callbacks.onBundleStarted,
             .onBundleFinished = callbacks.onBundleFinished,
             .onAllBundlesFinished = callbacks.onAllBundlesFinished,
+            .onResultReport = callbacks.onResultReport,
             .onBackupServiceDied = callbacks.onBackupServiceDied};
         int32_t res = proxy->InitRestoreSession(new ServiceReverse(callbacksTmp));
         if (res != 0) {

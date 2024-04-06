@@ -158,6 +158,12 @@ static void OnBundleStarted(shared_ptr<Session> ctx, ErrCode err, const BundleNa
     }
 }
 
+static void OnResultReport(shared_ptr<Session> ctx, const std::string result)
+{
+    printf("OnResultReport result is = %s\n", result.c_str());
+    ctx->TryNotify(true);
+}
+
 static void OnBundleFinished(shared_ptr<Session> ctx, ErrCode err, const BundleName name)
 {
     printf("BundleFinished errCode = %d, BundleName = %s\n", err, name.c_str());
@@ -243,6 +249,7 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
                                    .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
                                    .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
                                    .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
+                                   .onResultReport = bind(OnResultReport, ctx, placeholders::_1),
                                    .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init backup\n");

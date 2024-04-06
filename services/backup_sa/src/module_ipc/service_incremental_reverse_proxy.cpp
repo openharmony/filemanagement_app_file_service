@@ -62,6 +62,25 @@ void ServiceReverseProxy::IncrementalBackupOnBundleStarted(int32_t errCode, stri
     }
 }
 
+void ServiceReverseProxy::IncrementalBackupOnResultReport(std::string result)
+{
+    HILOGI("Begin");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(result)) {
+        throw BError(BError::Codes::SA_BROKEN_IPC);
+    };
+
+    MessageParcel reply;
+    MessageOption option;
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_RESULT_REPORT), data,
+        reply, option);
+        err != ERR_OK) {
+        throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
+    }
+}
+
 void ServiceReverseProxy::IncrementalBackupOnBundleFinished(int32_t errCode, string bundleName)
 {
     HILOGI("Begin");
@@ -155,6 +174,25 @@ void ServiceReverseProxy::IncrementalRestoreOnAllBundlesFinished(int32_t errCode
     MessageOption option;
     if (int err = Remote()->SendRequest(
         static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_TASK_FINISHED), data,
+        reply, option);
+        err != ERR_OK) {
+        throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
+    }
+}
+
+void ServiceReverseProxy::IncrementalRestoreOnResultReport(std::string result)
+{
+    HILOGI("Begin");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(result)) {
+        throw BError(BError::Codes::SA_BROKEN_IPC);
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_RESULT_REPORT), data,
         reply, option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));

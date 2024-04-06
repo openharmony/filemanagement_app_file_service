@@ -108,7 +108,7 @@ bool ExtBackup::AllowToBackupRestore()
     string usrConfig = GetUsrConfig();
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
     auto cache = cachedEntity.Structuralize();
-    if (cache.GetAllowToBackupRestore() || WasFromSpeicalVersion() || SpeicalVersionForCloneAndCloud()) {
+    if (cache.GetAllowToBackupRestore() || WasFromSpecialVersion() || SpeicalVersionForCloneAndCloud()) {
         return true;
     }
     return false;
@@ -186,7 +186,7 @@ sptr<IRemoteObject> ExtBackup::OnConnect(const AAFwk::Want &want)
             sptr<BackupExtExtension>(new BackupExtExtension(std::static_pointer_cast<ExtBackup>(shared_from_this())));
 
         // 排除特殊场景
-        if (!WasFromSpeicalVersion()) {
+        if (!WasFromSpecialVersion()) {
             remoteObject->ExtClear();
         }
 
@@ -220,7 +220,7 @@ void ExtBackup::OnDisconnect(const AAFwk::Want &want)
     }
 }
 
-bool ExtBackup::WasFromSpeicalVersion(void)
+bool ExtBackup::WasFromSpecialVersion(void)
 {
     if (appVersionCode_ == BConstants::DEFAULT_VERSION_CODE && appVersionStr_ == BConstants::DEFAULT_VERSION_NAME) {
         return true;
@@ -253,6 +253,12 @@ ErrCode ExtBackup::OnBackup(function<void()> callback)
 ErrCode ExtBackup::OnRestore(std::function<void(const std::string)> callbackEx,
     function<void()> callback)
 {
+    HILOGI("BackupExtensionAbility(base) OnRestore with Ex.");
+    return ERR_OK;
+}
+
+ErrCode ExtBackup::OnRestore(function<void()> callback)
+{
     HILOGI("BackupExtensionAbility(base) OnRestore.");
     return ERR_OK;
 }
@@ -260,6 +266,12 @@ ErrCode ExtBackup::OnRestore(std::function<void(const std::string)> callbackEx,
 ErrCode ExtBackup::GetBackupInfo(function<void(std::string)> callback)
 {
     HILOGI("BackupExtensionAbility(base) GetBackupInfo.");
+    return ERR_OK;
+}
+
+ErrCode ExtBackup::CallExtNotify(std::string result)
+{
+    HILOGI("BackupExtensionAbility(base) CallExtNotify.");
     return ERR_OK;
 }
 

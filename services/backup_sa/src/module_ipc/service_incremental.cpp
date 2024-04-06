@@ -184,7 +184,7 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
     try {
         HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
-
+        HILOGI("Start get ExtConnection, bundleName:%{public}s", fileInfo.owner.c_str());
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
         auto proxy = backUpConnection->GetBackupExtProxy();
         if (!proxy) {
@@ -194,7 +194,6 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
         if (res) {
             HILOGE("Failed to publish file for backup extension");
         }
-
         return res;
     } catch (const BError &e) {
         return e.GetCode();

@@ -72,7 +72,7 @@ ErrCode Service::AppDone(ErrCode errCode)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::ServiceResultReport(const std::string &restoreRetInfo)
+ErrCode Service::ServiceResultReport(const std::string restoreRetInfo, BackupRestoreScenario sennario)
 {
     return BError(BError::Codes::OK);
 }

@@ -68,6 +68,8 @@ constexpr int MAX_PARCELABLE_VECTOR_NUM = 10000;
 constexpr int DEFAULT_VFS_CACHE_PRESSURE = 100; // 默认内存回收参数
 constexpr int BACKUP_VFS_CACHE_PRESSURE = 10000; // 备份过程修改参数
 
+constexpr int32_t INVALID_FD_NUM = -1;
+
 // backup.para内配置项的名称，该配置项值为true时可在不更新hap包的情况下，可以读取包管理元数据配置文件的内容
 static inline std::string BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_KEY = "backup.debug.overrideExtensionConfig";
 
