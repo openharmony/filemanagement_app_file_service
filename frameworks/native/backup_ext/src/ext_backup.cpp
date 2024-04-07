@@ -186,7 +186,7 @@ sptr<IRemoteObject> ExtBackup::OnConnect(const AAFwk::Want &want)
             sptr<BackupExtExtension>(new BackupExtExtension(std::static_pointer_cast<ExtBackup>(shared_from_this())));
 
         // 排除特殊场景
-        if (!WasFromSpecialVersion()) {
+        if (!WasFromSpecialVersion() && !RestoreDataReady()) {
             remoteObject->ExtClear();
         }
 

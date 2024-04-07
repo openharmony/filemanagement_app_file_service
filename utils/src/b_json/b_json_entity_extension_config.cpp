@@ -116,6 +116,16 @@ string BJsonEntityExtensionConfig::GetSupportScene() const
     return obj_["supportScene"].asString();
 }
 
+Json::Value BJsonEntityExtensionConfig::GetExtraInfo() const
+{
+    if (!obj_ || !obj_.isMember("extraInfo") || !obj_["extraInfo"].isObject()) {
+        HILOGI("Failed to init field extraInfo");
+        return Json::Value();
+    }
+    
+    return obj_["extraInfo"];
+}
+
 string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, any option)
 {
     if (!BackupPara().GetBackupDebugOverrideExtensionConfig()) {

@@ -725,7 +725,8 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
         HILOGE("Backup <%{public}s> Extension Process Died", callName.data());
         string versionName = session_->GetBundleVersionName(bundleName);   /* old device app version name */
         uint32_t versionCode = session_->GetBundleVersionCode(bundleName); /* old device app version code */
-        if (versionCode == BConstants::DEFAULT_VERSION_CODE && versionName == BConstants::DEFAULT_VERSION_NAME) {
+        if (versionCode == BConstants::DEFAULT_VERSION_CODE && versionName == BConstants::DEFAULT_VERSION_NAME &&
+            session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_READDY)) {
             ExtConnectDied(bundleName);
             return;
         }
