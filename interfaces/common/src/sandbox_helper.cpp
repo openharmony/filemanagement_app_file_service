@@ -48,9 +48,6 @@ namespace {
     const string LOCAL = "local";
     const int ASSET_IN_BUCKET_NUM_MAX = 1000;
     const int ASSET_DIR_START_NUM = 16;
-    const int32_t DECODE_LEN = 2;
-    string deCodeInPutUri = "";
-    string deCodeOutPutUri = "";
 }
 
 struct MediaUriInfo {
@@ -90,26 +87,23 @@ string SandboxHelper::Encode(const string &uri)
 
 string SandboxHelper::Decode(const string &uri)
 {
-    if (uri == deCodeInPutUri) {
-        return deCodeOutPutUri;
-    }
     std::ostringstream outPutStream;
+    const int32_t encodeLen = 2;
     size_t index = 0;
     while (index < uri.length()) {
         if (uri[index] == '%') {
             int hex = 0;
-            std::istringstream inputStream(uri.substr(index + 1, DECODE_LEN));
+            std::istringstream inputStream(uri.substr(index + 1, encodeLen));
             inputStream >> std::hex >> hex;
             outPutStream << static_cast<char>(hex);
-            index += DECODE_LEN + 1;
+            index += encodeLen + 1;
         } else {
             outPutStream << uri[index];
             index++;
         }
     }
-    deCodeInPutUri = uri;
-    deCodeOutPutUri = outPutStream.str();
-    return deCodeOutPutUri;
+
+    return outPutStream.str();
 }
 
 static string GetLowerPath(string &lowerPathHead, const string &lowerPathTail,
