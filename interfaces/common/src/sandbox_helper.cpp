@@ -418,6 +418,7 @@ bool SandboxHelper::IsValidPath(const std::string &path)
 bool SandboxHelper::CheckValidPath(const std::string &filePath)
 {
     if (filePath.empty() || filePath.size() >= PATH_MAX) {
+        LOGE("filePath is invalid, size = %{public}zu", filePath.size());
         return false;
     }
 
@@ -426,6 +427,8 @@ bool SandboxHelper::CheckValidPath(const std::string &filePath)
         strncmp(realPath, filePath.c_str(), filePath.size()) == 0) {
         return true;
     } else {
+        LOGE("filePath doesn't exist, realPath.size = %{public}zu, filePath.size() = %{public}zu",
+            string_view(realPath).size(), filePath.size());
         return false;
     }
 }
