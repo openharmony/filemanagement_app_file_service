@@ -938,9 +938,7 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
     try {
         HILOGI("Service::GetBackupInfo begin.");
         session_->IncreaseSessionCnt();
-        std::string extName = BundleMgrAdapter::GetExtName(bundleName, session_->GetSessionUserId());
-        session_->CreateBackupConnection(bundleName, extName);
-        auto backupConnection = session_->GetExtConnection(bundleName);
+        auto backupConnection = session_->CreateBackupConnection(bundleName);
         auto callConnDone = [ptr {wptr(this)}](const string &&bundleName) {
             HILOGI("callConnDone begin.");
             auto thisPtr = ptr.promote();
@@ -971,31 +969,17 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
     } catch (...) {
         session_->DecreaseSessionCnt();
         HILOGI("Unexpected exception");
-        return UniqueFd(-EPERM);
+        return EPERM;
     }
 }
 
 AAFwk::Want Service::CreateConnectWant (BundleName &bundleName)
 {
-    IServiceReverse::Scenario scenario = session_->GetScenario();
-    BConstants::ExtensionAction action;
-    if (scenario == IServiceReverse::Scenario::BACKUP) {
-        action = BConstants::ExtensionAction::BACKUP;
-    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-        action = BConstants::ExtensionAction::RESTORE;
-    } else {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Failed to scenario");
-    }
+    BConstants::ExtensionAction action = BConstants::ExtensionAction::BACKUP;
     AAFwk::Want want;
-    string backupExtName = session_->GetBackupExtName(bundleName); /* new device app ext name */
-    string versionName = session_->GetBundleVersionName(bundleName);          /* old device app version name */
-    uint32_t versionCode = session_->GetBundleVersionCode(bundleName);        /* old device app version code */
-    RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
+    string backupExtName = BundleMgrAdapter::GetExtName(bundleName, session_->GetSessionUserId());
     want.SetElementName(bundleName, backupExtName);
     want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
-    want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<int>(versionCode));
-    want.SetParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, static_cast<int>(restoreType));
-    want.SetParam(BConstants::EXTENSION_VERSION_NAME_PARA, versionName);
     return want;
 }
 } // namespace OHOS::FileManagement::Backup
