@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -100,9 +100,8 @@ private:
      *
      * @param info 文件属性结构体
      * @param typeFlag 文件类型标志
-     * @param isSkip 是否跳过当前文件
      */
-    void ParseRegularFile(FileStatInfo &info, char typeFlag, bool &isSkip);
+    void ParseRegularFile(FileStatInfo &info, char typeFlag);
 
     /**
      * @brief handle tar buffer
@@ -117,27 +116,17 @@ private:
      * @brief parse file by typeFlag
      *
      * @param typeFlag 文件类型标志
-     * @param isSkip 是否跳过当前文件
      * @param info 文件属性结构体
      */
-    void ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &info);
+    void ParseFileByTypeFlag(char typeFlag, FileStatInfo &info);
 
     /**
      * @brief parse incremental file by typeFlag
      *
      * @param typeFlag 文件类型标志
-     * @param isSkip 是否跳过当前文件
      * @param info 文件属性结构体
      */
-    int ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &info);
-
-    /**
-     * @brief Handle file ownership groups
-     *
-     * @param isSkip 是否跳过当前文件
-     * @param info 文件属性结构体
-     */
-    int HandleFileProperties(bool &isSkip, FileStatInfo &info);
+    int ParseIncrementalFileByTypeFlag(char typeFlag, FileStatInfo &info);
 
 private:
     std::string rootPath_ {};
