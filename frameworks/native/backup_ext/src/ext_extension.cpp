@@ -1592,7 +1592,7 @@ ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
         return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
     }
-    HILOGD("GetBackupInfo lby, backupInfo = %s", backupInfo_.c_str());
+    HILOGD("backupInfo = %s", backupInfo_.c_str());
     result = backupInfo_;
     backupInfo_.clear();
 
