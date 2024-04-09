@@ -950,14 +950,19 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
         };
         backupConnection->SetCallback(callConnDone);
         AAFwk::Want want = CreateConnectWant(bundleName);
-        backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
+        auto ret = backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
+        if (ret) {
+            HILOGE("ConnectBackupExtAbility faild, please check bundleName: %{public}s", bundleName.c_str());
+            return BError(BError::Codes::OK);
+        }
         std::unique_lock<std::mutex> lock(getBackupInfoMutx_);
         getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
         auto proxy = backupConnection->GetBackupExtProxy();
         if (!proxy) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+            HILOGE("Extension backup Proxy is empty.");
+            return BError(BError::Codes::SA_INVAL_ARG);
         }
-        auto ret = proxy->GetBackupInfo(result);
+        ret = proxy->GetBackupInfo(result);
         backupConnection->DisconnectBackupExtAbility();
         if (ret != ERR_OK) {
             HILOGE("Call Ext GetBackupInfo faild.");
