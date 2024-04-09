@@ -21,7 +21,6 @@
 
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_json/b_json_entity_caps.h"
-#include "b_resources/b_constants.h"
 #include "i_service_reverse.h"
 #include "iremote_stub.h"
 #include "module_sched/sched_scheduler.h"

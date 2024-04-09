@@ -28,7 +28,7 @@ using namespace std;
 UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGD("Start");
+    HILOGI("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     data.WriteInterfaceToken(GetDescriptor());

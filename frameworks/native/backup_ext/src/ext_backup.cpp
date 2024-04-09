@@ -250,8 +250,8 @@ ErrCode ExtBackup::OnBackup(function<void()> callback)
     return ERR_OK;
 }
 
-ErrCode ExtBackup::OnRestore(std::function<void(const std::string)> callbackEx,
-    function<void()> callback)
+ErrCode ExtBackup::OnRestore(function<void()> callback, std::function<void(const std::string)> callbackEx,
+    std::function<void()> callbackExAppDone)
 {
     HILOGI("BackupExtensionAbility(base) OnRestore with Ex.");
     return ERR_OK;
@@ -269,9 +269,9 @@ ErrCode ExtBackup::GetBackupInfo(function<void(std::string)> callback)
     return ERR_OK;
 }
 
-ErrCode ExtBackup::CallExtNotify(std::string result)
+ErrCode ExtBackup::CallExtRestore(std::string result)
 {
-    HILOGI("BackupExtensionAbility(base) CallExtNotify.");
+    HILOGI("BackupExtensionAbility(base) CallExtRestore.");
     return ERR_OK;
 }
 

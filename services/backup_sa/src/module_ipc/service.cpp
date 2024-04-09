@@ -424,29 +424,18 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
         session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
         session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
-        if (bundleNameDetailMap.empty()) {
-            continue;
-        }
-        NotifyBundleInfos(bundleNameDetailMap, restoreInfo, restoreType);
-    }
-    HILOGI("End");
-}
-
-void Service::NotifyBundleInfos(std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap,
-    BJsonEntityCaps::BundleInfo restoreInfo, RestoreTypeEnum restoreType)
-{
-    if (restoreType == TypeRestoreTypeEnum::RESTORE_DATA_READDY ||
-        SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) {
         auto iter = bundleNameDetailMap.find(restoreInfo.name);
         if (iter != bundleNameDetailMap.end()) {
             BJsonUtil::BundleDetailInfo bundleDetailInfo = iter->second;
             if (bundleDetailInfo.type == COMMON_EVENT_TYPE) {
-                DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(bundleDetailInfo);
+                bool notifyRet = 
+                    DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(bundleDetailInfo);
+                HILOGI("Publish event end, notify result is:%{public}d", notifyRet);
             }
         }
     }
+    HILOGI("End");
 }
-
 
 ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
@@ -498,7 +487,7 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGD("Begin");
+        HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
 
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);

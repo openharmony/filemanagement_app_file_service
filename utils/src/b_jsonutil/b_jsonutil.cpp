@@ -76,10 +76,8 @@ std::map<std::string, BJsonUtil::BundleDetailInfo> BJsonUtil::BuildBundleInfos(
             bundleDetailInfo.bundleIndex = index;
             bundleNamesOnly.emplace_back(bundleNameSplit);
         }
-        if (i < bundleInfos.size()) {
-            std::string bundleInfo = bundleInfos[i];
-            ParseBundleInfoJson(bundleInfo, bundleDetailInfo);
-        }
+        std::string bundleInfo = bundleInfos[i];
+        ParseBundleInfoJson(bundleInfo, bundleDetailInfo);
         bundleDetailInfos.emplace_back(bundleDetailInfo);
         bundleNameDetailMap[bundleDetailInfo.bundleName] = bundleDetailInfo;
     }

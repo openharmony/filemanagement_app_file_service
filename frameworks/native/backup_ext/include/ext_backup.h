@@ -130,8 +130,8 @@ public:
     /**
      * @brief Called do restore.
      */
-    virtual ErrCode OnRestore(std::function<void(const std::string)> callbackEx,
-        std::function<void()> callback);
+    virtual ErrCode OnRestore(std::function<void()> callback, std::function<void(const std::string)> callbackEx,
+        std::function<void()> callbackExAppDone);
 
     /**
      * @brief Called do restore.
@@ -168,9 +168,9 @@ public:
     bool RestoreDataReady();
 
     /**
-     * @brief Called Notification containing extended information
+     * @brief Called Extention to notify
      */
-    virtual ErrCode CallExtNotify(std::string result);
+    virtual ErrCode CallExtRestore(std::string result);
 
 public:
     ExtBackup() = default;

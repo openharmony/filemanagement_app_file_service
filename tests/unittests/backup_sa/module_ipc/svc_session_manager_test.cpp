@@ -1257,6 +1257,50 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBunleFileReady_0200, tes
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_OnBunleFileReady_0200";
 }
+
+/**
+ * @tc.number: SUB_backup_sa_session_SetSessionUserId_0100
+ * @tc.name: SUB_backup_sa_session_SetSessionUserId_0100
+ * @tc.desc: 测试 SetSessionUserId
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetSessionUserId_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_backup_sa_session_SetSessionUserId_0100";
+    try {
+        int32_t userId = 1;
+        sessionManagerPtr_->SetSessionUserId(userId);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetSessionUserId.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_backup_sa_session_SetSessionUserId_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetSessionUserId_0100
+ * @tc.name: SUB_backup_sa_session_GetSessionUserId_0100
+ * @tc.desc: 测试 GetSessionUserId
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSessionUserId_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_backup_sa_session_GetSessionUserId_0100";
+    try {
+        sessionManagerPtr_->GetSessionUserId();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetSessionUserId.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_backup_sa_session_GetSessionUserId_0100";
+}
+
 /**
  * @tc.number: SUB_backup_sa_session_GetBundleRestoreType_0100
  * @tc.name: SUB_backup_sa_session_GetBundleRestoreType_0100
@@ -1517,7 +1561,6 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_IsOnOnStartSched_0102, tes
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_IsOnOnStartSched_0102";
 }
 
-
 /**
  * @tc.number: SUB_backup_sa_session_SetBundleDataSize_0100
  * @tc.name: SUB_backup_sa_session_SetBundleDataSize_0100
@@ -1560,48 +1603,5 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleDataSize_0101, te
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetBundleDataSize.";
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetBundleDataSize_0101";
-}
-
-/**
- * @tc.number: SUB_backup_sa_session_SetSessionUserId_0100
- * @tc.name: SUB_backup_sa_session_SetSessionUserId_0100
- * @tc.desc: 测试 SetSessionUserId
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I8ZIMJ
- */
-HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetSessionUserId_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_backup_sa_session_SetSessionUserId_0100";
-    try {
-        int32_t userId = 1;
-        sessionManagerPtr_->SetSessionUserId(userId);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetSessionUserId.";
-    }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_backup_sa_session_SetSessionUserId_0100";
-}
-
-/**
- * @tc.number: SUB_backup_sa_session_GetSessionUserId_0100
- * @tc.name: SUB_backup_sa_session_GetSessionUserId_0100
- * @tc.desc: 测试 GetSessionUserId
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I8ZIMJ
- */
-HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSessionUserId_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_backup_sa_session_GetSessionUserId_0100";
-    try {
-        sessionManagerPtr_->GetSessionUserId();
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetSessionUserId.";
-    }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_backup_sa_session_GetSessionUserId_0100";
 }
 } // namespace OHOS::FileManagement::Backup
