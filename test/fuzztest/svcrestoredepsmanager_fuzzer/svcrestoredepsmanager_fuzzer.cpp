@@ -96,6 +96,11 @@ bool SvcRestoreDepsManagerFuzzTest(const uint8_t *data, size_t size)
     SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(fileName, bundleName);
     SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
 
+    SvcRestoreDepsManager::GetInstance().depsMap_.clear();
+    SvcRestoreDepsManager::GetInstance().allBundles_.clear();
+    SvcRestoreDepsManager::GetInstance().toRestoreBundleMap_.clear();
+    SvcRestoreDepsManager::GetInstance().restoredBundles_.clear();
+
     return true;
 }
 } // namespace OHOS
