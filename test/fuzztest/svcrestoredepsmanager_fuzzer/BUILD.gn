@@ -46,6 +46,7 @@ ohos_fuzztest("SvcRestoreDepsManagerFuzzTest") {
   defines = [
     "LOG_TAG=\"app_file_service\"",
     "LOG_DOMAIN=0xD200000",
+    "private=public",
   ]
 
   use_exceptions = true

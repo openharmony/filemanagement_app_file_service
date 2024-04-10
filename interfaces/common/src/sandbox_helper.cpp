@@ -417,14 +417,18 @@ bool SandboxHelper::CheckValidPath(const std::string &filePath)
     }
 
     char realPath[PATH_MAX]{'\0'};
-    if (realpath(filePath.c_str(), realPath) != nullptr &&
-        strncmp(realPath, filePath.c_str(), filePath.size()) == 0) {
-        return true;
-    } else {
-        LOGE("filePath doesn't exist, realPath.size = %{public}zu, filePath.size() = %{public}zu",
+    if (realpath(filePath.c_str(), realPath) == nullptr) {
+        LOGE("realpath failed with %{public}d", errno);
+        return false;
+    }
+
+    if (strncmp(realPath, filePath.c_str(), filePath.size()) != 0) {
+        LOGE("filePath is not equal to realPath, realPath.size = %{public}zu, filePath.size() = %{public}zu",
             string_view(realPath).size(), filePath.size());
         return false;
     }
+
+    return true;
 }
 } // namespace AppFileService
 } // namespace OHOS
