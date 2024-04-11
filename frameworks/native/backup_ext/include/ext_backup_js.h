@@ -58,9 +58,21 @@ struct CallbackInfo {
     CallbackInfo(std::function<void()> callbackIn) : callback(callbackIn) {}
 };
 
+struct CallbackInfoBackup {
+    std::function<void(const std::string)> callbackParam;
+    CallbackInfoBackup(std::function<void(const std::string)> param)
+        : callbackParam(param)
+    {
+    }
+};
+
 struct CallbackInfoEx {
     std::function<void(const std::string)> callbackParam;
-    CallbackInfoEx(std::function<void(const std::string)> callbackIn) : callbackParam(callbackIn) {}
+    std::function<void()> callbackAppDone;
+    CallbackInfoEx(std::function<void(const std::string)> param, std::function<void()> appDone) 
+        : callbackParam(param), callbackAppDone(appDone)
+    {
+    }
 };
 
 class ExtBackupJs : public ExtBackup {
@@ -100,8 +112,8 @@ public:
      * @param callbackEx The callbackEx.
      * @param callback The callBack.
      */
-    ErrCode OnRestore(std::function<void(const std::string)> callbackEx,
-        std::function<void()> callback) override;
+    ErrCode OnRestore(std::function<void()> callback,std::function<void(const std::string)> callbackEx,
+        std::function<void()> callbackExAppDone) override;
 
     /**
      * @brief Call the app's OnRestore.
@@ -121,7 +133,7 @@ public:
      *
      * @param result The result.
     */
-    ErrCode CallExtNotify(std::string result) override;
+    ErrCode CallExtRestore(std::string result) override;
 
 public:
     explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
@@ -147,6 +159,7 @@ private:
 
     AbilityRuntime::JsRuntime &jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
+    std::shared_ptr<CallbackInfoBackup> callbackInfoBackup_;
     std::shared_ptr<CallbackInfoEx> callbackInfoEx_;
     std::shared_ptr<CallbackInfo> callbackInfo_;
     std::condition_variable callJsCon_;

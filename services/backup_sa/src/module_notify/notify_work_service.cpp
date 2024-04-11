@@ -42,8 +42,7 @@ bool NotifyWorkService::NotifyBundleDetail(BJsonUtil::BundleDetailInfo bundleDet
     want.SetParam("detail", bundleDetailInfo.detail);
     want.SetAction(EVENT_NAME);
     EventFwk::CommonEventData commonData {want};
-    bool publishRet = EventFwk::CommonEventManager::PublishCommonEvent(commonData);
     HILOGI("End publish event, bundleName is: %{public}s", bundleName.c_str());
-    return publishRet;
+    return EventFwk::CommonEventManager::PublishCommonEvent(commonData);
 }
 }

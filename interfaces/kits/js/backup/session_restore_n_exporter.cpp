@@ -371,11 +371,11 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
 napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_info cbinfo)
 {
     HILOGI("called SessionRestore::AppendBundles begin");
-    int32_t fd = BConstants::INVALID_FD_NUM;
+    int32_t fd_restore = BConstants::INVALID_FD_NUM;
     std::vector<std::string> bundleNames;
     std::vector<std::string> bundleInfos;
     NFuncArg funcArg(env, cbinfo);
-    if (!VerifyParamSuccess(funcArg, fd, bundleNames, bundleInfos, env)) {
+    if (!VerifyParamSuccess(funcArg, fd_restore, bundleNames, bundleInfos, env)) {
         return nullptr;
     }
     auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
@@ -384,7 +384,7 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-    auto cbExec = [entity {restoreEntity}, fd {fd}, bundles {bundleNames}, infos {bundleInfos}]() -> NError {
+    auto cbExec = [entity {restoreEntity}, fd {fd_restore}, bundles {bundleNames}, infos {bundleInfos}]() -> NError {
         if (!(entity && (entity->sessionWhole || entity->sessionSheet))) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
         }

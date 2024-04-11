@@ -51,10 +51,7 @@
                 "bounds_checking_function"
             ]
         },
-        "adapted_system_type": [
-            "small",
-            "standard"
-        ],
+        "adapted_system_type": [ "small", "standard"],
         "rom": "1024KB",
         "ram": "1024KB",
         "build": {

@@ -86,6 +86,7 @@ public:
         EXT_ABILITY_TIMEOUT = 0x5005,
         EXT_FORBID_BACKUP_RESTORE = 0x5006,
         EXT_BACKUP_PACKET_ERROR = 0x5007,
+        EXT_METHOD_NOT_EXIST = 0x5008,
     };
 
     enum BackupErrorCode {
