@@ -56,6 +56,7 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
         HILOGE("Invalid parameter");
         return false;
     }
+    HILOGI("Start Packet files, tarFileName is:%{public}s", tarFileName.c_str());
     ioBuffer_.resize(READ_BUFF_SIZE);
     baseTarName_ = tarFileName;
     packagePath_ = pkPath;
@@ -63,6 +64,7 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
         packagePath_ = packagePath_.substr(0, packagePath_.length() - 1);
     }
 
+    HILOGI("Start Create  SplitTar files");
     CreateSplitTarFile();
 
     size_t index = 0;
@@ -78,7 +80,7 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
             index = 0;
         }
     }
-
+    HILOGI("Start Fill SplitTailBlocks");
     FillSplitTailBlocks();
 
     tarMap = tarMap_;
@@ -87,7 +89,7 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
         fclose(currentTarFile_);
         currentTarFile_ = nullptr;
     }
-
+    HILOGI("End Packet files, pkPath is:%{public}s", pkPath.c_str());
     return true;
 }
 
@@ -305,7 +307,7 @@ bool TarFile::FillSplitTailBlocks()
     if (currentTarFile_ == nullptr) {
         throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "FillSplitTailBlocks currentTarFile_ is null");
     }
-    
+
     // write tar file tail
     const int END_BLOCK_SIZE = 1024;
     vector<uint8_t> buff {};

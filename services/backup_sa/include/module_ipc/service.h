@@ -225,13 +225,10 @@ private:
     /**
      * @brief 通知权限模块
      *
-     * @param bundleNameDetailMap bundle和detail的对应关系
-     * @param restoreInfo 待恢复的应用
-     * @param restoreType 任务类型
+     * @param bundleName 包名称
      *
     */
-    void NotifyBundleInfos(std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap,
-        BJsonEntityCaps::BundleInfo restoreInfo, RestoreTypeEnum restoreType);
+    void NotifyCloneBundleFinish(std::string bundleName);
 
 private:
     static sptr<Service> instance_;

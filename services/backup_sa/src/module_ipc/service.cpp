@@ -428,7 +428,7 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         if (iter != bundleNameDetailMap.end()) {
             BJsonUtil::BundleDetailInfo bundleDetailInfo = iter->second;
             if (bundleDetailInfo.type == COMMON_EVENT_TYPE) {
-                bool notifyRet = 
+                bool notifyRet =
                     DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(bundleDetailInfo);
                 HILOGI("Publish event end, notify result is:%{public}d", notifyRet);
             }
@@ -600,10 +600,13 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo, BackupRes
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
+        string callerName = VerifyCallerAndGetCallerName();
         if (sennario == BackupRestoreScenario::FULL_RESTORE) {
-            session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo);
+            session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, callerName);
+            NotifyCloneBundleFinish(callerName);
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
-            session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo);
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, callerName);
+            NotifyCloneBundleFinish(callerName);
         } else if (sennario == BackupRestoreScenario::FULL_BACKUP) {
             session_->GetServiceReverseProxy()->BackupOnResultReport(restoreRetInfo);
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
@@ -620,6 +623,22 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo, BackupRes
         HILOGI("Unexpected exception");
         return EPERM;
     }
+}
+
+void Service::NotifyCloneBundleFinish(std::string bundleName)
+{
+    if (session_->OnBunleFileReady(bundleName)) {
+        auto backUpConnection = session_->GetExtConnection(bundleName);
+        auto proxy = backUpConnection->GetBackupExtProxy();
+        if (!proxy) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+        }
+        proxy->HandleClear();
+        session_->BundleExtTimerStop(bundleName);
+        backUpConnection->DisconnectBackupExtAbility();
+        ClearSessionAndSchedInfo(bundleName);
+    }
+    OnAllBundlesFinished(BError(BError::Codes::OK));
 }
 
 ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
@@ -770,7 +789,7 @@ void Service::ExtStart(const string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGE("begin %{public}s", bundleName.data());
+        HILOGE("begin ExtStart, bundle name:%{public}s", bundleName.data());
         if (IncrementalBackup(bundleName)) {
             return;
         }
