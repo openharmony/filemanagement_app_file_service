@@ -349,6 +349,7 @@ bool Service::IncrementalBackup(const string &bundleName)
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
         if (ret) {
             ClearSessionAndSchedInfo(bundleName);
+            NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
         }
         return true;
     } else if (scenario == IServiceReverse::Scenario::RESTORE && BackupPara().GetBackupOverrideIncrementalRestore() &&
