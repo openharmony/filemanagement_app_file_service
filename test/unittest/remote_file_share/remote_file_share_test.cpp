@@ -20,6 +20,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string>
+#include <vector>
+#include <unordered_map>
 
 #include "remote_file_share.h"
 
@@ -225,6 +227,13 @@ namespace {
         HmdfsUriInfo hui;
         int ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
         EXPECT_EQ(ret, -EINVAL);
+
+        vector<string> uriList;
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+        uriList.push_back(uriStr);
+        ret = RemoteFileShare::GetDfsUrisFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, -EINVAL);
+
         GTEST_LOG_(INFO) << "RemoteFileShareTest uri is " << hui.uriStr;
         GTEST_LOG_(INFO) << "RemoteFileShareTest file size is " << hui.fileSize;
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0006";
@@ -246,6 +255,13 @@ namespace {
         HmdfsUriInfo hui;
         int ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
         EXPECT_EQ(ret, -EINVAL);
+
+        vector<string> uriList;
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+        uriList.push_back(uriStr);
+        ret = RemoteFileShare::GetDfsUrisFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, -EINVAL);
+
         GTEST_LOG_(INFO) << "RemoteFileShareTest uri is " << hui.uriStr;
         GTEST_LOG_(INFO) << "RemoteFileShareTest file size is " << hui.fileSize;
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0007";
@@ -267,6 +283,13 @@ namespace {
         HmdfsUriInfo hui;
         int ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
         EXPECT_EQ(ret, -EINVAL);
+
+        vector<string> uriList;
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+        uriList.push_back(uriStr);
+        ret = RemoteFileShare::GetDfsUrisFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, -EINVAL);
+
         GTEST_LOG_(INFO) << "RemoteFileShareTest uri is " << hui.uriStr;
         GTEST_LOG_(INFO) << "RemoteFileShareTest file size is " << hui.fileSize;
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0008";
@@ -288,6 +311,13 @@ namespace {
         HmdfsUriInfo hui;
         int ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
         EXPECT_EQ(ret, -EINVAL);
+
+        vector<string> uriList;
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+        uriList.push_back(uriStr);
+        ret = RemoteFileShare::GetDfsUrisFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, -EINVAL);
+
         GTEST_LOG_(INFO) << "RemoteFileShareTest uri is " << hui.uriStr;
         GTEST_LOG_(INFO) << "RemoteFileShareTest file size is " << hui.fileSize;
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0009";
@@ -309,6 +339,13 @@ namespace {
         HmdfsUriInfo hui;
         int ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
         EXPECT_NE(ret, E_OK);
+
+        vector<string> uriList;
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+        uriList.push_back(uriStr);
+        ret = RemoteFileShare::GetDfsUrisFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_NE(ret, E_OK);
+
         GTEST_LOG_(INFO) << "RemoteFileShareTest uri is " << hui.uriStr;
         GTEST_LOG_(INFO) << "RemoteFileShareTest file size is " << hui.fileSize;
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0010";
@@ -342,12 +379,18 @@ namespace {
         HmdfsUriInfo hui;
         ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
         EXPECT_EQ(ret, E_OK);
-
         ret = unlink(fileStr.c_str());
         ASSERT_TRUE(ret != -1) << "RemoteFileShareTest delete file failed! " << errno;
 
         ret = rmdir(dirPath.c_str());
         ASSERT_TRUE(ret != -1) << "RemoteFileShareTest rmdir failed! " << errno;
+
+        vector<string> uriList;
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+        uriList.push_back(uriStr);
+        ret = RemoteFileShare::GetDfsUrisFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_NE(ret, E_OK);
+
         GTEST_LOG_(INFO) << "RemoteFileShareTest uri is " << hui.uriStr;
         GTEST_LOG_(INFO) << "RemoteFileShareTest file size is " << hui.fileSize;
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0011";

@@ -326,10 +326,9 @@ static std::string GetLocalNetworkId()
     return networkId;
 }
 
-static void SetHmdfsUriInfo(struct HmdfsUriInfo &hui, Uri &uri, uint64_t fileSize)
+static void SetHmdfsUriInfo(struct HmdfsUriInfo &hui, Uri &uri, uint64_t fileSize, const std::string &networkId)
 {
     std::string bundleName = uri.GetAuthority();
-    std::string networkId = NETWORK_PARA + GetLocalNetworkId();
 
     hui.uriStr = FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH + REMOTE_SHARE_PATH_DIR +
                  uri.GetPath() + networkId;
@@ -339,9 +338,9 @@ static void SetHmdfsUriInfo(struct HmdfsUriInfo &hui, Uri &uri, uint64_t fileSiz
 }
 
 static int32_t SetPublicDirHmdfsInfo(const std::string &physicalPath, const std::string &uriStr,
-                                     struct HmdfsUriInfo &hui)
+                                     struct HmdfsUriInfo &hui, const std::string &networkId)
 {
-    hui.uriStr = uriStr + NETWORK_PARA + GetLocalNetworkId();
+    hui.uriStr = uriStr + networkId;
     struct stat buf = {};
     if (stat(physicalPath.c_str(), &buf) != 0) {
         LOGE("Failed to get physical path stat with %{public}d", -errno);
@@ -362,9 +361,9 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
         LOGE("Failed to get physical path");
         return -EINVAL;
     }
-
+    std::string networkId = NETWORK_PARA + GetLocalNetworkId();
     if (bundleName == MEDIA_AUTHORITY || bundleName == FILE_MANAGER_AUTHORITY) {
-        (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, hui);
+        (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, hui, networkId);
         LOGD("GetDfsUriFromLocal successfully");
         return 0;
     }
@@ -394,7 +393,62 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
     }
 
     close(dirFd);
-    SetHmdfsUriInfo(hui, uri, hdi.size);
+    SetHmdfsUriInfo(hui, uri, hdi.size, networkId);
+    LOGD("GetDfsUriFromLocal successfully");
+    return 0;
+}
+
+int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uriList,
+                                             const int32_t &userId,
+                                             std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
+{
+    std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + SHAER_PATH_MID;
+    int32_t dirFd = open(ioctlDir.c_str(), O_RDONLY);
+    if (dirFd < 0) {
+        LOGE("Open share path failed with %{public}d", errno);
+        return errno;
+    }
+    std::string networkId = NETWORK_PARA + GetLocalNetworkId();
+    for (auto &uriStr : uriList) {
+        Uri uri(uriStr);
+        std::string bundleName = uri.GetAuthority();
+        LOGD("GetDfsUriFromLocal begin");
+        std::string physicalPath = GetPhysicalPath(uri, std::to_string(userId));
+        if (physicalPath == "") {
+            LOGE("Failed to get physical path");
+            close(dirFd);
+            return -EINVAL;
+        }
+
+        if (bundleName == MEDIA_AUTHORITY || bundleName == FILE_MANAGER_AUTHORITY) {
+            HmdfsUriInfo dfsUriInfo;
+            (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, dfsUriInfo, networkId);
+            uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
+            LOGD("GetDfsUriFromLocal successfully");
+            continue;
+        }
+
+        std::string distributedPath;
+        int ret = GetDistributedPath(uri, userId, distributedPath);
+        if (ret != 0) {
+            LOGE("Path is too long with %{public}d", ret);
+            close(dirFd);
+            return ret;
+        }
+
+        struct HmdfsDstInfo hdi;
+        InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
+        ret = ioctl(dirFd, HMDFS_IOC_GET_DST_PATH, &hdi);
+        if (ret != 0) {
+            LOGE("Ioctl failed with %{public}d", errno);
+            close(dirFd);
+            return -errno;
+        }
+        HmdfsUriInfo dfsUriInfo;
+        SetHmdfsUriInfo(dfsUriInfo, uri, hdi.size, networkId);
+        uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
+    }
+    close(dirFd);
     LOGD("GetDfsUriFromLocal successfully");
     return 0;
 }
