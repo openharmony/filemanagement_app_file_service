@@ -167,7 +167,6 @@ int UntarFile::ParseTarFile(const string &rootPath)
     // re-parse tar header
     rootPath_ = rootPath;
     char buff[BLOCK_SIZE] = {0};
-    bool isSkip = false;
     FileStatInfo info {};
 
     // tarFileSize
@@ -203,11 +202,7 @@ int UntarFile::ParseTarFile(const string &rootPath)
             return ret;
         }
         HandleTarBuffer(string(buff, BLOCK_SIZE), header->name, info);
-        ParseFileByTypeFlag(header->typeFlag, isSkip, info);
-        ret = HandleFileProperties(isSkip, info);
-        if (ret != 0) {
-            HILOGE("Failed to handle file property");
-        }
+        ParseFileByTypeFlag(header->typeFlag, info);
     }
 
     return ret;
@@ -218,7 +213,6 @@ int UntarFile::ParseIncrementalTarFile(const string &rootPath)
     // re-parse tar header
     rootPath_ = rootPath;
     char buff[BLOCK_SIZE] = {0};
-    bool isSkip = false;
     FileStatInfo info {};
 
     // tarFileSize
@@ -260,52 +254,43 @@ int UntarFile::ParseIncrementalTarFile(const string &rootPath)
             return ret;
         }
         HandleTarBuffer(string(buff, BLOCK_SIZE), header->name, info);
-        if ((ret = ParseIncrementalFileByTypeFlag(header->typeFlag, isSkip, info)) != 0) {
+        if ((ret = ParseIncrementalFileByTypeFlag(header->typeFlag, info)) != 0) {
             HILOGE("Failed to parse incremental file by type flag");
             return ret;
-        }
-        ret = HandleFileProperties(isSkip, info);
-        if (ret != 0) {
-            HILOGE("Failed to handle file property");
         }
     } while (readCnt_ >= BLOCK_SIZE);
 
     return ret;
 }
 
-void UntarFile::ParseFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &info)
+void UntarFile::ParseFileByTypeFlag(char typeFlag, FileStatInfo &info)
 {
     HILOGI("untar file: %{public}s, rootPath: %{public}s", info.fullPath.c_str(), rootPath_.c_str());
     switch (typeFlag) {
         case REGTYPE:
         case AREGTYPE:
             info.fullPath = GenRealPath(rootPath_, info.fullPath);
-            ParseRegularFile(info, typeFlag, isSkip);
+            ParseRegularFile(info, typeFlag);
             break;
         case SYMTYPE:
-            isSkip = false;
             break;
         case DIRTYPE:
             info.fullPath = GenRealPath(rootPath_, info.fullPath);
             CreateDir(info.fullPath, info.mode);
-            isSkip = false;
             break;
         case GNUTYPE_LONGNAME: {
             ReadLongName(info, tarFilePtr_, tarFileSize_);
-            isSkip = true;
             fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET);
             break;
         }
         default: {
-            // Ignoring, skip
-            isSkip = true;
             fseeko(tarFilePtr_, tarFileBlockCnt_ * BLOCK_SIZE, SEEK_CUR);
             break;
         }
     }
 }
 
-int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileStatInfo &info)
+int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, FileStatInfo &info)
 {
     HILOGI("untar file: %{public}s, rootPath: %{public}s", info.fullPath.c_str(), rootPath_.c_str());
     string tmpFullPath = info.fullPath;
@@ -314,7 +299,6 @@ int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileS
         case REGTYPE:
         case AREGTYPE:
             if (!includes_.empty() && includes_.find(tmpFullPath) == includes_.end()) { // not in includes
-                isSkip = true;
                 if (fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET) != 0) {
                     HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
                     return -1;
@@ -322,22 +306,19 @@ int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileS
                 break;
             }
             info.fullPath = GenRealPath(rootPath_, info.fullPath);
-            ParseRegularFile(info, typeFlag, isSkip);
+            ParseRegularFile(info, typeFlag);
             break;
         case SYMTYPE:
-            isSkip = false;
             break;
         case DIRTYPE:
             info.fullPath = GenRealPath(rootPath_, info.fullPath);
             CreateDir(info.fullPath, info.mode);
-            isSkip = false;
             break;
         case GNUTYPE_LONGNAME: {
             int ret = ReadLongName(info, tarFilePtr_, tarFileSize_);
             if (ret != 0) {
                 return ret;
             }
-            isSkip = true;
             if (fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET) != 0) {
                 HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
                 return -1;
@@ -345,8 +326,6 @@ int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileS
             break;
         }
         default: {
-            // Ignoring, skip
-            isSkip = true;
             if (fseeko(tarFilePtr_, tarFileBlockCnt_ * BLOCK_SIZE, SEEK_CUR) != 0) {
                 HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
                 return -1;
@@ -358,7 +337,7 @@ int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, bool &isSkip, FileS
     return 0;
 }
 
-void UntarFile::ParseRegularFile(FileStatInfo &info, char typeFlag, bool &isSkip)
+void UntarFile::ParseRegularFile(FileStatInfo &info, char typeFlag)
 {
     FILE *destFile = CreateFile(info.fullPath, info.mode, typeFlag);
     if (destFile != nullptr) {
@@ -394,21 +373,6 @@ void UntarFile::ParseRegularFile(FileStatInfo &info, char typeFlag, bool &isSkip
         HILOGE("Failed to create file %{public}s, err = %{public}d", info.fullPath.c_str(), errno);
         fseeko(tarFilePtr_, tarFileBlockCnt_ * BLOCK_SIZE, SEEK_CUR);
     }
-    isSkip = false;
-}
-
-int UntarFile::HandleFileProperties(bool &isSkip, FileStatInfo &info)
-{
-    if (isSkip) {
-        isSkip = false;
-        return 0;
-    }
-    int ret = lchown(info.fullPath.c_str(), info.uid, info.gid);
-    if (ret != 0) {
-        HILOGE("Failed to lchown %{public}s, err = %{public}d", info.fullPath.c_str(), errno);
-    }
-
-    return ret;
 }
 
 bool UntarFile::VerifyChecksum(TarHeader &header)
