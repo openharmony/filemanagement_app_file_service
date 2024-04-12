@@ -682,7 +682,7 @@ void Service::ExtStart(const string &bundleName)
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
             if (ret) {
                 ClearSessionAndSchedInfo(bundleName);
-                NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
+                NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
             }
             return;
         }
@@ -748,7 +748,7 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
                    bundleName.c_str());
         }
         ClearSessionAndSchedInfo(bundleName);
-        NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
+        NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         return;
     } catch (const BError &e) {
         return;
