@@ -46,6 +46,9 @@ static vector<string> SplitStringByChar(const string &str, const char &sep)
 {
     vector<string> splits;
     string newStr = str;
+    if (str.empty() ||  str.size() < 1) {
+        return splits;
+    }
     if (str.rfind(sep) == str.size() - 1) {
         newStr += sep;
     }
@@ -69,7 +72,7 @@ static ErrCode ParseReportInfo(struct ReportFileInfo &fileStat,
     vector<string> residue;
     try {
         for (int i = 0; i < splitsLen; i++) {
-            if (i <= splitsLen - keys.size()) {
+            if (i <= static_cast<unsigned int>(splitsLen) - keys.size()) {
                 path += splits[i] + ";";
             } else {
                 residue.emplace_back(splits[i]);
