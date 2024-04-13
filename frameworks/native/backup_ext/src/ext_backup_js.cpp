@@ -439,6 +439,7 @@ ErrCode ExtBackupJs::CallJSRestoreEx(napi_env env, napi_value val)
     }
     if (!needCallOnRestore_.load()) {
         if (callbackInfoEx_) {
+            HILOGI("Will call app done");
             callbackInfoEx_->callbackAppDone();
         }
         HILOGI("Call Js method onRestoreEx done");

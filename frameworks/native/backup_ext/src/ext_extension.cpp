@@ -210,7 +210,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
             HILOGE("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
-
+        HILOGI("extension: Start GetIncrementalFileHandle");
         VerifyCaller();
 
         if (extension_->SpeicalVersionForCloneAndCloud()) {
@@ -234,6 +234,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         }
 
         // 对应的简报文件
+        HILOGI("extension: Start parse report files");
         string reportName = GetReportFileName(tarName);
         if (access(reportName.c_str(), F_OK) == 0) {
             throw BError(BError::Codes::EXT_INVAL_ARG, string("The report file already exists"));
@@ -243,7 +244,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
             HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
             throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
         }
-
+        HILOGI("extension: Will notify AppIncrementalFileReady");
         auto proxy = ServiceProxy::GetInstance();
         auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd));
         if (ret != ERR_OK) {
@@ -290,6 +291,7 @@ static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
             "%{public}d",
             ret);
     }
+    HILOGI("End notify Appfile Ready");
     return ret;
 }
 
@@ -329,6 +331,7 @@ static bool IsAllFileReceived(vector<string> tars, bool isSpeicalVersion)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     // 是否已收到索引文件
+    HILOGI("Start check All file is received");
     if (isSpeicalVersion) {
         HILOGI("Check if manage.json is received for SpeicalVersion.");
         string manageFileName = INDEX_FILE_RESTORE;
@@ -346,15 +349,17 @@ static bool IsAllFileReceived(vector<string> tars, bool isSpeicalVersion)
     }
 
     // 获取索引文件内容
+    HILOGI("Start Parse manage.json file");
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
     auto cache = cachedEntity.Structuralize();
     set<string> info = cache.GetExtManage();
 
     // 从数量上判断是否已经全部收到
     if (tars.size() <= info.size()) {
+        HILOGE("tars count is not equals info count");
         return false;
     }
-
+    HILOGI("compare tars and info, tars size:%zu, info size:%zu", tars.size(), info.size());
     // 逐个判断是否收到
     sort(tars.begin(), tars.end());
     return includes(tars.begin(), tars.end(), info.begin(), info.end());
@@ -363,7 +368,7 @@ static bool IsAllFileReceived(vector<string> tars, bool isSpeicalVersion)
 ErrCode BackupExtExtension::PublishFile(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGE("begin publish file. fileName is %{public}s", fileName.data());
+    HILOGI("Begin publish file. fileName is %{public}s", fileName.data());
     try {
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
@@ -382,6 +387,7 @@ ErrCode BackupExtExtension::PublishFile(const string &fileName)
             }
             tars_.push_back(fileName);
             if (!IsAllFileReceived(tars_, isSpeicalVersion)) {
+                HILOGE("Check all file is received failed");
                 return ERR_OK;
             }
         }
@@ -389,7 +395,7 @@ ErrCode BackupExtExtension::PublishFile(const string &fileName)
         if (extension_->AllowToBackupRestore()) {
             AsyncTaskRestore();
         }
-
+        HILOGE("End publish file");
         return ERR_OK;
     } catch (const BError &e) {
         DoClear();
@@ -427,6 +433,7 @@ ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
             }
             tars_.push_back(fileName);
             if (!IsAllFileReceived(tars_, isSpeicalVersion)) {
+                HILOGE("Check all files received failed");
                 return ERR_OK;
             }
         }
@@ -434,12 +441,14 @@ ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
         // 异步执行解压操作
         if (extension_->AllowToBackupRestore()) {
             if (isSpeicalVersion) {
+                HILOGI("Create task for Incremental SpecialVersion");
                 AsyncTaskIncreRestoreSpecialVersion();
             } else {
+                HILOGI("Create task for Incremental Restore");
                 AsyncTaskIncrementalRestore();
             }
         }
-
+        HILOGI("End publish incremental file");
         return ERR_OK;
     } catch (const BError &e) {
         DoClear();
@@ -528,7 +537,7 @@ static pair<TarMap, vector<string>> GetFileInfos(const vector<string> &includes,
 int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Do backup");
+    HILOGI("Start Do backup");
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
         return EPERM;
     }
@@ -542,6 +551,7 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
     vector<string> excludes = usrConfig.GetExcludes();
 
     // 大文件处理
+    HILOGI("Start packet bigfiles and small files");
     auto [bigFileInfo, smallFiles] = GetFileInfos(includes, excludes);
     for (const auto &item : bigFileInfo) {
         auto filePath = std::get<0>(item.second);
@@ -550,19 +560,20 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
         }
     }
 
+    HILOGI("Start packet Tar files");
     // 分片打包
     TarMap tarMap {};
     TarFile::GetInstance().Packet(smallFiles, "part", path, tarMap);
     bigFileInfo.insert(tarMap.begin(), tarMap.end());
-
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
         throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
     }
-
+    HILOGI("Will notify IndexFileReady");
     if (auto ret = IndexFileReady(bigFileInfo, proxy); ret) {
         return ret;
     }
+    HILOGI("Will notify BigFileReady");
     auto res = BigFileReady(proxy);
     HILOGI("HandleBackup finish, ret = %{public}d", res);
     return res;
@@ -706,7 +717,7 @@ static ErrCode RestoreFilesForSpecialCloneCloud()
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManageInfo();
-
+    HILOGI("Start do restore for SpecialCloneCloud.");
     for (auto &item : info) {
         if (item.hashName.empty()) {
             continue;
@@ -725,7 +736,7 @@ static ErrCode RestoreFilesForSpecialCloneCloud()
     if (!RemoveFile(INDEX_FILE_RESTORE)) {
         HILOGE("Failed to delete the backup index %{public}s", INDEX_FILE_RESTORE.c_str());
     }
-    HILOGI("after extra, do restore for SpecialCloneCloud.");
+    HILOGI("End do restore for SpecialCloneCloud.");
     return ERR_OK;
 }
 
@@ -792,7 +803,7 @@ static void RestoreBigFiles(bool appendTargetPath)
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManageInfo();
-
+    HILOGI("Start Restore Big Files");
     for (auto &item : info) {
         if (item.hashName.empty() || (!item.isUserTar && !item.isBigFile)) {
             continue;
@@ -812,6 +823,7 @@ static void RestoreBigFiles(bool appendTargetPath)
 
         RestoreBigFileAfter(fileName, filePath, item.sta);
     }
+    HILOGI("End Restore Big Files");
 }
 
 static void DeleteBackupTars()
@@ -834,6 +846,7 @@ static void DeleteBackupTars()
     if (!RemoveFile(INDEX_FILE_RESTORE)) {
         HILOGE("Failed to delete the backup index %{public}s", INDEX_FILE_RESTORE.c_str());
     }
+    HILOGI("End execute DeleteBackupTars");
 }
 
 static void DeleteBackupIncrementalTars()
@@ -883,7 +896,6 @@ void BackupExtExtension::AsyncTaskRestore()
                 }
                 return;
             }
-            // 解压
             for (auto item : tars) { // 处理要解压的tar文件
                 if (ExtractFileExt(item) == "tar" && !IsUserTar(item, INDEX_FILE_RESTORE)) {
                     ret = ptr->DoRestore(item);
@@ -894,10 +906,7 @@ void BackupExtExtension::AsyncTaskRestore()
             bool appendTargetPath =
                 ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpeicalVersionForCloneAndCloud();
             RestoreBigFiles(appendTargetPath);
-
-            // delete 1.tar/manage.json
             DeleteBackupTars();
-
             if (ret == ERR_OK) {
                 HILOGI("after extra, do restore.");
                 ptr->AsyncTaskRestoreForUpgrade();
@@ -915,7 +924,6 @@ void BackupExtExtension::AsyncTaskRestore()
             ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         }
     };
-
     // REM: 这里异步化了，需要做并发控制
     // 在往线程池中投入任务之前将需要的数据拷贝副本到参数中，保证不发生读写竞争，
     // 由于拷贝参数时尚运行在主线程中，故在参数拷贝过程中是线程安全的。
@@ -1624,6 +1632,7 @@ std::function<void(std::string)> BackupExtExtension::RestoreResultCallbackEx(wpt
             "Ext extension handle have been already released");
         extensionPtr->extension_->CallExtRestore(restoreRetInfo);
         if (restoreRetInfo.size()) {
+            HILOGI("Will notify restore result report");
             extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::FULL_RESTORE);
         }
     };

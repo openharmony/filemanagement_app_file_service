@@ -192,7 +192,7 @@ UniqueFd SvcSessionManager::OnBunleExtManageInfo(const string &bundleName, Uniqu
 
 void SvcSessionManager::RemoveExtInfo(const string &bundleName)
 {
-    HILOGI("Begin");
+    HILOGI("svcMrg:RemoveExt, bundleName:%{public}s", bundleName.c_str());
     unique_lock<shared_mutex> lock(lock_);
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
@@ -206,7 +206,7 @@ void SvcSessionManager::RemoveExtInfo(const string &bundleName)
 
 wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &bundleName)
 {
-    HILOGD("Begin");
+    HILOGI("svcMrg:GetExt, bundleName:%{public}s", bundleName.c_str());
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");

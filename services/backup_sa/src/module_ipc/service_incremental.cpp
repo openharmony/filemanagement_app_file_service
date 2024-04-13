@@ -221,7 +221,7 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
             fd = session_->OnBunleExtManageInfo(callerName, move(fd));
         }
-
+        HILOGI("reverse: Will notify IncrementalBackupOnFileReady");
         session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(callerName, fileName, move(fd),
                                                                          move(manifestFd));
         if (session_->OnBunleFileReady(callerName, fileName)) {
@@ -235,6 +235,7 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
             // 清除Timer
             session_->BundleExtTimerStop(callerName);
             // 通知TOOL 备份完成
+            HILOGI("reverse: Will notify IncrementalBackupOnBundleFinished");
             session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK),
                                                                                   callerName);
             // 断开extension
@@ -295,7 +296,7 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
+        HILOGI("Begin get incrementalFileHandle");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {

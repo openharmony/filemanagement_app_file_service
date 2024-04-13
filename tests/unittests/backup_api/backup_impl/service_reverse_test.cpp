@@ -1230,7 +1230,8 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnResultReport_010
     try {
         Init(IServiceReverse::Scenario::RESTORE);
         std::string resultReport = "result_report";
-        service_->RestoreOnResultReport(resultReport);
+        std::string bundleName = "app01";
+        service_->RestoreOnResultReport(resultReport, bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by RestoreOnResultReport.";
