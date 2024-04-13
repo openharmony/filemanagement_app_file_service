@@ -21,6 +21,7 @@
 
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
+#include "parameter.h"
 #include "uri.h"
 
 #include "common_func.h"
@@ -32,12 +33,24 @@ using namespace OHOS::Security::AccessToken;
 using namespace OHOS::AppFileService;
 
 namespace {
-    const string bundleA = "com.example.filesharea";
+    const string BUNDLE_A = "com.example.filesharea";
+    const string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
 }
 
 string CommonFunc::GetSelfBundleName()
 {
-    return bundleA;
+    return BUNDLE_A;
+}
+
+static bool CheckFileManagerFullMountEnable()
+{
+    char value[] = "false";
+    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER.c_str(), "false", value, sizeof(value));
+    if ((retSystem > 0) && (string_view(value) == "true")) {
+        return true;
+    }
+    LOGE("Not supporting all mounts");
+    return false;
 }
 
 namespace OHOS::AppFileService::ModuleFileUri {
@@ -67,7 +80,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_ToString_0000";
 
         string fileStr = "/data/storage/el2/base/files/test.txt";
-        string uri = "file://" + bundleA + fileStr;
+        string uri = "file://" + BUNDLE_A + fileStr;
         FileUri fileUri(fileStr);
         EXPECT_EQ(fileUri.ToString(), uri);
 
@@ -89,7 +102,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetName_0000";
 
         string fileStr = "/data/storage/el2/base/files/test.txt";
-        string uri = "file://" + bundleA + fileStr;
+        string uri = "file://" + BUNDLE_A + fileStr;
         FileUri fileUri(fileStr);
         string name = fileUri.GetName();
         EXPECT_EQ(name, "test.txt");
@@ -108,7 +121,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
     {
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0000";
         string fileStr = "/data/storage/el2/base/files/test.txt";
-        string uri = "file://" + bundleA + fileStr;
+        string uri = "file://" + BUNDLE_A + fileStr;
         FileUri fileUri(uri);
         string path = fileUri.GetPath();
         EXPECT_EQ(path, fileStr);
@@ -132,17 +145,22 @@ namespace OHOS::AppFileService::ModuleFileUri {
     {
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0001";
         string fileStr = "/Documents/test.txt";
-        string uri = "file://" + bundleA + fileStr;
+        string uri = "file://" + BUNDLE_A + fileStr;
         FileUri fileUri(uri);
         string path = fileUri.GetRealPath();
         EXPECT_EQ(path, fileStr);
 
-        string fileStr2 = "docs/storage/Users/currentUser/Documents/1.txt";
-        string uri2 = "file://" + fileStr2;
+        string fileStrPath = "docs/storage/Users/currentUser/Documents/1.txt";
+        string fileStrRealPath = "/storage/Users/currentUser/Documents/1.txt";
+        string uri2 = "file://" + fileStrPath;
         FileUri fileUri2(uri2);
         path.clear();
         path = fileUri2.GetRealPath();
-        EXPECT_EQ(path, PATH_SHARE + MODE_R + fileStr2);
+        if (CheckFileManagerFullMountEnable()) {
+            EXPECT_EQ(path, fileStrRealPath);
+        } else {
+            EXPECT_EQ(path, PATH_SHARE + MODE_R + fileStrPath);
+        };
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0001";
     }
 
@@ -186,7 +204,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
 
         string actStr = "/data/storage/el2/base/files/test.txt";
         string uri = "file://" + bundleB + actStr;
-        uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleA, 0);
+        uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, BUNDLE_A, 0);
 
         int32_t flag = 3;
         vector<string> uriList(1, uri);
@@ -241,12 +259,12 @@ namespace OHOS::AppFileService::ModuleFileUri {
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetFullDirectoryUri_0000";
         string fileStr = "/data/test/remote_file_share_test.txt";
         FileUri fileUriObject(fileStr);
-        string fileDirectoryUri = "file://" + bundleA + "/data/test";
+        string fileDirectoryUri = "file://" + BUNDLE_A + "/data/test";
         EXPECT_EQ(fileUriObject.GetFullDirectoryUri(), fileDirectoryUri);
         string folderStr = "/data/test";
-        string folderUri = "file://" + bundleA + folderStr;
+        string folderUri = "file://" + BUNDLE_A + folderStr;
         FileUri folderUriObject(folderUri);
-        string folderDirectoryUri = "file://" + bundleA + folderStr;
+        string folderDirectoryUri = "file://" + BUNDLE_A + folderStr;
         EXPECT_EQ(folderUriObject.GetFullDirectoryUri(), folderDirectoryUri);
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0000";
     }
