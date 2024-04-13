@@ -22,7 +22,7 @@
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 #include "uri.h"
-
+#include "parameter.h"
 #include "common_func.h"
 #include "file_share.h"
 #include "log.h"
@@ -45,7 +45,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
     const string MODE_RW = "/rw/";
     const string MODE_R = "/r/";
     const int E_OK = 0;
-
+    const std::string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
     class FileUriTest : public testing::Test {
     public:
         static void SetUpTestCase(void) {};
@@ -54,6 +54,16 @@ namespace OHOS::AppFileService::ModuleFileUri {
         void TearDown() {};
     };
 
+static bool CheckFileManagerFullMountEnable()
+{
+    char value[] = "false";
+    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER.c_str(), "false", value, sizeof(value));
+    if (retSystem > 0 && !std::strcmp(value, "true")) {
+        return true;
+    }
+    LOGE("Not supporting all mounts");
+    return false;
+}
     /**
      * @tc.name: file_uri_test_0000
      * @tc.desc: Test function of ToString() interface for SUCCESS.
@@ -137,12 +147,17 @@ namespace OHOS::AppFileService::ModuleFileUri {
         string path = fileUri.GetRealPath();
         EXPECT_EQ(path, fileStr);
 
-        string fileStr2 = "docs/storage/Users/currentUser/Documents/1.txt";
-        string uri2 = "file://" + fileStr2;
+        string fileStrPath = "docs/storage/Users/currentUser/Documents/1.txt";
+        string fileStrRealPath = "/storage/Users/currentUser/Documents/1.txt";
+        string uri2 = "file://" + fileStrPath;
         FileUri fileUri2(uri2);
         path.clear();
         path = fileUri2.GetRealPath();
-        EXPECT_EQ(path, PATH_SHARE + MODE_R + fileStr2);
+        if (CheckFileManagerFullMountEnable()) {
+            EXPECT_EQ(path, fileStrRealPath);
+        } else {
+            EXPECT_EQ(path, PATH_SHARE + MODE_R + fileStrPath);
+        };
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0001";
     }
 
