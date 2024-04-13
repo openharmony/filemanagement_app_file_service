@@ -25,7 +25,6 @@ using namespace std;
 
 void ServiceReverseProxy::IncrementalBackupOnFileReady(string bundleName, string fileName, int fd, int manifestFd)
 {
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(fileName) ||
@@ -45,7 +44,6 @@ void ServiceReverseProxy::IncrementalBackupOnFileReady(string bundleName, string
 
 void ServiceReverseProxy::IncrementalBackupOnBundleStarted(int32_t errCode, string bundleName)
 {
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteInt32(errCode) || !data.WriteString(bundleName)) {
@@ -64,7 +62,6 @@ void ServiceReverseProxy::IncrementalBackupOnBundleStarted(int32_t errCode, stri
 
 void ServiceReverseProxy::IncrementalBackupOnResultReport(std::string result)
 {
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(result)) {
@@ -83,7 +80,6 @@ void ServiceReverseProxy::IncrementalBackupOnResultReport(std::string result)
 
 void ServiceReverseProxy::IncrementalBackupOnBundleFinished(int32_t errCode, string bundleName)
 {
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteInt32(errCode) || !data.WriteString(bundleName)) {
@@ -102,7 +98,6 @@ void ServiceReverseProxy::IncrementalBackupOnBundleFinished(int32_t errCode, str
 
 void ServiceReverseProxy::IncrementalBackupOnAllBundlesFinished(int32_t errCode)
 {
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteInt32(errCode)) {
@@ -121,7 +116,6 @@ void ServiceReverseProxy::IncrementalBackupOnAllBundlesFinished(int32_t errCode)
 
 void ServiceReverseProxy::IncrementalRestoreOnBundleStarted(int32_t errCode, string bundleName)
 {
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteInt32(errCode) || !data.WriteString(bundleName)) {
@@ -140,7 +134,6 @@ void ServiceReverseProxy::IncrementalRestoreOnBundleStarted(int32_t errCode, str
 
 void ServiceReverseProxy::IncrementalRestoreOnBundleFinished(int32_t errCode, string bundleName)
 {
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteInt32(errCode) || !data.WriteString(bundleName)) {
@@ -163,7 +156,6 @@ void ServiceReverseProxy::IncrementalRestoreOnBundleFinished(int32_t errCode, st
 
 void ServiceReverseProxy::IncrementalRestoreOnAllBundlesFinished(int32_t errCode)
 {
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteInt32(errCode)) {
@@ -182,7 +174,6 @@ void ServiceReverseProxy::IncrementalRestoreOnAllBundlesFinished(int32_t errCode
 
 void ServiceReverseProxy::IncrementalRestoreOnResultReport(std::string result, std::string bundleName)
 {
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(result) || !data.WriteString(bundleName)) {
@@ -201,7 +192,6 @@ void ServiceReverseProxy::IncrementalRestoreOnResultReport(std::string result, s
 
 void ServiceReverseProxy::IncrementalRestoreOnFileReady(string bundleName, string fileName, int fd, int manifestFd)
 {
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(fileName) ||

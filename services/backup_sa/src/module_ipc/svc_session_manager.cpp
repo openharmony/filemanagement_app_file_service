@@ -222,7 +222,6 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
 
 sptr<SvcBackupConnection> SvcSessionManager::GetBackupExtAbility(const string &bundleName)
 {
-    HILOGI("Begin");
     auto callDied = [revPtr {reversePtr_}](const string &&bundleName) {
         auto revPtrStrong = revPtr.promote();
         if (!revPtrStrong) {
@@ -280,7 +279,6 @@ void SvcSessionManager::InitClient(Impl &newImpl)
 
 void SvcSessionManager::SetExtFileNameRequest(const string &bundleName, const string &fileName)
 {
-    HILOGI("Begin");
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -292,7 +290,6 @@ void SvcSessionManager::SetExtFileNameRequest(const string &bundleName, const st
 
 std::set<std::string> SvcSessionManager::GetExtFileNameRequest(const std::string &bundleName)
 {
-    HILOGI("Begin");
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -320,7 +317,6 @@ map<BundleName, BackupExtInfo>::iterator SvcSessionManager::GetBackupExtNameMap(
 
 bool SvcSessionManager::GetSchedBundleName(string &bundleName)
 {
-    HILOGI("Begin");
     unique_lock<shared_mutex> lock(lock_);
     if (extConnectNum_ >= BConstants::EXT_CONNECT_MAX_COUNT) {
         return false;
@@ -339,7 +335,6 @@ bool SvcSessionManager::GetSchedBundleName(string &bundleName)
 
 BConstants::ServiceSchedAction SvcSessionManager::GetServiceSchedAction(const std::string &bundleName)
 {
-    HILOGD("Begin");
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -350,7 +345,6 @@ BConstants::ServiceSchedAction SvcSessionManager::GetServiceSchedAction(const st
 
 void SvcSessionManager::SetServiceSchedAction(const string &bundleName, BConstants::ServiceSchedAction action)
 {
-    HILOGI("Begin");
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -365,7 +359,6 @@ void SvcSessionManager::SetServiceSchedAction(const string &bundleName, BConstan
 
 void SvcSessionManager::SetBackupExtName(const string &bundleName, const string &backupExtName)
 {
-    HILOGI("Begin");
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -377,7 +370,6 @@ void SvcSessionManager::SetBackupExtName(const string &bundleName, const string 
 
 string SvcSessionManager::GetBackupExtName(const string &bundleName)
 {
-    HILOGI("Begin");
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -389,7 +381,6 @@ string SvcSessionManager::GetBackupExtName(const string &bundleName)
 
 void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
 {
-    HILOGI("Begin");
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -413,7 +404,6 @@ sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &
 
 void SvcSessionManager::Start()
 {
-    HILOGI("Begin");
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -423,7 +413,6 @@ void SvcSessionManager::Start()
 
 void SvcSessionManager::Finish()
 {
-    HILOGI("Begin");
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");

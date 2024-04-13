@@ -32,7 +32,6 @@ using namespace std;
 ErrCode ServiceProxy::Release()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -53,7 +52,6 @@ ErrCode ServiceProxy::Release()
 UniqueFd ServiceProxy::GetLocalCapabilitiesIncremental(const vector<BIncrementalData> &bundleNames)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -83,7 +81,6 @@ UniqueFd ServiceProxy::GetLocalCapabilitiesIncremental(const vector<BIncremental
 ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -115,7 +112,6 @@ ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrementalData> &bundlesToBackup)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -144,7 +140,6 @@ ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrem
 ErrCode ServiceProxy::PublishIncrementalFile(const BFileInfo &fileInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -170,7 +165,6 @@ ErrCode ServiceProxy::PublishIncrementalFile(const BFileInfo &fileInfo)
 ErrCode ServiceProxy::AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -201,7 +195,6 @@ ErrCode ServiceProxy::AppIncrementalFileReady(const std::string &fileName, Uniqu
 ErrCode ServiceProxy::AppIncrementalDone(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -226,7 +219,6 @@ ErrCode ServiceProxy::AppIncrementalDone(ErrCode errCode)
 ErrCode ServiceProxy::GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {

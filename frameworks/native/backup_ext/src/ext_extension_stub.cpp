@@ -73,7 +73,6 @@ int32_t ExtExtensionStub::OnRemoteRequest(uint32_t code,
 
 ErrCode ExtExtensionStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     string fileName;
     if (!data.ReadString(fileName)) {
         return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive fileName").GetCode();
@@ -88,7 +87,6 @@ ErrCode ExtExtensionStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &r
 
 ErrCode ExtExtensionStub::CmdHandleClear(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     ErrCode res = HandleClear();
     if (!reply.WriteInt32(res)) {
         stringstream ss;
@@ -100,7 +98,6 @@ ErrCode ExtExtensionStub::CmdHandleClear(MessageParcel &data, MessageParcel &rep
 
 ErrCode ExtExtensionStub::CmdHandleBackup(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     ErrCode res = HandleBackup();
     if (!reply.WriteInt32(res)) {
         stringstream ss;
@@ -112,7 +109,6 @@ ErrCode ExtExtensionStub::CmdHandleBackup(MessageParcel &data, MessageParcel &re
 
 ErrCode ExtExtensionStub::CmdPublishFile(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     string fileName;
     if (!data.ReadString(fileName)) {
         return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive fileName");
@@ -129,7 +125,6 @@ ErrCode ExtExtensionStub::CmdPublishFile(MessageParcel &data, MessageParcel &rep
 
 ErrCode ExtExtensionStub::CmdHandleRestore(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     ErrCode res = HandleRestore();
     if (!reply.WriteInt32(res)) {
         stringstream ss;
@@ -141,7 +136,6 @@ ErrCode ExtExtensionStub::CmdHandleRestore(MessageParcel &data, MessageParcel &r
 
 ErrCode ExtExtensionStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     string fileName;
     if (!data.ReadString(fileName)) {
         return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive fileName").GetCode();
@@ -156,7 +150,6 @@ ErrCode ExtExtensionStub::CmdGetIncrementalFileHandle(MessageParcel &data, Messa
 
 ErrCode ExtExtensionStub::CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     string fileName;
     if (!data.ReadString(fileName)) {
         return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive fileName");
@@ -173,7 +166,6 @@ ErrCode ExtExtensionStub::CmdPublishIncrementalFile(MessageParcel &data, Message
 
 ErrCode ExtExtensionStub::CmdHandleIncrementalBackup(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     UniqueFd incrementalFd(data.ReadFileDescriptor());
     UniqueFd manifestFd(data.ReadFileDescriptor());
     ErrCode res = HandleIncrementalBackup(move(incrementalFd), move(manifestFd));
@@ -187,7 +179,6 @@ ErrCode ExtExtensionStub::CmdHandleIncrementalBackup(MessageParcel &data, Messag
 
 ErrCode ExtExtensionStub::CmdGetIncrementalBackupFileHandle(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     auto [incrementalFd, manifestFd] = GetIncrementalBackupFileHandle();
     if (!reply.WriteFileDescriptor(incrementalFd)) {
         return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the file").GetCode();
