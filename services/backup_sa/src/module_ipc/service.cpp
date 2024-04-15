@@ -107,7 +107,6 @@ UniqueFd Service::GetLocalCapabilities()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         /*
          Only called by restore app before InitBackupSession,
            so there must be set init userId.
@@ -250,7 +249,6 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
 ErrCode Service::Start()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     VerifyCaller(session_->GetScenario());
     session_->Start();
     OnStartSched();
@@ -316,7 +314,6 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         session_->IncreaseSessionCnt();
         if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
             session_->SetSessionUserId(userId);
@@ -353,7 +350,6 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         session_->IncreaseSessionCnt();
         if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
             session_->SetSessionUserId(userId);
@@ -441,7 +437,6 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
@@ -476,7 +471,6 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
 ErrCode Service::Finish()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     VerifyCaller(session_->GetScenario());
     session_->Finish();
     OnAllBundlesFinished(BError(BError::Codes::OK));
@@ -487,7 +481,6 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
 
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
@@ -517,7 +510,6 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         string callerName = VerifyCallerAndGetCallerName();
         HILOGI("Caller name is:%{public}s", callerName.c_str());
         if (fileName.find('/') != string::npos) {
@@ -562,7 +554,6 @@ ErrCode Service::AppDone(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         string callerName = VerifyCallerAndGetCallerName();
         if (session_->OnBunleFileReady(callerName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
@@ -599,7 +590,6 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo, BackupRes
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         string callerName = VerifyCallerAndGetCallerName();
         if (sennario == BackupRestoreScenario::FULL_RESTORE) {
             session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, callerName);
@@ -688,7 +678,6 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGD("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
 
         bool updateRes = SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);

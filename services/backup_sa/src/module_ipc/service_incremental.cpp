@@ -79,7 +79,6 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         /*
          Only called by restore app before InitBackupSession,
            so there must be set init userId.
@@ -124,7 +123,6 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
 ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     try {
         VerifyCaller();
         session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
@@ -143,7 +141,6 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         vector<string> bundleNames {};
@@ -182,7 +179,6 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         HILOGI("Start get ExtConnection, bundleName:%{public}s", fileInfo.owner.c_str());
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
@@ -210,7 +206,6 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         string callerName = VerifyCallerAndGetCallerName();
         if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(callerName, fileName, move(fd),
@@ -259,7 +254,6 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
         string callerName = VerifyCallerAndGetCallerName();
         if (session_->OnBunleFileReady(callerName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
@@ -296,7 +290,6 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin get incrementalFileHandle");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {

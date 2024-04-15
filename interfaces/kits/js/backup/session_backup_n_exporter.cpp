@@ -229,7 +229,7 @@ static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
 
 napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info cbinfo)
 {
-    HILOGI("called SessionBackup::Constructor begin");
+    HILOGD("called SessionBackup::Constructor begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         HILOGE("Number of arguments unmatched.");
@@ -264,13 +264,13 @@ napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info 
         return nullptr;
     }
 
-    HILOGI("called SessionBackup::Constructor end");
+    HILOGD("called SessionBackup::Constructor end");
     return funcArg.GetThisVar();
 }
 
 napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_info cbinfo)
 {
-    HILOGI("called SessionBackup::AppendBundles begin");
+    HILOGD("called SessionBackup::AppendBundles begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         HILOGE("Number of arguments unmatched.");
@@ -303,7 +303,7 @@ napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_inf
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
 
-    HILOGI("Called SessionBackup::AppendBundles end.");
+    HILOGD("Called SessionBackup::AppendBundles end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::ONE) {
@@ -316,7 +316,7 @@ napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_inf
 
 napi_value SessionBackupNExporter::Release(napi_env env, napi_callback_info cbinfo)
 {
-    HILOGI("called SessionBackup::Release begin");
+    HILOGD("called SessionBackup::Release begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
         HILOGE("Number of arguments unmatched.");
@@ -341,7 +341,7 @@ napi_value SessionBackupNExporter::Release(napi_env env, napi_callback_info cbin
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
 
-    HILOGI("Called SessionBackup::Release end.");
+    HILOGD("Called SessionBackup::Release end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
@@ -349,7 +349,7 @@ napi_value SessionBackupNExporter::Release(napi_env env, napi_callback_info cbin
 
 bool SessionBackupNExporter::Export()
 {
-    HILOGI("called SessionBackupNExporter::Export begin");
+    HILOGD("called SessionBackupNExporter::Export begin");
     vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("appendBundles", AppendBundles),
         NVal::DeclareNapiFunction("release", Release),
@@ -368,7 +368,7 @@ bool SessionBackupNExporter::Export()
         return false;
     }
 
-    HILOGI("called SessionBackupNExporter::Export end");
+    HILOGD("called SessionBackupNExporter::Export end");
     return exports_.AddProp(className, classValue);
 }
 

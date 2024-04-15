@@ -73,7 +73,6 @@ const uint32_t MAX_FILE_COUNT = 6000;                 // 单个tar包最多包�
 
 void BackupExtExtension::VerifyCaller()
 {
-    HILOGD("begin");
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
     int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
     if (tokenType != Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
@@ -1167,7 +1166,6 @@ void BackupExtExtension::AppDone(ErrCode errCode)
 
 void BackupExtExtension::AppResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario)
 {
-    HILOGI("Begin");
     auto proxy = ServiceProxy::GetInstance();
     BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
     auto ret = proxy->ServiceResultReport(restoreRetInfo, scenario);
@@ -1337,7 +1335,6 @@ static void WriteFile(const string &filename, const map<string, struct ReportFil
         f << str << endl;
     }
     f.close();
-    HILOGI("WriteFile path: %{public}s", filename.c_str());
 }
 
 /**
