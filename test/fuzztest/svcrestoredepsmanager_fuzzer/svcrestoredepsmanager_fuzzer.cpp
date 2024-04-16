@@ -75,7 +75,10 @@ void GetInfo(const uint8_t *data, size_t size, vector<BJsonEntityCaps::BundleInf
 bool SvcRestoreDepsManagerFuzzTest(const uint8_t *data, size_t size)
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
-    RestoreTypeEnum restoreType = *(reinterpret_cast<const RestoreTypeEnum*>(data));
+    RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
+    if (size >= sizeof(RestoreTypeEnum)) {
+        restoreType = *(reinterpret_cast<const RestoreTypeEnum*>(data));
+    }
     SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(bundleInfos, restoreType);
     GetInfo(data, size, bundleInfos);
 
