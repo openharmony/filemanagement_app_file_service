@@ -494,11 +494,11 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishIncrementalFile_0100, testin
         .WillOnce(Return(EPERM));
 
     string bundleName = "com.example.app2backup";
-    string fileName = "1.tar";
+    string fileName = "";
     BFileInfo fileInfo(bundleName, fileName, -1);
     int32_t result = proxy_->PublishIncrementalFile(fileInfo);
     EXPECT_EQ(result, BError(BError::Codes::OK));
-
+    fileName = "test";
     result = proxy_->PublishIncrementalFile(fileInfo);
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_PublishIncrementalFile_0100";

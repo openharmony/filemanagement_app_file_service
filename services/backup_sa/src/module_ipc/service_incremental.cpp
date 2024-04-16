@@ -181,6 +181,10 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
     try {
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         HILOGI("Start get ExtConnection, bundleName:%{public}s", fileInfo.owner.c_str());
+        if (!fileInfo.fileName.empty()) {
+            HILOGE("Forbit to use PublishIncrementalFile with fileName for App");
+            return EPERM;
+        }
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
         auto proxy = backUpConnection->GetBackupExtProxy();
         if (!proxy) {

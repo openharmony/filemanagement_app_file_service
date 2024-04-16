@@ -482,7 +482,10 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
-
+        if (!fileInfo.fileName.empty()) {
+            HILOGE("Forbit to use publishFile with fileName for App");
+            return EPERM;
+        }
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
 
         auto proxy = backUpConnection->GetBackupExtProxy();

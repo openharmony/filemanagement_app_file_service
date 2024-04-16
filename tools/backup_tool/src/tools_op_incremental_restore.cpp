@@ -105,7 +105,10 @@ private:
 
 public:
     std::atomic<bool> isAllBundelsFinished {false};
+    mutex fileCountLock_;
     vector<BIncrementalData> lastIncrementalData {};
+    map<string, int> fileCount_;
+    map<string, int> fileNums_;
 };
 
 static string GenHelpMsg()
@@ -150,10 +153,21 @@ static void OnFileReady(shared_ptr<SessionRestore> ctx, const BFileInfo &fileInf
         }
         BFile::SendFile(manifestFd, fdManifest);
     }
-    // 文件准备完成
-    int ret = ctx->session_->PublishFile(fileInfo);
-    if (ret != 0) {
-        throw BError(BError::Codes::TOOL_INVAL_ARG, "PublishFile error");
+    std::string bundleName = fileInfo.owner;
+    {
+        unique_lock<mutex> fileLock(ctx->fileCountLock_);
+        ++ctx->fileCount_[bundleName];
+        // 文件准备完成
+        printf("FileReady count/num = %d/%d\n", ctx->fileCount_[bundleName], ctx->fileNums_[bundleName]);
+        if (ctx->fileCount_[bundleName] == ctx->fileNums_[bundleName]) {
+            printf("PublishFile start.\n");
+            BFileInfo fileInfoTemp = fileInfo;
+            fileInfoTemp.fileName = "";
+            int ret = ctx->session_->PublishFile(fileInfoTemp);
+            if (ret != 0) {
+                throw BError(BError::Codes::TOOL_INVAL_ARG, "PublishFile error");
+            }
+        }
     }
     ctx->TryNotify();
 }
@@ -287,6 +301,10 @@ static int32_t Init(const string &pathCapFile, vector<string> bundleNames, bool 
 
     UniqueFd fd(open(realPath.data(), O_RDWR, S_IRWXU));
     auto ctx = make_shared<SessionRestore>();
+    int len = bundleNames.size();
+    for (int i = 0; i < len; ++i) {
+        ctx->fileNums_[bundleNames[i]] = ToolsOp::GetFIleNums(bundleNames[i], false);
+    }
     int32_t ret = InitRestoreSession(ctx, bundleNames, times);
     if (ret != 0) {
         printf("Failed to init restore session error:%d\n", ret);

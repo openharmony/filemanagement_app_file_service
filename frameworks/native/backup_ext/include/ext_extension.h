@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 
 #include "b_json/b_json_entity_extension_config.h"
+#include "b_json/b_json_entity_ext_manage.h"
 #include "b_json/b_report_entity.h"
 #include "ext_backup_js.h"
 #include "ext_extension_stub.h"
@@ -83,9 +84,8 @@ private:
     /**
      * @brief incremental restore
      *
-     * @param fileName name of the file that to be untar
      */
-    int DoIncrementalRestore(const string &fileName);
+    int DoIncrementalRestore();
 
     /** @brief clear backup restore data */
     void DoClear();
@@ -117,7 +117,7 @@ private:
      * @brief Executing Restoration Tasks Asynchronously
      *
      */
-    void AsyncTaskRestore();
+    void AsyncTaskRestore(std::set<std::string> fileSet, const std::vector<ExtManageInfo> extManageInfo);
 
     /**
      * @brief Executing Incremental Restoration Tasks Asynchronously
@@ -178,7 +178,6 @@ private:
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
-    std::vector<std::string> tars_;
     std::string backupInfo_;
     OHOS::ThreadPool threadPool_;
 };
