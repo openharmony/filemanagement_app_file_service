@@ -1245,25 +1245,19 @@ static bool CheckTar(const string &fileName)
     return ExtractFileExt(fileName) == "tar";
 }
 
-using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
-                                 map<string, struct ReportFileInfo>,
-                                 map<string, struct stat>,
-                                 map<string, struct ReportFileInfo>>;
-
-static CompareFilesResult CompareFiles(const UniqueFd &cloudFd, const UniqueFd &storageFd)
+CompareFilesResult BackupExtExtension::CompareFiles(const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
+    const unordered_map<string, struct ReportFileInfo> &storageFiles)
 {
-    BReportEntity cloudRp(UniqueFd(cloudFd.Get()));
-    unordered_map<string, struct ReportFileInfo> cloudFiles = cloudRp.GetReportInfos();
-    BReportEntity storageRp(UniqueFd(storageFd.Get()));
-    unordered_map<string, struct ReportFileInfo> storageFiles = storageRp.GetReportInfos();
     map<string, struct ReportFileInfo> allFiles;
     map<string, struct ReportFileInfo> smallFiles;
     map<string, struct stat> bigFiles;
     map<string, struct ReportFileInfo> bigInfos;
-    for (auto &item : storageFiles) {
+    std::unordered_map<string, struct ReportFileInfo> cloud(cloudFiles.begin(), cloudFiles.end());
+    std::unordered_map<string, struct ReportFileInfo> storage(storageFiles.begin(), storageFiles.end());
+    for (auto &item : storage) {
         // 进行文件对比
         string path = item.first;
-        bool isExist = cloudFiles.find(path) != cloudFiles.end() ? true : false;
+        bool isExist = cloud.find(path) != cloud.end() ? true : false;
         if (item.second.isIncremental == true && item.second.isDir == true && !isExist) {
             smallFiles.try_emplace(path, item.second);
         }
@@ -1282,7 +1276,7 @@ static CompareFilesResult CompareFiles(const UniqueFd &cloudFd, const UniqueFd &
 
         allFiles.try_emplace(path, item.second);
         if (item.second.isDir == false && item.second.isIncremental == true && (!isExist ||
-             cloudFiles.find(path)->second.hash != item.second.hash)) {
+             cloud.find(path)->second.hash != item.second.hash)) {
             // 在云空间简报里不存在或者hash不一致
             if (item.second.size <= BConstants::BIG_FILE_BOUNDARY) {
                 smallFiles.try_emplace(path, item.second);
@@ -1310,8 +1304,11 @@ ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, Uniq
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
             .GetCode();
     }
-    auto [allFiles, smallFiles, bigFiles, bigInfos] = CompareFiles(move(manifestFd), move(incrementalFd));
-    AsyncTaskOnIncrementalBackup(allFiles, smallFiles, bigFiles, bigInfos);
+    BReportEntity cloudRp(move(manifestFd));
+    unordered_map<string, struct ReportFileInfo> cloudFiles = cloudRp.GetReportInfos();
+    BReportEntity storageRp(move(incrementalFd));
+    unordered_map<string, struct ReportFileInfo> storageFiles = storageRp.GetReportInfos();
+    AsyncTaskOnIncrementalBackup(cloudFiles, storageFiles);
     return 0;
 }
 
@@ -1435,19 +1432,18 @@ static ErrCode IncrementalBigFileReady(const TarMap &pkgInfo,
     return ret;
 }
 
-void BackupExtExtension::AsyncTaskOnIncrementalBackup(const map<string, struct ReportFileInfo> &allFiles,
-                                                      const map<string, struct ReportFileInfo> &smallFiles,
-                                                      const map<string, struct stat> &bigFiles,
-                                                      const map<string, struct ReportFileInfo> &bigInfos)
+void BackupExtExtension::AsyncTaskOnIncrementalBackup(
+    const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
+    const unordered_map<string, struct ReportFileInfo> &storageFiles)
 {
-    auto task = [obj {wptr<BackupExtExtension>(this)}, allFiles, smallFiles, bigFiles, bigInfos]() {
+    auto task = [obj {wptr<BackupExtExtension>(this)}, cloudFiles, storageFiles]() {
         auto ptr = obj.promote();
         try {
             BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
                                   "Ext extension handle have been already released");
             BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
                                   "extension handle have been already released");
-
+            auto [allFiles, smallFiles, bigFiles, bigInfos] = ptr->CompareFiles(cloudFiles, storageFiles);
             auto ret = ptr->DoIncrementalBackup(allFiles, smallFiles, bigFiles, bigInfos);
             ptr->AppIncrementalDone(ret);
             HILOGE("Incremental backup app done %{public}d", ret);
