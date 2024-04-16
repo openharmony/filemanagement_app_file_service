@@ -47,6 +47,7 @@ ohos_unittest("backup_tool_test") {
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags = [ "--coverage" ]
@@ -60,7 +61,6 @@ ohos_unittest("backup_tool_test") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
-    "jsoncpp:jsoncpp",
     "samgr:samgr_proxy",
   ]
 
@@ -104,6 +104,7 @@ ohos_unittest("backup_tool_restore_test") {
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags = [ "--coverage" ]
@@ -117,7 +118,6 @@ ohos_unittest("backup_tool_restore_test") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
-    "jsoncpp:jsoncpp",
     "samgr:samgr_proxy",
   ]
 
