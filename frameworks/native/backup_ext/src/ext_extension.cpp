@@ -1425,7 +1425,7 @@ static ErrCode IncrementalBigFileReady(const TarMap &pkgInfo,
 
         ret = proxy->AppIncrementalFileReady(item.first, std::move(fd), UniqueFd(open(file.data(), O_RDONLY)));
         if (SUCCEEDED(ret)) {
-            HILOGI("IncrementalBigFileReady：The application is packaged successfully, package name is %{public}s",
+            HILOGI("IncrementalBigFileReady: The application is packaged successfully, package name is %{public}s",
                    item.first.c_str());
             RemoveFile(file);
         } else {
