@@ -18,6 +18,7 @@ config("file_share_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "file_share/include",
+    "//third_party/json/include",
     "../../common/include",
   ]
 }
@@ -26,6 +27,7 @@ config("file_uri_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "file_uri/include",
+    "//third_party/json/include",
     "../../common/include",
   ]
 }
@@ -61,7 +63,6 @@ ohos_shared_library("fileshare_native") {
     "file_api:filemgmt_libn",
     "hilog:libhilog",
     "ipc:ipc_core",
-    "json:nlohmann_json_static",
     "napi:ace_napi",
   ]
   defines = []
@@ -99,7 +100,6 @@ ohos_shared_library("fileuri_native") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "json:nlohmann_json_static",
     "samgr:samgr_proxy",
   ]
 
@@ -125,7 +125,10 @@ config("remote_file_share_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
+    "${utils_system_safwk_path}/native/include",
     "remote_file_share/include",
+    "//third_party/json/include",
+    "${path_base}/include",
     "../../common/include",
     ".",
   ]
@@ -152,8 +155,6 @@ ohos_shared_library("remote_file_share_native") {
     "ability_base:zuri",
     "c_utils:utils",
     "hilog:libhilog",
-    "init:libbegetutil",
-    "json:nlohmann_json_static",
   ]
 
   if (defined(global_parts_info) &&
@@ -171,6 +172,9 @@ config("sandbox_helper_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
+    "${utils_system_safwk_path}/native/include",
+    "//third_party/json/include",
+    "${path_base}/include",
     "../../common/include",
     ".",
   ]
@@ -196,8 +200,6 @@ ohos_shared_library("sandbox_helper_native") {
     "ability_base:zuri",
     "c_utils:utils",
     "hilog:libhilog",
-    "init:libbegetutil",
-    "json:nlohmann_json_static",
   ]
 
   innerapi_tags = [ "platformsdk_indirect" ]
