@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,8 @@
 #define REMOTE_FILE_SHARE_H
 
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace OHOS {
 namespace AppFileService {
@@ -36,6 +38,9 @@ public:
     static int CreateSharePath(const int &fd, std::string &sharePath,
                                const int &userId, const std::string &deviceId = SHARE_ALL_DEVICE);
     static int32_t GetDfsUriFromLocal(const std::string &uriStr, const int32_t &userId, struct HmdfsUriInfo &hui);
+    static int32_t GetDfsUrisFromLocal(const std::vector<std::string> &uriList,
+                                       const int32_t &userId,
+                                       std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps);
     ~RemoteFileShare() {}
 };
 } // namespace ModuleRemoteFileShare

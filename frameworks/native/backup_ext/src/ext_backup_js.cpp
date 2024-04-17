@@ -415,11 +415,7 @@ ErrCode ExtBackupJs::OnRestore(function<void()> callback)
 
 ErrCode ExtBackupJs::CallJSRestoreEx(napi_env env, napi_value val)
 {
-    bool isExist;
-    napi_status status = napi_has_named_property(env, val, "onRestoreEx", &isExist);
-    if (status != napi_ok) {
-        HILOGI("Js method onRestoreEx status err");
-    }
+    HILOGI("Start call app js method onRestoreEx");
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfoEx {callbackInfoEx_}](napi_env envir, napi_value result) ->
         bool {
         if (!CheckPromise(envir, result)) {
@@ -439,6 +435,7 @@ ErrCode ExtBackupJs::CallJSRestoreEx(napi_env env, napi_value val)
     }
     if (!needCallOnRestore_.load()) {
         if (callbackInfoEx_) {
+            HILOGI("Will call app done");
             callbackInfoEx_->callbackAppDone();
         }
         HILOGI("Call Js method onRestoreEx done");
@@ -449,16 +446,7 @@ ErrCode ExtBackupJs::CallJSRestoreEx(napi_env env, napi_value val)
 
 ErrCode ExtBackupJs::CallJSRestore(napi_env env, napi_value val)
 {
-    bool isExist;
-    napi_status status = napi_has_named_property(env, val, "onRestore", &isExist);
-    if (status != napi_ok) {
-        HILOGI("Js method onRestore status err");
-    }
-    if (!isExist) {
-        HILOGI("Js method onRestore is not exist");
-        return ErrCode(BError::Codes::EXT_METHOD_NOT_EXIST);
-    }
-    HILOGI("Js method onRestore is exist");
+    HILOGI("Start call app js method onRestore");
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env, napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
             HILOGI("onRestore, CheckPromise false");

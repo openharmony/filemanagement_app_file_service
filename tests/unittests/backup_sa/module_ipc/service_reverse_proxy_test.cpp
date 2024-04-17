@@ -506,7 +506,8 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnResultReport
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
-        proxy_->RestoreOnResultReport(RESULT_REPORT);
+        std::string bundleName = "app01";
+        proxy_->RestoreOnResultReport(RESULT_REPORT, bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by RestoreOnResultReport.";
@@ -531,7 +532,8 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalRestoreOnR
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
-        proxy_->IncrementalRestoreOnResultReport(RESULT_REPORT);
+        std::string bundleName = "app01";
+        proxy_->IncrementalRestoreOnResultReport(RESULT_REPORT, bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by RestoreOnResultReport.";

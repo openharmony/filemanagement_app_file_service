@@ -84,6 +84,7 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
         // 启动extension
         reversePtr_->LaunchBackupExtension(bundleName);
     } else if (action == BConstants::ServiceSchedAction::RUNNING) {
+        HILOGI("Current bundle %{public}s process is running", bundleName.data());
         unique_lock<shared_mutex> lock(lock_);
         auto iter = find_if(bundleTimeVec_.begin(), bundleTimeVec_.end(), [&bundleName](auto &obj) {
             auto &[bName, iTime] = obj;
@@ -97,6 +98,7 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
         extTime_.Unregister(iTime);
         lock.unlock();
         // 开始执行备份恢复流程
+        HILOGI("Current bundle %{public}s extension start", bundleName.data());
         reversePtr_->ExtStart(bundleName);
     }
 }

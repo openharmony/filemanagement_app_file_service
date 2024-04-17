@@ -31,6 +31,7 @@ public:
         std::string extensionName;
         std::string restoreDeps;
         std::string supportScene;
+        Json::Value extraInfo;
     };
     struct BundleBackupConfigPara {
         bool allToBackup;
@@ -39,6 +40,7 @@ public:
         std::string supportScene;
         std::vector<std::string> includes;
         std::vector<std::string> excludes;
+        Json::Value extraInfo;
     };
 public:
     void SetSystemFullName(std::string systemFullName)
@@ -66,6 +68,14 @@ public:
             arrObj["extensionName"] = item.extensionName;
             arrObj["restoreDeps"] = item.restoreDeps;
             arrObj["supportScene"] = item.supportScene;
+            Json::Value extraInfo;
+            if (item.extraInfo.empty()) {
+                Json::Value senceArray(Json::arrayValue);
+                extraInfo["supportsence"] = senceArray;
+            } else {
+                extraInfo = item.extraInfo;
+            }
+            arrObj["extraInfo"] = extraInfo;
             obj_["bundleInfos"].append(arrObj);
         }
     }
@@ -110,6 +120,15 @@ public:
         return obj_["supportScene"].asString();
     }
 
+    Json::Value GetExtraInfo()
+    {
+        if (!obj_ || !obj_.isMember("extraInfo") || !obj_["extraInfo"].isObject()) {
+            HILOGE("Failed to get field extraInfo");
+            return Json::Value();
+        }
+        return obj_["extraInfo"];
+    }
+
     std::vector<BundleInfo> GetBundleInfos()
     {
         if (!obj_ || !obj_.isMember("bundleInfos") || !obj_["bundleInfos"].isArray()) {
@@ -132,10 +151,14 @@ public:
             if (item.isMember("supportScene") && item["supportScene"].isString()) {
                 restoreDeps = item["supportScene"].asString();
             }
+            Json::Value extraInfo;
+            if (item.isMember("extraInfo") && item["extraInfo"].isObject()) {
+                extraInfo = item["extraInfo"];
+            }
             bundleInfos.emplace_back(BundleInfo {item["name"].asString(), item["versionCode"].asUInt(),
                                                  item["versionName"].asString(), item["spaceOccupied"].asInt64(),
                                                  item["allToBackup"].asBool(), item["extensionName"].asString(),
-                                                 restoreDeps, supportScene});
+                                                 restoreDeps, supportScene, extraInfo});
         }
         return bundleInfos;
     }

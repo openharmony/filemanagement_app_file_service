@@ -28,7 +28,7 @@ using namespace LibN;
 
 static napi_value AsyncCallback(napi_env env, const NFuncArg& funcArg)
 {
-    HILOGI("called LocalCapabilities::AsyncCallback begin");
+    HILOGD("called LocalCapabilities::AsyncCallback begin");
 
     auto fd = make_shared<UniqueFd>();
     auto cbExec = [fd]() -> NError {
@@ -123,7 +123,7 @@ static std::tuple<bool, std::vector<BIncrementalData>> ParseDataList(napi_env en
 
 static napi_value AsyncDataList(napi_env env, const NFuncArg& funcArg)
 {
-    HILOGI("called LocalCapabilities::AsyncDataList begin");
+    HILOGD("called LocalCapabilities::AsyncDataList begin");
 
     auto [succ, bundles] = ParseDataList(env, funcArg[NARG_POS::FIRST]);
     if (!succ) {
@@ -160,7 +160,7 @@ static napi_value AsyncDataList(napi_env env, const NFuncArg& funcArg)
 
 napi_value PropNOperation::Async(napi_env env, napi_callback_info info)
 {
-    HILOGI("called LocalCapabilities::Async begin");
+    HILOGD("called LocalCapabilities::Async begin");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
         HILOGE("Number of arguments unmatched.");
@@ -181,7 +181,7 @@ napi_value PropNOperation::Async(napi_env env, napi_callback_info info)
 
 napi_value PropNOperation::DoGetBackupInfo(napi_env env, napi_callback_info info)
 {
-    HILOGI("called DoGetBackupInfo begin");
+    HILOGD("called DoGetBackupInfo begin");
     std::string result;
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
