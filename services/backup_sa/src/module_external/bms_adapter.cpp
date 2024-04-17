@@ -45,6 +45,7 @@ const string LINUX_HAP_CODE_PATH = "2";
 const string MEDIA_LIBRARY_HAP = "com.ohos.medialibrary.medialibrarydata";
 const string EXTERNAL_FILE_HAP = "com.ohos.UserFile.ExternalFileManager";
 const int E_ERR = -1;
+const int SINGLE_BUNDLE_NUM = 1;
 const vector<string> dataDir = {"app", "local", "distributed", "database", "cache"};
 } // namespace
 
@@ -115,6 +116,10 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
         HILOGI("Begin Get bundleName:%{public}s", bundleName.c_str());
         AppExecFwk::BundleInfo installedBundle;
         if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
+            if (bundleNames.size() != SINGLE_BUNDLE_NUM) {
+                HILOGE("bundleName:%{public}s, current bundle info for backup/restore is empty", bundleName.c_str());
+                continue;
+            }
             throw BError(BError::Codes::SA_BUNDLE_INFO_EMPTY, "Failed to get bundle info");
         }
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
