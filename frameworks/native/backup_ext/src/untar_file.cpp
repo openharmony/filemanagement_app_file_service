@@ -423,6 +423,9 @@ string UntarFile::GenRealPath(const string &rootPath, const string &realName)
 
 void UntarFile::CreateDir(string &path, mode_t mode)
 {
+    if (path.empty()) {
+        return;
+    }
     size_t len = path.length();
     if (path[len - 1] == '/') {
         path[len - 1] = '\0';
