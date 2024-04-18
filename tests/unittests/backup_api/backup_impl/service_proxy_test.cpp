@@ -207,14 +207,14 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppFileReady_0100, testing::ext::Te
     std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
     UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
 
-    int32_t result = proxy_->AppFileReady(bundleName, move(fd));
+    int32_t result = proxy_->AppFileReady(bundleName, move(fd), 0);
     EXPECT_EQ(result, BError(BError::Codes::OK));
 
     TestManager tmErr("AppFileReady_GetFd_0200");
     UniqueFd fdErr(open(tmErr.GetRootDirCurTest().append(FILE_NAME).data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
-    result = proxy_->AppFileReady(bundleName, move(fdErr));
+    result = proxy_->AppFileReady(bundleName, move(fdErr), 0);
     EXPECT_NE(result, BError(BError::Codes::OK));
-    result = proxy_->AppFileReady(bundleName, UniqueFd(-1));
+    result = proxy_->AppFileReady(bundleName, UniqueFd(-1), 0);
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppFileReady_0100";
 }
@@ -527,14 +527,14 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppIncrementalFileReady_0100, testi
     UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
     UniqueFd manifestFd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
 
-    int32_t result = proxy_->AppIncrementalFileReady(bundleName, move(fd), move(manifestFd));
+    int32_t result = proxy_->AppIncrementalFileReady(bundleName, move(fd), move(manifestFd), 0);
     EXPECT_EQ(result, BError(BError::Codes::OK));
 
     TestManager tmErr("AppIncrementalFileReady_GetFd_0200");
     UniqueFd fdErr(open(tmErr.GetRootDirCurTest().append(FILE_NAME).data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
     UniqueFd manifestFdErr(
         open(tmErr.GetRootDirCurTest().append(FILE_NAME).data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
-    result = proxy_->AppIncrementalFileReady(bundleName, move(fdErr), move(manifestFdErr));
+    result = proxy_->AppIncrementalFileReady(bundleName, move(fdErr), move(manifestFdErr), 0);
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppIncrementalFileReady_0100";
 }

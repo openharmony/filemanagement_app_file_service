@@ -65,7 +65,7 @@ ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppFileReady(const string &fileName, UniqueFd fd)
+ErrCode ServiceProxy::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCode)
 {
     return BError(BError::Codes::OK);
 }
@@ -134,7 +134,7 @@ ErrCode ServiceProxy::PublishIncrementalFile(const BFileInfo &fileInfo)
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppIncrementalFileReady(const string &fileName, UniqueFd fd, UniqueFd manifestFd)
+ErrCode ServiceProxy::AppIncrementalFileReady(const string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)
 {
     return BError(BError::Codes::OK);
 }

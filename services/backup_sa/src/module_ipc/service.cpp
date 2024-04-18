@@ -506,7 +506,7 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
     }
 }
 
-ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd)
+ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
@@ -519,7 +519,7 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd)
             fd = session_->OnBunleExtManageInfo(callerName, move(fd));
         }
 
-        session_->GetServiceReverseProxy()->BackupOnFileReady(callerName, fileName, move(fd));
+        session_->GetServiceReverseProxy()->BackupOnFileReady(callerName, fileName, move(fd), errCode);
 
         if (session_->OnBunleFileReady(callerName, fileName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);

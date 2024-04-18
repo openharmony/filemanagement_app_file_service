@@ -21,14 +21,15 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-void ServiceReverse::IncrementalBackupOnFileReady(string bundleName, string fileName, int fd, int manifestFd)
+void ServiceReverse::IncrementalBackupOnFileReady(string bundleName, string fileName, int fd, int manifestFd,
+    int32_t errCode)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksIncrementalBackup_.onFileReady) {
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
     BFileInfo bFileInfo(bundleName, fileName, 0);
-    callbacksIncrementalBackup_.onFileReady(bFileInfo, UniqueFd(fd), UniqueFd(manifestFd));
+    callbacksIncrementalBackup_.onFileReady(bFileInfo, UniqueFd(fd), UniqueFd(manifestFd), errCode);
 }
 
 void ServiceReverse::IncrementalBackupOnBundleStarted(int32_t errCode, string bundleName)
@@ -96,14 +97,15 @@ void ServiceReverse::IncrementalRestoreOnAllBundlesFinished(int32_t errCode)
     callbacksIncrementalRestore_.onAllBundlesFinished(errCode);
 }
 
-void ServiceReverse::IncrementalRestoreOnFileReady(string bundleName, string fileName, int fd, int manifestFd)
+void ServiceReverse::IncrementalRestoreOnFileReady(string bundleName, string fileName, int fd, int manifestFd,
+    int32_t errCode)
 {
     if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onFileReady) {
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
     BFileInfo bFileInfo(bundleName, fileName, 0);
-    callbacksIncrementalRestore_.onFileReady(bFileInfo, UniqueFd(fd), UniqueFd(manifestFd));
+    callbacksIncrementalRestore_.onFileReady(bFileInfo, UniqueFd(fd), UniqueFd(manifestFd), errCode);
 }
 
 void ServiceReverse::IncrementalRestoreOnResultReport(std::string result, std::string bundleName)

@@ -40,7 +40,7 @@ const string FILE_NAME_MANIFEST = "1.fr";
 
 class MockServiceReverse final : public ServiceReverseStub {
 public:
-    MOCK_METHOD3(BackupOnFileReady, void(string bundleName, string fileName, int fd));
+    MOCK_METHOD4(BackupOnFileReady, void(string bundleName, string fileName, int fd, int32_t errCode));
     MOCK_METHOD2(BackupOnBundleStarted, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(BackupOnResultReport, void(string result));
     MOCK_METHOD2(BackupOnBundleFinished, void(int32_t errCode, string bundleName));
@@ -50,7 +50,8 @@ public:
     MOCK_METHOD1(RestoreOnAllBundlesFinished, void(int32_t errCode));
     MOCK_METHOD3(RestoreOnFileReady, void(string bundleName, string fileName, int fd));
     MOCK_METHOD2(RestoreOnResultReport, void(string result, string bundleName));
-    MOCK_METHOD4(IncrementalBackupOnFileReady, void(string bundleName, string fileName, int fd, int manifestFd));
+    MOCK_METHOD5(IncrementalBackupOnFileReady,
+        void(string bundleName, string fileName, int fd, int manifestFd, int32_t errCode));
     MOCK_METHOD2(IncrementalBackupOnBundleStarted, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(IncrementalBackupOnResultReport, void(string result));
     MOCK_METHOD2(IncrementalBackupOnBundleFinished, void(int32_t errCode, string bundleName));
@@ -58,7 +59,8 @@ public:
     MOCK_METHOD2(IncrementalRestoreOnBundleStarted, void(int32_t errCode, std::string bundleName));
     MOCK_METHOD2(IncrementalRestoreOnBundleFinished, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(IncrementalRestoreOnAllBundlesFinished, void(int32_t errCode));
-    MOCK_METHOD4(IncrementalRestoreOnFileReady, void(string bundleName, string fileName, int fd, int manifestFd));
+    MOCK_METHOD5(IncrementalRestoreOnFileReady,
+        void(string bundleName, string fileName, int fd, int manifestFd, int32_t errCode));
     MOCK_METHOD2(IncrementalRestoreOnResultReport, void(string result, string bundleName));
 };
 
@@ -84,7 +86,7 @@ HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_BackupOnFileReady
     GTEST_LOG_(INFO) << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_BackupOnFileReady_0100";
     try {
         MockServiceReverse service;
-        EXPECT_CALL(service, BackupOnFileReady(_, _, _)).WillOnce(Return());
+        EXPECT_CALL(service, BackupOnFileReady(_, _, _, _)).WillOnce(Return());
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -96,6 +98,7 @@ HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_BackupOnFileReady
         string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
         UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
         data.WriteFileDescriptor(fd);
+        data.WriteInt32(0);
 
         EXPECT_EQ(
             BError(BError::Codes::OK),
@@ -443,7 +446,7 @@ HWTEST_F(ServiceReverseStubTest,
     GTEST_LOG_(INFO) << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_IncrementalBackupOnFileReady_0100";
     try {
         MockServiceReverse service;
-        EXPECT_CALL(service, IncrementalBackupOnFileReady(_, _, _, _)).WillOnce(Return());
+        EXPECT_CALL(service, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return());
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -459,6 +462,7 @@ HWTEST_F(ServiceReverseStubTest,
         string filePathManifest = tm2.GetRootDirCurTest().append(FILE_NAME_MANIFEST);
         UniqueFd fdManifest(open(filePathManifest.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
         data.WriteFileDescriptor(fdManifest);
+        data.WriteInt32(0);
 
         EXPECT_EQ(BError(BError::Codes::OK),
                   service.OnRemoteRequest(
@@ -757,7 +761,7 @@ HWTEST_F(ServiceReverseStubTest,
     GTEST_LOG_(INFO) << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_IncrementalRestoreOnFileReady_0100";
     try {
         MockServiceReverse service;
-        EXPECT_CALL(service, IncrementalRestoreOnFileReady(_, _, _, _)).WillOnce(Return());
+        EXPECT_CALL(service, IncrementalRestoreOnFileReady(_, _, _, _, _)).WillOnce(Return());
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;

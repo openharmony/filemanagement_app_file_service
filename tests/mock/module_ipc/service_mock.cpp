@@ -62,7 +62,7 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd)
+ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCode)
 {
     return BError(BError::Codes::OK);
 }
@@ -168,7 +168,7 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppIncrementalFileReady(const string &fileName, UniqueFd fd, UniqueFd manifestFd)
+ErrCode Service::AppIncrementalFileReady(const string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)
 {
     return BError(BError::Codes::OK);
 }

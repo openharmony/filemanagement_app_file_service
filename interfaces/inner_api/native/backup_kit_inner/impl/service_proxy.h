@@ -33,7 +33,7 @@ public:
     ErrCode Start() override;
     UniqueFd GetLocalCapabilities() override;
     ErrCode PublishFile(const BFileInfo &fileInfo) override;
-    ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) override;
+    ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode) override;
     ErrCode AppDone(ErrCode errCode) override;
     ErrCode ServiceResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario) override;
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override;
@@ -54,7 +54,8 @@ public:
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) override;
 
     ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) override;
-    ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd) override;
+    ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd,
+        int32_t errCode) override;
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;

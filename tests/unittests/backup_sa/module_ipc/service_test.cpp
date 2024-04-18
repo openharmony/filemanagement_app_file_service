@@ -275,11 +275,11 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0100, testing::ext::TestSize.Leve
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppFileReady_0100";
     try {
         string fileName = MANAGE_JSON;
-        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1));
+        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1), 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "ServiceTest-AppFileReady Branches";
         fileName = "test";
-        ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1));
+        ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1), 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -302,7 +302,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0101, testing::ext::TestSize.Leve
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppFileReady_0101";
     try {
         string fileName = "";
-        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1));
+        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1), 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -325,7 +325,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0102, testing::ext::TestSize.Leve
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppFileReady_0102";
     try {
         string fileName = "manage.json";
-        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1));
+        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1), 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);

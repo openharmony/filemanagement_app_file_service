@@ -202,14 +202,14 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
     }
 }
 
-ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd)
+ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         string callerName = VerifyCallerAndGetCallerName();
         if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(callerName, fileName, move(fd),
-                                                                              move(manifestFd));
+                                                                              move(manifestFd), errCode);
             return BError(BError::Codes::OK);
         }
 
@@ -218,7 +218,7 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
         }
         HILOGI("reverse: Will notify IncrementalBackupOnFileReady");
         session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(callerName, fileName, move(fd),
-                                                                         move(manifestFd));
+                                                                         move(manifestFd), errCode);
         if (session_->OnBunleFileReady(callerName, fileName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
             auto proxy = backUpConnection->GetBackupExtProxy();

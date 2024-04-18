@@ -75,7 +75,7 @@ static void OnFileReadyWhole(weak_ptr<GeneralCallbacks> pCallbacks, const BFileI
 static void OnFileReadySheet(weak_ptr<GeneralCallbacks> pCallbacks,
                              const BFileInfo &fileInfo,
                              UniqueFd fd,
-                             UniqueFd manifestFd)
+                             UniqueFd manifestFd, int32_t errCode)
 {
     if (pCallbacks.expired()) {
         HILOGI("callbacks is unbound");
@@ -94,18 +94,24 @@ static void OnFileReadySheet(weak_ptr<GeneralCallbacks> pCallbacks,
     auto cbCompl = [bundleName {fileInfo.owner},
                     fileName {fileInfo.fileName},
                     fd {make_shared<UniqueFd>(fd.Release())},
-                    manifestFd {make_shared<UniqueFd>(manifestFd.Release())}](napi_env env, NError err) -> NVal {
+                    manifestFd {make_shared<UniqueFd>(manifestFd.Release())},
+                    errCode](napi_env env, NError err) -> NVal {
         if (err) {
             return {env, err.GetNapiErr(env)};
         }
-        NVal obj = NVal::CreateObject(env);
+        HILOGI("callback function restore OnFileReadySheet errCode: %{public}d", errCode);
+        NVal obj;
+        if (errCode != 0) {
+            obj = NVal {env, NError(errCode).GetNapiErr(env)};
+        } else {
+            obj = NVal::CreateObject(env);
+        }
         obj.AddProp({
             NVal::DeclareNapiProperty(BConstants::BUNDLE_NAME.c_str(), NVal::CreateUTF8String(env, bundleName).val_),
             NVal::DeclareNapiProperty(BConstants::URI.c_str(), NVal::CreateUTF8String(env, fileName).val_),
             NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_),
             NVal::DeclareNapiProperty(BConstants::MANIFEST_FD.c_str(),
                 NVal::CreateInt32(env, manifestFd->Release()).val_)});
-
         return {obj};
     };
 
@@ -338,7 +344,8 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
         restoreEntity->sessionWhole = nullptr;
         restoreEntity->sessionSheet = BIncrementalRestoreSession::Init(BIncrementalRestoreSession::Callbacks {
             .onFileReady =
-                bind(OnFileReadySheet, restoreEntity->callbacks, placeholders::_1, placeholders::_2, placeholders::_3),
+                bind(OnFileReadySheet, restoreEntity->callbacks, placeholders::_1, placeholders::_2, placeholders::_3,
+                    placeholders::_4),
             .onBundleStarted = bind(onBundleBegin, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onBundleFinished = bind(onBundleEnd, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
@@ -359,7 +366,6 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
         return nullptr;
     }
     if (!NClass::SetEntityFor<RestoreEntity>(env, funcArg.GetThisVar(), move(restoreEntity))) {
-        HILOGE("Failed to set SessionRestore entity.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to set SessionRestore entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
