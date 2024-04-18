@@ -56,6 +56,7 @@ private:
     int32_t CmdAppIncrementalDone(MessageParcel &data, MessageParcel &reply);
     int32_t CmdGetIncrementalFileHandle(MessageParcel &data, MessageParcel &reply);
     int32_t CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdUpdateTimer(MessageParcel &data, MessageParcel &reply);
 
 public:
     template <typename T>

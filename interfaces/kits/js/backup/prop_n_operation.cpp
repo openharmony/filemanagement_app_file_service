@@ -21,10 +21,27 @@
 #include "filemgmt_libn.h"
 #include "incremental_backup_data.h"
 #include "service_proxy.h"
+#include "access_token.h"
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace LibN;
+
+static bool CheckPermission(const string &permission)
+{
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+    return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
+           Security::AccessToken::PermissionState::PERMISSION_GRANTED;
+}
+
+static bool IsSystemApp()
+{
+    uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
+}
 
 static napi_value AsyncCallback(napi_env env, const NFuncArg& funcArg)
 {
@@ -217,6 +234,74 @@ napi_value PropNOperation::DoGetBackupInfo(napi_env env, napi_callback_info info
         return nullptr;
     }
     HILOGI("DoGetBackupInfo success with result: %{public}s", result.c_str());
+    return nResult;
+}
+
+bool PropNOperation::UpdateTimer(std::string &bundleName, uint32_t timeOut)
+{
+    bool result = false;
+    ServiceProxy::InvaildInstance();
+    auto proxy = ServiceProxy::GetInstance();
+    if (!proxy) {
+        HILOGE("called DoUpdateTimer,failed to get proxy");
+        return result;
+    }
+    ErrCode errcode = proxy->UpdateTimer(bundleName, timeOut, result);
+    if (errcode != 0) {
+        HILOGE("proxy->UpdateTimer faild.");
+        return result;
+    }
+    return result;
+}
+
+napi_value PropNOperation::DoUpdateTimer(napi_env env, napi_callback_info info)
+{
+    HILOGD("called DoUpdateTimer begin");
+    if (!CheckPermission("ohos.permission.BACKUP")) {
+        HILOGE("has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
+        HILOGE("Number of arguments unmatched.");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    NVal jsBundleStr(env, funcArg[NARG_POS::FIRST]);
+    auto [succStr, bundle, sizeStr] = jsBundleStr.ToUTF8String();
+    if (!succStr) {
+        HILOGE("First argument is not string.");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    NVal jsBundleInt(env, funcArg[NARG_POS::SECOND]);
+    auto [succInt, time] = jsBundleInt.ToInt32();
+    if (!succInt || time <= 0) {
+        HILOGE("Second argument is not number.");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    std::string bundleName = bundle.get();
+    uint32_t timeOut = time;
+    bool result = UpdateTimer(bundleName, timeOut);
+    if (result != true) {
+        return nullptr;
+    }
+
+    napi_value nResult;
+    napi_status status = napi_get_boolean(env, result, &nResult);
+    if (status != napi_ok) {
+        HILOGE("napi_get_boolean faild.");
+        return nullptr;
+    }
+    HILOGI("DoUpdateTimer success with result: %{public}d", result);
     return nResult;
 }
 } // namespace OHOS::FileManagement::Backup

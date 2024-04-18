@@ -580,6 +580,28 @@ void SvcSessionManager::BundleExtTimerStart(const std::string &bundleName, const
     }
 }
 
+bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeOut,
+    const Utils::Timer::TimerCallback &callback)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    if (it->second.timerStatus == true) {
+        // 定时器已存在，则先销毁，再重新注册
+        it->second.timerStatus = false;
+        extBundleTimer.Unregister(it->second.extTimerId);
+        HILOGI("UpdateTimer timeout=%{public}u(ms), bundleName=%{public}s ",
+            timeOut, bundleName.c_str());
+        it->second.extTimerId = extBundleTimer.Register(callback, timeOut, true);
+        it->second.timerStatus = true;
+        return true;
+    }
+    return false;
+}
+
 void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName)
 {
     unique_lock<shared_mutex> lock(lock_);

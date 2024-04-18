@@ -41,6 +41,7 @@ enum class IServiceInterfaceCode {
     SERVICE_CMD_APP_INCREMENTAL_DONE,
     SERVICE_CMD_GET_INCREMENTAL_FILE_NAME,
     SERVICE_CMD_GET_BACKUP_INFO,
+    SERVICE_CMD_UPDATE_TIMER,
 };
 } // namespace OHOS::FileManagement::Backup
 
