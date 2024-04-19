@@ -1111,6 +1111,7 @@ ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &res
     };
     try {
         HILOGI("Service::UpdateTimer begin.");
+        VerifyCaller();
         session_->IncreaseSessionCnt();
         result = session_->UpdateTimer(bundleName, timeOut, timeoutCallback);
         session_->DecreaseSessionCnt();
