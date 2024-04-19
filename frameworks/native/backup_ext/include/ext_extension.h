@@ -33,6 +33,10 @@
 #include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
+using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
+                                 map<string, struct ReportFileInfo>,
+                                 map<string, struct stat>,
+                                 map<string, struct ReportFileInfo>>;
 class BackupExtExtension : public ExtExtensionStub {
 public:
     UniqueFd GetFileHandle(const std::string &fileName) override;
@@ -134,14 +138,15 @@ private:
     void AsyncTaskOnBackup();
 
     int DoIncrementalBackup(const std::map<std::string, struct ReportFileInfo> &allFiles,
-        const std::map<std::string, struct ReportFileInfo> &smallFiles,
-        const std::map<std::string, struct stat> &bigFiles,
-        const std::map<std::string, struct ReportFileInfo> &bigInfos);
+                            const std::map<std::string, struct ReportFileInfo> &smallFiles,
+                            const std::map<std::string, struct stat> &bigFiles,
+                            const std::map<std::string, struct ReportFileInfo> &bigInfos);
 
-    void AsyncTaskOnIncrementalBackup(const std::map<std::string, struct ReportFileInfo> &allFiles,
-        const std::map<std::string, struct ReportFileInfo> &smallFiles,
-        const std::map<std::string, struct stat> &bigFiles,
-        const std::map<std::string, struct ReportFileInfo> &bigInfos);
+    CompareFilesResult CompareFiles(const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
+        const unordered_map<string, struct ReportFileInfo> &storageFiles);
+
+    void AsyncTaskOnIncrementalBackup(const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
+        const unordered_map<string, struct ReportFileInfo> &storageFiles);
 
     /**
      * @brief extension incremental backup restore is done
