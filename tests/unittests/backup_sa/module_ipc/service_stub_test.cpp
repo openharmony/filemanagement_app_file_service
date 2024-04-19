@@ -69,6 +69,7 @@ public:
     MOCK_METHOD1(AppIncrementalDone, ErrCode(ErrCode errCode));
     MOCK_METHOD2(GetIncrementalFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
     MOCK_METHOD2(GetBackupInfo, ErrCode(string &bundleName, string &result));
+    MOCK_METHOD3(UpdateTimer, ErrCode(BundleName &bundleName, uint32_t timeOut, bool &result));
     UniqueFd InvokeGetLocalCapabilities()
     {
         if (bCapabilities_) {
@@ -585,5 +586,37 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetBackupInfo_0100, testing:
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by GetBackupInfo.";
     }
     GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_GetBackupInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_UpdateTimer_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_UpdateTimer_0100
+ * @tc.desc: Test function of UpdateTimer interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_UpdateTimer_0100, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_UpdateTimer_0100";
+    try {
+        MockService service;
+        EXPECT_CALL(service, UpdateTimer(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        std::string bundleName = "com.example.app2backup";
+        uint32_t timeOut = 30000;
+        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
+        EXPECT_TRUE(data.WriteString(bundleName));
+        EXPECT_TRUE(data.WriteUint32(timeOut));
+        EXPECT_EQ(BError(BError::Codes::OK), service.OnRemoteRequest(
+            static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER), data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by UpdateTimer.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_UpdateTimer_0100";
 }
 } // namespace OHOS::FileManagement::Backup

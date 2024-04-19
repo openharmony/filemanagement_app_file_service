@@ -485,4 +485,32 @@ ErrCode ServiceProxy::GetBackupInfo(BundleName &bundleName, std::string &result)
     HILOGI("ServiceProxy GetBackupInfo end. result = %s", result.c_str());
     return BError(BError::Codes::OK, "success");
 }
+
+ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+{
+    HILOGI("ServiceProxy UpdateTimer Begin.");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    if (!data.WriteString(bundleName)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleName").GetCode();
+    }
+    if (!data.WriteUint32(timeOut)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send timeOut").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER),
+                                        data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    reply.ReadBool(result);
+    HILOGI("ServiceProxy UpdateTimer end. result = %d", result);
+    return BError(BError::Codes::OK, "success");
+}
 } // namespace OHOS::FileManagement::Backup

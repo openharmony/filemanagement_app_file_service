@@ -311,6 +311,12 @@ void SvcSessionManager::BundleExtTimerStart(const std::string &bundleName, const
 {
 }
 
+bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeOut,
+    const Utils::Timer::TimerCallback &callback)
+{
+    return true;
+}
+
 void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName) {}
 
 void SvcSessionManager::SetBackupExtName(const string &bundleName, const string &backupExtName) {}

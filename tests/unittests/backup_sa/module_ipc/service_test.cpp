@@ -875,4 +875,28 @@ HWTEST_F(ServiceTest, SUB_Service_GetBackupInfo_0100, testing::ext::TestSize.Lev
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetBackupInfo_0100";
 }
+
+/**
+ * @tc.number: SUB_Service_UpdateTimer_0100
+ * @tc.name: SUB_Service_UpdateTimer_0100
+ * @tc.desc: 测试 UpdateTimer 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_UpdateTimer_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_UpdateTimer_0100";
+    try {
+        std::string bundleName = "com.example.app2backup";
+        bool result = true;
+        uint32_t timeOut = 30000;
+        servicePtr_->UpdateTimer(bundleName, timeOut, result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by UpdateTimer.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_UpdateTimer_0100";
+}
 } // namespace OHOS::FileManagement::Backup

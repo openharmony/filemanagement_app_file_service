@@ -154,6 +154,11 @@ ErrCode ServiceProxy::GetBackupInfo(std::string &bundleName, std::string &result
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+{
+    return BError(BError::Codes::OK);
+}
+
 sptr<IService> ServiceProxy::GetInstance()
 {
     if (!GetMockGetInstance()) {

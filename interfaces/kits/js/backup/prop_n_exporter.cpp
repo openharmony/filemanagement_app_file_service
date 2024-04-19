@@ -25,6 +25,7 @@ bool PropNExporter::Export()
     return exports_.AddProp({
         NVal::DeclareNapiFunction("getLocalCapabilities", PropNOperation::Async),
         NVal::DeclareNapiFunction("getBackupInfo", PropNOperation::DoGetBackupInfo),
+        NVal::DeclareNapiFunction("updateTimer", PropNOperation::DoUpdateTimer),
     });
 }
 

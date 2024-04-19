@@ -76,6 +76,8 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdGetIncrementalFileHandle;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_INFO)] =
         &ServiceStub::CmdGetBackupInfo;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER)] =
+        &ServiceStub::CmdUpdateTimer;
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -341,6 +343,30 @@ int32_t ServiceStub::CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply)
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to write result"));
     }
     HILOGI("ServiceStub::CmdGetBackupInfo end.");
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdUpdateTimer(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("ServiceStub::CmdUpdateTimer Begin.");
+    int ret = ERR_OK;
+    string bundleName;
+    if (!data.ReadString(bundleName)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive bundleName"));
+    }
+    uint32_t timeOut;
+    if (!data.ReadUint32(timeOut)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive timeOut"));
+    }
+    bool result;
+    ret = UpdateTimer(bundleName, timeOut, result);
+    if (ret != ERR_OK) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to call UpdateTimer"));
+    }
+    if (!reply.WriteBool(result)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to write result"));
+    }
+    HILOGI("ServiceStub::CmdUpdateTimer end.");
     return BError(BError::Codes::OK);
 }
 

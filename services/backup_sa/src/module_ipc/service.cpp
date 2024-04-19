@@ -1096,6 +1096,36 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
     }
 }
 
+ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+{
+    auto timeoutCallback = [ptr {wptr(this)}, bundleName]() {
+        auto thisPtr = ptr.promote();
+        if (!thisPtr) {
+            HILOGW("this pointer is null.");
+            return;
+        }
+        auto sessionPtr = ptr->session_;
+        auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
+        HILOGE("Backup <%{public}s> Extension Process Timeout", bundleName.data());
+        sessionPtr->BundleExtTimerStop(bundleName);
+        sessionConnection->DisconnectBackupExtAbility();
+        thisPtr->ClearSessionAndSchedInfo(bundleName);
+        thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+    };
+    try {
+        HILOGI("Service::UpdateTimer begin.");
+        session_->IncreaseSessionCnt();
+        result = session_->UpdateTimer(bundleName, timeOut, timeoutCallback);
+        session_->DecreaseSessionCnt();
+        return BError(BError::Codes::OK);
+    } catch (...) {
+        result = false;
+        session_->DecreaseSessionCnt();
+        HILOGI("Unexpected exception");
+        return EPERM;
+    }
+}
+
 AAFwk::Want Service::CreateConnectWant (BundleName &bundleName)
 {
     BConstants::ExtensionAction action = BConstants::ExtensionAction::BACKUP;
