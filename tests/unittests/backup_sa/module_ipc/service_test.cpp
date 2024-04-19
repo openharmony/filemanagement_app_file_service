@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -189,7 +189,7 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0100, testing::ext::TestSize.Level
     try {
         ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-        BFileInfo fileInfo {BUNDLE_NAME, FILE_NAME, 0};
+        BFileInfo fileInfo {BUNDLE_NAME, "", 0};
         ret = servicePtr_->PublishFile(fileInfo);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "ServiceTest-PublishFile Branches";
@@ -218,13 +218,13 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0101, testing::ext::TestSize.Level
     try {
         ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-        BFileInfo fileInfo {BUNDLE_NAME, FILE_NAME, 0};
+        BFileInfo fileInfo {BUNDLE_NAME, "", 0};
         ret = servicePtr_->PublishFile(fileInfo);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "ServiceTest-PublishFile Branches";
         fileInfo.fileName = "/data/storage/el2/restore/bundle.hap";
         ret = servicePtr_->PublishFile(fileInfo);
-        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        EXPECT_NE(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by PublishFile.";
@@ -247,13 +247,12 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0102, testing::ext::TestSize.Level
     try {
         ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-        BFileInfo fileInfo {BUNDLE_NAME, FILE_NAME, 0};
+        BFileInfo fileInfo {BUNDLE_NAME, "", 0};
         ret = servicePtr_->PublishFile(fileInfo);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "ServiceTest-PublishFile Branches";
-        string bundleName = "";
         ret = servicePtr_->PublishFile(fileInfo);
-        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        EXPECT_NE(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by PublishFile.";

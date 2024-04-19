@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -75,6 +75,9 @@ public:
     }
 
     shared_ptr<BSessionRestoreAsync> session_ = {};
+    map<string, int> fileCount_;
+    map<string, int> fileNums_;
+    mutex fileCountLock_;
 
 private:
     mutable condition_variable cv_;
@@ -114,9 +117,21 @@ static void OnFileReady(shared_ptr<SessionAsync> ctx, const BFileInfo &fileInfo,
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
     BFile::SendFile(fd, fdLocal);
-    int ret = ctx->session_->PublishFile(fileInfo);
-    if (ret != 0) {
-        throw BError(BError::Codes::TOOL_INVAL_ARG, "PublishFile error");
+    std::string bundleName = fileInfo.owner;
+    {
+        unique_lock<mutex> fileLock(ctx->fileCountLock_);
+        ++ctx->fileCount_[bundleName];
+        // 文件准备完成
+        printf("FileReady count/num = %d/%d\n", ctx->fileCount_[bundleName], ctx->fileNums_[bundleName]);
+        if (ctx->fileCount_[bundleName] == ctx->fileNums_[bundleName]) {
+            printf("PublishFile start.\n");
+            BFileInfo fileInfoTemp = fileInfo;
+            fileInfoTemp.fileName = "";
+            int ret = ctx->session_->PublishFile(fileInfoTemp);
+            if (ret != 0) {
+                throw BError(BError::Codes::TOOL_INVAL_ARG, "PublishFile error");
+            }
+        }
     }
 }
 
@@ -339,6 +354,10 @@ static int32_t InitArg(const string &pathCapFile,
     }
 
     auto ctx = make_shared<SessionAsync>();
+    int len = bundleNames.size();
+    for (int i = 0; i < len; ++i) {
+        ctx->fileNums_[bundleNames[i]] = ToolsOp::GetFIleNums(bundleNames[i]);
+    }
     ctx->session_ = BSessionRestoreAsync::Init(BSessionRestoreAsync::Callbacks {
         .onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2),
         .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),

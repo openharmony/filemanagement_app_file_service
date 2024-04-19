@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_BACKUP_TOOLS_OP_H
 #define OHOS_FILEMGMT_BACKUP_TOOLS_OP_H
 
+#include <dirent.h>
 #include <functional>
 #include <map>
 #include <string>
@@ -23,6 +24,7 @@
 #include <vector>
 
 namespace OHOS::FileManagement::Backup {
+const int DEFAULT_ERR_NUMBER = -1;
 class ToolsOp {
 public:
     using CRefVStrView = const std::vector<std::string_view> &;
@@ -112,6 +114,12 @@ public:
      */
     int Execute(std::map<std::string, std::vector<std::string>> mapArg) const;
 
+    /**
+     * @brief 获取dir下文件个数，用于publishfile触发时机
+     *
+     * @return int 错误码（0 表示成功，非零表示失败）
+     */
+    static int GetFIleNums(const std::string &bundleName, bool isWholeRestore = true);
 private:
     Descriptor desc_;
     static inline std::vector<ToolsOp> opsAvailable_;
