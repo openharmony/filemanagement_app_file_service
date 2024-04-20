@@ -14,67 +14,184 @@
  */
 #include "backupext_fuzzer.h"
 
-#include <cstddef>
-#include <cstdint>
 #include <cstring>
 
 #include "message_parcel.h"
-#include "ext_extension_stub.h"
 #include "ext_extension.h"
 #include "ext_backup.h"
-#include "securec.h"
-
-using namespace OHOS::FileManagement::Backup;
 
 namespace OHOS {
-constexpr size_t FOO_MAX_LEN = 1024;
+using namespace std;
+using namespace OHOS::FileManagement::Backup;
+
 constexpr uint8_t MAX_CALL_TRANSACTION = 10;
-constexpr size_t U32_AT_SIZE = 4;
 
-std::shared_ptr<ExtBackup> extBackup = std::make_shared<ExtBackup>();
-std::shared_ptr<BackupExtExtension> backupExtExtensionPtr =
-    std::make_shared<BackupExtExtension>(extBackup);
-
-uint32_t GetU32Data(const char* ptr)
+template<class T>
+T TypeCast(const uint8_t *data, int *pos = nullptr)
 {
-    // 将第0个数字左移24位，将第1个数字左移16位，将第2个数字左移8位，第3个数字不左移
-    return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | (ptr[3]);
+    if (pos) {
+        *pos += sizeof(T);
+    }
+    return *(reinterpret_cast<const T*>(data));
 }
 
-bool BackupExtFuzzTest(std::unique_ptr<char[]> data, size_t size)
+bool OnRemoteRequestFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
-    uint32_t code = GetU32Data(data.get());
-    MessageParcel datas;
-    datas.WriteInterfaceToken(ExtExtensionStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
-    datas.RewindRead(0);
+    if (data == nullptr || size < sizeof(uint32_t)) {
+        return true;
+    }
+
+    MessageParcel msg;
     MessageParcel reply;
     MessageOption option;
-    backupExtExtensionPtr->OnRemoteRequest(code % MAX_CALL_TRANSACTION, datas, reply, option);
 
+    int pos = 0;
+    uint32_t code = TypeCast<uint32_t>(data, &pos);
+    msg.WriteInterfaceToken(ExtExtensionStub::GetDescriptor());
+    msg.WriteBuffer(data + pos, size - pos);
+    msg.RewindRead(0);
+
+    extension->OnRemoteRequest(code % MAX_CALL_TRANSACTION, msg, reply, option);
+    return true;
+}
+
+bool InitFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    shared_ptr<AbilityRuntime::AbilityLocalRecord> record = nullptr;
+    shared_ptr<AbilityRuntime::OHOSApplication> application = nullptr;
+    shared_ptr<AbilityRuntime::AbilityHandler> handler = nullptr;
+    const sptr<IRemoteObject> token = nullptr;
+    backup->Init(record, application, handler, token);
+    return true;
+}
+
+bool OnCommandFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    if (data == nullptr || size < sizeof(bool) + sizeof(int)) {
+        return true;
+    }
+
+    int pos = 0;
+    bool restart = TypeCast<bool>(data, &pos);
+    int startId = TypeCast<int>(data + pos, &pos);
+    int len = (size - pos) >> 1;
+    AAFwk::Want want;
+    want.SetElementName(string(reinterpret_cast<const char*>(data + pos), len),
+                        string(reinterpret_cast<const char*>(data + pos + len), len));
+
+    backup->OnCommand(want, restart, startId);
+    return true;
+}
+
+bool OnConnectFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    int len = size >> 1;
+    AAFwk::Want want;
+    want.SetElementName(string(reinterpret_cast<const char*>(data), len),
+                        string(reinterpret_cast<const char*>(data + len), size - len));
+
+    backup->OnConnect(want);
+    return true;
+}
+
+bool CreateFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    unique_ptr<AbilityRuntime::Runtime> runtime;
+    backup->Create(runtime);
+    return true;
+}
+
+bool GetExtensionActionFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    backup->GetExtensionAction();
+    return true;
+}
+
+bool OnBackupFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    function<void()> callback = nullptr;
+    backup->OnBackup(callback);
+    return true;
+}
+
+bool OnRestoreFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    function<void()> callback;
+    function<void(const string)> callbackEx;
+    function<void()> callbackExAppDone;
+    backup->OnRestore(callback, callbackEx, callbackExAppDone);
+    return true;
+}
+
+bool OnRestore2FuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    function<void()> callback = nullptr;
+    backup->OnRestore(callback);
+    return true;
+}
+
+bool GetBackupInfoFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    function<void(string)> callback = nullptr;
+    backup->GetBackupInfo(callback);
+    return true;
+}
+
+bool WasFromSpecialVersionFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    backup->WasFromSpecialVersion();
+    return true;
+}
+
+bool SpeicalVersionForCloneAndCloudFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    backup->SpeicalVersionForCloneAndCloud();
+    return true;
+}
+
+bool RestoreDataReadyFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    backup->RestoreDataReady();
+    return true;
+}
+
+bool CallExtRestoreFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    string result = string(reinterpret_cast<const char*>(data), size);
+    backup->CallExtRestore(result);
+    return true;
+}
+
+bool SetCreatorFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+{
+    CreatorFunc creator;
+    backup->SetCreator(creator);
     return true;
 }
 } // namespace OHOS
 
 /* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t inputSize)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
+    auto extBackup = std::make_shared<OHOS::FileManagement::Backup::ExtBackup>();
+    auto extension = std::make_shared<OHOS::FileManagement::Backup::BackupExtExtension>(extBackup);
 
-    /* Validate the length of size */
-    if (inputSize < OHOS::U32_AT_SIZE || inputSize > OHOS::FOO_MAX_LEN) {
-        return 0;
-    }
+    OHOS::OnRemoteRequestFuzzTest(extension, data, size);
+    OHOS::InitFuzzTest(extBackup, data, size);
+    OHOS::OnCommandFuzzTest(extBackup, data, size);
+    OHOS::OnConnectFuzzTest(extBackup, data, size);
+    OHOS::CreateFuzzTest(extBackup, data, size);
+    OHOS::GetExtensionActionFuzzTest(extBackup, data, size);
+    OHOS::OnBackupFuzzTest(extBackup, data, size);
+    OHOS::OnRestoreFuzzTest(extBackup, data, size);
+    OHOS::OnRestore2FuzzTest(extBackup, data, size);
+    OHOS::GetBackupInfoFuzzTest(extBackup, data, size);
+    OHOS::WasFromSpecialVersionFuzzTest(extBackup, data, size);
+    OHOS::SpeicalVersionForCloneAndCloudFuzzTest(extBackup, data, size);
+    OHOS::RestoreDataReadyFuzzTest(extBackup, data, size);
+    OHOS::CallExtRestoreFuzzTest(extBackup, data, size);
+    OHOS::SetCreatorFuzzTest(extBackup, data, size);
 
-    auto str = std::make_unique<char[]>(inputSize + 1);
-    (void)memset_s(str.get(), inputSize + 1, 0x00, inputSize + 1);
-    if (memcpy_s(str.get(), inputSize, data, inputSize) != EOK) {
-        return 0;
-    }
-    OHOS::BackupExtFuzzTest(move(str), inputSize);
     return 0;
 }
-

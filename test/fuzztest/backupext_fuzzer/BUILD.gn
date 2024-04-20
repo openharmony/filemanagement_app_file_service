@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -23,12 +23,10 @@ ohos_fuzztest("BackupExtFuzzTest") {
   fuzz_config_file = "${app_file_service_path}/test/fuzztest/backupext_fuzzer"
   include_dirs = [
     "${path_ability_runtime}/services/common/include",
-    "${path_ability_runtime}/interfaces/kits/napi/aafwk/inner/napi_common",
     "${path_ability_runtime}/interfaces/kits/native/appkit/ability_runtime",
     "${path_backup}/frameworks/native/backup_ext/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/utils/include",
-    "${path_napi}/native_engine",
   ]
   cflags = [
     "-g",
@@ -50,8 +48,6 @@ ohos_fuzztest("BackupExtFuzzTest") {
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/utils:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
-    "${third_party_path}/bounds_checking_function:libsec_shared",
   ]
 
   external_deps = [
@@ -67,16 +63,16 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
   ]
 
   defines = [
     "LOG_TAG=\"app_file_service\"",
     "LOG_DOMAIN=0xD200000",
+    "private = public",
   ]
 
   use_exceptions = true
 }
-
 ###############################################################################
-
