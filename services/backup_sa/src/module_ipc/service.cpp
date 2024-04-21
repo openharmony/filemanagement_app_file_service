@@ -22,6 +22,7 @@
 #include "module_ipc/service.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cerrno>
 #include <cstddef>
 #include <cstdint>
@@ -29,6 +30,7 @@
 #include <regex>
 
 #include <fcntl.h>
+#include <iomanip>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/vfs.h>
@@ -47,6 +49,7 @@
 #include "b_resources/b_constants.h"
 #include "bundle_mgr_client.h"
 #include "filemgmt_libhilog.h"
+#include "hisysevent.h"
 #include "ipc_skeleton.h"
 #include "module_app_gallery/app_gallery_dispose_proxy.h"
 #include "module_external/bms_adapter.h"
@@ -65,7 +68,10 @@ REGISTER_SYSTEM_ABILITY_BY_ID(Service, FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, fals
 
 namespace {
 constexpr int32_t DEBUG_ID = 100;
+constexpr int32_t INDEX = 3;
+constexpr int32_t MS_1000 = 1000;
 const static string COMMON_EVENT_TYPE = "broadcast";
+const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 const int32_t CONNECT_WAIT_TIME_S = 15;
 } // namespace
 
@@ -570,6 +576,21 @@ ErrCode Service::AppDone(ErrCode errCode)
             HILOGI("will notify clone data, scenario is: %{public}d", scenario);
             if (scenario == IServiceReverse::Scenario::BACKUP) {
                 session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, callerName);
+                auto now = std::chrono::system_clock::now();
+                auto time = std::chrono::system_clock::to_time_t(now);
+                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+                std::stringstream strTime;
+                strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
+                    << (std::setw(INDEX)) << (ms.count() % MS_1000);
+                HiSysEventWrite(
+                    OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
+                    FILE_BACKUP_EVENTS,
+                    OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+                    "PROC_NAME", "ohos.appfileservice",
+                    "BUNDLENAME", callerName,
+                    "PID", getpid(),
+                    "TIME", strTime.str()
+                );
             } else if (scenario == IServiceReverse::Scenario::RESTORE) {
                 session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, callerName);
             }
