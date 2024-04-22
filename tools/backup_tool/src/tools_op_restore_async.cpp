@@ -354,8 +354,8 @@ static int32_t InitArg(const string &pathCapFile,
     }
 
     auto ctx = make_shared<SessionAsync>();
-    int len = bundleNames.size();
-    for (int i = 0; i < len; ++i) {
+    size_t len = bundleNames.size();
+    for (size_t i = 0; i < len; ++i) {
         ctx->fileNums_[bundleNames[i]] = ToolsOp::GetFIleNums(bundleNames[i]);
     }
     ctx->session_ = BSessionRestoreAsync::Init(BSessionRestoreAsync::Callbacks {

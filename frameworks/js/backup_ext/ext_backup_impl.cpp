@@ -15,6 +15,8 @@
 
 #include "native_engine/native_engine.h"
 
+#define EXTERN_C_VISIBILITY_DEFAULT extern "C" __attribute__((visibility("default")))
+
 extern const char _binary_backup_extension_ability_js_start[];
 extern const char _binary_backup_extension_ability_js_end[];
 extern const char _binary_backup_extension_ability_abc_start[];
@@ -30,8 +32,7 @@ extern "C" __attribute__((constructor)) void NAPI_application_BackupExtensionAbi
     napi_module_register(&_module);
 }
 
-extern "C" __attribute__((visibility("default"))) void
-    NAPI_application_BackupExtensionAbility_GetJSCode(const char **buf, int *bufLen)
+EXTERN_C_VISIBILITY_DEFAULT void NAPI_application_BackupExtensionAbility_GetJSCode(const char **buf, int *bufLen)
 {
     if (buf != nullptr) {
         *buf = _binary_backup_extension_ability_js_start;
@@ -42,8 +43,7 @@ extern "C" __attribute__((visibility("default"))) void
     }
 }
 
-extern "C" __attribute__((visibility("default"))) void
-    NAPI_application_BackupExtensionAbility_GetABCCode(const char **buf, int *buflen)
+EXTERN_C_VISIBILITY_DEFAULT void NAPI_application_BackupExtensionAbility_GetABCCode(const char **buf, int *buflen)
 {
     if (buf != nullptr) {
         *buf = _binary_backup_extension_ability_abc_start;
