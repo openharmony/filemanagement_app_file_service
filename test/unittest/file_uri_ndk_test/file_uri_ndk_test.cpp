@@ -122,14 +122,12 @@ HWTEST_F(NDKFileUriTest, get_path_from_uri_test_002, TestSize.Level1)
 HWTEST_F(NDKFileUriTest, get_path_from_uri_test_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "get_path_from_uri_test_003 start";
-    std::string bundleB = "com.example.fileshareb";
-    std::string fileUriStr = "file://" + bundleB + "/data/storage/el2/base/files/GetPathFromUri003.txt";
-    const char *fileUri = fileUriStr.c_str();
+    const char fileUri[] = "file://com.example.fileshareb/data/storage/el2/base/files/GetPathFromUri003.txt";
     std::string filePathStr =
-        "/data/storage/el2/share/r/" + bundleB + "/data/storage/el2/base/files/GetPathFromUri003.txt";
+        "/data/storage/el2/share/r/com.example.fileshareb/data/storage/el2/base/files/GetPathFromUri003.txt";
     const char *filePath = filePathStr.c_str();
     char *result = nullptr;
-    unsigned int length = fileUriStr.size();
+    unsigned int length = strlen(fileUri);
     FileManagement_ErrCode ret = OH_FileUri_GetPathFromUri(fileUri, length, &result);
     EXPECT_EQ(ret, ERR_OK);
     GTEST_LOG_(INFO) << result;
