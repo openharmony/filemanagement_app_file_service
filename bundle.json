@@ -149,6 +149,17 @@
                             "impl/i_service_reverse.h"
                         ]
                     }
+                },
+                {
+                    "name": "//foundation/filemanagement/app_file_service/interfaces/kits/cj:cj_file_fileuri_ffi",
+                    "header": {
+                        "header_files": [
+                            "file_fileuri_ffi.h",
+                            "file_uri.h",
+                            "macro.h"
+                        ],
+                        "header_base": "//foundation/filemanagement/app_file_service/interfaces//kits/cj/src"
+                    }
                 }
             ],
             "test": [
