@@ -48,6 +48,7 @@ namespace {
     const string LOCAL = "local";
     const int ASSET_IN_BUCKET_NUM_MAX = 1000;
     const int ASSET_DIR_START_NUM = 16;
+    const int DECODE_FORMAT_NUM = 16;
 }
 
 struct MediaUriInfo {
@@ -87,23 +88,21 @@ string SandboxHelper::Encode(const string &uri)
 
 string SandboxHelper::Decode(const string &uri)
 {
-    std::ostringstream outPutStream;
+    std::string outPutStr;
     const int32_t encodeLen = 2;
     size_t index = 0;
     while (index < uri.length()) {
         if (uri[index] == '%') {
-            int hex = 0;
-            std::istringstream inputStream(uri.substr(index + 1, encodeLen));
-            inputStream >> std::hex >> hex;
-            outPutStream << static_cast<char>(hex);
+            std::string inputStr(uri.substr(index + 1, encodeLen));
+            outPutStr += static_cast<char>(strtol(inputStr.c_str(), nullptr, DECODE_FORMAT_NUM));
             index += encodeLen + 1;
         } else {
-            outPutStream << uri[index];
+            outPutStr += uri[index];
             index++;
         }
     }
 
-    return outPutStream.str();
+    return outPutStr;
 }
 
 static string GetLowerPath(string &lowerPathHead, const string &lowerPathTail,

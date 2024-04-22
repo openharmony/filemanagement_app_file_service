@@ -31,6 +31,7 @@
 #include "sandbox_helper.h"
 #include "securec.h"
 #include "uri.h"
+#include "unique_fd.h"
 
 namespace OHOS {
 namespace AppFileService {
@@ -379,7 +380,7 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
     InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
 
     std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + SHAER_PATH_MID;
-    int32_t dirFd = open(ioctlDir.c_str(), O_RDONLY);
+    UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
     if (dirFd < 0) {
         LOGE("Open share path failed with %{public}d", errno);
         return errno;
@@ -388,11 +389,9 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
     ret = ioctl(dirFd, HMDFS_IOC_GET_DST_PATH, &hdi);
     if (ret != 0) {
         LOGE("Ioctl failed with %{public}d", errno);
-        close(dirFd);
         return -errno;
     }
 
-    close(dirFd);
     SetHmdfsUriInfo(hui, uri, hdi.size, networkId);
     LOGD("GetDfsUriFromLocal successfully");
     return 0;
@@ -403,7 +402,7 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
                                              std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
 {
     std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + SHAER_PATH_MID;
-    int32_t dirFd = open(ioctlDir.c_str(), O_RDONLY);
+    UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
     if (dirFd < 0) {
         LOGE("Open share path failed with %{public}d", errno);
         return errno;
@@ -416,7 +415,6 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
         std::string physicalPath = GetPhysicalPath(uri, std::to_string(userId));
         if (physicalPath == "") {
             LOGE("Failed to get physical path");
-            close(dirFd);
             return -EINVAL;
         }
 
@@ -432,7 +430,6 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
         int ret = GetDistributedPath(uri, userId, distributedPath);
         if (ret != 0) {
             LOGE("Path is too long with %{public}d", ret);
-            close(dirFd);
             return ret;
         }
 
@@ -441,14 +438,12 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
         ret = ioctl(dirFd, HMDFS_IOC_GET_DST_PATH, &hdi);
         if (ret != 0) {
             LOGE("Ioctl failed with %{public}d", errno);
-            close(dirFd);
             return -errno;
         }
         HmdfsUriInfo dfsUriInfo;
         SetHmdfsUriInfo(dfsUriInfo, uri, hdi.size, networkId);
         uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
     }
-    close(dirFd);
     LOGD("GetDfsUriFromLocal successfully");
     return 0;
 }
