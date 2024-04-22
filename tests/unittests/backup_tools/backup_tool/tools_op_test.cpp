@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,8 @@
 
 #include <gtest/gtest.h>
 
+#include "b_resources/b_constants.h"
+#include "directory_ex.h"
 #include "tools_op.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -148,5 +150,56 @@ HWTEST_F(ToolsOpTest, SUB_backup_tools_op_0400, testing::ext::TestSize.Level1)
         GTEST_LOG_(INFO) << "ToolsOpTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ToolsOpTest-end SUB_backup_tools_op_0400";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_0500
+ * @tc.name: SUB_backup_tools_op_0500
+ * @tc.desc: 测试Execute分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpTest, SUB_backup_tools_op_0500, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpTest-begin SUB_backup_tools_op_0500";
+    try {
+        std::string bundleName = "test";
+        std::string wholePath = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + bundleName;
+        std::string incrementalpath = string(BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR) + bundleName;
+        if (access(incrementalpath.c_str(), F_OK) == 0) {
+            ForceRemoveDirectory(incrementalpath.data());
+        }
+        int result = ToolsOp::GetFIleNums(bundleName, false);
+        EXPECT_TRUE(result == DEFAULT_ERR_NUMBER);
+        if (access(wholePath.c_str(), F_OK) == 0) {
+            ForceRemoveDirectory(wholePath.data());
+        }
+        result = ToolsOp::GetFIleNums(bundleName, true);
+        EXPECT_TRUE(result == DEFAULT_ERR_NUMBER);
+
+
+        if (access(incrementalpath.c_str(), F_OK) != 0) {
+            ForceCreateDirectory(incrementalpath.data());
+        }
+        result = ToolsOp::GetFIleNums(bundleName, false);
+        EXPECT_TRUE(result == 0);
+        if (access(wholePath.c_str(), F_OK) != 0) {
+            ForceCreateDirectory(wholePath.data());
+        }
+        result = ToolsOp::GetFIleNums(bundleName, true);
+        EXPECT_TRUE(result == 0);
+        if (access(incrementalpath.c_str(), F_OK) == 0) {
+            ForceRemoveDirectory(incrementalpath.data());
+        }
+        if (access(wholePath.c_str(), F_OK) != 0) {
+            ForceCreateDirectory(wholePath.data());
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpTest-end SUB_backup_tools_op_0500";
 }
 } // namespace OHOS::FileManagement::Backup

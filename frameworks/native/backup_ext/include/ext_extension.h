@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 
 #include "b_json/b_json_entity_extension_config.h"
+#include "b_json/b_json_entity_ext_manage.h"
 #include "b_json/b_report_entity.h"
 #include "ext_backup_js.h"
 #include "ext_extension_stub.h"
@@ -32,6 +33,10 @@
 #include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
+using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
+                                 map<string, struct ReportFileInfo>,
+                                 map<string, struct stat>,
+                                 map<string, struct ReportFileInfo>>;
 class BackupExtExtension : public ExtExtensionStub {
 public:
     UniqueFd GetFileHandle(const std::string &fileName) override;
@@ -83,9 +88,8 @@ private:
     /**
      * @brief incremental restore
      *
-     * @param fileName name of the file that to be untar
      */
-    int DoIncrementalRestore(const string &fileName);
+    int DoIncrementalRestore();
 
     /** @brief clear backup restore data */
     void DoClear();
@@ -117,7 +121,7 @@ private:
      * @brief Executing Restoration Tasks Asynchronously
      *
      */
-    void AsyncTaskRestore();
+    void AsyncTaskRestore(std::set<std::string> fileSet, const std::vector<ExtManageInfo> extManageInfo);
 
     /**
      * @brief Executing Incremental Restoration Tasks Asynchronously
@@ -134,14 +138,15 @@ private:
     void AsyncTaskOnBackup();
 
     int DoIncrementalBackup(const std::map<std::string, struct ReportFileInfo> &allFiles,
-        const std::map<std::string, struct ReportFileInfo> &smallFiles,
-        const std::map<std::string, struct stat> &bigFiles,
-        const std::map<std::string, struct ReportFileInfo> &bigInfos);
+                            const std::map<std::string, struct ReportFileInfo> &smallFiles,
+                            const std::map<std::string, struct stat> &bigFiles,
+                            const std::map<std::string, struct ReportFileInfo> &bigInfos);
 
-    void AsyncTaskOnIncrementalBackup(const std::map<std::string, struct ReportFileInfo> &allFiles,
-        const std::map<std::string, struct ReportFileInfo> &smallFiles,
-        const std::map<std::string, struct stat> &bigFiles,
-        const std::map<std::string, struct ReportFileInfo> &bigInfos);
+    CompareFilesResult CompareFiles(const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
+        const unordered_map<string, struct ReportFileInfo> &storageFiles);
+
+    void AsyncTaskOnIncrementalBackup(const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
+        const unordered_map<string, struct ReportFileInfo> &storageFiles);
 
     /**
      * @brief extension incremental backup restore is done
@@ -178,7 +183,6 @@ private:
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
-    std::vector<std::string> tars_;
     std::string backupInfo_;
     OHOS::ThreadPool threadPool_;
 };

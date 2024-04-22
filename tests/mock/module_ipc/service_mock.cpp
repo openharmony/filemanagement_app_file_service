@@ -187,4 +187,9 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
 {
     return BError(BError::Codes::OK);
 }
+
+ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

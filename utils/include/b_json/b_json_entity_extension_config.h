@@ -68,6 +68,13 @@ public:
      * @return std::string
      */
     std::string GetSupportScene() const;
+    
+    /**
+     * @brief Get the ExtraInfo object
+     *
+     * @return Json::Value
+     */
+    Json::Value GetExtraInfo() const;
 
 public:
     std::string GetJSonSource(std::string_view jsonFromRealWorld, std::any option);

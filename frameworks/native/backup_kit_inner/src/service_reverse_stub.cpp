@@ -175,7 +175,11 @@ int32_t ServiceReverseStub::CmdRestoreOnResultReport(MessageParcel &data, Messag
     if (!data.ReadString(result)) {
         return BError(BError::Codes::EXT_INVAL_ARG, "Failed to read result").GetCode();
     }
-    RestoreOnResultReport(result);
+    std::string bundleName;
+    if (!data.ReadString(bundleName)) {
+        return BError(BError::Codes::EXT_INVAL_ARG, "Failed to read bundleName").GetCode();
+    }
+    RestoreOnResultReport(result, bundleName);
     return BError(BError::Codes::OK);
 }
 
@@ -255,7 +259,8 @@ int32_t ServiceReverseStub::CmdIncrementalRestoreOnFileReady(MessageParcel &data
 int32_t ServiceReverseStub::CmdIncrementalRestoreOnResultReport(MessageParcel &data, MessageParcel &reply)
 {
     auto result = data.ReadString();
-    IncrementalRestoreOnResultReport(result);
+    auto bundleName = data.ReadString();
+    IncrementalRestoreOnResultReport(result, bundleName);
     return BError(BError::Codes::OK);
 }
 } // namespace OHOS::FileManagement::Backup

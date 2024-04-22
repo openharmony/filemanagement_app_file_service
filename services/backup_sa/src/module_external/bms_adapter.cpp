@@ -45,6 +45,7 @@ const string LINUX_HAP_CODE_PATH = "2";
 const string MEDIA_LIBRARY_HAP = "com.ohos.medialibrary.medialibrarydata";
 const string EXTERNAL_FILE_HAP = "com.ohos.UserFile.ExternalFileManager";
 const int E_ERR = -1;
+const int SINGLE_BUNDLE_NUM = 1;
 const vector<string> dataDir = {"app", "local", "distributed", "database", "cache"};
 } // namespace
 
@@ -63,7 +64,7 @@ static sptr<AppExecFwk::IBundleMgr> GetBundleManager()
     return iface_cast<AppExecFwk::IBundleMgr>(bundleObj);
 }
 
-static tuple<bool, string, string, string> GetAllowAndExtName(
+static tuple<bool, string, string, string, Json::Value> GetAllowAndExtName(
     const vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
 {
     for (auto &&ext : extensionInfos) {
@@ -77,10 +78,11 @@ static tuple<bool, string, string, string> GetAllowAndExtName(
         }
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(out[0], ext.bundleName);
         auto cache = cachedEntity.Structuralize();
-        return {cache.GetAllowToBackupRestore(), ext.name, cache.GetRestoreDeps(), cache.GetSupportScene()};
+        return {cache.GetAllowToBackupRestore(), ext.name, cache.GetRestoreDeps(), cache.GetSupportScene(),
+            cache.GetExtraInfo()};
     }
     HILOGI("No backup extension ability found");
-    return {false, "", "", ""};
+    return {false, "", "", "", Json::Value()};
 }
 
 static int64_t GetBundleStats(const string &bundleName, int32_t userId)
@@ -114,6 +116,10 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
         HILOGI("Begin Get bundleName:%{public}s", bundleName.c_str());
         AppExecFwk::BundleInfo installedBundle;
         if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
+            if (bundleNames.size() != SINGLE_BUNDLE_NUM) {
+                HILOGE("bundleName:%{public}s, current bundle info for backup/restore is empty", bundleName.c_str());
+                continue;
+            }
             throw BError(BError::Codes::SA_BUNDLE_INFO_EMPTY, "Failed to get bundle info");
         }
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
@@ -121,14 +127,15 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
         }
-        auto [allToBackup, extName, restoreDeps, supportScene] = GetAllowAndExtName(installedBundle.extensionInfos);
+        auto [allToBackup, extName, restoreDeps, supportScene, extraInfo] =
+            GetAllowAndExtName(installedBundle.extensionInfos);
         int64_t dataSize = 0;
         if (allToBackup) {
             dataSize = GetBundleStats(installedBundle.name, userId);
         }
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, dataSize, allToBackup,
-                                                              extName, restoreDeps, supportScene});
+                                                              extName, restoreDeps, supportScene, extraInfo});
     }
     return bundleInfos;
 }
@@ -165,6 +172,7 @@ static bool GetBackupExtConfig(const vector<AppExecFwk::ExtensionAbilityInfo> &e
         backupPara.extensionName = ext.name;
         backupPara.restoreDeps = cache.GetRestoreDeps();
         backupPara.supportScene = cache.GetSupportScene();
+        backupPara.extraInfo = cache.GetExtraInfo();
         backupPara.includes = cache.GetIncludes();
         backupPara.excludes = cache.GetExcludes();
         return true;
@@ -236,7 +244,8 @@ static bool GenerateBundleStatsIncrease(int32_t userId, const vector<string> &bu
                                                      .allToBackup = bundleInfos[i].allToBackup,
                                                      .extensionName = bundleInfos[i].extensionName,
                                                      .restoreDeps = bundleInfos[i].restoreDeps,
-                                                     .supportScene = bundleInfos[i].supportScene};
+                                                     .supportScene = bundleInfos[i].supportScene,
+                                                     .extraInfo = bundleInfos[i].extraInfo};
         newBundleInfos.emplace_back(newBundleInfo);
     }
     return true;
@@ -269,7 +278,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, 0, backupPara.allToBackup,
                                                               backupPara.extensionName, backupPara.restoreDeps,
-                                                              backupPara.supportScene});
+                                                              backupPara.supportScene, backupPara.extraInfo});
         if (!CreateIPCInteractionFiles(userId, bundleName, bundleNameTime.lastIncrementalTime, backupPara.includes,
             backupPara.excludes)) {
             HILOGE("Failed to write include/exclude files, name : %{private}s", installedBundle.name.data());
@@ -305,10 +314,11 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
         }
-        auto [allToBackup, extName, restoreDeps, supportScene] = GetAllowAndExtName(installedBundle.extensionInfos);
+        auto [allToBackup, extName, restoreDeps, supportScene, extraInfo] =
+            GetAllowAndExtName(installedBundle.extensionInfos);
         if (!allToBackup) {
             bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
-                installedBundle.versionName, 0, allToBackup, extName, restoreDeps, supportScene});
+                installedBundle.versionName, 0, allToBackup, extName, restoreDeps, supportScene, extraInfo});
         } else {
             bundleNames.emplace_back(BIncrementalData {installedBundle.name, 0});
         }

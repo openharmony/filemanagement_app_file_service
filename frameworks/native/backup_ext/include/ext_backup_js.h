@@ -69,7 +69,7 @@ struct CallbackInfoBackup {
 struct CallbackInfoEx {
     std::function<void(const std::string)> callbackParam;
     std::function<void()> callbackAppDone;
-    CallbackInfoEx(std::function<void(const std::string)> param, std::function<void()> appDone) 
+    CallbackInfoEx(std::function<void(const std::string)> param, std::function<void()> appDone)
         : callbackParam(param), callbackAppDone(appDone)
     {
     }
@@ -112,7 +112,7 @@ public:
      * @param callbackEx The callbackEx.
      * @param callback The callBack.
      */
-    ErrCode OnRestore(std::function<void()> callback,std::function<void(const std::string)> callbackEx,
+    ErrCode OnRestore(std::function<void()> callback, std::function<void(const std::string)> callbackEx,
         std::function<void()> callbackExAppDone) override;
 
     /**

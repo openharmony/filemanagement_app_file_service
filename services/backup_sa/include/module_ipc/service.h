@@ -65,6 +65,7 @@ public:
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;
+    ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) override;
 
     // 以下都是非IPC接口
 public:
@@ -225,13 +226,10 @@ private:
     /**
      * @brief 通知权限模块
      *
-     * @param bundleNameDetailMap bundle和detail的对应关系
-     * @param restoreInfo 待恢复的应用
-     * @param restoreType 任务类型
+     * @param bundleName 包名称
      *
     */
-    void NotifyBundleInfos(std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap,
-        BJsonEntityCaps::BundleInfo restoreInfo, RestoreTypeEnum restoreType);
+    void NotifyCloneBundleFinish(std::string bundleName);
 
 private:
     static sptr<Service> instance_;

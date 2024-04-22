@@ -76,6 +76,8 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdGetIncrementalFileHandle;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_INFO)] =
         &ServiceStub::CmdGetBackupInfo;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER)] =
+        &ServiceStub::CmdUpdateTimer;
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -99,7 +101,6 @@ int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Message
 
 int32_t ServiceStub::CmdInitRestoreSession(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     auto remote = data.ReadRemoteObject();
     if (!remote) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the reverse stub");
@@ -120,7 +121,6 @@ int32_t ServiceStub::CmdInitRestoreSession(MessageParcel &data, MessageParcel &r
 
 int32_t ServiceStub::CmdInitBackupSession(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     auto remote = data.ReadRemoteObject();
     if (!remote) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the reverse stub");
@@ -152,7 +152,6 @@ int32_t ServiceStub::CmdStart(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdGetLocalCapabilities(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     UniqueFd fd(GetLocalCapabilities());
     if (!reply.WriteFileDescriptor(fd)) {
         return BError(BError::Codes::SA_BROKEN_IPC, "Failed to send out the file");
@@ -162,7 +161,6 @@ int32_t ServiceStub::CmdGetLocalCapabilities(MessageParcel &data, MessageParcel 
 
 int32_t ServiceStub::CmdPublishFile(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGD("Begin");
     unique_ptr<BFileInfo> fileInfo(data.ReadParcelable<BFileInfo>());
     if (!fileInfo) {
         return BError(BError::Codes::SA_BROKEN_IPC, "Failed to receive fileInfo");
@@ -178,7 +176,6 @@ int32_t ServiceStub::CmdPublishFile(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdAppFileReady(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     string fileName;
     if (!data.ReadString(fileName)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fileName");
@@ -199,7 +196,6 @@ int32_t ServiceStub::CmdAppFileReady(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     bool success;
     if (!data.ReadBool(success)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bool flag");
@@ -215,7 +211,6 @@ int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdResultReport(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     std::string restoreRetInfo;
     int32_t scenario;
     if (!data.ReadString(restoreRetInfo)) {
@@ -236,7 +231,6 @@ int32_t ServiceStub::CmdResultReport(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGD("Begin");
     string bundleName;
     if (!data.ReadString(bundleName)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleName").GetCode();
@@ -251,7 +245,6 @@ int32_t ServiceStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdAppendBundlesDetailsRestoreSession(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     UniqueFd fd(data.ReadFileDescriptor());
     if (fd < 0) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
@@ -284,7 +277,6 @@ int32_t ServiceStub::CmdAppendBundlesDetailsRestoreSession(MessageParcel &data, 
 
 int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     UniqueFd fd(data.ReadFileDescriptor());
     if (fd < 0) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
@@ -313,7 +305,6 @@ int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, Message
 
 int32_t ServiceStub::CmdAppendBundlesBackupSession(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     vector<string> bundleNames;
     if (!data.ReadStringVector(&bundleNames)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
@@ -328,7 +319,6 @@ int32_t ServiceStub::CmdAppendBundlesBackupSession(MessageParcel &data, MessageP
 
 int32_t ServiceStub::CmdFinish(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     int res = Finish();
     if (!reply.WriteInt32(res)) {
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
@@ -356,9 +346,32 @@ int32_t ServiceStub::CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply)
     return BError(BError::Codes::OK);
 }
 
+int32_t ServiceStub::CmdUpdateTimer(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("ServiceStub::CmdUpdateTimer Begin.");
+    int ret = ERR_OK;
+    string bundleName;
+    if (!data.ReadString(bundleName)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive bundleName"));
+    }
+    uint32_t timeOut;
+    if (!data.ReadUint32(timeOut)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive timeOut"));
+    }
+    bool result;
+    ret = UpdateTimer(bundleName, timeOut, result);
+    if (ret != ERR_OK) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to call UpdateTimer"));
+    }
+    if (!reply.WriteBool(result)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to write result"));
+    }
+    HILOGI("ServiceStub::CmdUpdateTimer end.");
+    return BError(BError::Codes::OK);
+}
+
 int32_t ServiceStub::CmdRelease(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     int res = Release();
     if (!reply.WriteInt32(res)) {
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
@@ -368,7 +381,6 @@ int32_t ServiceStub::CmdRelease(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdGetLocalCapabilitiesIncremental(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     vector<BIncrementalData> bundleNames;
     if (!ReadParcelableVector(bundleNames, data)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
@@ -383,7 +395,6 @@ int32_t ServiceStub::CmdGetLocalCapabilitiesIncremental(MessageParcel &data, Mes
 
 int32_t ServiceStub::CmdInitIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     auto remote = data.ReadRemoteObject();
     if (!remote) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the reverse stub");
@@ -404,7 +415,6 @@ int32_t ServiceStub::CmdInitIncrementalBackupSession(MessageParcel &data, Messag
 
 int32_t ServiceStub::CmdAppendBundlesIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     vector<BIncrementalData> bundlesToBackup;
     if (!ReadParcelableVector(bundlesToBackup, data)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
@@ -419,7 +429,6 @@ int32_t ServiceStub::CmdAppendBundlesIncrementalBackupSession(MessageParcel &dat
 
 int32_t ServiceStub::CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     unique_ptr<BFileInfo> fileInfo(data.ReadParcelable<BFileInfo>());
     if (!fileInfo) {
         return BError(BError::Codes::SA_BROKEN_IPC, "Failed to receive fileInfo");
@@ -435,7 +444,6 @@ int32_t ServiceStub::CmdPublishIncrementalFile(MessageParcel &data, MessageParce
 
 int32_t ServiceStub::CmdAppIncrementalFileReady(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     string fileName;
     if (!data.ReadString(fileName)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fileName");
@@ -461,7 +469,6 @@ int32_t ServiceStub::CmdAppIncrementalFileReady(MessageParcel &data, MessageParc
 
 int32_t ServiceStub::CmdAppIncrementalDone(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     int32_t ret;
     if (!data.ReadInt32(ret)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bool flag");
@@ -477,7 +484,6 @@ int32_t ServiceStub::CmdAppIncrementalDone(MessageParcel &data, MessageParcel &r
 
 int32_t ServiceStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessageParcel &reply)
 {
-    HILOGI("Begin");
     string bundleName;
     if (!data.ReadString(bundleName)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleName").GetCode();

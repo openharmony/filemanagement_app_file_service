@@ -230,6 +230,9 @@ static int32_t CalAssetBucket(const int32_t &fileId)
 
 static int32_t GetFileIdFromFileName(const std::string &fileName)
 {
+    if (fileName.empty()) {
+        return -EINVAL;
+    }
     size_t pos = fileName.find_last_of('_');
     if (pos == std::string::npos || pos == fileName.size() - 1) {
         return -EINVAL;
@@ -302,7 +305,6 @@ static void GetNetworkIdFromUri(const std::string &fileUri, string &networkId)
     if (networkIdInfo.empty()) {
         return;
     }
-
     size_t posIndex = networkIdInfo.find('=');
     if (posIndex == string::npos || posIndex == (networkIdInfo.size() - 1)) {
         return;

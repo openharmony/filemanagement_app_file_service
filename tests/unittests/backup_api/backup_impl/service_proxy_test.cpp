@@ -494,11 +494,11 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishIncrementalFile_0100, testin
         .WillOnce(Return(EPERM));
 
     string bundleName = "com.example.app2backup";
-    string fileName = "1.tar";
+    string fileName = "";
     BFileInfo fileInfo(bundleName, fileName, -1);
     int32_t result = proxy_->PublishIncrementalFile(fileInfo);
     EXPECT_EQ(result, BError(BError::Codes::OK));
-
+    fileName = "test";
     result = proxy_->PublishIncrementalFile(fileInfo);
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_PublishIncrementalFile_0100";
@@ -735,5 +735,28 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetBackupInfo_0100, testing::ext::T
     int32_t ret = proxy_->GetBackupInfo(bundleName, result);
     EXPECT_EQ(ret, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_GetBackupInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_UpdateTimer_0100
+ * @tc.name: SUB_Service_proxy_UpdateTimer_0100
+ * @tc.desc: 测试 UpdateTimer 获取应用信息接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_UpdateTimer_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_UpdateTimer_0100";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(1)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
+    bool result;
+    std::string bundleName = "com.example.app2backup";
+    uint32_t timeOut = 30000;
+    int32_t ret = proxy_->UpdateTimer(bundleName, timeOut, result);
+    EXPECT_EQ(ret, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_UpdateTimer_0100";
 }
 } // namespace OHOS::FileManagement::Backup

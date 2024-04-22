@@ -31,7 +31,6 @@ using namespace std;
 ErrCode ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -59,7 +58,6 @@ ErrCode ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
 ErrCode ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -87,7 +85,6 @@ ErrCode ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
 ErrCode ServiceProxy::Start()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -108,7 +105,6 @@ ErrCode ServiceProxy::Start()
 UniqueFd ServiceProxy::GetLocalCapabilities()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -132,7 +128,6 @@ UniqueFd ServiceProxy::GetLocalCapabilities()
 ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGD("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -158,7 +153,6 @@ ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
 ErrCode ServiceProxy::AppFileReady(const string &fileName, UniqueFd fd)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -186,7 +180,6 @@ ErrCode ServiceProxy::AppFileReady(const string &fileName, UniqueFd fd)
 ErrCode ServiceProxy::AppDone(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -211,7 +204,6 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
 ErrCode ServiceProxy::ServiceResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -238,7 +230,6 @@ ErrCode ServiceProxy::ServiceResultReport(const std::string restoreRetInfo, Back
 ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGD("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -268,7 +259,6 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<Bund
     const std::vector<std::string> &detailInfos, RestoreTypeEnum restoreType, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -310,7 +300,6 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
                                                   int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -345,7 +334,6 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
 ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -371,7 +359,6 @@ ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundl
 ErrCode ServiceProxy::Finish()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -496,6 +483,34 @@ ErrCode ServiceProxy::GetBackupInfo(BundleName &bundleName, std::string &result)
     }
     reply.ReadString(result);
     HILOGI("ServiceProxy GetBackupInfo end. result = %s", result.c_str());
+    return BError(BError::Codes::OK, "success");
+}
+
+ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+{
+    HILOGI("ServiceProxy UpdateTimer Begin.");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    if (!data.WriteString(bundleName)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleName").GetCode();
+    }
+    if (!data.WriteUint32(timeOut)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send timeOut").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER),
+                                        data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    reply.ReadBool(result);
+    HILOGI("ServiceProxy UpdateTimer end. result = %d", result);
     return BError(BError::Codes::OK, "success");
 }
 } // namespace OHOS::FileManagement::Backup

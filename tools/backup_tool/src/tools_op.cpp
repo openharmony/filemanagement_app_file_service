@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "b_resources/b_constants.h"
 #include "tools_op.h"
 
 #include <regex>
@@ -83,5 +84,32 @@ int ToolsOp::Execute(map<string, vector<string>> args) const
         return -EPERM;
     }
     return desc_.funcExec(args);
+}
+
+int ToolsOp::GetFIleNums(const std::string &bundleName, bool isWholeRestore)
+{
+    std::string path = "";
+    path = string(isWholeRestore? BConstants::BACKUP_TOOL_RECEIVE_DIR :
+        BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR) + bundleName;
+    struct dirent *entry;
+    printf("bundle path =  %s\n", path.c_str());
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        fprintf(stderr, "Open path error %s\n", path.c_str());
+        return DEFAULT_ERR_NUMBER;
+    }
+    int num = 0;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (entry->d_type != DT_DIR || (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)) {
+            ++num;
+        } else {
+            continue;
+        }
+    }
+    if (num == 0) {
+        fprintf(stderr, "The path dir is empty!\n");
+    }
+    closedir(dir);
+    return num;
 }
 } // namespace OHOS::FileManagement::Backup

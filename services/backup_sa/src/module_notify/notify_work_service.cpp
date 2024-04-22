@@ -35,11 +35,13 @@ bool NotifyWorkService::NotifyBundleDetail(BJsonUtil::BundleDetailInfo bundleDet
 {
     AAFwk::Want want;
     std::string bundleName = bundleDetailInfo.bundleName;
-    HILOGI("Start publish event, bundleName is: %{public}s", bundleName.c_str());
+    std::string bundleDetail = bundleDetailInfo.detail;
+    HILOGI("Start publish event, bundleName is: %{public}s, detail:%{public}s", bundleName.c_str(),
+        bundleDetail.c_str());
     want.SetParam("bundleName", bundleName);
     want.SetParam("userId", bundleDetailInfo.userId);
     want.SetParam("index", bundleDetailInfo.bundleIndex);
-    want.SetParam("detail", bundleDetailInfo.detail);
+    want.SetParam("detail", bundleDetail);
     want.SetAction(EVENT_NAME);
     EventFwk::CommonEventData commonData {want};
     HILOGI("End publish event, bundleName is: %{public}s", bundleName.c_str());

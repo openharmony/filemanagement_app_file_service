@@ -363,6 +363,17 @@ public:
     void BundleExtTimerStart(const std::string &bundleName, const Utils::Timer::TimerCallback &callback);
 
     /**
+     * @brief 重新设置定时器
+     *
+     * @param bundleName 应用名称
+     * @param timeOut 超时时间
+     * @return true
+     * @return false
+     */
+    bool UpdateTimer(const std::string &bundleName, uint32_t timeOut,
+        const Utils::Timer::TimerCallback &callback);
+
+    /**
      * @brief 取消/暂停应用扩展能力定时器
      *
      * @param bundleName 应用名称

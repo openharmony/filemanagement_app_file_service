@@ -46,7 +46,7 @@ public:
     void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) override {}
     void RestoreOnAllBundlesFinished(int32_t errCode) override {}
     void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd) override {}
-    void RestoreOnResultReport(std::string result) override {}
+    void RestoreOnResultReport(std::string result, std::string bundleName) override {}
 
     void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd) override {}
     void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) override {}
@@ -58,7 +58,7 @@ public:
     void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) override {}
     void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) override {}
     void IncrementalRestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd) override {}
-    void IncrementalRestoreOnResultReport(std::string result) override {};
+    void IncrementalRestoreOnResultReport(std::string result, std::string bundleName) override {};
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // MOCK_SERVICE_REVERSE_MOCK_H

@@ -131,6 +131,11 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode Release() override
     {
         return BError(BError::Codes::OK);

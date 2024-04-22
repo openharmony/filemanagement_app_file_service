@@ -98,6 +98,7 @@ ohos_unittest("backup_service_test") {
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -110,7 +111,6 @@ ohos_unittest("backup_service_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -162,6 +162,7 @@ ohos_unittest("backup_service_session_test") {
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -174,7 +175,6 @@ ohos_unittest("backup_service_session_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -271,6 +271,7 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -283,7 +284,6 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",

@@ -17,7 +17,7 @@
     },
     {
         "first_introduced": "12",
-        "name": "OH_FileShare_CheckPersistPermission"
+        "name": "OH_FileShare_CheckPersistentPermission"
     },
     {
         "first_introduced": "12",

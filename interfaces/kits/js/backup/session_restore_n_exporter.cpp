@@ -249,7 +249,7 @@ static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
 
 static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::string result)
 {
-    HILOGI("callback function onResultReport begin.");
+    HILOGD("callback function onResultReport begin.");
     if (pCallbacks.expired()) {
         HILOGI("callbacks is unbound");
         return;
@@ -315,7 +315,7 @@ static bool VerifyParamSuccess(NFuncArg &funcArg, int32_t &fd, std::vector<std::
 
 napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info cbinfo)
 {
-    HILOGI("called SessionRestore::Constructor begin");
+    HILOGD("called SessionRestore::Constructor begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         HILOGE("Number of arguments unmatched.");
@@ -364,18 +364,18 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
         return nullptr;
     }
 
-    HILOGI("called SessionRestore::Constructor end");
+    HILOGD("called SessionRestore::Constructor end");
     return funcArg.GetThisVar();
 }
 
 napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_info cbinfo)
 {
     HILOGI("called SessionRestore::AppendBundles begin");
-    int32_t fd_restore = BConstants::INVALID_FD_NUM;
+    int32_t fdRestore = BConstants::INVALID_FD_NUM;
     std::vector<std::string> bundleNames;
     std::vector<std::string> bundleInfos;
     NFuncArg funcArg(env, cbinfo);
-    if (!VerifyParamSuccess(funcArg, fd_restore, bundleNames, bundleInfos, env)) {
+    if (!VerifyParamSuccess(funcArg, fdRestore, bundleNames, bundleInfos, env)) {
         return nullptr;
     }
     auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
@@ -384,7 +384,7 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-    auto cbExec = [entity {restoreEntity}, fd {fd_restore}, bundles {bundleNames}, infos {bundleInfos}]() -> NError {
+    auto cbExec = [entity {restoreEntity}, fd {fdRestore}, bundles {bundleNames}, infos {bundleInfos}]() -> NError {
         if (!(entity && (entity->sessionWhole || entity->sessionSheet))) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
         }
@@ -402,7 +402,7 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
     auto cbCompl = [](napi_env env, NError err) -> NVal {
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
-    HILOGI("Called SessionRestore::AppendBundles end.");
+    HILOGD("Called SessionRestore::AppendBundles end.");
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::TWO) {
         return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
@@ -439,7 +439,7 @@ static std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> ParseF
 
 napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info cbinfo)
 {
-    HILOGI("called SessionRestore::PublishFile begin");
+    HILOGD("called SessionRestore::PublishFile begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         HILOGE("Number of arguments unmatched.");
@@ -483,7 +483,7 @@ napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
 
-    HILOGI("Called SessionRestore::PublishFile end.");
+    HILOGD("Called SessionRestore::PublishFile end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::ONE) {
@@ -496,7 +496,7 @@ napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info
 
 napi_value SessionRestoreNExporter::GetFileHandle(napi_env env, napi_callback_info cbinfo)
 {
-    HILOGI("called SessionRestore::GetFileHandle begin");
+    HILOGD("called SessionRestore::GetFileHandle begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         HILOGE("Number of arguments unmatched.");
@@ -541,7 +541,7 @@ napi_value SessionRestoreNExporter::GetFileHandle(napi_env env, napi_callback_in
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
 
-    HILOGI("Called SessionRestore::GetFileHandle end.");
+    HILOGD("Called SessionRestore::GetFileHandle end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::ONE) {
@@ -554,7 +554,7 @@ napi_value SessionRestoreNExporter::GetFileHandle(napi_env env, napi_callback_in
 
 napi_value SessionRestoreNExporter::Release(napi_env env, napi_callback_info cbinfo)
 {
-    HILOGI("called SessionRestore::Release begin");
+    HILOGD("called SessionRestore::Release begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
         HILOGE("Number of arguments unmatched.");
@@ -582,7 +582,7 @@ napi_value SessionRestoreNExporter::Release(napi_env env, napi_callback_info cbi
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
 
-    HILOGI("Called SessionRestore::Release end.");
+    HILOGD("Called SessionRestore::Release end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
@@ -590,7 +590,7 @@ napi_value SessionRestoreNExporter::Release(napi_env env, napi_callback_info cbi
 
 bool SessionRestoreNExporter::Export()
 {
-    HILOGI("called SessionRestoreNExporter::Export begin");
+    HILOGD("called SessionRestoreNExporter::Export begin");
     vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("appendBundles", AppendBundles),
         NVal::DeclareNapiFunction("publishFile", PublishFile),
@@ -611,7 +611,7 @@ bool SessionRestoreNExporter::Export()
         return false;
     }
 
-    HILOGI("called SessionRestoreNExporter::Export end");
+    HILOGD("called SessionRestoreNExporter::Export end");
     return exports_.AddProp(className, classValue);
 }
 
