@@ -132,7 +132,7 @@ int32_t ServiceStub::CmdAppFileReady(MessageParcel &data, MessageParcel &reply)
     string fileName;
     data.ReadString(fileName);
     UniqueFd fd(data.ReadFileDescriptor());
-    int res = AppFileReady(fileName, move(fd));
+    int res = AppFileReady(fileName, move(fd), 0);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }

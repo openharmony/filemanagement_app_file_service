@@ -31,6 +31,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+const int INVALID_FD = -1;
 
 ServiceStub::ServiceStub()
 {
@@ -180,12 +181,17 @@ int32_t ServiceStub::CmdAppFileReady(MessageParcel &data, MessageParcel &reply)
     if (!data.ReadString(fileName)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fileName");
     }
-    UniqueFd fd(data.ReadFileDescriptor());
-    if (fd < 0) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
+    bool fdFlag = data.ReadBool();
+    UniqueFd fd = UniqueFd(INVALID_FD);
+    if (fdFlag == true) {
+        fd = UniqueFd(data.ReadFileDescriptor());
+        if (fd < 0) {
+            return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
+        }
     }
+    int32_t errCode = data.ReadInt32();
 
-    int res = AppFileReady(fileName, move(fd));
+    int res = AppFileReady(fileName, move(fd), errCode);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;
@@ -448,17 +454,23 @@ int32_t ServiceStub::CmdAppIncrementalFileReady(MessageParcel &data, MessageParc
     if (!data.ReadString(fileName)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fileName");
     }
-    UniqueFd fd(data.ReadFileDescriptor());
-    if (fd < 0) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
-    }
+    bool fdFlag = data.ReadBool();
+    UniqueFd fd = UniqueFd(INVALID_FD);
+    UniqueFd manifestFd = UniqueFd(INVALID_FD);
+    if (fdFlag == true) {
+        fd = UniqueFd(data.ReadFileDescriptor());
+        if (fd < 0) {
+            return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
+        }
 
-    UniqueFd manifestFd(data.ReadFileDescriptor());
-    if (manifestFd < 0) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive manifestFd");
+        manifestFd = UniqueFd(data.ReadFileDescriptor());
+        if (manifestFd < 0) {
+            return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive manifestFd");
+        }
     }
+    int32_t errCode = data.ReadInt32();
 
-    int res = AppIncrementalFileReady(fileName, move(fd), move(manifestFd));
+    int res = AppIncrementalFileReady(fileName, move(fd), move(manifestFd), errCode);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;

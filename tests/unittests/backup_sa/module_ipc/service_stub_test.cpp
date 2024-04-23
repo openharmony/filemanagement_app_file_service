@@ -46,7 +46,7 @@ public:
     MOCK_METHOD0(Start, ErrCode());
     MOCK_METHOD0(GetLocalCapabilities, UniqueFd());
     MOCK_METHOD1(PublishFile, ErrCode(const BFileInfo &fileInfo));
-    MOCK_METHOD2(AppFileReady, ErrCode(const string &fileName, UniqueFd fd));
+    MOCK_METHOD3(AppFileReady, ErrCode(const string &fileName, UniqueFd fd, int32_t errCode));
     MOCK_METHOD1(AppDone, ErrCode(ErrCode errCode));
     MOCK_METHOD2(ServiceResultReport, ErrCode(const string restoreRetInfo, BackupRestoreScenario scenario));
     MOCK_METHOD2(GetFileHandle, ErrCode(const string &bundleName, const string &fileName));
@@ -65,7 +65,8 @@ public:
     MOCK_METHOD1(AppendBundlesIncrementalBackupSession, ErrCode(const std::vector<BIncrementalData> &bundlesToBackup));
 
     MOCK_METHOD1(PublishIncrementalFile, ErrCode(const BFileInfo &fileInfo));
-    MOCK_METHOD3(AppIncrementalFileReady, ErrCode(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd));
+    MOCK_METHOD4(AppIncrementalFileReady, ErrCode(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd,
+        int32_t errCode));
     MOCK_METHOD1(AppIncrementalDone, ErrCode(ErrCode errCode));
     MOCK_METHOD2(GetIncrementalFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
     MOCK_METHOD2(GetBackupInfo, ErrCode(string &bundleName, string &result));
@@ -284,7 +285,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0100, testing::
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppFileReady_0100";
     try {
         MockService service;
-        EXPECT_CALL(service, AppFileReady(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(service, AppFileReady(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;

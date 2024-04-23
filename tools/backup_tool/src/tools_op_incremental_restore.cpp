@@ -118,7 +118,8 @@ static string GenHelpMsg()
            "\t\t--bundle\t\t This parameter is bundleName.";
 }
 
-static void OnFileReady(shared_ptr<SessionRestore> ctx, const BFileInfo &fileInfo, UniqueFd fd, UniqueFd manifestFd)
+static void OnFileReady(shared_ptr<SessionRestore> ctx, const BFileInfo &fileInfo, UniqueFd fd, UniqueFd manifestFd,
+    int32_t errCode)
 {
     printf("FileReady owner = %s, fileName = %s, sn = %u, fd = %d\n", fileInfo.owner.c_str(), fileInfo.fileName.c_str(),
            fileInfo.sn, fd.Get());
@@ -267,7 +268,7 @@ static int32_t InitRestoreSession(shared_ptr<SessionRestore> ctx,
         return -EPERM;
     }
     ctx->session_ = BIncrementalRestoreSession::Init(BIncrementalRestoreSession::Callbacks {
-        .onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2, placeholders::_3),
+        .onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2, placeholders::_3, placeholders::_4),
         .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
         .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),

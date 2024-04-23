@@ -36,7 +36,7 @@ struct BackupEntity {
     shared_ptr<GeneralCallbacks> callbacks;
 };
 
-static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &fileInfo, UniqueFd fd)
+static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &fileInfo, UniqueFd fd, ErrCode errCode)
 {
     if (pCallbacks.expired()) {
         HILOGI("callbacks is unbound");
@@ -53,16 +53,21 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
     }
 
     auto cbCompl = [bundleName {fileInfo.owner}, fileName {fileInfo.fileName},
-                    fd {make_shared<UniqueFd>(fd.Release())}](napi_env env, NError err) -> NVal {
+                    fd {make_shared<UniqueFd>(fd.Release())}, errCode](napi_env env, NError err) -> NVal {
         if (err) {
             return {env, err.GetNapiErr(env)};
         }
-        NVal obj = NVal::CreateObject(env);
+        HILOGI("callback function backup onFileReady cbCompl errcode: %{public}d", errCode);
+        NVal obj;
+        if (errCode != 0) {
+            obj = NVal {env, NError(errCode).GetNapiErr(env)};
+        } else {
+            obj = NVal::CreateObject(env);
+        }
         obj.AddProp({
             NVal::DeclareNapiProperty(BConstants::BUNDLE_NAME.c_str(), NVal::CreateUTF8String(env, bundleName).val_),
             NVal::DeclareNapiProperty(BConstants::URI.c_str(), NVal::CreateUTF8String(env, fileName).val_),
             NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
-
         return {obj};
     };
 
@@ -248,7 +253,7 @@ napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info 
     auto backupEntity = std::make_unique<BackupEntity>();
     backupEntity->callbacks = make_shared<GeneralCallbacks>(env, ptr, callbacks);
     backupEntity->session = BSessionBackup::Init(BSessionBackup::Callbacks {
-        .onFileReady = bind(OnFileReady, backupEntity->callbacks, placeholders::_1, placeholders::_2),
+        .onFileReady = bind(OnFileReady, backupEntity->callbacks, placeholders::_1, placeholders::_2, placeholders::_3),
         .onBundleStarted = bind(onBundleBegin, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBundleFinished = bind(onBundleEnd, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(onAllBundlesEnd, backupEntity->callbacks, placeholders::_1),
