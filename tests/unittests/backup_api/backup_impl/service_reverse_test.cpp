@@ -1230,7 +1230,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnResultReport_010
     try {
         Init(IServiceReverse::Scenario::RESTORE);
         std::string resultReport = "result_report";
-        std::string bundleName = "app01";
+        std::string bundleName = BUNDLE_NAME;
         service_->RestoreOnResultReport(resultReport, bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
