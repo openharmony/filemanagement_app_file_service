@@ -228,7 +228,6 @@ static void AdapteCloneOptimize(const string &path)
 static void OnResultReport(shared_ptr<InrementalSessionAsync> ctx, const std::string resultInfo)
 {
     printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
-    ctx->TryNotify(true);
 }
 
 static void RestoreApp(shared_ptr<InrementalSessionAsync> restore, vector<BundleName> &bundleNames)
