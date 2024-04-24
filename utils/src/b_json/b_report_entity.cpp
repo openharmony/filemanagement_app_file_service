@@ -66,13 +66,13 @@ static ErrCode ParseReportInfo(struct ReportFileInfo &fileStat,
                                const unordered_map<string, int> &keys)
 {
     // 根据数据拼接结构体
-    int splitsLen = (int)splits.size();
+    size_t splitsLen = splits.size();
     // 处理path路径
     string path;
     vector<string> residue;
     try {
-        for (int i = 0; i < splitsLen; i++) {
-            if (i <= static_cast<unsigned int>(splitsLen) - keys.size()) {
+        for (size_t i = 0; i < splitsLen; i++) {
+            if (i <= splitsLen - keys.size()) {
                 path += splits[i] + ";";
             } else {
                 residue.emplace_back(splits[i]);

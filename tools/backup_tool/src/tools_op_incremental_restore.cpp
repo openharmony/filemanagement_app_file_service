@@ -302,8 +302,8 @@ static int32_t Init(const string &pathCapFile, vector<string> bundleNames, bool 
 
     UniqueFd fd(open(realPath.data(), O_RDWR, S_IRWXU));
     auto ctx = make_shared<SessionRestore>();
-    int len = bundleNames.size();
-    for (int i = 0; i < len; ++i) {
+    size_t len = bundleNames.size();
+    for (size_t i = 0; i < len; ++i) {
         ctx->fileNums_[bundleNames[i]] = ToolsOp::GetFIleNums(bundleNames[i], false);
     }
     int32_t ret = InitRestoreSession(ctx, bundleNames, times);
