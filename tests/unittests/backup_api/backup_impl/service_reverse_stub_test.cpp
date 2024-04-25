@@ -813,6 +813,7 @@ HWTEST_F(ServiceReverseStubTest,
         std::string resultReport = "result_report";
         EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
         EXPECT_TRUE(data.WriteString(resultReport));
+        EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
 
         EXPECT_EQ(
             BError(BError::Codes::OK),
