@@ -71,7 +71,7 @@ public:
             Json::Value extraInfo;
             if (item.extraInfo.empty()) {
                 Json::Value senceArray(Json::arrayValue);
-                extraInfo["supportSence"] = senceArray;
+                extraInfo["supportScene"] = senceArray;
             } else {
                 extraInfo = item.extraInfo;
             }
