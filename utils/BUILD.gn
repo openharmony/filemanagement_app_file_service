@@ -122,6 +122,7 @@ ohos_shared_library("backup_utils") {
     ":backup_cxx_cppdeps",
     ":backup_cxx_gen",
     ":backup_cxx_rust",
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
     "${path_jsoncpp}:jsoncpp",
     "//third_party/openssl:libcrypto_shared",
   ]

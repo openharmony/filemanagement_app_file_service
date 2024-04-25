@@ -48,6 +48,7 @@
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
 #include "i_service.h"
+#include "sandbox_helper.h"
 #include "service_proxy.h"
 #include "tar_file.h"
 #include "untar_file.h"
@@ -763,8 +764,20 @@ static void RestoreBigFiles(bool appendTargetPath)
             continue;
         }
 
-        string fileName = path + item.hashName;
-        string filePath = appendTargetPath ? (path + item.fileName) : item.fileName;
+        string itemHashName = item.hashName;
+        string itemFileName = item.fileName;
+        // check if item.hasName and fileName need decode by report item attribute
+        string reportPath = GetReportFileName(path + item.hashName);
+        UniqueFd fd(open(reportPath.data(), O_RDONLY));
+        if (fd < 0) {
+            HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportPath.c_str(), errno);
+            throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
+        }
+        BReportEntity rp(move(fd));
+        rp.CheckAndUpdateIfReportLineEncoded(itemFileName);
+
+        string fileName = path + itemHashName;
+        string filePath = appendTargetPath ? (path + itemFileName) : itemFileName;
 
         if (!RestoreBigFilePrecheck(fileName, path, item.hashName, filePath)) {
             continue;
@@ -1276,12 +1289,18 @@ static void WriteFile(const string &filename, const map<string, struct ReportFil
     fstream f;
     f.open(filename.data(), ios::out);
     // 前面2行先填充进去
-    f << "version=1.0&attrNum=7" << endl;
-    f << "path;mode;dir;size;mtime;hash;usertar" << endl;
+    f << "version=1.0&attrNum=8" << endl;
+    f << "path;mode;dir;size;mtime;hash;usertar;encodeFlag" << endl;
     for (auto item : srcFiles) {
         struct ReportFileInfo info = item.second;
-        string str = item.first + ";" + info.mode + ";" + to_string(info.isDir) + ";" + to_string(info.size);
-        str += ";" + to_string(info.mtime) + ";" + info.hash + ";" + to_string(info.userTar);
+        string path = BReportEntity::EncodeReportItem(item.first, info.encodeFlag);
+        string str = path + ";" + info.mode + ";" + to_string(info.isDir) + ";" + to_string(info.size);
+        str += ";" + to_string(info.mtime) + ";" + info.hash + ";" + to_string(info.userTar)+ ";";
+        if (info.encodeFlag) {
+            str += std::to_string(1);
+        } else {
+            str += std::to_string(0);
+        }
         f << str << endl;
     }
     f.close();
