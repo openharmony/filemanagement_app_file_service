@@ -199,7 +199,7 @@ static void OnBackupServiceDied(shared_ptr<SessionRestore> ctx)
     ctx->TryNotify(true);
 }
 
-static void OnResultReport(shared_ptr<SessionRestore> ctx, const std::string resultInfo)
+static void OnResultReport(shared_ptr<SessionRestore> ctx, const std::string &resultInfo)
 {
     printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
     ctx->TryNotify(true);

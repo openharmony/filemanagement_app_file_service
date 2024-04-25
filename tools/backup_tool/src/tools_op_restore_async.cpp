@@ -144,7 +144,7 @@ static void OnAllBundlesFinished(shared_ptr<SessionAsync> ctx, ErrCode err)
     ctx->TryNotify(true);
 }
 
-static void OnResultReport(shared_ptr<SessionAsync> ctx, const std::string resultInfo)
+static void OnResultReport(shared_ptr<SessionAsync> ctx, const std::string &resultInfo)
 {
     printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
     ctx->TryNotify(true);

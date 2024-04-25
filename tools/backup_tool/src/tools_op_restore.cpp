@@ -158,7 +158,7 @@ static void OnBundleFinished(shared_ptr<Session> ctx, ErrCode err, const BundleN
     ctx->TryNotify();
 }
 
-static void OnResultReport(shared_ptr<Session> ctx, const std::string resultInfo)
+static void OnResultReport(shared_ptr<Session> ctx, const std::string &resultInfo)
 {
     printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
     ctx->TryNotify(true);

@@ -86,14 +86,14 @@ static bool ConvertPolicyErrorResult(const std::deque<OHOS::AppFileService::Poli
         LOGE("The size of the return value array is abnormal");
         return false;
     }
-    *result = (FileShare_PolicyErrorResult *)malloc(memorySize);
+    *result = static_cast<FileShare_PolicyErrorResult *>(malloc(memorySize));
     if (*result == nullptr) {
         LOGE("Failed to apply for FileShare_PolicyErrorResult array memory");
         return false;
     }
     for (uint32_t i = 0; i < count; i++) {
         int size = errorResults[i].uri.size() + 1;
-        (*result)[i].uri = (char *)malloc(size);
+        (*result)[i].uri = static_cast<char *>(malloc(size));
         if ((*result)[i].uri == nullptr) {
             LOGE("Failed to apply for URI memory");
             return false;
@@ -106,7 +106,7 @@ static bool ConvertPolicyErrorResult(const std::deque<OHOS::AppFileService::Poli
         }
         (*result)[i].code = static_cast<FileShare_PolicyErrorCode>(errorResults[i].code);
         size = errorResults[i].message.size() + 1;
-        (*result)[i].message = (char *)malloc(size);
+        (*result)[i].message = static_cast<char *>(malloc(size));
         if ((*result)[i].message == nullptr) {
             LOGE("Failed to apply for message memory");
             free((*result)[i].uri);
@@ -204,7 +204,7 @@ FileManagement_ErrCode OH_FileShare_PersistPermission(const FileShare_PolicyInfo
         LOGE("The external input pointer is abnormal");
         return E_PARAMS;
     }
-    if (policyNum <= 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
+    if (policyNum == 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
         LOGE("The policyNum is abnormal");
         return E_PARAMS;
     }
@@ -220,7 +220,7 @@ FileManagement_ErrCode OH_FileShare_RevokePermission(const FileShare_PolicyInfo 
         LOGE("The external input pointer is abnormal");
         return E_PARAMS;
     }
-    if (policyNum <= 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
+    if (policyNum == 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
         LOGE("The policyNum is abnormal");
         return E_PARAMS;
     }
@@ -236,7 +236,7 @@ FileManagement_ErrCode OH_FileShare_ActivatePermission(const FileShare_PolicyInf
         LOGE("The external input pointer is abnormal");
         return E_PARAMS;
     }
-    if (policyNum <= 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
+    if (policyNum == 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
         LOGE("The policyNum is abnormal");
         return E_PARAMS;
     }
@@ -252,7 +252,7 @@ FileManagement_ErrCode OH_FileShare_DeactivatePermission(const FileShare_PolicyI
         LOGE("The external input pointer is abnormal");
         return E_PARAMS;
     }
-    if (policyNum <= 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
+    if (policyNum == 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
         LOGE("The policyNum is abnormal");
         return E_PARAMS;
     }
@@ -269,7 +269,7 @@ FileManagement_ErrCode OH_FileShare_CheckPersistentPermission(const FileShare_Po
         LOGE("The external input pointer is abnormal");
         return E_PARAMS;
     }
-    if (policyNum <= 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
+    if (policyNum == 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
         LOGE("The policyNum is abnormal");
         return E_PARAMS;
     }
