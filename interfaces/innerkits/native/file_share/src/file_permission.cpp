@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 #include "file_permission.h"
-#include <unistd.h>
-
 #include "log.h"
+#include "parameter.h"
 #include "uri.h"
+#include <unistd.h>
+#include <unordered_set>
 #ifdef SANDBOX_MANAGER
 #include "accesstoken_kit.h"
 #include "bundle_constants.h"
@@ -25,6 +26,7 @@
 #include "n_error.h"
 #include "sandbox_helper.h"
 #include "sandbox_manager_err_code.h"
+#include "tokenid_kit.h"
 #endif
 
 namespace OHOS {
@@ -36,7 +38,20 @@ const std::string INVALID_MODE_MESSAGE = "Invalid operation mode!";
 const std::string INVALID_PATH_MESSAGE = "Invalid path!";
 const std::string PERMISSION_NOT_PERSISTED_MESSAGE = "The policy is no persistent capability!";
 const std::string FILE_SCHEME_PREFIX = "file://";
-
+const std::string FILE_MANAGER_AUTHORITY = "docs";
+const std::string SANDBOX_STORAGE_PATH = "/storage/Users/currentUser/";
+const std::string DOWNLOAD_PATH = "/storage/Users/currentUser/Download";
+const std::string DESKTOP_PATH = "/storage/Users/currentUser/Desktop";
+const std::string DOCUMENTS_PATH = "/storage/Users/currentUser/Documents";
+const std::string READ_WRITE_DOWNLOAD_PERMISSION = "ohos.permission.READ_WRITE_DOWNLOAD_DIRECTORY";
+const std::string READ_WRITE_DESKTOP_PERMISSION = "ohos.permission.READ_WRITE_DESKTOP_DIRECTORY";
+const std::string READ_WRITE_DOCUMENTS_PERMISSION = "ohos.permission.READ_WRITE_DOCUMENTS_DIRECTORY";
+const std::string SET_SANDBOX_POLICY_PERMISSION = "ohos.permission.SET_SANDBOX_POLICY";
+const std::string FILE_ACCESS_MANAGER_PERMISSION = "ohos.permission.FILE_ACCESS_MANAGER";
+const std::unordered_map<std::string, std::string> permissionPathMap = {
+    {READ_WRITE_DOWNLOAD_PERMISSION, DOWNLOAD_PATH},
+    {READ_WRITE_DESKTOP_PERMISSION, DESKTOP_PATH},
+    {READ_WRITE_DOCUMENTS_PERMISSION, DOCUMENTS_PATH}};
 #ifdef SANDBOX_MANAGER
 namespace {
 bool CheckValidUri(const string &uriStr)
@@ -158,14 +173,6 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
             PolicyErrorResult result = {uriPolicy.uri, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
             errorResults.emplace_back(result);
         } else {
-            string currentUserId = to_string(IPCSkeleton::GetCallingTokenID() / AppExecFwk::Constants::BASE_USER_RANGE);
-            int32_t ret = SandboxHelper::GetPhysicalPath(uri.ToString(), currentUserId, path);
-            if (ret != 0) {
-                PolicyErrorResult result = {uriPolicy.uri, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
-                errorResults.emplace_back(result);
-                LOGE("Failed to get physical path, errorcode: %{public}d", ret);
-                continue;
-            }
             PolicyInfo policyInfo = {path, uriPolicy.mode};
             pathPolicies.emplace_back(policyInfo);
         }
@@ -184,13 +191,6 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
             LOGE("Not correct uri!");
             errorResults.emplace_back(false);
         } else {
-            string currentUserId = to_string(IPCSkeleton::GetCallingTokenID() / AppExecFwk::Constants::BASE_USER_RANGE);
-            int32_t ret = SandboxHelper::GetPhysicalPath(uri.ToString(), currentUserId, path);
-            if (ret != 0) {
-                errorResults.emplace_back(false);
-                LOGE("Failed to get physical path, errorcode: %{public}d", ret);
-                continue;
-            }
             PolicyInfo policyInfo = {path, uriPolicy.mode};
             pathPolicies.emplace_back(policyInfo);
             errorResults.emplace_back(true);
@@ -198,7 +198,48 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
     }
     return pathPolicies;
 }
+
+static bool CheckPermission(uint64_t tokenCaller, const string &permission)
+{
+    return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
+           Security::AccessToken::PermissionState::PERMISSION_GRANTED;
+}
+
+static bool IsFileManagerUri(const string &pathStr)
+{
+    return pathStr.find(DOWNLOAD_PATH) == 0 || pathStr.find(DESKTOP_PATH) == 0 || pathStr.find(DOCUMENTS_PATH) == 0;
+}
+
+static bool CheckFileManagerUriPermission(uint64_t providerTokenId, const string &pathStr)
+{
+    return (IsFileManagerUri(pathStr) && CheckPermission(providerTokenId, FILE_ACCESS_MANAGER_PERMISSION)) ||
+           (pathStr.find(DOWNLOAD_PATH) == 0 && CheckPermission(providerTokenId, READ_WRITE_DOWNLOAD_PERMISSION)) ||
+           (pathStr.find(DESKTOP_PATH) == 0 && CheckPermission(providerTokenId, READ_WRITE_DESKTOP_PERMISSION)) ||
+           (pathStr.find(DOCUMENTS_PATH) == 0 && CheckPermission(providerTokenId, READ_WRITE_DOCUMENTS_PERMISSION));
+}
+
+int32_t FilePermission::CheckUriPersistentPermission(uint64_t tokenId,
+                                                     const vector<UriPolicyInfo> &uriPolicies,
+                                                     vector<bool> &errorResults)
+{
+    int errorCode = 0;
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    if (pathPolicies.size() == 0) {
+        return EPERM;
+    }
+    vector<bool> resultCodes;
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::CheckPersistPolicy(tokenId, pathPolicies, resultCodes);
+    for (size_t i = 0; i < pathPolicies.size(); i++) {
+        if (!resultCodes[i]) {
+            resultCodes[i] = CheckFileManagerUriPermission(tokenId, pathPolicies[i].path);
+        }
+    }
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode);
+    ParseErrorResults(resultCodes, errorResults);
+    return errorCode;
+}
 #endif
+
 int32_t FilePermission::PersistPermission(const vector<UriPolicyInfo> &uriPolicies,
                                           deque<struct PolicyErrorResult> &errorResults)
 {
@@ -267,15 +308,50 @@ int32_t FilePermission::CheckPersistentPermission(const vector<UriPolicyInfo> &u
 {
     int errorCode = 0;
 #ifdef SANDBOX_MANAGER
-    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
-    if (pathPolicies.size() == 0) {
-        return errorCode;
-    }
-    vector<bool> resultCodes;
     auto tokenId = IPCSkeleton::GetCallingTokenID();
-    int32_t sandboxManagerErrorCode = SandboxManagerKit::CheckPersistPolicy(tokenId, pathPolicies, resultCodes);
-    errorCode = ErrorCodeConversion(sandboxManagerErrorCode);
-    ParseErrorResults(resultCodes, errorResults);
+    errorCode = CheckUriPersistentPermission(tokenId, uriPolicies, errorResults);
+#endif
+    return errorCode;
+}
+
+string FilePermission::GetPathByPermission(const std::string &permission)
+{
+#ifdef SANDBOX_MANAGER
+    if (permissionPathMap.find(permission) != permissionPathMap.end()) {
+        return permissionPathMap.at(permission);
+    }
+#endif
+    return "";
+}
+
+int32_t FilePermission::SetPolicy(uint64_t providerTokenId,
+                                  uint64_t targetTokenId,
+                                  vector<UriPolicyInfo> &uriPolicies,
+                                  vector<bool> &errorResults,
+                                  uint32_t policyFlag)
+{
+    int errorCode = 0;
+#ifdef SANDBOX_MANAGER
+    if (!CheckPermission(providerTokenId, SET_SANDBOX_POLICY_PERMISSION)) {
+        return FileManagement::LibN::E_PERMISSION;
+    }
+    errorCode = CheckUriPersistentPermission(providerTokenId, uriPolicies, errorResults);
+    if (errorCode != SANDBOX_MANAGER_OK) {
+        LOGE("SandboxManagerKit::CheckPersistPolicy is failed, code:%{public}d.", errorCode);
+    }
+    vector<PolicyInfo> setPathPolicies;
+    for (size_t i = 0; i < uriPolicies.size(); i++) {
+        if (errorResults[i]) {
+            Uri uri(uriPolicies[i].uri);
+            string path = SandboxHelper::Decode(uri.GetPath());
+            PolicyInfo policyInfo = {path, uriPolicies[i].mode};
+            setPathPolicies.emplace_back(policyInfo);
+        }
+    }
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::SetPolicy(targetTokenId, setPathPolicies, policyFlag);
+    if (sandboxManagerErrorCode != SANDBOX_MANAGER_OK) {
+        LOGE("SandboxManagerKit::SetPolicy is failed, code:%{public}d.", sandboxManagerErrorCode);
+    }
 #endif
     return errorCode;
 }

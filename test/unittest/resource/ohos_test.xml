@@ -44,6 +44,15 @@
             <option name="shell" value="bm uninstall -n com.example.fileshareb"/>
         </cleaner>
     </target>
+    <target name="file_permission_test">
+        <preparer>
+            <option name="push" value="filesharea.hap -> /data/test/" src="res"/>
+            <option name="shell" value="bm install -r -p /data/test/filesharea.hap"/>
+        </preparer>
+        <cleaner>
+            <option name="shell" value="bm uninstall -n com.example.filesharea"/>
+        </cleaner>
+    </target>
     <target name="file_uri_ndk_test">
         <preparer>
             <option name="push" value="file_uri_test.txt -> /data/test" src="res"/>
