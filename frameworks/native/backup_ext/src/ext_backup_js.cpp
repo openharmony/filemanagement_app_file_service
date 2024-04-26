@@ -372,13 +372,7 @@ ErrCode ExtBackupJs::OnRestore(function<void()> callback, std::function<void(con
     needCallOnRestore_.store(false);
     callbackInfo_ = std::make_shared<CallbackInfo>(callback);
     callbackInfoEx_ = std::make_shared<CallbackInfoEx>(callbackEx, callbackExAppDone);
-    auto envir = jsRuntime_.GetNapiEnv();
-    napi_value value = jsObj_.get()->GetNapiValue();
-    if (value == nullptr) {
-        HILOGE("failed to get napi value object");
-        return EINVAL;
-    }
-    return CallJSRestoreEx(envir, value);
+    return CallJSRestoreEx();
 }
 
 ErrCode ExtBackupJs::OnRestore(function<void()> callback)
@@ -413,7 +407,7 @@ ErrCode ExtBackupJs::OnRestore(function<void()> callback)
     return ERR_OK;
 }
 
-ErrCode ExtBackupJs::CallJSRestoreEx(napi_env env, napi_value val)
+ErrCode ExtBackupJs::CallJSRestoreEx()
 {
     HILOGI("Start call app js method onRestoreEx");
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfoEx {callbackInfoEx_}](napi_env envir, napi_value result) ->
@@ -441,10 +435,10 @@ ErrCode ExtBackupJs::CallJSRestoreEx(napi_env env, napi_value val)
         HILOGI("Call Js method onRestoreEx done");
         return ERR_OK;
     }
-    return CallJSRestore(env, val);
+    return CallJSRestore();
 }
 
-ErrCode ExtBackupJs::CallJSRestore(napi_env env, napi_value val)
+ErrCode ExtBackupJs::CallJSRestore()
 {
     HILOGI("Start call app js method onRestore");
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env, napi_value result) -> bool {
@@ -563,6 +557,7 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
     BExcepUltils::BAssert(work, BError::Codes::EXT_BROKEN_FRAMEWORK, "failed to new uv_work_t.");
 
     work->data = reinterpret_cast<void *>(param.get());
+    HILOGI("Will execute current js method");
     int ret = uv_queue_work(
         loop, work.get(), [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
@@ -572,6 +567,7 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
                     HILOGE("failed to get CallJsParam.");
                     break;
                 }
+                HILOGI("Start call current js method");
                 if (DoCallJsMethod(param) != ERR_OK) {
                     HILOGE("failed to call DoCallJsMethod.");
                 }
@@ -582,8 +578,9 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
         HILOGE("failed to exec uv_queue_work.");
         return EINVAL;
     }
+    HILOGI("Wait execute current js method");
     std::unique_lock<std::mutex> lock(param->backupOperateMutex);
-    param->backupOperateCondition.wait_for(lock, std::chrono::seconds(WAIT_ONRESTORE_EX_TIMEOUT));
+    param->backupOperateCondition.wait(lock);
     return ERR_OK;
 }
 

@@ -79,7 +79,9 @@ ErrCode ExtExtensionStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &r
     }
 
     UniqueFd fd = GetFileHandle(fileName);
-    if (!reply.WriteFileDescriptor(fd)) {
+    bool fdFlag = fd < 0 ? false : true;
+    reply.WriteBool(fdFlag);
+    if (fdFlag == true && !reply.WriteFileDescriptor(fd)) {
         return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the file").GetCode();
     }
     return BError(BError::Codes::OK);

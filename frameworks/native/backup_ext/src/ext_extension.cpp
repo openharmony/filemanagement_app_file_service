@@ -216,7 +216,7 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
     if (proxy == nullptr) {
         throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
     }
-    auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd));
+    auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd), ERR_OK);
     if (ret != ERR_OK) {
         HILOGI("Failed to AppIncrementalFileReady %{public}d", ret);
     }
@@ -249,10 +249,11 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         if (access(tarName.c_str(), F_OK) == 0) {
             throw BError(BError::Codes::EXT_INVAL_ARG, string("The file already exists"));
         }
+        int32_t errCode = ERR_OK;
         UniqueFd fd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("Failed to open tar file = %{private}s, err = %{public}d", tarName.c_str(), errno);
-            throw BError(BError::Codes::EXT_INVAL_ARG, string("open tar file failed"));
+            errCode = BError::GetCodeByErrno(errno);
         }
 
         // 对应的简报文件
@@ -264,11 +265,11 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (reportFd < 0) {
             HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
-            throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
+            errCode = BError::GetCodeByErrno(errno);
         }
         HILOGI("extension: Will notify AppIncrementalFileReady");
         auto proxy = ServiceProxy::GetInstance();
-        auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd));
+        auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd), errCode);
         if (ret != ERR_OK) {
             HILOGI("Failed to AppIncrementalFileReady %{public}d", ret);
         }
@@ -304,7 +305,8 @@ static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
     close(cachedEntity.GetFd().Release());
 
     ErrCode ret =
-        proxy->AppFileReady(string(BConstants::EXT_BACKUP_MANAGE), UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDONLY)));
+        proxy->AppFileReady(string(BConstants::EXT_BACKUP_MANAGE), UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDONLY)),
+            ERR_OK);
     if (SUCCEEDED(ret)) {
         HILOGI("The application is packaged successfully");
     } else {
@@ -330,13 +332,14 @@ static ErrCode BigFileReady(sptr<IService> proxy)
             continue;
         }
 
+        int32_t errCode = ERR_OK;
         UniqueFd fd(open(item.fileName.data(), O_RDONLY));
         if (fd < 0) {
             HILOGE("open file failed, file name is %{public}s, err = %{public}d", item.fileName.c_str(), errno);
-            continue;
+            errCode = BError::GetCodeByErrno(errno);
         }
 
-        ret = proxy->AppFileReady(item.hashName, std::move(fd));
+        ret = proxy->AppFileReady(item.hashName, std::move(fd), errCode);
         if (SUCCEEDED(ret)) {
             HILOGI("The application is packaged successfully, package name is %{public}s", item.hashName.c_str());
         } else {
@@ -1331,7 +1334,7 @@ static ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo,
 
     string tarName = string(INDEX_FILE_INCREMENTAL_BACKUP).append(tarFile);
     ErrCode ret = proxy->AppIncrementalFileReady(tarFile, UniqueFd(open(tarName.data(), O_RDONLY)),
-                                                 UniqueFd(open(file.data(), O_RDONLY)));
+                                                 UniqueFd(open(file.data(), O_RDONLY)), ERR_OK);
     if (SUCCEEDED(ret)) {
         HILOGI("IncrementalTarFileReady: The application is packaged successfully");
         // 删除文件
@@ -1357,11 +1360,12 @@ static ErrCode IncrementalBigFileReady(const TarMap &pkgInfo,
         }
         auto [path, sta, isBeforeTar] = item.second;
 
+        int32_t errCode = ERR_OK;
         UniqueFd fd(open(path.data(), O_RDONLY));
         if (fd < 0) {
             HILOGE("IncrementalBigFileReady open file failed, file name is %{public}s, err = %{public}d", path.c_str(),
                    errno);
-            continue;
+            errCode = BError::GetCodeByErrno(errno);
         }
 
         struct ReportFileInfo info = bigInfos.find(path)->second;
@@ -1370,7 +1374,7 @@ static ErrCode IncrementalBigFileReady(const TarMap &pkgInfo,
         bigInfo.try_emplace(path, info);
         WriteFile(file, bigInfo);
 
-        ret = proxy->AppIncrementalFileReady(item.first, std::move(fd), UniqueFd(open(file.data(), O_RDONLY)));
+        ret = proxy->AppIncrementalFileReady(item.first, std::move(fd), UniqueFd(open(file.data(), O_RDONLY)), errCode);
         if (SUCCEEDED(ret)) {
             HILOGI("IncrementalBigFileReady: The application is packaged successfully, package name is %{public}s",
                    item.first.c_str());
@@ -1481,7 +1485,8 @@ static ErrCode IncrementalAllFileReady(const TarMap &pkgInfo,
     UniqueFd fd(open(INDEX_FILE_BACKUP.data(), O_RDONLY));
     UniqueFd manifestFd(open(file.data(), O_RDONLY));
     ErrCode ret =
-        proxy->AppIncrementalFileReady(string(BConstants::EXT_BACKUP_MANAGE), std::move(fd), std::move(manifestFd));
+        proxy->AppIncrementalFileReady(string(BConstants::EXT_BACKUP_MANAGE), std::move(fd), std::move(manifestFd),
+            ERR_OK);
     if (SUCCEEDED(ret)) {
         HILOGI("IncrementalAllFileReady successfully");
         RemoveFile(file);

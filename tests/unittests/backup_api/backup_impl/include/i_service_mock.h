@@ -79,7 +79,7 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) override
+    ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode) override
     {
         return BError(BError::Codes::OK);
     }
@@ -161,7 +161,7 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd)
+    ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)
     {
         return BError(BError::Codes::OK);
     }

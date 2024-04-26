@@ -92,6 +92,7 @@ public:
     enum BackupErrorCode {
         E_IPCSS = 13600001,
         E_PERM = 13900001,
+        E_NOTEXIST = 13900002,
         E_IO = 13900005,
         E_NOMEM = 13900011,
         E_INVAL = 13900020,
@@ -112,6 +113,13 @@ public:
      * @return int 标注错误码
      */
     int GetCode() const;
+
+    /**
+     * @brief 根据系统的errno返回OHOS标准错误码
+     *
+     * @return int 标注错误码
+     */
+    static int32_t GetCodeByErrno(int32_t errnoSys);
 
     /**
      * @brief 返回原始错误码
@@ -254,6 +262,7 @@ private:
         {static_cast<int>(Codes::EXT_BACKUP_PACKET_ERROR), BackupErrorCode::E_PACKET},
         {BackupErrorCode::E_IPCSS, BackupErrorCode::E_IPCSS},
         {BackupErrorCode::E_INVAL, BackupErrorCode::E_INVAL},
+        {BackupErrorCode::E_NOTEXIST, BackupErrorCode::E_NOTEXIST},
         {BackupErrorCode::E_UKERR, BackupErrorCode::E_UKERR},
         {BackupErrorCode::E_PERM, BackupErrorCode::E_PERM},
         {BackupErrorCode::E_NOMEM, BackupErrorCode::E_NOMEM},
@@ -265,6 +274,13 @@ private:
         {BackupErrorCode::E_DIED, BackupErrorCode::E_DIED},
         {BackupErrorCode::E_EMPTY, BackupErrorCode::E_EMPTY},
         {BackupErrorCode::E_PACKET, BackupErrorCode::E_PACKET},
+    };
+
+    static inline const std::map<int, int> sysErrnoCodeTable_ {
+        {EIO, BackupErrorCode::E_IO},
+        {ENOMEM, BackupErrorCode::E_NOMEM},
+        {ENOENT, BackupErrorCode::E_NOTEXIST},
+        {EPERM, BackupErrorCode::E_PERM},
     };
 
 private:

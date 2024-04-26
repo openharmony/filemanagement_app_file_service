@@ -21,14 +21,14 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-void ServiceReverse::BackupOnFileReady(string bundleName, string fileName, int fd)
+void ServiceReverse::BackupOnFileReady(string bundleName, string fileName, int fd, int32_t errCode)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onFileReady) {
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
     BFileInfo bFileInfo(bundleName, fileName, 0);
-    callbacksBackup_.onFileReady(bFileInfo, UniqueFd(fd));
+    callbacksBackup_.onFileReady(bFileInfo, UniqueFd(fd), errCode);
 }
 
 void ServiceReverse::BackupOnBundleStarted(int32_t errCode, string bundleName)
