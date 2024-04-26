@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,8 @@
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_ext_manage.h"
 #include "test_manager.h"
+
+#include "src/b_json/b_json_entity_ext_manage.cpp"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -522,5 +524,154 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0803, testing::ext::
         GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-end b_json_entity_ext_manage_0803";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_ext_manage_0900
+ * @tc.name: b_json_entity_ext_manage_0900
+ * @tc.desc: 测试CheckBigFile中st_size的两种情况
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9JXNH
+ */
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0900, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0900";
+    try {
+        struct stat sta;
+        sta.st_size = 0;
+        bool ret = CheckBigFile(sta);
+        EXPECT_FALSE(ret);
+
+        sta.st_size = BConstants::BIG_FILE_BOUNDARY + 1;
+        ret = CheckBigFile(sta);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-end b_json_entity_ext_manage_0900";
+}
+
+string BExcepUltils::Canonicalize(const string_view &path)
+{
+    return string(path);
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_ext_manage_0901
+ * @tc.name: b_json_entity_ext_manage_0901
+ * @tc.desc: 测试CheckOwnPackTar各种异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9JXNH
+ */
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0901, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0901";
+    try {
+        string fileName = string(BConstants::PATH_BUNDLE_BACKUP_HOME)
+            .append(BConstants::SA_BUNDLE_BACKUP_BACKUP).append("/tar");
+        auto ret = CheckOwnPackTar(fileName);
+        EXPECT_FALSE(ret);
+
+        fileName = string(BConstants::PATH_BUNDLE_BACKUP_HOME)
+            .append(BConstants::SA_BUNDLE_BACKUP_BACKUP).append("/test.tar");
+        ret = CheckOwnPackTar(fileName);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-end b_json_entity_ext_manage_0901";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_ext_manage_0902
+ * @tc.name: b_json_entity_ext_manage_0902
+ * @tc.desc: 测试SetExtManageForClone的各种情况
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9JXNH
+ */
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0902, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0902";
+    try {
+        TestManager tm("b_json_entity_ext_manage_0902");
+        // 预置文件数据
+        // 索引文件pathManageFile, 测试文件路径pathTestFile, 测试文件名testFileHexName
+        string root = tm.GetRootDirCurTest();
+        string pathManageFile = root + "manage.json";
+        string pathTestFile = root + "test.txt";
+        string testFileHexName = "1234567890abcdef";
+        SaveStringToFile(pathTestFile, "hello world");
+        BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(pathManageFile.data(), O_RDONLY, 0)));
+        auto cache = cachedEntity.Structuralize();
+
+        // 生成一条有用数据并写入索引文件
+        map<string, tuple<string, struct stat, bool, bool>> info;
+        struct stat sta = {};
+        info.emplace(testFileHexName, make_tuple(pathTestFile, sta = GetFileStat(pathTestFile), false, true));
+        cache.SetExtManageForClone(info);
+
+        // 读取索引文件内容并做结果判断
+        auto fileNames = cache.GetExtManage();
+        ASSERT_EQ(fileNames.size(), 1ul);
+        EXPECT_EQ(*fileNames.begin(), testFileHexName);
+        auto fileInfo = cache.GetExtManageInfo();
+        ASSERT_EQ(fileInfo.size(), 1ul);
+        EXPECT_EQ(fileInfo[0].hashName, testFileHexName);
+        EXPECT_EQ(fileInfo[0].fileName, pathTestFile);
+        EXPECT_TRUE(fileInfo[0].isUserTar);
+        EXPECT_FALSE(fileInfo[0].isBigFile);
+        EXPECT_TRUE(IsEqual(fileInfo[0].sta, sta));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-end b_json_entity_ext_manage_0902";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_ext_manage_0903
+ * @tc.name: b_json_entity_ext_manage_0903
+ * @tc.desc: 测试CheckOwnPackTar各种异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9JXNH
+ */
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0903, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0903";
+    try {
+        TestManager tm("b_json_entity_ext_manage_0903");
+        // 预置文件数据
+        // 索引文件pathManageFile, 测试文件路径pathTestFile, 测试文件名testFileHexName
+        string root = tm.GetRootDirCurTest();
+        string pathManageFile = root + "manage.json";
+        BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(pathManageFile.data(), O_RDONLY, 0)));
+        auto cache = cachedEntity.Structuralize();
+        Json::Value value;
+        value["isUserTar"] = true;
+        value["information"]["test"] = "test";
+
+        cache.obj_.clear();
+        cache.obj_.append(value);
+        // 读取索引文件内容并做结果判断
+        auto fileNames = cache.GetExtManage();
+        EXPECT_EQ(fileNames.size(), 1ul);
+        EXPECT_EQ(*fileNames.begin(), "");
+        auto infos = cache.GetExtManageInfo();
+        EXPECT_EQ(infos.size(), 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-end b_json_entity_ext_manage_0903";
 }
 } // namespace OHOS::FileManagement::Backup
