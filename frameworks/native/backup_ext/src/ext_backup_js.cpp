@@ -82,9 +82,7 @@ static napi_status DealNapiStrValue(napi_env env, const napi_value napi_StrValue
             return status;
         }
     }
-    if (buffer.data() != nullptr) {
-        result = buffer;
-    }
+    result = buffer;
     return status;
 }
 

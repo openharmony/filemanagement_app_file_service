@@ -1555,7 +1555,7 @@ ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
 {
     auto obj = wptr<BackupExtExtension>(this);
     auto ptr = obj.promote();
-    auto callBackup = [ptr](std::string result) {
+    auto callBackup = [ptr](const std::string result) {
         HILOGI("GetBackupInfo callBackup start. result = %{public}s", result.c_str());
         ptr->backupInfo_ = result;
     };

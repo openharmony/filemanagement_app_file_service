@@ -225,7 +225,7 @@ static void AdapteCloneOptimize(const string &path)
     close(cachedEntity.GetFd().Release());
 }
 
-static void OnResultReport(shared_ptr<InrementalSessionAsync> ctx, const std::string resultInfo)
+static void OnResultReport(shared_ptr<InrementalSessionAsync> ctx, const std::string &resultInfo)
 {
     printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
     ctx->TryNotify(true);

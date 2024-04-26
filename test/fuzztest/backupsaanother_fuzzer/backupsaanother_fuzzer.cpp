@@ -112,8 +112,8 @@ void GetBundleNamesData(const uint8_t *data, size_t size, vector<BIncrementalDat
         int32_t fd = *(reinterpret_cast<const int32_t*>(data));
         int32_t priority = *(reinterpret_cast<const int32_t*>(data + sizeof(int32_t)));
         string parameters = string(reinterpret_cast<const char*>(data), size) + to_string(size - i);
-        BIncrementalData data(name, nTime, fd, parameters, priority);
-        bundleNames.push_back(data);
+        BIncrementalData incrementaData(name, nTime, fd, parameters, priority);
+        bundleNames.push_back(incrementaData);
     }
 }
 
@@ -201,8 +201,8 @@ bool CmdPublishIncrementalFileFuzzTest(const uint8_t *data, size_t size)
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
     if (size > 0) {
         int pos = (size + 1) >> 1;
-        std::string fileName((const char *)data, pos);
-        std::string bundleName((const char *)data + pos, size - pos);
+        std::string fileName(reinterpret_cast<const char *>(data), pos);
+        std::string bundleName(reinterpret_cast<const char *>(data) + pos, size - pos);
         uint32_t sn = 0;
         if (size > sizeof(uint32_t)) {
             sn = *(reinterpret_cast<const uint32_t *>(data));
@@ -226,7 +226,7 @@ bool CmdAppIncrementalFileReadyFuzzTest(const uint8_t *data, size_t size)
 {
     MessageParcel datas;
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
-    std::string fileName((const char *)data, size);
+    std::string fileName(reinterpret_cast<const char *>(data), size);
     datas.WriteString(fileName);
     if (size >= sizeof(int)) {
         int fd = *(reinterpret_cast<const int *>(data));

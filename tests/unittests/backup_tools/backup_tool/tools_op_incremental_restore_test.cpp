@@ -56,11 +56,11 @@ HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_
         GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-info";
         map<string, vector<string>> mapArgToVal;
         string localCap = string(BConstants::GetSaBundleBackupToolDir(BConstants::DEFAULT_USER_ID).data()) + "/tmp";
-        vector<string> path = {localCap.data()};
+        vector<string> path = { localCap.data() };
         mapArgToVal.insert(make_pair("pathCapFile", path));
-        vector<string> bundles = {"com.example.app2backup"};
+        vector<string> bundles = { "com.example.app2backup" };
         mapArgToVal.insert(make_pair("bundles", bundles));
-        vector<string> incrementalTime = {"0"};
+        vector<string> incrementalTime = { "0" };
         mapArgToVal.insert(make_pair("incrementalTime", incrementalTime));
 
         // 创建测试路径以及测试环境

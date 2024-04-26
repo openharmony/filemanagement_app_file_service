@@ -216,7 +216,7 @@ int32_t ServiceStub::CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply)
     }
     std::string result;
     ret = GetBackupInfo(bundleName, result);
-    return BError(BError::Codes::OK);
+    return ret;
 }
 
 int32_t ServiceStub::CmdUpdateTimer(MessageParcel &data, MessageParcel &reply)
