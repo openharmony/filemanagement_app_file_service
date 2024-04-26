@@ -36,10 +36,9 @@ constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr int32_t SERVICE_ID = 5203;
 
-std::shared_ptr<Service> Backupsaincremental = std::make_shared<Service>(SERVICE_ID);
-
 void GetLocalCapabilitiesIncrementalFuzzTest(const uint8_t *data, size_t size)
 {
+    sptr service = sptr(new Service(SERVICE_ID));
     BIncrementalData bundlenames;
     std::vector<BIncrementalData>bundleNames;
     bundlenames.bundleName = string(reinterpret_cast<const char *>(data), size);
@@ -48,11 +47,13 @@ void GetLocalCapabilitiesIncrementalFuzzTest(const uint8_t *data, size_t size)
     bundlenames.backupParameters = string(reinterpret_cast<const char *>(data), size);
     bundlenames.backupPriority = *(reinterpret_cast<const int32_t *>(data));
     bundleNames.push_back(bundlenames);
-    Backupsaincremental->GetLocalCapabilitiesIncremental(bundleNames);
+    service->GetLocalCapabilitiesIncremental(bundleNames);
+    service = nullptr;
 }
 
 void AppendBundlesIncrementalBackupSessionFuzzTest(const uint8_t *data, size_t size)
 {
+    sptr service = sptr(new Service(SERVICE_ID));
     BIncrementalData bundlesToBackups;
     std::vector<BIncrementalData> bundlesToBackup;
     bundlesToBackups.bundleName = string(reinterpret_cast<const char *>(data), size);
@@ -61,29 +62,36 @@ void AppendBundlesIncrementalBackupSessionFuzzTest(const uint8_t *data, size_t s
     bundlesToBackups.backupParameters = string(reinterpret_cast<const char *>(data), size);
     bundlesToBackups.backupPriority = *(reinterpret_cast<const int32_t *>(data));
     bundlesToBackup.push_back(bundlesToBackups);
-    Backupsaincremental->AppendBundlesIncrementalBackupSession(bundlesToBackup);
+    service->AppendBundlesIncrementalBackupSession(bundlesToBackup);
+    service = nullptr;
 }
 
 void PublishIncrementalFileFuzzTest(const uint8_t *data, size_t size)
 {
+    sptr service = sptr(new Service(SERVICE_ID));
     BFileInfo fileInfo;
     fileInfo.fileName = string(reinterpret_cast<const char *>(data), size);
     fileInfo.owner = string(reinterpret_cast<const char *>(data), size);
     fileInfo.sn = *(reinterpret_cast<const int32_t*>(data));
-    Backupsaincremental->PublishIncrementalFile(fileInfo);
+    service->PublishIncrementalFile(fileInfo);
+    service = nullptr;
 }
 
 void InitIncrementalBackupSessionFuzzTest(const uint8_t *data, size_t size)
 {
+    sptr service = sptr(new Service(SERVICE_ID));
     sptr<IServiceReverse> remote = nullptr;
-    Backupsaincremental->InitIncrementalBackupSession(remote);
+    service->InitIncrementalBackupSession(remote);
+    service = nullptr;
 }
 
 void GetIncrementalFileHandleFuzzTest(const uint8_t *data, size_t size)
 {
+    sptr service = sptr(new Service(SERVICE_ID));
     const std::string bundleName(reinterpret_cast<const char*>(data), size);
     const std::string fileName(reinterpret_cast<const char*>(data), size);
-    Backupsaincremental->GetIncrementalFileHandle(bundleName, fileName);
+    service->GetIncrementalFileHandle(bundleName, fileName);
+    service = nullptr;
 }
 } // namespace OHOS
 

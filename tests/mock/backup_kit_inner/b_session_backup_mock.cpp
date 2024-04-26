@@ -58,13 +58,13 @@ ErrCode BSessionBackup::Start()
     SaveStringToFile(fileManagePath, R"([{"fileName": "1.tar"}])");
     UniqueFd fd(open(fileManagePath.data(), O_RDWR, S_IRWXU));
     GTEST_LOG_(INFO) << "callbacks_::onFileReady manage.json";
-    callbacks_.onFileReady(bFileInfo, move(fd));
+    callbacks_.onFileReady(bFileInfo, move(fd), 0);
 
     string filePath = tm.GetRootDirCurTest().append("1.tar");
     UniqueFd fdTar(open(filePath.data(), O_RDONLY | O_CREAT, S_IRWXU));
     bFileInfo.fileName = "1.tar";
     GTEST_LOG_(INFO) << "callbacks_::onFileReady 1.tar";
-    callbacks_.onFileReady(bFileInfo, move(fdTar));
+    callbacks_.onFileReady(bFileInfo, move(fdTar), 0);
 
     callbacks_.onBundleFinished(0, "com.example.app2backup");
 
@@ -76,7 +76,7 @@ ErrCode BSessionBackup::Start()
     string filePathTwo = tm.GetRootDirCurTest().append("1.tar");
     UniqueFd fdFile(open(filePathTwo.data(), O_RDONLY | O_CREAT, S_IRWXU));
     GTEST_LOG_(INFO) << "callbacks_::onFileReady 1.tar";
-    callbacks_.onFileReady(bFileInfo, move(fdFile));
+    callbacks_.onFileReady(bFileInfo, move(fdFile), 0);
 
     callbacks_.onBackupServiceDied();
     return BError(BError::Codes::OK);

@@ -24,6 +24,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+const int INVALID_FD = -1;
 
 UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
 {
@@ -48,7 +49,11 @@ UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
     }
 
     HILOGI("Successful");
-    UniqueFd fd(reply.ReadFileDescriptor());
+    bool fdFlag = reply.ReadBool();
+    UniqueFd fd = UniqueFd(INVALID_FD);
+    if (fdFlag == true) {
+        fd = UniqueFd(reply.ReadFileDescriptor());
+    }
     return UniqueFd(fd.Release());
 }
 

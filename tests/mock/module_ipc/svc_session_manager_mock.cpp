@@ -113,7 +113,7 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
 sptr<SvcBackupConnection> SvcSessionManager::GetBackupExtAbility(const string &bundleName)
 {
     GTEST_LOG_(INFO) << "GetBackupExtAbility";
-    return nullptr;
+    return sptr<SvcBackupConnection>(new SvcBackupConnection(nullptr, nullptr));
 }
 
 void SvcSessionManager::DumpInfo(const int fd, const std::vector<std::u16string> &args)
@@ -205,7 +205,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
 sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &bundleName)
 {
     GTEST_LOG_(INFO) << "CreateBackupConnection";
-    return nullptr;
+    return GetBackupExtAbility(bundleName);
 }
 
 void SvcSessionManager::Start() {}
