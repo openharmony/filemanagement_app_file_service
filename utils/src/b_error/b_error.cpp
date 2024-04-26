@@ -41,7 +41,7 @@ string BError::WrapMessageWithExtraInfos(const char *fileName,
 
     if (code != Codes::OK) {
         string msg;
-        HiviewDFX::DfxDumpCatcher().DumpCatch(getpid(), syscall(SYS_gettid), msg);
+        HiviewDFX::DfxDumpCatcher().DumpCatch(getprocpid(), syscall(SYS_gettid), msg);
         ss << endl << msg;
     }
 

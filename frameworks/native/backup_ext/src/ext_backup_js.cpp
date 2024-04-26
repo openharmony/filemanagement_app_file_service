@@ -44,9 +44,6 @@
 #include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
-namespace {
-    const static uint32_t WAIT_ONRESTORE_EX_TIMEOUT = 10;
-}
 using namespace std;
 
 static string GetSrcPath(const AppExecFwk::AbilityInfo &info)
