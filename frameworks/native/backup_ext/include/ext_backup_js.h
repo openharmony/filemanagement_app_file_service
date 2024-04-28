@@ -152,8 +152,8 @@ private:
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseRestoreExInfo();
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseRestoreInfo();
 
-    ErrCode CallJSRestoreEx(napi_env env, napi_value val);
-    ErrCode CallJSRestore(napi_env env, napi_value val);
+    ErrCode CallJSRestoreEx();
+    ErrCode CallJSRestore();
 
     void ExportJsContext(void);
 

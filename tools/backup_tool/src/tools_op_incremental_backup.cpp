@@ -212,7 +212,6 @@ static void OnAllBundlesFinished(shared_ptr<SessionBckup> ctx, ErrCode err)
 static void OnResultReport(shared_ptr<SessionBckup> ctx, const std::string &resultInfo)
 {
     printf("OnResultReport, resultInfo = %s\n", resultInfo.c_str());
-    ctx->TryNotify(true);
 }
 
 static void OnBackupServiceDied(shared_ptr<SessionBckup> ctx)

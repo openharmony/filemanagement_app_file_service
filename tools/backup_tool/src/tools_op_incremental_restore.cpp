@@ -217,7 +217,6 @@ static void OnBackupServiceDied(shared_ptr<SessionRestore> ctx)
 static void OnResultReport(shared_ptr<SessionRestore> ctx, const std::string &resultInfo)
 {
     printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
-    ctx->TryNotify(true);
 }
 
 static void RestoreApp(shared_ptr<SessionRestore> restore)
