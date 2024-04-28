@@ -117,6 +117,7 @@ ohos_unittest("b_json_test") {
   include_dirs += backup_mock_parameter_include_dirs
 
   deps = [
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
     "${path_googletest}:gmock_main",

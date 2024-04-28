@@ -47,6 +47,7 @@ ohos_fuzztest("BackupExtFuzzTest") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
     "${path_backup}/utils:backup_utils",
   ]
 

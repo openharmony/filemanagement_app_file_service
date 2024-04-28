@@ -51,6 +51,7 @@ ohos_shared_library("backup_extension_ability_native") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
     "${path_backup}/utils:backup_utils",
     "${path_jsoncpp}:jsoncpp",
   ]

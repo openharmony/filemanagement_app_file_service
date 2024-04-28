@@ -33,6 +33,7 @@ struct ReportFileInfo {
     std::string hash;
     bool isIncremental {false};
     off_t userTar {0};
+    bool encodeFlag {false};
 };
 
 class BReportEntity {
@@ -43,6 +44,22 @@ public:
      * @return std::map<string, ReportFileInfo>
      */
     std::unordered_map<std::string, struct ReportFileInfo> GetReportInfos();
+
+    /**
+     * @brief Check if line is encode
+     *
+     */
+    void CheckAndUpdateIfReportLineEncoded(std::string &path);
+
+    /**
+     * @brief encode report item
+     */
+    static std::string EncodeReportItem(const std::string &reportItem, bool enableEncode);
+
+    /**
+     * @brief decode report item
+     */
+    static std::string DecodeReportItem(const std::string &reportItem, bool enableEncode);
 
 public:
     /**
