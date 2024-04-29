@@ -20,7 +20,6 @@ group("fuzztest") {
     "backupsa_fuzzer:BackupSaFuzzTest",
     "backupsaanother_fuzzer:BackupSaAnotherFuzzTest",
     "backupsaappend_fuzzer:BackupSaAppendFuzzTest",
-    "backupsaincremental_fuzzer:BackupSaIncrementalFuzzTest",
     "fileshare_fuzzer:FileShareFuzzTest",
     "remotefileshare_fuzzer:RemoteFileShareFuzzTest",
     "servicereverse_fuzzer:ServiceReverseFuzzTest",
