@@ -79,7 +79,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
         TestManager tm("ServiceReverseProxyTest_GetFd_0100");
         std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
         UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
-        proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, fd);
+        proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, fd, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnFileReady.";
@@ -288,7 +288,7 @@ HWTEST_F(ServiceReverseProxyTest,
         TestManager tm1("ServiceReverseProxyTest_GetFd_0301");
         std::string manifestFilePath = tm1.GetRootDirCurTest().append(FILE_NAME_MANIFEST);
         UniqueFd manifestFd(open(manifestFilePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
-        proxy_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, fd, manifestFd);
+        proxy_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, fd, manifestFd, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalBackupOnFileReady.";
@@ -482,7 +482,7 @@ HWTEST_F(ServiceReverseProxyTest,
         TestManager tm1("ServiceReverseProxyTest_GetFd_0401");
         std::string manifestFilePath = tm1.GetRootDirCurTest().append(FILE_NAME_MANIFEST);
         UniqueFd manifestFd(open(manifestFilePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
-        proxy_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, fd, manifestFd);
+        proxy_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, fd, manifestFd, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalRestoreOnFileReady.";

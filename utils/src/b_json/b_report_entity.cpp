@@ -23,6 +23,7 @@
 
 #include "b_error/b_error.h"
 #include "filemgmt_libhilog.h"
+#include "sandbox_helper.h"
 #include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -40,6 +41,7 @@ const string INFO_MODE = "mode";
 const string INFO_MTIME = "mtime";
 const string INFO_PATH = "path";
 const string INFO_SIZE = "size";
+const string INFO_ENCODE_FLAG = "encodeFlag";
 } // namespace
 
 static vector<string> SplitStringByChar(const string &str, const char &sep)
@@ -61,29 +63,39 @@ static vector<string> SplitStringByChar(const string &str, const char &sep)
     return splits;
 }
 
+static void ParseSplitsItem(const vector<string> &splits, const unordered_map<string, int> &keys,
+    vector<string> &residue, string &path)
+{
+    size_t splitsLen = splits.size();
+    for (size_t i = 0; i < splitsLen; i++) {
+        if (i <= splitsLen - keys.size()) {
+            path += splits[i] + ";";
+        } else {
+            residue.emplace_back(splits[i]);
+        }
+    }
+}
+
 static ErrCode ParseReportInfo(struct ReportFileInfo &fileStat,
                                const vector<string> &splits,
                                const unordered_map<string, int> &keys)
 {
     // 根据数据拼接结构体
-    int splitsLen = (int)splits.size();
     // 处理path路径
     string path;
     vector<string> residue;
     try {
-        for (int i = 0; i < splitsLen; i++) {
-            if (i <= static_cast<unsigned int>(splitsLen) - keys.size()) {
-                path += splits[i] + ";";
-            } else {
-                residue.emplace_back(splits[i]);
-            }
-        }
+        // 识别path字段与其他字段
+        ParseSplitsItem(splits, keys, residue, path);
         if (residue.size() != keys.size() - 1) {
             HILOGE("Error residue size");
             return EPERM;
         }
+        if (keys.find(INFO_ENCODE_FLAG) != keys.end()) {
+            fileStat.encodeFlag = residue[keys.find(INFO_ENCODE_FLAG)->second] == "1" ? true : false;
+        }
         path = (path.length() > 0 && path[0] == '/') ? path.substr(1, path.length() - 1) : path;
-        fileStat.filePath = path.substr(0, path.length() - 1);
+        fileStat.filePath = BReportEntity::DecodeReportItem(path.substr(0, path.length() - 1), fileStat.encodeFlag);
         HILOGI("Briefings file %{public}s", fileStat.filePath.c_str());
         if (keys.find(INFO_MODE) != keys.end()) {
             fileStat.mode = residue[keys.find(INFO_MODE)->second];
@@ -121,6 +133,10 @@ static void DealLine(unordered_map<string, int> &keys,
                      const string &line,
                      unordered_map<string, struct ReportFileInfo> &infos)
 {
+    if (line.empty()) {
+        return;
+    }
+
     string currentLine = line;
     if (currentLine[currentLine.length() - 1] == LINE_WRAP) {
         currentLine.pop_back();
@@ -172,5 +188,44 @@ unordered_map<string, struct ReportFileInfo> BReportEntity::GetReportInfos()
     }
 
     return infos;
+}
+
+void BReportEntity::CheckAndUpdateIfReportLineEncoded(std::string &path)
+{
+    if (path.empty()) {
+        return;
+    }
+
+    unordered_map<string, struct ReportFileInfo> infos = GetReportInfos();
+    if (infos.size() == 1) {
+        auto info = infos.begin();
+        if (info->second.encodeFlag) {
+            path = info->first;
+        }
+    } else {
+        HILOGE("Invalid item sizes in report, current is %{public}zu", infos.size());
+    }
+}
+
+string BReportEntity::EncodeReportItem(const string &reportItem, bool enableEncode)
+{
+    string encodeItem;
+    if (enableEncode) {
+        encodeItem = AppFileService::SandboxHelper::Encode(reportItem);
+    } else {
+        encodeItem = reportItem;
+    }
+    return encodeItem;
+}
+
+string BReportEntity::DecodeReportItem(const string &reportItem, bool enableEncode)
+{
+    string decodeItem;
+    if (enableEncode) {
+        decodeItem = AppFileService::SandboxHelper::Decode(reportItem);
+    } else {
+        decodeItem = reportItem;
+    }
+    return decodeItem;
 }
 } // namespace OHOS::FileManagement::Backup

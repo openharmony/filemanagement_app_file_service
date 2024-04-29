@@ -55,13 +55,13 @@ HWTEST_F(ToolsOpRestoreAsyncTest, SUB_backup_tools_op_restore_async_0100, testin
         GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-info";
         map<string, vector<string>> mapArgToVal;
         string localCap = string(BConstants::SA_BUNDLE_BACKUP_TMP_DIR.data()) + "/tmp";
-        vector<string> path = {localCap.data()};
+        vector<string> path = { localCap.data() };
         mapArgToVal.insert(make_pair("pathCapFile", path));
-        vector<string> bundles = {"com.example.app2backup"};
+        vector<string> bundles = { "com.example.app2backup" };
         mapArgToVal.insert(make_pair("bundles", bundles));
-        vector<string> restoreType = {"true"};
+        vector<string> restoreType = { "true" };
         mapArgToVal.insert(make_pair("restoreType", restoreType));
-        vector<string> userId = {"100"};
+        vector<string> userId = { "100" };
         mapArgToVal.insert(make_pair("userId", userId));
 
         // 创建测试路径以及测试环境
@@ -91,7 +91,7 @@ HWTEST_F(ToolsOpRestoreAsyncTest, SUB_backup_tools_op_restore_async_0100, testin
         mapArgToVal.clear();
         mapArgToVal.insert(make_pair("pathCapFile", path));
         mapArgToVal.insert(make_pair("bundles", bundles));
-        vector<string> restoreTypeF = {"false"};
+        vector<string> restoreTypeF = { "false" };
         mapArgToVal.insert(make_pair("restoreType", restoreTypeF));
         mapArgToVal.insert(make_pair("userId", userId));
         if (matchedOp != opeartions.end()) {

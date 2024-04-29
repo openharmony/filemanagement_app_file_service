@@ -132,7 +132,7 @@ int32_t ServiceStub::CmdAppFileReady(MessageParcel &data, MessageParcel &reply)
     string fileName;
     data.ReadString(fileName);
     UniqueFd fd(data.ReadFileDescriptor());
-    int res = AppFileReady(fileName, move(fd));
+    int res = AppFileReady(fileName, move(fd), 0);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }
@@ -216,7 +216,7 @@ int32_t ServiceStub::CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply)
     }
     std::string result;
     ret = GetBackupInfo(bundleName, result);
-    return BError(BError::Codes::OK);
+    return ret;
 }
 
 int32_t ServiceStub::CmdUpdateTimer(MessageParcel &data, MessageParcel &reply)

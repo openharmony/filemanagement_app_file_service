@@ -171,9 +171,15 @@ int UntarFile::ParseTarFile(const string &rootPath)
 
     // tarFileSize
     int ret = fseeko(tarFilePtr_, 0L, SEEK_END);
+    if (ret != 0) {
+        HILOGE("Failed to fseeko tarFileSize SEEK_SET, err = %{public}d", errno);
+    }
     tarFileSize_ = ftello(tarFilePtr_);
     // reback file to begin
     ret = fseeko(tarFilePtr_, 0L, SEEK_SET);
+    if (ret != 0) {
+        HILOGE("Failed to fseeko reback SEEK_SET, err = %{public}d", errno);
+    }
 
     while (1) {
         readCnt_ = fread(buff, 1, BLOCK_SIZE, tarFilePtr_);

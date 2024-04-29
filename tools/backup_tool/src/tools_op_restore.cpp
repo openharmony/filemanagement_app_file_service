@@ -173,10 +173,9 @@ static void OnBundleFinished(shared_ptr<Session> ctx, ErrCode err, const BundleN
     ctx->TryNotify();
 }
 
-static void OnResultReport(shared_ptr<Session> ctx, const std::string resultInfo)
+static void OnResultReport(shared_ptr<Session> ctx, const std::string &resultInfo)
 {
     printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
-    ctx->TryNotify(true);
 }
 
 static void OnAllBundlesFinished(shared_ptr<Session> ctx, ErrCode err)
@@ -278,8 +277,8 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
 
     UniqueFd fd(open(realPath.data(), O_RDWR, S_IRWXU));
     auto ctx = make_shared<Session>();
-    int len = bundleNames.size();
-    for (int i = 0; i < len; ++i) {
+    size_t len = bundleNames.size();
+    for (size_t i = 0; i < len; ++i) {
         ctx->fileNums_[bundleNames[i]] = ToolsOp::GetFIleNums(bundleNames[i]);
     }
     int32_t ret = InitRestoreSession(ctx);

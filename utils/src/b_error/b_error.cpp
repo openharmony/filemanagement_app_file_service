@@ -41,7 +41,7 @@ string BError::WrapMessageWithExtraInfos(const char *fileName,
 
     if (code != Codes::OK) {
         string msg;
-        HiviewDFX::DfxDumpCatcher().DumpCatch(getpid(), syscall(SYS_gettid), msg);
+        HiviewDFX::DfxDumpCatcher().DumpCatch(getprocpid(), syscall(SYS_gettid), msg);
         ss << endl << msg;
     }
 
@@ -58,5 +58,17 @@ int BError::GetCode() const
     }
     HILOGE("Unknown code : %{public}d", code);
     return BackupErrorCode::E_UKERR;
+}
+
+int BError::GetCodeByErrno(int32_t errnoSys)
+{
+    if (errnoSys == 0) {
+        return 0;
+    }
+    if (sysErrnoCodeTable_.find(errnoSys) != sysErrnoCodeTable_.end()) {
+        return sysErrnoCodeTable_.at(errnoSys);
+    }
+    HILOGE("Unknown code : %{public}d", errnoSys);
+    return BackupErrorCode::E_IO;
 }
 } // namespace OHOS::FileManagement::Backup

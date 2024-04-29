@@ -23,12 +23,19 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-void ServiceReverseProxy::IncrementalBackupOnFileReady(string bundleName, string fileName, int fd, int manifestFd)
+void ServiceReverseProxy::IncrementalBackupOnFileReady(string bundleName, string fileName, int fd, int manifestFd,
+    int32_t errCode)
 {
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(fileName) ||
-        !data.WriteFileDescriptor(fd) || !data.WriteFileDescriptor(manifestFd)) {
+    bool fdFlag = true;
+    if (fd < 0 || manifestFd < 0) {
+        fdFlag = false;
+    }
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) ||
+        !data.WriteString(fileName) || !data.WriteBool(fdFlag) ||
+        (fdFlag == true && (!data.WriteFileDescriptor(fd) || !data.WriteFileDescriptor(manifestFd))) ||
+        !data.WriteInt32(errCode)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
     }
 
@@ -190,12 +197,16 @@ void ServiceReverseProxy::IncrementalRestoreOnResultReport(std::string result, s
     }
 }
 
-void ServiceReverseProxy::IncrementalRestoreOnFileReady(string bundleName, string fileName, int fd, int manifestFd)
+void ServiceReverseProxy::IncrementalRestoreOnFileReady(string bundleName, string fileName, int fd, int manifestFd,
+    int32_t errCode)
 {
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(fileName) ||
-        !data.WriteFileDescriptor(fd) || !data.WriteFileDescriptor(manifestFd)) {
+    bool fdFlag = (fd < 0 || manifestFd < 0) ? false : true;
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) ||
+        !data.WriteString(fileName) || !data.WriteBool(fdFlag) ||
+        (fdFlag == true && (!data.WriteFileDescriptor(fd) || !data.WriteFileDescriptor(manifestFd))) ||
+        !data.WriteInt32(errCode)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
     }
 

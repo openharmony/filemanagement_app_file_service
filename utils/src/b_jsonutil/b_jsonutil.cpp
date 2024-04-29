@@ -55,6 +55,10 @@ std::map<std::string, BJsonUtil::BundleDetailInfo> BJsonUtil::BuildBundleInfos(
 {
     std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
     std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap;
+    if (bundleNames.size() != bundleInfos.size()) {
+        HILOGE("bundleNames count is not equals bundleInfos count");
+        return bundleNameDetailMap;
+    }
     for (size_t i = 0; i < bundleNames.size(); i++) {
         std::string bundleName = bundleNames[i];
         BJsonUtil::BundleDetailInfo bundleDetailInfo;

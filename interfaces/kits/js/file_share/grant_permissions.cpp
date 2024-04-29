@@ -79,7 +79,7 @@ static napi_value GetErrData(napi_env env, deque<struct PolicyErrorResult> &erro
     return res;
 }
 
-static napi_value GetResultData(napi_env env, vector<bool> &results)
+static napi_value GetResultData(napi_env env, const vector<bool> &results)
 {
     napi_value res = nullptr;
     napi_status status = napi_create_array(env, &res);
@@ -176,10 +176,6 @@ napi_value PersistPermission(napi_env env, napi_callback_info info)
         return nullptr;
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
-    if (arg == nullptr) {
-        NError(EILSEQ).ThrowErr(env);
-        return nullptr;
-    }
     auto cbExec = [uriPolicies, arg]() -> NError {
         arg->errNo = FilePermission::PersistPermission(uriPolicies, arg->errorResults);
         return NError(arg->errNo);
@@ -224,10 +220,6 @@ napi_value RevokePermission(napi_env env, napi_callback_info info)
         return nullptr;
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
-    if (arg == nullptr) {
-        NError(EILSEQ).ThrowErr(env);
-        return nullptr;
-    }
     auto cbExec = [uriPolicies, arg]() -> NError {
         arg->errNo = FilePermission::RevokePermission(uriPolicies, arg->errorResults);
         return NError(arg->errNo);
@@ -272,10 +264,6 @@ napi_value ActivatePermission(napi_env env, napi_callback_info info)
         return nullptr;
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
-    if (arg == nullptr) {
-        NError(EILSEQ).ThrowErr(env);
-        return nullptr;
-    }
     auto cbExec = [uriPolicies, arg]() -> NError {
         arg->errNo = FilePermission::ActivatePermission(uriPolicies, arg->errorResults);
         return NError(arg->errNo);
@@ -320,10 +308,6 @@ napi_value DeactivatePermission(napi_env env, napi_callback_info info)
         return nullptr;
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
-    if (arg == nullptr) {
-        NError(EILSEQ).ThrowErr(env);
-        return nullptr;
-    }
     auto cbExec = [uriPolicies, arg]() -> NError {
         arg->errNo = FilePermission::DeactivatePermission(uriPolicies, arg->errorResults);
         return NError(arg->errNo);
@@ -368,10 +352,6 @@ napi_value CheckPersistentPermission(napi_env env, napi_callback_info info)
         return nullptr;
     }
     shared_ptr<PolicyInfoResultArgs> arg = make_shared<PolicyInfoResultArgs>();
-    if (arg == nullptr) {
-        NError(EILSEQ).ThrowErr(env);
-        return nullptr;
-    }
     auto cbExec = [uriPolicies, arg]() -> NError {
         arg->errNo = FilePermission::CheckPersistentPermission(uriPolicies, arg->resultData);
         return NError(arg->errNo);

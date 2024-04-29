@@ -162,7 +162,8 @@ ErrCode ServiceProxy::PublishIncrementalFile(const BFileInfo &fileInfo)
     return reply.ReadInt32();
 }
 
-ErrCode ServiceProxy::AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd)
+ErrCode ServiceProxy::AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd,
+    int32_t errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
@@ -174,11 +175,16 @@ ErrCode ServiceProxy::AppIncrementalFileReady(const std::string &fileName, Uniqu
     if (!data.WriteString(fileName)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the filename").GetCode();
     }
-    if (!data.WriteFileDescriptor(fd)) {
+    bool fdFlag = (fd < 0 || manifestFd < 0) ? false : true;
+    data.WriteBool(fdFlag);
+    if (fdFlag == true && !data.WriteFileDescriptor(fd)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the fd").GetCode();
     }
-    if (!data.WriteFileDescriptor(manifestFd)) {
+    if (fdFlag == true && !data.WriteFileDescriptor(manifestFd)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the fd").GetCode();
+    }
+    if (!data.WriteInt32(errCode)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the errCode").GetCode();
     }
 
     MessageParcel reply;

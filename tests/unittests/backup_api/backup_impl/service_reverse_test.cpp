@@ -179,7 +179,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnFileReady_0100, t
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnFileReady_0100";
     try {
         Init(IServiceReverse::Scenario::BACKUP);
-        service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1);
+        service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
         service_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -202,7 +202,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnFileReady_0101, t
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnFileReady_0101";
     try {
         Init(IServiceReverse::Scenario::RESTORE);
-        service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1);
+        service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by BackupOnFileReady.";
@@ -224,7 +224,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnFileReady_0102, t
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnFileReady_0102";
     try {
         Init(IServiceReverse::Scenario::BACKUP, 1);
-        service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1);
+        service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by BackupOnFileReady.";
@@ -448,7 +448,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnFileReady_0100, 
     try {
         Init(IServiceReverse::Scenario::RESTORE);
         service_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1);
-        service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1);
+        service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by RestoreOnFileReady.";
@@ -765,7 +765,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_0300, testing::ext::TestS
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_0300";
     try {
         Init(IServiceReverse::Scenario::BACKUP, 1);
-        service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1);
+        service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
         service_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->BackupOnAllBundlesFinished(BError(BError::Codes::OK));
@@ -790,7 +790,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_0301, testing::ext::TestS
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_0301";
     try {
         Init(IServiceReverse::Scenario::BACKUP, 0);
-        service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1);
+        service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
         service_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->BackupOnAllBundlesFinished(BError(BError::Codes::OK));
@@ -815,8 +815,8 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnFileRe
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0100";
     try {
         IncrementalInit(IServiceReverse::Scenario::BACKUP);
-        service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
-        service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+        service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
+        service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by RestoreOnAllBundlesFinished.";
@@ -838,10 +838,10 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnFileRe
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0101";
     try {
         IncrementalInit(IServiceReverse::Scenario::RESTORE);
-        service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+        service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
 
         IncrementalInit(IServiceReverse::Scenario::BACKUP, 1);
-        service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+        service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalBackupOnFileReady.";
@@ -1021,8 +1021,8 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0100";
     try {
         IncrementalInit(IServiceReverse::Scenario::RESTORE);
-        service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
-        service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+        service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
+        service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnFileReady.";
@@ -1046,10 +1046,10 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0101";
     try {
         IncrementalInit(IServiceReverse::Scenario::BACKUP);
-        service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+        service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
 
         IncrementalInit(IServiceReverse::Scenario::RESTORE, 1);
-        service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1);
+        service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnFileReady.";
@@ -1230,7 +1230,7 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnResultReport_010
     try {
         Init(IServiceReverse::Scenario::RESTORE);
         std::string resultReport = "result_report";
-        std::string bundleName = "app01";
+        std::string bundleName = BUNDLE_NAME;
         service_->RestoreOnResultReport(resultReport, bundleName);
     } catch (...) {
         EXPECT_TRUE(false);

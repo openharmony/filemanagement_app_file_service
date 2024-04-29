@@ -225,10 +225,9 @@ static void AdapteCloneOptimize(const string &path)
     close(cachedEntity.GetFd().Release());
 }
 
-static void OnResultReport(shared_ptr<InrementalSessionAsync> ctx, const std::string resultInfo)
+static void OnResultReport(shared_ptr<InrementalSessionAsync> ctx, const std::string &resultInfo)
 {
     printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
-    ctx->TryNotify(true);
 }
 
 static void RestoreApp(shared_ptr<InrementalSessionAsync> restore, vector<BundleName> &bundleNames)
@@ -370,8 +369,8 @@ static int32_t InitArg(const string &pathCapFile,
     }
 
     auto ctx = make_shared<InrementalSessionAsync>();
-    int len = bundleNames.size();
-    for (int i = 0; i < len; ++i) {
+    size_t len = bundleNames.size();
+    for (size_t i = 0; i < len; ++i) {
         ctx->fileNums_[bundleNames[i]] = ToolsOp::GetFIleNums(bundleNames[i], false);
     }
     ctx->session_ = BIncrementalSessionRestoreAsync::Init(BIncrementalSessionRestoreAsync::Callbacks {

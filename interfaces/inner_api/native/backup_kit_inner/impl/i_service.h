@@ -49,7 +49,7 @@ public:
     virtual ErrCode Start() = 0;
     virtual UniqueFd GetLocalCapabilities() = 0;
     virtual ErrCode PublishFile(const BFileInfo &fileInfo) = 0;
-    virtual ErrCode AppFileReady(const std::string &fileName, UniqueFd fd) = 0;
+    virtual ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode) = 0;
     virtual ErrCode AppDone(ErrCode errCode) = 0;
     virtual ErrCode ServiceResultReport(const std::string restoreRetInfo,
         BackupRestoreScenario scenario) = 0;
@@ -71,7 +71,8 @@ public:
     virtual ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) = 0;
 
     virtual ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) = 0;
-    virtual ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd) = 0;
+    virtual ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd,
+        int32_t errCode) = 0;
     virtual ErrCode AppIncrementalDone(ErrCode errCode) = 0;
     virtual ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) = 0;
     virtual ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) = 0;

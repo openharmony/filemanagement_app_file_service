@@ -23,7 +23,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
-
+const int INVALID_FD = -1;
 int32_t ServiceReverseStub::OnRemoteRequest(uint32_t code,
                                             MessageParcel &data,
                                             MessageParcel &reply,
@@ -102,8 +102,13 @@ int32_t ServiceReverseStub::CmdBackupOnFileReady(MessageParcel &data, MessagePar
 {
     auto bundleName = data.ReadString();
     auto fileName = data.ReadString();
-    int fd = data.ReadFileDescriptor();
-    BackupOnFileReady(bundleName, fileName, fd);
+    int fd = INVALID_FD;
+    bool fdFlag = data.ReadBool();
+    if (fdFlag == true) {
+        fd = data.ReadFileDescriptor();
+    }
+    int32_t errCode = data.ReadInt32();
+    BackupOnFileReady(bundleName, fileName, fd, errCode);
     return BError(BError::Codes::OK);
 }
 
@@ -164,7 +169,11 @@ int32_t ServiceReverseStub::CmdRestoreOnFileReady(MessageParcel &data, MessagePa
 {
     auto bundleName = data.ReadString();
     auto fileName = data.ReadString();
-    int fd = data.ReadFileDescriptor();
+    int fd = INVALID_FD;
+    bool fdFlag = data.ReadBool();
+    if (fdFlag == true) {
+        fd = data.ReadFileDescriptor();
+    }
     RestoreOnFileReady(bundleName, fileName, fd);
     return BError(BError::Codes::OK);
 }
@@ -187,9 +196,15 @@ int32_t ServiceReverseStub::CmdIncrementalBackupOnFileReady(MessageParcel &data,
 {
     auto bundleName = data.ReadString();
     auto fileName = data.ReadString();
-    int fd = data.ReadFileDescriptor();
-    int manifestFd = data.ReadFileDescriptor();
-    IncrementalBackupOnFileReady(bundleName, fileName, fd, manifestFd);
+    int fd = INVALID_FD;
+    int manifestFd = INVALID_FD;
+    bool fdFlag = data.ReadBool();
+    if (fdFlag == true) {
+        fd = data.ReadFileDescriptor();
+        manifestFd = data.ReadFileDescriptor();
+    }
+    int32_t errCode = data.ReadInt32();
+    IncrementalBackupOnFileReady(bundleName, fileName, fd, manifestFd, errCode);
     return BError(BError::Codes::OK);
 }
 
@@ -250,9 +265,15 @@ int32_t ServiceReverseStub::CmdIncrementalRestoreOnFileReady(MessageParcel &data
 {
     auto bundleName = data.ReadString();
     auto fileName = data.ReadString();
-    int fd = data.ReadFileDescriptor();
-    int manifestFd = data.ReadFileDescriptor();
-    IncrementalRestoreOnFileReady(bundleName, fileName, fd, manifestFd);
+    int fd = INVALID_FD;
+    int manifestFd = INVALID_FD;
+    bool fdFlag = data.ReadBool();
+    if (fdFlag == true) {
+        fd = data.ReadFileDescriptor();
+        manifestFd = data.ReadFileDescriptor();
+    }
+    int32_t errCode = data.ReadInt32();
+    IncrementalRestoreOnFileReady(bundleName, fileName, fd, manifestFd, errCode);
     return BError(BError::Codes::OK);
 }
 

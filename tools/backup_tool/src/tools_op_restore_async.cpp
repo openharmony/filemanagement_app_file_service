@@ -159,10 +159,9 @@ static void OnAllBundlesFinished(shared_ptr<SessionAsync> ctx, ErrCode err)
     ctx->TryNotify(true);
 }
 
-static void OnResultReport(shared_ptr<SessionAsync> ctx, const std::string resultInfo)
+static void OnResultReport(shared_ptr<SessionAsync> ctx, const std::string &resultInfo)
 {
     printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
-    ctx->TryNotify(true);
 }
 
 static void OnBackupServiceDied(shared_ptr<SessionAsync> ctx)
@@ -354,8 +353,8 @@ static int32_t InitArg(const string &pathCapFile,
     }
 
     auto ctx = make_shared<SessionAsync>();
-    int len = bundleNames.size();
-    for (int i = 0; i < len; ++i) {
+    size_t len = bundleNames.size();
+    for (size_t i = 0; i < len; ++i) {
         ctx->fileNums_[bundleNames[i]] = ToolsOp::GetFIleNums(bundleNames[i]);
     }
     ctx->session_ = BSessionRestoreAsync::Init(BSessionRestoreAsync::Callbacks {
