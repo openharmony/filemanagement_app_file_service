@@ -17,10 +17,12 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 
 #include <fcntl.h>
+#include <iomanip>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/vfs.h>
@@ -37,6 +39,7 @@
 #include "b_process/b_multiuser.h"
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
+#include "hisysevent.h"
 #include "ipc_skeleton.h"
 #include "module_external/bms_adapter.h"
 #include "module_ipc/svc_backup_connection.h"
@@ -47,9 +50,12 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 
 namespace {
 constexpr int32_t DEBUG_ID = 100;
+constexpr int32_t INDEX = 3;
+constexpr int32_t MS_1000 = 1000;
 } // namespace
 
 static inline int32_t GetUserIdDefault()
@@ -271,6 +277,21 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
             HILOGI("will notify clone data, scenario is: %{public}d", scenario);
             if (scenario == IServiceReverse::Scenario::BACKUP) {
                 session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, callerName);
+                auto now = std::chrono::system_clock::now();
+                auto time = std::chrono::system_clock::to_time_t(now);
+                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+                std::stringstream strTime;
+                strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
+                    << (std::setw(INDEX)) << (ms.count() % MS_1000);
+                HiSysEventWrite(
+                    OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
+                    FILE_BACKUP_EVENTS,
+                    OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+                    "PROC_NAME", "ohos.appfileservice",
+                    "BUNDLENAME", callerName,
+                    "PID", getpid(),
+                    "TIME", strTime.str()
+                );
             } else if (scenario == IServiceReverse::Scenario::RESTORE) {
                 session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, callerName);
             }

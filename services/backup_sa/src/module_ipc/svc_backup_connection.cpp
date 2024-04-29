@@ -15,13 +15,20 @@
 
 #include "module_ipc/svc_backup_connection.h"
 
+#include <chrono>
+#include <iomanip>
+
 #include "ability_manager_client.h"
 #include "filemgmt_libhilog.h"
+#include "hisysevent.h"
 #include "module_ipc/svc_extension_proxy.h"
 #include "module_ipc/svc_session_manager.h"
 
 namespace OHOS::FileManagement::Backup {
 constexpr int WAIT_TIME = 3;
+constexpr int32_t INDEX = 3;
+constexpr int32_t MS_1000 = 1000;
+const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 using namespace std;
 
 void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &element,
@@ -40,6 +47,21 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
     }
     isConnected_.store(true);
     string bundleName = element.GetBundleName();
+    auto now = std::chrono::system_clock::now();
+    auto time = std::chrono::system_clock::to_time_t(now);
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+    std::stringstream strTime;
+    strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
+        << (std::setw(INDEX)) << (ms.count() % MS_1000);
+    HiSysEventWrite(
+        OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
+        FILE_BACKUP_EVENTS,
+        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+        "PROC_NAME", "ohos.appfileservice",
+        "BUNDLENAME", bundleName,
+        "PID", getpid(),
+        "TIME", strTime.str()
+    );
     callConnDone_(move(bundleName));
     HILOGI("called end");
 }

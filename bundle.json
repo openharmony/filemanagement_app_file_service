@@ -33,6 +33,7 @@
                 "file_api",
                 "hitrace",
                 "hilog",
+                "hisysevent",
                 "ipc",
                 "init",
                 "napi",
@@ -40,7 +41,6 @@
                 "samgr",
                 "storage_service",
                 "sandbox_manager"
-
             ],
             "third_party": [
                 "bounds_checking_function",
@@ -55,6 +55,9 @@
         ],
         "rom": "1024KB",
         "ram": "1024KB",
+        "hisysevent_config": [
+            "//foundation/filemanagement/app_file_service/hisysevent.yaml"
+        ],
         "build": {
             "group_type": {
                 "base_group": [],
