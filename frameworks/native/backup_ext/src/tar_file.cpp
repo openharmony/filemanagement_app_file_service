@@ -409,7 +409,11 @@ int TarFile::WriteTarHeader(TarHeader &header)
     vector<uint8_t> buffer {};
     buffer.resize(sizeof(header));
     buffer.assign(reinterpret_cast<uint8_t *>(&header), reinterpret_cast<uint8_t *>(&header) + sizeof(header));
-    return WriteAll(buffer, BLOCK_SIZE);
+    int ret = WriteAll(buffer, BLOCK_SIZE);
+    if (ret != BLOCK_SIZE) {
+        ret = WriteAll(buffer, BLOCK_SIZE); // 再执行一遍
+    }
+    return ret;
 }
 
 int TarFile::WriteAll(const vector<uint8_t> &buf, size_t len)
