@@ -127,7 +127,7 @@ HWTEST_F(ToolsOpRestoreAsyncTest, SUB_backup_tools_op_restore_async_0200, testin
 {
     GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin SUB_backup_tools_op_restore_async_0200";
     try {
-        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-The pathCapFile filed is not contained.";
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-The pathCapFile field is not contained.";
         map<string, vector<string>> mapArgToVal;
         vector<string> bundles = {"com.example.app2backup"};
         vector<string> path = {"/data/backup/tmp"};
@@ -147,7 +147,7 @@ HWTEST_F(ToolsOpRestoreAsyncTest, SUB_backup_tools_op_restore_async_0200, testin
             ret = matchedOp->Execute(mapArgToVal);
             EXPECT_NE(ret, 0);
         }
-        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-The bundles filed is not contained.";
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-The bundles field is not contained.";
         mapArgToVal.clear();
         if (matchedOp != opeartions.end()) {
             mapArgToVal.insert(make_pair("pathCapFile", path));
