@@ -96,12 +96,23 @@ ErrCode Service::AppendBundlesBackupSession(const std::vector<BundleName> &bundl
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
+    const std::vector<std::string> &bundleInfos)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::Finish()
 {
     return BError(BError::Codes::OK);
 }
 
 ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::LaunchBackupSAExtension(const BundleName &bundleName)
 {
     return BError(BError::Codes::OK);
 }
@@ -168,6 +179,11 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::AppIncrementalFileReady(const string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)
 {
     return BError(BError::Codes::OK);
@@ -192,4 +208,13 @@ ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &res
 {
     return BError(BError::Codes::OK);
 }
+
+void Service::OnSABackup(const std::string &bundleName,
+                         const int &fd,
+                         const std::string &result,
+                         const ErrCode &errCode)
+{
+}
+
+void Service::OnSARestore(const std::string &bundleName, const std::string &result, const ErrCode &errCode) {}
 } // namespace OHOS::FileManagement::Backup

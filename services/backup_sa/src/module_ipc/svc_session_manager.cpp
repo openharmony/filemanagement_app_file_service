@@ -27,6 +27,7 @@
 #include "b_json/b_json_entity_caps.h"
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_resources/b_constants.h"
+#include "b_sa/b_sa_utils.h"
 #include "filemgmt_libhilog.h"
 #include "module_ipc/service.h"
 #include "module_ipc/svc_restore_deps_manager.h"
@@ -145,7 +146,7 @@ bool SvcSessionManager::OnBunleFileReady(const string &bundleName, const string 
     }
 
     // 判断是否结束 通知EXTENTION清理资源  TOOL应用完成备份
-    if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
+    if (impl_.scenario == IServiceReverse::Scenario::RESTORE || SAUtils::IsSABundleName(bundleName)) {
         it->second.isBundleFinished = true;
         return true;
     } else if (impl_.scenario == IServiceReverse::Scenario::BACKUP) {
@@ -220,7 +221,23 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
     return wptr(it->second.backUpConnection);
 }
 
-sptr<SvcBackupConnection> SvcSessionManager::GetBackupExtAbility(const string &bundleName)
+std::weak_ptr<SABackupConnection> SvcSessionManager::GetSAExtConnection(const BundleName &bundleName)
+{
+    HILOGI("svcMrg:GetExt, bundleName:%{public}s", bundleName.c_str());
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    if (!it->second.saBackupConnection) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "SA backup connection is empty");
+    }
+
+    return std::weak_ptr<SABackupConnection>(it->second.saBackupConnection);
+}
+
+sptr<SvcBackupConnection> SvcSessionManager::GetBackupAbilityExt(const string &bundleName)
 {
     auto callDied = [revPtr {reversePtr_}](const string &&bundleName) {
         auto revPtrStrong = revPtr.promote();
@@ -232,7 +249,7 @@ sptr<SvcBackupConnection> SvcSessionManager::GetBackupExtAbility(const string &b
         revPtrStrong->OnBackupExtensionDied(move(bundleName));
     };
 
-    auto callConnDone = [revPtr {reversePtr_}](const string &&bundleName) {
+    auto callConnected = [revPtr {reversePtr_}](const string &&bundleName) {
         auto revPtrStrong = revPtr.promote();
         if (!revPtrStrong) {
             // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
@@ -242,7 +259,54 @@ sptr<SvcBackupConnection> SvcSessionManager::GetBackupExtAbility(const string &b
         revPtrStrong->ExtConnectDone(move(bundleName));
     };
 
-    return sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnDone));
+    return sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnected));
+}
+
+std::shared_ptr<SABackupConnection> SvcSessionManager::GetBackupSAExt(const std::string &bundleName)
+{
+    auto callDied = [revPtr {reversePtr_}](const string &&bundleName) {
+        auto revPtrStrong = revPtr.promote();
+        if (!revPtrStrong) {
+            // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
+            HILOGW("It's curious that the backup sa dies before the backup client");
+            return;
+        }
+        revPtrStrong->OnBackupExtensionDied(move(bundleName));
+    };
+
+    auto callConnected = [revPtr {reversePtr_}](const string &&bundleName) {
+        auto revPtrStrong = revPtr.promote();
+        if (!revPtrStrong) {
+            // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
+            HILOGW("It's curious that the backup sa dies before the backup client");
+            return;
+        }
+        revPtrStrong->ExtConnectDone(move(bundleName));
+    };
+
+    auto callBackup = [revPtr {reversePtr_}](const string &&bundleName, const int &&fd, const std::string result,
+                                             const ErrCode &&errCode) {
+        auto revPtrStrong = revPtr.promote();
+        if (!revPtrStrong) {
+            // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
+            HILOGW("It's curious that the backup sa dies before the backup client");
+            return;
+        }
+        revPtrStrong->OnSABackup(move(bundleName), move(fd), move(result), move(errCode));
+    };
+
+    auto callRestore = [revPtr {reversePtr_}](const string &&bundleName, const std::string result,
+                                              const ErrCode &&errCode) {
+        auto revPtrStrong = revPtr.promote();
+        if (!revPtrStrong) {
+            // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
+            HILOGW("It's curious that the backup sa dies before the backup client");
+            return;
+        }
+        revPtrStrong->OnSARestore(move(bundleName), move(result), move(errCode));
+    };
+
+    return std::make_shared<SABackupConnection>(callDied, callConnected, callBackup, callRestore);
 }
 
 void SvcSessionManager::DumpInfo(const int fd, const std::vector<std::u16string> &args)
@@ -379,6 +443,28 @@ string SvcSessionManager::GetBackupExtName(const string &bundleName)
     return it->second.backupExtName;
 }
 
+void SvcSessionManager::SetBackupExtInfo(const string &bundleName, const string &extInfo)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    it->second.extInfo = extInfo;
+}
+
+std::string SvcSessionManager::GetBackupExtInfo(const string &bundleName)
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+
+    auto it = GetBackupExtNameMap(bundleName);
+    return it->second.extInfo;
+}
+
 void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
 {
     unique_lock<shared_mutex> lock(lock_);
@@ -387,9 +473,13 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
     }
 
     for (auto &&bundleName : bundleNames) {
-        HILOGD("bundleName: %{public}s", bundleName.c_str());
+        HILOGI("bundleName: %{public}s", bundleName.c_str());
         BackupExtInfo info {};
-        info.backUpConnection = GetBackupExtAbility(bundleName);
+        if (SAUtils::IsSABundleName(bundleName)) {
+            info.saBackupConnection = GetBackupSAExt(bundleName);
+        } else {
+            info.backUpConnection = GetBackupAbilityExt(bundleName);
+        }
         impl_.backupExtNameMap.insert(make_pair(bundleName, info));
     }
     impl_.isBackupStart = true;
@@ -399,7 +489,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
 sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &bundleName)
 {
     HILOGI("SvcSessionManager::CreateBackupConnection begin.");
-    return GetBackupExtAbility(bundleName);
+    return GetBackupAbilityExt(bundleName);
 }
 
 void SvcSessionManager::Start()

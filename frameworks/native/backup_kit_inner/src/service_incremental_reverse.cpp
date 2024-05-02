@@ -41,13 +41,14 @@ void ServiceReverse::IncrementalBackupOnBundleStarted(int32_t errCode, string bu
     callbacksIncrementalBackup_.onBundleStarted(errCode, bundleName);
 }
 
-void ServiceReverse::IncrementalBackupOnResultReport(std::string result)
+void ServiceReverse::IncrementalBackupOnResultReport(std::string result, std::string bundleName)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksIncrementalBackup_.onResultReport) {
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
     callbacksIncrementalBackup_.onResultReport(result);
+    callbacksIncrementalBackup_.onBundleFinished(BError(BError::Codes::OK), bundleName);
 }
 
 void ServiceReverse::IncrementalBackupOnBundleFinished(int32_t errCode, string bundleName)

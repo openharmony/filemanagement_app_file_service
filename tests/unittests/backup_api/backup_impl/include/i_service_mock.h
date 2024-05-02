@@ -121,6 +121,12 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
+                                              const std::vector<std::string> &bundleInfos) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode Finish() override
     {
         return BError(BError::Codes::OK);
@@ -156,7 +162,12 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode PublishIncrementalFile(const BFileInfo &fileInfo)
+    ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd) override
     {
         return BError(BError::Codes::OK);
     }

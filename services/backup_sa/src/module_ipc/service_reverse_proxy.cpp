@@ -60,11 +60,11 @@ void ServiceReverseProxy::BackupOnBundleStarted(int32_t errCode, string bundleNa
     }
 }
 
-void ServiceReverseProxy::BackupOnResultReport(std::string result)
+void ServiceReverseProxy::BackupOnResultReport(std::string result, std::string bundleName)
 {
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(result)) {
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(result) || !data.WriteString(bundleName)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
     };
 

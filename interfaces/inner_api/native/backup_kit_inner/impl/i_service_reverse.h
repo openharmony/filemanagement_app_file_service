@@ -31,33 +31,33 @@ public:
     };
 
 public:
-    virtual void BackupOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) = 0;
     virtual void BackupOnBundleStarted(int32_t errCode, std::string bundleName) = 0;
-    virtual void BackupOnResultReport(std::string result) = 0;
+    virtual void BackupOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) = 0;
+    virtual void BackupOnResultReport(std::string result, std::string bundleName) = 0;
     virtual void BackupOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
     virtual void BackupOnAllBundlesFinished(int32_t errCode) = 0;
 
     virtual void RestoreOnBundleStarted(int32_t errCode, std::string bundleName) = 0;
-    virtual void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
-    virtual void RestoreOnAllBundlesFinished(int32_t errCode) = 0;
     virtual void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd) = 0;
     virtual void RestoreOnResultReport(std::string result, std::string bundleName) = 0;
+    virtual void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
+    virtual void RestoreOnAllBundlesFinished(int32_t errCode) = 0;
 
+    virtual void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) = 0;
     virtual void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
         int32_t errCode) = 0;
-    virtual void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) = 0;
-    virtual void IncrementalBackupOnResultReport(std::string result) = 0;
+    virtual void IncrementalBackupOnResultReport(std::string result, std::string bundleName) = 0;
     virtual void IncrementalBackupOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
     virtual void IncrementalBackupOnAllBundlesFinished(int32_t errCode) = 0;
 
     virtual void IncrementalRestoreOnBundleStarted(int32_t errCode, std::string bundleName) = 0;
-    virtual void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
-    virtual void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) = 0;
     virtual void IncrementalRestoreOnFileReady(std::string bundleName,
                                                std::string fileName,
                                                int fd,
                                                int manifestFd, int32_t errCode) = 0;
     virtual void IncrementalRestoreOnResultReport(std::string result, std::string bundleName) = 0;
+    virtual void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
+    virtual void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.FileManagement.Backup.IServiceReverse")
 };

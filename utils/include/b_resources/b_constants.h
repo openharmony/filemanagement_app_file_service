@@ -103,6 +103,12 @@ static inline std::string_view BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR = "/data/back
 static inline std::string_view BACKUP_TOOL_MANIFEST = "/manifest";
 static inline std::string_view BACKUP_TOOL_INCREMENTAL = "/incremental";
 
+// SA Ext
+constexpr int BACKUP_DEFAULT_SA_ID = -1;
+constexpr int BACKUP_SA_RELOAD_MAX = 2;
+static inline std::string EXTENSION_BACKUP = "backup";
+static inline std::string EXTENSION_RESTORE = "restore";
+
 // 多用户场景应用备份数据路径
 static inline std::string GetSaBundleBackupDir(int32_t userId)
 {

@@ -47,6 +47,8 @@ public:
                                         RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
                                         int32_t userId = DEFAULT_INVAL_VALUE) override;
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
+    ErrCode AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
+                                              const std::vector<std::string> &detailInfos) override;
     ErrCode Finish() override;
     ErrCode Release() override;
     UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) override;
@@ -54,6 +56,7 @@ public:
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) override;
 
     ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) override;
+    ErrCode PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd) override;
     ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd,
         int32_t errCode) override;
     ErrCode AppIncrementalDone(ErrCode errCode) override;

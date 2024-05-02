@@ -57,24 +57,24 @@ ServiceReverseStub::ServiceReverseStub()
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_TASK_FINISHED)] =
         &ServiceReverseStub::CmdBackupOnAllBundlesFinished;
 
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_FILE_READY)] =
+        &ServiceReverseStub::CmdRestoreOnFileReady;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_SUB_TASK_STARTED)] =
         &ServiceReverseStub::CmdRestoreOnBundleStarted;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_RESULT_REPORT)]
-        = &ServiceReverseStub::CmdIncrementalBackupOnResultReport;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_RESULT_REPORT)] =
+        &ServiceReverseStub::CmdRestoreOnResultReport;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_SUB_TASK_FINISHED)] =
         &ServiceReverseStub::CmdRestoreOnBundleFinished;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_TASK_FINISHED)] =
         &ServiceReverseStub::CmdRestoreOnAllBundlesFinished;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_FILE_READY)] =
-        &ServiceReverseStub::CmdRestoreOnFileReady;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_RESULT_REPORT)] =
-        &ServiceReverseStub::CmdRestoreOnResultReport;
 
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_FILE_READY)] =
         &ServiceReverseStub::CmdIncrementalBackupOnFileReady;
     opToInterfaceMap_[static_cast<uint32_t>(
         IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_SUB_TASK_STARTED)] =
         &ServiceReverseStub::CmdIncrementalBackupOnBundleStarted;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_RESULT_REPORT)]
+        = &ServiceReverseStub::CmdIncrementalBackupOnResultReport;
     opToInterfaceMap_[static_cast<uint32_t>(
         IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_SUB_TASK_FINISHED)] =
         &ServiceReverseStub::CmdIncrementalBackupOnBundleFinished;
@@ -82,20 +82,20 @@ ServiceReverseStub::ServiceReverseStub()
         IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_TASK_FINISHED)] =
         &ServiceReverseStub::CmdIncrementalBackupOnAllBundlesFinished;
 
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_FILE_READY)] =
+        &ServiceReverseStub::CmdIncrementalRestoreOnFileReady;
     opToInterfaceMap_[static_cast<uint32_t>(
         IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_SUB_TASK_STARTED)] =
         &ServiceReverseStub::CmdIncrementalRestoreOnBundleStarted;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_RESULT_REPORT)] =
+        &ServiceReverseStub::CmdIncrementalRestoreOnResultReport;
     opToInterfaceMap_[static_cast<uint32_t>(
         IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_SUB_TASK_FINISHED)] =
         &ServiceReverseStub::CmdIncrementalRestoreOnBundleFinished;
     opToInterfaceMap_[static_cast<uint32_t>(
         IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_TASK_FINISHED)] =
         &ServiceReverseStub::CmdIncrementalRestoreOnAllBundlesFinished;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_FILE_READY)] =
-        &ServiceReverseStub::CmdIncrementalRestoreOnFileReady;
-    opToInterfaceMap_[static_cast<uint32_t>(
-        IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_RESULT_REPORT)] =
-        &ServiceReverseStub::CmdIncrementalRestoreOnResultReport;
 }
 
 int32_t ServiceReverseStub::CmdBackupOnFileReady(MessageParcel &data, MessageParcel &reply)
@@ -115,7 +115,8 @@ int32_t ServiceReverseStub::CmdBackupOnFileReady(MessageParcel &data, MessagePar
 int32_t ServiceReverseStub::CmdBackupOnResultReport(MessageParcel &data, MessageParcel &reply)
 {
     std::string result = data.ReadString();
-    BackupOnResultReport(result);
+    std::string bundleName = data.ReadString();
+    BackupOnResultReport(result, bundleName);
     return BError(BError::Codes::OK);
 }
 
@@ -219,7 +220,8 @@ int32_t ServiceReverseStub::CmdIncrementalBackupOnBundleStarted(MessageParcel &d
 int32_t ServiceReverseStub::CmdIncrementalBackupOnResultReport(MessageParcel &data, MessageParcel &reply)
 {
     std::string result = data.ReadString();
-    IncrementalBackupOnResultReport(result);
+    std::string bundleName = data.ReadString();
+    IncrementalBackupOnResultReport(result, bundleName);
     return BError(BError::Codes::OK);
 }
 

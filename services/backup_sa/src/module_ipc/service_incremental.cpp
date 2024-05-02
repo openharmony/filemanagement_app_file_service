@@ -38,6 +38,7 @@
 #include "b_ohos/startup/backup_para.h"
 #include "b_process/b_multiuser.h"
 #include "b_resources/b_constants.h"
+#include "b_sa/b_sa_utils.h"
 #include "filemgmt_libhilog.h"
 #include "hisysevent.h"
 #include "ipc_skeleton.h"
@@ -210,6 +211,23 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
         HILOGI("Unexpected exception");
         return EPERM;
     }
+}
+
+ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd)
+{
+    std::string bundleName = fileInfo.owner;
+    if (!SAUtils::IsSABundleName(bundleName)) {
+        HILOGE("Bundle name %{public}s is not sa", bundleName.c_str());
+        return BError(BError::Codes::SA_EXT_ERR_CALL);
+    }
+    HILOGI("Bundle name %{public}s is sa, publish sa incremental file", bundleName.c_str());
+    auto backupConnection = session_->GetSAExtConnection(bundleName);
+    std::shared_ptr<SABackupConnection> saConnection = backupConnection.lock();
+    if (saConnection == nullptr) {
+        HILOGE("lock sa connection ptr is nullptr");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    return saConnection->CallRestoreSA(move(fd));
 }
 
 ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)

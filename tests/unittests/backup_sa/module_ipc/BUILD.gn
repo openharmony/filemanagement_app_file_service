@@ -75,6 +75,7 @@ ohos_unittest("backup_service_test") {
     "${path_backup_mock}/accesstoken/accesstoken_kit_mock.cpp",
     "${path_backup_mock}/module_ipc/app_gallery_dispose_proxy_mock.cpp",
     "${path_backup_mock}/timer/timer_mock.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/sa_backup_connection.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
@@ -142,6 +143,7 @@ ohos_unittest("backup_service_session_test") {
   sources = [
     "${path_backup_mock}/affwk/service_registry_mock.cpp",
     "${path_backup_mock}/bundle_manager/src/mock_bundle_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/sa_backup_connection.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_session_manager.cpp",
     "svc_session_manager_test.cpp",
@@ -249,6 +251,7 @@ ohos_unittest("backup_restore_deps_manager_test") {
   sources = [
     "${path_backup_mock}/accesstoken/accesstoken_kit_mock.cpp",
     "${path_backup}/services/backup_sa/src/module_app_gallery/app_gallery_dispose_proxy.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/sa_backup_connection.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",

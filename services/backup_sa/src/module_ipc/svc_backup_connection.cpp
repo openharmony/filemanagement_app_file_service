@@ -62,7 +62,7 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
         "PID", getpid(),
         "TIME", strTime.str()
     );
-    callConnDone_(move(bundleName));
+    callConnected_(move(bundleName));
     HILOGI("called end");
 }
 
@@ -121,8 +121,8 @@ sptr<IExtension> SvcBackupConnection::GetBackupExtProxy()
     return backupProxy_;
 }
 
-void SvcBackupConnection::SetCallback(function<void(const std::string &&)> callConnDone)
+void SvcBackupConnection::SetCallback(function<void(const std::string &&)> callConnected)
 {
-    callConnDone_ = callConnDone;
+    callConnected_ = callConnected;
 }
 } // namespace OHOS::FileManagement::Backup

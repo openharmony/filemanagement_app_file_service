@@ -58,6 +58,8 @@ public:
         AppendBundlesRestoreSession,
         ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, RestoreTypeEnum restoreType, int32_t userId));
     MOCK_METHOD1(AppendBundlesBackupSession, ErrCode(const std::vector<BundleName> &bundleNames));
+    MOCK_METHOD2(AppendBundlesDetailsBackupSession,
+                 ErrCode(const std::vector<BundleName> &bundleNames, const std::vector<std::string> &bundleInfos));
     MOCK_METHOD0(Finish, ErrCode());
     MOCK_METHOD0(Release, ErrCode());
     MOCK_METHOD1(GetLocalCapabilitiesIncremental, UniqueFd(const std::vector<BIncrementalData> &bundleNames));
@@ -65,6 +67,7 @@ public:
     MOCK_METHOD1(AppendBundlesIncrementalBackupSession, ErrCode(const std::vector<BIncrementalData> &bundlesToBackup));
 
     MOCK_METHOD1(PublishIncrementalFile, ErrCode(const BFileInfo &fileInfo));
+    MOCK_METHOD2(PublishSAIncrementalFile, ErrCode(const BFileInfo &fileInfo, UniqueFd fd));
     MOCK_METHOD4(AppIncrementalFileReady, ErrCode(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd,
         int32_t errCode));
     MOCK_METHOD1(AppIncrementalDone, ErrCode(ErrCode errCode));
