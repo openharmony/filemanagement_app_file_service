@@ -95,7 +95,8 @@ static ErrCode ParseReportInfo(struct ReportFileInfo &fileStat,
             fileStat.encodeFlag = residue[keys.find(INFO_ENCODE_FLAG)->second] == "1" ? true : false;
         }
         path = (path.length() > 0 && path[0] == '/') ? path.substr(1, path.length() - 1) : path;
-        fileStat.filePath = BReportEntity::DecodeReportItem(path.substr(0, path.length() - 1), fileStat.encodeFlag);
+        auto fileRawPath = (path.length() > 0) ? path.substr(0, path.length() - 1) : path;
+        fileStat.filePath = BReportEntity::DecodeReportItem(fileRawPath, fileStat.encodeFlag);
         HILOGI("Briefings file %{public}s", fileStat.filePath.c_str());
         if (keys.find(INFO_MODE) != keys.end()) {
             fileStat.mode = residue[keys.find(INFO_MODE)->second];
