@@ -50,9 +50,20 @@ public:
      * @brief 用于追加应用，现阶段仅支持在Start之前调用
      *
      * @param bundlesToBackup 待备份的应用清单
+     *
      * @return ErrCode 规范错误码
      */
     ErrCode AppendBundles(std::vector<BundleName> bundlesToBackup);
+
+    /**
+     * @brief 用于追加应用，现阶段仅支持在Start之前调用
+     *
+     * @param bundlesToBackup 待备份的应用清单
+     * @param detailInfos 备份所需信息
+     *
+     * @return ErrCode 规范错误码
+     */
+    ErrCode AppendBundles(std::vector<BundleName> bundlesToBackup, std::vector<std::string> detailInfos);
 
     /**
      * @brief 用于结束追加应用，结束后不可在调用AppendBundles

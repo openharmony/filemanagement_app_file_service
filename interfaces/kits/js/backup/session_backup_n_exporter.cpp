@@ -20,6 +20,7 @@
 #include "b_error/b_error.h"
 #include "b_filesystem/b_file.h"
 #include "b_resources/b_constants.h"
+#include "b_sa/b_sa_utils.h"
 #include "b_session_backup.h"
 #include "backup_kit_inner.h"
 #include "directory_ex.h"
@@ -273,24 +274,50 @@ napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info 
     return funcArg.GetThisVar();
 }
 
-napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_info cbinfo)
+static bool VerifyParamSuccess(NFuncArg &funcArg, std::vector<std::string> &bundleNames,
+    std::vector<std::string> &bundleInfos, napi_env env)
 {
-    HILOGD("called SessionBackup::AppendBundles begin");
-    NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         HILOGE("Number of arguments unmatched.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
-        return nullptr;
+        return false;
     }
-
     NVal jsBundles(env, funcArg[NARG_POS::FIRST]);
-    auto [succ, bundles, ignore] = jsBundles.ToStringArray();
+    auto [succ, jsBundleNames, ignore] = jsBundles.ToStringArray();
     if (!succ) {
         HILOGE("First argument is not bundles array.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not bundles array.").GetCode()).ThrowErr(env);
+        return false;
+    }
+    bundleNames = jsBundleNames;
+    NVal jsInfos(env, funcArg[NARG_POS::SECOND]);
+    if (jsInfos.TypeIs(napi_undefined) || jsInfos.TypeIs(napi_null)) {
+        HILOGW("Third param is not exist");
+        return true;
+    }
+    auto [deSuc, jsBundleInfos, deIgnore] = jsInfos.ToStringArray();
+    if (deSuc) {
+        bundleInfos = jsBundleInfos;
+        if (bundleNames.size() != bundleInfos.size()) {
+            HILOGE("bundleNames count is not equals bundleInfos count");
+            return false;
+        }
+        return true;
+    }
+    HILOGI("Second param is callback");
+    return true;
+}
+
+napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_info cbinfo)
+{
+    HILOGD("called SessionBackup::AppendBundles begin");
+    std::vector<std::string> bundleNames;
+    std::vector<std::string> bundleInfos;
+    NFuncArg funcArg(env, cbinfo);
+    if (!VerifyParamSuccess(funcArg, bundleNames, bundleInfos, env)) {
+        HILOGE("VerifyParamSuccess fail");
         return nullptr;
     }
-
     auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
     if (!(backupEntity && backupEntity->session)) {
         HILOGE("Failed to get backupSession entity.");
@@ -298,9 +325,12 @@ napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_inf
         return nullptr;
     }
 
-    auto cbExec = [session {backupEntity->session.get()}, bundles {bundles}]() -> NError {
+    auto cbExec = [session {backupEntity->session.get()}, bundles {bundleNames}, infos {bundleInfos}]() -> NError {
         if (!session) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "backup session is nullptr").GetCode());
+        }
+        if (!infos.empty()) {
+            return NError(session->AppendBundles(bundles, infos));
         }
         return NError(session->AppendBundles(bundles));
     };
@@ -312,6 +342,8 @@ napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_inf
 
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::ONE) {
+        return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+    } else if (!bundleInfos.empty()) {
         return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
     } else {
         NVal cb(env, funcArg[NARG_POS::SECOND]);

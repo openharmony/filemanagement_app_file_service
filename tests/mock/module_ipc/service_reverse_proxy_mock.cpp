@@ -24,7 +24,7 @@ void ServiceReverseProxy::BackupOnFileReady(string bundleName, string fileName, 
 
 void ServiceReverseProxy::BackupOnBundleStarted(int32_t errCode, string bundleName) {}
 
-void ServiceReverseProxy::BackupOnResultReport(string result) {}
+void ServiceReverseProxy::BackupOnResultReport(string result, std::string bundleName) {}
 
 void ServiceReverseProxy::BackupOnBundleFinished(int32_t errCode, string bundleName) {}
 
@@ -45,7 +45,7 @@ void ServiceReverseProxy::IncrementalBackupOnFileReady(string bundleName, string
 
 void ServiceReverseProxy::IncrementalBackupOnBundleStarted(int32_t errCode, string bundleName) {}
 
-void ServiceReverseProxy::IncrementalBackupOnResultReport(string result) {}
+void ServiceReverseProxy::IncrementalBackupOnResultReport(string result, std::string bundleName) {}
 
 void ServiceReverseProxy::IncrementalBackupOnBundleFinished(int32_t errCode, string bundleName) {}
 

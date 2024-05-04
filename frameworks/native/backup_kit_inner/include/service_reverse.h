@@ -27,7 +27,7 @@ class ServiceReverse final : public ServiceReverseStub {
 public:
     void BackupOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override;
     void BackupOnBundleStarted(int32_t errCode, std::string bundleName) override;
-    void BackupOnResultReport(std::string result)  override;
+    void BackupOnResultReport(std::string result, std::string bundleName) override;
     void BackupOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void BackupOnAllBundlesFinished(int32_t errCode) override;
 
@@ -40,7 +40,7 @@ public:
     void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
         int32_t errCode) override;
     void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) override;
-    void IncrementalBackupOnResultReport(std::string result) override;
+    void IncrementalBackupOnResultReport(std::string result, std::string bundleName) override;
     void IncrementalBackupOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void IncrementalBackupOnAllBundlesFinished(int32_t errCode) override;
 

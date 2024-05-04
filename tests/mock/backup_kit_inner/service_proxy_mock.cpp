@@ -104,6 +104,12 @@ ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundl
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
+    const std::vector<std::string> &detailInfos)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceProxy::Finish()
 {
     return BError(BError::Codes::OK);
@@ -130,6 +136,11 @@ ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrem
 }
 
 ErrCode ServiceProxy::PublishIncrementalFile(const BFileInfo &fileInfo)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd)
 {
     return BError(BError::Codes::OK);
 }

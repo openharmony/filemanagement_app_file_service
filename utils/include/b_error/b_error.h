@@ -87,6 +87,11 @@ public:
         EXT_FORBID_BACKUP_RESTORE = 0x5006,
         EXT_BACKUP_PACKET_ERROR = 0x5007,
         EXT_METHOD_NOT_EXIST = 0x5008,
+
+        // 0x6000~0x6999 sa_ext错误
+        SA_EXT_ERR_CALL = 0x6000,
+        SA_EXT_ERR_SAMGR = 0x6001,
+        SA_EXT_RELOAD_FAIL = 0x6002,
     };
 
     enum BackupErrorCode {

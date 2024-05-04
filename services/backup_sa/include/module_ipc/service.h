@@ -53,6 +53,8 @@ public:
                                         RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
                                         int32_t userId = DEFAULT_INVAL_VALUE) override;
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
+    ErrCode AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
+                                              const std::vector<std::string> &bundleInfos) override;
     ErrCode Finish() override;
     ErrCode Release() override;
 
@@ -61,12 +63,16 @@ public:
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) override;
 
     ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) override;
+    ErrCode PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd) override;
     ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd,
         int32_t errCode) override;
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;
     ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) override;
+
+    ErrCode SAResultReport(const std::string bundleName, const std::string resultInfo,
+                           const ErrCode errCode, const BackupRestoreScenario sennario);
 
     // 以下都是非IPC接口
 public:
@@ -82,6 +88,14 @@ public:
      * @return ErrCode
      */
     virtual ErrCode LaunchBackupExtension(const BundleName &bundleName);
+
+    /**
+     * @brief 执行启动 backup sa extension
+     *
+     * @param bundleName
+     * @return ErrCode
+     */
+    ErrCode LaunchBackupSAExtension(const BundleName &bundleName);
 
     /**
      * @brief backup extension died
@@ -131,6 +145,27 @@ public:
      *
      */
     AAFwk::Want CreateConnectWant (BundleName &bundleName);
+
+    /**
+     * @brief SA backup回调
+     *
+     * @param bundleName 应用名称
+     * @param fd 备份数据
+     * @param result SA备份的结果（异常）
+     * @param errCode backup的错误
+     *
+     */
+    void OnSABackup(const std::string &bundleName, const int &fd, const std::string &result, const ErrCode &errCode);
+
+    /**
+     * @brief SA restore回调
+     *
+     * @param bundleName 应用名称
+     * @param result SA恢复的结果（异常）
+     * @param errCode restore的错误
+     *
+     */
+    void OnSARestore(const std::string &bundleName, const std::string &result, const ErrCode &errCode);
 
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
@@ -231,6 +266,24 @@ private:
      *
     */
     void NotifyCloneBundleFinish(std::string bundleName);
+
+    /**
+     * @brief SA 备份恢复结束
+     *
+     * @param bundleName SAID
+     *
+     * @return ErrCode OK if saDone, otherwise saDone failed.
+    */
+    ErrCode SADone(const ErrCode errCode, std::string bundleName);
+
+    /**
+     * @brief SA备份恢复入口
+     *
+     * @param bundleName SAID
+     *
+     * @return ErrCode OK if backup sa, otherwise backup sa failed.
+    */
+    ErrCode BackupSA(std::string bundleName);
 
 private:
     static sptr<Service> instance_;

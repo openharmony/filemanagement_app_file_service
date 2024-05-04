@@ -102,17 +102,17 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
     }
     if (!it->second.backUpConnection) {
         auto callDied = [](const string &&bundleName) {};
-        auto callConnDone = [](const string &&bundleName) {};
-        it->second.backUpConnection = sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnDone));
+        auto callConnected = [](const string &&bundleName) {};
+        it->second.backUpConnection = sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnected));
         sptr<BackupExtExtensionMock> mock = sptr(new BackupExtExtensionMock());
         it->second.backUpConnection->OnAbilityConnectDone({}, mock->AsObject(), 0);
     }
     return wptr(it->second.backUpConnection);
 }
 
-sptr<SvcBackupConnection> SvcSessionManager::GetBackupExtAbility(const string &bundleName)
+sptr<SvcBackupConnection> SvcSessionManager::GetBackupAbilityExt(const string &bundleName)
 {
-    GTEST_LOG_(INFO) << "GetBackupExtAbility";
+    GTEST_LOG_(INFO) << "GetBackupAbilityExt";
     return sptr<SvcBackupConnection>(new SvcBackupConnection(nullptr, nullptr));
 }
 
@@ -194,6 +194,51 @@ string SvcSessionManager::GetBackupExtName(const string &bundleName)
     return "com.example.app2backup";
 }
 
+void SvcSessionManager::SetBackupExtInfo(const string &bundleName, const string &extInfo)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return;
+    }
+    it->second.extInfo = extInfo;
+}
+
+std::string SvcSessionManager::GetBackupExtInfo(const string &bundleName)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return "";
+    }
+    return it->second.extInfo;
+}
+
+void SvcSessionManager::SetBackupExtName(const string &bundleName, const string &backupExtName)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return;
+    }
+    it->second.backupExtName = backupExtName;
+}
+
+std::weak_ptr<SABackupConnection> SvcSessionManager::GetSAExtConnection(const BundleName &bundleName)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return std::weak_ptr<SABackupConnection>();
+    }
+    if (!it->second.saBackupConnection) {
+        auto callDied = [](const string &&bundleName) {};
+        auto callConnected = [](const string &&bundleName) {};
+        auto callBackup = [](const std::string &&bundleName, const int &&fd, const std::string &&result,
+                             const ErrCode &&errCode) {};
+        auto callRestore = [](const std::string &&bundleName, const std::string &&result, const ErrCode &&errCode) {};
+        it->second.saBackupConnection =
+            std::make_shared<SABackupConnection>(callDied, callConnected, callBackup, callRestore);
+    }
+    return std::weak_ptr<SABackupConnection>(it->second.saBackupConnection);
+}
+
 void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
 {
     GTEST_LOG_(INFO) << "AppendBundles";
@@ -205,7 +250,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
 sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &bundleName)
 {
     GTEST_LOG_(INFO) << "CreateBackupConnection";
-    return GetBackupExtAbility(bundleName);
+    return GetBackupAbilityExt(bundleName);
 }
 
 void SvcSessionManager::Start() {}
@@ -318,8 +363,6 @@ bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t time
 }
 
 void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName) {}
-
-void SvcSessionManager::SetBackupExtName(const string &bundleName, const string &backupExtName) {}
 
 void SvcSessionManager::IncreaseSessionCnt() {}
 

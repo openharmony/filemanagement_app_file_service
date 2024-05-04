@@ -35,6 +35,7 @@
 #include "i_service.h"
 #include "i_service_reverse.h"
 #include "module_ipc/svc_backup_connection.h"
+#include "module_ipc/sa_backup_connection.h"
 #include "svc_death_recipient.h"
 #include "timer.h"
 
@@ -45,6 +46,7 @@ struct BackupExtInfo {
     bool isBundleFinished {false};
     std::string backupExtName;
     sptr<SvcBackupConnection> backUpConnection;
+    std::shared_ptr<SABackupConnection> saBackupConnection;
     std::set<std::string> fileNameInfo;
     BConstants::ServiceSchedAction schedAction {BConstants::ServiceSchedAction::WAIT};
     /* [RESTORE] Record whether data backup is required during the app exec restore proceess. */
@@ -62,6 +64,7 @@ struct BackupExtInfo {
     int32_t manifestFd;
     std::string backupParameters;
     int32_t backupPriority;
+    std::string extInfo;
 };
 
 class Service;
@@ -184,6 +187,14 @@ public:
     wptr<SvcBackupConnection> GetExtConnection(const BundleName &bundleName);
 
     /**
+     * @brief get sa extension connection
+     *
+     * @param bundleName
+     * @return std::weak_ptr<SABackupConnection>
+     */
+    std::weak_ptr<SABackupConnection> GetSAExtConnection(const BundleName &bundleName);
+
+    /**
      * @brief HiDumper dump info
      *
      * @param fd 对端dump句柄
@@ -245,6 +256,22 @@ public:
      * @return std::string extension name
      */
     std::string GetBackupExtName(const std::string &bundleName);
+
+    /**
+     * @brief 暂存ext info
+     *
+     * @param bundleName 应用名称
+     * @param extInfo ext info
+     */
+    void SetBackupExtInfo(const std::string &bundleName, const std::string &extInfo);
+
+    /**
+     * @brief 获取ext info
+     *
+     * @param bundleName 应用名称
+     * @return std::string ext info
+     */
+    std::string GetBackupExtInfo(const std::string &bundleName);
 
     /**
      * @brief 追加应用
@@ -452,8 +479,19 @@ private:
      * @brief 获取backup extension ability
      *
      * @param bundleName 应用名称
+     *
+     * @return sptr<SvcBackupConnection>
      */
-    sptr<SvcBackupConnection> GetBackupExtAbility(const std::string &bundleName);
+    sptr<SvcBackupConnection> GetBackupAbilityExt(const std::string &bundleName);
+
+    /**
+     * @brief 获取backup sa extension
+     *
+     * @param bundleName 应用名称
+     *
+     * @return std::shared_ptr<SABackupConnection>
+     */
+    std::shared_ptr<SABackupConnection> GetBackupSAExt(const std::string &bundleName);
 
     /**
      * @brief 初始化 clientProxy

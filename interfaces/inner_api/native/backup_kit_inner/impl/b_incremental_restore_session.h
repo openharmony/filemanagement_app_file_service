@@ -58,6 +58,16 @@ public:
     ErrCode PublishFile(BFileInfo fileInfo);
 
     /**
+     * @brief 通知备份服务SA文件内容已就绪
+     *
+     * @param fileInfo 文件描述信息
+     * @param fd 文件描述符
+     * @return ErrCode 规范错误码
+     * @see GetFileHandle
+     */
+    ErrCode PublishSAFile(BFileInfo fileInfo, UniqueFd fd);
+
+    /**
      * @brief 请求恢复流程所需的真实文件
      *
      * @param bundleName 应用名称
@@ -71,6 +81,7 @@ public:
      * @param remoteCap 已打开的保存远端设备能力的Json文件。可使用GetLocalCapabilities方法获取
      * @param bundlesToRestore 待恢复的应用清单
      * @param detailInfos bundle对应的单双映射关系json串
+     *
      * @return ErrCode 规范错误码
      */
     ErrCode AppendBundles(UniqueFd remoteCap, std::vector<BundleName> bundlesToRestore,
@@ -81,6 +92,7 @@ public:
      *
      * @param remoteCap 已打开的保存远端设备能力的Json文件。可使用GetLocalCapabilities方法获取
      * @param bundlesToRestore 待恢复的应用清单
+     *
      * @return ErrCode 规范错误码
      */
     ErrCode AppendBundles(UniqueFd remoteCap, std::vector<BundleName> bundlesToRestore);

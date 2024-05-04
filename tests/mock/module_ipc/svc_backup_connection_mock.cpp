@@ -34,7 +34,7 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
     isConnected_.store(true);
     backupProxy_ = iface_cast<IExtension>(remoteObject);
     string bundleName = "";
-    callConnDone_(move(bundleName));
+    callConnected_(move(bundleName));
 }
 
 void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode)
@@ -62,9 +62,9 @@ bool SvcBackupConnection::IsExtAbilityConnected()
     return bFlag;
 }
 
-void SvcBackupConnection::SetCallback(function<void(const std::string &&)> callConnDone)
+void SvcBackupConnection::SetCallback(function<void(const std::string &&)> callConnected)
 {
-    callConnDone_ = callConnDone;
+    callConnected_ = callConnected;
 }
 
 sptr<IExtension> SvcBackupConnection::GetBackupExtProxy()

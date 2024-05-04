@@ -22,31 +22,31 @@
 namespace OHOS::FileManagement::Backup {
 class ServiceReverseProxy final : public IRemoteProxy<IServiceReverse>, protected NoCopyable {
 public:
-    void BackupOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override;
     void BackupOnBundleStarted(int32_t errCode, std::string bundleName) override;
-    void BackupOnResultReport(std::string result) override;
+    void BackupOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override;
+    void BackupOnResultReport(std::string result, std::string bundleName) override;
     void BackupOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void BackupOnAllBundlesFinished(int32_t errCode) override;
 
     void RestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
-    void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
-    void RestoreOnAllBundlesFinished(int32_t errCode) override;
     void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd) override;
     void RestoreOnResultReport(std::string result, std::string bundleName) override;
+    void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
+    void RestoreOnAllBundlesFinished(int32_t errCode) override;
 
+    void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) override;
     void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
         int32_t errCode) override;
-    void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) override;
-    void IncrementalBackupOnResultReport(std::string result) override;
+    void IncrementalBackupOnResultReport(std::string result, std::string bundleName) override;
     void IncrementalBackupOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void IncrementalBackupOnAllBundlesFinished(int32_t errCode) override;
 
     void IncrementalRestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
-    void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
-    void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) override;
     void IncrementalRestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
         int32_t errCode) override;
     void IncrementalRestoreOnResultReport(std::string result, std::string bundleName) override;
+    void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
+    void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) override;
 
 public:
     explicit ServiceReverseProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IServiceReverse>(impl) {}
