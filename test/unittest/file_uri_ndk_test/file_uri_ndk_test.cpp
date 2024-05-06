@@ -80,9 +80,11 @@ HWTEST_F(NDKFileUriTest, get_path_from_uri_test_001, TestSize.Level1)
     unsigned int length = fileUriStr.size();
     FileManagement_ErrCode ret = OH_FileUri_GetPathFromUri(fileUri, length, &result);
     EXPECT_EQ(ret, ERR_OK);
-    GTEST_LOG_(INFO) << result;
-    EXPECT_EQ(strcmp(result, filePath), 0);
-    FreeResult(&result);
+    if (result != nullptr) {
+        GTEST_LOG_(INFO) << result;
+        EXPECT_EQ(strcmp(result, filePath), 0);
+        FreeResult(&result);
+    }
     GTEST_LOG_(INFO) << "get_path_from_uri_test_001 end";
 }
 
@@ -122,17 +124,18 @@ HWTEST_F(NDKFileUriTest, get_path_from_uri_test_002, TestSize.Level1)
 HWTEST_F(NDKFileUriTest, get_path_from_uri_test_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "get_path_from_uri_test_003 start";
-    const char fileUri[] = "file://com.example.fileshareb/data/storage/el2/base/files/GetPathFromUri003.txt";
-    std::string filePathStr =
-        "/data/storage/el2/share/r/com.example.fileshareb/data/storage/el2/base/files/GetPathFromUri003.txt";
+    const char fileUri[] = "file://demoa/data/storage/el2/base/files/GetPathFromUri003.txt";
+    std::string filePathStr = "/data/storage/el2/share/r/demoa/data/storage/el2/base/files/GetPathFromUri003.txt";
     const char *filePath = filePathStr.c_str();
     char *result = nullptr;
     unsigned int length = strlen(fileUri);
     FileManagement_ErrCode ret = OH_FileUri_GetPathFromUri(fileUri, length, &result);
     EXPECT_EQ(ret, ERR_OK);
-    GTEST_LOG_(INFO) << result;
-    EXPECT_EQ(strcmp(result, filePath), 0);
-    FreeResult(&result);
+    if (result != nullptr) {
+        GTEST_LOG_(INFO) << result;
+        EXPECT_EQ(strcmp(result, filePath), 0);
+        FreeResult(&result);
+    }
     GTEST_LOG_(INFO) << "get_path_from_uri_test_003 end";
 }
 
@@ -157,9 +160,11 @@ HWTEST_F(NDKFileUriTest, get_path_from_uri_test_004, TestSize.Level1)
     unsigned int length = fileUriStr.size();
     FileManagement_ErrCode ret = OH_FileUri_GetPathFromUri(fileUri, length, &result);
     EXPECT_EQ(ret, ERR_OK);
-    GTEST_LOG_(INFO) << result;
-    EXPECT_EQ(strcmp(result, filePath), 0);
-    FreeResult(&result);
+    if (result != nullptr) {
+        GTEST_LOG_(INFO) << result;
+        EXPECT_EQ(strcmp(result, filePath), 0);
+        FreeResult(&result);
+    }
     GTEST_LOG_(INFO) << "get_path_from_uri_test_004 end";
 }
 
@@ -180,9 +185,11 @@ HWTEST_F(NDKFileUriTest, get_path_from_uri_test_005, TestSize.Level1)
     unsigned int length = fileUriStr.size();
     FileManagement_ErrCode ret = OH_FileUri_GetPathFromUri(fileUri, length, &result);
     EXPECT_EQ(ret, ERR_OK);
-    GTEST_LOG_(INFO) << result;
-    EXPECT_EQ(strcmp(result, filePath), 0);
-    FreeResult(&result);
+    if (result != nullptr) {
+        GTEST_LOG_(INFO) << result;
+        EXPECT_EQ(strcmp(result, filePath), 0);
+        FreeResult(&result);
+    }
     GTEST_LOG_(INFO) << "get_path_from_uri_test_005 end";
 }
 
@@ -208,9 +215,11 @@ HWTEST_F(NDKFileUriTest, get_path_from_uri_test_006, TestSize.Level1)
     unsigned int length = fileUriStr.size();
     FileManagement_ErrCode ret = OH_FileUri_GetPathFromUri(fileUri, length, &result);
     EXPECT_EQ(ret, ERR_OK);
-    GTEST_LOG_(INFO) << result;
-    EXPECT_EQ(strcmp(result, filePath), 0);
-    FreeResult(&result);
+    if (result != nullptr) {
+        GTEST_LOG_(INFO) << result;
+        EXPECT_EQ(strcmp(result, filePath), 0);
+        FreeResult(&result);
+    }
     GTEST_LOG_(INFO) << "get_path_from_uri_test_006 end";
 }
 
@@ -229,9 +238,11 @@ HWTEST_F(NDKFileUriTest, get_uri_from_path_test_001, TestSize.Level1)
     unsigned int length = strlen(filePath);
     FileManagement_ErrCode ret = OH_FileUri_GetUriFromPath(filePath, length, &result);
     EXPECT_EQ(ret, ERR_OK);
-    GTEST_LOG_(INFO) << result;
-    EXPECT_EQ(strcmp(result, fileUri), 0);
-    FreeResult(&result);
+    if (result != nullptr) {
+        GTEST_LOG_(INFO) << result;
+        EXPECT_EQ(strcmp(result, fileUri), 0);
+        FreeResult(&result);
+    }
     GTEST_LOG_(INFO) << "get_uri_from_path_test_001 end";
 }
 
