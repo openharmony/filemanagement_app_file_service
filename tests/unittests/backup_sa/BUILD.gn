@@ -17,5 +17,8 @@ import("//foundation/filemanagement/app_file_service/backup.gni")
 group("backup_sa_test") {
   testonly = true
 
-  deps = [ "module_ipc:backup_sa_ipc_test" ]
+  deps = [
+    "module_ipc:backup_sa_ipc_test",
+    "session:session_test",
+  ]
 }
