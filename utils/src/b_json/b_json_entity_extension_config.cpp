@@ -138,7 +138,11 @@ string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, 
             throw BError(BError::Codes::SA_INVAL_ARG, "Current process is not extension process");
         }
         string jsonFilePath = string(BConstants::BACKUP_CONFIG_EXTENSION_PATH).append(BConstants::BACKUP_CONFIG_JSON);
-        return BFile::ReadFile(UniqueFd(open(jsonFilePath.c_str(), O_RDONLY))).get();
+        UniqueFd fd(open(jsonFilePath.c_str(), O_RDONLY));
+        if (fd < 0) {
+            throw BError(BError::Codes::TOOL_INVAL_ARG, "open json file failed");
+        }
+        return BFile::ReadFile(std::move(fd)).get();
     }
 
     if (getuid() != static_cast<uid_t>(BConstants::BACKUP_UID)) {
@@ -158,7 +162,11 @@ string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, 
         HILOGI("Failed to access jsonFilePath : %{public}s", jsonFilePath.c_str());
         return string(jsonFromRealWorld);
     }
-    return BFile::ReadFile(UniqueFd(open(jsonFilePath.c_str(), O_RDONLY))).get();
+    UniqueFd fd(open(jsonFilePath.c_str(), O_RDONLY));
+    if (fd < 0) {
+        throw BError(BError::Codes::TOOL_INVAL_ARG, "open json file failed");
+    }
+    return BFile::ReadFile(std::move(fd)).get();
 }
 
 string BJsonEntityExtensionConfig::GetRestoreDeps() const

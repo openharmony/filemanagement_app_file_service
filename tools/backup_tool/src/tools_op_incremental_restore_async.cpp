@@ -171,15 +171,9 @@ static void OnBackupServiceDied(shared_ptr<InrementalSessionAsync> ctx)
     ctx->TryNotify(true);
 }
 
-static void AdapteCloneOptimize(const string &path)
+static map<string, tuple<string, struct stat, bool, bool>> ReadyExtManage(const string &path,
+    std::vector<ExtManageInfo>& pkgInfo)
 {
-    string manageJosnStr = path;
-    manageJosnStr = manageJosnStr + BConstants::FILE_SEPARATOR_CHAR + string(BConstants::EXT_BACKUP_MANAGE);
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntityOld(UniqueFd(open(manageJosnStr.data(), O_RDWR)));
-    auto cacheOld = cachedEntityOld.Structuralize();
-    auto pkgInfo = cacheOld.GetExtManageInfo();
-    close(cachedEntityOld.GetFd().Release());
-
     map<string, tuple<string, struct stat, bool, bool>> info;
     for (auto &item : pkgInfo) {
         string fileName = item.hashName;
@@ -216,9 +210,30 @@ static void AdapteCloneOptimize(const string &path)
         }
         info.emplace(item.hashName, make_tuple(item.fileName, item.sta, item.isBigFile, item.isUserTar));
     }
+    return info;
+}
 
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(manageJosnStr.data(),
-        O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)));
+static void AdapteCloneOptimize(const string &path)
+{
+    string manageJsonStr = path;
+    manageJsonStr = manageJsonStr + BConstants::FILE_SEPARATOR_CHAR + string(BConstants::EXT_BACKUP_MANAGE);
+    UniqueFd fd(open(manageJsonStr.data(), O_RDWR));
+    if (fd < 0) {
+        HILOGE("Failed to open manage json file = %{private}s, err = %{public}d", manageJsonStr.c_str(), errno);
+        return;
+    }
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntityOld(std::move(fd));
+    auto cacheOld = cachedEntityOld.Structuralize();
+    auto pkgInfo = cacheOld.GetExtManageInfo();
+    close(cachedEntityOld.GetFd().Release());
+
+    auto info = ReadyExtManage(path, pkgInfo);
+    UniqueFd fdJson(open(manageJsonStr.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
+    if (fdJson < 0) {
+        HILOGE("Failed to open manage json file = %{private}s, err = %{public}d", manageJsonStr.c_str(), errno);
+        return;
+    }
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(std::move(fdJson));
     auto cache = cachedEntity.Structuralize();
     cache.SetExtManageForClone(info);
     cachedEntity.Persist();
@@ -269,7 +284,12 @@ static void RestoreApp(shared_ptr<InrementalSessionAsync> restore, vector<Bundle
         restore->session_->GetFileHandle(bundleName, manageJsonPath);
 
         string manageJsonStr = tmpDataPath + BConstants::FILE_SEPARATOR_CHAR + string(BConstants::EXT_BACKUP_MANAGE);
-        BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(manageJsonStr.data(), O_RDONLY)));
+        UniqueFd fd(open(manageJsonStr.data(), O_RDONLY));
+        if (fd < 0) {
+            HILOGE("Failed to open manage json file = %{private}s, err = %{public}d", manageJsonStr.c_str(), errno);
+            return;
+        }
+        BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(std::move(fd));
         auto cache = cachedEntity.Structuralize();
         auto pkgInfo = cache.GetExtManageInfo();
         for (auto &item : pkgInfo) {

@@ -116,8 +116,12 @@ UniqueFd Service::GetLocalCapabilities()
         VerifyCaller();
         string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
         BExcepUltils::VerifyPath(path, false);
-        BJsonCachedEntity<BJsonEntityCaps> cachedEntity(
-            UniqueFd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR)));
+        UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
+        if (fd < 0) {
+            HILOGE("Failed to open config file = %{private}s, err = %{public}d", path.c_str(), errno);
+            return UniqueFd(-1);
+        }
+        BJsonCachedEntity<BJsonEntityCaps> cachedEntity(std::move(fd));
 
         auto cache = cachedEntity.Structuralize();
 
