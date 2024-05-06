@@ -211,7 +211,7 @@ namespace OHOS::AppFileService::ModuleFileUri {
         vector<int32_t> retList;
         int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
         EXPECT_EQ(ret, E_OK);
-        
+
         string rltStr = PATH_SHARE + MODE_R + bundleB + actStr;
         FileUri fileUri(uri);
         string path = fileUri.GetRealPath();

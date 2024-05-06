@@ -194,7 +194,6 @@ int32_t ServiceStub::CmdAppendBundlesBackupSession(MessageParcel &data, MessageP
 {
     std::vector<string> bundleNames;
     data.ReadStringVector(&bundleNames);
-
     int res = AppendBundlesBackupSession(bundleNames);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
