@@ -67,8 +67,6 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
     HILOGE("start");
     BConstants::ServiceSchedAction action = sessionPtr_->GetServiceSchedAction(bundleName);
     if (action == BConstants::ServiceSchedAction::START) {
-        // 通知应用市场
-        reversePtr_->SendAppGalleryNotify(bundleName);
         // 注册启动定时器
         auto callStart = [reversePtr {reversePtr_}, bundleName]() {
             HILOGE("Extension connect failed = %{public}s", bundleName.data());

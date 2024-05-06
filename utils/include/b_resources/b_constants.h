@@ -62,8 +62,8 @@ constexpr int EXT_CONNECT_MAX_COUNT = 3;      // extension 最大启动数
 constexpr int EXT_CONNECT_MAX_TIME = 15000;   // SA 启动 extension 等待连接最大时间
 
 constexpr int IPC_MAX_WAIT_TIME = 3000; // IPC通讯最大等待时间(s)
-constexpr char FILE_SEPARATOR_CHAR = '/';
 constexpr int MAX_PARCELABLE_VECTOR_NUM = 10000;
+constexpr char FILE_SEPARATOR_CHAR = '/';
 
 constexpr int DEFAULT_VFS_CACHE_PRESSURE = 100; // 默认内存回收参数
 constexpr int BACKUP_VFS_CACHE_PRESSURE = 10000; // 备份过程修改参数

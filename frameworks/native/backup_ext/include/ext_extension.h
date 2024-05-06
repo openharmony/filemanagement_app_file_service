@@ -165,20 +165,20 @@ private:
     /**
      * @brief get callbackEx for execute onRestore with string param
      * 
-     * @param errCode 
+     * @param errCode
      */
     std::function<void(const std::string)> IncrementalRestoreResultCallbackEx(wptr<BackupExtExtension> obj);
 
     /**
      * @brief get callbackEx for execute onRestore
-     * 
+     *
      * @param errCode
      */
     std::function<void()> IncrementalAppDoneCallbackEx(wptr<BackupExtExtension> obj);
 
     /**
-     * @brief get callbackEx for execute appDone 
-     */ 
+     * @brief get callbackEx for execute appDone
+     */
     std::function<void()> AppDoneCallbackEx(wptr<BackupExtExtension> obj);
 private:
     std::shared_mutex lock_;
