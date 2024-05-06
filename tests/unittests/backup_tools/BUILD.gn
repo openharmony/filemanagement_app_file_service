@@ -85,7 +85,6 @@ ohos_unittest("backup_tool_restore_test") {
     "${path_backup}/tools/backup_tool/src/tools_op.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_incremental_restore.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_restore.cpp",
-    "${path_backup}/tools/backup_tool/src/tools_op_restore_async.cpp",
     "backup_tool/tools_op_incremental_restore_test.cpp",
     "backup_tool/tools_op_restore_async_test.cpp",
     "backup_tool/tools_op_restore_test.cpp",
@@ -97,6 +96,7 @@ ohos_unittest("backup_tool_restore_test") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner",
     "${path_backup}/tools/backup_tool/include",
+    "${path_backup}/tools/backup_tool/src",
   ]
   include_dirs += backup_mock_utils_include
 
