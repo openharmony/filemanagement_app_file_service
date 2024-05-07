@@ -37,7 +37,7 @@ vector<string> BJsonEntityExtensionConfig::GetIncludes() const
         return {BConstants::PATHES_TO_BACKUP.begin(), BConstants::PATHES_TO_BACKUP.end()};
     }
     if (!obj_.isMember("includes")) {
-        HILOGE("'includes' field not found");
+        HILOGD("'includes' field not found");
         return {BConstants::PATHES_TO_BACKUP.begin(), BConstants::PATHES_TO_BACKUP.end()};
     }
     if (!obj_["includes"].isArray()) {
@@ -67,7 +67,7 @@ vector<string> BJsonEntityExtensionConfig::GetExcludes() const
         return {};
     }
     if (!obj_.isMember("excludes")) {
-        HILOGE("'excludes' field not found");
+        HILOGD("'excludes' field not found");
         return {};
     }
     if (!obj_["excludes"].isArray()) {
@@ -89,7 +89,7 @@ vector<string> BJsonEntityExtensionConfig::GetExcludes() const
 bool BJsonEntityExtensionConfig::GetAllowToBackupRestore() const
 {
     if (!obj_ || !obj_.isMember("allowToBackupRestore") || !obj_["allowToBackupRestore"].isBool()) {
-        HILOGE("Failed to init field allowToBackupRestore");
+        HILOGD("Failed to get field allowToBackupRestore");
         return false;
     }
 
@@ -99,7 +99,7 @@ bool BJsonEntityExtensionConfig::GetAllowToBackupRestore() const
 bool BJsonEntityExtensionConfig::GetFullBackupOnly() const
 {
     if (!obj_ || !obj_.isMember("fullBackupOnly") || !obj_["fullBackupOnly"].isBool()) {
-        HILOGE("Failed to init field fullBackupOnly");
+        HILOGD("Failed to get field fullBackupOnly");
         return false;
     }
 
@@ -109,7 +109,7 @@ bool BJsonEntityExtensionConfig::GetFullBackupOnly() const
 string BJsonEntityExtensionConfig::GetSupportScene() const
 {
     if (!obj_ || !obj_.isMember("supportScene") || !obj_["supportScene"].isString()) {
-        HILOGE("Failed to init field supportScene");
+        HILOGD("Failed to get field supportScene");
         return "";
     }
 
@@ -119,7 +119,7 @@ string BJsonEntityExtensionConfig::GetSupportScene() const
 Json::Value BJsonEntityExtensionConfig::GetExtraInfo() const
 {
     if (!obj_ || !obj_.isMember("extraInfo") || !obj_["extraInfo"].isObject()) {
-        HILOGI("Failed to init field extraInfo");
+        HILOGD("Failed to get field extraInfo");
         return Json::Value();
     }
     
@@ -172,7 +172,7 @@ string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, 
 string BJsonEntityExtensionConfig::GetRestoreDeps() const
 {
     if (!obj_ || !obj_.isMember("restoreDeps") || !obj_["restoreDeps"].isString()) {
-        HILOGE("Failed to init field restoreDeps");
+        HILOGD("Failed to get field restoreDeps");
         return "";
     }
 
