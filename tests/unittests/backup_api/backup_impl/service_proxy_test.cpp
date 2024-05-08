@@ -198,8 +198,9 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppFileReady_0100, testing::ext::Te
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppFileReady_0100";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
-        .Times(2)
+        .Times(3)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM))
         .WillOnce(Return(EPERM));
 
     string bundleName = "com.example.app2backup";

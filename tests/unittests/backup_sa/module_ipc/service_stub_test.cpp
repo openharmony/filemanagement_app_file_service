@@ -288,7 +288,9 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0100, testing::
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppFileReady_0100";
     try {
         MockService service;
-        EXPECT_CALL(service, AppFileReady(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(service, AppFileReady(_, _, _))
+            .WillOnce(Return(BError(BError::Codes::OK)))
+            .WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -299,15 +301,15 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0100, testing::
 
         EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
         EXPECT_TRUE(data.WriteString(FILE_NAME));
+        EXPECT_TRUE(data.WriteBool(true));
         EXPECT_TRUE(data.WriteFileDescriptor(fd));
         EXPECT_EQ(BError(BError::Codes::OK),
                   service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY),
                                           data, reply, option));
-        GTEST_LOG_(INFO) << "ServiceStubTest-begin-CmdAppFileReady Brances";
         MessageParcel brances;
         EXPECT_TRUE(brances.WriteInterfaceToken(IService::GetDescriptor()));
         EXPECT_TRUE(brances.WriteString(FILE_NAME));
-        EXPECT_NE(BError(BError::Codes::OK),
+        EXPECT_EQ(BError(BError::Codes::OK),
                   service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY),
                                           brances, reply, option));
     } catch (...) {
