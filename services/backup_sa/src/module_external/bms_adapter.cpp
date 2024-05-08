@@ -83,7 +83,7 @@ static tuple<bool, string, string, string, Json::Value> GetAllowAndExtName(
         return {cache.GetAllowToBackupRestore(), ext.name, cache.GetRestoreDeps(), cache.GetSupportScene(),
             cache.GetExtraInfo()};
     }
-    HILOGI("No backup extension ability found");
+    HILOGE("No backup extension ability found");
     return {false, "", "", "", Json::Value()};
 }
 
@@ -242,7 +242,7 @@ static bool GenerateBundleStatsIncrease(int32_t userId, const vector<string> &bu
     }
 
     for (size_t i = 0; i < bundleInfos.size(); i++) {
-        HILOGI("BundleMgrAdapter name for %{private}s", bundleInfos[i].name.c_str());
+        HILOGD("BundleMgrAdapter name for %{private}s", bundleInfos[i].name.c_str());
         BJsonEntityCaps::BundleInfo newBundleInfo = {.name = bundleInfos[i].name,
                                                      .versionCode = bundleInfos[i].versionCode,
                                                      .versionName = bundleInfos[i].versionName,
@@ -266,7 +266,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     auto bms = GetBundleManager();
     for (auto const &bundleNameTime : incrementalDataList) {
         auto bundleName = bundleNameTime.bundleName;
-        HILOGI("Begin Get bundleName:%{private}s", bundleName.c_str());
+        HILOGD("Begin get bundleName:%{private}s", bundleName.c_str());
         AppExecFwk::BundleInfo installedBundle;
         if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
             throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle info");
