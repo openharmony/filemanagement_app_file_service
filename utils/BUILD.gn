@@ -29,17 +29,6 @@ config("utils_public_config") {
   ]
 }
 
-rust_cxx("backup_cxx_gen") {
-  sources = [ "rust/src/lib.rs" ]
-}
-
-ohos_rust_static_ffi("backup_cxx_rust") {
-  sources = [ "rust/src/lib.rs" ]
-  deps = [ "//third_party/rust/crates/cxx:lib" ]
-  part_name = "app_file_service"
-  subsystem_name = "filemanagement"
-}
-
 ohos_static_library("backup_cxx_cppdeps") {
   branch_protector_ret = "pac_ret"
 
@@ -54,17 +43,6 @@ ohos_static_library("backup_cxx_cppdeps") {
 
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
-  defines = [ "RUST_CXX_NO_EXCEPTIONS" ]
-  sources = [
-    "//third_party/rust/crates/cxx/include/cxx.h",
-    "//third_party/rust/crates/cxx/src/cxx.cc",
-  ]
-  deps = [ "//third_party/rust/crates/cxx:lib" ]
-  if (is_win) {
-    defines += [ "CXX_RS_EXPORT=__declspec(dllexport)" ]
-  } else {
-    defines += [ "CXX_RS_EXPORT=__attribute__((visibility(\"default\")))" ]
-  }
 }
 
 ohos_shared_library("backup_utils") {
@@ -98,7 +76,6 @@ ohos_shared_library("backup_utils") {
     "src/b_tarball/b_tarball_cmdline.cpp",
     "src/b_tarball/b_tarball_factory.cpp",
   ]
-  sources += get_target_outputs(":backup_cxx_gen")
 
   configs = [ ":utils_private_config" ]
   public_configs = [ ":utils_public_config" ]
@@ -115,14 +92,10 @@ ohos_shared_library("backup_utils") {
   include_dirs = [
     "${path_init}/interfaces/innerkits/include/syspara",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
-    "${path_rust}/crates/cxx/include",
-    "${target_gen_dir}/rust/src",
   ]
 
   deps = [
     ":backup_cxx_cppdeps",
-    ":backup_cxx_gen",
-    ":backup_cxx_rust",
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
     "${path_jsoncpp}:jsoncpp",
     "//third_party/openssl:libcrypto_shared",
