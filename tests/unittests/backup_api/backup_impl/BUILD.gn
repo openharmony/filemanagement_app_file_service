@@ -84,6 +84,7 @@ ohos_unittest("backup_sa_impl_test") {
   ]
 
   sanitize = {
+    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false

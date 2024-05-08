@@ -65,6 +65,7 @@ ohos_unittest("backup_tool_test") {
   ]
 
   sanitize = {
+    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false
@@ -122,6 +123,7 @@ ohos_unittest("backup_tool_restore_test") {
   ]
 
   sanitize = {
+    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false
