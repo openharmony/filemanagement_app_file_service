@@ -69,9 +69,9 @@ ErrCode BSessionBackup::Start()
     callbacks_.onBundleFinished(0, "com.example.app2backup");
 
     callbacks_.onAllBundlesFinished(0);
-    callbacks_.onBundleStarted(BError::Codes::TOOL_INVAL_ARG, "com.example.app2backup");
-    callbacks_.onBundleFinished(BError::Codes::TOOL_INVAL_ARG, "com.example.app2backup");
-    callbacks_.onAllBundlesFinished(BError::Codes::TOOL_INVAL_ARG);
+    callbacks_.onBundleStarted((int)BError::Codes::TOOL_INVAL_ARG, "com.example.app2backup");
+    callbacks_.onBundleFinished((int)BError::Codes::TOOL_INVAL_ARG, "com.example.app2backup");
+    callbacks_.onAllBundlesFinished((int)BError::Codes::TOOL_INVAL_ARG);
 
     string filePathTwo = tm.GetRootDirCurTest().append("1.tar");
     UniqueFd fdFile(open(filePathTwo.data(), O_RDONLY | O_CREAT, S_IRWXU));
