@@ -199,7 +199,7 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_0400, testing::ext::TestS
         map<string, vector<string>> mapArgToVal;
         vector<string> path = {"/data/backup/tmp"};
         mapArgToVal.insert(make_pair("pathCapFile", path));
-        vector<string> bundles = {"com.example.app2backup"};
+        vector<string> bundles = {""};
         mapArgToVal.insert(make_pair("bundles", bundles));
         vector<string> local = {"false"};
         mapArgToVal.insert(make_pair("isLocal", local));
