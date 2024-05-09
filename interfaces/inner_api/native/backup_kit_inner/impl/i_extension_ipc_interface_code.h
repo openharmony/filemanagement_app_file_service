@@ -29,6 +29,7 @@ enum class IExtensionInterfaceCode {
     CMD_HANDLE_INCREMENTAL_BACKUP,
     CMD_GET_INCREMENTAL_BACKUP_FILE_HANDLE,
     CMD_GET_BACKUP_INFO,
+    CMD_INCREMENTAL_ON_BACKUP,
 };
 } // namespace OHOS::FileManagement::Backup
 

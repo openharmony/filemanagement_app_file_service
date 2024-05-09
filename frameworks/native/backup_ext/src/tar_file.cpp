@@ -171,7 +171,7 @@ bool TarFile::I2OcsConvert(const struct stat &st, TarHeader &hdr, string &fileNa
 
 bool TarFile::AddFile(string &fileName, const struct stat &st, bool isSplit)
 {
-    HILOGI("tar file %{public}s", fileName.c_str());
+    HILOGD("tar file %{public}s", fileName.c_str());
     currentFileName_ = fileName;
 
     TarHeader hdr;

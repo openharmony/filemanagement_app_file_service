@@ -125,6 +125,11 @@ UniqueFd ServiceProxy::GetLocalCapabilitiesIncremental(const vector<BIncremental
     return UniqueFd(-1);
 }
 
+ErrCode ServiceProxy::GetAppLocalListAndDoIncrementalBackup()
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 {
     return BError(BError::Codes::OK);

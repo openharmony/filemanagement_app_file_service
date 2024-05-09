@@ -33,6 +33,16 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 const int INVALID_FD = -1;
 
+
+void ServiceStub::ServiceStubSupplement()
+{
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER)] =
+        &ServiceStub::CmdUpdateTimer;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceInterfaceCode::SERVICE_CMD_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP)] =
+        &ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup;
+}
+
 ServiceStub::ServiceStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_RESTORE_SESSION)] =
@@ -81,8 +91,7 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdGetIncrementalFileHandle;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_INFO)] =
         &ServiceStub::CmdGetBackupInfo;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER)] =
-        &ServiceStub::CmdUpdateTimer;
+    ServiceStubSupplement();
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -418,6 +427,17 @@ int32_t ServiceStub::CmdGetLocalCapabilitiesIncremental(MessageParcel &data, Mes
     UniqueFd fd(GetLocalCapabilitiesIncremental(bundleNames));
     if (!reply.WriteFileDescriptor(fd)) {
         return BError(BError::Codes::SA_BROKEN_IPC, "Failed to send out the file");
+    }
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t res = GetAppLocalListAndDoIncrementalBackup();
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::SA_BROKEN_IPC, ss.str());
     }
     return BError(BError::Codes::OK);
 }

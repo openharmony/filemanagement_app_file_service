@@ -1257,6 +1257,7 @@ static bool CheckTar(const string &fileName)
 CompareFilesResult BackupExtExtension::CompareFiles(const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
     const unordered_map<string, struct ReportFileInfo> &storageFiles)
 {
+    HILOGD("Begin");
     map<string, struct ReportFileInfo> allFiles;
     map<string, struct ReportFileInfo> smallFiles;
     map<string, struct stat> bigFiles;
@@ -1317,7 +1318,22 @@ ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, Uniq
     unordered_map<string, struct ReportFileInfo> cloudFiles = cloudRp.GetReportInfos();
     BReportEntity storageRp(move(incrementalFd));
     unordered_map<string, struct ReportFileInfo> storageFiles = storageRp.GetReportInfos();
-    AsyncTaskOnIncrementalBackup(cloudFiles, storageFiles);
+    AsyncTaskDoIncrementalBackup(cloudFiles, storageFiles);
+    return 0;
+}
+
+ErrCode BackupExtExtension::IncrementalOnBackup()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    string usrConfig = extension_->GetUsrConfig();
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
+    auto cache = cachedEntity.Structuralize();
+    if (!cache.GetAllowToBackupRestore()) {
+        HILOGE("Application does not allow backup or restore");
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+            .GetCode();
+    }
+    AsyncTaskOnIncrementalBackup();
     return 0;
 }
 
@@ -1453,7 +1469,7 @@ static ErrCode IncrementalBigFileReady(const TarMap &pkgInfo,
     return ret;
 }
 
-void BackupExtExtension::AsyncTaskOnIncrementalBackup(
+void BackupExtExtension::AsyncTaskDoIncrementalBackup(
     const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
     const unordered_map<string, struct ReportFileInfo> &storageFiles)
 {
@@ -1468,6 +1484,44 @@ void BackupExtExtension::AsyncTaskOnIncrementalBackup(
             auto ret = ptr->DoIncrementalBackup(allFiles, smallFiles, bigFiles, bigInfos);
             ptr->AppIncrementalDone(ret);
             HILOGE("Incremental backup app done %{public}d", ret);
+        } catch (const BError &e) {
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+void BackupExtExtension::AsyncTaskOnIncrementalBackup()
+{
+    auto task = [obj {wptr<BackupExtExtension>(this)}]() {
+        auto ptr = obj.promote();
+        auto callBackup = [obj]() {
+            HILOGD("App onbackup end");
+            auto proxy = ServiceProxy::GetInstance();
+            if (proxy == nullptr) {
+                throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
+            }
+            proxy->GetAppLocalListAndDoIncrementalBackup();
+        };
+        try {
+            BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                                  "Ext extension handle have been already released");
+            BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
+                                  "extension handle have been already released");
+            ptr->extension_->OnBackup(callBackup);
         } catch (const BError &e) {
             ptr->AppIncrementalDone(e.GetCode());
         } catch (const exception &e) {

@@ -39,6 +39,7 @@ private:
     ErrCode CmdGetIncrementalFileHandle(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdHandleIncrementalBackup(MessageParcel &data, MessageParcel &reply);
+    ErrCode CmdIncrementalOnBackup(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdGetIncrementalBackupFileHandle(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply);
 

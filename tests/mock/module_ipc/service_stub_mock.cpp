@@ -68,6 +68,9 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdGetBackupInfo;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER)] =
         &ServiceStub::CmdUpdateTimer;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceInterfaceCode::SERVICE_CMD_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP)] =
+        &ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup;
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -242,6 +245,11 @@ int32_t ServiceStub::CmdRelease(MessageParcel &data, MessageParcel &reply)
 }
 
 int32_t ServiceStub::CmdGetLocalCapabilitiesIncremental(MessageParcel &data, MessageParcel &reply)
+{
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup(MessageParcel &data, MessageParcel &reply)
 {
     return BError(BError::Codes::OK);
 }

@@ -271,7 +271,7 @@ int UntarFile::ParseIncrementalTarFile(const string &rootPath)
 
 void UntarFile::ParseFileByTypeFlag(char typeFlag, FileStatInfo &info)
 {
-    HILOGI("untar file: %{public}s, rootPath: %{public}s", info.fullPath.c_str(), rootPath_.c_str());
+    HILOGD("untar file: %{public}s, rootPath: %{public}s", info.fullPath.c_str(), rootPath_.c_str());
     switch (typeFlag) {
         case REGTYPE:
         case AREGTYPE:
@@ -298,7 +298,7 @@ void UntarFile::ParseFileByTypeFlag(char typeFlag, FileStatInfo &info)
 
 int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, FileStatInfo &info)
 {
-    HILOGI("untar file: %{public}s, rootPath: %{public}s", info.fullPath.c_str(), rootPath_.c_str());
+    HILOGD("untar file: %{public}s, rootPath: %{public}s", info.fullPath.c_str(), rootPath_.c_str());
     string tmpFullPath = info.fullPath;
     RTrimNull(tmpFullPath);
     switch (typeFlag) {

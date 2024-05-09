@@ -113,6 +113,11 @@ public:
         return BError(BError::Codes::OK);
     };
 
+    ErrCode IncrementalOnBackup() override
+    {
+        return BError(BError::Codes::OK);
+    };
+
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override
     {
         return {UniqueFd(-1), UniqueFd(-1)};

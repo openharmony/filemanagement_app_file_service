@@ -47,6 +47,7 @@ public:
     ErrCode GetIncrementalFileHandle(const std::string &fileName) override;
     ErrCode PublishIncrementalFile(const std::string &fileName) override;
     ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) override;
+    ErrCode IncrementalOnBackup() override;
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
     ErrCode GetBackupInfo(std::string &result) override;
 
@@ -145,8 +146,9 @@ private:
     CompareFilesResult CompareFiles(const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
         const unordered_map<string, struct ReportFileInfo> &storageFiles);
 
-    void AsyncTaskOnIncrementalBackup(const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
+    void AsyncTaskDoIncrementalBackup(const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
         const unordered_map<string, struct ReportFileInfo> &storageFiles);
+    void AsyncTaskOnIncrementalBackup();
 
     /**
      * @brief extension incremental backup restore is done
