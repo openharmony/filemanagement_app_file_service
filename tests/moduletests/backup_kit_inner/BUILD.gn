@@ -64,6 +64,7 @@ ohos_unittest("b_session_test") {
   ]
 
   sanitize = {
+    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false
