@@ -55,7 +55,7 @@ ohos_fuzztest("BackupSaAppendFuzzTest") {
 
   defines = [
     "LOG_TAG=\"app_file_service\"",
-    "LOG_DOMAIN=0xD200000",
+    "LOG_DOMAIN=0xD004303",
   ]
 }
 ###############################################################################

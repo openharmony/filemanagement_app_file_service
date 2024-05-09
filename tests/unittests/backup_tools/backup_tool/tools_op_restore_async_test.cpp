@@ -668,4 +668,83 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1300, testing::ext::Tes
     }
     GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end tools_op_restore_async_1300";
 }
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_async_1301
+ * @tc.name: tools_op_restore_async_1301
+ * @tc.desc: 测试InitArg正常
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1301, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_1301";
+    try {
+        string pathCapFile = string(BConstants::SA_BUNDLE_BACKUP_TMP_DIR.data()) + "/tmp";
+        int fd = open(pathCapFile.data(), O_RDWR | O_CREAT, S_IRWXU);
+        EXPECT_GT(fd, 0);
+        close(fd);
+        vector<string> bundleNames = {"com.example.app2backup"};
+        string type = "true";
+        string userId = "100";
+        EXPECT_EQ(InitArg(pathCapFile, bundleNames, type, userId), 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end tools_op_restore_async_1301";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_async_1400
+ * @tc.name: tools_op_restore_async_1400
+ * @tc.desc: 测试包含所有参数的情况
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_1400";
+    try {
+        map<string, vector<string>> mapArgToVal;
+        mapArgToVal["pathCapFile"] = {"/tmp/"};
+        mapArgToVal["bundles"] = {"com.example.app2backup"};
+        mapArgToVal["restoreType"] = {"true"};
+        mapArgToVal["userId"] = {"100"};
+        int ret = Exec(mapArgToVal);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end tools_op_restore_async_1400";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_async_1401
+ * @tc.name: tools_op_restore_async_1401
+ * @tc.desc: 测试不包含所有参数的情况
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1401, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_1401";
+    try {
+
+        map<string, vector<string>> mapArgToVal;
+        int ret = Exec(mapArgToVal);
+        EXPECT_EQ(ret, -EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end tools_op_restore_async_1401";
+}
 } // namespace OHOS::FileManagement::Backup
