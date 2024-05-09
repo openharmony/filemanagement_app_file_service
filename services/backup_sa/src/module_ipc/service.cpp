@@ -22,6 +22,7 @@
 #include "module_ipc/service.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cerrno>
 #include <cstddef>
 #include <cstdint>
@@ -29,6 +30,7 @@
 #include <regex>
 
 #include <fcntl.h>
+#include <iomanip>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/vfs.h>
@@ -45,8 +47,10 @@
 #include "b_ohos/startup/backup_para.h"
 #include "b_process/b_multiuser.h"
 #include "b_resources/b_constants.h"
+#include "b_sa/b_sa_utils.h"
 #include "bundle_mgr_client.h"
 #include "filemgmt_libhilog.h"
+#include "hisysevent.h"
 #include "ipc_skeleton.h"
 #include "module_app_gallery/app_gallery_dispose_proxy.h"
 #include "module_external/bms_adapter.h"
@@ -65,7 +69,11 @@ REGISTER_SYSTEM_ABILITY_BY_ID(Service, FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, fals
 
 namespace {
 constexpr int32_t DEBUG_ID = 100;
+constexpr int32_t INDEX = 3;
+constexpr int32_t MS_1000 = 1000;
 const static string COMMON_EVENT_TYPE = "broadcast";
+const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
+const static string UNICAST_TYPE = "unicast";
 const int32_t CONNECT_WAIT_TIME_S = 15;
 } // namespace
 
@@ -116,8 +124,12 @@ UniqueFd Service::GetLocalCapabilities()
         VerifyCaller();
         string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
         BExcepUltils::VerifyPath(path, false);
-        BJsonCachedEntity<BJsonEntityCaps> cachedEntity(
-            UniqueFd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR)));
+        UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
+        if (fd < 0) {
+            HILOGE("Failed to open config file = %{private}s, err = %{public}d", path.c_str(), errno);
+            return UniqueFd(-1);
+        }
+        BJsonCachedEntity<BJsonEntityCaps> cachedEntity(std::move(fd));
 
         auto cache = cachedEntity.Structuralize();
 
@@ -291,6 +303,17 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     }
     vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {};
     for (auto &restoreInfo : restoreInfos) {
+        if (SAUtils::IsSABundleName(restoreInfo.name)) {
+            BJsonEntityCaps::BundleInfo info = {.name = restoreInfo.name,
+                                                .versionCode = restoreInfo.versionCode,
+                                                .versionName = restoreInfo.versionName,
+                                                .spaceOccupied = restoreInfo.spaceOccupied,
+                                                .allToBackup = restoreInfo.allToBackup,
+                                                .extensionName = restoreInfo.extensionName,
+                                                .restoreDeps = restoreInfo.restoreDeps};
+            restoreBundleInfos.emplace_back(info);
+            continue;
+        }
         auto it = find_if(bundleInfos.begin(), bundleInfos.end(),
                           [&restoreInfo](const auto &obj) { return obj.name == restoreInfo.name; });
         if (it == bundleInfos.end()) {
@@ -368,11 +391,11 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             if (it == restoreBundleNames.end()) {
                 throw BError(BError::Codes::SA_BUNDLE_INFO_EMPTY, "Can't find bundle name");
             }
-            HILOGD("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
+            HILOGI("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
                    restoreInfo.extensionName.c_str());
             if ((restoreInfo.allToBackup == false &&
                  !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) ||
-                restoreInfo.extensionName.empty()) {
+                (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) {
                 OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, restoreInfo.name);
                 session_->RemoveExtInfo(restoreInfo.name);
                 continue;
@@ -410,7 +433,7 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         HILOGD("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
             restoreInfo.extensionName.c_str());
         if ((restoreInfo.allToBackup == false && !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) ||
-            restoreInfo.extensionName.empty()) {
+            (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) {
             OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, restoreInfo.name);
             session_->RemoveExtInfo(restoreInfo.name);
             continue;
@@ -427,6 +450,8 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
                 bool notifyRet =
                     DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(bundleDetailInfo);
                 HILOGI("Publish event end, notify result is:%{public}d", notifyRet);
+            } else if (bundleDetailInfo.type == UNICAST_TYPE) {
+                session_->SetBackupExtInfo(restoreInfo.name, bundleDetailInfo.detail);
             }
         }
     }
@@ -464,6 +489,53 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
     } catch (...) {
         session_->DecreaseSessionCnt();
         HILOGI("Unexpected exception");
+        return EPERM;
+    }
+}
+
+ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bundleNames,
+                                                   const vector<std::string> &bundleInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
+        VerifyCaller(IServiceReverse::Scenario::BACKUP);
+        std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap =
+            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, session_->GetSessionUserId());
+        auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
+        session_->AppendBundles(bundleNames);
+        for (auto info : backupInfos) {
+            session_->SetBundleDataSize(info.name, info.spaceOccupied);
+            session_->SetBackupExtName(info.name, info.extensionName);
+            if (info.allToBackup == false) {
+                session_->GetServiceReverseProxy()->BackupOnBundleStarted(
+                    BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
+                session_->RemoveExtInfo(info.name);
+            }
+            auto iter = bundleNameDetailMap.find(info.name);
+            if (iter == bundleNameDetailMap.end()) {
+                continue;
+            }
+            BJsonUtil::BundleDetailInfo bundleDetailInfo = iter->second;
+            if (bundleDetailInfo.type == UNICAST_TYPE) {
+                session_->SetBackupExtInfo(info.name, bundleDetailInfo.detail);
+            }
+        }
+        OnStartSched();
+        session_->DecreaseSessionCnt();
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        session_->DecreaseSessionCnt();
+        HILOGE("Failed, errCode = %{public}d", e.GetCode());
+        return e.GetCode();
+    } catch (const exception &e) {
+        session_->DecreaseSessionCnt();
+        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        return EPERM;
+    } catch(...) {
+        session_->DecreaseSessionCnt();
+        HILOGE("Unexpected exception");
         return EPERM;
     }
 }
@@ -570,6 +642,21 @@ ErrCode Service::AppDone(ErrCode errCode)
             HILOGI("will notify clone data, scenario is: %{public}d", scenario);
             if (scenario == IServiceReverse::Scenario::BACKUP) {
                 session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, callerName);
+                auto now = std::chrono::system_clock::now();
+                auto time = std::chrono::system_clock::to_time_t(now);
+                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+                std::stringstream strTime;
+                strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
+                    << (std::setw(INDEX)) << (ms.count() % MS_1000);
+                HiSysEventWrite(
+                    OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
+                    FILE_BACKUP_EVENTS,
+                    OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+                    "PROC_NAME", "ohos.appfileservice",
+                    "BUNDLENAME", callerName,
+                    "PID", getpid(),
+                    "TIME", strTime.str()
+                );
             } else if (scenario == IServiceReverse::Scenario::RESTORE) {
                 session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, callerName);
             }
@@ -601,9 +688,9 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo, BackupRes
             session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, callerName);
             NotifyCloneBundleFinish(callerName);
         } else if (sennario == BackupRestoreScenario::FULL_BACKUP) {
-            session_->GetServiceReverseProxy()->BackupOnResultReport(restoreRetInfo);
+            session_->GetServiceReverseProxy()->BackupOnResultReport(restoreRetInfo, callerName);
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
-            session_->GetServiceReverseProxy()->IncrementalBackupOnResultReport(restoreRetInfo);
+            session_->GetServiceReverseProxy()->IncrementalBackupOnResultReport(restoreRetInfo, callerName);
         }
 
         return BError(BError::Codes::OK);
@@ -616,6 +703,21 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo, BackupRes
         HILOGI("Unexpected exception");
         return EPERM;
     }
+}
+
+ErrCode Service::SAResultReport(const std::string bundleName, const std::string restoreRetInfo,
+    const ErrCode errCode, const BackupRestoreScenario sennario)
+{
+    if (sennario == BackupRestoreScenario::FULL_RESTORE) {
+        session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, bundleName);
+    } else if (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
+        session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, bundleName);
+    } else if (sennario == BackupRestoreScenario::FULL_BACKUP) {
+        session_->GetServiceReverseProxy()->BackupOnResultReport(restoreRetInfo, bundleName);
+    } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
+        session_->GetServiceReverseProxy()->IncrementalBackupOnResultReport(restoreRetInfo, bundleName);
+    }
+    return SADone(errCode, bundleName);
 }
 
 void Service::NotifyCloneBundleFinish(std::string bundleName)
@@ -648,7 +750,9 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         } else {
             throw BError(BError::Codes::SA_INVAL_ARG, "Failed to scenario");
         }
-
+        if (SAUtils::IsSABundleName(bundleName)) {
+            return LaunchBackupSAExtension(bundleName);
+        }
         AAFwk::Want want;
         string backupExtName = session_->GetBackupExtName(bundleName); /* new device app ext name */
         HILOGD("backupExtName: %{public}s, bundleName: %{public}s", backupExtName.data(), bundleName.data());
@@ -675,6 +779,26 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         HILOGI("Unexpected exception");
         return EPERM;
     }
+}
+
+ErrCode Service::LaunchBackupSAExtension(const BundleName &bundleName)
+{
+    string extInfo = session_->GetBackupExtInfo(bundleName);
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    if (SAUtils::IsSABundleName(bundleName)) {
+        auto saBackUpConnection = session_->GetSAExtConnection(bundleName);
+        std::shared_ptr<SABackupConnection> saConnection = saBackUpConnection.lock();
+        if (saConnection == nullptr) {
+            HILOGE("lock sa connection ptr is nullptr");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        if (scenario == IServiceReverse::Scenario::BACKUP) {
+            return saConnection->ConnectBackupSAExt(bundleName, BConstants::EXTENSION_BACKUP, extInfo);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+            return saConnection->ConnectBackupSAExt(bundleName, BConstants::EXTENSION_RESTORE, extInfo);
+        }
+    }
+    return BError(BError::Codes::OK);
 }
 
 ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
@@ -733,7 +857,7 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
         // 重新连接清理缓存
         HILOGE("Clear backup extension data, bundleName: %{public}s", bundleName.data());
         auto backUpConnection = session_->GetExtConnection(bundleName);
-        auto callConnDone = [ptr {wptr(this)}](const string &&bundleName) {
+        auto callConnected = [ptr {wptr(this)}](const string &&bundleName) {
             auto thisPtr = ptr.promote();
             if (!thisPtr) {
                 HILOGW("this pointer is null.");
@@ -745,7 +869,7 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
             }
             thisPtr->ExtConnectDied(bundleName);
         };
-        backUpConnection->SetCallback(callConnDone);
+        backUpConnection->SetCallback(callConnected);
         auto ret = LaunchBackupExtension(bundleName);
         if (ret) {
             ExtConnectDied(bundleName);
@@ -783,6 +907,10 @@ void Service::ExtStart(const string &bundleName)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGE("begin ExtStart, bundle name:%{public}s", bundleName.data());
+        if (SAUtils::IsSABundleName(bundleName)) {
+            BackupSA(bundleName);
+            return;
+        }
         if (IncrementalBackup(bundleName)) {
             return;
         }
@@ -901,20 +1029,32 @@ void Service::ExtConnectDone(string bundleName)
     auto timeoutCallback = [ptr {wptr(this)}, bundleName]() {
         auto thisPtr = ptr.promote();
         if (!thisPtr) {
-            HILOGW("this pointer is null.");
+            HILOGE("ServicePtr is nullptr.");
             return;
         }
         auto sessionPtr = ptr->session_;
-        auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
-        /* Standard Log Output, for testers */
-        HILOGE("Backup <%{public}s> Extension Process Timeout", bundleName.data());
-        sessionPtr->BundleExtTimerStop(bundleName);
-        sessionConnection->DisconnectBackupExtAbility();
+        if (sessionPtr == nullptr) {
+            HILOGE("SessionPtr is nullptr.");
+            return;
+        }
+        if (SAUtils::IsSABundleName(bundleName)) {
+            auto sessionConnection = sessionPtr->GetSAExtConnection(bundleName);
+            shared_ptr<SABackupConnection> saConnection = sessionConnection.lock();
+            if (saConnection == nullptr) {
+                HILOGE("lock sa connection ptr is nullptr");
+                return;
+            }
+            sessionPtr->BundleExtTimerStop(bundleName);
+            saConnection->DisconnectBackupSAExt();
+        } else {
+            auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
+            sessionPtr->BundleExtTimerStop(bundleName);
+            sessionConnection->DisconnectBackupExtAbility();
+        }
         /* Must clear bundle session before call NoticeClientFinish. */
         thisPtr->ClearSessionAndSchedInfo(bundleName);
         thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
     };
-
     try {
         HILOGE("begin %{public}s", bundleName.data());
         session_->BundleExtTimerStart(bundleName, timeoutCallback);
@@ -1057,8 +1197,8 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
         session_->IncreaseSessionCnt();
         session_->SetSessionUserId(GetUserIdDefault());
         auto backupConnection = session_->CreateBackupConnection(bundleName);
-        auto callConnDone = [ptr {wptr(this)}](const string &&bundleName) {
-            HILOGI("callConnDone begin.");
+        auto callConnected = [ptr {wptr(this)}](const string &&bundleName) {
+            HILOGI("callConnected begin.");
             auto thisPtr = ptr.promote();
             if (!thisPtr) {
                 HILOGW("this pointer is null.");
@@ -1066,7 +1206,7 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
             }
             thisPtr->getBackupInfoCondition_.notify_one();
         };
-        backupConnection->SetCallback(callConnDone);
+        backupConnection->SetCallback(callConnected);
         AAFwk::Want want = CreateConnectWant(bundleName);
         auto ret = backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
         if (ret) {
@@ -1135,5 +1275,74 @@ AAFwk::Want Service::CreateConnectWant (BundleName &bundleName)
     want.SetElementName(bundleName, backupExtName);
     want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
     return want;
+}
+
+ErrCode Service::BackupSA(std::string bundleName)
+{
+    HILOGI("BackupSA begin %{public}s", bundleName.c_str());
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    auto backUpConnection = session_->GetSAExtConnection(bundleName);
+    std::shared_ptr<SABackupConnection> saConnection = backUpConnection.lock();
+    if (saConnection == nullptr) {
+        HILOGE("lock sa connection ptr is nullptr");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        auto ret = saConnection->CallBackupSA();
+        session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
+        if (ret) {
+            HILOGI("BackupSA ret is %{public}d", ret);
+            ClearSessionAndSchedInfo(bundleName);
+            NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
+            return BError(ret);
+        }
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), bundleName);
+    }
+    return BError(BError::Codes::OK);
+}
+
+void Service::OnSABackup(const std::string &bundleName, const int &fd, const std::string &result,
+    const ErrCode &errCode)
+{
+    HILOGI("OnSABackup bundleName: %{public}s, fd: %{public}d, result: %{public}s, err: %{public}d",
+        bundleName.c_str(), fd, result.c_str(), errCode);
+    session_->GetServiceReverseProxy()->BackupOnFileReady(bundleName, "", move(fd), errCode);
+    SAResultReport(bundleName, result, errCode, BackupRestoreScenario::FULL_BACKUP);
+}
+
+void Service::OnSARestore(const std::string &bundleName, const std::string &result, const ErrCode &errCode)
+{
+    HILOGI("OnSARestore bundleName: %{public}s, result: %{public}s, err: %{public}d",
+        bundleName.c_str(), result.c_str(), errCode);
+    SAResultReport(bundleName, result, errCode, BackupRestoreScenario::INCREMENTAL_RESTORE);
+}
+
+ErrCode Service::SADone(ErrCode errCode, std::string bundleName)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        if (session_->OnBunleFileReady(bundleName)) {
+            auto backupConnection = session_->GetSAExtConnection(bundleName);
+            std::shared_ptr<SABackupConnection> saConnection = backupConnection.lock();
+            if (saConnection == nullptr) {
+                HILOGE("lock sa connection ptr is nullptr");
+                return BError(BError::Codes::SA_INVAL_ARG);
+            }
+            session_->BundleExtTimerStop(bundleName);
+            saConnection->DisconnectBackupSAExt();
+            ClearSessionAndSchedInfo(bundleName);
+        }
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        return e.GetCode(); // 任意异常产生，终止监听该任务
+    } catch (const exception &e) {
+        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        return EPERM;
+    } catch(...) {
+        HILOGE("Unexpected exception");
+        return EPERM;
+    }
 }
 } // namespace OHOS::FileManagement::Backup

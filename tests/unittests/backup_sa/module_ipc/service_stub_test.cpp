@@ -58,6 +58,8 @@ public:
         AppendBundlesRestoreSession,
         ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, RestoreTypeEnum restoreType, int32_t userId));
     MOCK_METHOD1(AppendBundlesBackupSession, ErrCode(const std::vector<BundleName> &bundleNames));
+    MOCK_METHOD2(AppendBundlesDetailsBackupSession,
+                 ErrCode(const std::vector<BundleName> &bundleNames, const std::vector<std::string> &bundleInfos));
     MOCK_METHOD0(Finish, ErrCode());
     MOCK_METHOD0(Release, ErrCode());
     MOCK_METHOD1(GetLocalCapabilitiesIncremental, UniqueFd(const std::vector<BIncrementalData> &bundleNames));
@@ -65,6 +67,7 @@ public:
     MOCK_METHOD1(AppendBundlesIncrementalBackupSession, ErrCode(const std::vector<BIncrementalData> &bundlesToBackup));
 
     MOCK_METHOD1(PublishIncrementalFile, ErrCode(const BFileInfo &fileInfo));
+    MOCK_METHOD2(PublishSAIncrementalFile, ErrCode(const BFileInfo &fileInfo, UniqueFd fd));
     MOCK_METHOD4(AppIncrementalFileReady, ErrCode(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd,
         int32_t errCode));
     MOCK_METHOD1(AppIncrementalDone, ErrCode(ErrCode errCode));
@@ -285,7 +288,9 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0100, testing::
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppFileReady_0100";
     try {
         MockService service;
-        EXPECT_CALL(service, AppFileReady(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(service, AppFileReady(_, _, _))
+            .WillOnce(Return(BError(BError::Codes::OK)))
+            .WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -296,15 +301,15 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0100, testing::
 
         EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
         EXPECT_TRUE(data.WriteString(FILE_NAME));
+        EXPECT_TRUE(data.WriteBool(true));
         EXPECT_TRUE(data.WriteFileDescriptor(fd));
         EXPECT_EQ(BError(BError::Codes::OK),
                   service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY),
                                           data, reply, option));
-        GTEST_LOG_(INFO) << "ServiceStubTest-begin-CmdAppFileReady Brances";
         MessageParcel brances;
         EXPECT_TRUE(brances.WriteInterfaceToken(IService::GetDescriptor()));
         EXPECT_TRUE(brances.WriteString(FILE_NAME));
-        EXPECT_NE(BError(BError::Codes::OK),
+        EXPECT_EQ(BError(BError::Codes::OK),
                   service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY),
                                           brances, reply, option));
     } catch (...) {

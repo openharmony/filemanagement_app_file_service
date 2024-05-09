@@ -27,7 +27,7 @@ public:
     bool Export() override;
     std::string GetClassName() override;
 
-    static napi_value Constructor(napi_env env, napi_callback_info cbinfo);
+    static napi_value Constructor(napi_env env, napi_callback_info info);
     static napi_value UriToString(napi_env env, napi_callback_info info);
     static napi_value GetFileUriName(napi_env env, napi_callback_info info);
     static napi_value GetFileUriPath(napi_env env, napi_callback_info info);

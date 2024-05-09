@@ -57,6 +57,8 @@ ServiceStub::ServiceStub()
         = &ServiceStub::CmdAppendBundlesDetailsRestoreSession;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION)] =
         &ServiceStub::CmdAppendBundlesBackupSession;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION_DETAILS)] =
+        &ServiceStub::CmdAppendBundlesDetailsBackupSession;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_FINISH)] = &ServiceStub::CmdFinish;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RELSEASE_SESSION)] =
         &ServiceStub::CmdRelease;
@@ -69,6 +71,8 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdAppendBundlesIncrementalBackupSession;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_INCREMENTAL_FILE)] =
         &ServiceStub::CmdPublishIncrementalFile;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_SA_INCREMENTAL_FILE)] =
+        &ServiceStub::CmdPublishSAIncrementalFile;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_INCREMENTAL_FILE_READY)] =
         &ServiceStub::CmdAppIncrementalFileReady;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_INCREMENTAL_DONE)] =
@@ -323,6 +327,25 @@ int32_t ServiceStub::CmdAppendBundlesBackupSession(MessageParcel &data, MessageP
     return BError(BError::Codes::OK);
 }
 
+int32_t ServiceStub::CmdAppendBundlesDetailsBackupSession(MessageParcel &data, MessageParcel &reply)
+{
+    vector<string> bundleNames;
+    if (!data.ReadStringVector(&bundleNames)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
+    }
+
+    vector<string> detailInfos;
+    if (!data.ReadStringVector(&detailInfos)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive detailInfos");
+    }
+
+    int32_t res = AppendBundlesDetailsBackupSession(bundleNames, detailInfos);
+    if (!reply.WriteInt32(res)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
+    }
+    return BError(BError::Codes::OK);
+}
+
 int32_t ServiceStub::CmdFinish(MessageParcel &data, MessageParcel &reply)
 {
     int res = Finish();
@@ -440,6 +463,22 @@ int32_t ServiceStub::CmdPublishIncrementalFile(MessageParcel &data, MessageParce
         return BError(BError::Codes::SA_BROKEN_IPC, "Failed to receive fileInfo");
     }
     int res = PublishIncrementalFile(*fileInfo);
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::SA_BROKEN_IPC, ss.str());
+    }
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdPublishSAIncrementalFile(MessageParcel &data, MessageParcel &reply)
+{
+    unique_ptr<BFileInfo> fileInfo(data.ReadParcelable<BFileInfo>());
+    if (!fileInfo) {
+        return BError(BError::Codes::SA_BROKEN_IPC, "Failed to receive fileInfo");
+    }
+    UniqueFd fd(data.ReadFileDescriptor());
+    int res = PublishSAIncrementalFile(*fileInfo, move(fd));
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;

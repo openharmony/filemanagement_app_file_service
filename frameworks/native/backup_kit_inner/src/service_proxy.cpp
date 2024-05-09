@@ -361,6 +361,37 @@ ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundl
     return reply.ReadInt32();
 }
 
+ErrCode ServiceProxy::AppendBundlesDetailsBackupSession(const vector<BundleName> &bundleNames,
+                                                        const vector<std::string> &detailInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
+
+    if (!data.WriteStringVector(bundleNames)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();
+    }
+
+    if (!data.WriteStringVector(detailInfos)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send detailInfos").GetCode();
+    }
+
+    int32_t ret = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION_DETAILS),
+        data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode ServiceProxy::Finish()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);

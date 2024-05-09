@@ -162,6 +162,36 @@ ErrCode ServiceProxy::PublishIncrementalFile(const BFileInfo &fileInfo)
     return reply.ReadInt32();
 }
 
+ErrCode ServiceProxy::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+
+    if (!data.WriteParcelable(&fileInfo)) {
+        HILOGE("Failed to send the fileInfo");
+        return -EPIPE;
+    }
+
+    if (!data.WriteFileDescriptor(fd)) {
+        HILOGE("Failed to send the fd");
+        return -EPIPE;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    int32_t ret = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_SA_INCREMENTAL_FILE), data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode ServiceProxy::AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd,
     int32_t errCode)
 {

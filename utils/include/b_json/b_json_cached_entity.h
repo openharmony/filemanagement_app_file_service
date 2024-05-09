@@ -58,7 +58,7 @@ public:
     {
         Json::StreamWriterBuilder builder;
         const std::string jsonFileContent = Json::writeString(builder, obj_);
-        HILOGI("Try to persist a Json object, whose content reads: %{public}s", jsonFileContent.c_str());
+        HILOGD("Try to persist a Json object, whose content reads: %{public}s", jsonFileContent.c_str());
 
         BFile::Write(srcFile_, jsonFileContent);
     }

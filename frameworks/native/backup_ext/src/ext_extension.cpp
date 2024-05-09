@@ -48,6 +48,7 @@
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
 #include "i_service.h"
+#include "sandbox_helper.h"
 #include "service_proxy.h"
 #include "tar_file.h"
 #include "untar_file.h"
@@ -297,8 +298,12 @@ ErrCode BackupExtExtension::HandleClear()
 static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(
-        UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)));
+    UniqueFd fd(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
+    if (fd < 0) {
+        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_BACKUP.c_str(), errno);
+        return BError::GetCodeByErrno(errno);
+    }
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     cache.SetExtManage(pkgInfo);
     cachedEntity.Persist();
@@ -322,7 +327,12 @@ static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
 static ErrCode BigFileReady(sptr<IService> proxy)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDONLY)));
+    UniqueFd fd(open(INDEX_FILE_BACKUP.data(), O_RDONLY));
+    if (fd < 0) {
+        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_BACKUP.c_str(), errno);
+        return BError::GetCodeByErrno(errno);
+    }
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     auto pkgInfo = cache.GetExtManageInfo();
 
@@ -556,8 +566,14 @@ static unordered_map<string, struct ReportFileInfo> GetTarIncludes(const string 
     // 获取简报文件内容
     string reportName = GetReportFileName(tarName);
 
+    UniqueFd fd(open(reportName.data(), O_RDONLY));
+    if (fd < 0) {
+        HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
+        return {};
+    }
+
     // 获取简报内容
-    BReportEntity rp(UniqueFd(open(reportName.data(), O_RDONLY)));
+    BReportEntity rp(move(fd));
     return rp.GetReportInfos();
 }
 
@@ -638,6 +654,10 @@ static void RestoreBigFilesForSpecialCloneCloud(ExtManageInfo item)
 
     struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
     UniqueFd fd(open(fileName.data(), O_RDONLY));
+    if (fd < 0) {
+        HILOGE("Failed to open file = %{private}s, err = %{public}d", fileName.c_str(), errno);
+        return;
+    }
     if (futimens(fd.Get(), tv) != 0) {
         HILOGE("Failed to change the file time. %{public}s , %{public}d", fileName.c_str(), errno);
     }
@@ -668,7 +688,12 @@ static ErrCode RestoreFilesForSpecialCloneCloud()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     // 获取索引文件内容
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
+    UniqueFd fd(open(INDEX_FILE_RESTORE.data(), O_RDONLY));
+    if (fd < 0) {
+        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_RESTORE.c_str(), errno);
+        return BError::GetCodeByErrno(errno);
+    }
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManageInfo();
     HILOGI("Start do restore for SpecialCloneCloud.");
@@ -744,6 +769,10 @@ static void RestoreBigFileAfter(const string &fileName,
 
     struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
     UniqueFd fd(open(filePath.data(), O_RDONLY));
+    if (fd < 0) {
+        HILOGE("Failed to open file = %{private}s, err = %{public}d", filePath.c_str(), errno);
+        return;
+    }
     if (futimens(fd.Get(), tv) != 0) {
         HILOGI("failed to change the file time. %{public}s , %{public}d", filePath.c_str(), errno);
     }
@@ -754,7 +783,12 @@ static void RestoreBigFiles(bool appendTargetPath)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     // 获取索引文件内容
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
+    UniqueFd fd(open(INDEX_FILE_RESTORE.data(), O_RDONLY));
+    if (fd < 0) {
+        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_RESTORE.c_str(), errno);
+        return;
+    }
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManageInfo();
     HILOGI("Start Restore Big Files");
@@ -763,8 +797,20 @@ static void RestoreBigFiles(bool appendTargetPath)
             continue;
         }
 
-        string fileName = path + item.hashName;
-        string filePath = appendTargetPath ? (path + item.fileName) : item.fileName;
+        string itemHashName = item.hashName;
+        string itemFileName = item.fileName;
+        // check if item.hasName and fileName need decode by report item attribute
+        string reportPath = GetReportFileName(path + item.hashName);
+        UniqueFd fd(open(reportPath.data(), O_RDONLY));
+        if (fd < 0) {
+            HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportPath.c_str(), errno);
+            throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
+        }
+        BReportEntity rp(move(fd));
+        rp.CheckAndUpdateIfReportLineEncoded(itemFileName);
+
+        string fileName = path + itemHashName;
+        string filePath = appendTargetPath ? (path + itemFileName) : itemFileName;
 
         if (!RestoreBigFilePrecheck(fileName, path, item.hashName, filePath)) {
             continue;
@@ -783,8 +829,13 @@ static void RestoreBigFiles(bool appendTargetPath)
 static void DeleteBackupTars()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    UniqueFd fd(open(INDEX_FILE_RESTORE.data(), O_RDONLY));
+    if (fd < 0) {
+        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_RESTORE.c_str(), errno);
+        return;
+    }
     // The directory include tars and manage.json which would be deleted
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManage();
     auto path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
@@ -806,8 +857,13 @@ static void DeleteBackupTars()
 
 static void DeleteBackupIncrementalTars()
 {
+    UniqueFd fd(open(INDEX_FILE_RESTORE.data(), O_RDONLY));
+    if (fd < 0) {
+        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_RESTORE.c_str(), errno);
+        return;
+    }
     // The directory include tars and manage.json which would be deleted
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY)));
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManage();
     auto path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
@@ -1275,13 +1331,24 @@ static void WriteFile(const string &filename, const map<string, struct ReportFil
 {
     fstream f;
     f.open(filename.data(), ios::out);
+    if (!f) {
+        HILOGE("Failed to open file = %{private}s", filename.c_str());
+        return;
+    }
+
     // 前面2行先填充进去
-    f << "version=1.0&attrNum=7" << endl;
-    f << "path;mode;dir;size;mtime;hash;usertar" << endl;
+    f << "version=1.0&attrNum=8" << endl;
+    f << "path;mode;dir;size;mtime;hash;usertar;encodeFlag" << endl;
     for (auto item : srcFiles) {
         struct ReportFileInfo info = item.second;
-        string str = item.first + ";" + info.mode + ";" + to_string(info.isDir) + ";" + to_string(info.size);
-        str += ";" + to_string(info.mtime) + ";" + info.hash + ";" + to_string(info.userTar);
+        string path = BReportEntity::EncodeReportItem(item.first, info.encodeFlag);
+        string str = path + ";" + info.mode + ";" + to_string(info.isDir) + ";" + to_string(info.size);
+        str += ";" + to_string(info.mtime) + ";" + info.hash + ";" + to_string(info.userTar)+ ";";
+        if (info.encodeFlag) {
+            str += std::to_string(1);
+        } else {
+            str += std::to_string(0);
+        }
         f << str << endl;
     }
     f.close();
@@ -1473,8 +1540,12 @@ static ErrCode IncrementalAllFileReady(const TarMap &pkgInfo,
                                        const map<string, struct ReportFileInfo> &srcFiles,
                                        sptr<IService> proxy)
 {
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(
-        UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)));
+    UniqueFd fdIndex(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
+    if (fdIndex < 0) {
+        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_BACKUP.c_str(), errno);
+        return BError::GetCodeByErrno(errno);
+    }
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(std::move(fdIndex));
     auto cache = cachedEntity.Structuralize();
     cache.SetExtManage(pkgInfo);
     cachedEntity.Persist();
@@ -1555,7 +1626,7 @@ ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
 {
     auto obj = wptr<BackupExtExtension>(this);
     auto ptr = obj.promote();
-    auto callBackup = [ptr](std::string result) {
+    auto callBackup = [ptr](const std::string result) {
         HILOGI("GetBackupInfo callBackup start. result = %{public}s", result.c_str());
         ptr->backupInfo_ = result;
     };

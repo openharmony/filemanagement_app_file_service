@@ -62,10 +62,11 @@ HWTEST_F(NDKFileShareNoPermissionTest, OH_FileShare_PersistPermission_test, Test
 {
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test start";
     char policyUriChar[] = "file://com.example.filesharea/storage";
-    FileShare_PolicyInfo policy = {.uri = policyUriChar,
-                                   .length = sizeof(policyUriChar) - 1,
-                                   .operationMode =
-                                       FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE};
+    FileShare_PolicyInfo policy = {
+        .uri = policyUriChar,
+        .length = sizeof(policyUriChar) - 1,
+        .operationMode = FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE
+    };
     FileShare_PolicyInfo policies[] = {policy};
     unsigned int policiesNum = sizeof(policies) / sizeof(policies[0]);
     FileShare_PolicyErrorResult *result = nullptr;

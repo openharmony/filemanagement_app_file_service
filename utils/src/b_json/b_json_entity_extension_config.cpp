@@ -37,7 +37,7 @@ vector<string> BJsonEntityExtensionConfig::GetIncludes() const
         return {BConstants::PATHES_TO_BACKUP.begin(), BConstants::PATHES_TO_BACKUP.end()};
     }
     if (!obj_.isMember("includes")) {
-        HILOGE("'includes' field not found");
+        HILOGD("'includes' field not found");
         return {BConstants::PATHES_TO_BACKUP.begin(), BConstants::PATHES_TO_BACKUP.end()};
     }
     if (!obj_["includes"].isArray()) {
@@ -67,7 +67,7 @@ vector<string> BJsonEntityExtensionConfig::GetExcludes() const
         return {};
     }
     if (!obj_.isMember("excludes")) {
-        HILOGE("'excludes' field not found");
+        HILOGD("'excludes' field not found");
         return {};
     }
     if (!obj_["excludes"].isArray()) {
@@ -89,7 +89,7 @@ vector<string> BJsonEntityExtensionConfig::GetExcludes() const
 bool BJsonEntityExtensionConfig::GetAllowToBackupRestore() const
 {
     if (!obj_ || !obj_.isMember("allowToBackupRestore") || !obj_["allowToBackupRestore"].isBool()) {
-        HILOGE("Failed to init field allowToBackupRestore");
+        HILOGD("Failed to get field allowToBackupRestore");
         return false;
     }
 
@@ -99,7 +99,7 @@ bool BJsonEntityExtensionConfig::GetAllowToBackupRestore() const
 bool BJsonEntityExtensionConfig::GetFullBackupOnly() const
 {
     if (!obj_ || !obj_.isMember("fullBackupOnly") || !obj_["fullBackupOnly"].isBool()) {
-        HILOGE("Failed to init field fullBackupOnly");
+        HILOGD("Failed to get field fullBackupOnly");
         return false;
     }
 
@@ -109,7 +109,7 @@ bool BJsonEntityExtensionConfig::GetFullBackupOnly() const
 string BJsonEntityExtensionConfig::GetSupportScene() const
 {
     if (!obj_ || !obj_.isMember("supportScene") || !obj_["supportScene"].isString()) {
-        HILOGE("Failed to init field supportScene");
+        HILOGD("Failed to get field supportScene");
         return "";
     }
 
@@ -119,7 +119,7 @@ string BJsonEntityExtensionConfig::GetSupportScene() const
 Json::Value BJsonEntityExtensionConfig::GetExtraInfo() const
 {
     if (!obj_ || !obj_.isMember("extraInfo") || !obj_["extraInfo"].isObject()) {
-        HILOGI("Failed to init field extraInfo");
+        HILOGD("Failed to get field extraInfo");
         return Json::Value();
     }
     
@@ -138,7 +138,11 @@ string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, 
             throw BError(BError::Codes::SA_INVAL_ARG, "Current process is not extension process");
         }
         string jsonFilePath = string(BConstants::BACKUP_CONFIG_EXTENSION_PATH).append(BConstants::BACKUP_CONFIG_JSON);
-        return BFile::ReadFile(UniqueFd(open(jsonFilePath.c_str(), O_RDONLY))).get();
+        UniqueFd fd(open(jsonFilePath.c_str(), O_RDONLY));
+        if (fd < 0) {
+            throw BError(BError::Codes::TOOL_INVAL_ARG, "open json file failed");
+        }
+        return BFile::ReadFile(std::move(fd)).get();
     }
 
     if (getuid() != static_cast<uid_t>(BConstants::BACKUP_UID)) {
@@ -158,13 +162,17 @@ string BJsonEntityExtensionConfig::GetJSonSource(string_view jsonFromRealWorld, 
         HILOGI("Failed to access jsonFilePath : %{public}s", jsonFilePath.c_str());
         return string(jsonFromRealWorld);
     }
-    return BFile::ReadFile(UniqueFd(open(jsonFilePath.c_str(), O_RDONLY))).get();
+    UniqueFd fd(open(jsonFilePath.c_str(), O_RDONLY));
+    if (fd < 0) {
+        throw BError(BError::Codes::TOOL_INVAL_ARG, "open json file failed");
+    }
+    return BFile::ReadFile(std::move(fd)).get();
 }
 
 string BJsonEntityExtensionConfig::GetRestoreDeps() const
 {
     if (!obj_ || !obj_.isMember("restoreDeps") || !obj_["restoreDeps"].isString()) {
-        HILOGE("Failed to init field restoreDeps");
+        HILOGD("Failed to get field restoreDeps");
         return "";
     }
 

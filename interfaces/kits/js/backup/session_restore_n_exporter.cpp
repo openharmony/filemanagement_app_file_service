@@ -23,6 +23,7 @@
 #include "b_incremental_restore_session.h"
 #include "b_ohos/startup/backup_para.h"
 #include "b_resources/b_constants.h"
+#include "b_sa/b_sa_utils.h"
 #include "b_session_restore.h"
 #include "backup_kit_inner.h"
 #include "filemgmt_libhilog.h"
@@ -276,7 +277,7 @@ static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::str
     callbacks->onResultReport.ThreadSafeSchedule(cbCompl);
 }
 
-static bool VerifyParamSuccess(NFuncArg &funcArg, int32_t &fd, std::vector<std::string> &bundleNames,
+static bool VerifyAppendBundlesParam(NFuncArg &funcArg, int32_t &fd, std::vector<std::string> &bundleNames,
     std::vector<std::string> &bundleInfos, napi_env env)
 {
     if (!funcArg.InitArgs(NARG_CNT::TWO, NARG_CNT::THREE)) {
@@ -316,6 +317,52 @@ static bool VerifyParamSuccess(NFuncArg &funcArg, int32_t &fd, std::vector<std::
         return true;
     }
     HILOGI("Third param is callback");
+    return true;
+}
+
+static std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> ParseFileMeta(napi_env env,
+    const NVal &fileMeta)
+{
+    bool succ = false;
+    std::unique_ptr<char[]> bundleName = nullptr;
+    tie(succ, bundleName, ignore) = fileMeta.GetProp(BConstants::BUNDLE_NAME).ToUTF8String();
+    if (!succ) {
+        HILOGE("First argument is not have property bundle name.");
+        return { false, nullptr, nullptr };
+    }
+
+    std::unique_ptr<char[]> fileName = nullptr;
+    tie(succ, fileName, ignore) = fileMeta.GetProp(BConstants::URI).ToUTF8String();
+    if (!succ) {
+        HILOGE("First argument is not have property file name.");
+        return { false, nullptr, nullptr };
+    }
+
+    return { true, move(bundleName), move(fileName) };
+}
+
+static bool VerifyPublishFileParam(NFuncArg &funcArg, std::string &bundleName, std::string &fileName, napi_env env)
+{
+    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
+        return false;
+    }
+
+    NVal fileMeta(env, funcArg[NARG_POS::FIRST]);
+    if (!fileMeta.TypeIs(napi_object)) {
+        HILOGE("First arguments is not an object.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "First arguments is not an object.").GetCode()).ThrowErr(env);
+        return false;
+    }
+    auto [succ, bundle, file] = ParseFileMeta(env, fileMeta);
+    if (!succ) {
+        HILOGE("ParseFileMeta failed.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "ParseFileMeta failed.").GetCode()).ThrowErr(env);
+        return false;
+    }
+    bundleName = string(bundle.get());
+    fileName = string(file.get());
     return true;
 }
 
@@ -381,7 +428,7 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
     std::vector<std::string> bundleNames;
     std::vector<std::string> bundleInfos;
     NFuncArg funcArg(env, cbinfo);
-    if (!VerifyParamSuccess(funcArg, fdRestore, bundleNames, bundleInfos, env)) {
+    if (!VerifyAppendBundlesParam(funcArg, fdRestore, bundleNames, bundleInfos, env)) {
         return nullptr;
     }
     auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
@@ -422,48 +469,13 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
     }
 }
 
-static std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> ParseFileMeta(napi_env env,
-    const NVal &fileMeta)
-{
-    bool succ = false;
-    std::unique_ptr<char[]> bundleName = nullptr;
-    tie(succ, bundleName, ignore) = fileMeta.GetProp(BConstants::BUNDLE_NAME).ToUTF8String();
-    if (!succ) {
-        HILOGE("First argument is not have property bundle name.");
-        return { false, nullptr, nullptr };
-    }
-
-    std::unique_ptr<char[]> fileName = nullptr;
-    tie(succ, fileName, ignore) = fileMeta.GetProp(BConstants::URI).ToUTF8String();
-    if (!succ) {
-        HILOGE("First argument is not have property file name.");
-        return { false, nullptr, nullptr };
-    }
-
-    return { true, move(bundleName), move(fileName) };
-}
-
 napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info cbinfo)
 {
     HILOGD("called SessionRestore::PublishFile begin");
+    std::string bundleName;
+    std::string fileName;
     NFuncArg funcArg(env, cbinfo);
-    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
-        HILOGE("Number of arguments unmatched.");
-        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
-        return nullptr;
-    }
-
-    NVal fileMeta(env, funcArg[NARG_POS::FIRST]);
-    if (!fileMeta.TypeIs(napi_object)) {
-        HILOGE("First arguments is not an object.");
-        NError(BError(BError::Codes::SDK_INVAL_ARG, "First arguments is not an object.").GetCode()).ThrowErr(env);
-        return nullptr;
-    }
-
-    auto [succ, bundleName, fileName] = ParseFileMeta(env, fileMeta);
-    if (!succ) {
-        HILOGE("ParseFileMeta failed.");
-        NError(BError(BError::Codes::SDK_INVAL_ARG, "ParseFileMeta failed.").GetCode()).ThrowErr(env);
+    if (!VerifyPublishFileParam(funcArg, bundleName, fileName, env)) {
         return nullptr;
     }
 
@@ -474,14 +486,17 @@ napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info
         return nullptr;
     }
 
-    auto cbExec = [entity {restoreEntity}, bundleName {string(bundleName.get())},
-        fileName {string(fileName.get())}]() -> NError {
+    auto cbExec = [entity {restoreEntity}, bundleName {bundleName}, fileName {fileName}]() -> NError {
         if (!(entity && (entity->sessionWhole || entity->sessionSheet))) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
         }
         BFileInfo fileInfo(bundleName, fileName, 0);
         if (entity->sessionWhole) {
             return NError(entity->sessionWhole->PublishFile(fileInfo));
+        }
+        if (SAUtils::IsSABundleName(fileName)) {
+            HILOGI("SA %{public}s pushlish file", bundleName.c_str());
+            return NError(entity->sessionSheet->PublishSAFile(fileInfo, UniqueFd(std::atoi(fileName.c_str()))));
         }
         return NError(entity->sessionSheet->PublishFile(fileInfo));
     };

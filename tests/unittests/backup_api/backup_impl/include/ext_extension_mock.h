@@ -47,6 +47,7 @@ public:
         TestManager tm("GetFileHand_GetFd_0100");
         std::string filePath = tm.GetRootDirCurTest().append(fileName);
         UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        reply.WriteBool(true);
         reply.WriteFileDescriptor(fd);
         return BError(BError::Codes::OK);
     }

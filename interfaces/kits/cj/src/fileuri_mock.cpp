@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,9 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef BACKUPSA_FUZZER_H
-#define BACKUPSA_FUZZER_H
+#include "cj_ffi/cj_common_ffi.h"
 
-#define FUZZ_PROJECT_NAME "BackupSaIncrementalFuzzTest"
-
-#endif
+extern "C" {
+FFI_EXPORT int FfiOHOSFILEUriCreateUri = 0;
+FFI_EXPORT int FfiOHOSFILEUriGetPath = 0;
+FFI_EXPORT int FfiOHOSFILEUriGetName = 0;
+FFI_EXPORT int FfiOHOSFILEUriToString = 0;
+FFI_EXPORT int FfiOHOSFILEUriGetUriFromPath = 0;
+}

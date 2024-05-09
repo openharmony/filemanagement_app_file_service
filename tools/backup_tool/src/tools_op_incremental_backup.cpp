@@ -168,9 +168,13 @@ static void OnFileReady(shared_ptr<SessionBckup> ctx, const BFileInfo &fileInfo,
     }
     BFile::SendFile(fdManifest, manifestFd);
     if (fileInfo.fileName == BConstants::EXT_BACKUP_MANAGE) {
-        UniqueFd fullDatFd(open((string(BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR) + fileInfo.owner +
-                                string(BConstants::BACKUP_TOOL_MANIFEST).append(".rp")).data(),
-                                O_RDWR | O_CREAT | O_TRUNC, S_IRWXU));
+        string path = string(BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR) + fileInfo.owner +
+                                string(BConstants::BACKUP_TOOL_MANIFEST).append(".rp");
+        UniqueFd fullDatFd(open(path.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU));
+        if (fullDatFd < 0) {
+            HILOGE("Failed to open rp file = %{private}s, err = %{public}d", path.c_str(), errno);
+            return;
+        }
         BFile::SendFile(fullDatFd, fdManifest);
         ctx->SetIndexFiles(fileInfo.owner, move(fd));
     } else {
@@ -209,7 +213,7 @@ static void OnAllBundlesFinished(shared_ptr<SessionBckup> ctx, ErrCode err)
     ctx->TryNotify();
 }
 
-static void OnResultReport(shared_ptr<SessionBckup> ctx, const std::string resultInfo)
+static void OnResultReport(shared_ptr<SessionBckup> ctx, const std::string &resultInfo)
 {
     printf("OnResultReport, resultInfo = %s\n", resultInfo.c_str());
 }

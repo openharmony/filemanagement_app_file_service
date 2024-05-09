@@ -130,8 +130,10 @@ static bool CheckFileManagerFullMountEnable()
 HWTEST_F(FilePermissionTest, PersistPermission_test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_0000";
-    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_A + "/storage",
-                           .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    UriPolicyInfo infoA = {
+        .uri = "file://" + BUNDLE_A + "/storage",
+        .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE
+    };
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;

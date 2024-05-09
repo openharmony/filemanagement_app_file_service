@@ -40,13 +40,14 @@ void ServiceReverse::BackupOnBundleStarted(int32_t errCode, string bundleName)
     callbacksBackup_.onBundleStarted(errCode, bundleName);
 }
 
-void ServiceReverse::BackupOnResultReport(std::string result)
+void ServiceReverse::BackupOnResultReport(std::string result, std::string bundleName)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onResultReport) {
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
     callbacksBackup_.onResultReport(result);
+    callbacksBackup_.onBundleFinished(BError(BError::Codes::OK), bundleName);
 }
 
 void ServiceReverse::BackupOnBundleFinished(int32_t errCode, string bundleName)

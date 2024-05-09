@@ -26,6 +26,8 @@
 #include "b_json/b_report_entity.h"
 #include "test_manager.h"
 
+#include "src/b_json/b_report_entity.cpp"
+
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
@@ -104,4 +106,125 @@ HWTEST_F(BReportEntityTest, b_report_entity_GetReportInfos_0100, testing::ext::T
     }
     GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_GetReportInfos_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_b_report_entity_SplitStringByChar_0100
+ * @tc.name: b_report_entity_SplitStringByChar_0100
+ * @tc.desc: Test function of SplitStringByChar interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_SplitStringByChar_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_SplitStringByChar_0100";
+    try {
+        string str = "";
+        char sep = ATTR_SEP;
+        auto splits = SplitStringByChar(str, sep);
+        EXPECT_EQ(splits.size(), 0);
+
+        str = "test;";
+        splits = SplitStringByChar(str, sep);
+        EXPECT_EQ(splits.size(), 2);
+
+        str = "test";
+        splits = SplitStringByChar(str, sep);
+        EXPECT_EQ(splits.size(), 1);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by SplitStringByChar. " << e.what();
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_SplitStringByChar_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_report_entity_ParseReportInfo_0100
+ * @tc.name: b_report_entity_ParseReportInfo_0100
+ * @tc.desc: Test function of ParseReportInfo interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_ParseReportInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_ParseReportInfo_0100";
+    try {
+        struct ReportFileInfo fileStat;
+        vector<string> splits;
+        unordered_map<string, int> keys;
+        auto err = ParseReportInfo(fileStat, splits, keys);
+        EXPECT_EQ(err, EPERM);
+
+        fileStat = {};
+        splits = {"/test", "0", "0", "0", "0", "0", "0"};
+        keys.emplace(INFO_MODE, 0);
+        keys.emplace(INFO_DIR, 1);
+        keys.emplace(INFO_SIZE, 2);
+        keys.emplace(INFO_MTIME, 3);
+        keys.emplace(INFO_HASH, 4);
+        keys.emplace(INFO_IS_INCREMENTAL, 5);
+        err = ParseReportInfo(fileStat, splits, keys);
+        EXPECT_EQ(err, ERR_OK);
+
+        fileStat = {};
+        splits = {"test", "0", "1", "0", "0", "0", "1"};
+        keys.clear();
+        keys.emplace(INFO_MODE, 0);
+        keys.emplace(INFO_DIR, 1);
+        keys.emplace(INFO_SIZE, 2);
+        keys.emplace(INFO_MTIME, 3);
+        keys.emplace(INFO_HASH, 4);
+        keys.emplace(INFO_IS_INCREMENTAL, 5);
+        err = ParseReportInfo(fileStat, splits, keys);
+        EXPECT_EQ(err, ERR_OK);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by ParseReportInfo." << e.what();
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_ParseReportInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_report_entity_DealLine_0100
+ * @tc.name: b_report_entity_DealLine_0100
+ * @tc.desc: Test function of DealLine interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_DealLine_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_DealLine_0100";
+    try {
+        unordered_map<string, int> keys;
+        int num = 1;
+        string line = "test\r";
+        unordered_map<string, struct ReportFileInfo> infos;
+        DealLine(keys, num, line, infos);
+        EXPECT_EQ(keys.size(), 1);
+
+        num = INFO_ALIGN_NUM;
+        keys.clear();
+        line = "\r";
+        DealLine(keys, num, line, infos);
+        EXPECT_EQ(infos.size(), 0);
+
+        line = "/test;0;0;0;0;0;0\r";
+        keys.clear();
+        keys.emplace(INFO_MODE, 0);
+        keys.emplace(INFO_DIR, 1);
+        keys.emplace(INFO_SIZE, 2);
+        keys.emplace(INFO_MTIME, 3);
+        keys.emplace(INFO_HASH, 4);
+        keys.emplace(INFO_IS_INCREMENTAL, 5);
+        DealLine(keys, num, line, infos);
+        EXPECT_EQ(infos.size(), 1);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by DealLine. " << e.what();
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_DealLine_0100";
+}
+
 } // namespace OHOS::FileManagement::Backup

@@ -42,7 +42,7 @@ class MockServiceReverse final : public ServiceReverseStub {
 public:
     MOCK_METHOD4(BackupOnFileReady, void(string bundleName, string fileName, int fd, int32_t errCode));
     MOCK_METHOD2(BackupOnBundleStarted, void(int32_t errCode, string bundleName));
-    MOCK_METHOD1(BackupOnResultReport, void(string result));
+    MOCK_METHOD2(BackupOnResultReport, void(string result, std::string bundleName));
     MOCK_METHOD2(BackupOnBundleFinished, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(BackupOnAllBundlesFinished, void(int32_t errCode));
     MOCK_METHOD2(RestoreOnBundleStarted, void(int32_t errCode, std::string bundleName));
@@ -53,7 +53,7 @@ public:
     MOCK_METHOD5(IncrementalBackupOnFileReady,
         void(string bundleName, string fileName, int fd, int manifestFd, int32_t errCode));
     MOCK_METHOD2(IncrementalBackupOnBundleStarted, void(int32_t errCode, string bundleName));
-    MOCK_METHOD1(IncrementalBackupOnResultReport, void(string result));
+    MOCK_METHOD2(IncrementalBackupOnResultReport, void(string result, std::string bundleName));
     MOCK_METHOD2(IncrementalBackupOnBundleFinished, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(IncrementalBackupOnAllBundlesFinished, void(int32_t errCode));
     MOCK_METHOD2(IncrementalRestoreOnBundleStarted, void(int32_t errCode, std::string bundleName));
@@ -163,7 +163,7 @@ HWTEST_F(ServiceReverseStubTest,
     GTEST_LOG_(INFO) << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_BackupOnResultReport_0100";
     try {
         MockServiceReverse service;
-        EXPECT_CALL(service, BackupOnResultReport(_)).WillOnce(Return());
+        EXPECT_CALL(service, BackupOnResultReport(_, _)).WillOnce(Return());
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -531,7 +531,7 @@ HWTEST_F(ServiceReverseStubTest,
         << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_IncrementalBackupOnResultReport_0100";
     try {
         MockServiceReverse service;
-        EXPECT_CALL(service, IncrementalBackupOnResultReport(_)).WillOnce(Return());
+        EXPECT_CALL(service, IncrementalBackupOnResultReport(_, _)).WillOnce(Return());
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;

@@ -73,14 +73,14 @@ public:
     /**
      * @brief Set the Callback object
      *
-     * @param callConnDone
+     * @param callConnected
      */
-    void SetCallback(std::function<void(const std::string &&)> callConnDone);
+    void SetCallback(std::function<void(const std::string &&)> callConnected);
 
 public:
     SvcBackupConnection(std::function<void(const std::string &&)> callDied,
-                        std::function<void(const std::string &&)> callConnDone)
-        : callDied_(callDied), callConnDone_(callConnDone)
+                        std::function<void(const std::string &&)> callConnected)
+        : callDied_(callDied), callConnected_(callConnected)
     {
     }
     ~SvcBackupConnection() override {};
@@ -93,7 +93,7 @@ private:
     sptr<IExtension> backupProxy_;
 
     std::function<void(const std::string &&)> callDied_;
-    std::function<void(const std::string &&)> callConnDone_;
+    std::function<void(const std::string &&)> callConnected_;
 };
 } // namespace OHOS::FileManagement::Backup
 

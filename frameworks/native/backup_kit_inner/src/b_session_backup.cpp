@@ -105,6 +105,16 @@ ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup)
     return proxy->AppendBundlesBackupSession(bundlesToBackup);
 }
 
+ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup, vector<std::string> detailInfos)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+
+    return proxy->AppendBundlesDetailsBackupSession(bundlesToBackup, detailInfos);
+}
+
 ErrCode BSessionBackup::Finish()
 {
     auto proxy = ServiceProxy::GetInstance();

@@ -24,6 +24,7 @@
 #include "b_file_info.h"
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_resources/b_constants.h"
+#include "b_sa/b_sa_utils.h"
 #include "bundle_mgr_client.h"
 #include "filemgmt_libhilog.h"
 #include "install_param.h"
@@ -34,6 +35,7 @@
 #include "module_sched/sched_scheduler.h"
 #include "status_receiver_host.h"
 #include "system_ability_definition.h"
+#include "if_system_ability_manager.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -82,7 +84,7 @@ static tuple<bool, string, string, string, Json::Value> GetAllowAndExtName(
         return {cache.GetAllowToBackupRestore(), ext.name, cache.GetRestoreDeps(), cache.GetSupportScene(),
             cache.GetExtraInfo()};
     }
-    HILOGI("No backup extension ability found");
+    HILOGE("No backup extension ability found");
     return {false, "", "", "", Json::Value()};
 }
 
@@ -115,6 +117,10 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
     auto bms = GetBundleManager();
     for (auto const &bundleName : bundleNames) {
         HILOGI("Begin Get bundleName:%{public}s", bundleName.c_str());
+        if (SAUtils::IsSABundleName(bundleName)) {
+            GetBundleInfoForSA(bundleName, bundleInfos);
+            continue;
+        }
         AppExecFwk::BundleInfo installedBundle;
         if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
             if (bundleNames.size() != SINGLE_BUNDLE_NUM) {
@@ -238,7 +244,7 @@ static bool GenerateBundleStatsIncrease(int32_t userId, const vector<string> &bu
     }
 
     for (size_t i = 0; i < bundleInfos.size(); i++) {
-        HILOGI("BundleMgrAdapter name for %{private}s", bundleInfos[i].name.c_str());
+        HILOGD("BundleMgrAdapter name for %{private}s", bundleInfos[i].name.c_str());
         BJsonEntityCaps::BundleInfo newBundleInfo = {.name = bundleInfos[i].name,
                                                      .versionCode = bundleInfos[i].versionCode,
                                                      .versionName = bundleInfos[i].versionName,
@@ -262,7 +268,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     auto bms = GetBundleManager();
     for (auto const &bundleNameTime : incrementalDataList) {
         auto bundleName = bundleNameTime.bundleName;
-        HILOGI("Begin Get bundleName:%{private}s", bundleName.c_str());
+        HILOGD("Begin get bundleName:%{private}s", bundleName.c_str());
         AppExecFwk::BundleInfo installedBundle;
         if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
             throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle info");
@@ -326,7 +332,9 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         }
     }
     auto bundleInfosNew = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, userId);
+    auto bundleInfosSA = BundleMgrAdapter::GetBundleInfosForSA();
     copy(bundleInfosNew.begin(), bundleInfosNew.end(), back_inserter(bundleInfos));
+    copy(bundleInfosSA.begin(), bundleInfosSA.end(), back_inserter(bundleInfos));
     return bundleInfos;
 }
 
@@ -351,5 +359,50 @@ string BundleMgrAdapter::GetExtName(string bundleName, int32_t userId)
         }
     }
     return "BackupExtensionAbility";
+}
+
+std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForSA()
+{
+    std::vector<int32_t> saIds;
+    vector<BJsonEntityCaps::BundleInfo> saBundleInfos;
+    sptr<ISystemAbilityManager> samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!samgrProxy) {
+        HILOGE("SamgrProxy is nullptr");
+        return saBundleInfos;
+    }
+    int32_t ret = samgrProxy->GetExtensionSaIds(BConstants::EXTENSION_BACKUP, saIds);
+    HILOGI("GetExtensionSaIds ret: %{public}d", ret);
+    for (auto saId : saIds) {
+        saBundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {std::to_string(saId), 0, "", 0, true, "", "", "", ""});
+    }
+    return saBundleInfos;
+}
+
+void BundleMgrAdapter::GetBundleInfoForSA(std::string bundleName, std::vector<BJsonEntityCaps::BundleInfo>& bundleInfos)
+{
+    HILOGI("SA %{public}s GetBundleInfo begin.", bundleName.c_str());
+    std::vector<int32_t> saIds;
+    vector<BJsonEntityCaps::BundleInfo> saBundleInfos;
+    sptr<ISystemAbilityManager> samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!samgrProxy) {
+        HILOGE("SamgrProxy is nullptr");
+        return;
+    }
+    int32_t ret = samgrProxy->GetExtensionSaIds(BConstants::EXTENSION_BACKUP, saIds);
+    if (ret != ERR_OK) {
+        HILOGE("GetExtensionSaIds err,ret %{public}d", ret);
+        return;
+    }
+    if (saIds.empty()) {
+        HILOGE("GetExtensionSaIds result is empty");
+        return;
+    }
+    int32_t saId = std::atoi(bundleName.c_str());
+    if (std::find(saIds.begin(), saIds.end(), saId) == saIds.end()) {
+        HILOGE("SA %{public}d is not surport backup.", saId);
+        return;
+    }
+    bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {bundleName, 0, "", 0, true, "", "", "", ""});
+    HILOGI("SA %{public}s GetBundleInfo end.", bundleName.c_str());
 }
 } // namespace OHOS::FileManagement::Backup

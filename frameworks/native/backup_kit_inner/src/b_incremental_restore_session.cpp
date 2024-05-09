@@ -73,6 +73,15 @@ ErrCode BIncrementalRestoreSession::PublishFile(BFileInfo fileInfo)
     return proxy->PublishIncrementalFile(fileInfo);
 }
 
+ErrCode BIncrementalRestoreSession::PublishSAFile(BFileInfo fileInfo, UniqueFd fd)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+    return proxy->PublishSAIncrementalFile(fileInfo, move(fd));
+}
+
 ErrCode BIncrementalRestoreSession::GetFileHandle(const string &bundleName, const string &fileName)
 {
     auto proxy = ServiceProxy::GetInstance();

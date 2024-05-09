@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -964,4 +964,77 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_3500, te
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_3500";
 }
 
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_3600
+ * @tc.name: b_json_entity_extension_config_3600
+ * @tc.desc: 测试GetSupportScene接口能否成功返回
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: issuesI9JXNH
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_3600, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_3600";
+    try {
+        string_view sv1 = R"({"":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+        auto cache1 = cachedEntity1.Structuralize();
+        string supportScene = cache1.GetSupportScene();
+        EXPECT_EQ(supportScene, "");
+
+        string_view sv2 = R"({"supportScene":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity2(sv2);
+        auto cache2 = cachedEntity2.Structuralize();
+        supportScene = cache2.GetSupportScene();
+        EXPECT_EQ(supportScene, "");
+
+        string_view sv3 = R"({"supportScene":"true"})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity3(sv3);
+        auto cache3 = cachedEntity3.Structuralize();
+        supportScene = cache3.GetSupportScene();
+        EXPECT_EQ(supportScene, "true");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetRestoreDeps.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_3600";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_3700
+ * @tc.name: b_json_entity_extension_config_3700
+ * @tc.desc: 测试GetExtraInfo接口能否成功返回
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: issuesI9JXNH
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_3700, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_3700";
+    try {
+        string_view sv1 = R"({"":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+        auto cache1 = cachedEntity1.Structuralize();
+        auto extraInfo1 = cache1.GetExtraInfo();
+        EXPECT_TRUE(extraInfo1.isNull());
+
+        string_view sv2 = R"({"extraInfo":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity2(sv2);
+        auto cache2 = cachedEntity2.Structuralize();
+        auto extraInfo2 = cache2.GetExtraInfo();
+        EXPECT_TRUE(extraInfo2.isNull());
+
+        string_view sv3 = R"({"extraInfo":{}})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity3(sv3);
+        auto cache3 = cachedEntity3.Structuralize();
+        auto extraInfo3 = cache3.GetExtraInfo();
+        EXPECT_TRUE(extraInfo3.isObject());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetRestoreDeps.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_3700";
+}
 } // namespace OHOS::FileManagement::Backup
