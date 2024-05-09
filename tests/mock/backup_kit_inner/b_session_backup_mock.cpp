@@ -69,9 +69,6 @@ ErrCode BSessionBackup::Start()
     callbacks_.onBundleFinished(0, "com.example.app2backup");
 
     callbacks_.onAllBundlesFinished(0);
-    callbacks_.onBundleStarted(1, "com.example.app2backup");
-    callbacks_.onBundleFinished(1, "com.example.app2backup");
-    callbacks_.onAllBundlesFinished(1);
 
     string filePathTwo = tm.GetRootDirCurTest().append("1.tar");
     UniqueFd fdFile(open(filePathTwo.data(), O_RDONLY | O_CREAT, S_IRWXU));
