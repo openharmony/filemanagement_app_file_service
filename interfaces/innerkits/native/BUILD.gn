@@ -62,6 +62,7 @@ ohos_shared_library("fileshare_native") {
     "c_utils:utils",
     "file_api:filemgmt_libn",
     "hilog:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "napi:ace_napi",
   ]
