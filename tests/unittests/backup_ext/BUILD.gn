@@ -27,6 +27,8 @@ ohos_unittest("tar_file_test") {
 
   sources = [
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_extension.cpp",
@@ -97,6 +99,8 @@ ohos_unittest("untar_file_test") {
 
   sources = [
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_extension.cpp",

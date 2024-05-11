@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ public:
     ~ExtBackupContext() override = default;
 
     static inline size_t CONTEXT_TYPE_ID = std::hash<const char *> {}("extBackupContext");
+    const std::string GetBackupDir();
 
 protected:
     bool IsContext(size_t contextTypeId) override
