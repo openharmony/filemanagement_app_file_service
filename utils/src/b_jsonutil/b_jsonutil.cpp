@@ -26,7 +26,6 @@ using namespace std;
 namespace {
     const static int BUNDLE_INDEX_DEFAULT_VAL = 0;
     const static std::string BUNDLE_INDEX_SPLICE = ":";
-    const static string COMMON_EVENT_TYPE = "broadcast";
 }
 
 BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string &bundleNameStr,
@@ -59,6 +58,7 @@ std::map<std::string, BJsonUtil::BundleDetailInfo> BJsonUtil::BuildBundleInfos(
         HILOGE("bundleNames count is not equals bundleInfos count");
         return bundleNameDetailMap;
     }
+    HILOGI("Start BuildBundleInfos");
     for (size_t i = 0; i < bundleNames.size(); i++) {
         std::string bundleName = bundleNames[i];
         BJsonUtil::BundleDetailInfo bundleDetailInfo;
@@ -85,6 +85,7 @@ std::map<std::string, BJsonUtil::BundleDetailInfo> BJsonUtil::BuildBundleInfos(
         bundleDetailInfos.emplace_back(bundleDetailInfo);
         bundleNameDetailMap[bundleDetailInfo.bundleName] = bundleDetailInfo;
     }
+    HILOGI("End BuildBundleInfos");
     return bundleNameDetailMap;
 }
 
@@ -110,17 +111,21 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, BundleDetailI
             return;
         }
         cJSON *type = cJSON_GetObjectItem(infoItem, "type");
-        if (type && cJSON_IsString(type)) {
-            if (type->valuestring == COMMON_EVENT_TYPE) {
-                bundleDetail.type = type->valuestring;
-            }
+        if (type == nullptr || !cJSON_IsString(type)) {
+            HILOGE("Parse json type element error");
+            cJSON_Delete(root);
+            return;
         }
+        bundleDetail.type = type->valuestring;
         cJSON *details = cJSON_GetObjectItem(infoItem, "details");
-        if (details && cJSON_IsArray(details)) {
-            char *detailInfos = cJSON_Print(details);
-            bundleDetail.detail = std::string(detailInfos);
-            free(detailInfos);
+        if (details == nullptr || !cJSON_IsArray(details)) {
+            HILOGE("Parse json details element error");
+            cJSON_Delete(root);
+            return;
         }
+        char *detailInfos = cJSON_Print(details);
+        bundleDetail.detail = std::string(detailInfos);
+        free(detailInfos);
     }
     cJSON_Delete(root);
 }

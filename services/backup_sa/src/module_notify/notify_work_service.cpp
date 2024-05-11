@@ -38,6 +38,7 @@ bool NotifyWorkService::NotifyBundleDetail(BJsonUtil::BundleDetailInfo bundleDet
     std::string bundleDetail = bundleDetailInfo.detail;
     HILOGI("Start publish event, bundleName is: %{public}s, detail:%{public}s", bundleName.c_str(),
         bundleDetail.c_str());
+    want.SetBundle(bundleName);
     want.SetParam("bundleName", bundleName);
     want.SetParam("userId", bundleDetailInfo.userId);
     want.SetParam("index", bundleDetailInfo.bundleIndex);

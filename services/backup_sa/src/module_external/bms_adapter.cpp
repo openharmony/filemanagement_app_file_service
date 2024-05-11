@@ -76,7 +76,8 @@ static tuple<bool, string, string, string, Json::Value> GetAllowAndExtName(
         vector<string> out;
         AppExecFwk::BundleMgrClient client;
         if (!client.GetResConfigFile(ext, "ohos.extension.backup", out) || out.size() == 0) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Failed to get resconfigfile of bundle " + ext.bundleName);
+            HILOGE("Failed to get resconfigfile of bundle, bundle name is:%{public}s", ext.bundleName.c_str());
+            continue;
         }
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(out[0], ext.bundleName);
         auto cache = cachedEntity.Structuralize();
@@ -170,7 +171,8 @@ static bool GetBackupExtConfig(const vector<AppExecFwk::ExtensionAbilityInfo> &e
         vector<string> out;
         AppExecFwk::BundleMgrClient client;
         if (!client.GetResConfigFile(ext, "ohos.extension.backup", out) || out.size() == 0) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Failed to get resconfigfile of bundle " + ext.bundleName);
+            HILOGE("Failed to get resconfigfile of bundle, bundle name is:%{public}s", ext.bundleName.c_str());
+            continue;
         }
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(out[0], ext.bundleName);
         auto cache = cachedEntity.Structuralize();
