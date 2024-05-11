@@ -26,7 +26,6 @@ using namespace std;
 namespace {
     const static int BUNDLE_INDEX_DEFAULT_VAL = 0;
     const static std::string BUNDLE_INDEX_SPLICE = ":";
-    const static string COMMON_EVENT_TYPE = "broadcast";
 }
 
 BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string &bundleNameStr,
