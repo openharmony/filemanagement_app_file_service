@@ -152,6 +152,11 @@ public:
         return UniqueFd(-1);
     }
 
+    ErrCode GetAppLocalListAndDoIncrementalBackup() override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote) override
     {
         return BError(BError::Codes::OK);

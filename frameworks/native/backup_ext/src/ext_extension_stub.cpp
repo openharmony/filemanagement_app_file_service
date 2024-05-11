@@ -47,6 +47,8 @@ ExtExtensionStub::ExtExtensionStub()
         &ExtExtensionStub::CmdGetIncrementalBackupFileHandle;
     opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_GET_BACKUP_INFO)] =
         &ExtExtensionStub::CmdGetBackupInfo;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_INCREMENTAL_ON_BACKUP)] =
+        &ExtExtensionStub::CmdIncrementalOnBackup;
 }
 
 int32_t ExtExtensionStub::OnRemoteRequest(uint32_t code,
@@ -171,6 +173,17 @@ ErrCode ExtExtensionStub::CmdHandleIncrementalBackup(MessageParcel &data, Messag
     UniqueFd incrementalFd(data.ReadFileDescriptor());
     UniqueFd manifestFd(data.ReadFileDescriptor());
     ErrCode res = HandleIncrementalBackup(move(incrementalFd), move(manifestFd));
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::EXT_BROKEN_IPC, ss.str()).GetCode();
+    }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ExtExtensionStub::CmdIncrementalOnBackup(MessageParcel &data, MessageParcel &reply)
+{
+    ErrCode res = IncrementalOnBackup();
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;

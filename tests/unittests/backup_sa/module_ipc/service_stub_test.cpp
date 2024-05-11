@@ -74,6 +74,7 @@ public:
     MOCK_METHOD2(GetIncrementalFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
     MOCK_METHOD2(GetBackupInfo, ErrCode(string &bundleName, string &result));
     MOCK_METHOD3(UpdateTimer, ErrCode(BundleName &bundleName, uint32_t timeOut, bool &result));
+    MOCK_METHOD0(GetAppLocalListAndDoIncrementalBackup, ErrCode());
     UniqueFd InvokeGetLocalCapabilities()
     {
         if (bCapabilities_) {

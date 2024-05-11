@@ -31,6 +31,7 @@ public:
     ErrCode GetIncrementalFileHandle(const std::string &fileName) override;
     ErrCode PublishIncrementalFile(const std::string &fileName) override;
     ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) override;
+    ErrCode IncrementalOnBackup() override;
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
     ErrCode GetBackupInfo(std::string &result) override;
 

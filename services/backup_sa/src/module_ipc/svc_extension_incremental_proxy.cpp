@@ -101,6 +101,27 @@ ErrCode SvcExtensionProxy::HandleIncrementalBackup(UniqueFd incrementalFd, Uniqu
     return reply.ReadInt32();
 }
 
+ErrCode SvcExtensionProxy::IncrementalOnBackup()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGD("Start");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    data.WriteInterfaceToken(GetDescriptor());
+
+    MessageParcel reply;
+    MessageOption option;
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IExtensionInterfaceCode::CMD_INCREMENTAL_ON_BACKUP),
+                                        data, reply, option);
+    if (ret != NO_ERROR) {
+        HILOGE("Received error %{public}d when doing IPC", ret);
+        return ErrCode(ret);
+    }
+
+    HILOGD("Successful");
+    return BError(BError::Codes::OK);
+}
+
 tuple<UniqueFd, UniqueFd> SvcExtensionProxy::GetIncrementalBackupFileHandle()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);

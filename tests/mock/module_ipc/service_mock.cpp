@@ -164,6 +164,11 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
     return UniqueFd(-1);
 }
 
+ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 {
     return BError(BError::Codes::OK);

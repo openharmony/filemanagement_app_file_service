@@ -78,6 +78,29 @@ UniqueFd ServiceProxy::GetLocalCapabilitiesIncremental(const vector<BIncremental
     return UniqueFd(fd.Release());
 }
 
+ErrCode ServiceProxy::GetAppLocalListAndDoIncrementalBackup()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        HILOGE("Failed to write descriptor");
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
+    int32_t ret = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP),
+        data, reply, option);
+    if (ret != NO_ERROR) {
+        HILOGE("Received error %{public}d when doing IPC", ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, "Received error when doing IPC").GetCode();
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);

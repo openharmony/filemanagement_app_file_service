@@ -760,4 +760,27 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_UpdateTimer_0100, testing::ext::Tes
     EXPECT_EQ(ret, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_UpdateTimer_0100";
 }
+
+/**
+ * @tc.number: SUB_Service_proxy_GetAppLocalListAndDoIncrementalBackup_0100
+ * @tc.name: SUB_Service_proxy_GetAppLocalListAndDoIncrementalBackup_0100
+ * @tc.desc: 测试 GetAppLocalListAndDoIncrementalBackup 执行DoBackup的接口成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetAppLocalListAndDoIncrementalBackup_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetAppLocalListAndDoIncrementalBackup_0100";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+    int32_t ret = proxy_->GetAppLocalListAndDoIncrementalBackup();
+    EXPECT_EQ(ret, BError(BError::Codes::OK));
+    ret = proxy_->GetAppLocalListAndDoIncrementalBackup();
+    EXPECT_NE(ret, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_GetAppLocalListAndDoIncrementalBackup_0100";
+}
 } // namespace OHOS::FileManagement::Backup

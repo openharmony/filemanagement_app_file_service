@@ -127,6 +127,56 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
     }
 }
 
+ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        session_->IncreaseSessionCnt();
+        session_->SetSessionUserId(GetUserIdDefault());
+        std::string bundleName = VerifyCallerAndGetCallerName();
+        auto backUpConnection = session_->GetExtConnection(bundleName);
+        auto proxy = backUpConnection->GetBackupExtProxy();
+        if (!proxy) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+        }
+        int64_t lastTime = session_->GetLastIncrementalTime(bundleName);
+        std::vector<BIncrementalData> bundleNames;
+        bundleNames.emplace_back(BIncrementalData {bundleName, lastTime});
+        BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session_->GetSessionUserId());
+        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId()).
+                      append(bundleName).
+                      append("/").
+                      append(BConstants::BACKUP_STAT_SYMBOL).
+                      append(to_string(lastTime));
+        HILOGD("path = %{public}s", path.c_str());
+        UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP));
+        if (fdLocal < 0) {
+            HILOGD("fdLocal open fail, error = %{public}d", errno);
+            throw BError(BError::Codes::SA_INVAL_ARG, "open local Manifest file failed");
+        }
+        UniqueFd lastManifestFd(session_->GetIncrementalManifestFd(bundleName));
+        auto ret = proxy->HandleIncrementalBackup(move(fdLocal), move(lastManifestFd));
+        if (ret) {
+            ClearSessionAndSchedInfo(bundleName);
+            NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
+        }
+        session_->DecreaseSessionCnt();
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        session_->DecreaseSessionCnt();
+        HILOGE("GetAppLocalListAndDoIncrementalBackup failed, errCode = %{public}d", e.GetCode());
+        return e.GetCode();
+    } catch (const exception &e) {
+        session_->DecreaseSessionCnt();
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
+        return EPERM;
+    } catch (...) {
+        session_->DecreaseSessionCnt();
+        HILOGI("Unexpected exception");
+        return EPERM;
+    }
+}
+
 ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -371,18 +421,7 @@ bool Service::IncrementalBackup(const string &bundleName)
         throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
     }
     if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
-        //  本地全量数据
-        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId()).
-                      append(bundleName).
-                      append("/").
-                      append(BConstants::BACKUP_STAT_SYMBOL).
-                      append(to_string(session_->GetLastIncrementalTime(bundleName)));
-        HILOGI("path = %{public}s", path.c_str());
-        UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP));
-        // BFile::SendFile(incrementalFd, fdLocal);
-        //  云上存在的数据
-        UniqueFd lastManifestFd(session_->GetIncrementalManifestFd(bundleName));
-        auto ret = proxy->HandleIncrementalBackup(move(fdLocal), move(lastManifestFd));
+        auto ret = proxy->IncrementalOnBackup();
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
         if (ret) {
             ClearSessionAndSchedInfo(bundleName);

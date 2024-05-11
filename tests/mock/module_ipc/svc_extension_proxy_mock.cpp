@@ -63,6 +63,11 @@ ErrCode SvcExtensionProxy::HandleIncrementalBackup(UniqueFd incrementalFd, Uniqu
     return 0;
 }
 
+ErrCode SvcExtensionProxy::IncrementalOnBackup()
+{
+    return 0;
+}
+
 tuple<UniqueFd, UniqueFd> SvcExtensionProxy::GetIncrementalBackupFileHandle()
 {
     return {UniqueFd(-1), UniqueFd(-1)};

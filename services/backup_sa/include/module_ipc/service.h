@@ -59,6 +59,7 @@ public:
     ErrCode Release() override;
 
     UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) override;
+    ErrCode GetAppLocalListAndDoIncrementalBackup() override;
     ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote) override;
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) override;
 
