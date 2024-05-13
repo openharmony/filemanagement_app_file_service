@@ -131,7 +131,7 @@ ohos_unittest("b_json_test") {
 
   defines = [
     "LOG_TAG=\"app_file_service\"",
-    "LOG_DOMAIN=0xD200000",
+    "LOG_DOMAIN=0xD004303",
     "private = public",
     "protected = public",
   ]
