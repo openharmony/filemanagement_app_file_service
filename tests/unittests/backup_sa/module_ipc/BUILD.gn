@@ -21,7 +21,15 @@ ohos_unittest("module_ipc_test") {
 
   sources = [
     "${path_backup_mock}/module_ipc/app_gallery_dispose_proxy_mock.cpp",
+    "${path_backup_mock}/module_ipc/message_parcel_mock.cpp",
     "${path_backup_mock}/timer/timer_mock.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/service_incremental_reverse_proxy.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/service_reverse_proxy.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/service_stub.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/svc_backup_connection.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_incremental_proxy.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_proxy.cpp",
     "service_reverse_proxy_test.cpp",
     "service_stub_test.cpp",
     "svc_backup_connection_test.cpp",
@@ -29,15 +37,17 @@ ohos_unittest("module_ipc_test") {
   ]
 
   include_dirs = [
+    "${path_backup_mock}/module_ipc",
+    "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/services/backup_sa/include",
-    "${path_base}/include",
     "${path_backup}/tests/unittests/backup_api/backup_impl/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_base}/include",
+    "${path_ipc}/interfaces/innerkits/ipc_core/include",
   ]
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
-    "${path_backup}/services/backup_sa:backup_sa",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "//third_party/googletest:gmock_main",
@@ -50,6 +60,7 @@ ohos_unittest("module_ipc_test") {
     "c_utils:utils",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -57,12 +68,17 @@ ohos_unittest("module_ipc_test") {
   ]
 
   sanitize = {
-    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false
     blocklist = "${path_backup}/cfi_blocklist.txt"
   }
+
+  defines = [
+    "LOG_TAG=\"app_file_service\"",
+    "LOG_DOMAIN=0xD004303",
+    "private = public",
+  ]
 
   use_exceptions = true
 }
@@ -121,7 +137,6 @@ ohos_unittest("backup_service_test") {
   ]
 
   sanitize = {
-    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false
@@ -231,7 +246,6 @@ ohos_unittest("backup_service_scheduler_test") {
   ]
 
   sanitize = {
-    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false
