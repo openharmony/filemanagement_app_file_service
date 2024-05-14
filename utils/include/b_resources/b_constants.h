@@ -102,6 +102,8 @@ static inline std::string_view BACKUP_TOOL_LINK_DIR = "/data/backup";
 static inline std::string_view BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR = "/data/backup/incrementalreceived/";
 static inline std::string_view BACKUP_TOOL_MANIFEST = "/manifest";
 static inline std::string_view BACKUP_TOOL_INCREMENTAL = "/incremental";
+static inline std::string BACKUP_DIR_PRE = "data/storage/";
+static inline std::string CONTEXT_ELS[] = {"el1", "el2"};
 
 // SA Ext
 constexpr int BACKUP_DEFAULT_SA_ID = -1;
