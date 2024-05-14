@@ -293,7 +293,6 @@ ErrCode ServiceProxy::GetIncrementalFileHandle(const std::string &bundleName, co
 
     MessageParcel reply;
     MessageOption option;
-    option.SetFlags(MessageOption::TF_ASYNC);
     int32_t ret = Remote()->SendRequest(
         static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_INCREMENTAL_FILE_NAME), data, reply, option);
     if (ret != NO_ERROR) {
