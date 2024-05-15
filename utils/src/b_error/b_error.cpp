@@ -43,10 +43,13 @@ string BError::WrapMessageWithExtraInfos(const char *fileName,
         string msg;
         HiviewDFX::DfxDumpCatcher().DumpCatch(getprocpid(), syscall(SYS_gettid), msg);
         ss << endl << msg;
+        string res = ss.str();
+        (void)HILOG_IMPL(LOG_CORE, LOG_ERROR, LOG_DOMAIN, LOG_TAG, "%{public}s", res.c_str());
+        return res;
     }
 
     string res = ss.str();
-    (void)HILOG_IMPL(LOG_CORE, LOG_ERROR, LOG_DOMAIN, LOG_TAG, "%{public}s", res.c_str());
+    (void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, LOG_DOMAIN, LOG_TAG, "%{public}s", res.c_str());
     return res;
 }
 

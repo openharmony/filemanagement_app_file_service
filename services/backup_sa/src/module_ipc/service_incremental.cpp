@@ -292,12 +292,12 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
         }
 
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
-            fd = session_->OnBunleExtManageInfo(callerName, move(fd));
+            fd = session_->OnBundleExtManageInfo(callerName, move(fd));
         }
-        HILOGI("reverse: Will notify IncrementalBackupOnFileReady");
+        HILOGD("reverse: Will notify IncrementalBackupOnFileReady");
         session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(callerName, fileName, move(fd),
                                                                          move(manifestFd), errCode);
-        if (session_->OnBunleFileReady(callerName, fileName)) {
+        if (session_->OnBundleFileReady(callerName, fileName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
@@ -333,7 +333,7 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         string callerName = VerifyCallerAndGetCallerName();
-        if (session_->OnBunleFileReady(callerName)) {
+        if (session_->OnBundleFileReady(callerName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {

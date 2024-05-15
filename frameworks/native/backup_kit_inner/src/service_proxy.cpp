@@ -450,7 +450,7 @@ sptr<IService> ServiceProxy::GetInstance()
 void ServiceProxy::InvaildInstance()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("invalid instance");
+    HILOGD("invalid instance");
     unique_lock<mutex> lock(proxyMutex_);
     serviceProxy_ = nullptr;
 }
