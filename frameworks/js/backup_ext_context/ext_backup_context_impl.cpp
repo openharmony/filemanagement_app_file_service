@@ -15,6 +15,9 @@
 
 #include "native_engine/native_engine.h"
 
+#define EXTERN_C_VISIBILITY_DEFAULT extern "C" __attribute__((visibility("default")))
+#define EXTERN_C_CONSTRUCTOR extern "C" __attribute__((constructor))
+
 extern const char _binary_backup_extension_context_js_start[];
 extern const char _binary_backup_extension_context_js_end[];
 extern const char _binary_backup_extension_context_abc_start[];
@@ -25,14 +28,13 @@ static napi_module _module = {
     .nm_filename = "application/libbackupextensioncontext_napi.so/backup_extension_context.js",
     .nm_modname = "application.BackupExtensionContext",
 };
-extern "C" __attribute__((constructor))
-void NAPI_application_BackupExtensionContext_AutoRegister()
+
+EXTERN_C_CONSTRUCTOR void NAPI_application_BackupExtensionContext_AutoRegister()
 {
     napi_module_register(&_module);
 }
 
-extern "C" __attribute__((visibility("default")))
-void NAPI_application_BackupExtensionContext_GetJSCode(const char **buf, int *bufLen)
+EXTERN_C_VISIBILITY_DEFAULT void NAPI_application_BackupExtensionContext_GetJSCode(const char **buf, int *bufLen)
 {
     if (buf != nullptr) {
         *buf = _binary_backup_extension_context_js_start;
@@ -44,8 +46,7 @@ void NAPI_application_BackupExtensionContext_GetJSCode(const char **buf, int *bu
 }
 
 // extension_context JS register
-extern "C" __attribute__((visibility("default")))
-void NAPI_application_BackupExtensionContext_GetABCCode(const char **buf, int *buflen)
+EXTERN_C_VISIBILITY_DEFAULT void NAPI_application_BackupExtensionContext_GetABCCode(const char **buf, int *buflen)
 {
     if (buf != nullptr) {
         *buf = _binary_backup_extension_context_abc_start;
