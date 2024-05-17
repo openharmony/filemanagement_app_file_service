@@ -18,6 +18,7 @@
 #include "macro.h"
 #include "common_func.h"
 #include "securec.h"
+#include <cinttypes>
 
 using namespace OHOS::FFI;
 
@@ -45,7 +46,7 @@ int64_t FfiOHOSFILEUriCreateUri(const char* uriOrPath)
     LOGI("FILEURI_TEST::FfiOHOSFILEUriCreateUri");
     auto nativeUri = FFIData::Create<FileUriImpl>(uriOrPath);
     int64_t id = nativeUri->GetID();
-    LOGI("FILEURI_TEST::FfiOHOSFILEUriCreateUri %{public}lld", id);
+    LOGI("FILEURI_TEST::FfiOHOSFILEUriCreateUri %{public}" PRId64, id);
     return id;
 }
 
