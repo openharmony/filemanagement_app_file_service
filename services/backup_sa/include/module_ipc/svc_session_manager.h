@@ -159,7 +159,7 @@ public:
      * @return true 分发已完成
      * @return false 分发未完成
      */
-    bool OnBunleFileReady(const std::string &bundleName, const std::string &fileName = "");
+    bool OnBundleFileReady(const std::string &bundleName, const std::string &fileName = "");
 
     /**
      * @brief 设置backup manage.json 信息
@@ -169,7 +169,7 @@ public:
      * @return UniqueFd 返回manage.json 文件描述符
      * @throw BError::Codes::SA_INVAL_ARG 获取异常
      */
-    UniqueFd OnBunleExtManageInfo(const std::string &bundleName, UniqueFd fd);
+    UniqueFd OnBundleExtManageInfo(const std::string &bundleName, UniqueFd fd);
 
     /**
      * @brief Remove backup extension info

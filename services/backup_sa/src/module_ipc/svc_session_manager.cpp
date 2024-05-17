@@ -100,7 +100,7 @@ void SvcSessionManager::VerifyBundleName(string &bundleName)
         ss << "Could not find the " << bundleName << " from current session";
         throw BError(BError::Codes::SA_REFUSED_ACT, ss.str());
     }
-    HILOGE("Succeed to verify the bundleName");
+    HILOGD("Succeed to verify the bundleName");
 }
 
 sptr<IServiceReverse> SvcSessionManager::GetServiceReverseProxy()
@@ -131,13 +131,13 @@ void SvcSessionManager::SetSessionUserId(int32_t userId)
     impl_.userId = userId;
 }
 
-bool SvcSessionManager::OnBunleFileReady(const string &bundleName, const string &fileName)
+bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string &fileName)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-    HILOGI("Begin, bundleName name is:%{public}s", bundleName.c_str());
+    HILOGD("Begin, bundleName name is:%{private}s", bundleName.c_str());
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
         stringstream ss;
@@ -163,11 +163,11 @@ bool SvcSessionManager::OnBunleFileReady(const string &bundleName, const string 
             return true;
         }
     }
-    HILOGI("End, bundleName name is:%{public}s", bundleName.c_str());
+    HILOGD("End, bundleName name is:%{private}s", bundleName.c_str());
     return false;
 }
 
-UniqueFd SvcSessionManager::OnBunleExtManageInfo(const string &bundleName, UniqueFd fd)
+UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, UniqueFd fd)
 {
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -182,7 +182,7 @@ UniqueFd SvcSessionManager::OnBunleExtManageInfo(const string &bundleName, Uniqu
 
     for (auto &fileName : info) {
         HILOGE("fileName %{public}s", fileName.data());
-        OnBunleFileReady(bundleName, fileName);
+        OnBundleFileReady(bundleName, fileName);
     }
 
     unique_lock<shared_mutex> lock(lock_);
@@ -521,7 +521,7 @@ bool SvcSessionManager::IsOnAllBundlesFinished()
         bool isAllBundlesRestored = SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
         isAllBundlesFinished = (isAllBundlesFinished && isAllBundlesRestored);
     }
-    HILOGI("isAllBundlesFinished:%{public}d", isAllBundlesFinished);
+    HILOGD("isAllBundlesFinished:%{public}d", isAllBundlesFinished);
     return isAllBundlesFinished;
 }
 
