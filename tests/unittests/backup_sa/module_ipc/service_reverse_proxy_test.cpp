@@ -22,6 +22,7 @@
 #include "b_error/b_error.h"
 #include "b_file_info.h"
 #include "iservice_registry.h"
+#include "message_parcel_mock.h"
 #include "module_ipc/service_reverse_proxy.h"
 #include "service_reverse_mock.h"
 #include "test_manager.h"
@@ -40,23 +41,29 @@ const string RESULT_REPORT = "result_report";
 
 class ServiceReverseProxyTest : public testing::Test {
 public:
-    static void SetUpTestCase(void) {};
-    static void TearDownTestCase() {};
-    void SetUp() override;
-    void TearDown() override;
-    shared_ptr<ServiceReverseProxy> proxy_ = nullptr;
-    sptr<ServiceReverseMock> mock_ = nullptr;
+    static void SetUpTestCase(void);
+    static void TearDownTestCase();
+    void SetUp() override {};
+    void TearDown() override {};
+public:
+    static inline shared_ptr<ServiceReverseProxy> proxy_ = nullptr;
+    static inline sptr<ServiceReverseMock> mock_ = nullptr;
+    static inline shared_ptr<MessageParcelMock> messageParcelMock_ = nullptr;
 };
 
-void ServiceReverseProxyTest::SetUp()
+void ServiceReverseProxyTest::SetUpTestCase(void)
 {
     mock_ = sptr(new ServiceReverseMock());
     proxy_ = make_shared<ServiceReverseProxy>(mock_);
+    messageParcelMock_ = make_shared<MessageParcelMock>();
+    MessageParcelMock::messageParcel = messageParcelMock_;
 }
-void ServiceReverseProxyTest::TearDown()
+void ServiceReverseProxyTest::TearDownTestCase()
 {
     mock_ = nullptr;
     proxy_ = nullptr;
+    MessageParcelMock::messageParcel = nullptr;
+    messageParcelMock_ = nullptr;
 }
 
 /**
@@ -72,6 +79,11 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
 {
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnFileReady_0100";
     try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
@@ -80,11 +92,152 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
         std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
         UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
         proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, fd, 0);
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnFileReady.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_BackupOnFileReady_0101
+ * @tc.name: SUB_ServiceReverse_proxy_BackupOnFileReady_0101
+ * @tc.desc: Test function of BackupOnFileReady interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9OVHB
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnFileReady_0101";
+    try {
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+            proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(false));
+            proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnFileReady_0101";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_BackupOnFileReady_0102
+ * @tc.name: SUB_ServiceReverse_proxy_BackupOnFileReady_0102
+ * @tc.desc: Test function of BackupOnFileReady interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9OVHB
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnFileReady_0102";
+    try {
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+            proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(false));
+            proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+            proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnFileReady_0102";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_BackupOnFileReady_0103
+ * @tc.name: SUB_ServiceReverse_proxy_BackupOnFileReady_0103
+ * @tc.desc: Test function of BackupOnFileReady interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9OVHB
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_0103, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnFileReady_0103";
+    try {
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnFileReady_0103";
 }
 
 /**
@@ -100,15 +253,76 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleStarted
 {
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnBundleStarted_0100";
     try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
         proxy_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnBundleStarted.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnBundleStarted_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_BackupOnBundleStarted_0101
+ * @tc.name: SUB_ServiceReverse_proxy_BackupOnBundleStarted_0101
+ * @tc.desc: Test function of BackupOnBundleStarted interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleStarted_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnBundleStarted_0101";
+    try {
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            proxy_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+            proxy_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+            proxy_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            proxy_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnBundleStarted.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnBundleStarted_0101";
 }
 
 /**
@@ -124,15 +338,76 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleFinishe
 {
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnBundleFinished_0100";
     try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
         proxy_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnBundleFinished.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnBundleFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_BackupOnBundleFinished_0101
+ * @tc.name: SUB_ServiceReverse_proxy_BackupOnBundleFinished_0101
+ * @tc.desc: Test function of BackupOnBundleFinished interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleFinished_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnBundleFinished_0101";
+    try {
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            proxy_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+            proxy_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+            proxy_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            proxy_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnBundleFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnBundleFinished_0101";
 }
 
 /**
@@ -150,15 +425,150 @@ HWTEST_F(ServiceReverseProxyTest,
 {
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnAllBundlesFinished_0100";
     try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
         proxy_->BackupOnAllBundlesFinished(BError(BError::Codes::OK));
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnAllBundlesFinished.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnAllBundlesFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_BackupOnAllBundlesFinished_0101
+ * @tc.name: SUB_ServiceReverse_proxy_BackupOnAllBundlesFinished_0101
+ * @tc.desc: Test function of BackupOnAllBundlesFinished interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9OVHB
+ */
+HWTEST_F(ServiceReverseProxyTest,
+         SUB_ServiceReverse_proxy_BackupOnAllBundlesFinished_0101,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnAllBundlesFinished_0101";
+    try {
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            proxy_->BackupOnAllBundlesFinished(BError(BError::Codes::OK));
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+            proxy_->BackupOnAllBundlesFinished(BError(BError::Codes::OK));
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            proxy_->BackupOnAllBundlesFinished(BError(BError::Codes::OK));
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnAllBundlesFinished_0101";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_BackupOnResultReport_0100
+ * @tc.name: SUB_ServiceReverse_proxy_BackupOnResultReport_0100
+ * @tc.desc: Test function of BackupOnResultReport interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnResultReport_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnResultReport_0100";
+    try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        std::string bundleName = "app01";
+        proxy_->BackupOnResultReport(RESULT_REPORT, bundleName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnResultReport_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_BackupOnResultReport_0101
+ * @tc.name: SUB_ServiceReverse_proxy_BackupOnResultReport_0101
+ * @tc.desc: Test function of BackupOnResultReport interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9OVHB
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnResultReport_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnResultReport_0101";
+    try {
+        std::string bundleName = "app01";
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            proxy_->BackupOnResultReport(RESULT_REPORT, bundleName);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+            proxy_->BackupOnResultReport(RESULT_REPORT, bundleName);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            proxy_->BackupOnResultReport(RESULT_REPORT, bundleName);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            proxy_->BackupOnResultReport(RESULT_REPORT, bundleName);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnResultReport_0101";
 }
 
 /**
@@ -174,15 +584,76 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnBundleStarte
 {
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_RestoreOnBundleStarted_0100";
     try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
         proxy_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by RestoreOnBundleStarted.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_RestoreOnBundleStarted_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_RestoreOnBundleStarted_0101
+ * @tc.name: SUB_ServiceReverse_proxy_RestoreOnBundleStarted_0101
+ * @tc.desc: Test function of RestoreOnBundleStarted interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9OVHB
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnBundleStarted_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_RestoreOnBundleStarted_0101";
+    try {
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            proxy_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+            proxy_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+            proxy_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            proxy_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by RestoreOnBundleStarted.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_RestoreOnBundleStarted_0101";
 }
 
 /**
