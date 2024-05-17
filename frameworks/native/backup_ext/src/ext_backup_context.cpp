@@ -18,8 +18,6 @@
 #include "b_resources/b_constants.h"
 
 namespace OHOS::FileManagement::Backup {
-const std::string BACKUP_DIR = "/data/storage/el2/backup/";
-
 const std::string ExtBackupContext::GetBackupDir()
 {
     int area = GetArea();
