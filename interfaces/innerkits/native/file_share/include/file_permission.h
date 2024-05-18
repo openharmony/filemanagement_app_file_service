@@ -92,7 +92,7 @@ private:
                                                                  vector<bool> &errorResults);
     static int32_t CheckUriPersistentPermission(uint64_t tokenId,
                                                 const vector<UriPolicyInfo> &uriPolicies,
-                                                vector<bool> &errorResults)
+                                                vector<bool> &errorResults);
 #endif
 };
 } // namespace AppFileService
