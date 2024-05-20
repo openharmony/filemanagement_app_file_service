@@ -201,6 +201,12 @@ ohos_unittest("backup_service_session_test") {
     "storage_service:storage_manager_sa_proxy",
   ]
 
+  defines = [
+    "LOG_TAG=\"app_file_service\"",
+    "LOG_DOMAIN=0xD004303",
+    "private = public",
+  ]
+
   use_exceptions = true
 }
 
