@@ -70,21 +70,21 @@ IServiceReverse::Scenario SvcSessionManager::GetScenario()
     return impl_.scenario;
 }
 
-bool SvcSessionManager::OnBunleFileReady(const string &bundleName, const string &fileName)
+bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string &fileName)
 {
-    GTEST_LOG_(INFO) << "OnBunleFileReady";
+    GTEST_LOG_(INFO) << "OnBundleFileReady";
     g_nFileReadyNum++;
     if (g_nFileReadyNum % FILE_NUM == SCHED_NUM) {
-        GTEST_LOG_(INFO) << "OnBunleFileReady is true";
+        GTEST_LOG_(INFO) << "OnBundleFileReady is true";
         return true;
     }
-    GTEST_LOG_(INFO) << "OnBunleFileReady is false";
+    GTEST_LOG_(INFO) << "OnBundleFileReady is false";
     return false;
 }
 
-UniqueFd SvcSessionManager::OnBunleExtManageInfo(const string &bundleName, UniqueFd fd)
+UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, UniqueFd fd)
 {
-    GTEST_LOG_(INFO) << "OnBunleExtManageInfo";
+    GTEST_LOG_(INFO) << "OnBundleExtManageInfo";
     return UniqueFd(-1);
 }
 

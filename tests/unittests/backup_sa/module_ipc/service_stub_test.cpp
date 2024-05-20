@@ -18,13 +18,15 @@
 #include <fcntl.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <message_parcel.h>
+#include <memory>
 #include <sys/stat.h>
 #include <sys/types.h>
 
 #include "b_error/b_error.h"
 #include "b_resources/b_constants.h"
+#include "ipc_types.h"
 #include "i_service.h"
+#include "message_parcel_mock.h"
 #include "module_ipc/service_stub.h"
 #include "service_reverse_mock.h"
 #include "test_manager.h"
@@ -39,7 +41,7 @@ const string BUNDLE_NAME = "com.example.app2backup";
 const string FILE_NAME = "1.tar";
 } // namespace
 
-class MockService final : public ServiceStub {
+class ServiceMock final : public ServiceStub {
 public:
     MOCK_METHOD1(InitRestoreSession, ErrCode(sptr<IServiceReverse> remote));
     MOCK_METHOD1(InitBackupSession, ErrCode(sptr<IServiceReverse> remote));
@@ -63,6 +65,7 @@ public:
     MOCK_METHOD0(Finish, ErrCode());
     MOCK_METHOD0(Release, ErrCode());
     MOCK_METHOD1(GetLocalCapabilitiesIncremental, UniqueFd(const std::vector<BIncrementalData> &bundleNames));
+    MOCK_METHOD0(GetAppLocalListAndDoIncrementalBackup, ErrCode());
     MOCK_METHOD1(InitIncrementalBackupSession, ErrCode(sptr<IServiceReverse> remote));
     MOCK_METHOD1(AppendBundlesIncrementalBackupSession, ErrCode(const std::vector<BIncrementalData> &bundlesToBackup));
 
@@ -74,30 +77,85 @@ public:
     MOCK_METHOD2(GetIncrementalFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
     MOCK_METHOD2(GetBackupInfo, ErrCode(string &bundleName, string &result));
     MOCK_METHOD3(UpdateTimer, ErrCode(BundleName &bundleName, uint32_t timeOut, bool &result));
-    MOCK_METHOD0(GetAppLocalListAndDoIncrementalBackup, ErrCode());
-    UniqueFd InvokeGetLocalCapabilities()
-    {
-        if (bCapabilities_) {
-            return UniqueFd(-1);
-        }
-        TestManager tm("MockService_GetFd_0100");
-        std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
-        UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
-        bCapabilities_ = true;
-        return fd;
-    }
-
-private:
-    bool bCapabilities_ = {false};
 };
 
 class ServiceStubTest : public testing::Test {
 public:
-    static void SetUpTestCase(void) {};
-    static void TearDownTestCase() {};
+    static void SetUpTestCase(void);
+    static void TearDownTestCase();
     void SetUp() override {};
     void TearDown() override {};
+public:
+    static inline shared_ptr<MessageParcelMock> messageParcelMock = nullptr;
+    static inline shared_ptr<ServiceMock> service = nullptr;
+    static inline shared_ptr<IfaceCastMock> castMock = nullptr;
+    static inline sptr<ServiceReverseMock> remote = nullptr;
 };
+
+void ServiceStubTest::SetUpTestCase(void)
+{
+    remote = sptr(new ServiceReverseMock());
+    service = make_shared<ServiceMock>();
+    messageParcelMock = make_shared<MessageParcelMock>();
+    MessageParcelMock::messageParcel = messageParcelMock;
+    castMock = std::make_shared<IfaceCastMock>();
+    IfaceCastMock::cast = castMock;
+}
+void ServiceStubTest::TearDownTestCase()
+{
+    remote = nullptr;
+    service = nullptr;
+    MessageParcelMock::messageParcel = nullptr;
+    messageParcelMock = nullptr;
+    IfaceCastMock::cast = nullptr;
+    castMock = nullptr;
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_OnRemoteRequest_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_OnRemoteRequest_0100
+ * @tc.desc: Test function of OnRemoteRequest interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9OVHB
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_OnRemoteRequest_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_OnRemoteRequest_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInterfaceToken()).WillOnce(Return(u16string()));
+            service->OnRemoteRequest(0, data, reply, option);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            const std::u16string descriptor = ServiceStub::GetDescriptor();
+            EXPECT_CALL(*messageParcelMock, ReadInterfaceToken()).WillOnce(Return(descriptor));
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+            service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_FILE_NAME),
+                data, reply, option);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        const std::u16string descriptor = ServiceStub::GetDescriptor();
+        EXPECT_CALL(*messageParcelMock, ReadInterfaceToken()).WillOnce(Return(descriptor));
+        auto ret = service->OnRemoteRequest(-1, data, reply, option);
+        EXPECT_EQ(ret, IPC_STUB_UNKNOW_TRANS_ERR);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by InitRestoreSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_OnRemoteRequest_0100";
+}
 
 /**
  * @tc.number: SUB_backup_sa_ServiceStub_InitRestoreSession_0100
@@ -105,28 +163,49 @@ public:
  * @tc.desc: Test function of InitRestoreSession interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitRestoreSession_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitRestoreSession_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_InitRestoreSession_0100";
     try {
-        MockService service;
-        EXPECT_CALL(service, InitRestoreSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(nullptr));
+            service->CmdInitRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
 
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        sptr<ServiceReverseMock> remote = sptr(new ServiceReverseMock());
-        EXPECT_TRUE(data.WriteRemoteObject(remote->AsObject().GetRefPtr()));
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+            EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(nullptr));
+            service->CmdInitRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
 
-        EXPECT_EQ(
-            BError(BError::Codes::OK),
-            service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_RESTORE_SESSION),
-                                    data, reply, option));
-        remote = nullptr;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+            EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
+            EXPECT_CALL(*service, InitRestoreSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdInitRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+        EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
+        EXPECT_CALL(*service, InitRestoreSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdInitRestoreSession(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by InitRestoreSession.";
@@ -140,27 +219,49 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitRestoreSession_0100, tes
  * @tc.desc: Test function of InitBackupSession interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitBackupSession_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitBackupSession_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_InitBackupSession_0100";
     try {
-        MockService service;
-        EXPECT_CALL(service, InitBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
-        sptr<ServiceReverseMock> remote = sptr(new ServiceReverseMock());
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(nullptr));
+            service->CmdInitBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
 
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_TRUE(data.WriteRemoteObject(remote->AsObject().GetRefPtr()));
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+            EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(nullptr));
+            service->CmdInitBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
 
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_BACKUP_SESSION),
-                                          data, reply, option));
-        remote = nullptr;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+            EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
+            EXPECT_CALL(*service, InitBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdInitBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+        EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
+        EXPECT_CALL(*service, InitBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdInitBackupSession(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by InitBackupSession.";
@@ -174,23 +275,28 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitBackupSession_0100, test
  * @tc.desc: Test function of Start interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Start_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Start_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_Start_0100";
     try {
-        MockService service;
-        EXPECT_CALL(service, Start()).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
+        try {
+            EXPECT_CALL(*service, Start()).WillOnce(Return(BError(BError::Codes::OK)));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdStart(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
 
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START), data, reply,
-                                          option));
+        EXPECT_CALL(*service, Start()).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdStart(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by Start.";
@@ -204,38 +310,28 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Start_0100, testing::ext::Te
  * @tc.desc: Test function of GetLocalCapabilities interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetLocalCapabilities_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetLocalCapabilities_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_GetLocalCapabilities_0100";
     try {
-        sptr<MockService> serviceSptr = sptr(new MockService());
-        EXPECT_CALL(*serviceSptr, GetLocalCapabilities())
-            .Times(2)
-            .WillOnce(Invoke(serviceSptr.GetRefPtr(), &MockService::InvokeGetLocalCapabilities))
-            .WillOnce(Invoke(serviceSptr.GetRefPtr(), &MockService::InvokeGetLocalCapabilities));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
+        try {
+            EXPECT_CALL(*service, GetLocalCapabilities()).WillOnce(Return(UniqueFd(0)));
+            EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(false));
+            service->CmdGetLocalCapabilities(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
 
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-
-        EXPECT_EQ(
-            BError(BError::Codes::OK),
-            serviceSptr->OnRemoteRequest(
-                static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES), data, reply, option));
-        UniqueFd fd(reply.ReadFileDescriptor());
-        EXPECT_GT(fd, BError(BError::Codes::OK));
-        GTEST_LOG_(INFO) << "ServiceStubTest-CmdGetLocalCapabilities Brances";
-        MessageParcel brances;
-        EXPECT_TRUE(brances.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_NE(BError(BError::Codes::OK),
-                  serviceSptr->OnRemoteRequest(
-                      static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES), brances, reply,
-                      option));
-        serviceSptr = nullptr;
+        EXPECT_CALL(*service, GetLocalCapabilities()).WillOnce(Return(UniqueFd(0)));
+        EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(true));
+        auto ret = service->CmdGetLocalCapabilities(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by GetLocalCapabilities.";
@@ -249,25 +345,42 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetLocalCapabilities_0100, t
  * @tc.desc: Test function of PublishFile interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_PublishFile_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_PublishFile_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_PublishFile_0100";
     try {
-        MockService service;
-        EXPECT_CALL(service, PublishFile(_)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+            service->CmdPublishFile(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
 
-        BFileInfo fileInfo {BUNDLE_NAME, FILE_NAME, -1};
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_TRUE(data.WriteParcelable(&fileInfo));
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_FILE), data,
-                                          reply, option));
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*service, PublishFile(_)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdPublishFile(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, PublishFile(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdPublishFile(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by PublishFile.";
@@ -278,41 +391,60 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_PublishFile_0100, testing::e
 /**
  * @tc.number: SUB_backup_sa_ServiceStub_AppFileReady_0100
  * @tc.name: SUB_backup_sa_ServiceStub_AppFileReady_0100
- * @tc.desc: Test function of AppFileReady interface for SUCCESS.
+ * @tc.desc: Test function of AppFileReady interface for FAILURE.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppFileReady_0100";
     try {
-        MockService service;
-        EXPECT_CALL(service, AppFileReady(_, _, _))
-            .WillOnce(Return(BError(BError::Codes::OK)))
-            .WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+            service->CmdAppFileReady(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
 
-        TestManager tm("ServiceStub_GetFd_0200");
-        std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
-        UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(-1));
+            service->CmdAppFileReady(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
 
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_TRUE(data.WriteString(FILE_NAME));
-        EXPECT_TRUE(data.WriteBool(true));
-        EXPECT_TRUE(data.WriteFileDescriptor(fd));
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY),
-                                          data, reply, option));
-        MessageParcel brances;
-        EXPECT_TRUE(brances.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_TRUE(brances.WriteString(FILE_NAME));
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY),
-                                          brances, reply, option));
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+            EXPECT_CALL(*service, AppFileReady(_, _, _)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdAppFileReady(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(false));
+            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+            EXPECT_CALL(*service, AppFileReady(_, _, _)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdAppFileReady(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppFileReady.";
@@ -321,29 +453,72 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0100, testing::
 }
 
 /**
+ * @tc.number: SUB_backup_sa_ServiceStub_AppFileReady_0101
+ * @tc.name: SUB_backup_sa_ServiceStub_AppFileReady_0101
+ * @tc.desc: Test function of AppFileReady interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppFileReady_0101";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(false));
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+        EXPECT_CALL(*service, AppFileReady(_, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdAppFileReady(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppFileReady_0101";
+}
+
+/**
  * @tc.number: SUB_backup_sa_ServiceStub_AppDone_0100
  * @tc.name: SUB_backup_sa_ServiceStub_AppDone_0100
  * @tc.desc: Test function of AppDone interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppDone_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppDone_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppDone_0100";
     try {
-        MockService service;
-        EXPECT_CALL(service, AppDone(_)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadBool(_)).WillOnce(Return(false));
+            service->CmdAppDone(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
 
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_TRUE(data.WriteInt32(BError(BError::Codes::OK)));
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_DONE), data,
-                                          reply, option));
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadBool(_)).WillOnce(Return(true));
+            EXPECT_CALL(*service, AppDone(_)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdAppDone(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadBool(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppDone(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdAppDone(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppDone.";
@@ -357,27 +532,35 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppDone_0100, testing::ext::
  * @tc.desc: Test function of GetFileHandle interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetFileHandle_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetFileHandle_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_GetFileHandle_0100";
     try {
-        MockService service;
-        EXPECT_CALL(service, GetFileHandle(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
-        option.SetFlags(MessageOption::TF_ASYNC);
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+            service->CmdGetFileHandle(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
 
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
-        EXPECT_TRUE(data.WriteString(FILE_NAME));
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_FILE_NAME), data,
-                                          reply, option));
-        EXPECT_NE(BError(BError::Codes::OK), service.OnRemoteRequest(3333, data, reply, option));
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            service->CmdGetFileHandle(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*service, GetFileHandle(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        auto ret = service->CmdGetFileHandle(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by GetFileHandle.";
@@ -388,36 +571,44 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetFileHandle_0100, testing:
 /**
  * @tc.number: SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100
  * @tc.name: SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100
- * @tc.desc: Test function of AppendBundlesRestoreSession interface for SUCCESS.
+ * @tc.desc: Test function of AppendBundlesRestoreSession interface for FAILURE.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6URNZ
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100";
     try {
-        MockService service;
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(-1));
+            service->CmdAppendBundlesRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
 
-        vector<BundleName> bundleNames;
-        bundleNames.push_back(BUNDLE_NAME);
-        TestManager tm("ServiceStub_GetFd_0300");
-        std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
-        UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(false));
+            service->CmdAppendBundlesRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
 
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_TRUE(data.WriteFileDescriptor(fd));
-        EXPECT_TRUE(data.WriteStringVector(bundleNames));
-        EXPECT_TRUE(data.WriteInt32(0));
-        EXPECT_TRUE(data.WriteInt32(-1));
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(
-                      static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION), data,
-                      reply, option));
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+            service->CmdAppendBundlesRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesRestoreSession.";
@@ -425,45 +616,76 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_
     GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100";
 }
 
-
 /**
  * @tc.number: SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0101
  * @tc.name: SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0101
- * @tc.desc: Test function of AppendBundlesRestoreSession interface for SUCCESS.
+ * @tc.desc: Test function of AppendBundlesRestoreSession interface for FAILURE.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6URNZ
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0101, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0101, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100";
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0101";
     try {
-        MockService service;
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            service->CmdAppendBundlesRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
 
-        vector<BundleName> bundleNames;
-        bundleNames.push_back(BUNDLE_NAME);
-        TestManager tm("ServiceStub_GetFd_0300");
-        std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
-        UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
-
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_TRUE(data.WriteFileDescriptor(fd));
-        EXPECT_TRUE(data.WriteStringVector(bundleNames));
-        EXPECT_TRUE(data.WriteInt32(0));
-        EXPECT_TRUE(data.WriteInt32(-1));
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(
-                      static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION), data,
-                      reply, option));
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*service, AppendBundlesRestoreSession(_, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdAppendBundlesRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesRestoreSession.";
     }
-    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0100";
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0102
+ * @tc.name: SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0102
+ * @tc.desc: Test function of AppendBundlesRestoreSession interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0102";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppendBundlesRestoreSession(_, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdAppendBundlesRestoreSession(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesRestoreSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_0102";
 }
 
 /**
@@ -472,28 +694,38 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_
  * @tc.desc: Test function of AppendBundlesBackupSession interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6URNZ
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesBackupSession_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesBackupSession_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesBackupSession_0100";
     try {
-        MockService service;
-        EXPECT_CALL(service, AppendBundlesBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(false));
+            service->CmdAppendBundlesBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
 
-        vector<BundleName> bundleNames;
-        bundleNames.push_back(BUNDLE_NAME);
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
+            EXPECT_CALL(*service, AppendBundlesBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdAppendBundlesBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
 
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_TRUE(data.WriteStringVector(bundleNames));
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(
-                      static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION), data,
-                      reply, option));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppendBundlesBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdAppendBundlesBackupSession(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesBackupSession.";
@@ -504,26 +736,31 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesBackupSession_0
 /**
  * @tc.number: SUB_backup_sa_ServiceStub_Finish_0100
  * @tc.name: SUB_backup_sa_ServiceStub_Finish_0100
- * @tc.desc: Test function of AppendBundlesBackupSession interface for SUCCESS.
+ * @tc.desc: Test function of Finish interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6URNZ
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Finish_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Finish_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_Finish_0100";
     try {
-        MockService service;
-        EXPECT_CALL(service, Finish()).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
+        try {
+            EXPECT_CALL(*service, Finish()).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdFinish(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
 
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_FINISH), data, reply,
-                                          option));
+        EXPECT_CALL(*service, Finish()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdFinish(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by Finish.";
@@ -540,20 +777,25 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Finish_0100, testing::ext::T
  * @tc.level Level 1
  * @tc.require: I6URNZ
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Release_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Release_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_Release_0100";
     try {
-        MockService service;
-        EXPECT_CALL(service, Release()).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
+        try {
+            EXPECT_CALL(*service, Release()).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdRelease(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
 
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RELSEASE_SESSION),
-                                          data, reply, option));
+        EXPECT_CALL(*service, Release()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdRelease(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by Release.";
@@ -567,25 +809,47 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Release_0100, testing::ext::
  * @tc.desc: Test function of GetBackupInfo interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6URNZ
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetBackupInfo_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetBackupInfo_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_GetBackupInfo_0100";
     try {
-        MockService service;
-        EXPECT_CALL(service, GetBackupInfo(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
-        std::string bundleName = "com.example.app2backup";
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_TRUE(data.WriteString(bundleName));
-        EXPECT_EQ(BError(BError::Codes::OK),
-                  service.OnRemoteRequest(
-                      static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_INFO), data,
-                      reply, option));
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+            service->CmdGetBackupInfo(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*service, GetBackupInfo(_, _)).WillOnce(Return(-1));
+            service->CmdGetBackupInfo(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*service, GetBackupInfo(_, _)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteString(_)).WillOnce(Return(false));
+            service->CmdGetBackupInfo(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, GetBackupInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteString(_)).WillOnce(Return(true));
+        auto ret = service->CmdGetBackupInfo(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by GetBackupInfo.";
@@ -599,25 +863,41 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetBackupInfo_0100, testing:
  * @tc.desc: Test function of UpdateTimer interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6URNZ
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_UpdateTimer_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_UpdateTimer_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_UpdateTimer_0100";
     try {
-        MockService service;
-        EXPECT_CALL(service, UpdateTimer(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
         MessageParcel data;
         MessageParcel reply;
-        MessageOption option;
-        std::string bundleName = "com.example.app2backup";
-        uint32_t timeOut = 30000;
-        EXPECT_TRUE(data.WriteInterfaceToken(IService::GetDescriptor()));
-        EXPECT_TRUE(data.WriteString(bundleName));
-        EXPECT_TRUE(data.WriteUint32(timeOut));
-        EXPECT_EQ(BError(BError::Codes::OK), service.OnRemoteRequest(
-            static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER), data, reply, option));
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+            service->CmdUpdateTimer(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(false));
+            service->CmdUpdateTimer(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*service, UpdateTimer(_, _, _)).WillOnce(Return(-1));
+            service->CmdUpdateTimer(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by UpdateTimer.";

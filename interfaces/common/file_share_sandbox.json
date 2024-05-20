@@ -15,6 +15,9 @@
             "sandbox-path" : "/storage/Users/currentUser/",
             "src-path" : "/mnt/hmdfs/<currentUserId>/account/device_view/<networkId>/files/Docs/"
         }, {
+            "sandbox-path" : "/storage/hmdfs/",
+            "src-path" : "/mnt/data/<currentUserId>/hmdfs/"
+        }, {
             "sandbox-path" : "/storage/External/",
             "src-path" : "/mnt/data/external/"
         }, {

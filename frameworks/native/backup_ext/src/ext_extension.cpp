@@ -225,6 +225,16 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
     return ERR_OK;
 }
 
+static string GetIncrementalFileHandlePath()
+{
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
+        string str = string("Failed to create restore folder. ").append(std::generic_category().message(errno));
+        throw BError(BError::Codes::EXT_INVAL_ARG, str);
+    }
+    return path;
+}
+
 ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -240,12 +250,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
             return GetIncreFileHandleForSpecialVersion(fileName);
         }
 
-        string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
-        if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
-            string str = string("Failed to create restore folder. ").append(std::generic_category().message(errno));
-            throw BError(BError::Codes::EXT_INVAL_ARG, str);
-        }
-
+        string path = GetIncrementalFileHandlePath();
         string tarName = path + fileName;
         if (access(tarName.c_str(), F_OK) == 0) {
             throw BError(BError::Codes::EXT_INVAL_ARG, string("The file already exists"));
@@ -270,6 +275,9 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         }
         HILOGI("extension: Will notify AppIncrementalFileReady");
         auto proxy = ServiceProxy::GetInstance();
+        if (proxy == nullptr) {
+            throw BError(BError::Codes::EXT_BROKEN_IPC, string("Failed to AGetInstance"));
+        }
         auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd), errCode);
         if (ret != ERR_OK) {
             HILOGI("Failed to AppIncrementalFileReady %{public}d", ret);

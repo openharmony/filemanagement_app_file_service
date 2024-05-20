@@ -17,7 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_EXT_BACKUP_H
 
 #include "b_resources/b_constants.h"
-#include "ext_backup_context.h"
+#include "ext_backup_context_js.h"
 #include "extension_base.h"
 #include "runtime.h"
 #include "want.h"

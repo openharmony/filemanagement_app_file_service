@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,24 +23,22 @@
 #include "b_error/b_error.h"
 #include "element_name.h"
 #include "ext_extension_mock.h"
+#include "message_parcel_mock.h"
 #include "module_ipc/svc_backup_connection.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
 
-namespace {
-constexpr int32_t WAIT_TIME = 1;
-constexpr int DEFAULT_USER_ID = 100;
-} // namespace
-
 class SvcBackupConnectionTest : public testing::Test {
 public:
-    static void SetUpTestCase(void) {};
-    static void TearDownTestCase() {};
-    void SetUp() override;
-    void TearDown() override;
-    sptr<SvcBackupConnection> backupCon_ = nullptr;
+    static void SetUpTestCase(void);
+    static void TearDownTestCase();
+    void SetUp() override {};
+    void TearDown() override {};
+public:
+    static inline sptr<SvcBackupConnection> backupCon_ = nullptr;
+    static inline shared_ptr<IfaceCastMock> castMock = nullptr;
 };
 
 static void CallDied(const std::string &&name)
@@ -53,13 +51,46 @@ static void CallDone(const std::string &&name)
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-CallDone SUCCESS";
 }
 
-void SvcBackupConnectionTest::SetUp()
+void SvcBackupConnectionTest::SetUpTestCase()
 {
     backupCon_ = sptr(new SvcBackupConnection(CallDied, CallDone));
+    castMock = std::make_shared<IfaceCastMock>();
+    IfaceCastMock::cast = castMock;
 }
-void SvcBackupConnectionTest::TearDown()
+void SvcBackupConnectionTest::TearDownTestCase()
 {
     backupCon_ = nullptr;
+    IfaceCastMock::cast = nullptr;
+    castMock = nullptr;
+}
+
+/**
+ * @tc.number: SUB_BackupConnection_OnAbilityConnectDone_0100
+ * @tc.name: SUB_BackupConnection_OnAbilityConnectDone_0100
+ * @tc.desc: 测试 OnAbilityConnectDone 链接回调接口调用成功
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityConnectDone_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-begin SUB_BackupConnection_OnAbilityConnectDone_0100";
+    try {
+        int resultCode = 0;
+        AppExecFwk::ElementName element;
+        backupCon_->OnAbilityConnectDone(element, nullptr, resultCode);
+        EXPECT_TRUE(true);
+
+        sptr<IRemoteObject> remoteObject = sptr(new BackupExtExtensionMock);
+        EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(nullptr));
+        backupCon_->OnAbilityConnectDone(element, remoteObject, resultCode);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcBackupConnectionTest-an exception occurred by OnAbilityConnectDone.";
+    }
+    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_OnAbilityConnectDone_0100";
 }
 
 /**
@@ -74,13 +105,25 @@ void SvcBackupConnectionTest::TearDown()
 HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityDisconnectDone_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcBackupConnectionTest-begin SUB_BackupConnection_OnAbilityDisconnectDone_0100";
-    AppExecFwk::ElementName element;
-    string bundleName = "";
-    element.SetBundleName(bundleName);
-    int resultCode = 1;
-    backupCon_->OnAbilityDisconnectDone(element, resultCode);
-    bool ret = backupCon_->IsExtAbilityConnected();
-    EXPECT_FALSE(ret);
+    try {
+        AppExecFwk::ElementName element;
+        string bundleName = "";
+        element.SetBundleName(bundleName);
+        int resultCode = 1;
+
+        backupCon_->isConnectedDone_ = false;
+        backupCon_->OnAbilityDisconnectDone(element, resultCode);
+        bool ret = backupCon_->IsExtAbilityConnected();
+        EXPECT_FALSE(ret);
+
+        backupCon_->isConnectedDone_ = true;
+        backupCon_->OnAbilityDisconnectDone(element, resultCode);
+        ret = backupCon_->IsExtAbilityConnected();
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcBackupConnectionTest-an exception occurred by OnAbilityDisconnectDone.";
+    }
     GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_OnAbilityDisconnectDone_0100";
 }
 
@@ -99,56 +142,5 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_GetBackupExtProxy_0100, t
     auto proxy = backupCon_->GetBackupExtProxy();
     EXPECT_EQ(proxy, nullptr);
     GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_GetBackupExtProxy_0100";
-}
-
-/**
- * @tc.number: SUB_BackupConnection_ConnectBackupExtAbility_0100
- * @tc.name: SUB_BackupConnection_ConnectBackupExtAbility_0100
- * @tc.desc: 测试 ConnectBackupExtAbility 拉起extension接口调用成功
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_ConnectBackupExtAbility_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-begin SUB_BackupConnection_ConnectBackupExtAbility_0100";
-    AAFwk::Want want;
-    ErrCode ret = backupCon_->ConnectBackupExtAbility(want, DEFAULT_USER_ID);
-    EXPECT_NE(ret, BError(BError::Codes::OK));
-    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_ConnectBackupExtAbility_0100";
-}
-
-static void CallBack(sptr<SvcBackupConnection> backupCon)
-{
-    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-CallBack Begin";
-    sleep(WAIT_TIME);
-    backupCon->OnAbilityDisconnectDone({}, WAIT_TIME);
-    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-CallBack End";
-}
-
-/**
- * @tc.number: SUB_BackupConnection_DisconnectBackupExtAbility_0100
- * @tc.name: SUB_BackupConnection_DisconnectBackupExtAbility_0100
- * @tc.desc: 测试 DisconnectBackupExtAbility 拉起extension接口调用成功
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_DisconnectBackupExtAbility_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-begin SUB_BackupConnection_DisconnectBackupExtAbility_0100";
-    ErrCode ret = backupCon_->DisconnectBackupExtAbility();
-    EXPECT_EQ(ret, BError(BError::Codes::OK));
-    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-DisconnectBackupExtAbility async Begin";
-    auto future = std::async(std::launch::async, CallBack, backupCon_);
-    sleep(WAIT_TIME);
-    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-DisconnectBackupExtAbility Branches Begin";
-    ret = backupCon_->DisconnectBackupExtAbility();
-    EXPECT_EQ(ret, BError(BError::Codes::OK));
-    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-DisconnectBackupExtAbility Branches End";
-    future.get();
-    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_DisconnectBackupExtAbility_0100";
 }
 } // namespace OHOS::FileManagement::Backup

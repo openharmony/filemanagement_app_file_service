@@ -591,12 +591,12 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
             throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not valid");
         }
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
-            fd = session_->OnBunleExtManageInfo(callerName, move(fd));
+            fd = session_->OnBundleExtManageInfo(callerName, move(fd));
         }
 
         session_->GetServiceReverseProxy()->BackupOnFileReady(callerName, fileName, move(fd), errCode);
 
-        if (session_->OnBunleFileReady(callerName, fileName)) {
+        if (session_->OnBundleFileReady(callerName, fileName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
@@ -630,7 +630,7 @@ ErrCode Service::AppDone(ErrCode errCode)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         string callerName = VerifyCallerAndGetCallerName();
-        if (session_->OnBunleFileReady(callerName)) {
+        if (session_->OnBundleFileReady(callerName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
@@ -722,7 +722,7 @@ ErrCode Service::SAResultReport(const std::string bundleName, const std::string 
 
 void Service::NotifyCloneBundleFinish(std::string bundleName)
 {
-    if (session_->OnBunleFileReady(bundleName)) {
+    if (session_->OnBundleFileReady(bundleName)) {
         auto backUpConnection = session_->GetExtConnection(bundleName);
         auto proxy = backUpConnection->GetBackupExtProxy();
         if (!proxy) {
@@ -1322,7 +1322,7 @@ ErrCode Service::SADone(ErrCode errCode, std::string bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_->OnBunleFileReady(bundleName)) {
+        if (session_->OnBundleFileReady(bundleName)) {
             auto backupConnection = session_->GetSAExtConnection(bundleName);
             std::shared_ptr<SABackupConnection> saConnection = backupConnection.lock();
             if (saConnection == nullptr) {
