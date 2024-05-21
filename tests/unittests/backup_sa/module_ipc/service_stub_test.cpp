@@ -906,41 +906,610 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_UpdateTimer_0100, testing::e
 }
 
 /**
- * @tc.number: SUB_backup_sa_ServiceStub_UpdateTimer_0101
- * @tc.name: SUB_backup_sa_ServiceStub_UpdateTimer_0101
- * @tc.desc: Test function of UpdateTimer interface for SUCCESS.
+ * @tc.number: SUB_backup_sa_ServiceStub_AppendBundlesDetailsRestoreSession_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_AppendBundlesDetailsRestoreSession_0100
+ * @tc.desc: Test function of AppendBundlesDetailsRestoreSession interface for FAILURE.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I6URNZ
  */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_UpdateTimer_0101, testing::ext::TestSize.Level1)
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesDetailsRestoreSession_0100,
+    testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_UpdateTimer_0101";
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesDetailsRestoreSession_0100";
     try {
         MessageParcel data;
         MessageParcel reply;
         try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
-            EXPECT_CALL(*service, UpdateTimer(_, _, _)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteBool(_)).WillOnce(Return(false));
-            service->CmdUpdateTimer(data, reply);
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(-1));
+            service->CmdAppendBundlesDetailsRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(false));
+            service->CmdAppendBundlesDetailsRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            service->CmdAppendBundlesDetailsRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+            service->CmdAppendBundlesDetailsRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesDetailsRestoreSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppendBundlesDetailsRestoreSession_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_AppendBundlesDetailsRestoreSession_0101
+ * @tc.name: SUB_backup_sa_ServiceStub_AppendBundlesDetailsRestoreSession_0101
+ * @tc.desc: Test function of AppendBundlesDetailsRestoreSession interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesDetailsRestoreSession_0101,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesDetailsRestoreSession_0101";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            service->CmdAppendBundlesDetailsRestoreSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*service, AppendBundlesRestoreSession(_, _, _, _, _)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdAppendBundlesDetailsRestoreSession(data, reply);
             EXPECT_TRUE(false);
         } catch (BError &err) {
             EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
         }
 
-        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
-        EXPECT_CALL(*service, UpdateTimer(_, _, _)).WillOnce(Return(0));
-        EXPECT_CALL(*messageParcelMock, WriteBool(_)).WillOnce(Return(true));
-        auto ret = service->CmdUpdateTimer(data, reply);
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppendBundlesRestoreSession(_, _, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdAppendBundlesDetailsRestoreSession(data, reply);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by UpdateTimer.";
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesDetailsRestoreSession.";
     }
-    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_UpdateTimer_0101";
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppendBundlesDetailsRestoreSession_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_AppendBundlesDetailsBackupSession_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_AppendBundlesDetailsBackupSession_0100
+ * @tc.desc: Test function of AppendBundlesDetailsBackupSession interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesDetailsBackupSession_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesDetailsBackupSession_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(false));
+            service->CmdAppendBundlesDetailsBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            service->CmdAppendBundlesDetailsBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*service, AppendBundlesDetailsBackupSession(_, _)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdAppendBundlesDetailsBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppendBundlesDetailsBackupSession(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdAppendBundlesDetailsBackupSession(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesDetailsBackupSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppendBundlesDetailsBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_GetLocalCapabilitiesIncremental_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_GetLocalCapabilitiesIncremental_0100
+ * @tc.desc: Test function of GetLocalCapabilitiesIncremental interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetLocalCapabilitiesIncremental_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_GetLocalCapabilitiesIncremental_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+            service->CmdGetLocalCapabilitiesIncremental(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
+            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+            service->CmdGetLocalCapabilitiesIncremental(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*service, GetLocalCapabilitiesIncremental(_)).WillOnce(Return(UniqueFd(0)));
+            EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(false));
+            service->CmdGetLocalCapabilitiesIncremental(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, GetLocalCapabilitiesIncremental(_)).WillOnce(Return(UniqueFd(0)));
+        EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(true));
+        auto ret = service->CmdGetLocalCapabilitiesIncremental(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by GetLocalCapabilitiesIncremental.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_GetLocalCapabilitiesIncremental_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_InitIncrementalBackupSession_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_InitIncrementalBackupSession_0100
+ * @tc.desc: Test function of InitIncrementalBackupSession interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitIncrementalBackupSession_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_InitIncrementalBackupSession_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(nullptr));
+            service->CmdInitIncrementalBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+            EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(nullptr));
+            service->CmdInitIncrementalBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+            EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
+            EXPECT_CALL(*service, InitIncrementalBackupSession(_)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdInitIncrementalBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+        EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
+        EXPECT_CALL(*service, InitIncrementalBackupSession(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdInitIncrementalBackupSession(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by InitIncrementalBackupSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_InitIncrementalBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_AppendBundlesIncrementalBackupSession_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_AppendBundlesIncrementalBackupSession_0100
+ * @tc.desc: Test function of AppendBundlesIncrementalBackupSession interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesIncrementalBackupSession_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesIncrementalBackupSession_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+            service->CmdAppendBundlesIncrementalBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
+            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+            service->CmdAppendBundlesIncrementalBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*service, AppendBundlesIncrementalBackupSession(_)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdAppendBundlesIncrementalBackupSession(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppendBundlesIncrementalBackupSession(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdAppendBundlesIncrementalBackupSession(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesIncrementalBackupSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_InitIncrementalBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_PublishIncrementalFile_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_PublishIncrementalFile_0100
+ * @tc.desc: Test function of PublishIncrementalFile interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_PublishIncrementalFile_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_PublishIncrementalFile_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+            service->CmdPublishIncrementalFile(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*service, PublishIncrementalFile(_)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdPublishIncrementalFile(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, PublishIncrementalFile(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdPublishIncrementalFile(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by PublishIncrementalFile.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_PublishIncrementalFile_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_PublishSAIncrementalFile_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_PublishSAIncrementalFile_0100
+ * @tc.desc: Test function of PublishSAIncrementalFile interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_PublishSAIncrementalFile_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_PublishSAIncrementalFile_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+            service->CmdPublishSAIncrementalFile(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+            EXPECT_CALL(*service, PublishSAIncrementalFile(_, _)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdPublishSAIncrementalFile(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*service, PublishSAIncrementalFile(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdPublishSAIncrementalFile(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by PublishSAIncrementalFile.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_PublishSAIncrementalFile_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_AppIncrementalFileReady_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_AppIncrementalFileReady_0100
+ * @tc.desc: Test function of AppIncrementalFileReady interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppIncrementalFileReady_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppIncrementalFileReady_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+            service->CmdAppIncrementalFileReady(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(-1));
+            service->CmdAppIncrementalFileReady(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0)).WillOnce(Return(-1));
+            service->CmdAppIncrementalFileReady(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0)).WillOnce(Return(1));
+            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+            EXPECT_CALL(*service, AppIncrementalFileReady(_, _, _, _)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdAppIncrementalFileReady(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppIncrementalFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppIncrementalFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_AppIncrementalFileReady_0101
+ * @tc.name: SUB_backup_sa_ServiceStub_AppIncrementalFileReady_0101
+ * @tc.desc: Test function of AppIncrementalFileReady interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppIncrementalFileReady_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppIncrementalFileReady_0101";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(false));
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+        EXPECT_CALL(*service, AppIncrementalFileReady(_, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdAppIncrementalFileReady(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppIncrementalFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppIncrementalFileReady_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_AppIncrementalDone_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_AppIncrementalDone_0100
+ * @tc.desc: Test function of AppIncrementalDone interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppIncrementalDone_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppIncrementalDone_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+            service->CmdAppIncrementalDone(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+            EXPECT_CALL(*service, AppIncrementalDone(_)).WillOnce(Return(0));
+            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+            service->CmdAppIncrementalDone(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppIncrementalDone(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdAppIncrementalDone(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppIncrementalDone.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_AppIncrementalDone_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_GetIncrementalFileHandle_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_GetIncrementalFileHandle_0100
+ * @tc.desc: Test function of GetIncrementalFileHandle interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetIncrementalFileHandle_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_GetIncrementalFileHandle_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+            service->CmdGetIncrementalFileHandle(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            service->CmdGetIncrementalFileHandle(data, reply);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*service, GetIncrementalFileHandle(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        auto ret = service->CmdGetIncrementalFileHandle(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by GetIncrementalFileHandle.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_GetIncrementalFileHandle_0100";
 }
 } // namespace OHOS::FileManagement::Backup
