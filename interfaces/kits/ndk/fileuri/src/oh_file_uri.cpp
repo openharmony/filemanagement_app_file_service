@@ -23,7 +23,7 @@
 using namespace std;
 static FileManagement_ErrCode GetValue(std::string_view resultStr, char **result)
 {
-    int count = resultStr.length();
+    size_t count = resultStr.length();
     if (count == 0) {
         return ERR_UNKNOWN;
     }
