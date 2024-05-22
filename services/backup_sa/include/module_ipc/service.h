@@ -27,6 +27,7 @@
 #include "service_stub.h"
 #include "svc_session_manager.h"
 #include "system_ability.h"
+#include "thread_pool.h"
 
 namespace OHOS::FileManagement::Backup {
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
@@ -74,6 +75,7 @@ public:
 
     ErrCode SAResultReport(const std::string bundleName, const std::string resultInfo,
                            const ErrCode errCode, const BackupRestoreScenario sennario);
+    void StartGetFdTask(std::string bundleName, wptr<Service> ptr);
 
     // 以下都是非IPC接口
 public:
@@ -171,9 +173,13 @@ public:
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {
+        threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(this)));
     };
-    ~Service() override = default;
+    ~Service() override
+    {
+        threadPool_.Stop();
+    };
 
 private:
     /**
@@ -297,6 +303,8 @@ private:
     sptr<SchedScheduler> sched_;
 
     friend class ServiceTest;
+
+    OHOS::ThreadPool threadPool_;
 };
 } // namespace OHOS::FileManagement::Backup
 
