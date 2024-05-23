@@ -41,7 +41,10 @@ ohos_fuzztest("SvcRestoreDepsManagerFuzzTest") {
     "${path_jsoncpp}:jsoncpp",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "hilog:libhilog",
+  ]
 
   defines = [
     "LOG_TAG=\"app_file_service\"",
