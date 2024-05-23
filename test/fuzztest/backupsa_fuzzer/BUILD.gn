@@ -37,12 +37,12 @@ ohos_fuzztest("BackupSaFuzzTest") {
   deps = [
     "${app_file_service_path}/services/backup_sa:backup_sa",
     "${path_backup}/utils:backup_utils",
-    "${third_party_path}/bounds_checking_function:libsec_shared",
   ]
 
   external_deps = [
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "file_api:filemgmt_libn",
     "hilog:libhilog",

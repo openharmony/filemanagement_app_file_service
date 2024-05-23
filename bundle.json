@@ -45,8 +45,7 @@
             "third_party": [
                 "bounds_checking_function",
                 "jsoncpp",
-                "openssl",
-                "bounds_checking_function"
+                "openssl"
             ]
         },
         "adapted_system_type": [

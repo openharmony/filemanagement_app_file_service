@@ -30,9 +30,8 @@ ohos_fuzztest("RemoteFileShareFuzzTest") {
   ]
   sources = [ "remotefileshare_fuzzer.cpp" ]
 
-  deps = [ "${third_party_path}/bounds_checking_function:libsec_shared" ]
-
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "file_api:filemgmt_libn",
     "hilog:libhilog",
   ]
