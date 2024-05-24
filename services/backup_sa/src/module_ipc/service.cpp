@@ -933,7 +933,6 @@ void Service::ExtStart(const string &bundleName)
             throw BError(BError::Codes::SA_INVAL_ARG, "Failed to scenario");
         }
         auto ret = proxy->HandleRestore();
-        HILOGI("HandleRestore End, bundle name:%{public}s", bundleName.data());
         session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (auto &fileName : fileNameVec) {
