@@ -127,26 +127,17 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_OnRemoteRequest_0100, testin
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInterfaceToken()).WillOnce(Return(u16string()));
-            service->OnRemoteRequest(0, data, reply, option);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
-
-        try {
-            const std::u16string descriptor = ServiceStub::GetDescriptor();
-            EXPECT_CALL(*messageParcelMock, ReadInterfaceToken()).WillOnce(Return(descriptor));
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
-            service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_FILE_NAME),
-                data, reply, option);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInterfaceToken()).WillOnce(Return(u16string()));
+        auto err = service->OnRemoteRequest(0, data, reply, option);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
         const std::u16string descriptor = ServiceStub::GetDescriptor();
+        EXPECT_CALL(*messageParcelMock, ReadInterfaceToken()).WillOnce(Return(descriptor));
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        err = service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_FILE_NAME),
+            data, reply, option);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
+
         EXPECT_CALL(*messageParcelMock, ReadInterfaceToken()).WillOnce(Return(descriptor));
         auto ret = service->OnRemoteRequest(-1, data, reply, option);
         EXPECT_EQ(ret, IPC_STUB_UNKNOW_TRANS_ERR);
@@ -172,33 +163,21 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitRestoreSession_0100, tes
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(nullptr));
-            service->CmdInitRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(nullptr));
+        auto err = service->CmdInitRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
-            EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(nullptr));
-            service->CmdInitRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+        EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(nullptr));
+        err = service->CmdInitRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
-            EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
-            EXPECT_CALL(*service, InitRestoreSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdInitRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+        EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
+        EXPECT_CALL(*service, InitRestoreSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdInitRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
         EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
@@ -228,33 +207,21 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitBackupSession_0100, test
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(nullptr));
-            service->CmdInitBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(nullptr));
+        auto err = service->CmdInitBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
-            EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(nullptr));
-            service->CmdInitBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+        EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(nullptr));
+        err = service->CmdInitBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
-            EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
-            EXPECT_CALL(*service, InitBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdInitBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+        EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
+        EXPECT_CALL(*service, InitBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdInitBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
         EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
@@ -284,14 +251,10 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Start_0100, testing::ext::Te
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*service, Start()).WillOnce(Return(BError(BError::Codes::OK)));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdStart(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*service, Start()).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        auto err = service->CmdStart(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*service, Start()).WillOnce(Return(BError(BError::Codes::OK)));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
@@ -319,14 +282,10 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetLocalCapabilities_0100, t
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*service, GetLocalCapabilities()).WillOnce(Return(UniqueFd(0)));
-            EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(false));
-            service->CmdGetLocalCapabilities(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*service, GetLocalCapabilities()).WillOnce(Return(UniqueFd(0)));
+        EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(false));
+        auto err = service->CmdGetLocalCapabilities(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*service, GetLocalCapabilities()).WillOnce(Return(UniqueFd(0)));
         EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(true));
@@ -354,25 +313,17 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_PublishFile_0100, testing::e
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
-            service->CmdPublishFile(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+        auto err = service->CmdPublishFile(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
-            EXPECT_CALL(*service, PublishFile(_)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdPublishFile(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, PublishFile(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdPublishFile(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
@@ -403,48 +354,32 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppFileReady_0100, testing::
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
-            service->CmdAppFileReady(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        auto err = service->CmdAppFileReady(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(-1));
-            service->CmdAppFileReady(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(-1));
+        err = service->CmdAppFileReady(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
-            EXPECT_CALL(*service, AppFileReady(_, _, _)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdAppFileReady(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+        EXPECT_CALL(*service, AppFileReady(_, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppFileReady(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(false));
-            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
-            EXPECT_CALL(*service, AppFileReady(_, _, _)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdAppFileReady(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(false));
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+        EXPECT_CALL(*service, AppFileReady(_, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppFileReady(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppFileReady.";
@@ -496,23 +431,15 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppDone_0100, testing::ext::
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadBool(_)).WillOnce(Return(false));
-            service->CmdAppDone(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadBool(_)).WillOnce(Return(false));
+        auto err = service->CmdAppDone(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadBool(_)).WillOnce(Return(true));
-            EXPECT_CALL(*service, AppDone(_)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdAppDone(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadBool(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppDone(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppDone(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadBool(_)).WillOnce(Return(true));
         EXPECT_CALL(*service, AppDone(_)).WillOnce(Return(0));
@@ -541,21 +468,13 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetFileHandle_0100, testing:
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
-            service->CmdGetFileHandle(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        auto err = service->CmdGetFileHandle(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
-            service->CmdGetFileHandle(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        err = service->CmdGetFileHandle(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
         EXPECT_CALL(*service, GetFileHandle(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
@@ -583,32 +502,20 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(-1));
-            service->CmdAppendBundlesRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(-1));
+        auto err = service->CmdAppendBundlesRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(false));
-            service->CmdAppendBundlesRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(false));
+        err = service->CmdAppendBundlesRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
-            service->CmdAppendBundlesRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppendBundlesRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesRestoreSession.";
@@ -631,27 +538,19 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesRestoreSession_
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
-            service->CmdAppendBundlesRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        auto err = service->CmdAppendBundlesRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
-            EXPECT_CALL(*service, AppendBundlesRestoreSession(_, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdAppendBundlesRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppendBundlesRestoreSession(_, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppendBundlesRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesRestoreSession.";
@@ -703,23 +602,15 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesBackupSession_0
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(false));
-            service->CmdAppendBundlesBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(false));
+        auto err = service->CmdAppendBundlesBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
-            EXPECT_CALL(*service, AppendBundlesBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdAppendBundlesBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppendBundlesBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppendBundlesBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true));
         EXPECT_CALL(*service, AppendBundlesBackupSession(_)).WillOnce(Return(BError(BError::Codes::OK)));
@@ -748,14 +639,10 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Finish_0100, testing::ext::T
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*service, Finish()).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdFinish(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*service, Finish()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        auto err = service->CmdFinish(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*service, Finish()).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
@@ -783,14 +670,10 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Release_0100, testing::ext::
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*service, Release()).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdRelease(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*service, Release()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        auto err = service->CmdRelease(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*service, Release()).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
@@ -818,32 +701,20 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetBackupInfo_0100, testing:
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
-            service->CmdGetBackupInfo(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        auto err = service->CmdGetBackupInfo(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-            EXPECT_CALL(*service, GetBackupInfo(_, _)).WillOnce(Return(-1));
-            service->CmdGetBackupInfo(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, GetBackupInfo(_, _)).WillOnce(Return(-1));
+        err = service->CmdGetBackupInfo(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-            EXPECT_CALL(*service, GetBackupInfo(_, _)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteString(_)).WillOnce(Return(false));
-            service->CmdGetBackupInfo(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, GetBackupInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteString(_)).WillOnce(Return(false));
+        err = service->CmdGetBackupInfo(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
         EXPECT_CALL(*service, GetBackupInfo(_, _)).WillOnce(Return(0));
@@ -872,32 +743,20 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_UpdateTimer_0100, testing::e
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
-            service->CmdUpdateTimer(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        auto err = service->CmdUpdateTimer(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(false));
-            service->CmdUpdateTimer(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(false));
+        err = service->CmdUpdateTimer(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
-            EXPECT_CALL(*service, UpdateTimer(_, _, _)).WillOnce(Return(-1));
-            service->CmdUpdateTimer(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, UpdateTimer(_, _, _)).WillOnce(Return(-1));
+        err = service->CmdUpdateTimer(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by UpdateTimer.";
@@ -921,41 +780,25 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesDetailsRestoreS
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(-1));
-            service->CmdAppendBundlesDetailsRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(-1));
+        auto err = service->CmdAppendBundlesDetailsRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(false));
-            service->CmdAppendBundlesDetailsRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(false));
+        err = service->CmdAppendBundlesDetailsRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(false));
-            service->CmdAppendBundlesDetailsRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        err = service->CmdAppendBundlesDetailsRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
-            service->CmdAppendBundlesDetailsRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppendBundlesDetailsRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesDetailsRestoreSession.";
@@ -979,27 +822,19 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesDetailsRestoreS
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
-            service->CmdAppendBundlesDetailsRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        auto err = service->CmdAppendBundlesDetailsRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
-            EXPECT_CALL(*service, AppendBundlesRestoreSession(_, _, _, _, _)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdAppendBundlesDetailsRestoreSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppendBundlesRestoreSession(_, _, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppendBundlesDetailsRestoreSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
@@ -1031,31 +866,19 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesDetailsBackupSe
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(false));
-            service->CmdAppendBundlesDetailsBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(false));
+        auto err = service->CmdAppendBundlesDetailsBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(false));
-            service->CmdAppendBundlesDetailsBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        err = service->CmdAppendBundlesDetailsBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
-            EXPECT_CALL(*service, AppendBundlesDetailsBackupSession(_, _)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdAppendBundlesDetailsBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppendBundlesDetailsBackupSession(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppendBundlesDetailsBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
         EXPECT_CALL(*service, AppendBundlesDetailsBackupSession(_, _)).WillOnce(Return(0));
@@ -1084,32 +907,20 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetLocalCapabilitiesIncremen
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
-            service->CmdGetLocalCapabilitiesIncremental(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+        auto err = service->CmdGetLocalCapabilitiesIncremental(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
-            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
-            service->CmdGetLocalCapabilitiesIncremental(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+        err = service->CmdGetLocalCapabilitiesIncremental(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
-            EXPECT_CALL(*service, GetLocalCapabilitiesIncremental(_)).WillOnce(Return(UniqueFd(0)));
-            EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(false));
-            service->CmdGetLocalCapabilitiesIncremental(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, GetLocalCapabilitiesIncremental(_)).WillOnce(Return(UniqueFd(0)));
+        EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(false));
+        err = service->CmdGetLocalCapabilitiesIncremental(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*service, GetLocalCapabilitiesIncremental(_)).WillOnce(Return(UniqueFd(0)));
@@ -1138,33 +949,21 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_InitIncrementalBackupSession
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(nullptr));
-            service->CmdInitIncrementalBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(nullptr));
+        auto err = service->CmdInitIncrementalBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
-            EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(nullptr));
-            service->CmdInitIncrementalBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+        EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(nullptr));
+        err = service->CmdInitIncrementalBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
-            EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
-            EXPECT_CALL(*service, InitIncrementalBackupSession(_)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdInitIncrementalBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
+        EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
+        EXPECT_CALL(*service, InitIncrementalBackupSession(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdInitIncrementalBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadRemoteObject()).WillOnce(Return(remote));
         EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(remote));
@@ -1195,32 +994,20 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesIncrementalBack
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
-            service->CmdAppendBundlesIncrementalBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+        auto err = service->CmdAppendBundlesIncrementalBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
-            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
-            service->CmdAppendBundlesIncrementalBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+        err = service->CmdAppendBundlesIncrementalBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
-            EXPECT_CALL(*service, AppendBundlesIncrementalBackupSession(_)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdAppendBundlesIncrementalBackupSession(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppendBundlesIncrementalBackupSession(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppendBundlesIncrementalBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*service, AppendBundlesIncrementalBackupSession(_)).WillOnce(Return(0));
@@ -1249,25 +1036,17 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_PublishIncrementalFile_0100,
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
-            service->CmdPublishIncrementalFile(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+        auto err = service->CmdPublishIncrementalFile(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
-            EXPECT_CALL(*service, PublishIncrementalFile(_)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdPublishIncrementalFile(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, PublishIncrementalFile(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdPublishIncrementalFile(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
@@ -1298,26 +1077,18 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_PublishSAIncrementalFile_010
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
-            service->CmdPublishSAIncrementalFile(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+        auto err = service->CmdPublishSAIncrementalFile(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
-            EXPECT_CALL(*service, PublishSAIncrementalFile(_, _)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdPublishSAIncrementalFile(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadUint32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0));
+        EXPECT_CALL(*service, PublishSAIncrementalFile(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdPublishSAIncrementalFile(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(1));
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
@@ -1349,46 +1120,30 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppIncrementalFileReady_0100
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
-            service->CmdAppIncrementalFileReady(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        auto err = service->CmdAppIncrementalFileReady(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(-1));
-            service->CmdAppIncrementalFileReady(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(-1));
+        err = service->CmdAppIncrementalFileReady(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0)).WillOnce(Return(-1));
-            service->CmdAppIncrementalFileReady(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0)).WillOnce(Return(-1));
+        err = service->CmdAppIncrementalFileReady(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
-            EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0)).WillOnce(Return(1));
-            EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
-            EXPECT_CALL(*service, AppIncrementalFileReady(_, _, _, _)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdAppIncrementalFileReady(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadBool()).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0)).WillOnce(Return(1));
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+        EXPECT_CALL(*service, AppIncrementalFileReady(_, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppIncrementalFileReady(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppIncrementalFileReady.";
@@ -1441,23 +1196,15 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppIncrementalDone_0100, tes
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
-            service->CmdAppIncrementalDone(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+        auto err = service->CmdAppIncrementalDone(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
-            EXPECT_CALL(*service, AppIncrementalDone(_)).WillOnce(Return(0));
-            EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-            service->CmdAppIncrementalDone(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppIncrementalDone(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppIncrementalDone(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*service, AppIncrementalDone(_)).WillOnce(Return(0));
@@ -1486,21 +1233,13 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetIncrementalFileHandle_010
     try {
         MessageParcel data;
         MessageParcel reply;
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
-            service->CmdGetIncrementalFileHandle(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        auto err = service->CmdGetIncrementalFileHandle(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        try {
-            EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
-            service->CmdGetIncrementalFileHandle(data, reply);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
-        }
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        err = service->CmdGetIncrementalFileHandle(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true));
         EXPECT_CALL(*service, GetIncrementalFileHandle(_, _)).WillOnce(Return(BError(BError::Codes::OK)));

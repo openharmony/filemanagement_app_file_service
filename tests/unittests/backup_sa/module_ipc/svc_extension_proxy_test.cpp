@@ -279,4 +279,145 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetBackupInfo_0100, test
     }
     GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_GetBackupInfo_0100";
 }
+
+/**
+ * @tc.number: SUB_Ext_Extension_proxy_GetIncrementalFileHandle_0100
+ * @tc.name: SUB_Ext_Extension_proxy_GetIncrementalFileHandle_0100
+ * @tc.desc: 测试 GetIncrementalFileHandle 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetIncrementalFileHandle_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_GetIncrementalFileHandle_0100";
+    try {
+        string fileName = "1.tar";
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+        ErrCode ret = proxy_->GetIncrementalFileHandle(fileName);
+        EXPECT_EQ(ret, ErrCode(EPERM));
+
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+        ret = proxy_->GetIncrementalFileHandle(fileName);
+        EXPECT_EQ(ret, ErrCode(EPERM));
+
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(NO_ERROR));
+        EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(NO_ERROR));
+        ret = proxy_->GetIncrementalFileHandle(fileName);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcExtensionProxyTest-an exception occurred by GetIncrementalFileHandle.";
+    }
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_GetIncrementalFileHandle_0100";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_proxy_PublishIncrementalFile_0100
+ * @tc.name: SUB_Ext_Extension_proxy_PublishIncrementalFile_0100
+ * @tc.desc: 测试 PublishIncrementalFile 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_PublishIncrementalFile_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_PublishIncrementalFile_0100";
+    try {
+        string fileName = "1.tar";
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+        ErrCode ret = proxy_->PublishIncrementalFile(fileName);
+        EXPECT_EQ(ret, ErrCode(EPERM));
+
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+        ret = proxy_->PublishIncrementalFile(fileName);
+        EXPECT_EQ(ret, ErrCode(EPERM));
+
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(NO_ERROR));
+        EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(NO_ERROR));
+        ret = proxy_->PublishIncrementalFile(fileName);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcExtensionProxyTest-an exception occurred by PublishIncrementalFile.";
+    }
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_PublishIncrementalFile_0100";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_proxy_HandleIncrementalBackup_0100
+ * @tc.name: SUB_Ext_Extension_proxy_HandleIncrementalBackup_0100
+ * @tc.desc: 测试 HandleIncrementalBackup 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleIncrementalBackup_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_HandleIncrementalBackup_0100";
+    try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+        ErrCode ret = proxy_->HandleIncrementalBackup(UniqueFd(-1), UniqueFd(-1));
+        EXPECT_EQ(ret, ErrCode(EPERM));
+
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(NO_ERROR));
+        EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(NO_ERROR));
+        ret = proxy_->HandleIncrementalBackup(UniqueFd(-1), UniqueFd(-1));
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcExtensionProxyTest-an exception occurred by HandleIncrementalBackup.";
+    }
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_HandleIncrementalBackup_0100";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_proxy_GetIncrementalBackupFileHandle_0100
+ * @tc.name: SUB_Ext_Extension_proxy_GetIncrementalBackupFileHandle_0100
+ * @tc.desc: 测试 GetIncrementalBackupFileHandle 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetIncrementalBackupFileHandle_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_GetIncrementalBackupFileHandle_0100";
+    try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+        auto [incrementalFd, manifestFd] = proxy_->GetIncrementalBackupFileHandle();
+        EXPECT_EQ(incrementalFd, -1);
+        EXPECT_EQ(manifestFd, -1);
+
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(NO_ERROR));
+        EXPECT_CALL(*messageParcelMock_, ReadFileDescriptor()).WillOnce(Return(-1)).WillOnce(Return(-1));
+        tie(incrementalFd, manifestFd) = proxy_->GetIncrementalBackupFileHandle();
+        EXPECT_EQ(incrementalFd, -1);
+        EXPECT_EQ(manifestFd, -1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcExtensionProxyTest-an exception occurred by GetIncrementalBackupFileHandle.";
+    }
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_GetIncrementalBackupFileHandle_0100";
+}
 } // namespace OHOS::FileManagement::Backup
