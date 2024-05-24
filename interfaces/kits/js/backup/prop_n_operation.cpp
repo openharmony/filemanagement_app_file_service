@@ -291,9 +291,6 @@ napi_value PropNOperation::DoUpdateTimer(napi_env env, napi_callback_info info)
     std::string bundleName = bundle.get();
     uint32_t timeOut = static_cast<uint32_t>(time);
     bool result = UpdateTimer(bundleName, timeOut);
-    if (result != true) {
-        return nullptr;
-    }
 
     napi_value nResult;
     napi_status status = napi_get_boolean(env, result, &nResult);
