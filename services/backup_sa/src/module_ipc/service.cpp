@@ -843,6 +843,7 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         string callName = move(bundleName);
+        HILOGE("Backup <%{public}s> Extension Process Died", callName.c_str());
         session_->VerifyBundleName(callName);
 
         /* Standard Log Output, for testers */
