@@ -165,6 +165,7 @@ private:
     std::condition_variable callJsCon_;
     std::mutex callJsMutex_;
     std::atomic<bool> needCallOnRestore_;
+    std::atomic<bool> callRestoreExDone_;
 };
 } // namespace OHOS::FileManagement::Backup
 
