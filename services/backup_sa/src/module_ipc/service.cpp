@@ -842,12 +842,10 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        HILOGE("Backup <%{public}s> Extension Process Died", callName.data());
         string callName = move(bundleName);
         HILOGE("Backup <%{public}s> Extension Process Died", callName.c_str());
         session_->VerifyBundleName(callName);
-
-        /* Standard Log Output, for testers */
-        HILOGE("Backup <%{public}s> Extension Process Died", callName.data());
         string versionName = session_->GetBundleVersionName(bundleName);   /* old device app version name */
         uint32_t versionCode = session_->GetBundleVersionCode(bundleName); /* old device app version code */
         if (versionCode == BConstants::DEFAULT_VERSION_CODE && versionName == BConstants::DEFAULT_VERSION_NAME &&
@@ -859,14 +857,11 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
         HILOGE("Clear backup extension data, bundleName: %{public}s", bundleName.data());
         auto backUpConnection = session_->GetExtConnection(bundleName);
         auto callConnected = [ptr {wptr(this)}](const string &&bundleName) {
+            HILOGE("OnBackupExtensionDied callConnected <%{public}s>", bundleName.c_str());
             auto thisPtr = ptr.promote();
             if (!thisPtr) {
                 HILOGW("this pointer is null.");
                 return;
-            }
-            auto sessionConnection = thisPtr->session_->GetExtConnection(bundleName);
-            if (sessionConnection->IsExtAbilityConnected()) {
-                sessionConnection->DisconnectBackupExtAbility();
             }
             thisPtr->ExtConnectDied(bundleName);
         };
@@ -877,7 +872,8 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
             return;
         }
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+        ExtConnectDied(bundleName);
         return;
     }
 }
@@ -886,7 +882,7 @@ void Service::ExtConnectDied(const string &callName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGI("Begin");
+        HILOGI("Begin, bundleName: %{public}s", callName.c_str());
         /* Clear Timer */
         session_->BundleExtTimerStop(callName);
         auto backUpConnection = session_->GetExtConnection(callName);
@@ -898,7 +894,9 @@ void Service::ExtConnectDied(const string &callName)
         /* Notice Client Ext Ability Process Died */
         NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
     } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGE("Unexpected exception, bundleName: %{public}s", callName.c_str());
+        ClearSessionAndSchedInfo(callName);
+        NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
         return;
     }
 }
@@ -926,7 +924,7 @@ void Service::ExtStart(const string &bundleName)
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
             if (ret) {
                 ClearSessionAndSchedInfo(bundleName);
-                NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
+                NoticeClientFinish(bundleName, BError(BError::Codes::SA_INVAL_ARG));
             }
             return;
         }
@@ -944,13 +942,10 @@ void Service::ExtStart(const string &bundleName)
             session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd));
         }
         return;
-    } catch (const BError &e) {
-        return;
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return;
     } catch (...) {
-        HILOGI("Unexpected exception");
+        HILOGI("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+        ClearSessionAndSchedInfo(bundleName);
+        NoticeClientFinish(bundleName, BError(BError::Codes::SA_INVAL_ARG));
         return;
     }
 }
@@ -1008,6 +1003,7 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
 void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("begin %{public}s", bundleName.c_str());
     auto scenario = session_->GetScenario();
     if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
@@ -1026,8 +1022,8 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
 void Service::ExtConnectDone(string bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    /* Callback for App Ext Timeout Process. */
     auto timeoutCallback = [ptr {wptr(this)}, bundleName]() {
+        HILOGI("begin timeoutCallback bundleName = %{public}s", bundleName.c_str());
         auto thisPtr = ptr.promote();
         if (!thisPtr) {
             HILOGE("ServicePtr is nullptr.");
@@ -1038,36 +1034,38 @@ void Service::ExtConnectDone(string bundleName)
             HILOGE("SessionPtr is nullptr.");
             return;
         }
-        if (SAUtils::IsSABundleName(bundleName)) {
-            auto sessionConnection = sessionPtr->GetSAExtConnection(bundleName);
-            shared_ptr<SABackupConnection> saConnection = sessionConnection.lock();
-            if (saConnection == nullptr) {
-                HILOGE("lock sa connection ptr is nullptr");
-                return;
+        try {
+            if (SAUtils::IsSABundleName(bundleName)) {
+                auto sessionConnection = sessionPtr->GetSAExtConnection(bundleName);
+                shared_ptr<SABackupConnection> saConnection = sessionConnection.lock();
+                if (saConnection == nullptr) {
+                    HILOGE("lock sa connection ptr is nullptr");
+                    return;
+                }
+                sessionPtr->BundleExtTimerStop(bundleName);
+                saConnection->DisconnectBackupSAExt();
+            } else {
+                auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
+                sessionPtr->BundleExtTimerStop(bundleName);
+                sessionConnection->DisconnectBackupExtAbility();
             }
-            sessionPtr->BundleExtTimerStop(bundleName);
-            saConnection->DisconnectBackupSAExt();
-        } else {
-            auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
-            sessionPtr->BundleExtTimerStop(bundleName);
-            sessionConnection->DisconnectBackupExtAbility();
+            thisPtr->ClearSessionAndSchedInfo(bundleName);
+            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+        } catch (...) {
+            HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+            thisPtr->ClearSessionAndSchedInfo(bundleName);
+            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
         }
-        /* Must clear bundle session before call NoticeClientFinish. */
-        thisPtr->ClearSessionAndSchedInfo(bundleName);
-        thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
     };
     try {
         HILOGE("begin %{public}s", bundleName.data());
         session_->BundleExtTimerStart(bundleName, timeoutCallback);
         session_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::RUNNING);
         sched_->Sched(bundleName);
-    } catch (const BError &e) {
-        return;
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return;
     } catch (...) {
-        HILOGI("Unexpected exception");
+        HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+        ClearSessionAndSchedInfo(bundleName);
+        NoticeClientFinish(bundleName, BError(BError::Codes::SDK_INVAL_ARG));
         return;
     }
 }
@@ -1076,6 +1074,7 @@ void Service::ClearSessionAndSchedInfo(const string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        HILOGI("begin %{public}s", bundleName.c_str());
         session_->RemoveExtInfo(bundleName);
         sched_->RemoveExtConn(bundleName);
         HandleRestoreDepsBundle(bundleName);
@@ -1134,6 +1133,7 @@ void Service::HandleRestoreDepsBundle(const string &bundleName)
 void Service::OnAllBundlesFinished(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("called begin.");
     if (session_->IsOnAllBundlesFinished()) {
         IServiceReverse::Scenario scenario = session_->GetScenario();
         if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
@@ -1151,6 +1151,7 @@ void Service::OnAllBundlesFinished(ErrCode errCode)
             sched_->TryUnloadServiceTimer(true);
         }
     }
+    HILOGI("called end.");
 }
 
 void Service::OnStartSched()
@@ -1240,18 +1241,28 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
 ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
 {
     auto timeoutCallback = [ptr {wptr(this)}, bundleName]() {
+        HILOGE("Backup <%{public}s> Extension Process Timeout", bundleName.c_str());
         auto thisPtr = ptr.promote();
         if (!thisPtr) {
             HILOGW("this pointer is null.");
             return;
         }
         auto sessionPtr = ptr->session_;
-        auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
-        HILOGE("Backup <%{public}s> Extension Process Timeout", bundleName.data());
-        sessionPtr->BundleExtTimerStop(bundleName);
-        sessionConnection->DisconnectBackupExtAbility();
-        thisPtr->ClearSessionAndSchedInfo(bundleName);
-        thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+        if (sessionPtr == nullptr) {
+            HILOGW("SessionPtr is null.");
+            return;
+        }
+        try {
+            auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
+            sessionPtr->BundleExtTimerStop(bundleName);
+            sessionConnection->DisconnectBackupExtAbility();
+            thisPtr->ClearSessionAndSchedInfo(bundleName);
+            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+        } catch (...) {
+            HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+            thisPtr->ClearSessionAndSchedInfo(bundleName);
+            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+        }
     };
     try {
         HILOGI("Service::UpdateTimer begin.");

@@ -47,6 +47,7 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
     }
     isConnected_.store(true);
     string bundleName = element.GetBundleName();
+    HILOGI("%{public}s, OnAbilityConnectDone", bundleName.c_str());
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
@@ -71,14 +72,14 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
     HILOGI("called begin");
     isConnected_.store(false);
     backupProxy_ = nullptr;
+    string bundleName = element.GetBundleName();
     if (isConnectedDone_ == false) {
         isConnectedDone_.store(true);
-        string bundleName = element.GetBundleName();
         HILOGE("It's error that the backup extension dies before the backup sa. name : %{public}s", bundleName.data());
         callDied_(move(bundleName));
     }
     condition_.notify_all();
-    HILOGI("called end");
+    HILOGI("called end, name: %{public}s", bundleName.c_str());
 }
 
 ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId)
