@@ -173,7 +173,10 @@ public:
     {
         session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(this)));
     };
-    ~Service() override = default;
+    ~Service() override
+    {
+
+    };
 
 private:
     /**
