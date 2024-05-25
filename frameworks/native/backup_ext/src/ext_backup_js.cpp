@@ -370,6 +370,7 @@ ErrCode ExtBackupJs::OnRestore(function<void()> callback, std::function<void(con
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
                           "The app does not provide the onRestore interface.");
     needCallOnRestore_.store(false);
+    callRestoreExDone_.store(false);
     callbackInfo_ = std::make_shared<CallbackInfo>(callback);
     callbackInfoEx_ = std::make_shared<CallbackInfoEx>(callbackEx, callbackExAppDone);
     return CallJSRestoreEx();
@@ -427,6 +428,12 @@ ErrCode ExtBackupJs::CallJSRestoreEx()
         HILOGE("Call onRestoreEx error");
         return errCode;
     }
+    HILOGI("Check callRestoreExDone load");
+    if (!callRestoreExDone_.load()) {
+        std::unique_lock<std::mutex> lock(callJsMutex_);
+        callJsCon_.wait(lock);
+    }
+    HILOGI("Check needCallOnRestore load");
     if (!needCallOnRestore_.load()) {
         if (callbackInfoEx_) {
             HILOGI("Will call app done");
@@ -629,6 +636,8 @@ ErrCode ExtBackupJs::CallExtRestore(std::string result)
     } else {
         needCallOnRestore_.store(false);
     }
+    callJsCon_.notify_one();
+    callRestoreExDone_.store(true);
     HILOGI("End CallExtRestore");
     return ERR_OK;
 }
