@@ -493,6 +493,7 @@ ErrCode ExtBackupJs::GetBackupInfo(std::function<void(const std::string)> callba
 static int DoCallJsMethod(CallJsParam *param)
 {
     AbilityRuntime::JsRuntime *jsRuntime = param->jsRuntime;
+    HILOGI("Start execute DoCallJsMethod");
     if (jsRuntime == nullptr) {
         HILOGE("failed to get jsRuntime.");
         return EINVAL;
@@ -528,13 +529,15 @@ static int DoCallJsMethod(CallJsParam *param)
         return EINVAL;
     }
     napi_value result;
+    HILOGI("Extension start do call current js method");
     napi_call_function(env, value, method, argv.size(), argv.data(), &result);
     if (!param->retParser(env, handleEscape.Escape(result))) {
-        HILOGI("Parser js result fail.");
+        HILOGE("Parser js result fail.");
         napi_close_handle_scope(env, scope);
         return EINVAL;
     }
     napi_close_handle_scope(env, scope);
+    HILOGI("End execute DoCallJsMethod");
     return ERR_OK;
 }
 
@@ -572,6 +575,7 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
                     HILOGE("failed to call DoCallJsMethod.");
                 }
             } while (false);
+            HILOGI("will notify current thread info");
             param->backupOperateCondition.notify_one();
         });
     if (ret != 0) {
@@ -581,6 +585,7 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
     HILOGI("Wait execute current js method");
     std::unique_lock<std::mutex> lock(param->backupOperateMutex);
     param->backupOperateCondition.wait(lock);
+    HILOGI("End do call current js method");
     return ERR_OK;
 }
 
