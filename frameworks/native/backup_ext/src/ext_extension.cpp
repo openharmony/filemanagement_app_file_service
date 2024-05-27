@@ -812,7 +812,7 @@ static void RestoreBigFiles(bool appendTargetPath)
         UniqueFd fd(open(reportPath.data(), O_RDONLY));
         if (fd < 0) {
             HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportPath.c_str(), errno);
-            throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
+            continue;
         }
         BReportEntity rp(move(fd));
         rp.CheckAndUpdateIfReportLineEncoded(itemFileName);
