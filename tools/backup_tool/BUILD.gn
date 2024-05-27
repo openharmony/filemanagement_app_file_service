@@ -65,7 +65,7 @@ ohos_executable("backup_tool") {
   }
 
   use_exceptions = true
-  install_enable = true
+  install_enable = false
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
 }

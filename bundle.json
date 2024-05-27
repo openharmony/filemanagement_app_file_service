@@ -72,8 +72,7 @@
                 "service_group": [
                     "//foundation/filemanagement/app_file_service:tgt_backup_extension",
                     "//foundation/filemanagement/app_file_service:tgt_backup_kit_inner",
-                    "//foundation/filemanagement/app_file_service:tgt_backup_sa",
-                    "//foundation/filemanagement/app_file_service:tgt_backup_tool"
+                    "//foundation/filemanagement/app_file_service:tgt_backup_sa"
                 ]
             },
             "inner_kits": [
