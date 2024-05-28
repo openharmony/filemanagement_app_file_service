@@ -34,6 +34,7 @@ const char LINE_SEP = '\n';
 const char LINE_WRAP = '\r';
 const int64_t HASH_BUFFER_SIZE = 4096; // 每次读取的siz
 const int INFO_ALIGN_NUM = 2;
+const int BUFFER_LENGTH = 2;
 const string INFO_DIR = "dir";
 const string INFO_HASH = "hash";
 const string INFO_IS_INCREMENTAL = "isIncremental";
@@ -162,6 +163,37 @@ static void DealLine(unordered_map<string, int> &keys,
     }
 }
 
+static struct ReportFileInfo StorageDealLine(unordered_map<string, int> &keys, int &num, const string &line)
+{
+    if (line.empty()) {
+        return {};
+    }
+
+    string currentLine = line;
+    if (currentLine[currentLine.length() - 1] == LINE_WRAP) {
+        currentLine.pop_back();
+    }
+
+    vector<string> splits = SplitStringByChar(currentLine, ATTR_SEP);
+    if (num < INFO_ALIGN_NUM) {
+        if (num == 1) {
+            for (int j = 0; j < (int)splits.size(); j++) {
+                keys.emplace(splits[j], j - 1);
+            }
+        }
+        num++;
+    } else {
+        struct ReportFileInfo fileState;
+        auto code = ParseReportInfo(fileState, splits, keys);
+        if (code != ERR_OK) {
+            HILOGE("ParseReportInfo err:%{public}d, %{public}s", code, currentLine.c_str());
+        } else {
+            return fileState;
+        }
+    }
+    return {};
+}
+
 unordered_map<string, struct ReportFileInfo> BReportEntity::GetReportInfos()
 {
     unordered_map<string, struct ReportFileInfo> infos {};
@@ -189,6 +221,33 @@ unordered_map<string, struct ReportFileInfo> BReportEntity::GetReportInfos()
     }
 
     return infos;
+}
+
+bool BReportEntity::GetStorageReportInfos(struct ReportFileInfo &fileStat)
+{
+    char buffer[BUFFER_LENGTH];
+    ssize_t bytesRead;
+    string currentLine;
+    static unordered_map<string, int> keys;
+    static int num = 0;
+
+    if ((bytesRead = read(srcFile_, buffer, 1)) <= 0) {
+        keys = {};
+        num = 0;
+        return false;
+    }
+    do {
+        if (buffer[0] != LINE_SEP && buffer[0] != '\0') {
+            currentLine += buffer[0];
+        } else {
+            currentLine += LINE_SEP;
+            fileStat = StorageDealLine(keys, num, currentLine);
+            return true;
+        }
+    } while ((bytesRead = read(srcFile_, buffer, 1)) > 0);
+    currentLine += LINE_SEP;
+    fileStat = StorageDealLine(keys, num, currentLine);
+    return true;
 }
 
 void BReportEntity::CheckAndUpdateIfReportLineEncoded(std::string &path)

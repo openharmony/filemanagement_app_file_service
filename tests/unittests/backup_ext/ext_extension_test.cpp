@@ -447,7 +447,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0700, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0700";
     try {
-        map<string, struct stat> files;
+        map<string, struct ReportFileInfo> files;
         TarMap result = GetIncrmentBigInfos(files);
         EXPECT_TRUE(result.empty());
     } catch (...) {
@@ -470,8 +470,8 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0701, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0701";
     try {
-        map<string, struct stat> files;
-        files.emplace("test", (struct stat) {});
+        map<string, struct ReportFileInfo> files;
+        files.emplace("test", (struct ReportFileInfo) {});
         TarMap result = GetIncrmentBigInfos(files);
         EXPECT_EQ(result.size(), 1);
     } catch (...) {
@@ -494,9 +494,9 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0702, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0702";
     try {
-        map<string, struct stat> files;
-        files.emplace("test", (struct stat) {});
-        files.emplace("test", (struct stat) {});
+        map<string, struct ReportFileInfo> files;
+        files.emplace("test", (struct ReportFileInfo) {});
+        files.emplace("test", (struct ReportFileInfo) {});
         TarMap result = GetIncrmentBigInfos(files);
         EXPECT_EQ(result.size(), 1);
     } catch (...) {
@@ -519,9 +519,9 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0703, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0703";
     try {
-        map<string, struct stat> files;
-        files.emplace("test1", (struct stat) {});
-        files.emplace("test2", (struct stat) {});
+        map<string, struct ReportFileInfo> files;
+        files.emplace("test1", (struct ReportFileInfo) {});
+        files.emplace("test2", (struct ReportFileInfo) {});
         TarMap result = GetIncrmentBigInfos(files);
         EXPECT_EQ(result.size(), 2);
     } catch (...) {
