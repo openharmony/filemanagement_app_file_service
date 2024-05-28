@@ -157,7 +157,7 @@ public:
      * @return true
      * @return false
      */
-    bool SpeicalVersionForCloneAndCloud(void);
+    bool SpecialVersionForCloneAndCloud(void);
 
     /**
      * @brief 数据以准备就绪
@@ -181,7 +181,7 @@ public:
 protected:
     std::string appVersionStr_;
     std::string restoreRetInfo_;
-    int appVersionCode_;
+    int64_t appVersionCode_;
     int restoreType_;
 
 private:

@@ -315,10 +315,10 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
     auto cacheBundleInfos = cache.GetBundleInfos();
     for (auto name : bundleNames) {
         string versionName = string(BConstants::DEFAULT_VERSION_NAME);
-        uint32_t versionCode = static_cast<uint32_t>(BConstants::DEFAULT_VERSION_CODE);
+        int64_t versionCode = static_cast<int64_t>(BConstants::DEFAULT_VERSION_CODE);
         if (type == "false") {
             versionName = string(BConstants::DEFAULT_VERSION_NAME_CLONE);
-            versionCode = static_cast<uint32_t>(BConstants::DEFAULT_VERSION_CODE);
+            versionCode = static_cast<int64_t>(BConstants::DEFAULT_VERSION_CODE);
         }
         for (auto &&bundleInfo : cacheBundleInfos) {
             if (bundleInfo.name != name) {

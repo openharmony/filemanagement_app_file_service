@@ -24,7 +24,7 @@ class BJsonEntityCaps : public BJsonEntity {
 public:
     struct BundleInfo {
         std::string name;
-        uint32_t versionCode;
+        int64_t versionCode;
         std::string versionName;
         int64_t spaceOccupied;
         bool allToBackup;
@@ -137,8 +137,8 @@ public:
         }
         std::vector<BundleInfo> bundleInfos;
         for (const auto &item : obj_["bundleInfos"]) {
-            if (!item || !item["name"].isString() || !item["versionCode"].isUInt() || !item["versionName"].isString() ||
-                !item["spaceOccupied"].isInt64() || !item["allToBackup"].isBool() ||
+            if (!item || !item["name"].isString() || !item["versionCode"].isInt64() ||
+                !item["versionName"].isString() || !item["spaceOccupied"].isInt64() || !item["allToBackup"].isBool() ||
                 !item["extensionName"].isString()) {
                 HILOGI("Failed to get field bundleInfos, type error");
                 return {};
@@ -155,7 +155,7 @@ public:
             if (item.isMember("extraInfo") && item["extraInfo"].isObject()) {
                 extraInfo = item["extraInfo"];
             }
-            bundleInfos.emplace_back(BundleInfo {item["name"].asString(), item["versionCode"].asUInt(),
+            bundleInfos.emplace_back(BundleInfo {item["name"].asString(), item["versionCode"].asInt64(),
                                                  item["versionName"].asString(), item["spaceOccupied"].asInt64(),
                                                  item["allToBackup"].asBool(), item["extensionName"].asString(),
                                                  restoreDeps, supportScene, extraInfo});

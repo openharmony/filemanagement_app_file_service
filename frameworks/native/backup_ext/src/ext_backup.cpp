@@ -108,7 +108,7 @@ bool ExtBackup::AllowToBackupRestore()
     string usrConfig = GetUsrConfig();
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
     auto cache = cachedEntity.Structuralize();
-    if (cache.GetAllowToBackupRestore() || WasFromSpecialVersion() || SpeicalVersionForCloneAndCloud()) {
+    if (cache.GetAllowToBackupRestore() || WasFromSpecialVersion() || SpecialVersionForCloneAndCloud()) {
         return true;
     }
     return false;
@@ -151,9 +151,8 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
 {
     if (extAction_ == BConstants::ExtensionAction::RESTORE) {
         appVersionStr_ = want.GetStringParam(BConstants::EXTENSION_VERSION_NAME_PARA);
-        appVersionCode_ = want.GetIntParam(BConstants::EXTENSION_VERSION_CODE_PARA, 0);
+        appVersionCode_ = want.GetLongParam(BConstants::EXTENSION_VERSION_CODE_PARA, 0);
         restoreType_ = want.GetIntParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, 0);
-
         HILOGI("Get version %{public}s type %{public}d from want when restore.", appVersionStr_.c_str(), restoreType_);
     }
     /* backup don't need parament. */
@@ -222,18 +221,22 @@ void ExtBackup::OnDisconnect(const AAFwk::Want &want)
 
 bool ExtBackup::WasFromSpecialVersion(void)
 {
-    if (appVersionCode_ == BConstants::DEFAULT_VERSION_CODE && appVersionStr_ == BConstants::DEFAULT_VERSION_NAME) {
+    std::string appVersionFlag_ =
+        appVersionStr_.substr(0, appVersionStr_.find_first_of(BConstants::VERSION_NAME_SEPARATOR_CHAR));
+    if (appVersionFlag_ == BConstants::DEFAULT_VERSION_NAME) {
         return true;
     }
     return false;
 }
 
-bool ExtBackup::SpeicalVersionForCloneAndCloud(void)
+bool ExtBackup::SpecialVersionForCloneAndCloud(void)
 {
+    std::string appVersionFlag_ =
+        appVersionStr_.substr(0, appVersionStr_.find_first_of(BConstants::VERSION_NAME_SEPARATOR_CHAR));
     auto iter =
         find_if(BConstants::DEFAULT_VERSION_NAMES_VEC.begin(), BConstants::DEFAULT_VERSION_NAMES_VEC.end(),
-                [appVersionStr {appVersionStr_}](const auto &versionName) { return versionName == appVersionStr; });
-    if (appVersionCode_ == BConstants::DEFAULT_VERSION_CODE && iter != BConstants::DEFAULT_VERSION_NAMES_VEC.end()) {
+                [appVersionFlag {appVersionFlag_}](const auto &versionName) { return versionName == appVersionFlag; });
+    if (iter != BConstants::DEFAULT_VERSION_NAMES_VEC.end()) {
         return true;
     }
     return false;

@@ -61,8 +61,8 @@ void GetInfo(const uint8_t *data, size_t size, vector<BJsonEntityCaps::BundleInf
             bundleInfo.allToBackup = *(reinterpret_cast<const bool*>(data));
         }
 
-        if (size >= sizeof(uint32_t)) {
-            bundleInfo.versionCode = *(reinterpret_cast<const uint32_t*>(data));
+        if (size >= sizeof(int64_t)) {
+            bundleInfo.versionCode = *(reinterpret_cast<const int64_t*>(data));
         }
 
         if (size >= sizeof(int64_t)) {

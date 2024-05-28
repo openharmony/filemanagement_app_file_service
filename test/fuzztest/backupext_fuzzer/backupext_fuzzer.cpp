@@ -143,9 +143,9 @@ bool WasFromSpecialVersionFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *
     return true;
 }
 
-bool SpeicalVersionForCloneAndCloudFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+bool SpecialVersionForCloneAndCloudFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
-    backup->SpeicalVersionForCloneAndCloud();
+    backup->SpecialVersionForCloneAndCloud();
     return true;
 }
 
@@ -188,7 +188,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::OnRestore2FuzzTest(extBackup, data, size);
     OHOS::GetBackupInfoFuzzTest(extBackup, data, size);
     OHOS::WasFromSpecialVersionFuzzTest(extBackup, data, size);
-    OHOS::SpeicalVersionForCloneAndCloudFuzzTest(extBackup, data, size);
+    OHOS::SpecialVersionForCloneAndCloudFuzzTest(extBackup, data, size);
     OHOS::RestoreDataReadyFuzzTest(extBackup, data, size);
     OHOS::CallExtRestoreFuzzTest(extBackup, data, size);
     OHOS::SetCreatorFuzzTest(extBackup, data, size);

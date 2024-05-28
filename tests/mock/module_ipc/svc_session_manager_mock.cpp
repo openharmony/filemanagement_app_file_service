@@ -307,7 +307,7 @@ RestoreTypeEnum SvcSessionManager::GetBundleRestoreType(const std::string &bundl
     return it->second.restoreType;
 }
 
-void SvcSessionManager::SetBundleVersionCode(const std::string &bundleName, uint32_t versionCode)
+void SvcSessionManager::SetBundleVersionCode(const std::string &bundleName, int64_t versionCode)
 {
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
@@ -316,7 +316,7 @@ void SvcSessionManager::SetBundleVersionCode(const std::string &bundleName, uint
     it->second.versionCode = versionCode;
 }
 
-uint32_t SvcSessionManager::GetBundleVersionCode(const std::string &bundleName)
+int64_t SvcSessionManager::GetBundleVersionCode(const std::string &bundleName)
 {
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
