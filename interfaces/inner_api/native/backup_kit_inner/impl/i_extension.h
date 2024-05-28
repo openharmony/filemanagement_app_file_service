@@ -27,6 +27,7 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.FileManagement.Backup.IExtension");
 
 public:
+    virtual ~IExtension() = default;
     virtual UniqueFd GetFileHandle(const std::string &fileName) = 0;
     virtual ErrCode HandleClear() = 0;
     virtual ErrCode HandleBackup() = 0;

@@ -31,6 +31,7 @@ public:
     };
 
 public:
+    virtual ~IServiceReverse() = default;
     virtual void BackupOnBundleStarted(int32_t errCode, std::string bundleName) = 0;
     virtual void BackupOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) = 0;
     virtual void BackupOnResultReport(std::string result, std::string bundleName) = 0;

@@ -370,6 +370,7 @@ ErrCode ExtBackupJs::OnRestore(function<void()> callback, std::function<void(con
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
                           "The app does not provide the onRestore interface.");
     needCallOnRestore_.store(false);
+    callRestoreExDone_.store(false);
     callbackInfo_ = std::make_shared<CallbackInfo>(callback);
     callbackInfoEx_ = std::make_shared<CallbackInfoEx>(callbackEx, callbackExAppDone);
     return CallJSRestoreEx();
@@ -427,6 +428,12 @@ ErrCode ExtBackupJs::CallJSRestoreEx()
         HILOGE("Call onRestoreEx error");
         return errCode;
     }
+    HILOGI("Check callRestoreExDone load");
+    if (!callRestoreExDone_.load()) {
+        std::unique_lock<std::mutex> lock(callJsMutex_);
+        callJsCon_.wait(lock);
+    }
+    HILOGI("Check needCallOnRestore load");
     if (!needCallOnRestore_.load()) {
         if (callbackInfoEx_) {
             HILOGI("Will call app done");
@@ -493,6 +500,7 @@ ErrCode ExtBackupJs::GetBackupInfo(std::function<void(const std::string)> callba
 static int DoCallJsMethod(CallJsParam *param)
 {
     AbilityRuntime::JsRuntime *jsRuntime = param->jsRuntime;
+    HILOGI("Start execute DoCallJsMethod");
     if (jsRuntime == nullptr) {
         HILOGE("failed to get jsRuntime.");
         return EINVAL;
@@ -528,13 +536,15 @@ static int DoCallJsMethod(CallJsParam *param)
         return EINVAL;
     }
     napi_value result;
+    HILOGI("Extension start do call current js method");
     napi_call_function(env, value, method, argv.size(), argv.data(), &result);
     if (!param->retParser(env, handleEscape.Escape(result))) {
-        HILOGI("Parser js result fail.");
+        HILOGE("Parser js result fail.");
         napi_close_handle_scope(env, scope);
         return EINVAL;
     }
     napi_close_handle_scope(env, scope);
+    HILOGI("End execute DoCallJsMethod");
     return ERR_OK;
 }
 
@@ -572,6 +582,7 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
                     HILOGE("failed to call DoCallJsMethod.");
                 }
             } while (false);
+            HILOGI("will notify current thread info");
             param->backupOperateCondition.notify_one();
         });
     if (ret != 0) {
@@ -581,6 +592,7 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
     HILOGI("Wait execute current js method");
     std::unique_lock<std::mutex> lock(param->backupOperateMutex);
     param->backupOperateCondition.wait(lock);
+    HILOGI("End do call current js method");
     return ERR_OK;
 }
 
@@ -624,6 +636,8 @@ ErrCode ExtBackupJs::CallExtRestore(std::string result)
     } else {
         needCallOnRestore_.store(false);
     }
+    callJsCon_.notify_one();
+    callRestoreExDone_.store(true);
     HILOGI("End CallExtRestore");
     return ERR_OK;
 }

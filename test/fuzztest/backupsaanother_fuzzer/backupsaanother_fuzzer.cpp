@@ -41,17 +41,19 @@ bool CmdGetFileHandleFuzzTest(const uint8_t *data, size_t size)
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
     int pos = (size + 1) >> 1;
     if (size > 0) {
-        datas.WriteString(string(reinterpret_cast<const char*>(data), pos));
+        std::string param(string(reinterpret_cast<const char*>(data), pos));
+        datas.WriteString(param);
     }
 
     if (size > 1) {
-        datas.WriteString(string(reinterpret_cast<const char*>(data + pos), size - pos));
+        std::string param(string(reinterpret_cast<const char*>(data + pos), size - pos));
+        datas.WriteString(param);
     }
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
 
-    sptr service = sptr(new Service(SERVICE_ID));
+    sptr service(new Service(SERVICE_ID));
     service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_FILE_NAME),
         datas, reply, option);
     service = nullptr;
@@ -65,7 +67,8 @@ bool CmdAppendBundlesBackupSessionFuzzTest(const uint8_t *data, size_t size)
     if (size > 0) {
         vector<string> bundleNames;
         for (size_t i = 0; i < size; i++) {
-            string name = string(reinterpret_cast<const char*>(data), size) + to_string(i);
+            string param(reinterpret_cast<const char*>(data), size);
+            string name = param + to_string(i);
             bundleNames.push_back(name);
         }
         datas.WriteStringVector(bundleNames);
@@ -75,7 +78,7 @@ bool CmdAppendBundlesBackupSessionFuzzTest(const uint8_t *data, size_t size)
     MessageParcel reply;
     MessageOption option;
 
-    sptr service = sptr(new Service(SERVICE_ID));
+    sptr service(new Service(SERVICE_ID));
     uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
@@ -91,7 +94,7 @@ bool CmdReleaseFuzzTest(const uint8_t *data, size_t size)
     MessageParcel reply;
     MessageOption option;
 
-    sptr service = sptr(new Service(SERVICE_ID));
+    sptr service(new Service(SERVICE_ID));
     uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RELSEASE_SESSION);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
@@ -101,7 +104,8 @@ bool CmdReleaseFuzzTest(const uint8_t *data, size_t size)
 void GetBundleNamesData(const uint8_t *data, size_t size, vector<BIncrementalData> &bundleNames)
 {
     for (size_t i = 0; i < size; i++) {
-        string name = string(reinterpret_cast<const char*>(data), size) + to_string(i);
+        string param(reinterpret_cast<const char*>(data), size);
+        string name = param + to_string(i);
         if (size < sizeof(int64_t)) {
             BIncrementalData data(name, 0);
             bundleNames.push_back(data);
@@ -147,7 +151,7 @@ bool CmdGetLocalCapabilitiesIncrementalFuzzTest(const uint8_t *data, size_t size
     MessageParcel reply;
     MessageOption option;
 
-    sptr service = sptr(new Service(SERVICE_ID));
+    sptr service(new Service(SERVICE_ID));
     uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES_INCREMENTAL);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
@@ -167,7 +171,7 @@ bool CmdInitIncrementalBackupSessionFuzzTest(const uint8_t *data, size_t size)
     MessageParcel reply;
     MessageOption option;
 
-    sptr service = sptr(new Service(SERVICE_ID));
+    sptr service(new Service(SERVICE_ID));
     uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_INCREMENTAL_BACKUP_SESSION);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
@@ -187,7 +191,7 @@ bool CmdAppendBundlesIncrementalBackupSessionFuzzTest(const uint8_t *data, size_
     MessageParcel reply;
     MessageOption option;
 
-    sptr service = sptr(new Service(SERVICE_ID));
+    sptr service(new Service(SERVICE_ID));
     uint32_t code = static_cast<uint32_t>(
         IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION);
     service->OnRemoteRequest(code, datas, reply, option);
@@ -210,12 +214,12 @@ bool CmdPublishIncrementalFileFuzzTest(const uint8_t *data, size_t size)
         BFileInfo fileInfo(fileName, bundleName, sn);
         datas.WriteParcelable(&fileInfo);
     }
-    
+
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
 
-    sptr service = sptr(new Service(SERVICE_ID));
+    sptr service(new Service(SERVICE_ID));
     uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_INCREMENTAL_FILE);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
@@ -241,7 +245,7 @@ bool CmdAppIncrementalFileReadyFuzzTest(const uint8_t *data, size_t size)
     MessageParcel reply;
     MessageOption option;
 
-    sptr service = sptr(new Service(SERVICE_ID));
+    sptr service(new Service(SERVICE_ID));
     uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_INCREMENTAL_FILE_READY);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
@@ -260,7 +264,7 @@ bool CmdAppIncrementalDoneFuzzTest(const uint8_t *data, size_t size)
     MessageParcel reply;
     MessageOption option;
 
-    sptr service = sptr(new Service(SERVICE_ID));
+    sptr service(new Service(SERVICE_ID));
     service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_INCREMENTAL_DONE),
         datas, reply, option);
     service = nullptr;
@@ -273,18 +277,20 @@ bool CmdGetIncrementalFileHandleFuzzTest(const uint8_t *data, size_t size)
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
     int pos = (size + 1) >> 1;
     if (size > 0) {
-        datas.WriteString(string(reinterpret_cast<const char*>(data), pos));
+        string param(reinterpret_cast<const char*>(data), pos);
+        datas.WriteString(param);
     }
 
     if (size > 1) {
-        datas.WriteString(string(reinterpret_cast<const char*>(data + pos), size - pos));
+        string param(reinterpret_cast<const char*>(data + pos), size - pos);
+        datas.WriteString(param);
     }
 
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
 
-    sptr service = sptr(new Service(SERVICE_ID));
+    sptr service(new Service(SERVICE_ID));
     service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_INCREMENTAL_FILE_NAME),
         datas, reply, option);
     service = nullptr;
@@ -299,7 +305,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (data == nullptr) {
         return 0;
     }
-    
+
     OHOS::CmdGetFileHandleFuzzTest(data, size);
     OHOS::CmdAppendBundlesBackupSessionFuzzTest(data, size);
     OHOS::CmdReleaseFuzzTest(data, size);
