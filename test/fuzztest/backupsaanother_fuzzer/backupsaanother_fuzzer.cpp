@@ -162,11 +162,7 @@ bool CmdInitIncrementalBackupSessionFuzzTest(const uint8_t *data, size_t size)
 {
     MessageParcel datas;
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
-    BIncrementalBackupSession::Callbacks callbacks;
-    std::shared_ptr<ServiceReverse> backupPtr =
-        std::make_shared<ServiceReverse>(callbacks);
-    datas.WriteRemoteObject(backupPtr->AsObject().GetRefPtr());
-
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
