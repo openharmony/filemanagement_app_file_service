@@ -1479,7 +1479,7 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
     HILOGI("Start AsyncTaskDoIncrementalBackup");
     int incrementalFdDup = dup(incrementalFd);
     int manifestFdDup = dup(manifestFd);
-    if (incrementalFdDup < 0 || manifestFdDup < 0) {
+    if (incrementalFdDup < 0) {
         throw BError(BError::Codes::EXT_INVAL_ARG, "dup failed");
     }
     auto task = [obj {wptr<BackupExtExtension>(this)}, manifestFdDup, incrementalFdDup]() {
@@ -1494,7 +1494,7 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
             map<string, struct ReportFileInfo> bigFiles;
             UniqueFd incrementalDupFd(dup(incrementalFdDup));
             UniqueFd manifestDupFd(dup(manifestFdDup));
-            if (incrementalDupFd < 0 || manifestDupFd < 0) {
+            if (incrementalDupFd < 0) {
                 throw BError(BError::Codes::EXT_INVAL_ARG, "dup failed");
             }
             close(incrementalFdDup);
