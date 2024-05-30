@@ -165,7 +165,7 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
 
         VerifyCaller();
 
-        if (extension_->SpeicalVersionForCloneAndCloud()) {
+        if (extension_->SpecialVersionForCloneAndCloud()) {
             return GetFileHandleForSpecialCloneCloud(fileName);
         }
 
@@ -246,7 +246,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         HILOGI("extension: Start GetIncrementalFileHandle");
         VerifyCaller();
 
-        if (extension_->SpeicalVersionForCloneAndCloud()) {
+        if (extension_->SpecialVersionForCloneAndCloud()) {
             return GetIncreFileHandleForSpecialVersion(fileName);
         }
 
@@ -410,7 +410,7 @@ ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
         VerifyCaller();
         // 异步执行解压操作
         if (extension_->AllowToBackupRestore()) {
-            if (extension_->SpeicalVersionForCloneAndCloud()) {
+            if (extension_->SpecialVersionForCloneAndCloud()) {
                 HILOGI("Create task for Incremental SpecialVersion");
                 AsyncTaskIncreRestoreSpecialVersion();
             } else {
@@ -559,7 +559,7 @@ int BackupExtExtension::DoRestore(const string &fileName)
     string tarName = path + fileName;
 
     // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
-    if (extension_->SpeicalVersionForCloneAndCloud() || extension_->UseFullBackupOnly()) {
+    if (extension_->SpecialVersionForCloneAndCloud() || extension_->UseFullBackupOnly()) {
         UntarFile::GetInstance().UnPacket(tarName, path);
     } else {
         UntarFile::GetInstance().UnPacket(tarName, "/");
@@ -601,7 +601,7 @@ int BackupExtExtension::DoIncrementalRestore()
             string tarName = path + item;
 
             // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
-            if (extension_->SpeicalVersionForCloneAndCloud() || extension_->UseFullBackupOnly()) {
+            if (extension_->SpecialVersionForCloneAndCloud() || extension_->UseFullBackupOnly()) {
                 UntarFile::GetInstance().IncrementalUnPacket(tarName, path, GetTarIncludes(tarName));
             } else {
                 UntarFile::GetInstance().IncrementalUnPacket(tarName, "/", GetTarIncludes(tarName));
@@ -671,7 +671,7 @@ static void RestoreBigFilesForSpecialCloneCloud(ExtManageInfo item)
     }
 }
 
-static ErrCode RestoreTarForSpeicalCloneCloud(ExtManageInfo item)
+static ErrCode RestoreTarForSpecialCloneCloud(ExtManageInfo item)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     string tarName = item.hashName;
@@ -714,7 +714,7 @@ static ErrCode RestoreFilesForSpecialCloneCloud()
             RestoreBigFilesForSpecialCloneCloud(item);
         } else {
             // 待解压tar文件处理
-            if (RestoreTarForSpeicalCloneCloud(item) != ERR_OK) {
+            if (RestoreTarForSpecialCloneCloud(item) != ERR_OK) {
                 HILOGE("Failed to restore tar file %{public}s", item.hashName.c_str());
                 return ERR_INVALID_VALUE;
             }
@@ -907,7 +907,7 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have already released");
         try {
             int ret = ERR_OK;
-            if (ptr->extension_->SpeicalVersionForCloneAndCloud()) {
+            if (ptr->extension_->SpecialVersionForCloneAndCloud()) {
                 ret = RestoreFilesForSpecialCloneCloud();
                 if (ret == ERR_OK) {
                     ptr->AsyncTaskRestoreForUpgrade();
@@ -926,7 +926,7 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
             // 恢复用户tar包以及大文件
             // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景
             bool appendTargetPath =
-                ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpeicalVersionForCloneAndCloud();
+                ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpecialVersionForCloneAndCloud();
             RestoreBigFiles(appendTargetPath);
             DeleteBackupTars();
             if (ret == ERR_OK) {
@@ -972,7 +972,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
             // 恢复用户tar包以及大文件
             // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景
             bool appendTargetPath =
-                ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpeicalVersionForCloneAndCloud();
+                ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpecialVersionForCloneAndCloud();
             RestoreBigFiles(appendTargetPath);
 
             // delete 1.tar/manage.json

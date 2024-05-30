@@ -576,7 +576,7 @@ RestoreTypeEnum SvcSessionManager::GetBundleRestoreType(const std::string &bundl
     return it->second.restoreType;
 }
 
-void SvcSessionManager::SetBundleVersionCode(const std::string &bundleName, uint32_t versionCode)
+void SvcSessionManager::SetBundleVersionCode(const std::string &bundleName, int64_t versionCode)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
@@ -587,7 +587,7 @@ void SvcSessionManager::SetBundleVersionCode(const std::string &bundleName, uint
     it->second.versionCode = versionCode;
 }
 
-uint32_t SvcSessionManager::GetBundleVersionCode(const std::string &bundleName)
+int64_t SvcSessionManager::GetBundleVersionCode(const std::string &bundleName)
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {

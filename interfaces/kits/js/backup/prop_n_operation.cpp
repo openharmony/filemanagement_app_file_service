@@ -57,9 +57,11 @@ static napi_value AsyncCallback(napi_env env, const NFuncArg& funcArg)
             return NError(errno);
         }
         *fd = proxy->GetLocalCapabilities();
+        HILOGI("called LocalCapabilities::AsyncCallback cbExec success");
         return NError(ERRNO_NOERR);
     };
     auto cbCompl = [fd](napi_env env, NError err) -> NVal {
+        HILOGI("called LocalCapabilities::AsyncCallback cbCompl");
         if (err) {
             return {env, err.GetNapiErr(env)};
         }

@@ -156,6 +156,7 @@ static inline std::string BLANK_REPORT_NAME = "blankReport.rp";
 
 // 特殊版本信息
 constexpr int DEFAULT_VERSION_CODE = 0;
+constexpr char VERSION_NAME_SEPARATOR_CHAR = '-';
 static inline std::string_view DEFAULT_VERSION_NAME = "0.0.0.0";
 static inline std::string_view DEFAULT_VERSION_NAME_CLONE = "99.99.99.999";
 static inline std::string_view DEFAULT_VERSION_NAME_CLONE_2 = "99.99.99.998";

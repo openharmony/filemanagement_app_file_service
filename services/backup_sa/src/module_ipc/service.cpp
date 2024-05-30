@@ -267,11 +267,12 @@ ErrCode Service::Start()
     return BError(BError::Codes::OK);
 }
 
-static bool SpeicalVersion(const string &versionName, uint32_t versionCode)
+static bool SpecialVersion(const string &versionName)
 {
+    string versionNameFlag = versionName.substr(0, versionName.find_first_of(BConstants::VERSION_NAME_SEPARATOR_CHAR));
     auto iter = find_if(BConstants::DEFAULT_VERSION_NAMES_VEC.begin(), BConstants::DEFAULT_VERSION_NAMES_VEC.end(),
-                        [&versionName](const auto &version) { return version == versionName; });
-    if (versionCode == BConstants::DEFAULT_VERSION_CODE && iter != BConstants::DEFAULT_VERSION_NAMES_VEC.end()) {
+                        [&versionNameFlag](const auto &version) { return version == versionNameFlag; });
+    if (iter != BConstants::DEFAULT_VERSION_NAMES_VEC.end()) {
         return true;
     }
     return false;
@@ -393,8 +394,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             }
             HILOGI("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
                    restoreInfo.extensionName.c_str());
-            if ((restoreInfo.allToBackup == false &&
-                 !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) ||
+            if ((restoreInfo.allToBackup == false && !SpecialVersion(restoreInfo.versionName)) ||
                 (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) {
                 OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, restoreInfo.name);
                 session_->RemoveExtInfo(restoreInfo.name);
@@ -432,7 +432,7 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         }
         HILOGD("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
             restoreInfo.extensionName.c_str());
-        if ((restoreInfo.allToBackup == false && !SpeicalVersion(restoreInfo.versionName, restoreInfo.versionCode)) ||
+        if ((restoreInfo.allToBackup == false && !SpecialVersion(restoreInfo.versionName)) ||
             (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) {
             OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, restoreInfo.name);
             session_->RemoveExtInfo(restoreInfo.name);
@@ -757,12 +757,12 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         string backupExtName = session_->GetBackupExtName(bundleName); /* new device app ext name */
         HILOGD("backupExtName: %{public}s, bundleName: %{public}s", backupExtName.data(), bundleName.data());
         string versionName = session_->GetBundleVersionName(bundleName);          /* old device app version name */
-        uint32_t versionCode = session_->GetBundleVersionCode(bundleName);        /* old device app version code */
+        int64_t versionCode = session_->GetBundleVersionCode(bundleName);         /* old device app version code */
         RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
 
         want.SetElementName(bundleName, backupExtName);
         want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
-        want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<int>(versionCode));
+        want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<long>(versionCode));
         want.SetParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, static_cast<int>(restoreType));
         want.SetParam(BConstants::EXTENSION_VERSION_NAME_PARA, versionName);
 
@@ -846,8 +846,9 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
         HILOGE("Backup <%{public}s> Extension Process Died", callName.c_str());
         session_->VerifyBundleName(callName);
         string versionName = session_->GetBundleVersionName(bundleName);   /* old device app version name */
-        uint32_t versionCode = session_->GetBundleVersionCode(bundleName); /* old device app version code */
-        if (versionCode == BConstants::DEFAULT_VERSION_CODE && versionName == BConstants::DEFAULT_VERSION_NAME &&
+        string versionNameFlag =
+            versionName.substr(0, versionName.find_first_of(BConstants::VERSION_NAME_SEPARATOR_CHAR));
+        if (versionNameFlag == BConstants::DEFAULT_VERSION_NAME &&
             session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_READDY)) {
             ExtConnectDied(bundleName);
             return;

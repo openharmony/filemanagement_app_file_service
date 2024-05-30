@@ -52,7 +52,7 @@ struct BackupExtInfo {
     /* [RESTORE] Record whether data backup is required during the app exec restore proceess. */
     RestoreTypeEnum restoreType;
     /* Clone App: old device app versionCode */
-    uint32_t versionCode;
+    int64_t versionCode;
     /* Clone App: old device app versionCode */
     std::string versionName;
     /* Ext Ability APP process time */
@@ -347,7 +347,7 @@ public:
      * @param bundleName
      * @param versionCode
      */
-    void SetBundleVersionCode(const std::string &bundleName, uint32_t versionCode);
+    void SetBundleVersionCode(const std::string &bundleName, int64_t versionCode);
 
     /**
      * @brief Get the bundle version code object
@@ -355,7 +355,7 @@ public:
      * @param  bundleName
      * @return versionCode
      */
-    uint32_t GetBundleVersionCode(const std::string &bundleName);
+    int64_t GetBundleVersionCode(const std::string &bundleName);
 
     /**
      * @brief Set the bundle version name object
