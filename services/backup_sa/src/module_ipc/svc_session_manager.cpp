@@ -193,7 +193,7 @@ UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, Uniq
 
 void SvcSessionManager::RemoveExtInfo(const string &bundleName)
 {
-    HILOGI("svcMrg:RemoveExt, bundleName:%{public}s", bundleName.c_str());
+    HILOGD("svcMrg:RemoveExt, bundleName:%{public}s", bundleName.c_str());
     unique_lock<shared_mutex> lock(lock_);
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
@@ -207,7 +207,7 @@ void SvcSessionManager::RemoveExtInfo(const string &bundleName)
 
 wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &bundleName)
 {
-    HILOGI("svcMrg:GetExt, bundleName:%{public}s", bundleName.c_str());
+    HILOGD("svcMrg:GetExt, bundleName:%{public}s", bundleName.c_str());
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -223,7 +223,7 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
 
 std::weak_ptr<SABackupConnection> SvcSessionManager::GetSAExtConnection(const BundleName &bundleName)
 {
-    HILOGI("svcMrg:GetExt, bundleName:%{public}s", bundleName.c_str());
+    HILOGD("svcMrg:GetExt, bundleName:%{public}s", bundleName.c_str());
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -473,7 +473,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
     }
 
     for (auto &&bundleName : bundleNames) {
-        HILOGI("bundleName: %{public}s", bundleName.c_str());
+        HILOGD("bundleName: %{public}s", bundleName.c_str());
         BackupExtInfo info {};
         if (SAUtils::IsSABundleName(bundleName)) {
             info.saBackupConnection = GetBackupSAExt(bundleName);
@@ -488,7 +488,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
 
 sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &bundleName)
 {
-    HILOGI("SvcSessionManager::CreateBackupConnection begin.");
+    HILOGD("SvcSessionManager::CreateBackupConnection begin.");
     return GetBackupAbilityExt(bundleName);
 }
 
@@ -549,7 +549,7 @@ bool SvcSessionManager::NeedToUnloadService()
         bool isAllBundlesRestored = SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
         isNeedToUnloadService = (isNeedToUnloadService && isAllBundlesRestored);
     }
-    HILOGI("isNeedToUnloadService:%{public}d", isNeedToUnloadService);
+    HILOGD("isNeedToUnloadService:%{public}d", isNeedToUnloadService);
     return isNeedToUnloadService;
 }
 

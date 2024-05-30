@@ -28,7 +28,7 @@ using namespace std;
 ErrCode SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Start");
+    HILOGD("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     data.WriteInterfaceToken(GetDescriptor());
@@ -47,14 +47,14 @@ ErrCode SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
         return ErrCode(ret);
     }
 
-    HILOGI("Successful");
+    HILOGD("Successful");
     return reply.ReadInt32();
 }
 
 ErrCode SvcExtensionProxy::PublishIncrementalFile(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Start");
+    HILOGD("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     data.WriteInterfaceToken(GetDescriptor());
@@ -73,14 +73,14 @@ ErrCode SvcExtensionProxy::PublishIncrementalFile(const string &fileName)
         return ErrCode(ret);
     }
 
-    HILOGI("Successful");
+    HILOGD("Successful");
     return reply.ReadInt32();
 }
 
 ErrCode SvcExtensionProxy::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Start");
+    HILOGD("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     data.WriteInterfaceToken(GetDescriptor());
@@ -97,7 +97,7 @@ ErrCode SvcExtensionProxy::HandleIncrementalBackup(UniqueFd incrementalFd, Uniqu
         return ErrCode(ret);
     }
 
-    HILOGI("Successful");
+    HILOGD("Successful");
     return reply.ReadInt32();
 }
 
@@ -125,7 +125,7 @@ ErrCode SvcExtensionProxy::IncrementalOnBackup()
 tuple<UniqueFd, UniqueFd> SvcExtensionProxy::GetIncrementalBackupFileHandle()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Start");
+    HILOGD("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     data.WriteInterfaceToken(GetDescriptor());
@@ -139,7 +139,7 @@ tuple<UniqueFd, UniqueFd> SvcExtensionProxy::GetIncrementalBackupFileHandle()
         return {UniqueFd(-1), UniqueFd(-1)};
     }
 
-    HILOGI("Successful");
+    HILOGD("Successful");
     UniqueFd incrementalFd(reply.ReadFileDescriptor());
     UniqueFd manifestFd(reply.ReadFileDescriptor());
     return {move(incrementalFd), move(manifestFd)};

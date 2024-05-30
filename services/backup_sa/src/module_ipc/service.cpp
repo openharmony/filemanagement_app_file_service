@@ -586,7 +586,7 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         string callerName = VerifyCallerAndGetCallerName();
-        HILOGI("Caller name is:%{public}s", callerName.c_str());
+        HILOGD("Caller name is:%{public}s", callerName.c_str());
         if (fileName.find('/') != string::npos) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not valid");
         }
