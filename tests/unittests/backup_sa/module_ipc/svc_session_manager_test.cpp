@@ -286,8 +286,8 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceReverseProxy_010
 
         sessionManagerPtr_->impl_.clientProxy = remote_;
         auto proxy = sessionManagerPtr_->GetServiceReverseProxy();
-        EXPECT_EQ(reinterpret_cast<int>(proxy.GetRefPtr()),
-            reinterpret_cast<int>(sessionManagerPtr_->impl_.clientProxy.GetRefPtr()));
+        EXPECT_EQ(reinterpret_cast<long long>(proxy.GetRefPtr()),
+            reinterpret_cast<long long>(sessionManagerPtr_->impl_.clientProxy.GetRefPtr()));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetServiceReverseProxy.";
@@ -663,12 +663,65 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtConnection_0100, tes
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
         auto ret = sessionManagerPtr_->GetExtConnection(BUNDLE_NAME);
-        EXPECT_EQ(reinterpret_cast<int>(ret.GetRefPtr()), reinterpret_cast<int>(info.backUpConnection.GetRefPtr()));
+        EXPECT_EQ(reinterpret_cast<long long>(ret.GetRefPtr()),
+            reinterpret_cast<long long>(info.backUpConnection.GetRefPtr()));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetExtConnection.";
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetExtConnection_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetSAExtConnection_0100
+ * @tc.name: SUB_backup_sa_session_GetSAExtConnection_0100
+ * @tc.desc: 测试 GetSAExtConnection 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSAExtConnection_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetSAExtConnection_0100";
+    try {
+        try {
+            sessionManagerPtr_->impl_.clientToken = 0;
+            sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        try {
+            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+            sessionManagerPtr_->impl_.backupExtNameMap.clear();
+            sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_REFUSED_ACT);
+        }
+
+        try {
+            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+            sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+            sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        BackupExtInfo info;
+        info.saBackupConnection = make_shared<SABackupConnection>(nullptr, nullptr, nullptr, nullptr);
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
+        auto ret = sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME).lock();
+        EXPECT_EQ(reinterpret_cast<long long>(ret.get()), reinterpret_cast<long long>(info.saBackupConnection.get()));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetSAExtConnection.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetSAExtConnection_0100";
 }
 
 /**

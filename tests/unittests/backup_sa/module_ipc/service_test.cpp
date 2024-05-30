@@ -65,8 +65,19 @@ ErrCode ServiceTest::Init(IServiceReverse::Scenario scenario)
 {
     vector<string> bundleNames;
     vector<string> detailInfos;
+    string json = "[{\"infos\":[{"
+                    "\"details\":[{"
+                        "\"detail\":[{"
+                            "\"source\":\"com.app.demo001\","
+                            "\"target\":\"com.example.fileonrestoreex\""
+                        "}],"
+                        "\"type\":\"app_mapping_relation\""
+                    "}],"
+                    "\"type\":\"broadcast\""
+                    "}]"
+                "}]";
     bundleNames.emplace_back(BUNDLE_NAME);
-    detailInfos.emplace_back("");
+    detailInfos.emplace_back(json);
     ErrCode ret = 0;
     if (scenario == IServiceReverse::Scenario::RESTORE) {
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
