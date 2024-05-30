@@ -355,9 +355,14 @@ string BundleMgrAdapter::GetExtName(string bundleName, int32_t userId)
             if (ext.bundleName != bundleName) {
                 continue;
             }
+            if (ext.type != AppExecFwk::ExtensionAbility::BACKUP) {
+                continue;
+            }
+            HLOGI("bundleName: %{public}s, find extName: %{public}s", bundleName.c_str(), ext.name.c_str());
             return ext.name;
         }
     }
+    HLOGI("bundleName: %{public}s , find extName failed", bundleName.c_str());
     return "BackupExtensionAbility";
 }
 
