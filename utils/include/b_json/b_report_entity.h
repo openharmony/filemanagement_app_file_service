@@ -46,6 +46,13 @@ public:
     std::unordered_map<std::string, struct ReportFileInfo> GetReportInfos();
 
     /**
+     * @brief 获取本地Report信息
+     *
+     * @return bool
+     */
+    bool GetStorageReportInfos(struct ReportFileInfo &fileStat);
+
+    /**
      * @brief Check if line is encode
      *
      */

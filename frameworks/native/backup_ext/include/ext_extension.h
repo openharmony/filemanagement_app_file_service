@@ -35,7 +35,6 @@
 namespace OHOS::FileManagement::Backup {
 using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
                                  map<string, struct ReportFileInfo>,
-                                 map<string, struct stat>,
                                  map<string, struct ReportFileInfo>>;
 class BackupExtExtension : public ExtExtensionStub {
 public:
@@ -140,14 +139,15 @@ private:
 
     int DoIncrementalBackup(const std::map<std::string, struct ReportFileInfo> &allFiles,
                             const std::map<std::string, struct ReportFileInfo> &smallFiles,
-                            const std::map<std::string, struct stat> &bigFiles,
-                            const std::map<std::string, struct ReportFileInfo> &bigInfos);
+                            const std::map<std::string, struct ReportFileInfo> &bigFiles);
 
-    CompareFilesResult CompareFiles(const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
-        const unordered_map<string, struct ReportFileInfo> &storageFiles);
+    void CompareFiles(UniqueFd incrementalFd,
+                      UniqueFd manifestFd,
+                      map<string, struct ReportFileInfo> &allFiles,
+                      map<string, struct ReportFileInfo> &smallFiles,
+                      map<string, struct ReportFileInfo> &bigFiles);
 
-    void AsyncTaskDoIncrementalBackup(const std::unordered_map<string, struct ReportFileInfo> &cloudFiles,
-        const unordered_map<string, struct ReportFileInfo> &storageFiles);
+    void AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     void AsyncTaskOnIncrementalBackup();
 
     /**
