@@ -584,7 +584,7 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
             } while (false);
             HILOGI("will notify current thread info");
             std::unique_lock<std::mutex> lock(param->backupOperateMutex);
-            param->isReady = true;
+            param->isReady.store(true);
             param->backupOperateCondition.notify_one();
         });
     if (ret != 0) {
@@ -593,7 +593,7 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
     }
     HILOGI("Wait execute current js method");
     std::unique_lock<std::mutex> lock(param->backupOperateMutex);
-    param->backupOperateCondition.wait(lock, [param]() { return param->isReady; });
+    param->backupOperateCondition.wait(lock, [param]() { return param->isReady.load(); });
     HILOGI("End do call current js method");
     return ERR_OK;
 }
