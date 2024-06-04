@@ -36,7 +36,7 @@ using ResultValueParser = std::function<bool(napi_env, napi_value)>;
 struct CallJsParam {
     std::mutex backupOperateMutex;
     std::condition_variable backupOperateCondition;
-    bool isReady = false;
+    std::atomic<bool> isReady {false};
     std::string funcName;
     AbilityRuntime::JsRuntime *jsRuntime;
     NativeReference *jsObj;
