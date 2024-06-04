@@ -33,10 +33,6 @@ group("tgt_backup_sa") {
   ]
 }
 
-group("tgt_backup_tool") {
-  deps = [ "tools/backup_tool" ]
-}
-
 group("tgt_backup_tests") {
   testonly = true
 
