@@ -127,39 +127,71 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
     }
 }
 
-ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
+void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    try {
-        session_->IncreaseSessionCnt();
-        session_->SetSessionUserId(GetUserIdDefault());
-        std::string bundleName = VerifyCallerAndGetCallerName();
-        auto backUpConnection = session_->GetExtConnection(bundleName);
+        auto thisPtr = ptr.promote();
+        if (!thisPtr) {
+            HILOGE("this pointer is null");
+            return;
+        }
+        auto session = thisPtr->session_;
+        if (session == nullptr) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "session is nullptr");
+            return;
+        }
+        auto backUpConnection = session->GetExtConnection(bundleName);
         auto proxy = backUpConnection->GetBackupExtProxy();
         if (!proxy) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
         }
-        int64_t lastTime = session_->GetLastIncrementalTime(bundleName);
+        int64_t lastTime = session->GetLastIncrementalTime(bundleName);
         std::vector<BIncrementalData> bundleNames;
         bundleNames.emplace_back(BIncrementalData {bundleName, lastTime});
-        BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session_->GetSessionUserId());
-        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId()).
-                      append(bundleName).
-                      append("/").
-                      append(BConstants::BACKUP_STAT_SYMBOL).
-                      append(to_string(lastTime));
-        HILOGD("path = %{public}s", path.c_str());
+        BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session->GetSessionUserId());
+        string path = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId()).
+                        append(bundleName).
+                        append("/").
+                        append(BConstants::BACKUP_STAT_SYMBOL).
+                        append(to_string(lastTime));
+        HILOGD("path = %{public}s,bundleName = %{public}s", path.c_str(), bundleName.c_str());
         UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP));
         if (fdLocal < 0) {
             HILOGD("fdLocal open fail, error = %{public}d", errno);
             throw BError(BError::Codes::SA_INVAL_ARG, "open local Manifest file failed");
         }
-        UniqueFd lastManifestFd(session_->GetIncrementalManifestFd(bundleName));
+        UniqueFd lastManifestFd(session->GetIncrementalManifestFd(bundleName));
         auto ret = proxy->HandleIncrementalBackup(move(fdLocal), move(lastManifestFd));
         if (ret) {
-            ClearSessionAndSchedInfo(bundleName);
-            NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
+            thisPtr->ClearSessionAndSchedInfo(bundleName);
+            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         }
+}
+
+ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        if (session_ == nullptr) {
+            HILOGE("session is nullptr");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        session_->IncreaseSessionCnt();
+        session_->SetSessionUserId(GetUserIdDefault());
+        std::string bundleName = VerifyCallerAndGetCallerName();
+        auto task = [this, bundleName]() {
+            StartGetFdTask(bundleName, wptr(this));
+        };
+        threadPool_.AddTask([task]() {
+            try {
+                task();
+            } catch (const BError &e) {
+                HILOGE("GetAppLocalListAndDoIncrementalBackup failed, errCode = %{public}d", e.GetCode());
+            } catch (const exception &e) {
+                HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
+            } catch (...) {
+                HILOGI("Unexpected exception");
+            }
+        });
         session_->DecreaseSessionCnt();
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
