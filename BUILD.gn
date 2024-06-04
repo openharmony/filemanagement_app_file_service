@@ -17,6 +17,7 @@ group("tgt_backup_extension") {
   deps = [
     "frameworks/native/backup_ext:backup_extension_ability_native",
     "interfaces/api/js/napi/backup_ext:backupextensionability_napi",
+    "interfaces/api/js/napi/backup_ext_context:backupextensioncontext_napi",
   ]
 }
 
