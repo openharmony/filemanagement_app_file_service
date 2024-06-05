@@ -22,7 +22,7 @@
 #include <sys/types.h>
 
 #include "bundle_mgr_client.h"
-#include "ext_backup_context.h"
+#include "ext_backup_context_js.h"
 #include "js_extension_context.h"
 #include "js_native_api.h"
 #include "js_native_api_types.h"
@@ -45,6 +45,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+constexpr size_t ARGC_ONE = 1;
 
 static string GetSrcPath(const AppExecFwk::AbilityInfo &info)
 {
@@ -259,13 +260,13 @@ napi_value AttachBackupExtensionContext(napi_env env, void *value, void *)
         HILOGE("invalid context.");
         return nullptr;
     }
-    auto object = CreateJsExtensionContext(env, ptr);
+    auto object = CreateExtBackupJsContext(env, ptr);
     if (object == nullptr) {
         HILOGE("Failed to get js backup extension context");
         return nullptr;
     }
     auto contextRef =
-        AbilityRuntime::JsRuntime::LoadSystemModuleByEngine(env, "application.ExtensionContext", &object, 1);
+        AbilityRuntime::JsRuntime::LoadSystemModuleByEngine(env, "application.BackupExtensionContext", &object, 1);
     napi_value contextObj = contextRef->GetNapiValue();
     napi_coerce_to_native_binding_object(env, contextObj, AbilityRuntime::DetachCallbackFunc,
                                          AttachBackupExtensionContext, value, nullptr);
@@ -301,8 +302,12 @@ void ExtBackupJs::ExportJsContext(void)
     }
 
     HILOGI("CreateBackupExtAbilityContext");
-    napi_value contextObj = CreateJsExtensionContext(env, context);
-    auto contextRef = jsRuntime_.LoadSystemModule("application.ExtensionContext", &contextObj, 1);
+    napi_value contextObj = CreateExtBackupJsContext(env, context);
+    auto contextRef = jsRuntime_.LoadSystemModule("application.BackupExtensionContext", &contextObj, ARGC_ONE);
+    if (!contextRef) {
+        HILOGE("context is nullptr");
+        return;
+    }
     contextObj = contextRef->GetNapiValue();
     HILOGI("Bind context");
     context->Bind(jsRuntime_, contextRef.release());
