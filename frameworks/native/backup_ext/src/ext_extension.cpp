@@ -1064,20 +1064,18 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
             BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
                                   "extension handle have been already released");
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx, callBackupExAppDone);
-            if (err != ErrCode(BError::Codes::EXT_METHOD_NOT_EXIST)) {
-                HILOGI("OnRestore result EXT_METHOD_NOT_EXIST");
-                return;
-            }
-            ptr->AppDone(err);
-            ptr->DoClear();
+            HILOGI("OnRestore done err = %{public}d", err);
         } catch (const BError &e) {
             ptr->AppDone(e.GetCode());
+            ptr->DoClear();
         } catch (const exception &e) {
             HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
             ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+            ptr->DoClear();
         } catch (...) {
             HILOGE("Failed to restore the ext bundle");
             ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+            ptr->DoClear();
         }
     };
     threadPool_.AddTask([task]() {
@@ -1115,18 +1113,18 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
             BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
                                   "extension handle have been already released");
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx, callBackupExAppDone);
-            if (err == ErrCode(BError::Codes::EXT_METHOD_NOT_EXIST)) {
-                ptr->AppIncrementalDone(err);
-                ptr->DoClear();
-            }
+            HILOGI("OnRestore done err = %{public}d", err);
         } catch (const BError &e) {
             ptr->AppIncrementalDone(e.GetCode());
+            ptr->DoClear();
         } catch (const exception &e) {
             HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
             ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+            ptr->DoClear();
         } catch (...) {
             HILOGE("Failed to restore the ext bundle");
             ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+            ptr->DoClear();
         }
     };
 
