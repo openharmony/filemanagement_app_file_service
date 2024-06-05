@@ -20,7 +20,7 @@
 #include <tuple>
 
 namespace OHOS::FileManagement::Backup {
-class BFileHash {
+class BackupFileHash {
 public:
     static std::tuple<int, std::string> HashWithSHA256(const std::string &fpath);
 };

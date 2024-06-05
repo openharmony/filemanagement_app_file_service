@@ -43,7 +43,7 @@ public:
      *
      * @return std::map<string, ReportFileInfo>
      */
-    std::unordered_map<std::string, struct ReportFileInfo> GetReportInfos();
+    std::unordered_map<std::string, struct ReportFileInfo> GetReportInfos() const;
 
     /**
      * @brief 获取本地Report信息
@@ -80,7 +80,6 @@ public:
     virtual ~BReportEntity() = default;
 
 public:
-    std::string version;
     unsigned int attrNum = 0;
 
 protected:

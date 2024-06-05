@@ -563,7 +563,6 @@ int32_t ServiceStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessagePar
     if (!data.ReadString(fileName)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fileName").GetCode();
     }
-
     return GetIncrementalFileHandle(bundleName, fileName);
 }
 

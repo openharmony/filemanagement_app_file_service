@@ -62,7 +62,7 @@ static int ForEachFileSegment(const string &fpath, function<void(char *, size_t)
     return ferror(filp.get()) ? errno : 0;
 }
 
-tuple<int, string> BFileHash::HashWithSHA256(const string &fpath)
+tuple<int, string> BackupFileHash::HashWithSHA256(const string &fpath)
 {
     auto res = make_unique<unsigned char[]>(SHA256_DIGEST_LENGTH);
     SHA256_CTX ctx;

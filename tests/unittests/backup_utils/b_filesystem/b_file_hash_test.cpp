@@ -65,7 +65,7 @@ HWTEST_F(BFileHashTest, b_file_hash_HashWithSHA256_0100, testing::ext::TestSize.
         TestManager tm(__func__);
         const auto [filePath, content] = GetTestFile(tm);
 
-        auto [res, fileHash] = BFileHash::HashWithSHA256(filePath);
+        auto [res, fileHash] = BackupFileHash::HashWithSHA256(filePath);
 
         EXPECT_EQ(res, 0);
     } catch (const exception &e) {
