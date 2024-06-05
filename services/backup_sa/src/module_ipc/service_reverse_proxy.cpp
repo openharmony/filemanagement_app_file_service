@@ -171,13 +171,13 @@ void ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode)
     }
 }
 
-void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName, int fd)
+void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName, int fd, int32_t errCode)
 {
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     bool fdFlag = fd < 0 ? false : true;
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(fileName) ||
-        !data.WriteBool(fdFlag) || (fdFlag == true && !data.WriteFileDescriptor(fd))) {
+        !data.WriteBool(fdFlag) || (fdFlag == true && !data.WriteFileDescriptor(fd)) || !data.WriteInt32(errCode)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
     }
 

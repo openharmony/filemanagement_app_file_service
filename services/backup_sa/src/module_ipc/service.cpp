@@ -825,11 +825,9 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
             if (!proxy) {
                 throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
             }
-            UniqueFd fd = proxy->GetFileHandle(fileName);
-            if (fd < 0) {
-                HILOGE("Failed to extension file handle");
-            }
-            session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd));
+            int32_t errCode = 0;
+            UniqueFd fd = proxy->GetFileHandle(fileName, errCode);
+            session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd), errCode);
         } else {
             session_->SetExtFileNameRequest(bundleName, fileName);
         }
@@ -942,11 +940,9 @@ void Service::ExtStart(const string &bundleName)
         session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (auto &fileName : fileNameVec) {
-            UniqueFd fd = proxy->GetFileHandle(fileName);
-            if (fd < 0) {
-                HILOGE("Failed to extension file handle");
-            }
-            session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd));
+            int32_t errCode = 0;
+            UniqueFd fd = proxy->GetFileHandle(fileName, errCode);
+            session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd), errCode);
         }
         return;
     } catch (...) {

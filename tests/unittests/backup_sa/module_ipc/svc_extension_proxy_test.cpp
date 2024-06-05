@@ -69,15 +69,16 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetFileHandle_0100, test
     GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_GetFileHandle_0100";
     try {
         string fileName = "1.tar";
+        int32_t errCode = 0;
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
-        UniqueFd fd = proxy_->GetFileHandle(fileName);
+        UniqueFd fd = proxy_->GetFileHandle(fileName, errCode);
         EXPECT_LT(fd, BError(BError::Codes::OK));
 
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
-        fd = proxy_->GetFileHandle(fileName);
+        fd = proxy_->GetFileHandle(fileName, errCode);
         EXPECT_LT(fd, BError(BError::Codes::OK));
 
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
@@ -85,14 +86,14 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetFileHandle_0100, test
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(NO_ERROR));
         EXPECT_CALL(*messageParcelMock_, ReadBool()).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, ReadFileDescriptor()).WillOnce(Return(-1));
-        fd = proxy_->GetFileHandle(fileName);
+        fd = proxy_->GetFileHandle(fileName, errCode);
         EXPECT_LT(fd, BError(BError::Codes::OK));
 
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(NO_ERROR));
         EXPECT_CALL(*messageParcelMock_, ReadBool()).WillOnce(Return(false));
-        fd = proxy_->GetFileHandle(fileName);
+        fd = proxy_->GetFileHandle(fileName, errCode);
         EXPECT_LT(fd, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);

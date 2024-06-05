@@ -29,7 +29,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-static void OnFileReady(const BFileInfo &fileInfo, UniqueFd fd)
+static void OnFileReady(const BFileInfo &fileInfo, UniqueFd fd, int32_t errCode)
 {
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest OnFileReady OK";
 }
@@ -110,7 +110,7 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0100, test
     try {
         Init();
         BFileInfo backupFile("", "", 0);
-        callbacks_.onFileReady(backupFile, UniqueFd(-1));
+        callbacks_.onFileReady(backupFile, UniqueFd(-1), 0);
         callbacks_.onBundleStarted(ErrCode(BError::Codes::OK), "");
         callbacks_.onBundleFinished(ErrCode(BError::Codes::OK), "");
         callbacks_.onAllBundlesFinished(ErrCode(BError::Codes::OK));

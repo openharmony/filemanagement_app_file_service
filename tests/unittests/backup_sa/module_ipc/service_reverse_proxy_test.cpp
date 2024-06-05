@@ -835,14 +835,19 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnFileReady_01
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
 
         TestManager tm("ServiceReverseProxyTest_GetFd_0200");
+        int32_t errCode = 0;
         std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
         UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
-        proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, fd);
+        if (fd < 0) {
+            errCode = BError::GetCodeByErrno(errno);
+        }
+        proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, fd, errCode);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -866,7 +871,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnFileReady_01
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
-            proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0);
+            proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
             EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
@@ -875,7 +880,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnFileReady_01
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
-            proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0);
+            proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
             EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
@@ -884,7 +889,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnFileReady_01
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
-            proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0);
+            proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
             EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
@@ -913,7 +918,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnFileReady_01
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(false));
-            proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0);
+            proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
             EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
@@ -924,7 +929,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnFileReady_01
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(false));
-            proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0);
+            proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
             EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);

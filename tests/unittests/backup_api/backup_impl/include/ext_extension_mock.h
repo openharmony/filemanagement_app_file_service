@@ -48,23 +48,29 @@ public:
         std::string filePath = tm.GetRootDirCurTest().append(fileName);
         UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
         reply.WriteBool(true);
+        reply.WriteInt32(0);
         reply.WriteFileDescriptor(fd);
         return BError(BError::Codes::OK);
     }
 
-    UniqueFd GetFileHandle(const std::string &fileName) override
+    UniqueFd GetFileHandle(const std::string &fileName, int32_t &errCode) override
     {
         GTEST_LOG_(INFO) << "GetFileHandle" << fileName;
         if (fileName == "testName") {
+            errCode = BError::BackupErrorCode::E_UKERR;
             return UniqueFd(-1);
         }
 
         if (fileName.empty()) {
+            errCode = BError::BackupErrorCode::E_UKERR;
             return UniqueFd(-1);
         }
         TestManager tm("GetFileHand_GetFd_0200");
         std::string filePath = tm.GetRootDirCurTest().append(fileName);
         UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        if (fd < 0) {
+            errCode = BError::GetCodeByErrno(errno);
+        }
         return fd;
     };
 

@@ -48,7 +48,7 @@ public:
     MOCK_METHOD2(RestoreOnBundleStarted, void(int32_t errCode, std::string bundleName));
     MOCK_METHOD2(RestoreOnBundleFinished, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(RestoreOnAllBundlesFinished, void(int32_t errCode));
-    MOCK_METHOD3(RestoreOnFileReady, void(string bundleName, string fileName, int fd));
+    MOCK_METHOD4(RestoreOnFileReady, void(string bundleName, string fileName, int fd, int32_t errCode));
     MOCK_METHOD2(RestoreOnResultReport, void(string result, string bundleName));
     MOCK_METHOD5(IncrementalBackupOnFileReady,
         void(string bundleName, string fileName, int fd, int manifestFd, int32_t errCode));
@@ -374,10 +374,12 @@ HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_RestoreOnFileRead
     GTEST_LOG_(INFO) << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_RestoreOnFileReady_0100";
     try {
         MockServiceReverse service;
-        EXPECT_CALL(service, RestoreOnFileReady(_, _, _)).WillOnce(Return());
+        EXPECT_CALL(service, RestoreOnFileReady(_, _, _, _)).WillOnce(Return());
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        int32_t errCode = 0;
+        bool fdFlag = true;
 
         EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
         EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
@@ -386,7 +388,15 @@ HWTEST_F(ServiceReverseStubTest, SUB_backup_ServiceReverseStub_RestoreOnFileRead
         TestManager tm("ServiceReverseStub_0200");
         string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
         UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
-        data.WriteFileDescriptor(fd);
+        if (fd < 0) {
+            errCode = BError::GetCodeByErrno(errno);
+            fdFlag = false;
+        }
+        data.WriteBool(fdFlag);
+        if (fdFlag == true) {
+            data.WriteFileDescriptor(fd);
+        }
+        data.WriteInt32(errCode);
 
         EXPECT_EQ(
             BError(BError::Codes::OK),

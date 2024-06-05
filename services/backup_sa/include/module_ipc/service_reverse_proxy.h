@@ -29,7 +29,7 @@ public:
     void BackupOnAllBundlesFinished(int32_t errCode) override;
 
     void RestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
-    void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd) override;
+    void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override;
     void RestoreOnResultReport(std::string result, std::string bundleName) override;
     void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void RestoreOnAllBundlesFinished(int32_t errCode) override;

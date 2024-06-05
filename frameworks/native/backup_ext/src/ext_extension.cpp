@@ -154,7 +154,7 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
     return fd;
 }
 
-UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
+UniqueFd BackupExtExtension::GetFileHandle(const string &fileName, int32_t &errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
@@ -166,7 +166,11 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
         VerifyCaller();
 
         if (extension_->SpecialVersionForCloneAndCloud()) {
-            return GetFileHandleForSpecialCloneCloud(fileName);
+            UniqueFd fd = GetFileHandleForSpecialCloneCloud(fileName);
+            if (fd < 0) {
+                errCode = BError::GetCodeByErrno(errno);
+            }
+            return fd;
         }
 
         string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
@@ -179,10 +183,16 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName)
         if (access(tarName.c_str(), F_OK) == 0) {
             throw BError(BError::Codes::EXT_INVAL_ARG, string("The file already exists"));
         }
-        return UniqueFd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+        UniqueFd tarFd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+        if (tarFd < 0) {
+            HILOGE("Open file failed, file name is %{private}s, err = %{public}d", tarName.data(), errno);
+            errCode = BError::GetCodeByErrno(errno);
+        }
+        return tarFd;
     } catch (...) {
         HILOGE("Failed to get file handle");
         DoClear();
+        errCode = BError::BackupErrorCode::E_UKERR;
         return UniqueFd(-1);
     }
 }

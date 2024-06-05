@@ -282,10 +282,18 @@ private:
     };
 
     static inline const std::map<int, int> sysErrnoCodeTable_ {
+        {EPERM, BackupErrorCode::E_IPCSS},
         {EIO, BackupErrorCode::E_IO},
+        {EBADF, BackupErrorCode::E_IO},
+        {EACCES, BackupErrorCode::E_IO},
+        {EFBIG, BackupErrorCode::E_IO},
         {ENOMEM, BackupErrorCode::E_NOMEM},
-        {ENOENT, BackupErrorCode::E_NOTEXIST},
-        {EPERM, BackupErrorCode::E_PERM},
+        {EMFILE, BackupErrorCode::E_NOMEM},
+        {ENOENT, BackupErrorCode::E_INVAL},
+        {ENOTDIR, BackupErrorCode::E_INVAL},
+        {EISDIR, BackupErrorCode::E_INVAL},
+        {ENAMETOOLONG, BackupErrorCode::E_INVAL},
+        {ENOSPC, BackupErrorCode::E_NOSPC},
     };
 
 private:

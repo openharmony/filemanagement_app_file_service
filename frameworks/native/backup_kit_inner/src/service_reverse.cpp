@@ -99,14 +99,14 @@ void ServiceReverse::RestoreOnAllBundlesFinished(int32_t errCode)
     callbacksRestore_.onAllBundlesFinished(errCode);
 }
 
-void ServiceReverse::RestoreOnFileReady(string bundleName, string fileName, int fd)
+void ServiceReverse::RestoreOnFileReady(string bundleName, string fileName, int fd, int32_t errCode)
 {
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onFileReady) {
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
     BFileInfo bFileInfo(bundleName, fileName, 0);
-    callbacksRestore_.onFileReady(bFileInfo, UniqueFd(fd));
+    callbacksRestore_.onFileReady(bFileInfo, UniqueFd(fd), errCode);
 }
 
 void ServiceReverse::RestoreOnResultReport(string result, std::string bundleName)

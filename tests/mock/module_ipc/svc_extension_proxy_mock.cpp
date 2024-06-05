@@ -18,7 +18,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
+UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName, int32_t &errCode)
 {
     return UniqueFd(-1);
 }

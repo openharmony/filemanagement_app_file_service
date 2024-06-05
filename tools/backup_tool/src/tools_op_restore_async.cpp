@@ -96,7 +96,7 @@ static string GenHelpMsg()
            "simulates the application recovery scenario.\n";
 }
 
-static void OnFileReady(shared_ptr<SessionAsync> ctx, const BFileInfo &fileInfo, UniqueFd fd)
+static void OnFileReady(shared_ptr<SessionAsync> ctx, const BFileInfo &fileInfo, UniqueFd fd, int32_t errCode)
 {
     printf("FileReady owner = %s, fileName = %s, sn = %u, fd = %d\n", fileInfo.owner.c_str(), fileInfo.fileName.c_str(),
            fileInfo.sn, fd.Get());
@@ -378,7 +378,7 @@ static int32_t InitArg(const string &pathCapFile,
         ctx->fileNums_[bundleNames[i]] = ToolsOp::GetFIleNums(bundleNames[i]);
     }
     ctx->session_ = BSessionRestoreAsync::Init(BSessionRestoreAsync::Callbacks {
-        .onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2),
+        .onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2, placeholders::_3),
         .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
         .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),

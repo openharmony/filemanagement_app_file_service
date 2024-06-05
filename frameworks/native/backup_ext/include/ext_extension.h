@@ -38,7 +38,7 @@ using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
                                  map<string, struct ReportFileInfo>>;
 class BackupExtExtension : public ExtExtensionStub {
 public:
-    UniqueFd GetFileHandle(const std::string &fileName) override;
+    UniqueFd GetFileHandle(const std::string &fileName, int32_t &errCode) override;
     ErrCode HandleClear() override;
     ErrCode PublishFile(const std::string &fileName) override;
     ErrCode HandleBackup() override;

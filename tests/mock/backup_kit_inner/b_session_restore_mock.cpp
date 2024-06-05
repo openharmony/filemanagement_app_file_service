@@ -61,13 +61,13 @@ ErrCode BSessionRestore::Start()
     string filePath = tm.GetRootDirCurTest().append("1.tar");
     UniqueFd fd(open(filePath.data(), O_RDWR | O_CREAT, S_IRWXU));
     GTEST_LOG_(INFO) << "callbacks_::onFileReady 1.tar";
-    callbacks_.onFileReady(bFileInfo, move(fd));
+    callbacks_.onFileReady(bFileInfo, move(fd), 0);
 
     string fileManagePath = tm.GetRootDirCurTest().append("manage.json");
     UniqueFd fdManage(open(fileManagePath.data(), O_RDWR | O_CREAT, S_IRWXU));
     bFileInfo.fileName = "manage.json";
     GTEST_LOG_(INFO) << "callbacks_::onFileReady manage.json";
-    callbacks_.onFileReady(bFileInfo, move(fdManage));
+    callbacks_.onFileReady(bFileInfo, move(fdManage), 0);
 
     callbacks_.onBundleFinished(0, "com.example.app2backup");
 

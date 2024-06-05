@@ -29,7 +29,7 @@ namespace OHOS::FileManagement::Backup {
 class BSessionRestore {
 public:
     struct Callbacks {
-        std::function<void(const BFileInfo &, UniqueFd)> onFileReady;    // 当备份服务有文件待发送时执行的回调
+        std::function<void(const BFileInfo &, UniqueFd, ErrCode)> onFileReady;    // 当备份服务有文件待发送时执行的回调
         std::function<void(ErrCode, const BundleName)> onBundleStarted;  // 当启动某个应用的恢复流程结束时执行的回调函数
         std::function<void(ErrCode, const BundleName)> onBundleFinished; // 当某个应用的恢复流程结束或意外中止时执行的回调函数
         std::function<void(ErrCode)> onAllBundlesFinished;               // 当整个恢复流程结束或意外中止时执行的回调函数
