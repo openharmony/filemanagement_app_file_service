@@ -197,7 +197,7 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
 {
     UniqueFd fd = GetFileHandleForSpecialCloneCloud(fileName);
     if (fd < 0) {
-        HILOGE("Failed to open file = %{fileName}s, err = %{public}d", fileName.c_str(), errno);
+        HILOGE("Failed to open file = %{public}s, err = %{public}d", fileName.c_str(), errno);
         throw BError(BError::Codes::EXT_INVAL_ARG, string("open tar file failed"));
     }
 
@@ -209,7 +209,7 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
     string reportName = path + BConstants::BLANK_REPORT_NAME;
     UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
     if (reportFd < 0) {
-        HILOGE("Failed to open report file = %{fileName}s, err = %{public}d", reportName.c_str(), errno);
+        HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportName.c_str(), errno);
         throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
     }
 
