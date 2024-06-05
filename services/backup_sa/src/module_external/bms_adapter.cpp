@@ -84,7 +84,6 @@ static tuple<bool, string, string, string, Json::Value> GetAllowAndExtName(
         return {cache.GetAllowToBackupRestore(), ext.name, cache.GetRestoreDeps(), cache.GetSupportScene(),
             cache.GetExtraInfo()};
     }
-    HILOGE("No backup extension ability found");
     return {false, "", "", "", Json::Value()};
 }
 
@@ -115,6 +114,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     auto bms = GetBundleManager();
+    HILOGI("Start, bundleNames size:%{public}zu", bundleNames.size());
     for (auto const &bundleName : bundleNames) {
         HILOGI("Begin Get bundleName:%{public}s", bundleName.c_str());
         if (SAUtils::IsSABundleName(bundleName)) {
@@ -144,6 +144,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
                                                               installedBundle.versionName, dataSize, allToBackup,
                                                               extName, restoreDeps, supportScene, extraInfo});
     }
+    HILOGI("End, bundleInfos size:%{public}zu", bundleInfos.size());
     return bundleInfos;
 }
 
@@ -309,6 +310,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
 vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncremental(int32_t userId)
 {
     vector<AppExecFwk::BundleInfo> installedBundles;
+    HILOGI("Begin get bundle infos");
     auto bms = GetBundleManager();
     if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles, userId)) {
         throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle infos");
@@ -316,6 +318,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
 
     vector<BIncrementalData> bundleNames;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    HILOGI("Begin get bundle infos");
     for (auto const &installedBundle : installedBundles) {
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
@@ -335,6 +338,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     auto bundleInfosSA = BundleMgrAdapter::GetBundleInfosForSA();
     copy(bundleInfosNew.begin(), bundleInfosNew.end(), back_inserter(bundleInfos));
     copy(bundleInfosSA.begin(), bundleInfosSA.end(), back_inserter(bundleInfos));
+    HILOGI("End get bundle infos, bundleInfos size: %{public}zu", bundleInfos.size());
     return bundleInfos;
 }
 

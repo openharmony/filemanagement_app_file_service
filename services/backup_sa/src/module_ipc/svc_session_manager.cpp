@@ -137,7 +137,7 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-    HILOGD("Begin, bundleName name is:%{private}s", bundleName.c_str());
+    HILOGD("Begin, bundleName name is:%{public}s", bundleName.c_str());
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
         stringstream ss;
@@ -159,11 +159,12 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
             it->second.receExtAppDone = true;
         }
         if (it->second.receExtManageJson && it->second.fileNameInfo.empty() && it->second.receExtAppDone) {
+            HILOGI("Current bundle manage json info and file info support current app done");
             it->second.isBundleFinished = true;
             return true;
         }
     }
-    HILOGD("End, bundleName name is:%{private}s", bundleName.c_str());
+    HILOGD("End, bundleName name is:%{public}s", bundleName.c_str());
     return false;
 }
 
@@ -527,6 +528,7 @@ bool SvcSessionManager::IsOnAllBundlesFinished()
 
 bool SvcSessionManager::IsOnOnStartSched()
 {
+    HILOGI("Begin");
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
@@ -534,7 +536,7 @@ bool SvcSessionManager::IsOnOnStartSched()
     if (impl_.isBackupStart && impl_.backupExtNameMap.size()) {
         return true;
     }
-
+    HILOGI("End");
     return false;
 }
 

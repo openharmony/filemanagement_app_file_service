@@ -119,6 +119,7 @@ UniqueFd Service::GetLocalCapabilities()
          Only called by restore app before InitBackupSession,
            so there must be set init userId.
         */
+        HILOGI("Begin");
         session_->IncreaseSessionCnt();
         session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
@@ -139,6 +140,7 @@ UniqueFd Service::GetLocalCapabilities()
         cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
         session_->DecreaseSessionCnt();
+        HILOGI("End");
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
         session_->DecreaseSessionCnt();
@@ -302,6 +304,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     if (!bundleInfos.size()) {
         throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
     }
+    HILOGI("restoreInfos size is:%{public}zu", restoreInfos.size());
     vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {};
     for (auto &restoreInfo : restoreInfos) {
         if (SAUtils::IsSABundleName(restoreInfo.name)) {
@@ -330,6 +333,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
                                             .restoreDeps = restoreInfo.restoreDeps};
         restoreBundleInfos.emplace_back(info);
     }
+    HILOGI("restoreBundleInfos size is:%{public}zu", restoreInfos.size());
     return restoreBundleInfos;
 }
 
@@ -337,6 +341,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
     const std::vector<std::string> &bundleInfos, RestoreTypeEnum restoreType, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("Begin");
     try {
         session_->IncreaseSessionCnt();
         if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
@@ -349,6 +354,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
         auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNamesOnly);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         if (restoreBundleNames.empty()) {
+            HILOGW("restoreBundleNames is empty");
             session_->DecreaseSessionCnt();
             return BError(BError::Codes::OK);
         }
@@ -356,6 +362,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
         SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
         OnStartSched();
         session_->DecreaseSessionCnt();
+        HILOGI("End");
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         session_->DecreaseSessionCnt();

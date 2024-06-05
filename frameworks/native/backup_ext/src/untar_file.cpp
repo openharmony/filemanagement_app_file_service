@@ -204,7 +204,7 @@ int UntarFile::ParseTarFile(const string &rootPath)
                 HILOGE("Invalid tar file format");
                 ret = ERR_FORMAT;
             }
-            HILOGE("invalid tar block");
+            HILOGE("invalid tar block header");
             return ret;
         }
         HandleTarBuffer(string(buff, BLOCK_SIZE), header->name, info);
@@ -406,7 +406,7 @@ bool UntarFile::IsValidTarBlock(TarHeader &header)
     if (strncmp(header.magic, TMAGIC.c_str(), TMAGIC_LEN - 1) == 0 && VerifyChecksum(header)) {
         return true;
     }
-    HILOGE("Invalid tar block");
+    HILOGW("Invalid tar block");
     return false;
 }
 
@@ -437,7 +437,7 @@ void UntarFile::CreateDir(string &path, mode_t mode)
         path[len - 1] = '\0';
     }
     if (access(path.c_str(), F_OK) != 0) {
-        HILOGE("directory does not exist, path:%{public}s, err = %{public}d", path.c_str(), errno);
+        HILOGW("directory does not exist, path:%{public}s, err = %{public}d", path.c_str(), errno);
         if (!ForceCreateDirectoryWithMode(path, mode)) {
             HILOGE("Failed to force create directory %{public}s, err = %{public}d", path.c_str(), errno);
         }
@@ -452,7 +452,7 @@ FILE *UntarFile::CreateFile(string &filePath, mode_t mode, char fileType)
     }
 
     uint32_t len = filePath.length();
-    HILOGE("Failed to open file %{public}d, %{public}s, err = %{public}d", len, filePath.c_str(), errno);
+    HILOGW("Failed to open file %{public}d, %{public}s, err = %{public}d", len, filePath.c_str(), errno);
     size_t pos = filePath.rfind('/');
     if (pos == string::npos) {
         return nullptr;
@@ -462,7 +462,7 @@ FILE *UntarFile::CreateFile(string &filePath, mode_t mode, char fileType)
     if (ForceCreateDirectory(path)) {
         f = fopen(filePath.c_str(), "wb+");
         if (f == nullptr) {
-            HILOGE("Failed to open file %{public}s, err = %{public}d", filePath.c_str(), errno);
+            HILOGE("Failed to create file %{public}s, err = %{public}d", filePath.c_str(), errno);
         }
     }
 
