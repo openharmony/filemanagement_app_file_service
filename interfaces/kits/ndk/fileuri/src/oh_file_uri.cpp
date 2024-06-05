@@ -21,9 +21,9 @@
 #include "securec.h"
 
 using namespace std;
-static FileManagement_ErrCode GetValue(const char *resultStr, char **result)
+static FileManagement_ErrCode GetValue(std::string_view resultStr, char **result)
 {
-    int count = strlen(resultStr);
+    int count = resultStr.length();
     if (count == 0) {
         return ERR_UNKNOWN;
     }
@@ -32,7 +32,7 @@ static FileManagement_ErrCode GetValue(const char *resultStr, char **result)
         LOGE("malloc is feiled!");
         return ERR_ENOMEM;
     }
-    int ret = strncpy_s(*result, count + 1, resultStr, count);
+    int ret = strncpy_s(*result, count + 1, resultStr.data(), count);
     if (ret != 0) {
         LOGE("strncpy_s is feiled!");
         free(*result);
@@ -49,8 +49,7 @@ FileManagement_ErrCode OH_FileUri_GetUriFromPath(const char *path, unsigned int 
     }
     std::string pathStr(path, length);
     OHOS::AppFileService::ModuleFileUri::FileUri fileUri(pathStr);
-    const char *resultUri = fileUri.ToString().c_str();
-    return GetValue(resultUri, result);
+    return GetValue(fileUri.ToString(), result);
 }
 
 FileManagement_ErrCode OH_FileUri_GetPathFromUri(const char *uri, unsigned int length, char **result)
@@ -60,8 +59,7 @@ FileManagement_ErrCode OH_FileUri_GetPathFromUri(const char *uri, unsigned int l
     }
     std::string uriStr(uri, length);
     OHOS::AppFileService::ModuleFileUri::FileUri fileUri(uriStr);
-    const char *resultPath = fileUri.GetRealPath().c_str();
-    return GetValue(resultPath, result);
+    return GetValue(fileUri.GetRealPath(), result);
 }
 
 FileManagement_ErrCode OH_FileUri_GetFullDirectoryUri(const char *uri, unsigned int length, char **result)
@@ -71,11 +69,11 @@ FileManagement_ErrCode OH_FileUri_GetFullDirectoryUri(const char *uri, unsigned 
     }
     std::string uriStr(uri, length);
     OHOS::AppFileService::ModuleFileUri::FileUri fileUri(uriStr);
-    const char *resultUri = fileUri.GetFullDirectoryUri().c_str();
-    if (strlen(resultUri) == 0) {
+    std::string resultStr = fileUri.GetFullDirectoryUri();
+    if (resultStr.length() == 0) {
         return ERR_ENOENT;
     }
-    return GetValue(resultUri, result);
+    return GetValue(resultStr, result);
 }
 
 bool OH_FileUri_IsValidUri(const char *uri, unsigned int length)
