@@ -90,6 +90,7 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
          Only called by restore app before InitBackupSession,
            so there must be set init userId.
         */
+        HILOGI("Begin");
         session_->IncreaseSessionCnt();
         session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
@@ -111,6 +112,7 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
         cachedEntity.Persist();
         HILOGI("Service GetLocalCapabilitiesIncremental persist");
         session_->DecreaseSessionCnt();
+        HILOGI("End, bundleInfos size:%{public}zu", bundleInfos.size());
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
         session_->DecreaseSessionCnt();
@@ -365,6 +367,7 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         string callerName = VerifyCallerAndGetCallerName();
+        HILOGI("Begin, callerName is %{publish}s", callerName.c_str());
         if (session_->OnBundleFileReady(callerName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
             auto proxy = backUpConnection->GetBackupExtProxy();

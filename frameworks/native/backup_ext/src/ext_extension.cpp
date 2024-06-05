@@ -197,7 +197,7 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
 {
     UniqueFd fd = GetFileHandleForSpecialCloneCloud(fileName);
     if (fd < 0) {
-        HILOGE("Failed to open file = %{private}s, err = %{public}d", fileName.c_str(), errno);
+        HILOGE("Failed to open file = %{public}s, err = %{public}d", fileName.c_str(), errno);
         throw BError(BError::Codes::EXT_INVAL_ARG, string("open tar file failed"));
     }
 
@@ -209,7 +209,7 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
     string reportName = path + BConstants::BLANK_REPORT_NAME;
     UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
     if (reportFd < 0) {
-        HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
+        HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportName.c_str(), errno);
         throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
     }
 
@@ -221,7 +221,6 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
     if (ret != ERR_OK) {
         HILOGI("Failed to AppIncrementalFileReady %{public}d", ret);
     }
-
     return ERR_OK;
 }
 
@@ -243,7 +242,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
             HILOGE("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
-        HILOGI("extension: Start GetIncrementalFileHandle");
+        HILOGI("extension: Start GetIncrementalFileHandle, fileName:%{public}s", fileName.c_str());
         VerifyCaller();
 
         if (extension_->SpecialVersionForCloneAndCloud()) {
@@ -258,7 +257,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         int32_t errCode = ERR_OK;
         UniqueFd fd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (fd < 0) {
-            HILOGE("Failed to open tar file = %{private}s, err = %{public}d", tarName.c_str(), errno);
+            HILOGE("Failed to open tar file = %{public}s, err = %{public}d", tarName.c_str(), errno);
             errCode = BError::GetCodeByErrno(errno);
         }
 
@@ -270,7 +269,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         }
         UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (reportFd < 0) {
-            HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
+            HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportName.c_str(), errno);
             errCode = BError::GetCodeByErrno(errno);
         }
         HILOGI("extension: Will notify AppIncrementalFileReady");
@@ -282,7 +281,6 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         if (ret != ERR_OK) {
             HILOGI("Failed to AppIncrementalFileReady %{public}d", ret);
         }
-
         return ERR_OK;
     } catch (...) {
         HILOGE("Failed to get incremental file handle");
@@ -343,13 +341,12 @@ static ErrCode BigFileReady(sptr<IService> proxy)
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     auto pkgInfo = cache.GetExtManageInfo();
-
+    HILOGI("BigFileReady: pkgInfo file size is: %{public}zu", pkgInfo.size());
     ErrCode ret {ERR_OK};
     for (auto &item : pkgInfo) {
         if (item.hashName.empty() || item.fileName.empty()) {
             continue;
         }
-
         int32_t errCode = ERR_OK;
         UniqueFd fd(open(item.fileName.data(), O_RDONLY));
         if (fd < 0) {
@@ -361,10 +358,7 @@ static ErrCode BigFileReady(sptr<IService> proxy)
         if (SUCCEEDED(ret)) {
             HILOGI("The application is packaged successfully, package name is %{public}s", item.hashName.c_str());
         } else {
-            HILOGI(
-                "The application is packaged successfully but the AppFileReady interface fails to be invoked: "
-                "%{public}d",
-                ret);
+            HILOGW("Current file execute app file ready interface failed, ret is:%{public}d", ret);
         }
     }
     return ret;
@@ -778,7 +772,7 @@ static void RestoreBigFileAfter(const string &fileName,
     struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
     UniqueFd fd(open(filePath.data(), O_RDONLY));
     if (fd < 0) {
-        HILOGE("Failed to open file = %{private}s, err = %{public}d", filePath.c_str(), errno);
+        HILOGE("Failed to open file = %{public}s, err = %{public}d", filePath.c_str(), errno);
         return;
     }
     if (futimens(fd.Get(), tv) != 0) {
@@ -811,7 +805,7 @@ static void RestoreBigFiles(bool appendTargetPath)
         string reportPath = GetReportFileName(path + item.hashName);
         UniqueFd fd(open(reportPath.data(), O_RDONLY));
         if (fd < 0) {
-            HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportPath.c_str(), errno);
+            HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportPath.c_str(), errno);
             throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
         }
         BReportEntity rp(move(fd));
@@ -1056,6 +1050,7 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
             auto extensionPtr = obj.promote();
             BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
                 "Ext extension handle have been already released");
+            HILOGI("Current bundle will execute app done");
             extensionPtr->AppDone(BError(BError::Codes::OK));
             extensionPtr->DoClear();
         };
@@ -1101,10 +1096,10 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         auto callBackup = [obj]() {
-            HILOGI("begin call restore");
             auto extensionPtr = obj.promote();
             BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
                 "Ext extension handle have been already released");
+            HILOGI("Current bundle will execute app done");
             extensionPtr->AppIncrementalDone(BError(BError::Codes::OK));
             extensionPtr->DoClear();
         };
@@ -1442,6 +1437,7 @@ static ErrCode IncrementalBigFileReady(const TarMap &pkgInfo,
                                        sptr<IService> proxy)
 {
     ErrCode ret {ERR_OK};
+    HILOGI("Begin, pkgInfo size:%{public}zu", pkgInfo.size());
     for (auto &item : pkgInfo) {
         if (item.first.empty()) {
             continue;
@@ -1645,16 +1641,14 @@ int BackupExtExtension::DoIncrementalBackup(const map<string, struct ReportFileI
                                             const map<string, struct ReportFileInfo> &smallFiles,
                                             const map<string, struct ReportFileInfo> &bigFiles)
 {
-    HILOGI("Do increment backup");
+    HILOGI("Do increment backup begin");
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
         return EPERM;
     }
-
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
     if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
         throw BError(errno);
     }
-
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
         throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
@@ -1667,26 +1661,25 @@ int BackupExtExtension::DoIncrementalBackup(const map<string, struct ReportFileI
         HILOGI("Do increment backup, IncrementalAllFileReady end, file empty");
         return ERR_OK;
     }
-
     // tar包数据
     TarMap tarMap;
     IncrementalPacket(smallFiles, tarMap, proxy);
     HILOGI("Do increment backup, IncrementalPacket end");
-
     // 最后回传大文件
     TarMap bigMap = GetIncrmentBigInfos(bigFiles);
     IncrementalBigFileReady(bigMap, bigFiles, proxy);
     HILOGI("Do increment backup, IncrementalBigFileReady end");
     bigMap.insert(tarMap.begin(), tarMap.end());
-
     // 回传manage.json和全量文件
     IncrementalAllFileReady(bigMap, allFiles, proxy);
-    HILOGI("Do increment backup, IncrementalAllFileReady end");
+    HILOGI("End, bigFiles num:%{public}zu, smallFiles num:%{public}zu, allFiles num:%{public}zu", bigFiles.size(),
+        smallFiles.size(), allFiles.size());
     return ERR_OK;
 }
 
 void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
 {
+    HILOGI("Begin");
     auto proxy = ServiceProxy::GetInstance();
     BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
     auto ret = proxy->AppIncrementalDone(errCode);
