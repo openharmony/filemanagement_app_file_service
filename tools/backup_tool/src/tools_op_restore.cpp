@@ -116,7 +116,7 @@ static string GenHelpMsg()
            "\t\t--bundle\t\t This parameter is bundleName.";
 }
 
-static void OnFileReady(shared_ptr<Session> ctx, const BFileInfo &fileInfo, UniqueFd fd)
+static void OnFileReady(shared_ptr<Session> ctx, const BFileInfo &fileInfo, UniqueFd fd, int32_t errCode)
 {
     printf("FileReady owner = %s, fileName = %s, sn = %u, fd = %d\n", fileInfo.owner.c_str(), fileInfo.fileName.c_str(),
            fileInfo.sn, fd.Get());
@@ -251,13 +251,13 @@ static int32_t InitRestoreSession(shared_ptr<Session> ctx)
     if (!ctx) {
         throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
     }
-    ctx->session_ = BSessionRestore::Init(
-        BSessionRestore::Callbacks {.onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2),
-                                    .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
-                                    .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
-                                    .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
-                                    .onResultReport = bind(OnResultReport, ctx, placeholders::_1),
-                                    .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
+    ctx->session_ = BSessionRestore::Init(BSessionRestore::Callbacks {
+        .onFileReady = bind(OnFileReady, ctx, placeholders::_1, placeholders::_2, placeholders::_3),
+        .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
+        .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
+        .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
+        .onResultReport = bind(OnResultReport, ctx, placeholders::_1),
+        .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init restore\n");
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);

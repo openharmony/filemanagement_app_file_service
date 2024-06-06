@@ -26,7 +26,7 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 const int INVALID_FD = -1;
 
-UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
+UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName, int32_t &errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start");
@@ -50,6 +50,7 @@ UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName)
 
     HILOGI("Successful");
     bool fdFlag = reply.ReadBool();
+    errCode = reply.ReadInt32();
     UniqueFd fd = UniqueFd(INVALID_FD);
     if (fdFlag == true) {
         fd = UniqueFd(reply.ReadFileDescriptor());

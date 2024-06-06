@@ -28,7 +28,7 @@ public:
 
 public:
     virtual ~IExtension() = default;
-    virtual UniqueFd GetFileHandle(const std::string &fileName) = 0;
+    virtual UniqueFd GetFileHandle(const std::string &fileName, int32_t &errCode) = 0;
     virtual ErrCode HandleClear() = 0;
     virtual ErrCode HandleBackup() = 0;
     virtual ErrCode PublishFile(const std::string &fileName) = 0;

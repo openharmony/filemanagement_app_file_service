@@ -68,10 +68,10 @@ int BError::GetCodeByErrno(int32_t errnoSys)
     if (errnoSys == 0) {
         return 0;
     }
+    HILOGE("Unknown code : %{public}d", errnoSys);
     if (sysErrnoCodeTable_.find(errnoSys) != sysErrnoCodeTable_.end()) {
         return sysErrnoCodeTable_.at(errnoSys);
     }
-    HILOGE("Unknown code : %{public}d", errnoSys);
-    return BackupErrorCode::E_IO;
+    return BackupErrorCode::E_UKERR;
 }
 } // namespace OHOS::FileManagement::Backup

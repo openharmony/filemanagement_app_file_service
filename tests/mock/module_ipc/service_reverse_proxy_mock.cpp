@@ -36,7 +36,7 @@ void ServiceReverseProxy::RestoreOnBundleFinished(int32_t errCode, string bundle
 
 void ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode) {}
 
-void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName, int fd) {}
+void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName, int fd, int32_t errCode) {}
 
 void ServiceReverseProxy::RestoreOnResultReport(string result, string bundleName) {}
 

@@ -279,7 +279,7 @@ HWTEST_F(ToolsOpRestoreTest, tools_op_restore_OnFileReady_0500, testing::ext::Te
         fileInfo.fileName = "manage.json";
         fileInfo.sn = 1;
         UniqueFd fd(open("text.txt", O_RDWR | O_CREAT, 0666));
-        OnFileReady(ctx, fileInfo, move(fd));
+        OnFileReady(ctx, fileInfo, move(fd), 0);
     } catch (BError &e) {
         EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
         EXPECT_TRUE(true);
@@ -310,7 +310,7 @@ HWTEST_F(ToolsOpRestoreTest, tools_op_restore_OnFileReady_0501, testing::ext::Te
         fileInfo.fileName = "test.json";
         fileInfo.sn = 1;
         UniqueFd fd(open("text.txt", O_RDWR | O_CREAT, 0666));
-        OnFileReady(ctx, fileInfo, move(fd));
+        OnFileReady(ctx, fileInfo, move(fd), 0);
     } catch (BError &e) {
         EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
         EXPECT_TRUE(true);
@@ -340,7 +340,7 @@ HWTEST_F(ToolsOpRestoreTest, tools_op_restore_OnFileReady_0502, testing::ext::Te
         fileInfo.fileName = "/test.json";
         fileInfo.sn = 1;
         UniqueFd fd(open("text.txt", O_RDWR | O_CREAT, 0666));
-        OnFileReady(ctx, fileInfo, move(fd));
+        OnFileReady(ctx, fileInfo, move(fd), 0);
     } catch (BError &e) {
         EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
         EXPECT_TRUE(true);
@@ -370,7 +370,7 @@ HWTEST_F(ToolsOpRestoreTest, tools_op_restore_OnFileReady_0503, testing::ext::Te
         fileInfo.fileName = " ";
         fileInfo.sn = 1;
         UniqueFd fd(open("text.txt", O_RDWR | O_CREAT, 0666));
-        OnFileReady(ctx, fileInfo, move(fd));
+        OnFileReady(ctx, fileInfo, move(fd), 0);
     } catch (BError &e) {
         EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
         EXPECT_TRUE(true);

@@ -175,7 +175,8 @@ int32_t ServiceReverseStub::CmdRestoreOnFileReady(MessageParcel &data, MessagePa
     if (fdFlag == true) {
         fd = data.ReadFileDescriptor();
     }
-    RestoreOnFileReady(bundleName, fileName, fd);
+    int32_t errCode = data.ReadInt32();
+    RestoreOnFileReady(bundleName, fileName, fd, errCode);
     return BError(BError::Codes::OK);
 }
 

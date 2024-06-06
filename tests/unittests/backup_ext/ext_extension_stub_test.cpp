@@ -26,7 +26,7 @@ using namespace testing;
 
 class ExtExtensionStubMock : public ExtExtensionStub {
 public:
-    MOCK_METHOD(UniqueFd, GetFileHandle, (const std::string &fileName));
+    MOCK_METHOD(UniqueFd, GetFileHandle, (const std::string &fileName, int32_t &errCode));
     MOCK_METHOD(ErrCode, HandleClear, ());
     MOCK_METHOD(ErrCode, HandleBackup, ());
     MOCK_METHOD(ErrCode, PublishFile, (const std::string &fileName));
@@ -126,20 +126,20 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdGetFileHandle_
         EXPECT_EQ(err, BError(BError::Codes::EXT_INVAL_ARG));
 
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*stub, GetFileHandle(_)).WillOnce(Return(UniqueFd(-1)));
+        EXPECT_CALL(*stub, GetFileHandle(_, _)).WillOnce(Return(UniqueFd(-1)));
         EXPECT_CALL(*messageParcelMock, WriteBool(_)).WillOnce(Return(true));
         err = stub->CmdGetFileHandle(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::OK));
 
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*stub, GetFileHandle(_)).WillOnce(Return(UniqueFd(0)));
+        EXPECT_CALL(*stub, GetFileHandle(_, _)).WillOnce(Return(UniqueFd(0)));
         EXPECT_CALL(*messageParcelMock, WriteBool(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(false));
         err = stub->CmdGetFileHandle(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*stub, GetFileHandle(_)).WillOnce(Return(UniqueFd(0)));
+        EXPECT_CALL(*stub, GetFileHandle(_, _)).WillOnce(Return(UniqueFd(0)));
         EXPECT_CALL(*messageParcelMock, WriteBool(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(true));
         err = stub->CmdGetFileHandle(data, reply);

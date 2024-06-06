@@ -197,7 +197,7 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_0300, testing::ext::Tes
         fileInfo.fileName = "manage.json";
         fileInfo.sn = 1;
         UniqueFd fd(open("text.txt", O_RDWR | O_CREAT, 0666));
-        OnFileReady(ctx, fileInfo, move(fd));
+        OnFileReady(ctx, fileInfo, move(fd), 0);
     } catch (BError &e) {
         EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
         EXPECT_TRUE(true);
@@ -227,7 +227,7 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_0301, testing::ext::Tes
         fileInfo.fileName = "test.json";
         fileInfo.sn = 1;
         UniqueFd fd(open("text.txt", O_RDWR | O_CREAT, 0666));
-        OnFileReady(ctx, fileInfo, move(fd));
+        OnFileReady(ctx, fileInfo, move(fd), 0);
     } catch (BError &e) {
         EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
         EXPECT_TRUE(true);

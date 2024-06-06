@@ -40,7 +40,8 @@ struct RestoreEntity {
     shared_ptr<GeneralCallbacks> callbacks;
 };
 
-static void OnFileReadyWhole(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &fileInfo, UniqueFd fd)
+static void OnFileReadyWhole(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &fileInfo,
+    UniqueFd fd, int32_t errCode)
 {
     if (pCallbacks.expired()) {
         HILOGI("callbacks is unbound");
@@ -57,11 +58,18 @@ static void OnFileReadyWhole(weak_ptr<GeneralCallbacks> pCallbacks, const BFileI
     }
 
     auto cbCompl = [bundleName {fileInfo.owner}, fileName {fileInfo.fileName},
-                    fd {make_shared<UniqueFd>(fd.Release())}](napi_env env, NError err) -> NVal {
+                    fd {make_shared<UniqueFd>(fd.Release())},
+                    errCode](napi_env env, NError err) -> NVal {
         if (err) {
             return {env, err.GetNapiErr(env)};
         }
-        NVal obj = NVal::CreateObject(env);
+        HILOGI("callback function restore OnFileReadyWhole errCode: %{public}d", errCode);
+        NVal obj;
+        if (errCode != 0) {
+            obj = NVal {env, NError(errCode).GetNapiErr(env)};
+        } else {
+            obj = NVal::CreateObject(env);
+        }
         obj.AddProp({
             NVal::DeclareNapiProperty(BConstants::BUNDLE_NAME.c_str(), NVal::CreateUTF8String(env, bundleName).val_),
             NVal::DeclareNapiProperty(BConstants::URI.c_str(), NVal::CreateUTF8String(env, fileName).val_),
@@ -390,9 +398,8 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
     if (bSheet) {
         restoreEntity->sessionWhole = nullptr;
         restoreEntity->sessionSheet = BIncrementalRestoreSession::Init(BIncrementalRestoreSession::Callbacks {
-            .onFileReady =
-                bind(OnFileReadySheet, restoreEntity->callbacks, placeholders::_1, placeholders::_2, placeholders::_3,
-                    placeholders::_4),
+            .onFileReady = bind(OnFileReadySheet, restoreEntity->callbacks, placeholders::_1, placeholders::_2,
+                placeholders::_3, placeholders::_4),
             .onBundleStarted = bind(onBundleBegin, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onBundleFinished = bind(onBundleEnd, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
@@ -401,7 +408,8 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
     } else {
         restoreEntity->sessionSheet = nullptr;
         restoreEntity->sessionWhole = BSessionRestore::Init(BSessionRestore::Callbacks {
-            .onFileReady = bind(OnFileReadyWhole, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
+            .onFileReady = bind(OnFileReadyWhole, restoreEntity->callbacks, placeholders::_1,
+                placeholders::_2, placeholders::_3),
             .onBundleStarted = bind(onBundleBegin, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onBundleFinished = bind(onBundleEnd, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
             .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),

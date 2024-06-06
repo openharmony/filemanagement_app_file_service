@@ -80,9 +80,11 @@ ErrCode ExtExtensionStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &r
         return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive fileName").GetCode();
     }
 
-    UniqueFd fd = GetFileHandle(fileName);
+    int32_t errCode = ERR_OK;
+    UniqueFd fd = GetFileHandle(fileName, errCode);
     bool fdFlag = fd < 0 ? false : true;
     reply.WriteBool(fdFlag);
+    reply.WriteInt32(errCode);
     if (fdFlag == true && !reply.WriteFileDescriptor(fd)) {
         return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the file").GetCode();
     }
