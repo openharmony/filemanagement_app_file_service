@@ -56,6 +56,7 @@ void ServiceReverse::BackupOnBundleFinished(int32_t errCode, string bundleName)
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
+    HILOGI("errCode = %{public}d, bundleName = %{public}s", errCode, bundleName.c_str());
     callbacksBackup_.onBundleFinished(errCode, bundleName);
 }
 
@@ -84,6 +85,7 @@ void ServiceReverse::RestoreOnBundleFinished(int32_t errCode, string bundleName)
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
+    HILOGI("errCode = %{public}d, bundleName = %{public}s", errCode, bundleName.c_str());
     callbacksRestore_.onBundleFinished(errCode, bundleName);
 }
 
