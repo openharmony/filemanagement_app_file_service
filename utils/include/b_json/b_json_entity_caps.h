@@ -43,13 +43,23 @@ public:
         Json::Value extraInfo;
     };
 public:
-    void SetSystemFullName(std::string systemFullName)
+    void SetSystemFullName(const char *systemFullName)
     {
+        if (systemFullName == nullptr) {
+            HILOGE("systemFullName is nullptr, use default.");
+            obj_["systemFullName"] = "default";
+            return;
+        }
         obj_["systemFullName"] = systemFullName;
     }
 
-    void SetDeviceType(std::string deviceType)
+    void SetDeviceType(const char * deviceType)
     {
+        if (deviceType == nullptr) {
+            HILOGE("deviceType is nullptr, use default.");
+            obj_["deviceType"] = "default";
+            return;
+        }
         obj_["deviceType"] = deviceType;
     }
 
