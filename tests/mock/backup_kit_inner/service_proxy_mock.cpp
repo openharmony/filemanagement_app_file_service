@@ -140,6 +140,12 @@ ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrem
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrementalData> &bundlesToBackup,
+    const vector<std::string> &infos)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceProxy::PublishIncrementalFile(const BFileInfo &fileInfo)
 {
     return BError(BError::Codes::OK);

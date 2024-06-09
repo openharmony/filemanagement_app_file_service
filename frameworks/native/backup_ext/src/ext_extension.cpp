@@ -1188,6 +1188,7 @@ void BackupExtExtension::AppResultReport(const std::string restoreRetInfo, Backu
 {
     auto proxy = ServiceProxy::GetInstance();
     BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+    HILOGI("restoreRetInfo is %{public}s", restoreRetInfo.c_str());
     auto ret = proxy->ServiceResultReport(restoreRetInfo, scenario);
     if (ret != ERR_OK) {
         HILOGE("Failed notify app restoreResultReport, errCode: %{public}d", ret);
@@ -1214,8 +1215,19 @@ void BackupExtExtension::AsyncTaskOnBackup()
                                       "extension handle have been already released");
                 extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
             };
-
-            ptr->extension_->OnBackup(callBackup);
+            auto callBackupEx = [obj](const std::string backupExRetInfo) {
+                HILOGI("begin call backup");
+                auto extensionPtr = obj.promote();
+                BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                                      "Ext extension handle have been already released");
+                extensionPtr->extension_->CallExtRestore(backupExRetInfo);
+                if (backupExRetInfo.size()) {
+                    HILOGI("Will notify backup result report");
+                    extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::FULL_BACKUP);
+                }
+                extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
+            };
+            ptr->extension_->OnBackup(callBackup, callBackupEx);
         } catch (const BError &e) {
             ptr->AppDone(e.GetCode());
         } catch (const exception &e) {
@@ -1542,12 +1554,28 @@ void BackupExtExtension::AsyncTaskOnIncrementalBackup()
             HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
             proxy->GetAppLocalListAndDoIncrementalBackup();
         };
+        auto callBackupEx = [obj](const std::string backupExRetInfo) {
+            auto proxy = ServiceProxy::GetInstance();
+            if (proxy == nullptr) {
+                throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
+            }
+            HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
+            proxy->GetAppLocalListAndDoIncrementalBackup();
+            auto extensionPtr = obj.promote();
+            BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                "Ext extension handle have been already released");
+            extensionPtr->extension_->CallExtRestore(backupExRetInfo);
+            if (backupExRetInfo.size()) {
+                HILOGI("Will notify backup result report");
+                extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::INCREMENTAL_BACKUP);
+            }
+        };
         try {
             BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
                                   "Ext extension handle have been already released");
             BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
                                   "extension handle have been already released");
-            ptr->extension_->OnBackup(callBackup);
+            ptr->extension_->OnBackup(callBackup, callBackupEx);
         } catch (const BError &e) {
             ptr->AppIncrementalDone(e.GetCode());
         } catch (const exception &e) {

@@ -167,6 +167,12 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
+        const std::vector<std::string> &infos) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) override
     {
         return BError(BError::Codes::OK);

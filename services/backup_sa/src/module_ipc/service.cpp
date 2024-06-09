@@ -766,12 +766,16 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         string versionName = session_->GetBundleVersionName(bundleName);          /* old device app version name */
         int64_t versionCode = session_->GetBundleVersionCode(bundleName);         /* old device app version code */
         RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
+        string bundleExtInfo = session_->GetBackupExtInfo(bundleName);
+        HILOGI("bundleExtInfo is:%{public}s", bundleExtInfo.c_str());
 
         want.SetElementName(bundleName, backupExtName);
         want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
         want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<long>(versionCode));
         want.SetParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, static_cast<int>(restoreType));
         want.SetParam(BConstants::EXTENSION_VERSION_NAME_PARA, versionName);
+        want.SetParam(BConstants::EXTENSION_RESTORE_EXT_INFO_PARA, bundleExtInfo);
+        want.SetParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA, bundleExtInfo);
 
         auto backUpConnection = session_->GetExtConnection(bundleName);
 

@@ -57,6 +57,7 @@ namespace {
 constexpr int32_t DEBUG_ID = 100;
 constexpr int32_t INDEX = 3;
 constexpr int32_t MS_1000 = 1000;
+const static string UNICAST_TYPE = "unicast";
 } // namespace
 
 static inline int32_t GetUserIdDefault()
@@ -247,6 +248,56 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
                 session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
                 session_->RemoveExtInfo(info.name);
+            }
+        }
+        for (auto &bundleInfo : bundlesToBackup) {
+            session_->SetIncrementalData(bundleInfo);
+        }
+        OnStartSched();
+        session_->DecreaseSessionCnt();
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        session_->DecreaseSessionCnt();
+        HILOGE("Failed, errCode = %{public}d", e.GetCode());
+        return e.GetCode();
+    } catch (...) {
+        session_->DecreaseSessionCnt();
+        HILOGI("Unexpected exception");
+        return EPERM;
+    }
+}
+
+ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
+    const std::vector<std::string> &infos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
+        VerifyCaller(IServiceReverse::Scenario::BACKUP);
+        vector<string> bundleNames {};
+        for (auto &bundle : bundlesToBackup) {
+            bundleNames.emplace_back(bundle.bundleName);
+        }
+        std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap =
+            BJsonUtil::BuildBundleInfos(bundleNames, infos, bundleNamesOnly, session_->GetSessionUserId());
+        auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
+        session_->AppendBundles(bundleNames);
+        for (auto info : backupInfos) {
+            session_->SetBundleDataSize(info.name, info.spaceOccupied);
+            session_->SetBackupExtName(info.name, info.extensionName);
+            if (info.allToBackup == false) {
+                session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
+                    BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
+                session_->RemoveExtInfo(info.name);
+            }
+            auto iter = bundleNameDetailMap.find(info.name);
+            if (iter == bundleNameDetailMap.end()) {
+                continue;
+            }
+            BJsonUtil::BundleDetailInfo bundleDetailInfo = iter->second;
+            if (bundleDetailInfo.type == UNICAST_TYPE) {
+                session_->SetBackupExtInfo(info.name, bundleDetailInfo.detail);
             }
         }
         for (auto &bundleInfo : bundlesToBackup) {

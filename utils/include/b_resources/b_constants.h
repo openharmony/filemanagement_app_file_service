@@ -28,6 +28,8 @@ static inline const char *EXTENSION_ACTION_PARA = "extensionAction";
 static inline const char *EXTENSION_RESTORE_TYPE_PARA = "restoreType";
 static inline const char *EXTENSION_VERSION_CODE_PARA = "versionCode";
 static inline const char *EXTENSION_VERSION_NAME_PARA = "versionName";
+static inline const char *EXTENSION_RESTORE_EXT_INFO_PARA = "restoreExtInfo";
+static inline const char *EXTENSION_BACKUP_EXT_INFO_PARA = "backupExtInfo";
 
 enum class ExtensionAction {
     INVALID = 0,

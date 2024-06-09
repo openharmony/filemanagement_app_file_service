@@ -153,7 +153,12 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         appVersionStr_ = want.GetStringParam(BConstants::EXTENSION_VERSION_NAME_PARA);
         appVersionCode_ = want.GetLongParam(BConstants::EXTENSION_VERSION_CODE_PARA, 0);
         restoreType_ = want.GetIntParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, 0);
+        restoreExtInfo_ = want.GetStringParam(BConstants::EXTENSION_RESTORE_EXT_INFO_PARA);
+        HILOGI("restoreExtInfo_ is %{public}s", restoreExtInfo_.c_str());
         HILOGI("Get version %{public}s type %{public}d from want when restore.", appVersionStr_.c_str(), restoreType_);
+    } else if (extAction_ == BConstants::ExtensionAction::BACKUP) {
+        backupExtInfo_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA);
+        HILOGI("backupExtInfo_ is %{public}s", backupExtInfo_.c_str());
     }
     /* backup don't need parament. */
     return ERR_OK;
@@ -250,6 +255,12 @@ bool ExtBackup::RestoreDataReady()
 ErrCode ExtBackup::OnBackup(function<void()> callback)
 {
     HILOGI("BackupExtensionAbility(base) OnBackup.");
+    return ERR_OK;
+}
+
+ErrCode ExtBackup::OnBackup(std::function<void()> callback, std::function<void(const std::string)> callbackEx)
+{
+    HILOGI("BackupExtensionAbility(base) OnBackup with Ex");
     return ERR_OK;
 }
 

@@ -79,6 +79,9 @@ ServiceStub::ServiceStub()
     opToInterfaceMap_[static_cast<uint32_t>(
         IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION)] =
         &ServiceStub::CmdAppendBundlesIncrementalBackupSession;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION_DETAILS)] =
+        &ServiceStub::CmdAppendBundlesDetailsIncrementalBackupSession;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_INCREMENTAL_FILE)] =
         &ServiceStub::CmdPublishIncrementalFile;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_SA_INCREMENTAL_FILE)] =
@@ -470,6 +473,23 @@ int32_t ServiceStub::CmdAppendBundlesIncrementalBackupSession(MessageParcel &dat
     }
 
     int32_t res = AppendBundlesIncrementalBackupSession(bundlesToBackup);
+    if (!reply.WriteInt32(res)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
+    }
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdAppendBundlesDetailsIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
+{
+    vector<BIncrementalData> bundlesToBackup;
+    if (!ReadParcelableVector(bundlesToBackup, data)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
+    }
+    std::vector<std::string> infos;
+    if (!data.ReadStringVector(&infos)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive infos");
+    }
+    int32_t res = AppendBundlesIncrementalBackupSession(bundlesToBackup, infos);
     if (!reply.WriteInt32(res)) {
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
     }

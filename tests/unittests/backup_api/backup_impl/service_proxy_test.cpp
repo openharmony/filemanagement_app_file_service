@@ -478,6 +478,34 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesIncrementalBackupSessi
 }
 
 /**
+ * @tc.number: SUB_Service_proxy_AppendBundlesIncrementalBackupSession_0101
+ * @tc.name: SUB_Service_proxy_AppendBundlesIncrementalBackupSession_0101
+ * @tc.desc: 测试 AppendBundlesIncrementalBackupSession 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesIncrementalBackupSession_0101,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppendBundlesDetailsIncrementalBackupSession_0101";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+
+    std::vector<BIncrementalData> bundleNames;
+    std::vector<std::string> infos;
+    int32_t result = proxy_->AppendBundlesIncrementalBackupSession(bundleNames, infos);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->AppendBundlesIncrementalBackupSession(bundleNames, infos);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppendBundlesDetailsIncrementalBackupSession_0101";
+}
+
+/**
  * @tc.number: SUB_Service_proxy_PublishIncrementalFile_0100
  * @tc.name: SUB_Service_proxy_PublishIncrementalFile_0100
  * @tc.desc: 测试 PublishIncrementalFile 接口调用成功和失败

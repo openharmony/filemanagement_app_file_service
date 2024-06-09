@@ -53,6 +53,7 @@ private:
     int32_t CmdGetAppLocalListAndDoIncrementalBackup(MessageParcel &data, MessageParcel &reply);
     int32_t CmdInitIncrementalBackupSession(MessageParcel &data, MessageParcel &reply);
     int32_t CmdAppendBundlesIncrementalBackupSession(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdAppendBundlesDetailsIncrementalBackupSession(MessageParcel &data, MessageParcel &reply);
     int32_t CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply);
     int32_t CmdPublishSAIncrementalFile(MessageParcel &data, MessageParcel &reply);
     int32_t CmdAppIncrementalFileReady(MessageParcel &data, MessageParcel &reply);

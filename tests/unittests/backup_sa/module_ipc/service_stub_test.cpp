@@ -68,6 +68,8 @@ public:
     MOCK_METHOD0(GetAppLocalListAndDoIncrementalBackup, ErrCode());
     MOCK_METHOD1(InitIncrementalBackupSession, ErrCode(sptr<IServiceReverse> remote));
     MOCK_METHOD1(AppendBundlesIncrementalBackupSession, ErrCode(const std::vector<BIncrementalData> &bundlesToBackup));
+    MOCK_METHOD2(AppendBundlesIncrementalBackupSession,
+        ErrCode(const std::vector<BIncrementalData> &bundlesToBackup, const std::vector<std::string> &infos));
 
     MOCK_METHOD1(PublishIncrementalFile, ErrCode(const BFileInfo &fileInfo));
     MOCK_METHOD2(PublishSAIncrementalFile, ErrCode(const BFileInfo &fileInfo, UniqueFd fd));
@@ -1019,6 +1021,49 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesIncrementalBack
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesIncrementalBackupSession.";
     }
     GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_InitIncrementalBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_AppendBundlesIncrementalBackupSession_0101
+ * @tc.name: SUB_backup_sa_ServiceStub_AppendBundlesIncrementalBackupSession_0101
+ * @tc.desc: Test function of AppendBundlesIncrementalBackupSession interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesIncrementalBackupSession_0101,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_AppendBundlesIncrementalBackupSession_0101";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+        auto err = service->CmdAppendBundlesDetailsIncrementalBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
+
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(1), Return(true)));
+        EXPECT_CALL(*messageParcelMock, ReadInt32()).WillOnce(Return(0));
+        err = service->CmdAppendBundlesDetailsIncrementalBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
+
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppendBundlesIncrementalBackupSession(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdAppendBundlesDetailsIncrementalBackupSession(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, AppendBundlesIncrementalBackupSession(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdAppendBundlesDetailsIncrementalBackupSession(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppendBundlesIncrementalBackupSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_InitIncrementalBackupSession_0101";
 }
 
 /**

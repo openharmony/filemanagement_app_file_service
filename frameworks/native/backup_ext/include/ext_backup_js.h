@@ -106,6 +106,8 @@ public:
      */
     ErrCode OnBackup(std::function<void()> callback) override;
 
+    ErrCode OnBackup(std::function<void()> callback, std::function<void(const std::string)> callbackEx) override;
+
     /**
      * @brief Call the app's OnRestore.
      *
@@ -152,8 +154,13 @@ private:
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseRestoreExInfo();
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseRestoreInfo();
 
+    std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseBackupExInfo();
+    std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseBackupInfo();
+
     ErrCode CallJSRestoreEx();
     ErrCode CallJSRestore();
+    ErrCode CallJsOnBackupEx();
+    ErrCode CallJsOnBackup();
 
     void ExportJsContext(void);
 

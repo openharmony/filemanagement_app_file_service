@@ -95,6 +95,17 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
     return proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup);
 }
 
+ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundlesToBackup,
+    std::vector<std::string> infos)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+
+    return proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup, infos);
+}
+
 ErrCode BIncrementalBackupSession::Release()
 {
     auto proxy = ServiceProxy::GetInstance();
