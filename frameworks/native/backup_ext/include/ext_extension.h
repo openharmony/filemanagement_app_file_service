@@ -182,6 +182,8 @@ private:
      * @brief get callbackEx for execute appDone
      */
     std::function<void()> AppDoneCallbackEx(wptr<BackupExtExtension> obj);
+    std::function<void(const std::string)> HandleBackupEx(wptr<BackupExtExtension> obj);
+    std::function<void(const std::string)> HandleTaskBackupEx(wptr<BackupExtExtension> obj);
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;

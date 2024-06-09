@@ -57,6 +57,15 @@ public:
     ErrCode AppendBundles(std::vector<BIncrementalData> bundlesToBackup);
 
     /**
+     * @brief 用于追加应用，现阶段仅支持在Start之前调用, 携带应用扩展信息
+     *
+     * @param bundlesToBackup 待备份的应用清单
+     * @param infos 应用的扩展信息
+     * @return ErrCode 规范错误码
+     */
+    ErrCode AppendBundles(std::vector<BIncrementalData> bundlesToBackup, std::vector<std::string> infos);
+
+    /**
      * @brief 用于结束服务
      *
      * @return ErrCode 规范错误码

@@ -63,6 +63,8 @@ public:
     ErrCode GetAppLocalListAndDoIncrementalBackup() override;
     ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote) override;
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) override;
+    ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
+        const std::vector<std::string> &infos) override;
 
     ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) override;
     ErrCode PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd) override;

@@ -179,6 +179,12 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
+    const std::vector<std::string> &infos)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
 {
     return BError(BError::Codes::OK);

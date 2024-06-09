@@ -53,6 +53,7 @@ private:
     int32_t CmdGetAppLocalListAndDoIncrementalBackup(MessageParcel &data, MessageParcel &reply);
     int32_t CmdInitIncrementalBackupSession(MessageParcel &data, MessageParcel &reply);
     int32_t CmdAppendBundlesIncrementalBackupSession(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdAppendBundlesDetailsIncrementalBackupSession(MessageParcel &data, MessageParcel &reply);
     int32_t CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply);
     int32_t CmdPublishSAIncrementalFile(MessageParcel &data, MessageParcel &reply);
     int32_t CmdAppIncrementalFileReady(MessageParcel &data, MessageParcel &reply);
@@ -61,6 +62,7 @@ private:
     int32_t CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply);
     int32_t CmdUpdateTimer(MessageParcel &data, MessageParcel &reply);
     void ServiceStubSupplement();
+    void ServiceStubSuppAppendBundles();
 
 public:
     template <typename T>

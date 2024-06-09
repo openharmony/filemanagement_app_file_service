@@ -594,4 +594,34 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1800, testing::e
     GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_1800";
 }
 
+/**
+ * @tc.number: SUB_b_incremental_session_test_1900
+ * @tc.name: SUB_b_incremental_session_test_1900
+ * @tc.desc: 测试 AppendBundles 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1900, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1900";
+    try {
+        ServiceProxy::serviceProxy_ = nullptr;
+        vector<BIncrementalData> bundlesToBackup;
+        vector<std::string> infos;
+        auto err = backupSession->AppendBundles(bundlesToBackup, infos);
+        EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
+
+        EXPECT_CALL(*proxy, AppendBundlesIncrementalBackupSession(_, _)).WillOnce(Return(0));
+        ServiceProxy::serviceProxy_ = proxy;
+        err = backupSession->AppendBundles(bundlesToBackup, infos);
+        EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(true);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by RemoveExtConn.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_1900";
+}
+
 } // namespace OHOS::FileManagement::Backup

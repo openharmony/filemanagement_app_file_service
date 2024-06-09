@@ -73,6 +73,8 @@ public:
     virtual ErrCode GetAppLocalListAndDoIncrementalBackup() = 0;
     virtual ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remotse) = 0;
     virtual ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) = 0;
+    virtual ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
+        const std::vector<std::string> &bundleInfos) = 0;
 
     virtual ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) = 0;
     virtual ErrCode PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd) = 0;
