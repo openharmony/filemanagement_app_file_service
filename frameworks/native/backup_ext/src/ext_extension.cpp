@@ -1215,18 +1215,7 @@ void BackupExtExtension::AsyncTaskOnBackup()
                                       "extension handle have been already released");
                 extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
             };
-            auto callBackupEx = [obj](const std::string backupExRetInfo) {
-                HILOGI("begin call backup");
-                auto extensionPtr = obj.promote();
-                BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                                      "Ext extension handle have been already released");
-                extensionPtr->extension_->CallExtRestore(backupExRetInfo);
-                if (backupExRetInfo.size()) {
-                    HILOGI("Will notify backup result report");
-                    extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::FULL_BACKUP);
-                }
-                extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
-            };
+            auto callBackupEx = ptr->HandleTaskBackupEx(obj);
             ptr->extension_->OnBackup(callBackup, callBackupEx);
         } catch (const BError &e) {
             ptr->AppDone(e.GetCode());
@@ -1554,22 +1543,7 @@ void BackupExtExtension::AsyncTaskOnIncrementalBackup()
             HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
             proxy->GetAppLocalListAndDoIncrementalBackup();
         };
-        auto callBackupEx = [obj](const std::string backupExRetInfo) {
-            auto proxy = ServiceProxy::GetInstance();
-            if (proxy == nullptr) {
-                throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
-            }
-            HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
-            proxy->GetAppLocalListAndDoIncrementalBackup();
-            auto extensionPtr = obj.promote();
-            BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                "Ext extension handle have been already released");
-            extensionPtr->extension_->CallExtRestore(backupExRetInfo);
-            if (backupExRetInfo.size()) {
-                HILOGI("Will notify backup result report");
-                extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::INCREMENTAL_BACKUP);
-            }
-        };
+        auto callBackupEx = ptr->HandleBackupEx(obj);
         try {
             BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
                                   "Ext extension handle have been already released");
@@ -1798,6 +1772,44 @@ std::function<void()> BackupExtExtension::IncrementalAppDoneCallbackEx(wptr<Back
             "Ext extension handle have been already released");
         extensionPtr->AppIncrementalDone(BError(BError::Codes::OK));
         extensionPtr->DoClear();
+    };
+}
+
+std::function<void(const std::string)> BackupExtExtension::HandleBackupEx(wptr<BackupExtExtension> obj)
+{
+    HILOGI("Begin get HandleBackupEx");
+    return [obj](const std::string backupExRetInfo) {
+        auto proxy = ServiceProxy::GetInstance();
+        if (proxy == nullptr) {
+            throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
+        }
+        HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
+        proxy->GetAppLocalListAndDoIncrementalBackup();
+        auto extensionPtr = obj.promote();
+        BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+            "Ext extension handle have been already released");
+        extensionPtr->extension_->CallExtRestore(backupExRetInfo);
+        if (backupExRetInfo.size()) {
+            HILOGI("Will notify backup result report");
+            extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::INCREMENTAL_BACKUP);
+        }
+    };
+}
+
+std::function<void(const std::string)> BackupExtExtension::HandleTaskBackupEx(wptr<BackupExtExtension> obj)
+{
+    HILOGI("Begin get HandleTaskBackupEx");
+    return [obj](const std::string backupExRetInfo) {
+        HILOGI("begin call backup");
+        auto extensionPtr = obj.promote();
+        BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
+            "Ext extension handle have been already released");
+        extensionPtr->extension_->CallExtRestore(backupExRetInfo);
+        if (backupExRetInfo.size()) {
+            HILOGI("Will notify backup result report");
+            extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::FULL_BACKUP);
+        }
+        extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
     };
 }
 } // namespace OHOS::FileManagement::Backup

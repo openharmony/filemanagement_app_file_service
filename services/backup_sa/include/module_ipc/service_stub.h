@@ -62,6 +62,7 @@ private:
     int32_t CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply);
     int32_t CmdUpdateTimer(MessageParcel &data, MessageParcel &reply);
     void ServiceStubSupplement();
+    void ServiceStubSuppAppendBundles();
 
 public:
     template <typename T>

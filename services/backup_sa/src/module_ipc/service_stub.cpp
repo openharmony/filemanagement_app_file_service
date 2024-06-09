@@ -43,6 +43,16 @@ void ServiceStub::ServiceStubSupplement()
         &ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup;
 }
 
+void ServiceStub::ServiceStubSuppAppendBundles()
+{
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION)] =
+        &ServiceStub::CmdAppendBundlesIncrementalBackupSession;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION_DETAILS)] =
+        &ServiceStub::CmdAppendBundlesDetailsIncrementalBackupSession;
+}
+
 ServiceStub::ServiceStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_RESTORE_SESSION)] =
@@ -76,12 +86,7 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdGetLocalCapabilitiesIncremental;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_INCREMENTAL_BACKUP_SESSION)] =
         &ServiceStub::CmdInitIncrementalBackupSession;
-    opToInterfaceMap_[static_cast<uint32_t>(
-        IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION)] =
-        &ServiceStub::CmdAppendBundlesIncrementalBackupSession;
-    opToInterfaceMap_[static_cast<uint32_t>(
-        IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION_DETAILS)] =
-        &ServiceStub::CmdAppendBundlesDetailsIncrementalBackupSession;
+    ServiceStubSuppAppendBundles();
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_INCREMENTAL_FILE)] =
         &ServiceStub::CmdPublishIncrementalFile;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_SA_INCREMENTAL_FILE)] =
