@@ -1290,7 +1290,7 @@ void BackupExtExtension::CompareFiles(UniqueFd incrementalFd,
             smallFiles.try_emplace(path, storageFiles);
         }
         if (storageFiles.isIncremental == true && storageFiles.isDir == false) {
-            auto [res, fileHash] = BFileHash::HashWithSHA256(path);
+            auto [res, fileHash] = BackupFileHash::HashWithSHA256(path);
             if (fileHash.empty()) {
                 continue;
             }
@@ -1384,7 +1384,7 @@ static void WriteFile(const string &filename, const map<string, struct ReportFil
  */
 static TarMap GetIncrmentBigInfos(const map<string, struct ReportFileInfo> &files)
 {
-    auto getStringHash = [](const TarMap &m, const string &str) -> string {
+    auto getStringHash = [](const TarMap &tarMap, const string &str) -> string {
         ostringstream strHex;
         strHex << hex;
 
@@ -1392,7 +1392,7 @@ static TarMap GetIncrmentBigInfos(const map<string, struct ReportFileInfo> &file
         size_t szHash = strHash(str);
         strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
         string name = strHex.str();
-        for (int i = 0; m.find(name) != m.end(); ++i, strHex.str("")) {
+        for (int i = 0; tarMap.find(name) != tarMap.end(); ++i, strHex.str("")) {
             szHash = strHash(str + to_string(i));
             strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
             name = strHex.str();

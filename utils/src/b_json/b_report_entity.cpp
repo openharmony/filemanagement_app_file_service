@@ -194,7 +194,7 @@ static struct ReportFileInfo StorageDealLine(unordered_map<string, int> &keys, i
     return {};
 }
 
-unordered_map<string, struct ReportFileInfo> BReportEntity::GetReportInfos()
+unordered_map<string, struct ReportFileInfo> BReportEntity::GetReportInfos() const
 {
     unordered_map<string, struct ReportFileInfo> infos {};
 
