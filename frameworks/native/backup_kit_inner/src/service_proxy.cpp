@@ -415,6 +415,7 @@ ErrCode ServiceProxy::Finish()
 sptr<IService> ServiceProxy::GetInstance()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    unique_lock<mutex> getInstanceLock(getInstanceMutex_);
     unique_lock<mutex> lock(proxyMutex_);
     if (serviceProxy_ != nullptr) {
         return serviceProxy_;
