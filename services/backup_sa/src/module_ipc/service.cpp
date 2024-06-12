@@ -721,6 +721,7 @@ ErrCode Service::SAResultReport(const std::string bundleName, const std::string 
         session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, bundleName);
     } else if (sennario == BackupRestoreScenario::FULL_BACKUP) {
         session_->GetServiceReverseProxy()->BackupOnResultReport(restoreRetInfo, bundleName);
+        session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
     } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
         session_->GetServiceReverseProxy()->IncrementalBackupOnResultReport(restoreRetInfo, bundleName);
     }
