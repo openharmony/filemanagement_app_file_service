@@ -98,15 +98,15 @@ static inline std::string_view SA_BUNDLE_BACKUP_BACKUP = "/backup/";
 static inline std::string_view SA_BUNDLE_BACKUP_RESTORE = "/restore/";
 static inline std::string_view SA_BUNDLE_BACKUP_TMP_DIR = "/tmp/";
 static inline std::string_view BACKUP_TOOL_RECEIVE_DIR = "/data/backup/received/";
-static inline std::string_view PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/backup";
-static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/backup";
+static inline std::string_view PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/base/.backup";
+static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/base/.backup";
 static inline std::string_view BACKUP_TOOL_LINK_DIR = "/data/backup";
 static inline std::string_view BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR = "/data/backup/incrementalreceived/";
 static inline std::string_view BACKUP_TOOL_MANIFEST = "/manifest";
 static inline std::string_view BACKUP_TOOL_INCREMENTAL = "/incremental";
 static inline std::string BACKUP_DIR_PRE = "/data/storage/";
 static inline std::string CONTEXT_ELS[] = {"el1", "el2"};
-
+static inline std::string BACKUP_DIR_END = "/base/.backup/";
 // SA Ext
 constexpr int BACKUP_DEFAULT_SA_ID = -1;
 constexpr int BACKUP_SA_RELOAD_MAX = 2;
@@ -117,9 +117,9 @@ static inline std::string EXTENSION_RESTORE = "restore";
 static inline std::string GetSaBundleBackupDir(int32_t userId)
 {
     std::string str;
-    str.append("/data/service/el2/");
+    str.append("/data/app/el2/");
     str.append(std::to_string(userId));
-    str.append("/backup/bundles/");
+    str.append("/base/.backup/");
     return str;
 }
 

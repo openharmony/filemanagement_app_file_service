@@ -25,6 +25,6 @@ const std::string ExtBackupContext::GetBackupDir()
         return "";
     }
     return std::string(BConstants::BACKUP_DIR_PRE) + std::string(BConstants::CONTEXT_ELS[area]) +
-        std::string(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+        std::string(BConstants::BACKUP_DIR_END);
 }
 } // namespace OHOS::FileManagement::Backup
