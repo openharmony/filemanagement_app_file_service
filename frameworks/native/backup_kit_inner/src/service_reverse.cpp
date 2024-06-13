@@ -47,7 +47,6 @@ void ServiceReverse::BackupOnResultReport(std::string result, std::string bundle
         return;
     }
     callbacksBackup_.onResultReport(result);
-    callbacksBackup_.onBundleFinished(BError(BError::Codes::OK), bundleName);
 }
 
 void ServiceReverse::BackupOnBundleFinished(int32_t errCode, string bundleName)

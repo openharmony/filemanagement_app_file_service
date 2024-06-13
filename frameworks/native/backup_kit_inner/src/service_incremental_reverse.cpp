@@ -48,7 +48,6 @@ void ServiceReverse::IncrementalBackupOnResultReport(std::string result, std::st
         return;
     }
     callbacksIncrementalBackup_.onResultReport(result);
-    callbacksIncrementalBackup_.onBundleFinished(BError(BError::Codes::OK), bundleName);
 }
 
 void ServiceReverse::IncrementalBackupOnBundleFinished(int32_t errCode, string bundleName)
