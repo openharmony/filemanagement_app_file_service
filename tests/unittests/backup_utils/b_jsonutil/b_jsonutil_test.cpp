@@ -90,12 +90,13 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0100, testing::ext::TestSize
             "type" : "broadcast" } ]
         }";
         detailInfos.push_back(detail01);
+        detailInfos.push_back("");
         int32_t userId = 100;
         std::vector<std::string> realBundleNames;
-        std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap =
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, detailInfos, realBundleNames, userId);
         std::string key = "com.hos.app01";
-        EXPECT_EQ("com.hos.app01", bundleNameDetailMap[key].bundleName);
+        EXPECT_EQ("com.hos.app01", bundleNameDetailMap[key].bundleName[0]);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
