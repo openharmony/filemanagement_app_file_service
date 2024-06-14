@@ -1049,6 +1049,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppendBundlesIncrementalBack
         EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
         EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadStringVector(_)).WillOnce(Return(true)).WillOnce(Return(true));
         EXPECT_CALL(*service, AppendBundlesIncrementalBackupSession(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
         err = service->CmdAppendBundlesDetailsIncrementalBackupSession(data, reply);
