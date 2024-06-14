@@ -267,7 +267,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         int32_t errCode = ERR_OK;
         UniqueFd fd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (fd < 0) {
-            HILOGE("Failed to open tar file = %{public}s, err = %{public}d", tarName.c_str(), errno);
+            HILOGE("Failed to open tar file = %{private}s, err = %{public}d", tarName.c_str(), errno);
             errCode = BError::GetCodeByErrno(errno);
         }
 
@@ -279,7 +279,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         }
         UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (reportFd < 0) {
-            HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportName.c_str(), errno);
+            HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
             errCode = BError::GetCodeByErrno(errno);
         }
         HILOGI("extension: Will notify AppIncrementalFileReady");
