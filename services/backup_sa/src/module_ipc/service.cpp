@@ -71,7 +71,7 @@ namespace {
 constexpr int32_t DEBUG_ID = 100;
 constexpr int32_t INDEX = 3;
 constexpr int32_t MS_1000 = 1000;
-const static string COMMON_EVENT_TYPE = "broadcast";
+const static string BROADCAST_TYPE = "broadcast";
 const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 const static string UNICAST_TYPE = "unicast";
 const int32_t CONNECT_WAIT_TIME_S = 15;
@@ -349,7 +349,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
         }
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap =
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
         auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNamesOnly);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
@@ -428,7 +428,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
     std::vector<std::string> &restoreBundleNames,
-    std::map<std::string, BJsonUtil::BundleDetailInfo> &bundleNameDetailMap, RestoreTypeEnum restoreType)
+    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap, RestoreTypeEnum restoreType)
 {
     HILOGI("Start");
     for (auto restoreInfo : restoreBundleInfos) {
@@ -450,16 +450,20 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
         session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
         session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
-        auto iter = bundleNameDetailMap.find(restoreInfo.name);
-        if (iter != bundleNameDetailMap.end()) {
-            BJsonUtil::BundleDetailInfo bundleDetailInfo = iter->second;
-            if (bundleDetailInfo.type == COMMON_EVENT_TYPE) {
-                bool notifyRet =
-                    DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(bundleDetailInfo);
-                HILOGI("Publish event end, notify result is:%{public}d", notifyRet);
-            } else if (bundleDetailInfo.type == UNICAST_TYPE) {
-                session_->SetBackupExtInfo(restoreInfo.name, bundleDetailInfo.detail);
-            }
+        BJsonUtil::BundleDetailInfo broadCastInfo;
+        BJsonUtil::BundleDetailInfo uniCastInfo;
+        bool broadCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, restoreInfo.name, BROADCAST_TYPE,
+            broadCastInfo);
+        if (broadCastRet) {
+            bool notifyRet =
+                    DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(broadCastInfo);
+            HILOGI("Publish event end, notify result is:%{public}d", notifyRet);
+        }
+        bool uniCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, restoreInfo.name, UNICAST_TYPE,
+            uniCastInfo);
+        if (uniCastRet) {
+            HILOGI("current bundle, unicast info:%{public}s", uniCastInfo.detail.c_str());
+            session_->SetBackupExtInfo(restoreInfo.name, uniCastInfo.detail);
         }
     }
     HILOGI("End");
@@ -508,7 +512,7 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
         session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap =
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, session_->GetSessionUserId());
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
@@ -520,13 +524,12 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
                 session_->RemoveExtInfo(info.name);
             }
-            auto iter = bundleNameDetailMap.find(info.name);
-            if (iter == bundleNameDetailMap.end()) {
-                continue;
-            }
-            BJsonUtil::BundleDetailInfo bundleDetailInfo = iter->second;
-            if (bundleDetailInfo.type == UNICAST_TYPE) {
-                session_->SetBackupExtInfo(info.name, bundleDetailInfo.detail);
+            BJsonUtil::BundleDetailInfo uniCastInfo;
+            bool uniCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, info.name, UNICAST_TYPE,
+                uniCastInfo);
+            if (uniCastRet) {
+                HILOGI("current bundle, unicast info:%{public}s", uniCastInfo.detail.c_str());
+                session_->SetBackupExtInfo(info.name, uniCastInfo.detail);
             }
         }
         OnStartSched();

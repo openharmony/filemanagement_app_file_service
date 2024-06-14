@@ -49,20 +49,39 @@ public:
      * @param realBundleNames 分割后真正的bundleNames
      * @param userId userId
      *
-     * @return 结构体集合
+     * @return 包名和解析结果的对应关系集合
      *
      */
-    static std::map<std::string, BundleDetailInfo> BuildBundleInfos(const std::vector<std::string> &bundleNames,
-        const std::vector<std::string> &details, std::vector<std::string> &realBundleNames, int32_t userId);
+    static std::map<std::string, std::vector<BundleDetailInfo>> BuildBundleInfos(
+        const std::vector<std::string> &bundleNames, const std::vector<std::string> &details,
+        std::vector<std::string> &realBundleNames, int32_t userId);
 
     /**
      * @brief 解析单个bundle对应的json串
      *
      * @param bundleDetailInfo json串
      * @param bundleDetail 结构体对象
+     * @param bundleNameOnly bundle名称
+     * @param bundleIndex bundle对应的索引
+     * @param userId userId
      *
      */
-    static void ParseBundleInfoJson(const std::string &bundleInfo, BundleDetailInfo &bundleDetail);
+    static void ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
+        std::string &bundleNameOnly, int bundleIndex, int32_t userId);
+
+    /**
+     * @brief 根据业务类型和bundleName确定唯一的bundleInfo
+     *
+     * @param bundleNameDetailsMap 包名和当前包扩展信息解析结果的集合
+     * @param bundleName 包名
+     * @param jobType 业务类型broadcast或者unicast
+     * @param bundleDetail 确定下来的bundleInfo
+     *
+     * @return 是否获取到
+     *
+     */
+    static bool FindBundleInfoByName(std::map<std::string, std::vector<BundleDetailInfo>> &bundleNameDetailsMap,
+        std::string &bundleName, const std::string &jobType, BundleDetailInfo &bundleDetail);
 };
 } // namespace OHOS::FileManagement::Backup
 

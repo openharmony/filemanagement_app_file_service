@@ -48,12 +48,11 @@ BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string
     return bundleDetailInfo;
 }
 
-std::map<std::string, BJsonUtil::BundleDetailInfo> BJsonUtil::BuildBundleInfos(
+std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::BuildBundleInfos(
     const std::vector<std::string> &bundleNames, const std::vector<std::string> &bundleInfos,
     std::vector<std::string> &bundleNamesOnly, int32_t userId)
 {
-    std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
-    std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap;
+    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
     if (bundleNames.size() != bundleInfos.size()) {
         HILOGE("bundleNames count is not equals bundleInfos count");
         return bundleNameDetailMap;
@@ -61,35 +60,36 @@ std::map<std::string, BJsonUtil::BundleDetailInfo> BJsonUtil::BuildBundleInfos(
     HILOGI("Start BuildBundleInfos");
     for (size_t i = 0; i < bundleNames.size(); i++) {
         std::string bundleName = bundleNames[i];
-        BJsonUtil::BundleDetailInfo bundleDetailInfo;
-        bundleDetailInfo.userId = userId;
+        std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
         size_t pos = bundleName.find(BUNDLE_INDEX_SPLICE);
         if (pos == 0 || pos == (bundleName.size() - 1)) {
             HILOGE("Current bundle name is wrong");
             continue;
         }
+        std::string bundleNameOnly;
+        int bundleIndex;
         if (pos == std::string::npos) {
-            bundleDetailInfo.bundleName = bundleName;
-            bundleDetailInfo.bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
+            bundleNameOnly = bundleName;
+            bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
             bundleNamesOnly.emplace_back(bundleName);
         } else {
             std::string bundleNameSplit = bundleName.substr(0, pos);
             std::string indexSplit = bundleName.substr(pos, bundleName.size() - 1);
             int index = std::stoi(indexSplit);
-            bundleDetailInfo.bundleName = bundleNameSplit;
-            bundleDetailInfo.bundleIndex = index;
+            bundleNameOnly = bundleNameSplit;
+            bundleIndex = index;
             bundleNamesOnly.emplace_back(bundleNameSplit);
         }
         std::string bundleInfo = bundleInfos[i];
-        ParseBundleInfoJson(bundleInfo, bundleDetailInfo);
-        bundleDetailInfos.emplace_back(bundleDetailInfo);
-        bundleNameDetailMap[bundleDetailInfo.bundleName] = bundleDetailInfo;
+        ParseBundleInfoJson(bundleInfo, bundleDetailInfos, bundleNameOnly, bundleIndex, userId);
+        bundleNameDetailMap[bundleNameOnly] = bundleDetailInfos;
     }
     HILOGI("End BuildBundleInfos");
     return bundleNameDetailMap;
 }
 
-void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, BundleDetailInfo &bundleDetail)
+void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
+    std::string &bundleNameOnly, int bundleIndex, int32_t userId)
 {
     cJSON *root = cJSON_Parse(bundleInfo.c_str());
     if (root == nullptr) {
@@ -104,6 +104,10 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, BundleDetailI
     }
     int infosCount = cJSON_GetArraySize(infos);
     for (int i = 0; i < infosCount; i++) {
+        BJsonUtil::BundleDetailInfo bundleDetailInfo;
+        bundleDetailInfo.bundleName = bundleNameOnly;
+        bundleDetailInfo.bundleIndex = bundleIndex;
+        bundleDetailInfo.userId = userId;
         cJSON *infoItem = cJSON_GetArrayItem(infos, i);
         if (!cJSON_IsObject(infoItem)) {
             HILOGE("Parse json error, info item is not an object");
@@ -111,12 +115,12 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, BundleDetailI
             return;
         }
         cJSON *type = cJSON_GetObjectItem(infoItem, "type");
-        if (type == nullptr || !cJSON_IsString(type)) {
+        if (type == nullptr || !cJSON_IsString(type) || (type->valuestring == nullptr)) {
             HILOGE("Parse json type element error");
             cJSON_Delete(root);
             return;
         }
-        bundleDetail.type = type->valuestring;
+        bundleDetailInfo.type = type->valuestring;
         cJSON *details = cJSON_GetObjectItem(infoItem, "details");
         if (details == nullptr || !cJSON_IsArray(details)) {
             HILOGE("Parse json details element error");
@@ -124,9 +128,27 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, BundleDetailI
             return;
         }
         char *detailInfos = cJSON_Print(details);
-        bundleDetail.detail = std::string(detailInfos);
-        free(detailInfos);
+        bundleDetailInfo.detail = std::string(detailInfos);
+        bundleDetails.emplace_back(bundleDetailInfo);
+        cJSON_free(detailInfos);
     }
     cJSON_Delete(root);
+}
+
+bool BJsonUtil::FindBundleInfoByName(std::map<std::string, std::vector<BundleDetailInfo>> &bundleNameDetailsMap,
+    std::string &bundleName, const std::string &jobType, BundleDetailInfo &bundleDetail)
+{
+    auto iter = bundleNameDetailsMap.find(bundleName);
+    if (iter == bundleNameDetailsMap.end()) {
+        return false;
+    }
+    std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos = iter->second;
+    for (auto &bundleDetailInfo : bundleDetailInfos) {
+        if (bundleDetailInfo.type == jobType) {
+            bundleDetail = bundleDetailInfo;
+            return true;
+        }
+    }
+    return false;
 }
 }

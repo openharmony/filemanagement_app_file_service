@@ -279,7 +279,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
             bundleNames.emplace_back(bundle.bundleName);
         }
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, BJsonUtil::BundleDetailInfo> bundleNameDetailMap =
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, infos, bundleNamesOnly, session_->GetSessionUserId());
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
@@ -291,13 +291,12 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
                 session_->RemoveExtInfo(info.name);
             }
-            auto iter = bundleNameDetailMap.find(info.name);
-            if (iter == bundleNameDetailMap.end()) {
-                continue;
-            }
-            BJsonUtil::BundleDetailInfo bundleDetailInfo = iter->second;
-            if (bundleDetailInfo.type == UNICAST_TYPE) {
-                session_->SetBackupExtInfo(info.name, bundleDetailInfo.detail);
+            BJsonUtil::BundleDetailInfo uniCastInfo;
+            bool uniCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, info.name, UNICAST_TYPE,
+                uniCastInfo);
+            if (uniCastRet) {
+                HILOGI("current bundle, unicast info:%{public}s", uniCastInfo.detail.c_str());
+                session_->SetBackupExtInfo(info.name, uniCastInfo.detail);
             }
         }
         for (auto &bundleInfo : bundlesToBackup) {

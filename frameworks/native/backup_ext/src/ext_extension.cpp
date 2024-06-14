@@ -207,7 +207,7 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
 {
     UniqueFd fd = GetFileHandleForSpecialCloneCloud(fileName);
     if (fd < 0) {
-        HILOGE("Failed to open file = %{public}s, err = %{public}d", fileName.c_str(), errno);
+        HILOGE("Failed to open file = %{private}s, err = %{public}d", fileName.c_str(), errno);
         throw BError(BError::Codes::EXT_INVAL_ARG, string("open tar file failed"));
     }
 
@@ -219,7 +219,7 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
     string reportName = path + BConstants::BLANK_REPORT_NAME;
     UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
     if (reportFd < 0) {
-        HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportName.c_str(), errno);
+        HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
         throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
     }
 
@@ -252,7 +252,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
             HILOGE("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
-        HILOGI("extension: Start GetIncrementalFileHandle, fileName:%{public}s", fileName.c_str());
+        HILOGI("extension: Start GetIncrementalFileHandle");
         VerifyCaller();
 
         if (extension_->SpecialVersionForCloneAndCloud()) {
@@ -267,7 +267,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         int32_t errCode = ERR_OK;
         UniqueFd fd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (fd < 0) {
-            HILOGE("Failed to open tar file = %{public}s, err = %{public}d", tarName.c_str(), errno);
+            HILOGE("Failed to open tar file = %{private}s, err = %{public}d", tarName.c_str(), errno);
             errCode = BError::GetCodeByErrno(errno);
         }
 
@@ -279,7 +279,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         }
         UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (reportFd < 0) {
-            HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportName.c_str(), errno);
+            HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
             errCode = BError::GetCodeByErrno(errno);
         }
         HILOGI("extension: Will notify AppIncrementalFileReady");
