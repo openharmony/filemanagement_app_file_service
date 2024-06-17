@@ -90,6 +90,7 @@ public:
 
 private:
     static inline std::mutex proxyMutex_;
+    static inline std::mutex getInstanceMutex_;
     static inline sptr<IService> serviceProxy_ = nullptr;
     static inline BrokerDelegator<ServiceProxy> delegator_;
 };
