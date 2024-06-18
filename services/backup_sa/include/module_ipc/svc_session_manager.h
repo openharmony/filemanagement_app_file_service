@@ -102,7 +102,7 @@ public:
      *
      * @param impl 客户端信息
      */
-    void Active(Impl newImpl);
+    ErrCode Active(Impl newImpl);
 
     /**
      * @brief 关闭会话

@@ -220,13 +220,12 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         VerifyCaller();
-        session_->Active({
+        return session_->Active({
             .clientToken = IPCSkeleton::GetCallingTokenID(),
             .scenario = IServiceReverse::Scenario::RESTORE,
             .clientProxy = remote,
             .userId = GetUserIdDefault(),
         });
-        return BError(BError::Codes::OK);
     } catch (const BError &e) {
         StopAll(nullptr, true);
         return e.GetCode();
@@ -247,13 +246,12 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
         int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
         HILOGE("InitBackupSession oldSize %{public}d", oldSize);
         session_->SetMemParaCurSize(oldSize);
-        session_->Active({
+        return session_->Active({
             .clientToken = IPCSkeleton::GetCallingTokenID(),
             .scenario = IServiceReverse::Scenario::BACKUP,
             .clientProxy = remote,
             .userId = GetUserIdDefault(),
         });
-        return BError(BError::Codes::OK);
     } catch (const BError &e) {
         StopAll(nullptr, true);
         return e.GetCode();

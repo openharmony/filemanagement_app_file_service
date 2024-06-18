@@ -48,12 +48,13 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
     HILOGD("Succeed to verify the caller");
 }
 
-void SvcSessionManager::Active(Impl newImpl)
+ErrCode SvcSessionManager::Active(Impl newImpl)
 {
     unique_lock<shared_mutex> lock(lock_);
     const Impl &oldImpl = impl_;
     if (oldImpl.clientToken) {
-        throw BError(BError::Codes::SA_REFUSED_ACT, "Already have an active session");
+        HILOGE("Already have an active session");
+        return BError(BError::Codes::SA_REFUSED_ACT);
     }
 
     if (!newImpl.clientToken) {
@@ -65,6 +66,7 @@ void SvcSessionManager::Active(Impl newImpl)
 
     InitClient(newImpl);
     impl_ = newImpl;
+    return BError(BError::Codes::OK);
 }
 
 void SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool force)
