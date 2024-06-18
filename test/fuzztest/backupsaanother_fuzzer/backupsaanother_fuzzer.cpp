@@ -141,7 +141,7 @@ bool CmdGetLocalCapabilitiesIncrementalFuzzTest(const uint8_t *data, size_t size
 {
     MessageParcel datas;
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
-    if (size > 0) {
+    if (size >= sizeof(int32_t)) {
         vector<BIncrementalData> bundleNames;
         GetBundleNamesData(data, size, bundleNames);
         WriteParcelableVector(bundleNames, datas);
@@ -178,7 +178,7 @@ bool CmdAppendBundlesIncrementalBackupSessionFuzzTest(const uint8_t *data, size_
 {
     MessageParcel datas;
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
-    if (size > 0) {
+    if (size >= sizeof(int32_t)) {
         vector<BIncrementalData> bundleNames;
         GetBundleNamesData(data, size, bundleNames);
         WriteParcelableVector(bundleNames, datas);
