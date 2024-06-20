@@ -1176,6 +1176,7 @@ void BackupExtExtension::DoClear()
 void BackupExtExtension::AppDone(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("AppDone Begin.");
     auto proxy = ServiceProxy::GetInstance();
     BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
     auto ret = proxy->AppDone(errCode);

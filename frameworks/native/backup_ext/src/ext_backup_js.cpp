@@ -135,6 +135,32 @@ static bool CheckPromise(napi_env env, napi_value value)
     return isPromise;
 }
 
+static bool CallCatchPromise(AbilityRuntime::JsRuntime &jsRuntime, napi_value result, CallbackInfo *callbackInfo)
+{
+    HILOGI("CallCatchPromise Begin.");
+    AbilityRuntime::HandleScope handleScope(jsRuntime);
+    auto env = jsRuntime.GetNapiEnv();
+    napi_value method = nullptr;
+    if (napi_get_named_property(env, result, "catch", &method) != napi_ok) {
+        HILOGI("CallCatchPromise, Failed to get method catch");
+        return false;
+    }
+    bool isCallable = false;
+    if (napi_is_callable(env, method, &isCallable) != napi_ok) {
+        HILOGI("CallCatchPromise, Failed to check method then is callable");
+        return false;
+    }
+    if (!isCallable) {
+        HILOGI("CallCatchPromise, property then is not callable.");
+        return false;
+    }
+    napi_value ret;
+    napi_create_function(env, "promiseCallback", strlen("promiseCallback"), PromiseCallback, callbackInfo, &ret);
+    napi_value argv[1] = {ret};
+    napi_call_function(env, result, method, 1, argv, nullptr);
+    return true;
+}
+
 static bool CallPromise(AbilityRuntime::JsRuntime &jsRuntime, napi_value result, CallbackInfo *callbackInfo)
 {
     AbilityRuntime::HandleScope handleScope(jsRuntime);
@@ -155,6 +181,37 @@ static bool CallPromise(AbilityRuntime::JsRuntime &jsRuntime, napi_value result,
     }
     napi_value ret;
     napi_create_function(env, "promiseCallback", strlen("promiseCallback"), PromiseCallback, callbackInfo, &ret);
+    napi_value argv[1] = {ret};
+    napi_call_function(env, result, method, 1, argv, nullptr);
+    if (!CallCatchPromise(jsRuntime, result, callbackInfo)) {
+        HILOGE("CallCatchPromise failed.");
+        return false;
+    }
+    return true;
+}
+
+static bool CallCatchPromiseEx(AbilityRuntime::JsRuntime &jsRuntime, napi_value result, CallbackInfoEx *callbackInfoEx)
+{
+    HILOGI("CallCatchPromiseEx Begin.");
+    AbilityRuntime::HandleScope handleScope(jsRuntime);
+    auto env = jsRuntime.GetNapiEnv();
+    napi_value method = nullptr;
+    if (napi_get_named_property(env, result, "catch", &method) != napi_ok) {
+        HILOGI("CallCatchPromiseEx, Failed to get method catch");
+        return false;
+    }
+    bool isCallable = false;
+    if (napi_is_callable(env, method, &isCallable) != napi_ok) {
+        HILOGI("CallCatchPromiseEx, Failed to check method then is callable");
+        return false;
+    }
+    if (!isCallable) {
+        HILOGI("CallCatchPromiseEx, property then is not callable.");
+        return false;
+    }
+    napi_value ret;
+    napi_create_function(env, "promiseCallbackEx", strlen("promiseCallbackEx"), PromiseCallbackEx, callbackInfoEx,
+        &ret);
     napi_value argv[1] = {ret};
     napi_call_function(env, result, method, 1, argv, nullptr);
     return true;
@@ -183,6 +240,10 @@ static bool CallPromiseEx(AbilityRuntime::JsRuntime &jsRuntime, napi_value resul
         &ret);
     napi_value argv[1] = {ret};
     napi_call_function(env, result, method, 1, argv, nullptr);
+    if (!CallCatchPromiseEx(jsRuntime, result, callbackInfoEx)) {
+        HILOGE("CallCatchPromiseEx failed.");
+        return false;
+    }
     return true;
 }
 
