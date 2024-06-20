@@ -198,7 +198,8 @@ static bool CreateIPCInteractionFiles(int32_t userId, const string &bundleName, 
     if (access(backupSaBundleDir.data(), F_OK) != 0) {
         int32_t err = mkdir(backupSaBundleDir.data(), S_IRWXU | S_IRWXG);
         if (err != 0) {
-            HILOGE("Failed to create folder in backup_sa, err = %{public}d", err);
+            HILOGE("Failed to create folder in backup_sa bundleName:%{public}s, sys err:%{public}d",
+                bundleName.c_str(), errno);
             return false;
         }
     }
@@ -243,10 +244,16 @@ static bool GenerateBundleStatsIncrease(int32_t userId, const vector<string> &bu
         HILOGE("Failed to get bundleStats result from storage, err = %{public}d", err);
         return false;
     }
-
+    HILOGI("bundleNames size:%{public}zu, pkgFileSizes size:%{public}zu, bundleInfos size:%{public}zu",
+        bundleNames.size(), pkgFileSizes.size(), bundleInfos.size());
+    if (bundleInfos.size() != pkgFileSizes.size()) {
+        HILOGE("The number of bundle is not equal to the number of data records");
+        return false;
+    }
     for (size_t i = 0; i < bundleInfos.size(); i++) {
-        HILOGD("BundleMgrAdapter name for %{private}s", bundleInfos[i].name.c_str());
-        BJsonEntityCaps::BundleInfo newBundleInfo = {.name = bundleInfos[i].name,
+        std::string curBundleName = bundleInfos[i].name;
+        HILOGD("BundleMgrAdapter name for %{public}s", curBundleName.c_str());
+        BJsonEntityCaps::BundleInfo newBundleInfo = {.name = curBundleName,
                                                      .versionCode = bundleInfos[i].versionCode,
                                                      .versionName = bundleInfos[i].versionName,
                                                      .spaceOccupied = pkgFileSizes[i],
@@ -284,19 +291,17 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
             HILOGE("No backup extension ability found");
             continue;
         }
+        if (!CreateIPCInteractionFiles(userId, bundleName, bundleNameTime.lastIncrementalTime, backupPara.includes,
+            backupPara.excludes)) {
+            continue;
+        }
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, 0, backupPara.allToBackup,
                                                               backupPara.extensionName, backupPara.restoreDeps,
                                                               backupPara.supportScene, backupPara.extraInfo});
-        if (!CreateIPCInteractionFiles(userId, bundleName, bundleNameTime.lastIncrementalTime, backupPara.includes,
-            backupPara.excludes)) {
-            HILOGE("Failed to write include/exclude files, name : %{private}s", installedBundle.name.data());
-            continue;
-        }
         bundleNames.emplace_back(bundleName);
         incrementalBackTimes.emplace_back(bundleNameTime.lastIncrementalTime);
     }
-
     vector<BJsonEntityCaps::BundleInfo> newBundleInfos {};
     if (!GenerateBundleStatsIncrease(userId, bundleNames, incrementalBackTimes, bundleInfos, newBundleInfos)) {
         HILOGE("Failed to get bundleStats result");
