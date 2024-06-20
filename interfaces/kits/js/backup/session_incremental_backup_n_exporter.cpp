@@ -389,8 +389,8 @@ napi_value SessionIncrementalBackupNExporter::AppendBundles(napi_env env, napi_c
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get backupSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-    auto cbExec = [session{ backupEntity->session.get() }, bundles{ move(backupBundles) },
-        infos{ move(bundleInfos) }]() -> NError {
+    auto cbExec = [session{ backupEntity->session.get() }, bundles{ backupBundles },
+        infos{ bundleInfos }]() -> NError {
         if (!session) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "backup session is nullptr").GetCode());
         }
