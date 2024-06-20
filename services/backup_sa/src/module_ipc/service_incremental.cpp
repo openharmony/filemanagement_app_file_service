@@ -217,12 +217,11 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         VerifyCaller();
-        session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
-                          .scenario = IServiceReverse::Scenario::BACKUP,
-                          .clientProxy = remote,
-                          .userId = GetUserIdDefault(),
-                          .isIncrementalBackup = true});
-        return BError(BError::Codes::OK);
+        return session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
+                                 .scenario = IServiceReverse::Scenario::BACKUP,
+                                 .clientProxy = remote,
+                                 .userId = GetUserIdDefault(),
+                                 .isIncrementalBackup = true});
     } catch (const BError &e) {
         StopAll(nullptr, true);
         return e.GetCode();

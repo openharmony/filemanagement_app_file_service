@@ -137,10 +137,10 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Active_0100, testing::ext:
         SvcSessionManager::Impl newImpl;
         try {
             sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-            sessionManagerPtr_->Active(newImpl);
-            EXPECT_TRUE(false);
+            auto res = sessionManagerPtr_->Active(newImpl);
+            EXPECT_EQ(res, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
         } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_REFUSED_ACT);
+            EXPECT_TRUE(false);
         }
 
         try {

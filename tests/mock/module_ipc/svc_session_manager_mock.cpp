@@ -41,11 +41,12 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
     GTEST_LOG_(INFO) << "VerifyCallerAndScenario";
 }
 
-void SvcSessionManager::Active(Impl newImpl)
+ErrCode SvcSessionManager::Active(Impl newImpl)
 {
     GTEST_LOG_(INFO) << "Active";
     extConnectNum_ = 0;
     impl_ = newImpl;
+    return BError(BError::Codes::OK);
 }
 
 void SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool force)
