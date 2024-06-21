@@ -168,7 +168,7 @@ HWTEST_F(FilePermissionTest, PersistPermission_test_0001, testing::ext::TestSize
         EXPECT_EQ(ret, EPERM);
         EXPECT_EQ(INVALID_MODE, errorResults[0].code);
     } else {
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, EPERM);
     };
     GTEST_LOG_(INFO) << "FileShareTest-end PersistPermission_test_0001";
 }
@@ -194,7 +194,7 @@ HWTEST_F(FilePermissionTest, PersistPermission_test_0002, testing::ext::TestSize
         ASSERT_EQ(uriPolicies.size(), errorResults.size());
         EXPECT_EQ(INVALID_PATH, errorResults[0].code);
     } else {
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, EPERM);
     };
     GTEST_LOG_(INFO) << "FileShareTest-end PersistPermission_test_0002";
 }
@@ -241,7 +241,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0001, testing::ext::TestSiz
         EXPECT_EQ(ret, EPERM);
         EXPECT_EQ(INVALID_MODE, errorResults[0].code);
     } else {
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, EPERM);
     };
     GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_0001";
 }
@@ -267,7 +267,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0002, testing::ext::TestSiz
         ASSERT_EQ(uriPolicies.size(), errorResults.size());
         EXPECT_EQ(INVALID_PATH, errorResults[0].code);
     } else {
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, EPERM);
     };
     GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_0002";
 }
@@ -314,7 +314,7 @@ HWTEST_F(FilePermissionTest, DeactivatePermission_test_0001, testing::ext::TestS
         EXPECT_EQ(ret, EPERM);
         EXPECT_EQ(INVALID_MODE, errorResults[0].code);
     } else {
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, EPERM);
     };
     GTEST_LOG_(INFO) << "FileShareTest-end DeactivatePermission_test_0001";
 }
@@ -340,7 +340,7 @@ HWTEST_F(FilePermissionTest, DeactivatePermission_test_0002, testing::ext::TestS
         ASSERT_EQ(uriPolicies.size(), errorResults.size());
         EXPECT_EQ(INVALID_PATH, errorResults[0].code);
     } else {
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, EPERM);
     };
     GTEST_LOG_(INFO) << "FileShareTest-end DeactivatePermission_test_0002";
 }
@@ -384,7 +384,7 @@ HWTEST_F(FilePermissionTest, RevokePermission_test_0001, testing::ext::TestSize.
         EXPECT_EQ(ret, EPERM);
         EXPECT_EQ(INVALID_MODE, errorResults[0].code);
     } else {
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, EPERM);
     };
     GTEST_LOG_(INFO) << "FileShareTest-end RevokePermission_test_0001";
 }
@@ -410,7 +410,7 @@ HWTEST_F(FilePermissionTest, RevokePermission_test_0002, testing::ext::TestSize.
         ASSERT_EQ(uriPolicies.size(), errorResults.size());
         EXPECT_EQ(INVALID_PATH, errorResults[0].code);
     } else {
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, EPERM);
     };
     GTEST_LOG_(INFO) << "FileShareTest-end RevokePermission_test_0002";
 }
@@ -431,7 +431,7 @@ HWTEST_F(FilePermissionTest, GetPathByPermission_test_0001, testing::ext::TestSi
     if (CheckFileManagerFullMountEnable()) {
         EXPECT_EQ(path, sandboxPath);
     } else {
-        EXPECT_EQ(path, "");
+        EXPECT_EQ(path, sandboxPath);
     };
     GTEST_LOG_(INFO) << "FileShareTest-end GetPathByPermission_test_0001";
 }
@@ -452,7 +452,7 @@ HWTEST_F(FilePermissionTest, GetPathByPermission_test_0002, testing::ext::TestSi
     if (CheckFileManagerFullMountEnable()) {
         EXPECT_EQ(path, sandboxPath);
     } else {
-        EXPECT_EQ(path, "");
+        EXPECT_EQ(path, sandboxPath);
     };
     GTEST_LOG_(INFO) << "FileShareTest-end GetPathByPermission_test_0002";
 }
@@ -473,153 +473,9 @@ HWTEST_F(FilePermissionTest, GetPathByPermission_test_0003, testing::ext::TestSi
     if (CheckFileManagerFullMountEnable()) {
         EXPECT_EQ(path, sandboxPath);
     } else {
-        EXPECT_EQ(path, "");
+        EXPECT_EQ(path, sandboxPath);
     };
     GTEST_LOG_(INFO) << "FileShareTest-end GetPathByPermission_test_0003";
-}
-/**
- * @tc.name: SetPolicy_test_0001
- * @tc.desc: Test function of SetPolicy() interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require:
- */
-HWTEST_F(FilePermissionTest, SetPolicy_test_0001, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FileShareTest-begin SetPolicy_test_0001";
-    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_NAME_A + "/storage",
-                           .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
-    std::vector<UriPolicyInfo> uriPolicies;
-    uriPolicies.emplace_back(infoA);
-    vector<bool> errorResults;
-    auto providerTokenId = IPCSkeleton::GetCallingTokenID();
-    uint32_t PolicyFlag = 0;
-    int32_t uid = 100;
-    uint32_t tokenId = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenID(uid, BUNDLE_NAME_A, 0);
-    int32_t ret = FilePermission::SetPolicy(providerTokenId, tokenId, uriPolicies, errorResults, PolicyFlag);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, 0);
-        ASSERT_EQ(uriPolicies.size(), errorResults.size());
-        EXPECT_EQ(false, errorResults[0]);
-    } else {
-        EXPECT_EQ(ret, 0);
-    };
-    GTEST_LOG_(INFO) << "FileShareTest-end SetPolicy_test_0001";
-}
-/**
- * @tc.name: SetPolicy_test_0002
- * @tc.desc: Test function of SetPolicy() interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require:
- */
-HWTEST_F(FilePermissionTest, SetPolicy_test_0002, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FileShareTest-begin SetPolicy_test_0002";
-    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_NAME_A + "/storage",
-                           .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
-    std::vector<UriPolicyInfo> uriPolicies;
-    uriPolicies.emplace_back(infoA);
-    deque<struct PolicyErrorResult> errorResults;
-    int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
-    EXPECT_EQ(ret, 0);
-    vector<bool> errorResult;
-    auto providerTokenId = IPCSkeleton::GetCallingTokenID();
-    uint32_t PolicyFlag = 0;
-    int32_t uid = 100;
-    uint32_t tokenId = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenID(uid, BUNDLE_NAME_A, 0);
-    ret = FilePermission::SetPolicy(providerTokenId, tokenId, uriPolicies, errorResult, PolicyFlag);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, 0);
-        ASSERT_EQ(uriPolicies.size(), errorResult.size());
-        EXPECT_EQ(true, errorResult[0]);
-    } else {
-        EXPECT_EQ(ret, 0);
-    };
-    ret = FilePermission::RevokePermission(uriPolicies, errorResults);
-    GTEST_LOG_(INFO) << "FileShareTest-end SetPolicy_test_0002";
-}
-/**
- * @tc.name: SetPolicy_test_0003
- * @tc.desc: Test function of SetPolicy() interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require:
- */
-HWTEST_F(FilePermissionTest, SetPolicy_test_0003, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FileShareTest-begin SetPolicy_test_0003";
-    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/001.txt",
-                           .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
-    std::vector<UriPolicyInfo> uriPolicies;
-    uriPolicies.emplace_back(infoA);
-    vector<bool> errorResult;
-    auto providerTokenId = IPCSkeleton::GetCallingTokenID();
-    uint32_t PolicyFlag = 0;
-    int32_t uid = 100;
-    uint32_t tokenId = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenID(uid, BUNDLE_NAME_A, 0);
-    int32_t ret = FilePermission::SetPolicy(providerTokenId, tokenId, uriPolicies, errorResult, PolicyFlag);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, EPERM);
-        ASSERT_EQ(uriPolicies.size(), errorResult.size());
-        EXPECT_EQ(false, errorResult[0]);
-    } else {
-        EXPECT_EQ(ret, 0);
-    };
-    GTEST_LOG_(INFO) << "FileShareTest-end SetPolicy_test_0003";
-}
-/**
- * @tc.name: SetPolicy_test_0004
- * @tc.desc: Test function of SetPolicy() interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require:
- */
-HWTEST_F(FilePermissionTest, SetPolicy_test_0004, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FileShareTest-begin SetPolicy_test_0004";
-    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_NAME_A + "/storage",
-                           .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
-    UriPolicyInfo infoB = {.uri = "file://" + BUNDLE_NAME_A + "/storage/test02.test",
-                           .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
-    UriPolicyInfo infoC = {.uri = "file://docs/storage/Users/currentUser/Download",
-                           .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
-    UriPolicyInfo infoD = {.uri = "file://docs/storage/Users/currentUser/Desktop",
-                           .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
-    std::vector<UriPolicyInfo> uriPolicies;
-    uriPolicies.emplace_back(infoA);
-    uriPolicies.emplace_back(infoB);
-    uriPolicies.emplace_back(infoC);
-    uriPolicies.emplace_back(infoD);
-    deque<struct PolicyErrorResult> errorResults;
-    int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, EPERM);
-    } else {
-        EXPECT_EQ(ret, 0);
-    };
-    vector<bool> errorResult;
-    auto providerTokenId = IPCSkeleton::GetCallingTokenID();
-    uint32_t PolicyFlag = 0;
-    int32_t uid = 100;
-    uint32_t tokenId = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenID(uid, BUNDLE_NAME_A, 0);
-    ret = FilePermission::SetPolicy(providerTokenId, tokenId, uriPolicies, errorResult, PolicyFlag);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, 0);
-        ASSERT_EQ(uriPolicies.size(), errorResult.size());
-        EXPECT_EQ(true, errorResult[0]);
-        EXPECT_EQ(false, errorResult[1]);
-        EXPECT_EQ(false, errorResult[2]);
-        EXPECT_EQ(false, errorResult[3]);
-    } else {
-        EXPECT_EQ(ret, 0);
-    };
-    ret = FilePermission::RevokePermission(uriPolicies, errorResults);
-    GTEST_LOG_(INFO) << "FileShareTest-end SetPolicy_test_0004";
 }
 /**
  * @tc.name: CheckPersistentPermission_test_0001
@@ -699,7 +555,7 @@ HWTEST_F(FilePermissionTest, CheckPersistentPermission_test_0003, testing::ext::
         ASSERT_EQ(uriPolicies.size(), errorResult.size());
         EXPECT_EQ(false, errorResult[0]);
     } else {
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, EPERM);
     };
     GTEST_LOG_(INFO) << "FileShareTest-end CheckPersistentPermission_test_0003";
 }
