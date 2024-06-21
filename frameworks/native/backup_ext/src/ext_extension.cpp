@@ -1721,6 +1721,18 @@ ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
     return ERR_OK;
 }
 
+ErrCode BackupExtExtension::UpdateFdSendRate(std::string &bundleName, int sendRate)
+{
+    std::lock_guard<std::mutex> lock(updateSendRateLock_);
+    VerifyCaller();
+    needUpdateSendRate_.store(true);
+    bundleName_ = bundleName;
+    sendRate_ = sendRate;
+    HILOGI("Update SendRate Success, bundleName:%{public}s, sendRate:%{public}d", bundleName.c_str(), sendRate)
+    return ERR_OK;
+}
+
+
 std::function<void(std::string)> BackupExtExtension::RestoreResultCallbackEx(wptr<BackupExtExtension> obj)
 {
     HILOGI("Begin get callbackEx");

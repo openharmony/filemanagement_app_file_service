@@ -1288,6 +1288,22 @@ ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &res
     }
 }
 
+ErrCode Service::UpdateSendRate(std::string bundleName, int sendRate, bool &result)
+{
+    IServiceReverse::Scenario scenario = session_ -> GetScenario();
+    if (scenario != IServiceReverse::Scenario::BACKUP) {
+        HILOGE("This method is applicable to the backup scenario");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    auto backupConnection  = session_->GetExtConnection(bundleName);
+    auto proxy = backupConnection->GetBackupExtProxy();
+    if (!proxy) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+    }
+    auto ret = proxy->UpdateFdSendRate(bundleName, sendRate);
+    return ret;
+}
+
 AAFwk::Want Service::CreateConnectWant (BundleName &bundleName)
 {
     BConstants::ExtensionAction action = BConstants::ExtensionAction::BACKUP;

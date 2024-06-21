@@ -49,6 +49,7 @@ public:
     ErrCode IncrementalOnBackup() override;
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
     ErrCode GetBackupInfo(std::string &result) override;
+    ErrCode UpdateFdSendRate(std::string &bundleName, int sendRate) override;
 
     void AsyncTaskRestoreForUpgrade(void);
     void ExtClear(void);
@@ -189,6 +190,11 @@ private:
     std::shared_ptr<ExtBackup> extension_;
     std::string backupInfo_;
     OHOS::ThreadPool threadPool_;
+    std::mutex updateSendRateLock_;
+    std::atomic<bool> needUpdateSendRate_ {false};
+    std::atomic<bool> isMinSendRate_ {false};
+    std::string bundleName_;
+    int sendRate_;
 };
 } // namespace OHOS::FileManagement::Backup
 

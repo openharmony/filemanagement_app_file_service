@@ -24,8 +24,10 @@ public:
     static napi_value Async(napi_env env, napi_callback_info info);
     static napi_value DoGetBackupInfo(napi_env env, napi_callback_info info);
     static napi_value DoUpdateTimer(napi_env env, napi_callback_info info);
+    static napi_value DoUpdateSendRate(napi_env env, napi_callback_info info);
 private:
     static bool UpdateTimer(std::string &bundleName, uint32_t timeOut);
+    static bool UpdateSendRate(std::string &bundleName, int sendRate);
 };
 
 const std::string PROCEDURE_LOCALCAPABILITIES_NAME = "getLocalCapalities";

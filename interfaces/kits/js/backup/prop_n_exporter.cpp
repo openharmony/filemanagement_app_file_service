@@ -26,6 +26,7 @@ bool PropNExporter::Export()
         NVal::DeclareNapiFunction("getLocalCapabilities", PropNOperation::Async),
         NVal::DeclareNapiFunction("getBackupInfo", PropNOperation::DoGetBackupInfo),
         NVal::DeclareNapiFunction("updateTimer", PropNOperation::DoUpdateTimer),
+        NVal::DeclareNapiFunction("updateSendRate", PropNOperation::DoUpdateSendRate),
     });
 }
 

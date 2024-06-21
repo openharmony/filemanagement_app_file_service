@@ -49,6 +49,8 @@ ExtExtensionStub::ExtExtensionStub()
         &ExtExtensionStub::CmdGetBackupInfo;
     opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_INCREMENTAL_ON_BACKUP)] =
         &ExtExtensionStub::CmdIncrementalOnBackup;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_UPDATE_FD_SENDRATE)] =
+        &ExtExtensionStub::CmdUpdateFdSendRate;
 }
 
 int32_t ExtExtensionStub::OnRemoteRequest(uint32_t code,
@@ -216,6 +218,24 @@ ErrCode ExtExtensionStub::CmdGetBackupInfo(MessageParcel &data, MessageParcel &r
     }
     if (!reply.WriteString(result)) {
         return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the result").GetCode();
+    }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ExtExtensionStub::CmdUpdateFdSendRate(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGD("CmdUpdateFdSendRate Begin");
+    std::string bundleName;
+    if (!data.ReadString(bundleName)) {
+        return BError(BError::Codes::EXT_INVAL_ARG), "Failed to receive bundleName").GetCode();
+    }
+    int sendRate;
+    if (!data.ReadInt(sendRate)) {
+        return BError(BError::Codes::EXT_INVAL_ARG), "Failed to receive sendRate").GetCode();
+    }
+    int ret = UpdateSendRate(bundleName, sendRate);
+    if (reply.WriteInt32(ret)) {
+        return BError(BError::Codes::EXT_BROKEN_IPC), "Failed to send out the ret").GetCode();
     }
     return BError(BError::Codes::OK);
 }
