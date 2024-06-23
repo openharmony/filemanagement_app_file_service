@@ -125,25 +125,26 @@ public:
     /**
      * @brief do backup. Subclasses can inherit to implement their own custom functionality.
      */
-    virtual ErrCode OnBackup(std::function<void()> callback);
+    virtual ErrCode OnBackup(std::function<void(ErrCode)> callback);
 
-    virtual ErrCode OnBackup(std::function<void()> callback, std::function<void(const std::string)> callbackEx);
-
-    /**
-     * @brief Called do restore.
-     */
-    virtual ErrCode OnRestore(std::function<void()> callback, std::function<void(const std::string)> callbackEx,
-        std::function<void()> callbackExAppDone);
+    virtual ErrCode OnBackup(std::function<void(ErrCode)> callback,
+        std::function<void(ErrCode, const std::string)> callbackEx);
 
     /**
      * @brief Called do restore.
      */
-    virtual ErrCode OnRestore(std::function<void()> callback);
+    virtual ErrCode OnRestore(std::function<void(ErrCode)> callback,
+        std::function<void(ErrCode, const std::string)> callbackEx, std::function<void(ErrCode)> callbackExAppDone);
+
+    /**
+     * @brief Called do restore.
+     */
+    virtual ErrCode OnRestore(std::function<void(ErrCode)> callback);
 
     /**
      * @brief Called do GetBackupInfo.
      */
-    virtual ErrCode GetBackupInfo(std::function<void(std::string)> callback);
+    virtual ErrCode GetBackupInfo(std::function<void(ErrCode, std::string)> callback);
 
     /**
      * @brief 数据迁移判断
@@ -172,7 +173,7 @@ public:
     /**
      * @brief Called Extention to notify
      */
-    virtual ErrCode CallExtRestore(std::string result);
+    virtual ErrCode CallExtRestore(ErrCode, const std::string);
 
 public:
     ExtBackup() = default;

@@ -252,38 +252,39 @@ bool ExtBackup::RestoreDataReady()
     return restoreType_ == RestoreTypeEnum::RESTORE_DATA_READDY;
 }
 
-ErrCode ExtBackup::OnBackup(function<void()> callback)
+ErrCode ExtBackup::OnBackup(function<void(ErrCode)> callback)
 {
     HILOGI("BackupExtensionAbility(base) OnBackup.");
     return ERR_OK;
 }
 
-ErrCode ExtBackup::OnBackup(std::function<void()> callback, std::function<void(const std::string)> callbackEx)
+ErrCode ExtBackup::OnBackup(std::function<void(ErrCode)> callback,
+    std::function<void(ErrCode, const std::string)> callbackEx)
 {
     HILOGI("BackupExtensionAbility(base) OnBackup with Ex");
     return ERR_OK;
 }
 
-ErrCode ExtBackup::OnRestore(function<void()> callback, std::function<void(const std::string)> callbackEx,
-    std::function<void()> callbackExAppDone)
+ErrCode ExtBackup::OnRestore(function<void(ErrCode)> callback,
+    std::function<void(ErrCode, const std::string)> callbackEx, std::function<void(ErrCode)> callbackExAppDone)
 {
     HILOGI("BackupExtensionAbility(base) OnRestore with Ex.");
     return ERR_OK;
 }
 
-ErrCode ExtBackup::OnRestore(function<void()> callback)
+ErrCode ExtBackup::OnRestore(function<void(ErrCode)> callback)
 {
     HILOGI("BackupExtensionAbility(base) OnRestore.");
     return ERR_OK;
 }
 
-ErrCode ExtBackup::GetBackupInfo(function<void(std::string)> callback)
+ErrCode ExtBackup::GetBackupInfo(function<void(ErrCode, std::string)> callback)
 {
     HILOGI("BackupExtensionAbility(base) GetBackupInfo.");
     return ERR_OK;
 }
 
-ErrCode ExtBackup::CallExtRestore(std::string result)
+ErrCode ExtBackup::CallExtRestore(ErrCode errCode, const std::string result)
 {
     HILOGI("BackupExtensionAbility(base) CallExtRestore.");
     return ERR_OK;
