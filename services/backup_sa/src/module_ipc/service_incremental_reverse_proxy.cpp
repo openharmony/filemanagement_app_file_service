@@ -155,10 +155,6 @@ void ServiceReverseProxy::IncrementalRestoreOnBundleFinished(int32_t errCode, st
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }
-
-    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
-    HILOGI("RestoreOnBundleFinished EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
-           bundleName.c_str());
 }
 
 void ServiceReverseProxy::IncrementalRestoreOnAllBundlesFinished(int32_t errCode)

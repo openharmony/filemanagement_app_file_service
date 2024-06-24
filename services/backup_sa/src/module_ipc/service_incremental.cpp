@@ -79,6 +79,8 @@ ErrCode Service::Release()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("KILL");
     VerifyCaller(session_->GetScenario());
+    SendErrAppGalleryNotify();
+    DeleteDisConfigFile();
     SessionDeactive();
     return BError(BError::Codes::OK);
 }
@@ -439,12 +441,11 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
                     OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
                     FILE_BACKUP_EVENTS,
                     OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-                    "PROC_NAME", "ohos.appfileservice",
-                    "BUNDLENAME", callerName,
-                    "PID", getpid(),
-                    "TIME", strTime.str()
+                    "PROC_NAME", "ohos.appfileservice", "BUNDLENAME", callerName,
+                    "PID", getpid(), "TIME", strTime.str()
                 );
             } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+                SendEndAppGalleryNotify(callerName);
                 session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, callerName);
             }
             backUpConnection->DisconnectBackupExtAbility();

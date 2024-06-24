@@ -94,6 +94,7 @@ static inline int32_t GetUserIdDefault()
 void Service::OnStart()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    ClearDisposalOnSaStart();
     bool res = SystemAbility::Publish(sptr(this));
     sched_ = sptr(new SchedScheduler(wptr(this), wptr(session_)));
     sched_->StartTimer();
@@ -742,6 +743,7 @@ void Service::NotifyCloneBundleFinish(std::string bundleName)
         backUpConnection->DisconnectBackupExtAbility();
         ClearSessionAndSchedInfo(bundleName);
     }
+    SendEndAppGalleryNotify(bundleName);
     OnAllBundlesFinished(BError(BError::Codes::OK));
 }
 
@@ -1173,15 +1175,97 @@ void Service::OnStartSched()
     }
 }
 
-void Service::SendAppGalleryNotify(const BundleName &bundleName)
+void Service::SendStartAppGalleryNotify(const BundleName &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     IServiceReverse::Scenario scenario = session_->GetScenario();
-    if (scenario == IServiceReverse::Scenario::RESTORE) {
-        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
-        HILOGI("SendAppGalleryNotify StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
-               bundleName.c_str());
+    if (scenario != IServiceReverse::Scenario::RESTORE) {
+        return ;
     }
+    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
+    HILOGI("SendStartAppGalleryNotify StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+        bundleName.c_str());
+    if (!disposal_->IfBundleNameInDisposalConfigFile(bundleName)) {
+        HILOGE("WriteDisposalConfigFile Failed");
+        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
+        HILOGI("SendEndAppGalleryNotify EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+            bundleName.c_str());
+        return ;
+    }
+    HILOGI("AppendIntoDisposalConfigFile OK, bundleName=%{public}s", bundleName.c_str());
+}
+
+void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    if (scenario != IServiceReverse::Scenario::RESTORE) {
+        return ;
+    }
+    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
+    HILOGI("SendEndAppGalleryNotify EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+        bundleName.c_str());
+    if (disposeErr != DisposeErr::OK) {
+        HILOGE("SendEndAppGalleryNotify error,disposal will be clear in the end");
+        return ;
+    }
+    if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
+        HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
+        return ;
+    }
+    HILOGI("DeleteFromDisposalConfigFile OK, bundleName=%{public}s", bundleName.c_str());
+}
+
+void Service::SendErrAppGalleryNotify()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    vector<string> bundleNameList = disposal_->GetBundleNameFromConfigFile();
+    if (bundleNameList.empty()) {
+        HILOGI("End, All disposal pasitions have been cleared");
+    }
+    for (vector<string>::iterator it = bundleNameList.begin(); it != bundleNameList.end(); ++it) {
+        string bundleName = *it;
+        IServiceReverse::Scenario scenario = session_->GetScenario();
+        if (scenario != IServiceReverse::Scenario::RESTORE) {
+            return ;
+        }
+        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
+        HILOGI("SendErrAppGalleryNotify EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+            bundleName.c_str());
+        if (disposeErr != DisposeErr::OK) {
+            HILOGE("SendEndAppGalleryNotify error,disposal will be clear in the end");
+            return ;
+        }
+        if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
+            HILOGE("DeleteFromDisposalConfigFile Failed");
+        }
+    }
+}
+
+void Service::ClearDisposalOnSaStart()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    vector<string> bundleNameList = disposal_->GetBundleNameFromConfigFile();
+    if (!bundleNameList.empty()) {
+        for (vector<string>::iterator it = bundleNameList.begin(); it != bundleNameList.end(); ++it) {
+            string bundleName = *it;
+            DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
+            HILOGI("SendErrAppGalleryNotify EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+                bundleName.c_str());
+        }
+    }
+    HILOGI("SA start, All Errdisposal pasitions have been cleared");
+}
+
+void Service::DeleteDisConfigFile()
+{
+    vector<string> bundleNameList = disposal_->GetBundleNameFromConfigFile();
+    if (bundleNameList.empty()) {
+        if (!disposal_->DeleteConfigFile()) {
+            HILOGE("DeleteConfigFile failed");
+        }
+    }
+    HILOGE("DisposalConfigFile is not empty");
 }
 
 void Service::SessionDeactive()

@@ -21,6 +21,7 @@
 
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_json/b_json_entity_caps.h"
+#include "b_json/b_json_service_disposal_config.h"
 #include "i_service_reverse.h"
 #include "iremote_stub.h"
 #include "module_sched/sched_scheduler.h"
@@ -131,12 +132,39 @@ public:
     virtual void ExtStart(const std::string &bundleName);
 
     /**
-     * @brief 发送备份恢复通知到应用市场
+     * @brief 备份恢复开始，设置处置位
      *
      * @param bundleName 应用名称
      *
      */
-    void SendAppGalleryNotify(const std::string &bundleName);
+    void SendStartAppGalleryNotify(const std::string &bundleName);
+
+    /**
+     * @brief 备份恢复结束，清理处置位
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void SendEndAppGalleryNotify(const std::string &bundleName);
+
+    /**
+     * @brief 备份恢复异常结束，清理处置位
+     *
+     */
+    void SendErrAppGalleryNotify();
+
+    /**
+     * @brief SA开始时，清理配置文件中的处置位
+     *
+     */
+    void ClearDisposalOnSaStart();
+
+    /**
+     * @brief 备份恢复全部结束，删除配置文件
+     *
+     *
+     */
+    void DeleteDisConfigFile();
 
     /**
      * @brief 结束会话删除session，卸载服务
@@ -177,6 +205,7 @@ public:
     {
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(this)));
+        disposal_ = make_shared<BJsonDisposalConfig>();
     };
     ~Service() override
     {
@@ -304,6 +333,7 @@ private:
 
     sptr<SvcSessionManager> session_;
     sptr<SchedScheduler> sched_;
+    std::shared_ptr<BJsonDisposalConfig> disposal_;
 
     friend class ServiceTest;
 
