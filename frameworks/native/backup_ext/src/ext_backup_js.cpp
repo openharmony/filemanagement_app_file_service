@@ -84,6 +84,25 @@ static napi_status DealNapiStrValue(napi_env env, const napi_value napi_StrValue
     return status;
 }
 
+static napi_status DealNapiException(napi_env env, std::string &exceptionInfo)
+{
+    HILOGI("call DealNapiException start.");
+    napi_status status;
+    napi_value exception;
+    status = napi_get_and_clear_last_exception(env, &exception);
+    if (status != napi_ok) {
+        HILOGE("call napi_get_and_clear_last_exception failed.");
+        return status;
+    }
+    status = DealNapiStrValue(env, exception, exceptionInfo);
+    if (status != napi_ok) {
+        HILOGE("call DealNapiStrValue failed.");
+        return status;
+    }
+    HILOGI("call DealNapiException end, exception info = %{public}s.", exceptionInfo.c_str());
+    return status;
+}
+
 static napi_value PromiseCallback(napi_env env, napi_callback_info info)
 {
     HILOGI("Promise callback.");
@@ -97,7 +116,27 @@ static napi_value PromiseCallback(napi_env env, napi_callback_info info)
         HILOGE("CallbackInfo is nullptr");
         return nullptr;
     }
-    callbackInfo->callback();
+    callbackInfo->callback(BError(BError::Codes::OK));
+    data = nullptr;
+    return nullptr;
+}
+
+static napi_value PromiseCatchCallback(napi_env env, napi_callback_info info)
+{
+    HILOGI("Promise catch callback.");
+    size_t argc = 1;
+    napi_value argv = {nullptr};
+    void *data = nullptr;
+    NAPI_CALL_NO_THROW(napi_get_cb_info(env, info, &argc, &argv, nullptr, &data), nullptr);
+    string exceptionInfo;
+    DealNapiStrValue(env, argv, exceptionInfo);
+    HILOGI("Catch exception info is %{public}s.", exceptionInfo.c_str());
+    auto *callbackInfo = static_cast<CallbackInfo *>(data);
+    if (callbackInfo == nullptr) {
+        HILOGE("CallbackInfo is nullptr");
+        return nullptr;
+    }
+    callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
     data = nullptr;
     return nullptr;
 }
@@ -116,7 +155,27 @@ static napi_value PromiseCallbackEx(napi_env env, napi_callback_info info)
         return nullptr;
     }
     DealNapiStrValue(env, argv, str);
-    callbackInfoEx->callbackParam(str);
+    callbackInfoEx->callbackParam(BError(BError::Codes::OK), str);
+    data = nullptr;
+    return nullptr;
+}
+
+static napi_value PromiseCatchCallbackEx(napi_env env, napi_callback_info info)
+{
+    HILOGI("PromiseEx catch callback.");
+    void *data = nullptr;
+    size_t argc = 1;
+    napi_value argv = {nullptr};
+    NAPI_CALL_NO_THROW(napi_get_cb_info(env, info, &argc, &argv, nullptr, &data), nullptr);
+    string exceptionInfo;
+    DealNapiStrValue(env, argv, exceptionInfo);
+    HILOGI("Catch exception info is %{public}s.", exceptionInfo.c_str());
+    auto *callbackInfoEx = static_cast<CallbackInfoEx *>(data);
+    if (callbackInfoEx == nullptr) {
+        HILOGE("CallbackInfo is nullPtr");
+        return nullptr;
+    }
+    callbackInfoEx->callbackParam(BError(BError::Codes::EXT_THROW_EXCEPTION), exceptionInfo);
     data = nullptr;
     return nullptr;
 }
@@ -155,7 +214,8 @@ static bool CallCatchPromise(AbilityRuntime::JsRuntime &jsRuntime, napi_value re
         return false;
     }
     napi_value ret;
-    napi_create_function(env, "promiseCallback", strlen("promiseCallback"), PromiseCallback, callbackInfo, &ret);
+    napi_create_function(env, "promiseCatchCallback", strlen("promiseCatchCallback"), PromiseCatchCallback,
+        callbackInfo, &ret);
     napi_value argv[1] = {ret};
     napi_call_function(env, result, method, 1, argv, nullptr);
     return true;
@@ -210,8 +270,8 @@ static bool CallCatchPromiseEx(AbilityRuntime::JsRuntime &jsRuntime, napi_value 
         return false;
     }
     napi_value ret;
-    napi_create_function(env, "promiseCallbackEx", strlen("promiseCallbackEx"), PromiseCallbackEx, callbackInfoEx,
-        &ret);
+    napi_create_function(env, "promiseCatchCallbackEx", strlen("promiseCatchCallbackEx"), PromiseCatchCallbackEx,
+        callbackInfoEx, &ret);
     napi_value argv[1] = {ret};
     napi_call_function(env, result, method, 1, argv, nullptr);
     return true;
@@ -401,16 +461,25 @@ ExtBackupJs *ExtBackupJs::Create(const unique_ptr<AbilityRuntime::Runtime> &runt
     return new ExtBackupJs(static_cast<AbilityRuntime::JsRuntime &>(*runtime));
 }
 
-ErrCode ExtBackupJs::OnBackup(function<void()> callback)
+ErrCode ExtBackupJs::OnBackup(function<void(ErrCode)> callback)
 {
     HILOGI("BackupExtensionAbility(JS) OnBackup.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
                           "The app does not provide the onBackup interface.");
     callbackInfo_ = std::make_shared<CallbackInfo>(callback);
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env,
-                                                                             napi_value result) -> bool {
+        napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
-            callbackInfo->callback();
+            string str;
+            bool isExceptionPending;
+            napi_is_exception_pending(env, &isExceptionPending);
+            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (isExceptionPending) {
+                DealNapiException(env, str);
+                callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
+            } else {
+                callbackInfo->callback(BError(BError::Codes::OK));
+            }
             return true;
         }
         HILOGI("CheckPromise(JS) OnBackup ok.");
@@ -424,7 +493,8 @@ ErrCode ExtBackupJs::OnBackup(function<void()> callback)
     return errCode;
 }
 
-ErrCode ExtBackupJs::OnBackup(function<void()> callback, std::function<void(const std::string)> callbackEx)
+ErrCode ExtBackupJs::OnBackup(function<void(ErrCode)> callback,
+    std::function<void(ErrCode, const std::string)> callbackEx)
 {
     HILOGI("BackupExtensionAbility(JS) OnBackup ex");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
@@ -442,10 +512,17 @@ ErrCode ExtBackupJs::CallJsOnBackupEx()
     auto retParser = [jsRuntime{ &jsRuntime_ }, callbackInfoBackup{ callbackInfoBackup_ }](napi_env envir,
         napi_value result) -> bool {
         if (!CheckPromise(envir, result)) {
-            HILOGI("CheckPromise onBackupEx false");
-            std::string str;
-            DealNapiStrValue(envir, result, str);
-            callbackInfoBackup->callbackParam(str);
+            string str;
+            bool isExceptionPending;
+            napi_is_exception_pending(envir, &isExceptionPending);
+            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (isExceptionPending) {
+                DealNapiException(envir, str);
+                callbackInfoBackup->callbackParam(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
+            } else {
+                DealNapiStrValue(envir, result, str);
+                callbackInfoBackup->callbackParam(BError(BError::Codes::OK), str);
+            }
             return true;
         }
         HILOGI("CheckPromise onBackupEx ok");
@@ -463,7 +540,7 @@ ErrCode ExtBackupJs::CallJsOnBackupEx()
     if (!needCallOnRestore_.load()) {
         if (callbackInfoEx_) {
             HILOGI("Will call app done");
-            callbackInfoEx_->callbackAppDone();
+            callbackInfoEx_->callbackAppDone(BError(BError::Codes::OK));
         }
         HILOGI("Call Js method onRestoreEx done");
         return ERR_OK;
@@ -477,7 +554,16 @@ ErrCode ExtBackupJs::CallJsOnBackup()
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env,
         napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
-            callbackInfo->callback();
+            string str;
+            bool isExceptionPending;
+            napi_is_exception_pending(env, &isExceptionPending);
+            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (isExceptionPending) {
+                DealNapiException(env, str);
+                callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
+            } else {
+                callbackInfo->callback(BError(BError::Codes::OK));
+            }
             return true;
         }
         HILOGI("CheckPromise Js Method onBackup ok.");
@@ -490,8 +576,8 @@ ErrCode ExtBackupJs::CallJsOnBackup()
     return errCode;
 }
 
-ErrCode ExtBackupJs::OnRestore(function<void()> callback, std::function<void(const std::string)> callbackEx,
-    std::function<void()> callbackExAppDone)
+ErrCode ExtBackupJs::OnRestore(function<void(ErrCode)> callback,
+    std::function<void(ErrCode, const std::string)> callbackEx, std::function<void(ErrCode)> callbackExAppDone)
 {
     HILOGI("BackupExtensionAbility(JS) OnRestore.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
@@ -503,7 +589,7 @@ ErrCode ExtBackupJs::OnRestore(function<void()> callback, std::function<void(con
     return CallJSRestoreEx();
 }
 
-ErrCode ExtBackupJs::OnRestore(function<void()> callback)
+ErrCode ExtBackupJs::OnRestore(function<void(ErrCode)> callback)
 {
     HILOGI("Start execute BackupExtensionAbility(JS) OnRestore.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
@@ -518,10 +604,19 @@ ErrCode ExtBackupJs::OnRestore(function<void()> callback)
         return true;
     };
     callbackInfo_ = std::make_shared<CallbackInfo>(callback);
-    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env, napi_value result) -> bool {
+    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env, napi_value result) ->
+        bool {
         if (!CheckPromise(env, result)) {
-            HILOGI("CheckPromise false");
-            callbackInfo->callback();
+            string str;
+            bool isExceptionPending;
+            napi_is_exception_pending(env, &isExceptionPending);
+            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (isExceptionPending) {
+                DealNapiException(env, str);
+                callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
+            } else {
+                callbackInfo->callback(BError(BError::Codes::OK));
+            }
             return true;
         }
         HILOGI("CheckPromise Js Method onRestore ok.");
@@ -541,10 +636,17 @@ ErrCode ExtBackupJs::CallJSRestoreEx()
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfoEx {callbackInfoEx_}](napi_env envir, napi_value result) ->
         bool {
         if (!CheckPromise(envir, result)) {
-            HILOGI("CheckPromise onRestoreEx false");
-            std::string str;
-            DealNapiStrValue(envir, result, str);
-            callbackInfoEx->callbackParam(str);
+            string str;
+            bool isExceptionPending;
+            napi_is_exception_pending(envir, &isExceptionPending);
+            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (isExceptionPending) {
+                DealNapiException(envir, str);
+                callbackInfoEx->callbackParam(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
+            } else {
+                DealNapiStrValue(envir, result, str);
+                callbackInfoEx->callbackParam(BError(BError::Codes::OK), str);
+            }
             return true;
         }
         HILOGI("CheckPromise onRestoreEx ok");
@@ -562,7 +664,7 @@ ErrCode ExtBackupJs::CallJSRestoreEx()
     if (!needCallOnRestore_.load()) {
         if (callbackInfoEx_) {
             HILOGI("Will call app done");
-            callbackInfoEx_->callbackAppDone();
+            callbackInfoEx_->callbackAppDone(BError(BError::Codes::OK));
         }
         HILOGI("Call Js method onRestoreEx done");
         return ERR_OK;
@@ -575,8 +677,16 @@ ErrCode ExtBackupJs::CallJSRestore()
     HILOGI("Start call app js method onRestore");
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env, napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
-            HILOGI("onRestore, CheckPromise false");
-            callbackInfo->callback();
+            string str;
+            bool isExceptionPending;
+            napi_is_exception_pending(env, &isExceptionPending);
+            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (isExceptionPending) {
+                DealNapiException(env, str);
+                callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
+            } else {
+                callbackInfo->callback(BError(BError::Codes::OK));
+            }
             return true;
         }
         HILOGI("CheckPromise Js Method onRestore ok.");
@@ -590,7 +700,7 @@ ErrCode ExtBackupJs::CallJSRestore()
     return ERR_OK;
 }
 
-ErrCode ExtBackupJs::GetBackupInfo(std::function<void(const std::string)> callback)
+ErrCode ExtBackupJs::GetBackupInfo(std::function<void(ErrCode, const std::string)> callback)
 {
     HILOGI("BackupExtensionAbility(JS) GetBackupInfo begin.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
@@ -607,7 +717,7 @@ ErrCode ExtBackupJs::GetBackupInfo(std::function<void(const std::string)> callba
             size_t bufLen = strLen + 1;
             unique_ptr<char[]> str = make_unique<char[]>(bufLen);
             status = napi_get_value_string_utf8(env, result, str.get(), bufLen, &strLen);
-            callBackInfo->callbackParam(str.get());
+            callBackInfo->callbackParam(BError(BError::Codes::OK), str.get());
             return true;
         }
         HILOGI("BackupExtensionAbulity(JS) GetBackupInfo ok.");
@@ -768,10 +878,11 @@ std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::Pa
     return onRestoreFun;
 }
 
-ErrCode ExtBackupJs::CallExtRestore(std::string result)
+ErrCode ExtBackupJs::CallExtRestore(ErrCode errCode, const std::string result)
 {
-    HILOGI("Start CallExtRestore, result is: %{public}s", result.c_str());
-    if (result.size() == 0) {
+    HILOGI("Start CallExtRestore, errCode is: %{public}d, result is: %{public}s", errCode, result.c_str());
+    // no need call OnRestor/onBackup when occur exception
+    if ((result.size() == 0) && (errCode == BError(BError::Codes::OK))) {
         needCallOnRestore_.store(true);
     } else {
         needCallOnRestore_.store(false);

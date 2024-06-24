@@ -87,6 +87,7 @@ public:
         EXT_FORBID_BACKUP_RESTORE = 0x5006,
         EXT_BACKUP_PACKET_ERROR = 0x5007,
         EXT_METHOD_NOT_EXIST = 0x5008,
+        EXT_THROW_EXCEPTION = 0x5009,
 
         // 0x6000~0x6999 sa_ext错误
         SA_EXT_ERR_CALL = 0x6000,
@@ -109,6 +110,7 @@ public:
         E_DIED = 13500004,
         E_EMPTY = 13500005,
         E_PACKET = 13500006,
+        E_EXCEPTION = 13500007,
     };
 
 public:
@@ -237,6 +239,7 @@ private:
         {Codes::EXT_ABILITY_DIED, "Extension process died"},
         {Codes::EXT_FORBID_BACKUP_RESTORE, "forbid backup or restore"},
         {Codes::EXT_BACKUP_PACKET_ERROR, "Backup packet error"},
+        {Codes::EXT_THROW_EXCEPTION, "Extension throw exception"},
     };
 
     static inline const std::map<int, int> errCodeTable_ {
@@ -265,6 +268,7 @@ private:
         {static_cast<int>(Codes::EXT_ABILITY_TIMEOUT), BackupErrorCode::E_ETO},
         {static_cast<int>(Codes::EXT_FORBID_BACKUP_RESTORE), BackupErrorCode::E_FORBID},
         {static_cast<int>(Codes::EXT_BACKUP_PACKET_ERROR), BackupErrorCode::E_PACKET},
+        {static_cast<int>(Codes::EXT_THROW_EXCEPTION), BackupErrorCode::E_EXCEPTION},
         {BackupErrorCode::E_IPCSS, BackupErrorCode::E_IPCSS},
         {BackupErrorCode::E_INVAL, BackupErrorCode::E_INVAL},
         {BackupErrorCode::E_NOTEXIST, BackupErrorCode::E_NOTEXIST},
@@ -279,6 +283,7 @@ private:
         {BackupErrorCode::E_DIED, BackupErrorCode::E_DIED},
         {BackupErrorCode::E_EMPTY, BackupErrorCode::E_EMPTY},
         {BackupErrorCode::E_PACKET, BackupErrorCode::E_PACKET},
+        {BackupErrorCode::E_EXCEPTION, BackupErrorCode::E_EXCEPTION},
     };
 
     static inline const std::map<int, int> sysErrnoCodeTable_ {

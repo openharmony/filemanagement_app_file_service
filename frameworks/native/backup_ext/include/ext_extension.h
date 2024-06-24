@@ -162,28 +162,28 @@ private:
      *
      * @param errCode
      */
-    std::function<void(const std::string)> RestoreResultCallbackEx(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, const std::string)> RestoreResultCallbackEx(wptr<BackupExtExtension> obj);
 
     /**
      * @brief get callbackEx for execute onRestore with string param
      * 
      * @param errCode
      */
-    std::function<void(const std::string)> IncrementalRestoreResultCallbackEx(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, const std::string)> IncRestoreResultCallbackEx(wptr<BackupExtExtension> obj);
 
     /**
      * @brief get callbackEx for execute onRestore
      *
      * @param errCode
      */
-    std::function<void()> IncrementalAppDoneCallbackEx(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode)> IncAppDoneCallbackEx(wptr<BackupExtExtension> obj);
 
     /**
      * @brief get callbackEx for execute appDone
      */
-    std::function<void()> AppDoneCallbackEx(wptr<BackupExtExtension> obj);
-    std::function<void(const std::string)> HandleBackupEx(wptr<BackupExtExtension> obj);
-    std::function<void(const std::string)> HandleTaskBackupEx(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode)> AppDoneCallbackEx(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, const std::string)> HandleBackupEx(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, const std::string)> HandleTaskBackupEx(wptr<BackupExtExtension> obj);
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
