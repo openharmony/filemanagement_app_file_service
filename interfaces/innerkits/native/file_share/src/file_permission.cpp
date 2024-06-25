@@ -46,7 +46,6 @@ const std::string DOCUMENTS_PATH = "/storage/Users/currentUser/Documents";
 const std::string READ_WRITE_DOWNLOAD_PERMISSION = "ohos.permission.READ_WRITE_DOWNLOAD_DIRECTORY";
 const std::string READ_WRITE_DESKTOP_PERMISSION = "ohos.permission.READ_WRITE_DESKTOP_DIRECTORY";
 const std::string READ_WRITE_DOCUMENTS_PERMISSION = "ohos.permission.READ_WRITE_DOCUMENTS_DIRECTORY";
-const std::string SET_SANDBOX_POLICY_PERMISSION = "ohos.permission.SET_SANDBOX_POLICY";
 const std::string FILE_ACCESS_MANAGER_PERMISSION = "ohos.permission.FILE_ACCESS_MANAGER";
 const std::unordered_map<std::string, std::string> permissionPathMap = {
     {READ_WRITE_DOWNLOAD_PERMISSION, DOWNLOAD_PATH},
@@ -322,38 +321,6 @@ string FilePermission::GetPathByPermission(const std::string &permission)
     }
 #endif
     return "";
-}
-
-int32_t FilePermission::SetPolicy(uint64_t providerTokenId,
-                                  uint64_t targetTokenId,
-                                  vector<UriPolicyInfo> &uriPolicies,
-                                  vector<bool> &errorResults,
-                                  uint32_t policyFlag)
-{
-    int errorCode = 0;
-#ifdef SANDBOX_MANAGER
-    if (!CheckPermission(providerTokenId, SET_SANDBOX_POLICY_PERMISSION)) {
-        return FileManagement::LibN::E_PERMISSION;
-    }
-    errorCode = CheckUriPersistentPermission(providerTokenId, uriPolicies, errorResults);
-    if (errorCode != SANDBOX_MANAGER_OK) {
-        LOGE("SandboxManagerKit::CheckPersistPolicy is failed, code:%{public}d.", errorCode);
-    }
-    vector<PolicyInfo> setPathPolicies;
-    for (size_t i = 0; i < uriPolicies.size(); i++) {
-        if (errorResults[i]) {
-            Uri uri(uriPolicies[i].uri);
-            string path = SandboxHelper::Decode(uri.GetPath());
-            PolicyInfo policyInfo = {path, uriPolicies[i].mode};
-            setPathPolicies.emplace_back(policyInfo);
-        }
-    }
-    int32_t sandboxManagerErrorCode = SandboxManagerKit::SetPolicy(targetTokenId, setPathPolicies, policyFlag);
-    if (sandboxManagerErrorCode != SANDBOX_MANAGER_OK) {
-        LOGE("SandboxManagerKit::SetPolicy is failed, code:%{public}d.", sandboxManagerErrorCode);
-    }
-#endif
-    return errorCode;
 }
 } // namespace AppFileService
 } // namespace OHOS
