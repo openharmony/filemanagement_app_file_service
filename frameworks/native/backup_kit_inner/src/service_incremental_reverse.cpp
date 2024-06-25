@@ -47,7 +47,7 @@ void ServiceReverse::IncrementalBackupOnResultReport(std::string result, std::st
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
-    callbacksIncrementalBackup_.onResultReport(result);
+    callbacksIncrementalBackup_.onResultReport(bundleName, result);
 }
 
 void ServiceReverse::IncrementalBackupOnBundleFinished(int32_t errCode, string bundleName)
@@ -116,7 +116,7 @@ void ServiceReverse::IncrementalRestoreOnResultReport(std::string result, std::s
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
-    callbacksIncrementalRestore_.onResultReport(result);
+    callbacksIncrementalRestore_.onResultReport(bundleName, result);
     if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onBundleFinished) {
         HILOGI("Error scenario or callback is nullptr");
         return;

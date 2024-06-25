@@ -22,6 +22,19 @@
 #include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::Backup {
+using InputArgsParser = std::function<bool(napi_env, std::vector<napi_value> &)>;
+
+class BackupRestoreCallback {
+public:
+    BackupRestoreCallback(napi_env env, LibN::NVal thisPtr, LibN::NVal cb);
+    ~BackupRestoreCallback();
+    void CallJsMethod(InputArgsParser argParser);
+    explicit operator bool() const;
+private:
+    napi_env env_;
+    LibN::NAsyncContextCallback *ctx_ = nullptr;
+};
+
 class GeneralCallbacks {
 public:
     GeneralCallbacks(const napi_env &env, const LibN::NVal &thisPtr, const LibN::NVal &jsCallbacks)
@@ -38,7 +51,7 @@ public:
     LibN::NAsyncWorkCallback onBundleEnd;
     LibN::NAsyncWorkCallback onAllBundlesEnd;
     LibN::NAsyncWorkCallback onBackupServiceDied;
-    LibN::NAsyncWorkCallback onResultReport;
+    BackupRestoreCallback onResultReport;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // INTERFACES_KITS_JS_SRC_MOD_BACKUP_PROPERTIES_GENERAL_CALLBACKS_H

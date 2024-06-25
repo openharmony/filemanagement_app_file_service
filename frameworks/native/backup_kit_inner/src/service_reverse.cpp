@@ -46,7 +46,7 @@ void ServiceReverse::BackupOnResultReport(std::string result, std::string bundle
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
-    callbacksBackup_.onResultReport(result);
+    callbacksBackup_.onResultReport(bundleName, result);
 }
 
 void ServiceReverse::BackupOnBundleFinished(int32_t errCode, string bundleName)
@@ -116,7 +116,7 @@ void ServiceReverse::RestoreOnResultReport(string result, std::string bundleName
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
-    callbacksRestore_.onResultReport(result);
+    callbacksRestore_.onResultReport(bundleName, result);
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onBundleFinished) {
         HILOGI("Error scenario or callback is nullptr");
         return;

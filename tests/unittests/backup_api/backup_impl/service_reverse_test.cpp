@@ -77,9 +77,10 @@ static void OnAllBundlesFinishedTest(ErrCode err)
 
 static void OnBackupServiceDiedTest() {}
 
-static void OnResultReportTest(std::string result)
+static void OnResultReportTest(std::string bundleName, std::string result)
 {
     EXPECT_EQ(result, "result_report");
+    EXPECT_EQ(bundleName, "com.example.app2backup");
     GTEST_LOG_(INFO) << "ServiceReverseTest-OnResultReportTest SUCCESS";
 }
 
@@ -104,7 +105,7 @@ void ServiceReverseTest::Init(IServiceReverse::Scenario scenario, int nType)
                 .onBundleStarted = bind(OnBundleStartedTest, placeholders::_1, placeholders::_2),
                 .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
                 .onAllBundlesFinished = bind(OnAllBundlesFinishedTest, placeholders::_1),
-                .onResultReport = bind(OnResultReportTest, placeholders::_1),
+                .onResultReport = bind(OnResultReportTest, placeholders::_1, placeholders::_2),
                 .onBackupServiceDied = bind(OnBackupServiceDiedTest)});
         }
     } else {
@@ -121,7 +122,7 @@ void ServiceReverseTest::Init(IServiceReverse::Scenario scenario, int nType)
                 .onBundleStarted = bind(OnBundleStartedTest, placeholders::_1, placeholders::_2),
                 .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
                 .onAllBundlesFinished = bind(OnAllBundlesFinishedTest, placeholders::_1),
-                .onResultReport = bind(OnResultReportTest, placeholders::_1),
+                .onResultReport = bind(OnResultReportTest, placeholders::_1, placeholders::_2),
                 .onBackupServiceDied = bind(OnBackupServiceDiedTest)});
         }
     }
@@ -143,7 +144,7 @@ void ServiceReverseTest::IncrementalInit(IServiceReverse::Scenario scenario, int
                 .onBundleStarted = bind(OnBundleStartedTest, placeholders::_1, placeholders::_2),
                 .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
                 .onAllBundlesFinished = bind(OnAllBundlesFinishedTest, placeholders::_1),
-                .onResultReport = bind(OnResultReportTest, placeholders::_1),
+                .onResultReport = bind(OnResultReportTest, placeholders::_1, placeholders::_2),
                 .onBackupServiceDied = bind(OnBackupServiceDiedTest)});
         }
     } else {
@@ -159,7 +160,7 @@ void ServiceReverseTest::IncrementalInit(IServiceReverse::Scenario scenario, int
                 .onBundleStarted = bind(OnBundleStartedTest, placeholders::_1, placeholders::_2),
                 .onBundleFinished = bind(OnBundleFinishedTest, placeholders::_1, placeholders::_2),
                 .onAllBundlesFinished = bind(OnAllBundlesFinishedTest, placeholders::_1),
-                .onResultReport = bind(OnResultReportTest, placeholders::_1),
+                .onResultReport = bind(OnResultReportTest, placeholders::_1, placeholders::_2),
                 .onBackupServiceDied = bind(OnBackupServiceDiedTest)});
         }
     }
@@ -1237,5 +1238,177 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnResultReport_010
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by RestoreOnResultReport.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_RestoreOnResultReport_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_RestoreOnResultReport_0101
+ * @tc.name: SUB_backup_ServiceReverse_RestoreOnResultReport_0101
+ * @tc.desc: 测试 RestoreOnResultReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnResultReport_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnResultReport_0101";
+    try {
+        Init(IServiceReverse::Scenario::RESTORE, 1);
+        std::string resultReport = "result_report";
+        std::string bundleName = BUNDLE_NAME;
+        service_->RestoreOnResultReport(resultReport, bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by RestoreOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_RestoreOnResultReport_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0100
+ * @tc.desc: 测试 IncrementalRestoreOnResultReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0100";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        std::string resultReport = "result_report";
+        std::string bundleName = BUNDLE_NAME;
+        service_->IncrementalRestoreOnResultReport(resultReport, bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0101
+ * @tc.desc: 测试 IncrementalRestoreOnResultReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0101,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0101";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::RESTORE, 1);
+        std::string resultReport = "result_report";
+        std::string bundleName = BUNDLE_NAME;
+        service_->IncrementalRestoreOnResultReport(resultReport, bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_BackupOnResultReport_0100
+ * @tc.name: SUB_backup_ServiceReverse_BackupOnResultReport_0100
+ * @tc.desc: 测试 BackupOnResultReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnResultReport_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnResultReport_0100";
+    try {
+        Init(IServiceReverse::Scenario::BACKUP);
+        std::string resultReport = "result_report";
+        std::string bundleName = BUNDLE_NAME;
+        service_->BackupOnResultReport(resultReport, bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by BackupOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_BackupOnResultReport_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_BackupOnResultReport_0101
+ * @tc.name: SUB_backup_ServiceReverse_BackupOnResultReport_0101
+ * @tc.desc: 测试 BackupOnResultReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnResultReport_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnResultReport_0101";
+    try {
+        Init(IServiceReverse::Scenario::BACKUP, 1);
+        std::string resultReport = "result_report";
+        std::string bundleName = BUNDLE_NAME;
+        service_->BackupOnResultReport(resultReport, bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by BackupOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_BackupOnResultReport_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0100
+ * @tc.desc: 测试 IncrementalBackupOnResultReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0100";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        std::string resultReport = "result_report";
+        std::string bundleName = BUNDLE_NAME;
+        service_->IncrementalBackupOnResultReport(resultReport, bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalBackupOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0101
+ * @tc.desc: 测试 IncrementalBackupOnResultReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0101,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0101";
+    try {
+        IncrementalInit(IServiceReverse::Scenario::BACKUP, 1);
+        std::string resultReport = "result_report";
+        std::string bundleName = BUNDLE_NAME;
+        service_->IncrementalBackupOnResultReport(resultReport, bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalBackupOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0101";
 }
 } // namespace OHOS::FileManagement::Backup

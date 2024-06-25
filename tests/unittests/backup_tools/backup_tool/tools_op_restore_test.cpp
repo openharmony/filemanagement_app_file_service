@@ -446,8 +446,9 @@ HWTEST_F(ToolsOpRestoreTest, tools_op_restore_OOnResultReport_0800, testing::ext
     GTEST_LOG_(INFO) << "ToolsOpRestoreTest-begin tools_op_restore_OOnResultReport_0800";
     try {
         auto ctx = make_shared<Session>();
+        std::string bundleName = "com.example.app2backup";
         std::string resultInfo = "result info";
-        OnResultReport(ctx, resultInfo);
+        OnResultReport(ctx, bundleName, resultInfo);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

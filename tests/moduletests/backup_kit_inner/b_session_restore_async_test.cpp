@@ -54,7 +54,7 @@ static void OnBackupServiceDied()
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest OnBackupServiceDied OK";
 }
 
-static void OnResultReport(std::string result)
+static void OnResultReport(std::string bundleName, std::string result)
 {
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest OnResultReport OK";
 }
@@ -115,7 +115,7 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0100, test
         callbacks_.onBundleFinished(ErrCode(BError::Codes::OK), "");
         callbacks_.onAllBundlesFinished(ErrCode(BError::Codes::OK));
         callbacks_.onBackupServiceDied();
-        callbacks_.onResultReport("");
+        callbacks_.onResultReport("", "");
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-an exception occurred by Callbacks.";

@@ -87,7 +87,7 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap, vector<BundleNam
     callbacks_.onBundleStarted(1, "com.example.app2backup");
     callbacks_.onBundleFinished(1, "com.example.app2backup");
     callbacks_.onAllBundlesFinished(1);
-    callbacks_.onResultReport("com.example.app2backup");
+    callbacks_.onResultReport("com.example.app2backup", "ok");
     callbacks_.onBackupServiceDied();
     return BError(BError::Codes::OK);
 }
@@ -123,7 +123,7 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
     callbacks_.onBundleStarted(1, "com.example.app2backup");
     callbacks_.onBundleFinished(1, "com.example.app2backup");
     callbacks_.onAllBundlesFinished(1);
-    callbacks_.onResultReport("com.example.app2backup");
+    callbacks_.onResultReport("com.example.app2backup", "ok");
     callbacks_.onBackupServiceDied();
     return BError(BError::Codes::OK);
 }

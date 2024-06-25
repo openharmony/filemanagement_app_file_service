@@ -240,9 +240,10 @@ static void AdapteCloneOptimize(const string &path)
     close(cachedEntity.GetFd().Release());
 }
 
-static void OnResultReport(shared_ptr<InrementalSessionAsync> ctx, const std::string &resultInfo)
+static void OnResultReport(shared_ptr<InrementalSessionAsync> ctx, const std::string &bundleName,
+    const std::string &resultInfo)
 {
-    printf("OnResultReport, detailInfo = %s\n", resultInfo.c_str());
+    printf("OnResultReport bundleName = %s, resultInfo = %s\n", bundleName.c_str(), resultInfo.c_str());
 }
 
 static void RestoreApp(shared_ptr<InrementalSessionAsync> restore, vector<BundleName> &bundleNames)
@@ -398,7 +399,7 @@ static int32_t InitArg(const string &pathCapFile,
         .onBundleStarted = bind(OnBundleStarted, ctx, placeholders::_1, placeholders::_2),
         .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
-        .onResultReport = bind(OnResultReport, ctx, placeholders::_1),
+        .onResultReport = bind(OnResultReport, ctx, placeholders::_1, placeholders::_2),
         .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init restore\n");
