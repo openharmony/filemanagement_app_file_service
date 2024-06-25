@@ -134,6 +134,11 @@ public:
         return BError(BError::Codes::OK);
     };
 
+    ErrCode UpdateFdSendRate(std::string &bundleName, int32_t sendRate) override
+    {
+        return BError(BError::Codes::OK);
+    };
+
 private:
     int32_t nHandleBackupNum_ = 0;
 };

@@ -178,30 +178,34 @@ ErrCode SvcExtensionProxy::GetBackupInfo(std::string &result)
     return ret;
 }
 
-ErrCode SvcExtensionProxy::UpdateFdSendRate(std::string &bundleName, int sendRate)
+ErrCode SvcExtensionProxy::UpdateFdSendRate(std::string &bundleName, int32_t sendRate)
 {
     HILOGD("SvcExtensionProxy::UpdateFdSendRate begin.");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
     data.WriteInterfaceToken(GetDescriptor());
-
+    if (!data.WriteString(bundleName)) {
+        BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleName");
+        return ErrCode(EPERM);
+    }
+    if (!data.WriteInt32(sendRate)) {
+        BError(BError::Codes::SDK_INVAL_ARG, "Failed to send sendRate");
+        return ErrCode(EPERM);
+    }
     MessageParcel reply;
     MessageOption option;
     int32_t ret =
-        Remote()->SendRequest(static_cast<uint32_t>(IExtensionInterfaceCode::CMD_UPDATE_FD_SENDRATE), data, reply, option);
+        Remote()->SendRequest(static_cast<uint32_t>(IExtensionInterfaceCode::CMD_UPDATE_FD_SENDRATE), data, reply,
+            option);
     if (ret != NO_ERROR) {
         HILOGE("Received error %{public}d when doing IPC", ret);
         return ErrCode(ret);
     }
     if (!reply.ReadInt32(ret)) {
-        HILOGE("fail to ReadInt32 ret");
+        HILOGE("fail to read ret, ret is %{public}d", ret);
         return ErrCode(ret);
     }
-    if (ret != NO_ERROR) {
-        HILOGE("ret is not NO_ERROR. ret = %d", ret);
-        return ErrCode(ret);
-    }
-    HILOGI("SvcExtensionProxy::UpdateFdSendRate end. result: %s", result.c_str());
+    HILOGI("SvcExtensionProxy::UpdateFdSendRate end.");
     return ret;
 }
 } // namespace OHOS::FileManagement::Backup

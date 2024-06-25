@@ -256,7 +256,7 @@ bool PropNOperation::UpdateTimer(std::string &bundleName, uint32_t timeOut)
     return result;
 }
 
-bool PropNOperation::UpdateSendRate(std::string &bundleName, int sendRate)
+bool PropNOperation::UpdateSendRate(std::string &bundleName, int32_t sendRate)
 {
     bool result = false;
     ServiceProxy::InvaildInstance();
@@ -267,7 +267,7 @@ bool PropNOperation::UpdateSendRate(std::string &bundleName, int sendRate)
     }
     ErrCode errCode = proxy->UpdateSendRate(bundleName, sendRate, result);
     if (errCode != 0) {
-        HILOGE("Proxy execute UpdateSendRate faild.");
+        HILOGE("Proxy execute UpdateSendRate failed. errCode:%{public}d", errCode);
         return result;
     }
     return result;
@@ -348,22 +348,22 @@ napi_value PropNOperation::DoUpdateSendRate(napi_env env, napi_callback_info inf
         return nullptr;
     }
     NVal jsBundleInt(env, funcArg[NARG_POS::SECOND]);
-    auto [succInt, sendRate] = jsBundleInt.ToInt();
-    if (!succInt || sendRate < 0) {
+    auto [succInt, jsRate] = jsBundleInt.ToInt32();
+    if (!succInt || jsRate < 0) {
         HILOGE("Second argument is invalid.");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
     std::string bundleName = bundle.get();
-    int sendRate = static_cast<int>(sendRate);
-    if (sendRate > MAX_FD_SEND_RATE) {
-        sendRate = MAX_FD_SEND_RATE;
+    int32_t sendFdRate = static_cast<int32_t>(jsRate);
+    if (sendFdRate > BConstants::MAX_FD_SEND_RATE) {
+        sendFdRate = BConstants::MAX_FD_SEND_RATE;
     }
-    bool result = UpdateSendRate(bundleName, sendRate);
+    bool result = UpdateSendRate(bundleName, sendFdRate);
     napi_value nResult;
-    napi_status status = napi_get_boolean(env, result, &hao);
+    napi_status status = napi_get_boolean(env, result, &nResult);
     if (status != napi_ok) {
-        HILOGE("napi_get_boolean faild.");
+        HILOGE("napi_get_boolean failed.");
         return nullptr;
     }
     HILOGI("DoUpdateSendRate success with result: %{public}d", result);

@@ -1288,8 +1288,9 @@ ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &res
     }
 }
 
-ErrCode Service::UpdateSendRate(std::string bundleName, int sendRate, bool &result)
+ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result)
 {
+    HILOGI("Begin, bundle name:%{public}s, sendRate is:%{public}d", bundleName.c_str(), sendRate);
     IServiceReverse::Scenario scenario = session_ -> GetScenario();
     if (scenario != IServiceReverse::Scenario::BACKUP) {
         HILOGE("This method is applicable to the backup scenario");
@@ -1301,7 +1302,12 @@ ErrCode Service::UpdateSendRate(std::string bundleName, int sendRate, bool &resu
         throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
     }
     auto ret = proxy->UpdateFdSendRate(bundleName, sendRate);
-    return ret;
+    if (ret != NO_ERROR) {
+        result = false;
+        return BError(BError::Codes::EXT_BROKEN_IPC);
+    }
+    result = true;
+    return BError(BError::Codes::OK);
 }
 
 AAFwk::Want Service::CreateConnectWant (BundleName &bundleName)

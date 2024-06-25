@@ -160,6 +160,11 @@ ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result)
+{
+    return BError(BError::Codes::OK);
+}
+
 sptr<IService> ServiceProxy::GetInstance()
 {
     return serviceProxy_;

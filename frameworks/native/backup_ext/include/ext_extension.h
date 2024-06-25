@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_BACKUP_BACKUP_EXT_EXTENSION_H
 #define OHOS_FILEMGMT_BACKUP_BACKUP_EXT_EXTENSION_H
 
+#include <chrono>
 #include <shared_mutex>
 #include <string>
 #include <vector>
@@ -29,6 +30,7 @@
 #include "ext_backup_js.h"
 #include "ext_extension_stub.h"
 #include "i_service.h"
+#include "tar_file.h"
 #include "thread_pool.h"
 #include "unique_fd.h"
 
@@ -49,7 +51,7 @@ public:
     ErrCode IncrementalOnBackup() override;
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
     ErrCode GetBackupInfo(std::string &result) override;
-    ErrCode UpdateFdSendRate(std::string &bundleName, int sendRate) override;
+    ErrCode UpdateFdSendRate(std::string &bundleName, int32_t sendRate) override;
 
     void AsyncTaskRestoreForUpgrade(void);
     void ExtClear(void);
@@ -150,6 +152,10 @@ private:
 
     void AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     void AsyncTaskOnIncrementalBackup();
+    ErrCode IncrementalBigFileReady(const TarMap &pkgInfo, const map<string, struct ReportFileInfo> &bigInfos,
+        sptr<IService> proxy);
+    ErrCode BigFileReady(sptr<IService> proxy);
+    void WaitToSendFd(std::chrono::system_clock::time_point startTime, int fdSendNumWaitToSendFdWaitToSendF);
 
     /**
      * @brief extension incremental backup restore is done
@@ -167,7 +173,7 @@ private:
 
     /**
      * @brief get callbackEx for execute onRestore with string param
-     * 
+     *
      * @param errCode
      */
     std::function<void(ErrCode, const std::string)> IncRestoreResultCallbackEx(wptr<BackupExtExtension> obj);
@@ -192,9 +198,11 @@ private:
     OHOS::ThreadPool threadPool_;
     std::mutex updateSendRateLock_;
     std::atomic<bool> needUpdateSendRate_ {false};
-    std::atomic<bool> isMinSendRate_ {false};
+    std::atomic<bool> isStopSendFd_ {false};
+    std::condition_variable startSendFdRateCon_;
+    std::mutex startSendMutex_;
     std::string bundleName_;
-    int sendRate_;
+    int32_t sendRate_;
 };
 } // namespace OHOS::FileManagement::Backup
 

@@ -551,7 +551,7 @@ ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool
     return BError(BError::Codes::OK, "success");
 }
 
-ErrCode ServiceProxy::UpdateSendRate(std::string &bundleName, int sendRate, bool &result)
+ErrCode ServiceProxy::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result)
 {
     HILOGD("ServiceProxy UpdateSendRate Begin.");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
@@ -562,7 +562,7 @@ ErrCode ServiceProxy::UpdateSendRate(std::string &bundleName, int sendRate, bool
     if (!data.WriteString(bundleName)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleName").GetCode();
     }
-    if (!data.WriteInt(sendRate)) {
+    if (!data.WriteInt32(sendRate)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send sendRate").GetCode();
     }
     MessageParcel reply;
@@ -575,7 +575,7 @@ ErrCode ServiceProxy::UpdateSendRate(std::string &bundleName, int sendRate, bool
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
     reply.ReadBool(result);
-    HILOGI("ServiceProxy UpdateTimer end. result = %d", result);
+    HILOGI("ServiceProxy UpdateSendRate end. ret = %{public}d", ret);
     return BError(BError::Codes::OK, "success");
 }
 } // namespace OHOS::FileManagement::Backup

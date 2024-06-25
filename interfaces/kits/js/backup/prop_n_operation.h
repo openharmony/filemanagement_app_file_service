@@ -27,7 +27,7 @@ public:
     static napi_value DoUpdateSendRate(napi_env env, napi_callback_info info);
 private:
     static bool UpdateTimer(std::string &bundleName, uint32_t timeOut);
-    static bool UpdateSendRate(std::string &bundleName, int sendRate);
+    static bool UpdateSendRate(std::string &bundleName, int32_t sendRate);
 };
 
 const std::string PROCEDURE_LOCALCAPABILITIES_NAME = "getLocalCapalities";

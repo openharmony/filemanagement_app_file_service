@@ -227,15 +227,15 @@ ErrCode ExtExtensionStub::CmdUpdateFdSendRate(MessageParcel &data, MessageParcel
     HILOGD("CmdUpdateFdSendRate Begin");
     std::string bundleName;
     if (!data.ReadString(bundleName)) {
-        return BError(BError::Codes::EXT_INVAL_ARG), "Failed to receive bundleName").GetCode();
+        return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive bundleName").GetCode();
     }
-    int sendRate;
-    if (!data.ReadInt(sendRate)) {
-        return BError(BError::Codes::EXT_INVAL_ARG), "Failed to receive sendRate").GetCode();
+    int32_t sendRate;
+    if (!data.ReadInt32(sendRate)) {
+        return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive sendRate").GetCode();
     }
-    int ret = UpdateSendRate(bundleName, sendRate);
-    if (reply.WriteInt32(ret)) {
-        return BError(BError::Codes::EXT_BROKEN_IPC), "Failed to send out the ret").GetCode();
+    int ret = UpdateFdSendRate(bundleName, sendRate);
+    if (!reply.WriteInt32(ret)) {
+        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the ret").GetCode();
     }
     return BError(BError::Codes::OK);
 }

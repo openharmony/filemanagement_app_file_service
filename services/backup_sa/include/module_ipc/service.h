@@ -74,7 +74,7 @@ public:
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;
     ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) override;
-    ErrCode UpdateSendRate(BundleName &bundleName, int sendRate, bool &result) override;
+    ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) override;
 
     ErrCode SAResultReport(const std::string bundleName, const std::string resultInfo,
                            const ErrCode errCode, const BackupRestoreScenario sennario);

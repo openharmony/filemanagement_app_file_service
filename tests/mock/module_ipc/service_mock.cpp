@@ -220,6 +220,11 @@ ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &res
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result)
+{
+    return BError(BError::Codes::OK);
+}
+
 void Service::OnSABackup(const std::string &bundleName,
                          const int &fd,
                          const std::string &result,

@@ -37,6 +37,7 @@ public:
     MOCK_METHOD(ErrCode, IncrementalOnBackup, ());
     MOCK_METHOD((std::tuple<UniqueFd, UniqueFd>), GetIncrementalBackupFileHandle, ());
     MOCK_METHOD(ErrCode, GetBackupInfo, (std::string &result));
+    MOCK_METHOD(ErrCode, UpdateFdSendRate, (std::string &bundleName, int32_t sendRate));
 };
 
 class ExtExtensionStubTest : public testing::Test {
@@ -501,5 +502,43 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdGetBackupInfo_
         GTEST_LOG_(INFO) << "ExtExtensionStubTest-an exception occurred by CmdGetBackupInfo.";
     }
     GTEST_LOG_(INFO) << "ExtExtensionStubTest-end SUB_backup_ext_ExtExtensionStub_CmdGetBackupInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ext_ExtExtensionStub_CmdUpdateSendRate_0100
+ * @tc.name: SUB_backup_ext_ExtExtensionStub_CmdUpdateSendRate_0100
+ * @tc.desc: 测试 CmdUpdateSendRate 各个分支成功与失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9QWK5
+ */
+HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdUpdateSendRate_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionStubTest-begin SUB_backup_ext_ExtExtensionStub_CmdUpdateSendRate_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        EXPECT_CALL(*stub, UpdateFdSendRate(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        auto err = stub->CmdUpdateFdSendRate(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
+
+        EXPECT_CALL(*stub, UpdateFdSendRate(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, WriteString(_)).WillOnce(Return(false));
+        err = stub->CmdUpdateFdSendRate(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
+
+        EXPECT_CALL(*stub, UpdateFdSendRate(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, WriteString(_)).WillOnce(Return(true));
+        err = stub->CmdUpdateFdSendRate(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionStubTest-an exception occurred by CmdUpdateSendRate.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionStubTest-end SUB_backup_ext_ExtExtensionStub_CmdUpdateSendRate_0100";
 }
 } // namespace OHOS::FileManagement::Backup
