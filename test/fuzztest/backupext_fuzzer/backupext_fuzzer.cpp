@@ -109,30 +109,30 @@ bool GetExtensionActionFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *dat
 
 bool OnBackupFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
-    function<void()> callback = nullptr;
+    function<void(ErrCode)> callback = nullptr;
     backup->OnBackup(callback);
     return true;
 }
 
 bool OnRestoreFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
-    function<void()> callback;
-    function<void(const string)> callbackEx;
-    function<void()> callbackExAppDone;
+    function<void(ErrCode)> callback;
+    function<void(ErrCode, const string)> callbackEx;
+    function<void(ErrCode)> callbackExAppDone;
     backup->OnRestore(callback, callbackEx, callbackExAppDone);
     return true;
 }
 
 bool OnRestore2FuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
-    function<void()> callback = nullptr;
+    function<void(ErrCode)> callback = nullptr;
     backup->OnRestore(callback);
     return true;
 }
 
 bool GetBackupInfoFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
-    function<void(string)> callback = nullptr;
+    function<void(ErrCode, string)> callback = nullptr;
     backup->GetBackupInfo(callback);
     return true;
 }
@@ -158,7 +158,7 @@ bool RestoreDataReadyFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data,
 bool CallExtRestoreFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
     string result = string(reinterpret_cast<const char*>(data), size);
-    backup->CallExtRestore(result);
+    backup->CallExtRestore(BError(BError::Codes::OK), result);
     return true;
 }
 

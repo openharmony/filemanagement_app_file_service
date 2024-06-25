@@ -54,22 +54,22 @@ struct CallJsParam {
 };
 
 struct CallbackInfo {
-    std::function<void()> callback;
-    CallbackInfo(std::function<void()> callbackIn) : callback(callbackIn) {}
+    std::function<void(ErrCode)> callback;
+    CallbackInfo(std::function<void(ErrCode)> callbackIn) : callback(callbackIn) {}
 };
 
 struct CallbackInfoBackup {
-    std::function<void(const std::string)> callbackParam;
-    CallbackInfoBackup(std::function<void(const std::string)> param)
+    std::function<void(ErrCode, const std::string)> callbackParam;
+    CallbackInfoBackup(std::function<void(ErrCode, const std::string)> param)
         : callbackParam(param)
     {
     }
 };
 
 struct CallbackInfoEx {
-    std::function<void(const std::string)> callbackParam;
-    std::function<void()> callbackAppDone;
-    CallbackInfoEx(std::function<void(const std::string)> param, std::function<void()> appDone)
+    std::function<void(ErrCode, const std::string)> callbackParam;
+    std::function<void(ErrCode)> callbackAppDone;
+    CallbackInfoEx(std::function<void(ErrCode, const std::string)> param, std::function<void(ErrCode)> appDone)
         : callbackParam(param), callbackAppDone(appDone)
     {
     }
@@ -104,9 +104,10 @@ public:
      *
      * @param callback The callback.
      */
-    ErrCode OnBackup(std::function<void()> callback) override;
+    ErrCode OnBackup(std::function<void(ErrCode)> callback) override;
 
-    ErrCode OnBackup(std::function<void()> callback, std::function<void(const std::string)> callbackEx) override;
+    ErrCode OnBackup(std::function<void(ErrCode)> callback,
+        std::function<void(ErrCode, const std::string)> callbackEx) override;
 
     /**
      * @brief Call the app's OnRestore.
@@ -114,28 +115,28 @@ public:
      * @param callbackEx The callbackEx.
      * @param callback The callBack.
      */
-    ErrCode OnRestore(std::function<void()> callback, std::function<void(const std::string)> callbackEx,
-        std::function<void()> callbackExAppDone) override;
+    ErrCode OnRestore(std::function<void(ErrCode)> callback, std::function<void(ErrCode, const std::string)> callbackEx,
+        std::function<void(ErrCode)> callbackExAppDone) override;
 
     /**
      * @brief Call the app's OnRestore.
      *
      * @param callback The callBack.
      */
-    ErrCode OnRestore(std::function<void()> callback) override;
+    ErrCode OnRestore(std::function<void(ErrCode)> callback) override;
     /**
      * @brief get app backup detail
      *
      * @param callback The callBack.
     */
-    ErrCode GetBackupInfo(std::function<void(const std::string)> callback) override;
+    ErrCode GetBackupInfo(std::function<void(ErrCode, const std::string)> callback) override;
 
     /**
      * @brief Called Notification containing extended information
      *
      * @param result The result.
     */
-    ErrCode CallExtRestore(std::string result) override;
+    ErrCode CallExtRestore(ErrCode, const std::string) override;
 
 public:
     explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
