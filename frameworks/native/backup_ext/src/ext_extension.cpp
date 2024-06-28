@@ -1746,7 +1746,7 @@ ErrCode BackupExtExtension::UpdateFdSendRate(std::string &bundleName, int32_t se
     return ERR_OK;
 }
 
-std::function<void(std::string)> BackupExtExtension::RestoreResultCallbackEx(wptr<BackupExtExtension> obj)
+std::function<void(ErrCode, std::string)> BackupExtExtension::RestoreResultCallbackEx(wptr<BackupExtExtension> obj)
 {
     HILOGI("Begin get callbackEx");
     return [obj](ErrCode errCode, const std::string restoreRetInfo) {
@@ -1863,7 +1863,7 @@ void BackupExtExtension::WaitToSendFd(std::chrono::system_clock::time_point star
         HILOGI("current time fd num is max rate, bundle name:%{public}s, rate:%{public}d", bundleName_.c_str(),
             sendRate_);
         auto curTime = std::chrono::system_clock::now();
-        auto useTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(curTime - startTime);
+        auto useTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(curTime - startTime).count();
         if (useTimeMs < MAX_FD_GROUP_USE_TIME) {
             int32_t sleepTime = MAX_FD_GROUP_USE_TIME - useTimeMs;
             HILOGI("will wait time:%{public}d", sleepTime);

@@ -75,11 +75,6 @@ public:
                                         deque<struct PolicyErrorResult> &errorResults);
     static int32_t CheckPersistentPermission(const vector<UriPolicyInfo> &uriPolicies, vector<bool> &errorResults);
     static string GetPathByPermission(const std::string &permission);
-    static int32_t SetPolicy(uint64_t providerTokenId,
-                             uint64_t targetTokenId,
-                             vector<UriPolicyInfo> &uriPolicies,
-                             vector<bool> &errorResults,
-                             uint32_t policyFlag);
 #ifdef SANDBOX_MANAGER
 private:
     static void ParseErrorResults(const vector<uint32_t> &resultCodes,

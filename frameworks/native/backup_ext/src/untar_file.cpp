@@ -370,7 +370,7 @@ void UntarFile::ParseRegularFile(FileStatInfo &info, char typeFlag)
             times.actime = attr.st_atime;
         }
         times.modtime = info.mtime;
-        if (utime(info.fullPath.c_str(), &times) != 0) {
+        if (info.mtime != 0 && utime(info.fullPath.c_str(), &times) != 0) {
             HILOGE("Failed to set mtime of %{public}s, err = %{public}d", info.fullPath.c_str(), errno);
         }
         // anyway, go to correct

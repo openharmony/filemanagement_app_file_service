@@ -101,7 +101,11 @@ bool TarFile::TraversalFile(string &filePath)
     }
 
     struct stat curFileStat {};
-    memset_s(&curFileStat, sizeof(curFileStat), 0, sizeof(curFileStat));
+    auto ret = memset_s(&curFileStat, sizeof(curFileStat), 0, sizeof(curFileStat));
+    if (ret != EOK) {
+        HILOGE("Failed to call memset_s, err = %{public}d", ret);
+        return false;
+    }
     if (lstat(filePath.c_str(), &curFileStat) != 0) {
         HILOGE("Failed to lstat, err = %{public}d", errno);
         return false;
@@ -136,22 +140,69 @@ bool TarFile::TraversalFile(string &filePath)
     return true;
 }
 
+static bool CopyData(TarHeader &hdr, const string &mode, const string &uid, const string &gid, const string &size)
+{
+    auto ret = memcpy_s(hdr.mode, sizeof(hdr.mode), mode.c_str(), min(sizeof(hdr.mode) - 1, mode.length()));
+    if (ret != EOK) {
+        HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+        return false;
+    }
+    ret = memcpy_s(hdr.uid, sizeof(hdr.uid), uid.c_str(), min(sizeof(hdr.uid) - 1, uid.length()));
+    if (ret != EOK) {
+        HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+        return false;
+    }
+    ret = memcpy_s(hdr.gid, sizeof(hdr.gid), gid.c_str(), min(sizeof(hdr.gid) - 1, gid.length()));
+    if (ret != EOK) {
+        HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+        return false;
+    }
+    ret = memcpy_s(hdr.size, sizeof(hdr.size), size.c_str(), min(sizeof(hdr.size) - 1, size.length()));
+    if (ret != EOK) {
+        HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+        return false;
+    }
+    return true;
+}
+
 bool TarFile::I2OcsConvert(const struct stat &st, TarHeader &hdr, string &fileName, bool isSplit)
 {
-    memset_s(&hdr, sizeof(hdr), 0, sizeof(hdr));
-    memcpy_s(hdr.mode, sizeof(hdr.mode), I2Ocs(sizeof(hdr.mode), st.st_mode & PERMISSION_MASK).c_str(),
-             sizeof(hdr.mode) - 1);
-    memcpy_s(hdr.uid, sizeof(hdr.uid), I2Ocs(sizeof(hdr.uid), st.st_uid).c_str(), sizeof(hdr.uid) - 1);
-    memcpy_s(hdr.gid, sizeof(hdr.gid), I2Ocs(sizeof(hdr.gid), st.st_gid).c_str(), sizeof(hdr.gid) - 1);
-    memcpy_s(hdr.size, sizeof(hdr.size), I2Ocs(sizeof(hdr.size), 0).c_str(), sizeof(hdr.size) - 1);
-    memcpy_s(hdr.mtime, sizeof(hdr.mtime), I2Ocs(sizeof(hdr.mtime), st.st_mtime).c_str(), sizeof(hdr.mtime) - 1);
-    memset_s(hdr.chksum, sizeof(hdr.chksum), BLANK_SPACE, sizeof(hdr.chksum));
+    auto ret = memset_s(&hdr, sizeof(hdr), 0, sizeof(hdr));
+    if (ret != EOK) {
+        HILOGE("Failed to call memset_s, err = %{public}d", ret);
+        return false;
+    }
+
+    string mode = I2Ocs(sizeof(hdr.mode), st.st_mode & PERMISSION_MASK);
+    string uid = I2Ocs(sizeof(hdr.uid), st.st_uid);
+    string gid = I2Ocs(sizeof(hdr.gid), st.st_gid);
+    string size = I2Ocs(sizeof(hdr.size), 0);
+    if (!CopyData(hdr, mode, uid, gid, size)) {
+        return false;
+    }
+
+    string mtime = I2Ocs(sizeof(hdr.mtime), st.st_mtime);
+    ret = memcpy_s(hdr.mtime, sizeof(hdr.mtime), mtime.c_str(), min(sizeof(hdr.mtime) - 1, mtime.length()));
+    if (ret != EOK) {
+        HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+        return false;
+    }
+    ret = memset_s(hdr.chksum, sizeof(hdr.chksum), BLANK_SPACE, sizeof(hdr.chksum));
+    if (ret != EOK) {
+        HILOGE("Failed to call memset_s, err = %{public}d", ret);
+        return false;
+    }
 
     if (S_ISREG(st.st_mode)) {
         hdr.typeFlag = REGTYPE;
         off_t hdrSize = st.st_size;
         if (sizeof(off_t) <= OFF_T_SIZE || st.st_size <= static_cast<off_t>(MAX_FILE_SIZE)) {
-            memcpy_s(hdr.size, sizeof(hdr.size), I2Ocs(sizeof(hdr.size), hdrSize).c_str(), sizeof(hdr.size) - 1);
+            size = I2Ocs(sizeof(hdr.size), hdrSize);
+            ret = memcpy_s(hdr.size, sizeof(hdr.size), size.c_str(), min(sizeof(hdr.size) - 1, size.length()));
+            if (ret != EOK) {
+                HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+                return false;
+            }
         } else {
             HILOGE("Invalid tar header size");
             return false;
@@ -169,6 +220,35 @@ bool TarFile::I2OcsConvert(const struct stat &st, TarHeader &hdr, string &fileNa
     return true;
 }
 
+static bool ReadyHeader(TarHeader &hdr, const string &fileName)
+{
+    errno_t ret = EOK;
+    if (fileName.length() < TNAME_LEN) {
+        if (ret = memcpy_s(hdr.name, sizeof(hdr.name), fileName.c_str(), fileName.length()), ret != EOK) {
+            HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+            return false;
+        }
+    } else {
+        ret = memcpy_s(hdr.name, sizeof(hdr.name), LONG_LINK_SYMBOL.c_str(),
+            min(sizeof(hdr.name) - 1, LONG_LINK_SYMBOL.length()));
+        if (ret != EOK) {
+            HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+            return false;
+        }
+    }
+    ret = memcpy_s(hdr.magic, sizeof(hdr.magic), TMAGIC.c_str(), min(sizeof(hdr.magic) - 1, TMAGIC.length()));
+    if (ret != EOK) {
+        HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+        return false;
+    }
+    ret = memcpy_s(hdr.version, sizeof(hdr.version), VERSION.c_str(), min(sizeof(hdr.version) - 1, VERSION.length()));
+    if (ret != EOK) {
+        HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+        return false;
+    }
+    return true;
+}
+
 bool TarFile::AddFile(string &fileName, const struct stat &st, bool isSplit)
 {
     HILOGD("tar file %{public}s", fileName.c_str());
@@ -179,15 +259,14 @@ bool TarFile::AddFile(string &fileName, const struct stat &st, bool isSplit)
         HILOGE("Failed to I2OcsConvert");
         return false;
     }
-
-    if (fileName.length() < TNAME_LEN) {
-        memcpy_s(hdr.name, sizeof(hdr.name), fileName.c_str(), sizeof(hdr.name) - 1);
-    } else {
-        WriteLongName(fileName, GNUTYPE_LONGNAME);
-        memcpy_s(hdr.name, sizeof(hdr.name), LONG_LINK_SYMBOL.c_str(), sizeof(hdr.name) - 1);
+    if (!ReadyHeader(hdr, fileName)) {
+        return false;
     }
-    memcpy_s(hdr.magic, sizeof(hdr.magic), TMAGIC.c_str(), sizeof(hdr.magic) - 1);
-    memcpy_s(hdr.version, sizeof(hdr.version), VERSION.c_str(), sizeof(hdr.version) - 1);
+    if (fileName.length() >= TNAME_LEN) {
+        if (!WriteLongName(fileName, GNUTYPE_LONGNAME)) {
+            return false;
+        }
+    }
     FillOwnerName(hdr, st);
     SetCheckSum(hdr);
 
@@ -296,7 +375,7 @@ bool TarFile::CompleteBlock(off_t size)
     if ((size % BLOCK_SIZE) > 0) {
         int append = BLOCK_SIZE - (size % BLOCK_SIZE);
         vector<uint8_t> buff {};
-        buff.resize(BLOCK_SIZE);
+        buff.resize(append);
         WriteAll(buff, append);
     }
     return true;
@@ -311,7 +390,7 @@ bool TarFile::FillSplitTailBlocks()
     // write tar file tail
     const int END_BLOCK_SIZE = 1024;
     vector<uint8_t> buff {};
-    buff.resize(BLOCK_SIZE);
+    buff.resize(END_BLOCK_SIZE);
     WriteAll(buff, END_BLOCK_SIZE);
     fflush(currentTarFile_);
 
@@ -346,7 +425,7 @@ void TarFile::SetCheckSum(TarHeader &hdr)
 {
     int sum = 0;
     vector<uint32_t> buffer {};
-    buffer.resize(sizeof(hdr));
+    buffer.resize(BLOCK_SIZE);
     buffer.assign(reinterpret_cast<uint8_t *>(&hdr), reinterpret_cast<uint8_t *>(&hdr) + sizeof(hdr));
     for (uint32_t index = 0; index < BLOCK_SIZE; index++) {
         if (index < CHKSUM_BASE || index > CHKSUM_BASE + CHKSUM_LEN - 1) {
@@ -355,7 +434,11 @@ void TarFile::SetCheckSum(TarHeader &hdr)
             sum += BLANK_SPACE;
         }
     }
-    memcpy_s(hdr.chksum, sizeof(hdr.chksum), I2Ocs(sizeof(hdr.chksum), sum).c_str(), sizeof(hdr.chksum) - 1);
+    string chksum = I2Ocs(sizeof(hdr.chksum), sum);
+    auto ret = memcpy_s(hdr.chksum, sizeof(hdr.chksum), chksum.c_str(), min(sizeof(hdr.chksum) - 1, chksum.length()));
+    if (ret != EOK) {
+        HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+    }
 }
 
 void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
@@ -407,11 +490,12 @@ off_t TarFile::ReadAll(int fd, vector<uint8_t> &ioBuffer, off_t size)
 int TarFile::WriteTarHeader(TarHeader &header)
 {
     vector<uint8_t> buffer {};
-    buffer.resize(sizeof(header));
+    buffer.resize(BLOCK_SIZE);
     buffer.assign(reinterpret_cast<uint8_t *>(&header), reinterpret_cast<uint8_t *>(&header) + sizeof(header));
     int ret = WriteAll(buffer, BLOCK_SIZE);
     if (ret != BLOCK_SIZE) {
-        ret = WriteAll(buffer, BLOCK_SIZE); // 再执行一遍
+        buffer.erase(buffer.begin(), buffer.begin() + ret);
+        ret += WriteAll(buffer, BLOCK_SIZE - ret); // 再执行一遍
     }
     return ret;
 }
@@ -440,13 +524,8 @@ string TarFile::I2Ocs(int len, off_t val)
     return string(tmp);
 }
 
-bool TarFile::WriteLongName(string &name, char type)
+static bool WriteNormalData(TarHeader& tmp)
 {
-    // fill tar header for long name
-    TarHeader tmp;
-    memset_s(&tmp, sizeof(tmp), 0, sizeof(tmp));
-
-    int sz = name.length() + 1;
     const string FORMAT = "%0*d";
 
     strlcpy(tmp.name, LONG_LINK_SYMBOL.c_str(), sizeof(tmp.name));
@@ -470,10 +549,35 @@ bool TarFile::WriteLongName(string &name, char type)
     if (ret < 0) {
         return false;
     }
-    memcpy_s(tmp.size, sizeof(tmp.size), I2Ocs(sizeof(tmp.size), sz).c_str(), sizeof(tmp.size) - 1);
+    return true;
+}
+
+bool TarFile::WriteLongName(string &name, char type)
+{
+    // fill tar header for long name
+    TarHeader tmp;
+    errno_t ret = memset_s(&tmp, sizeof(tmp), 0, sizeof(tmp));
+    if (ret != EOK) {
+        HILOGE("Failed to call memset_s, err = %{public}d", ret);
+        return false;
+    }
+
+    int sz = name.length() + 1;
+    if (!WriteNormalData(tmp)) {
+        return false;
+    }
+    string size = I2Ocs(sizeof(tmp.size), sz);
+    ret = memcpy_s(tmp.size, sizeof(tmp.size), size.c_str(), min(sizeof(tmp.size) - 1, size.length()));
+    if (ret != EOK) {
+        HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+        return false;
+    }
 
     tmp.typeFlag = type;
-    memset_s(tmp.chksum, sizeof(tmp.chksum), BLANK_SPACE, sizeof(tmp.chksum));
+    if (ret = memset_s(tmp.chksum, sizeof(tmp.chksum), BLANK_SPACE, sizeof(tmp.chksum)), ret != EOK) {
+        HILOGE("Failed to call memset_s, err = %{public}d", ret);
+        return false;
+    }
 
     strlcpy(tmp.magic, TMAGIC.c_str(), sizeof(tmp.magic));
     strlcpy(tmp.version, VERSION.c_str(), sizeof(tmp.version));

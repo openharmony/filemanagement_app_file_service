@@ -155,7 +155,7 @@ private:
     ErrCode IncrementalBigFileReady(const TarMap &pkgInfo, const map<string, struct ReportFileInfo> &bigInfos,
         sptr<IService> proxy);
     ErrCode BigFileReady(sptr<IService> proxy);
-    void WaitToSendFd(std::chrono::system_clock::time_point startTime, int fdSendNumWaitToSendFdWaitToSendF);
+    void WaitToSendFd(std::chrono::system_clock::time_point startTime, int fdSendNum);
 
     /**
      * @brief extension incremental backup restore is done
