@@ -155,7 +155,9 @@ private:
     ErrCode IncrementalBigFileReady(const TarMap &pkgInfo, const map<string, struct ReportFileInfo> &bigInfos,
         sptr<IService> proxy);
     ErrCode BigFileReady(sptr<IService> proxy);
-    void WaitToSendFd(std::chrono::system_clock::time_point startTime, int fdSendNum);
+    void WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
+    void RefreshTimeInfo(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
+    void IncrementalPacket(const map<string, struct ReportFileInfo> &infos, TarMap &tar, sptr<IService> proxy);
 
     /**
      * @brief extension incremental backup restore is done
@@ -197,12 +199,13 @@ private:
     std::string backupInfo_;
     OHOS::ThreadPool threadPool_;
     std::mutex updateSendRateLock_;
-    std::atomic<bool> needUpdateSendRate_ {false};
     std::atomic<bool> isStopSendFd_ {false};
     std::condition_variable startSendFdRateCon_;
+    std::condition_variable waitSendFdCon_;
     std::mutex startSendMutex_;
+    std::mutex waitTimeLock_;
     std::string bundleName_;
-    int32_t sendRate_;
+    int32_t sendRate_ = BConstants::DEFAULT_FD_SEND_RATE;
 };
 } // namespace OHOS::FileManagement::Backup
 

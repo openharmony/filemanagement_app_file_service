@@ -347,16 +347,17 @@ napi_value PropNOperation::DoUpdateSendRate(napi_env env, napi_callback_info inf
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
+    std::string bundleName = bundle.get();
     NVal jsBundleInt(env, funcArg[NARG_POS::SECOND]);
     auto [succInt, jsRate] = jsBundleInt.ToInt32();
     if (!succInt || jsRate < 0) {
-        HILOGE("Second argument is invalid.");
+        HILOGE("Second argument is invalid. bundleName:%{public}s", bundleName.c_str());
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-    std::string bundleName = bundle.get();
     int32_t sendFdRate = static_cast<int32_t>(jsRate);
     if (sendFdRate > BConstants::MAX_FD_SEND_RATE) {
+        HILOGI("sendFdRate is too large, %{public}d", sendFdRate);
         sendFdRate = BConstants::MAX_FD_SEND_RATE;
     }
     bool result = UpdateSendRate(bundleName, sendFdRate);
