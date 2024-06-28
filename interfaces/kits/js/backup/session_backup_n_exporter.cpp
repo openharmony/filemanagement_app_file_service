@@ -187,7 +187,8 @@ static void onAllBundlesEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err)
     callbacks->onAllBundlesEnd.ThreadSafeSchedule(cbCompl);
 }
 
-static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::string result)
+static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::string bundleName,
+    const std::string result)
 {
     HILOGI("callback function onResultReport begin");
     if (pCallbacks.expired()) {
@@ -203,11 +204,16 @@ static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::str
         HILOGI("callback function onResultReport is undefined");
         return;
     }
-    auto cbCompl = [res {result}](napi_env env, NError err) -> NVal {
-        NVal str = NVal::CreateUTF8String(env, res);
-        return str;
+    auto cbCompl = [bName {bundleName}, res {result}](napi_env env, vector<napi_value> &argv) -> bool {
+        napi_value napi_bName = nullptr;
+        napi_create_string_utf8(env, bName.c_str(), bName.size(), &napi_bName);
+        argv.push_back(napi_bName);
+        napi_value napi_res = nullptr;
+        napi_create_string_utf8(env, res.c_str(), res.size(), &napi_res);
+        argv.push_back(napi_res);
+        return true;
     };
-    callbacks->onResultReport.ThreadSafeSchedule(cbCompl);
+    callbacks->onResultReport.CallJsMethod(cbCompl);
 }
 
 static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
@@ -258,7 +264,7 @@ napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info 
         .onBundleStarted = bind(onBundleBegin, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBundleFinished = bind(onBundleEnd, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(onAllBundlesEnd, backupEntity->callbacks, placeholders::_1),
-        .onResultReport = bind(OnResultReport, backupEntity->callbacks, placeholders::_1),
+        .onResultReport = bind(OnResultReport, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBackupServiceDied = bind(OnBackupServiceDied, backupEntity->callbacks)});
     if (!backupEntity->session) {
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to init backup").GetCode()).ThrowErr(env);

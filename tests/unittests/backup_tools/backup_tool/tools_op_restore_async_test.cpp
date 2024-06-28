@@ -326,8 +326,9 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_0700, testing::ext::Tes
     GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_0700";
     try {
         auto ctx = make_shared<SessionAsync>();
+        std::string bundleName = "com.example.app2backup";
         std::string resultInfo = "test result info";
-        OnResultReport(ctx, resultInfo);
+        OnResultReport(ctx, bundleName, resultInfo);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
