@@ -30,6 +30,8 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace LibN;
 
+const int32_t H_TO_MS = 3600 * 1000;
+
 static bool CheckPermission(const string &permission)
 {
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
@@ -284,7 +286,7 @@ napi_value PropNOperation::DoUpdateTimer(napi_env env, napi_callback_info info)
     }
     NVal jsBundleInt(env, funcArg[NARG_POS::SECOND]);
     auto [succInt, time] = jsBundleInt.ToInt32();
-    if (!succInt || time <= 0) {
+    if (!succInt || time <= 0 || time > H_TO_MS) {
         HILOGE("Second argument is not number.");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
