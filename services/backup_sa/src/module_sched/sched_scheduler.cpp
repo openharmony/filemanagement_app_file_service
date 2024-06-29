@@ -97,6 +97,8 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
         lock.unlock();
         // 开始执行备份恢复流程
         HILOGI("Current bundle %{public}s extension start", bundleName.data());
+        //通知应用市场设置处置
+        reversePtr_->SendStartAppGalleryNotify(bundleName);
         reversePtr_->ExtStart(bundleName);
     }
 }

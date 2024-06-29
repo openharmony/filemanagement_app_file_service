@@ -150,7 +150,7 @@ void Service::OnAllBundlesFinished(ErrCode errCode) {}
 
 void Service::OnStartSched() {}
 
-void Service::SendAppGalleryNotify(const BundleName &bundleName) {}
+void Service::SendStartAppGalleryNotify(const BundleName &bundleName) {}
 
 void Service::SessionDeactive() {}
 

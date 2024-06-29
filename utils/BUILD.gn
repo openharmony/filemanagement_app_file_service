@@ -66,6 +66,7 @@ ohos_shared_library("backup_utils") {
     "src/b_filesystem/b_file_hash.cpp",
     "src/b_json/b_json_entity_ext_manage.cpp",
     "src/b_json/b_json_entity_extension_config.cpp",
+    "src/b_json/b_json_service_disposal_config.cpp",
     "src/b_json/b_report_entity.cpp",
     "src/b_jsonutil/b_jsonutil.cpp",
     "src/b_ohos/startup/backup_para.cpp",
