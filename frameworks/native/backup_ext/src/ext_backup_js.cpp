@@ -868,10 +868,21 @@ std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::Pa
 {
     auto onRestoreFun = [appVersionCode(appVersionCode_), appVersionStr(appVersionStr_)](napi_env env,
         vector<napi_value> &argv) -> bool {
+        std::string appVersionStrFlag = appVersionStr;
+        int64_t appVersionCodeFlag = appVersionCode;
         napi_value objValue = nullptr;
         napi_create_object(env, &objValue);
-        napi_set_named_property(env, objValue, "code", AbilityRuntime::CreateJsValue(env, appVersionCode));
-        napi_set_named_property(env, objValue, "name", AbilityRuntime::CreateJsValue(env, appVersionStr.c_str()));
+        auto pos = appVersionStrFlag.find_first_of(BConstants::VERSION_NAME_SEPARATOR_CHAR);
+        std::string appVersionFlag = "";
+        if (pos != string::npos) {
+            appVersionFlag = appVersionStrFlag.substr(0, pos);
+            if (appVersionFlag == BConstants::DEFAULT_VERSION_NAME) {
+                appVersionStrFlag = appVersionFlag;
+                appVersionCodeFlag = 0;
+            }
+        }
+        napi_set_named_property(env, objValue, "code", AbilityRuntime::CreateJsValue(env, appVersionCodeFlag));
+        napi_set_named_property(env, objValue, "name", AbilityRuntime::CreateJsValue(env, appVersionStrFlag.c_str()));
         argv.push_back(objValue);
         return true;
     };
