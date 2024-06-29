@@ -256,6 +256,23 @@ bool PropNOperation::UpdateTimer(std::string &bundleName, uint32_t timeOut)
     return result;
 }
 
+bool PropNOperation::UpdateSendRate(std::string &bundleName, int32_t sendRate)
+{
+    bool result = false;
+    ServiceProxy::InvaildInstance();
+    auto proxy = ServiceProxy::GetInstance();
+    if (!proxy) {
+        HILOGE("called UpdateSendRate,failed to get proxy");
+        return result;
+    }
+    ErrCode errCode = proxy->UpdateSendRate(bundleName, sendRate, result);
+    if (errCode != 0) {
+        HILOGE("Proxy execute UpdateSendRate failed. errCode:%{public}d", errCode);
+        return result;
+    }
+    return result;
+}
+
 napi_value PropNOperation::DoUpdateTimer(napi_env env, napi_callback_info info)
 {
     HILOGD("called DoUpdateTimer begin");
@@ -301,6 +318,56 @@ napi_value PropNOperation::DoUpdateTimer(napi_env env, napi_callback_info info)
         return nullptr;
     }
     HILOGI("DoUpdateTimer success with result: %{public}d", result);
+    return nResult;
+}
+
+napi_value PropNOperation::DoUpdateSendRate(napi_env env, napi_callback_info info)
+{
+    HILOGD("called DoUpdateSendRate begin");
+    if (!CheckPermission("ohos.permission.BACKUP")) {
+        HILOGE("has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
+        HILOGE("Number of arguments unmatched.");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    NVal jsBundleStr(env, funcArg[NARG_POS::FIRST]);
+    auto [succStr, bundle, sizeStr] = jsBundleStr.ToUTF8String();
+    if (!succStr) {
+        HILOGE("First argument is not string.");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    std::string bundleName = bundle.get();
+    NVal jsBundleInt(env, funcArg[NARG_POS::SECOND]);
+    auto [succInt, jsRate] = jsBundleInt.ToInt32();
+    if (!succInt || jsRate < 0) {
+        HILOGE("Second argument is invalid. bundleName:%{public}s", bundleName.c_str());
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    int32_t sendFdRate = static_cast<int32_t>(jsRate);
+    if (sendFdRate > BConstants::MAX_FD_SEND_RATE) {
+        HILOGI("sendFdRate is too large, %{public}d", sendFdRate);
+        sendFdRate = BConstants::MAX_FD_SEND_RATE;
+    }
+    bool result = UpdateSendRate(bundleName, sendFdRate);
+    napi_value nResult;
+    napi_status status = napi_get_boolean(env, result, &nResult);
+    if (status != napi_ok) {
+        HILOGE("napi_get_boolean failed.");
+        return nullptr;
+    }
+    HILOGI("DoUpdateSendRate success with result: %{public}d", result);
     return nResult;
 }
 } // namespace OHOS::FileManagement::Backup

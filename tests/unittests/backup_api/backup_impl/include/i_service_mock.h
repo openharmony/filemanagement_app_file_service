@@ -142,6 +142,11 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode Release() override
     {
         return BError(BError::Codes::OK);

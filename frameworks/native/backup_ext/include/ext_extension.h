@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_BACKUP_BACKUP_EXT_EXTENSION_H
 #define OHOS_FILEMGMT_BACKUP_BACKUP_EXT_EXTENSION_H
 
+#include <chrono>
 #include <shared_mutex>
 #include <string>
 #include <vector>
@@ -29,6 +30,7 @@
 #include "ext_backup_js.h"
 #include "ext_extension_stub.h"
 #include "i_service.h"
+#include "tar_file.h"
 #include "thread_pool.h"
 #include "unique_fd.h"
 
@@ -49,6 +51,7 @@ public:
     ErrCode IncrementalOnBackup() override;
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
     ErrCode GetBackupInfo(std::string &result) override;
+    ErrCode UpdateFdSendRate(std::string &bundleName, int32_t sendRate) override;
 
     void AsyncTaskRestoreForUpgrade(void);
     void ExtClear(void);
@@ -149,6 +152,12 @@ private:
 
     void AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     void AsyncTaskOnIncrementalBackup();
+    ErrCode IncrementalBigFileReady(const TarMap &pkgInfo, const map<string, struct ReportFileInfo> &bigInfos,
+        sptr<IService> proxy);
+    ErrCode BigFileReady(sptr<IService> proxy);
+    void WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
+    void RefreshTimeInfo(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
+    void IncrementalPacket(const map<string, struct ReportFileInfo> &infos, TarMap &tar, sptr<IService> proxy);
 
     /**
      * @brief extension incremental backup restore is done
@@ -166,7 +175,7 @@ private:
 
     /**
      * @brief get callbackEx for execute onRestore with string param
-     * 
+     *
      * @param errCode
      */
     std::function<void(ErrCode, const std::string)> IncRestoreResultCallbackEx(wptr<BackupExtExtension> obj);
@@ -189,6 +198,14 @@ private:
     std::shared_ptr<ExtBackup> extension_;
     std::string backupInfo_;
     OHOS::ThreadPool threadPool_;
+    std::mutex updateSendRateLock_;
+    std::atomic<bool> isStopSendFd_ {false};
+    std::condition_variable startSendFdRateCon_;
+    std::condition_variable waitSendFdCon_;
+    std::mutex startSendMutex_;
+    std::mutex waitTimeLock_;
+    std::string bundleName_;
+    int32_t sendRate_ = BConstants::DEFAULT_FD_SEND_RATE;
 };
 } // namespace OHOS::FileManagement::Backup
 

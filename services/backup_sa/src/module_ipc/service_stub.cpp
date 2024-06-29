@@ -38,6 +38,8 @@ void ServiceStub::ServiceStubSupplement()
 {
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER)] =
         &ServiceStub::CmdUpdateTimer;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_SENDRATE)] =
+        &ServiceStub::CmdUpdateSendRate;
     opToInterfaceMap_[static_cast<uint32_t>(
         IServiceInterfaceCode::SERVICE_CMD_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP)] =
         &ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup;
@@ -413,6 +415,30 @@ int32_t ServiceStub::CmdUpdateTimer(MessageParcel &data, MessageParcel &reply)
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to write result"));
     }
     HILOGI("ServiceStub::CmdUpdateTimer end.");
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdUpdateSendRate(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("ServiceStub::CmdUpdateSendRate Begin.");
+    int ret = ERR_OK;
+    string bundleName;
+    if (!data.ReadString(bundleName)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive bundleName"));
+    }
+    int32_t sendRate;
+    if (!data.ReadInt32(sendRate)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive sendRate"));
+    }
+    bool result;
+    ret = UpdateSendRate(bundleName, sendRate, result);
+    if (ret != ERR_OK) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to call UpdateSendRate"));
+    }
+    if (!reply.WriteBool(result)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to write result"));
+    }
+    HILOGI("ServiceStub::CmdUpdateSendRate end.");
     return BError(BError::Codes::OK);
 }
 

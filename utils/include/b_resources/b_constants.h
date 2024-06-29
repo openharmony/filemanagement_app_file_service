@@ -72,6 +72,10 @@ constexpr int BACKUP_VFS_CACHE_PRESSURE = 10000; // 备份过程修改参数
 
 constexpr int32_t INVALID_FD_NUM = -1;
 
+constexpr int MAX_FD_SEND_RATE = 800; // 允许应用申请的最大FD数量
+constexpr int MIN_FD_SEND_RATE = 0; // 允许应用申请的最小FD数量
+constexpr int DEFAULT_FD_SEND_RATE = 60; // 框架默认的FD数量
+
 // backup.para内配置项的名称，该配置项值为true时可在不更新hap包的情况下，可以读取包管理元数据配置文件的内容
 static inline std::string BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_KEY = "backup.debug.overrideExtensionConfig";
 

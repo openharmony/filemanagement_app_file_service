@@ -30,6 +30,7 @@ enum class IExtensionInterfaceCode {
     CMD_GET_INCREMENTAL_BACKUP_FILE_HANDLE,
     CMD_GET_BACKUP_INFO,
     CMD_INCREMENTAL_ON_BACKUP,
+    CMD_UPDATE_FD_SENDRATE,
 };
 } // namespace OHOS::FileManagement::Backup
 

@@ -22,6 +22,7 @@
 #include <map>
 #include <regex>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -68,7 +69,9 @@ using namespace std;
 namespace {
 const int64_t DEFAULT_SLICE_SIZE = 100 * 1024 * 1024; // 分片文件大小为100M
 const uint32_t MAX_FILE_COUNT = 6000;                 // 单个tar包最多包含6000个文件
-} // namespace
+const uint32_t MAX_FD_GROUP_USE_TIME = 1000;          // 每组打开最大时间1000ms
+const int FILE_AND_MANIFEST_FD_COUNT = 2;          // 每组文件和简报数量统计
+}
 
 static std::set<std::string> GetIdxFileData()
 {
@@ -340,7 +343,7 @@ static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
     return ret;
 }
 
-static ErrCode BigFileReady(sptr<IService> proxy)
+ErrCode BackupExtExtension::BigFileReady(sptr<IService> proxy)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     UniqueFd fd(open(INDEX_FILE_BACKUP.data(), O_RDONLY));
@@ -351,12 +354,15 @@ static ErrCode BigFileReady(sptr<IService> proxy)
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     auto pkgInfo = cache.GetExtManageInfo();
-    HILOGI("BigFileReady: pkgInfo file size is: %{public}zu", pkgInfo.size());
+    HILOGI("BigFileReady Begin: pkgInfo file size is: %{public}zu", pkgInfo.size());
     ErrCode ret {ERR_OK};
+    auto startTime = std::chrono::system_clock::now();
+    int fdNum = 0;
     for (auto &item : pkgInfo) {
         if (item.hashName.empty() || item.fileName.empty()) {
             continue;
         }
+        WaitToSendFd(startTime, fdNum);
         int32_t errCode = ERR_OK;
         UniqueFd fd(open(item.fileName.data(), O_RDONLY));
         if (fd < 0) {
@@ -370,7 +376,10 @@ static ErrCode BigFileReady(sptr<IService> proxy)
         } else {
             HILOGW("Current file execute app file ready interface failed, ret is:%{public}d", ret);
         }
+        fdNum++;
+        RefreshTimeInfo(startTime, fdNum);
     }
+    HILOGI("BigFileReady End");
     return ret;
 }
 
@@ -1444,32 +1453,31 @@ static ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo,
 /**
  * 增量大文件和简报信息回传
  */
-static ErrCode IncrementalBigFileReady(const TarMap &pkgInfo,
-                                       const map<string, struct ReportFileInfo> &bigInfos,
-                                       sptr<IService> proxy)
+ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
+    const map<string, struct ReportFileInfo> &bigInfos, sptr<IService> proxy)
 {
     ErrCode ret {ERR_OK};
-    HILOGI("Begin, pkgInfo size:%{public}zu", pkgInfo.size());
+    HILOGI("IncrementalBigFileReady Begin, pkgInfo size:%{public}zu", pkgInfo.size());
+    auto startTime = std::chrono::system_clock::now();
+    int fdNum = 0;
     for (auto &item : pkgInfo) {
         if (item.first.empty()) {
             continue;
         }
         auto [path, sta, isBeforeTar] = item.second;
-
         int32_t errCode = ERR_OK;
+        WaitToSendFd(startTime, fdNum);
         UniqueFd fd(open(path.data(), O_RDONLY));
         if (fd < 0) {
             HILOGE("IncrementalBigFileReady open file failed, file name is %{public}s, err = %{public}d", path.c_str(),
                    errno);
             errCode = BError::GetCodeByErrno(errno);
         }
-
         struct ReportFileInfo info = bigInfos.find(path)->second;
         string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append(item.first));
         map<string, struct ReportFileInfo> bigInfo;
         bigInfo.try_emplace(path, info);
         WriteFile(file, bigInfo);
-
         ret = proxy->AppIncrementalFileReady(item.first, std::move(fd), UniqueFd(open(file.data(), O_RDONLY)), errCode);
         if (SUCCEEDED(ret)) {
             HILOGI("IncrementalBigFileReady: The application is packaged successfully, package name is %{public}s",
@@ -1478,7 +1486,10 @@ static ErrCode IncrementalBigFileReady(const TarMap &pkgInfo,
         } else {
             HILOGE("IncrementalBigFileReady interface fails to be invoked: %{public}d", ret);
         }
+        fdNum += FILE_AND_MANIFEST_FD_COUNT;
+        RefreshTimeInfo(startTime, fdNum);
     }
+    HILOGI("IncrementalBigFileReady End");
     return ret;
 }
 
@@ -1580,16 +1591,18 @@ static string GetIncrmentPartName()
     return to_string(milliseconds.count()) + "_part";
 }
 
-static void IncrementalPacket(const map<string, struct ReportFileInfo> &infos, TarMap &tar, sptr<IService> proxy)
+void BackupExtExtension::IncrementalPacket(const map<string, struct ReportFileInfo> &infos, TarMap &tar,
+    sptr<IService> proxy)
 {
-    HILOGI("IncrementalPacket begin");
+    HILOGI("IncrementalPacket begin, infos count: %{public}zu", infos.size());
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
     int64_t totalSize = 0;
     uint32_t fileCount = 0;
     vector<string> packFiles;
     map<string, struct ReportFileInfo> tarInfos;
-    // 设置下打包模式
-    TarFile::GetInstance().SetPacketMode(true);
+    TarFile::GetInstance().SetPacketMode(true); // 设置下打包模式
+    auto startTime = std::chrono::system_clock::now();
+    int fdNum = 0;
     string partName = GetIncrmentPartName();
     for (auto small : infos) {
         totalSize += small.second.size;
@@ -1601,11 +1614,14 @@ static void IncrementalPacket(const map<string, struct ReportFileInfo> &infos, T
             TarFile::GetInstance().Packet(packFiles, partName, path, tarMap);
             tar.insert(tarMap.begin(), tarMap.end());
             // 执行tar包回传功能
+            WaitToSendFd(startTime, fdNum);
             IncrementalTarFileReady(tarMap, tarInfos, proxy);
             totalSize = 0;
             fileCount = 0;
             packFiles.clear();
             tarInfos.clear();
+            fdNum += FILE_AND_MANIFEST_FD_COUNT;
+            RefreshTimeInfo(startTime, fdNum);
         }
     }
     if (fileCount > 0) {
@@ -1613,9 +1629,12 @@ static void IncrementalPacket(const map<string, struct ReportFileInfo> &infos, T
         TarMap tarMap {};
         TarFile::GetInstance().Packet(packFiles, partName, path, tarMap);
         IncrementalTarFileReady(tarMap, tarInfos, proxy);
+        fdNum = 1;
+        WaitToSendFd(startTime, fdNum);
         tar.insert(tarMap.begin(), tarMap.end());
         packFiles.clear();
         tarInfos.clear();
+        RefreshTimeInfo(startTime, fdNum);
     }
 }
 
@@ -1721,6 +1740,19 @@ ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
     return ERR_OK;
 }
 
+ErrCode BackupExtExtension::UpdateFdSendRate(std::string &bundleName, int32_t sendRate)
+{
+    std::lock_guard<std::mutex> lock(updateSendRateLock_);
+    HILOGI("Update SendRate, bundleName:%{public}s, sendRate:%{public}d", bundleName.c_str(), sendRate);
+    VerifyCaller();
+    bundleName_ = bundleName;
+    sendRate_ = sendRate;
+    if (sendRate > 0) {
+        startSendFdRateCon_.notify_one();
+    }
+    return ERR_OK;
+}
+
 std::function<void(ErrCode, std::string)> BackupExtExtension::RestoreResultCallbackEx(wptr<BackupExtExtension> obj)
 {
     HILOGI("Begin get callbackEx");
@@ -1822,5 +1854,39 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::HandleTaskBa
             extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::FULL_BACKUP);
         }
     };
+}
+
+void BackupExtExtension::WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum)
+{
+    HILOGI("WaitToSendFd Begin");
+    std::unique_lock<std::mutex> lock(startSendMutex_);
+    startSendFdRateCon_.wait(lock, [this] { return sendRate_ > 0; });
+    if (fdSendNum >= sendRate_) {
+        HILOGI("current time fd num is max rate, bundle name:%{public}s, rate:%{public}d", bundleName_.c_str(),
+            sendRate_);
+        auto curTime = std::chrono::system_clock::now();
+        auto useTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(curTime - startTime).count();
+        if (useTimeMs < MAX_FD_GROUP_USE_TIME) {
+            int32_t sleepTime = MAX_FD_GROUP_USE_TIME - useTimeMs;
+            HILOGI("will wait time:%{public}d ms", sleepTime);
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+        } else {
+            HILOGW("current fd send num exceeds one second");
+        }
+        fdSendNum = 0;
+        startTime = std::chrono::system_clock::now();
+    }
+    HILOGI("WaitToSendFd End");
+}
+
+void BackupExtExtension::RefreshTimeInfo(std::chrono::system_clock::time_point &startTime, int &fdSendNum)
+{
+    auto currentTime = std::chrono::system_clock::now();
+    auto useTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
+    if (useTime >= MAX_FD_GROUP_USE_TIME) {
+        HILOGI("RefreshTimeInfo Begin, fdSendNum is:%{public}d", fdSendNum);
+        startTime = std::chrono::system_clock::now();
+        fdSendNum = 0;
+    }
 }
 } // namespace OHOS::FileManagement::Backup

@@ -67,13 +67,20 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdAppIncrementalFileReady;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_INCREMENTAL_FILE_NAME)] =
         &ServiceStub::CmdGetIncrementalFileHandle;
+    ServiceStubSupplement();
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceInterfaceCode::SERVICE_CMD_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP)] =
+        &ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup;
+}
+
+void ServiceStub::ServiceStubSupplement()
+{
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_INFO)] =
         &ServiceStub::CmdGetBackupInfo;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER)] =
         &ServiceStub::CmdUpdateTimer;
-    opToInterfaceMap_[static_cast<uint32_t>(
-        IServiceInterfaceCode::SERVICE_CMD_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP)] =
-        &ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_SENDRATE)] =
+        &ServiceStub::CmdUpdateSendRate;
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -237,6 +244,22 @@ int32_t ServiceStub::CmdUpdateTimer(MessageParcel &data, MessageParcel &reply)
     }
     bool result;
     ret = UpdateTimer(bundleName, timeOut, result);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdUpdateSendRate(MessageParcel &data, MessageParcel &reply)
+{
+    int ret = ERR_OK;
+    string bundleName;
+    if (!data.ReadString(bundleName)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive bundleName"));
+    }
+    int32_t sendRate;
+    if (!data.ReadInt32(sendRate)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive sendRate"));
+    }
+    bool result;
+    ret = UpdateSendRate(bundleName, sendRate, result);
     return BError(BError::Codes::OK);
 }
 
