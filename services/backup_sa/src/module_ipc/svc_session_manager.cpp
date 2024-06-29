@@ -637,6 +637,7 @@ void SvcSessionManager::SetBundleDataSize(const std::string &bundleName, int64_t
 
 uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
 {
+    const int64_t minTimeout = 900;      /* 900 second */
     const int64_t defaultTimeout = 30;           /* 30 second */
     const int64_t processRate = 3 * 1024 * 1024; /* 3M/s */
     const int64_t multiple = 3;
@@ -653,6 +654,7 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
         HILOGE("Failed to get app<%{public}s> dataInfo, err=%{public}d", bundleName.c_str(), e.GetCode());
         timeout = defaultTimeout;
     }
+    timeout = timeout < minTimeout ? minTimeout : timeout;
     resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX); /* conver second to millisecond */
     HILOGI("Calculate App extension process run timeout=%{public}u(us), bundleName=%{public}s ", resTimeoutMs,
            bundleName.c_str());
