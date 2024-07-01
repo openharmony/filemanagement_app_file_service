@@ -301,6 +301,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     auto cache = cachedEntity.Structuralize();
     auto bundleInfos = cache.GetBundleInfos();
     if (!bundleInfos.size()) {
+        HILOGE("GetRestoreBundleNames bundleInfos is empty.");
         throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
     }
     HILOGI("restoreInfos size is:%{public}zu", restoreInfos.size());
@@ -320,7 +321,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
         auto it = find_if(bundleInfos.begin(), bundleInfos.end(),
                           [&restoreInfo](const auto &obj) { return obj.name == restoreInfo.name; });
         if (it == bundleInfos.end()) {
-            OnBundleStarted(BError(BError::Codes::SA_BUNDLE_INFO_EMPTY), session, restoreInfo.name);
+            HILOGE("Bundle not need restore, bundleName is %{public}s.", restoreInfo.name.c_str());
             continue;
         }
         BJsonEntityCaps::BundleInfo info = {.name = (*it).name,
@@ -334,6 +335,22 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     }
     HILOGI("restoreBundleInfos size is:%{public}zu", restoreInfos.size());
     return restoreBundleInfos;
+}
+
+static void HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
+    const vector<BundleName> &appendBundleNames, const vector<BundleName> &restoreBundleNames)
+{
+    if (appendBundleNames.size() != restoreBundleNames.size()) {
+        HILOGE("AppendBundleNames not equal restoreBundleNames.");
+        for (auto bundleName : appendBundleNames) {
+            auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
+                [&bundleName](const auto &obj) { return obj == bundleName; });
+            if (it == restoreBundleNames.end()) {
+                HILOGE("AppendBundles failed, bundleName = %{public}s.", bundleName.c_str());
+                OnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), session, bundleName);
+            }
+        }
+    }
 }
 
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames,
@@ -352,8 +369,9 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
             BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
         auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNamesOnly);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
+        HandleExceptionOnAppendBundles(session_, bundleNames, restoreBundleNames);
         if (restoreBundleNames.empty()) {
-            HILOGW("restoreBundleNames is empty");
+            HILOGE("AppendBundlesRestoreSession failed, restoreBundleNames is empty.");
             session_->DecreaseSessionCnt();
             return BError(BError::Codes::OK);
         }
@@ -364,11 +382,14 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
         HILOGI("End");
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        HILOGE("Catch exception");
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt();
         return e.GetCode();
     } catch (...) {
+        HILOGE("Unexpected exception");
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt();
-        HILOGI("Unexpected exception");
         return EPERM;
     }
 }
