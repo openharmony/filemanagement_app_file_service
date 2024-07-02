@@ -40,6 +40,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using ErrCode = int;
+using ErrParam = std::function<std::tuple<uint32_t, std::string>()>;
 
 class BError : public std::exception {
 public:

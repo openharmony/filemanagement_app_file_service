@@ -171,7 +171,7 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName, int32_t &errC
         if (extension_->SpecialVersionForCloneAndCloud()) {
             UniqueFd fd = GetFileHandleForSpecialCloneCloud(fileName);
             if (fd < 0) {
-                errCode = BError::GetCodeByErrno(errno);
+                errCode = errno;
             }
             return fd;
         }
@@ -189,13 +189,13 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName, int32_t &errC
         UniqueFd tarFd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (tarFd < 0) {
             HILOGE("Open file failed, file name is %{private}s, err = %{public}d", tarName.data(), errno);
-            errCode = BError::GetCodeByErrno(errno);
+            errCode = errno;
         }
         return tarFd;
     } catch (...) {
         HILOGE("Failed to get file handle");
         DoClear();
-        errCode = BError::BackupErrorCode::E_UKERR;
+        errCode = -1;
         return UniqueFd(-1);
     }
 }
@@ -271,7 +271,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         UniqueFd fd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("Failed to open tar file = %{private}s, err = %{public}d", tarName.c_str(), errno);
-            errCode = BError::GetCodeByErrno(errno);
+            errCode = errno;
         }
 
         // 对应的简报文件
@@ -283,7 +283,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (reportFd < 0) {
             HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
-            errCode = BError::GetCodeByErrno(errno);
+            errCode = errno;
         }
         HILOGI("extension: Will notify AppIncrementalFileReady");
         auto proxy = ServiceProxy::GetInstance();
@@ -367,7 +367,7 @@ ErrCode BackupExtExtension::BigFileReady(sptr<IService> proxy)
         UniqueFd fd(open(item.fileName.data(), O_RDONLY));
         if (fd < 0) {
             HILOGE("open file failed, file name is %{public}s, err = %{public}d", item.fileName.c_str(), errno);
-            errCode = BError::GetCodeByErrno(errno);
+            errCode = errno;
         }
 
         ret = proxy->AppFileReady(item.hashName, std::move(fd), errCode);
@@ -1471,7 +1471,7 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
         if (fd < 0) {
             HILOGE("IncrementalBigFileReady open file failed, file name is %{public}s, err = %{public}d", path.c_str(),
                    errno);
-            errCode = BError::GetCodeByErrno(errno);
+            errCode = errno;
         }
         struct ReportFileInfo info = bigInfos.find(path)->second;
         string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append(item.first));

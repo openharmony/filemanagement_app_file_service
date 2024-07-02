@@ -39,7 +39,7 @@ struct BackupEntity {
 };
 
 static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &fileInfo, UniqueFd fd,
-    UniqueFd manifestFd, ErrCode errCode)
+    UniqueFd manifestFd, int sysErrno)
 {
     if (pCallbacks.expired()) {
         HILOGI("callbacks is unbound");
@@ -54,18 +54,24 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
         HILOGI("callback function onFileReady is undefined");
         return;
     }
+    ErrCode errCode = BError::GetCodeByErrno(sysErrno);
+    std::string errMsg = "system errno: " + to_string(sysErrno);
+    std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, errMsg);
 
     auto cbCompl = [bundleName {fileInfo.owner}, fileName {fileInfo.fileName},
                     fd {make_shared<UniqueFd>(fd.Release())},
                     manifestFd {make_shared<UniqueFd>(manifestFd.Release())},
-                    errCode](napi_env env, NError err) -> NVal {
+                    errInfo](napi_env env, NError err) -> NVal {
         if (err) {
             return {env, err.GetNapiErr(env)};
         }
-        HILOGI("callback function incremental backup onFileReady cbCompl errcode: %{public}d", errCode);
+        HILOGI("callback function incremental backup onFileReady cbCompl errcode: %{public}d", std::get<0>(errInfo));
         NVal obj;
-        if (errCode != 0) {
-            obj = NVal {env, NError(errCode).GetNapiErr(env)};
+        ErrParam errorParam = [ errInfo ]() {
+            return errInfo;
+        };
+        if (std::get<0>(errInfo) != 0) {
+            obj = NVal {env, NError(errorParam).GetNapiErr(env)};
         } else {
             obj = NVal::CreateObject(env);
         }
