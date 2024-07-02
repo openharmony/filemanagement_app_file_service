@@ -84,10 +84,10 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
 
 ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId)
 {
-    HILOGI("called begin");
+    HILOGI("Called begin");
     std::unique_lock<std::mutex> lock(mutex_);
     ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, userId);
-    HILOGI("called end, ret=%{public}d", ret);
+    HILOGI("Called end, ret=%{public}d, userId=%{public}d.", ret, userId);
     return ret;
 }
 
