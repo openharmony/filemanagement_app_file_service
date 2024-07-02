@@ -410,6 +410,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         if (restoreBundleNames.empty()) {
             session_->DecreaseSessionCnt();
+            HILOGW("RestoreBundleNames is empty.");
             return BError(BError::Codes::OK);
         }
         session_->AppendBundles(restoreBundleNames);
