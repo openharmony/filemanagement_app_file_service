@@ -140,15 +140,15 @@ private:
 
     void AsyncTaskOnBackup();
 
-    int DoIncrementalBackup(const std::map<std::string, struct ReportFileInfo> &allFiles,
-                            const std::map<std::string, struct ReportFileInfo> &smallFiles,
-                            const std::map<std::string, struct ReportFileInfo> &bigFiles);
+    int DoIncrementalBackup(const std::vector<struct ReportFileInfo> &allFiles,
+                            const std::vector<struct ReportFileInfo> &smallFiles,
+                            const std::vector<struct ReportFileInfo> &bigFiles);
 
     void CompareFiles(UniqueFd incrementalFd,
                       UniqueFd manifestFd,
-                      map<string, struct ReportFileInfo> &allFiles,
-                      map<string, struct ReportFileInfo> &smallFiles,
-                      map<string, struct ReportFileInfo> &bigFiles);
+                      vector<struct ReportFileInfo> &allFiles,
+                      vector<struct ReportFileInfo> &smallFiles,
+                      vector<struct ReportFileInfo> &bigFiles);
 
     void AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     void AsyncTaskOnIncrementalBackup();

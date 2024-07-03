@@ -333,7 +333,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0601, testing::ext::TestSize.Level
         int fd = open(fileName.data(), O_RDWR | O_TRUNC, S_IRWXU);
         EXPECT_GT(fd, 0);
         close(fd);
-        map<string, struct ReportFileInfo> srcFiles;
+        vector<struct ReportFileInfo> srcFiles;
         WriteFile(fileName, srcFiles);
         ifstream f(fileName);
         if (!f.is_open()) {
@@ -368,7 +368,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0602, testing::ext::TestSize.Level
         int fd = open(fileName.data(), O_RDWR | O_TRUNC, S_IRWXU);
         EXPECT_GT(fd, 0);
         close(fd);
-        map<string, struct ReportFileInfo> srcFiles;
+        vector<struct ReportFileInfo> srcFiles;
         struct ReportFileInfo info;
         info.mode = "755";
         info.isDir = 0;
@@ -377,7 +377,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0602, testing::ext::TestSize.Level
         info.hash = "1234567890";
         info.userTar = 1;
         info.encodeFlag = true;
-        srcFiles["/data/test.txt"] = info;
+        srcFiles.push_back(info);
         WriteFile(fileName, srcFiles);
         ifstream f(fileName);
         if (!f.is_open()) {
@@ -408,7 +408,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0603, testing::ext::TestSize.Level
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0603";
     try {
         string fileName = PATH + BUNDLE_NAME + FILE_NAME;
-        map<string, struct ReportFileInfo> srcFiles;
+        vector<struct ReportFileInfo> srcFiles;
         struct ReportFileInfo info;
         info.mode = "755";
         info.isDir = 0;
@@ -417,7 +417,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0603, testing::ext::TestSize.Level
         info.hash = "1234567890";
         info.userTar = 1;
         info.encodeFlag = false;
-        srcFiles["/data/test.txt"] = info;
+        srcFiles.push_back(info);
         WriteFile(fileName, srcFiles);
         ifstream f(fileName);
         if (!f.is_open()) {
@@ -447,7 +447,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0700, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0700";
     try {
-        map<string, struct ReportFileInfo> files;
+        vector<struct ReportFileInfo> files;
         TarMap result = GetIncrmentBigInfos(files);
         EXPECT_TRUE(result.empty());
     } catch (...) {
@@ -470,9 +470,18 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0701, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0701";
     try {
-        map<string, struct ReportFileInfo> files;
-        files.emplace("test", (struct ReportFileInfo) {});
-        TarMap result = GetIncrmentBigInfos(files);
+        vector<struct ReportFileInfo> srcFiles;
+        struct ReportFileInfo info;
+        info.filePath = PATH + BUNDLE_NAME;
+        info.mode = "755";
+        info.isDir = 0;
+        info.size = 1024;
+        info.mtime = 123456789;
+        info.hash = "1234567890";
+        info.userTar = 1;
+        info.encodeFlag = false;
+        srcFiles.push_back(info);
+        TarMap result = GetIncrmentBigInfos(srcFiles);
         EXPECT_EQ(result.size(), 1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -494,41 +503,25 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0702, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0702";
     try {
-        map<string, struct ReportFileInfo> files;
-        files.emplace("test", (struct ReportFileInfo) {});
-        files.emplace("test", (struct ReportFileInfo) {});
-        TarMap result = GetIncrmentBigInfos(files);
-        EXPECT_EQ(result.size(), 1);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0702";
-}
-
-/**
- * @tc.number: SUB_Ext_Extension_0703
- * @tc.name: Ext_Extension_Test_0703
- * @tc.desc: 测试file有2个元素
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I9P3Y3
- */
-HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0703, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0703";
-    try {
-        map<string, struct ReportFileInfo> files;
-        files.emplace("test1", (struct ReportFileInfo) {});
-        files.emplace("test2", (struct ReportFileInfo) {});
-        TarMap result = GetIncrmentBigInfos(files);
+        vector<struct ReportFileInfo> srcFiles;
+        struct ReportFileInfo info;
+        info.filePath = PATH + BUNDLE_NAME;
+        info.mode = "755";
+        info.isDir = 0;
+        info.size = 1024;
+        info.mtime = 123456789;
+        info.hash = "1234567890";
+        info.userTar = 1;
+        info.encodeFlag = false;
+        srcFiles.push_back(info);
+        srcFiles.push_back(info);
+        TarMap result = GetIncrmentBigInfos(srcFiles);
         EXPECT_EQ(result.size(), 2);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0703";
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0702";
 }
 
 
