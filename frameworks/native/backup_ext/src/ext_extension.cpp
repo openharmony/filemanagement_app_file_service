@@ -1322,7 +1322,8 @@ void BackupExtExtension::CompareFiles(UniqueFd incrementalFd,
             bigFiles.try_emplace(path, storageFiles);
         }
     }
-    HILOGI("End Compare");
+    HILOGI("End Compare, allfile is %{public}d, samllfile is %{public}d, bigfile is %{public}d",
+        allFiles.size(), smallFiles.size(), bigFiles.size());
 }
 
 ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
