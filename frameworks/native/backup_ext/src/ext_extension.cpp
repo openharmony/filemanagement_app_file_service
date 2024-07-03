@@ -1392,7 +1392,6 @@ static void WriteFile(const string &filename, const vector<struct ReportFileInfo
     f << "version=1.0&attrNum=8" << endl;
     f << "path;mode;dir;size;mtime;hash;usertar;encodeFlag" << endl;
     for (auto item : srcFiles) {
-        struct ReportFileInfo info = item.second;
         string path = BReportEntity::EncodeReportItem(item.filePath, item.encodeFlag);
         string str = path + ";" + item.mode + ";" + to_string(item.isDir) + ";" + to_string(item.size);
         str += ";" + to_string(item.mtime) + ";" + item.hash + ";" + to_string(item.userTar)+ ";";
@@ -1538,9 +1537,9 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
             }
             close(incrementalFdDup);
             close(manifestFdDup);
-            map<string, struct ReportFileInfo> allFiles;
-            map<string, struct ReportFileInfo> smallFiles;
-            map<string, struct ReportFileInfo> bigFiles;
+            vector<struct ReportFileInfo> allFiles;
+            vector<struct ReportFileInfo> smallFiles;
+            vector<struct ReportFileInfo> bigFiles;
             ptr->CompareFiles(move(incrementalDupFd), move(manifestDupFd), allFiles, smallFiles, bigFiles);
             auto ret = ptr->DoIncrementalBackup(allFiles, smallFiles, bigFiles);
             ptr->AppIncrementalDone(ret);

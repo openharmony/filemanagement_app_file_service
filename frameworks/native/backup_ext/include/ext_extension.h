@@ -152,12 +152,12 @@ private:
 
     void AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     void AsyncTaskOnIncrementalBackup();
-    ErrCode IncrementalBigFileReady(const TarMap &pkgInfo, const map<string, struct ReportFileInfo> &bigInfos,
+    ErrCode IncrementalBigFileReady(const TarMap &pkgInfo, const vector<struct ReportFileInfo> &bigInfos,
         sptr<IService> proxy);
     ErrCode BigFileReady(sptr<IService> proxy);
     void WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
     void RefreshTimeInfo(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
-    void IncrementalPacket(const map<string, struct ReportFileInfo> &infos, TarMap &tar, sptr<IService> proxy);
+    void IncrementalPacket(const vector<struct ReportFileInfo> &infos, TarMap &tar, sptr<IService> proxy);
 
     /**
      * @brief extension incremental backup restore is done
