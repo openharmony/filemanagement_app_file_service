@@ -44,7 +44,7 @@ enum ServiceSchedAction {
     FINISH = 3,
 };
 
-constexpr int SPAN_USERID_UID = 20000000;
+constexpr int SPAN_USERID_UID = 200000;
 constexpr int SYSTEM_UID = 0;
 constexpr int XTS_UID = 1;
 constexpr int DEFAULT_USER_ID = 100;

@@ -85,6 +85,7 @@ static inline int32_t GetUserIdDefault()
         return debugId;
     }
     auto multiuser = BMultiuser::ParseUid(IPCSkeleton::GetCallingUid());
+    HILOGI("GetUserIdDefault userId=%{public}d.", multiuser.userId);
     if ((multiuser.userId == BConstants::SYSTEM_UID) || (multiuser.userId == BConstants::XTS_UID)) {
         return BConstants::DEFAULT_USER_ID;
     }
