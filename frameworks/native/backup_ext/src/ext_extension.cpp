@@ -1322,7 +1322,7 @@ void BackupExtExtension::CompareFiles(UniqueFd incrementalFd,
             bigFiles.try_emplace(path, storageFiles);
         }
     }
-    HILOGI("End Compare, allfile is %{public}d, samllfile is %{public}d, bigfile is %{public}d",
+    HILOGI("End Compare, allfile is %{public}zu, samllfile is %{public}zu, bigfile is %{public}zu",
         allFiles.size(), smallFiles.size(), bigFiles.size());
 }
 
