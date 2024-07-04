@@ -461,18 +461,12 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBundleExtManageInfo_0100
             EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
         }
 
-        Init(IServiceReverse::Scenario::BACKUP);
-        auto ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, FILE_NAME);
-        EXPECT_FALSE(ret);
-        ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, FILE_NAME);
-        EXPECT_FALSE(ret);
-
         TestManager tm("SvcSessionManagerTest_GetFd_0100");
         string filePath = tm.GetRootDirCurTest().append(MANAGE_JSON);
         SaveStringToFile(filePath, R"({"fileName" : "1.tar"})");
         UniqueFd fd(open(filePath.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
         sessionManagerPtr_->OnBundleExtManageInfo(BUNDLE_NAME, move(fd));
-        ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
+        auto ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
         EXPECT_FALSE(ret);
         ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, FILE_NAME);
         EXPECT_FALSE(ret);

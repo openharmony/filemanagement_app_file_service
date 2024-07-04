@@ -85,6 +85,7 @@ static inline int32_t GetUserIdDefault()
         return debugId;
     }
     auto multiuser = BMultiuser::ParseUid(IPCSkeleton::GetCallingUid());
+    HILOGI("GetUserIdDefault userId=%{public}d.", multiuser.userId);
     if ((multiuser.userId == BConstants::SYSTEM_UID) || (multiuser.userId == BConstants::XTS_UID)) {
         return BConstants::DEFAULT_USER_ID;
     }
@@ -410,6 +411,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         if (restoreBundleNames.empty()) {
             session_->DecreaseSessionCnt();
+            HILOGW("RestoreBundleNames is empty.");
             return BError(BError::Codes::OK);
         }
         session_->AppendBundles(restoreBundleNames);

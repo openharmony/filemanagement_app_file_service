@@ -519,20 +519,26 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdUpdateSendRate
     try {
         MessageParcel data;
         MessageParcel reply;
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        auto err = stub->CmdUpdateFdSendRate(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::EXT_INVAL_ARG));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+        err = stub->CmdUpdateFdSendRate(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::EXT_INVAL_ARG));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*stub, UpdateFdSendRate(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
-        auto err = stub->CmdUpdateFdSendRate(data, reply);
-        EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
-
-        EXPECT_CALL(*stub, UpdateFdSendRate(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
-        EXPECT_CALL(*messageParcelMock, WriteString(_)).WillOnce(Return(false));
         err = stub->CmdUpdateFdSendRate(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
 
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*stub, UpdateFdSendRate(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
-        EXPECT_CALL(*messageParcelMock, WriteString(_)).WillOnce(Return(true));
         err = stub->CmdUpdateFdSendRate(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::OK));
     } catch (...) {

@@ -470,11 +470,11 @@ ErrCode ExtBackupJs::OnBackup(function<void(ErrCode)> callback)
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env,
         napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
-            string str;
             bool isExceptionPending;
             napi_is_exception_pending(env, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
             if (isExceptionPending) {
+                string str;
                 DealNapiException(env, str);
                 callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
             } else {
@@ -554,11 +554,11 @@ ErrCode ExtBackupJs::CallJsOnBackup()
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env,
         napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
-            string str;
             bool isExceptionPending;
             napi_is_exception_pending(env, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
             if (isExceptionPending) {
+                string str;
                 DealNapiException(env, str);
                 callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
             } else {
@@ -607,11 +607,11 @@ ErrCode ExtBackupJs::OnRestore(function<void(ErrCode)> callback)
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env, napi_value result) ->
         bool {
         if (!CheckPromise(env, result)) {
-            string str;
             bool isExceptionPending;
             napi_is_exception_pending(env, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
             if (isExceptionPending) {
+                string str;
                 DealNapiException(env, str);
                 callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
             } else {
@@ -677,11 +677,11 @@ ErrCode ExtBackupJs::CallJSRestore()
     HILOGI("Start call app js method onRestore");
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env, napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
-            string str;
             bool isExceptionPending;
             napi_is_exception_pending(env, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
             if (isExceptionPending) {
+                string str;
                 DealNapiException(env, str);
                 callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
             } else {
