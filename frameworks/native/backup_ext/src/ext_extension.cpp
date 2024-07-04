@@ -1335,7 +1335,6 @@ void BackupExtExtension::CompareFiles(UniqueFd incrementalFd,
             }
             bigFiles.push_back(storageFiles);
         }
-    
     }
     AdDeduplication(allFiles);
     AdDeduplication(smallFiles);
