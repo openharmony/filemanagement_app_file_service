@@ -434,17 +434,17 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppDone_0100, testing::ext::
     try {
         MessageParcel data;
         MessageParcel reply;
-        EXPECT_CALL(*messageParcelMock, ReadBool(_)).WillOnce(Return(false));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
         auto err = service->CmdAppDone(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
-        EXPECT_CALL(*messageParcelMock, ReadBool(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*service, AppDone(_)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
         err = service->CmdAppDone(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
-        EXPECT_CALL(*messageParcelMock, ReadBool(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*service, AppDone(_)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
         auto ret = service->CmdAppDone(data, reply);

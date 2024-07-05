@@ -152,9 +152,9 @@ int32_t ServiceStub::CmdAppFileReady(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
 {
-    bool success;
-    data.ReadBool(success);
-    int res = AppDone(success);
+    ErrCode errCode;
+    data.ReadInt32(errCode);
+    int res = AppDone(errCode);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }
