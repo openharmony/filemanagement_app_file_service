@@ -103,9 +103,11 @@ ohos_unittest("b_json_test") {
 
   sources = [
     "${path_backup}/utils/src/b_json/b_json_entity_extension_config.cpp",
+    "${path_backup}/utils/src/b_json/b_json_service_disposal_config.cpp",
     "b_json/b_json_cached_entity_test.cpp",
     "b_json/b_json_entity_ext_manage_test.cpp",
     "b_json/b_json_entity_extension_config_test.cpp",
+    "b_json/b_json_service_disposal_config_test.cpp",
     "b_json/b_report_entity_test.cpp",
   ]
   sources += backup_mock_parameter_src
@@ -125,6 +127,7 @@ ohos_unittest("b_json_test") {
   ]
 
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "hilog:libhilog",
   ]
