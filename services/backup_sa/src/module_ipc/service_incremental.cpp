@@ -142,7 +142,6 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
         auto session = thisPtr->session_;
         if (session == nullptr) {
             throw BError(BError::Codes::SA_INVAL_ARG, "session is nullptr");
-            return;
         }
         auto backUpConnection = session->GetExtConnection(bundleName);
         auto proxy = backUpConnection->GetBackupExtProxy();

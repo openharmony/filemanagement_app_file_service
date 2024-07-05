@@ -1276,11 +1276,25 @@ static bool CheckTar(const string &fileName)
     return ExtractFileExt(fileName) == "tar";
 }
 
+static bool IfEquality(const ReportFileInfo &info, const ReportFileInfo &infoAd)
+{
+    return info.filePath < infoAd.filePath;
+}
+
+static void AdDeduplication(vector<struct ReportFileInfo> &FilesList)
+{
+    sort(FilesList.begin(), FilesList.end(), IfEquality);
+    auto it = unique(FilesList.begin(), FilesList.end(), [](const ReportFileInfo &info, const ReportFileInfo &infoAd) {
+        return info.filePath == infoAd.filePath;
+        });
+    FilesList.erase(it, FilesList.end());
+}
+
 void BackupExtExtension::CompareFiles(UniqueFd incrementalFd,
                                       UniqueFd manifestFd,
-                                      map<string, struct ReportFileInfo> &allFiles,
-                                      map<string, struct ReportFileInfo> &smallFiles,
-                                      map<string, struct ReportFileInfo> &bigFiles)
+                                      vector<struct ReportFileInfo> &allFiles,
+                                      vector<struct ReportFileInfo> &smallFiles,
+                                      vector<struct ReportFileInfo> &bigFiles)
 {
     HILOGI("Begin Compare");
     struct ReportFileInfo storageFiles;
@@ -1290,14 +1304,14 @@ void BackupExtExtension::CompareFiles(UniqueFd incrementalFd,
 
     while (storageRp.GetStorageReportInfos(storageFiles)) {
         // 进行文件对比
-        string path = storageFiles.filePath;
+        const string &path = storageFiles.filePath;
         if (path.empty()) {
             HILOGD("GetStorageReportInfos failed");
             continue;
         }
         bool isExist = cloudFiles.find(path) != cloudFiles.end() ? true : false;
         if (storageFiles.isIncremental == true && storageFiles.isDir == true && !isExist) {
-            smallFiles.try_emplace(path, storageFiles);
+            smallFiles.push_back(storageFiles);
         }
         if (storageFiles.isIncremental == true && storageFiles.isDir == false) {
             auto [res, fileHash] = BackupFileHash::HashWithSHA256(path);
@@ -1311,17 +1325,20 @@ void BackupExtExtension::CompareFiles(UniqueFd incrementalFd,
             storageFiles.userTar = 1;
         }
 
-        allFiles.try_emplace(path, storageFiles);
+        allFiles.push_back(storageFiles);
         if (storageFiles.isDir == false && storageFiles.isIncremental == true && (!isExist ||
              cloudFiles.find(path)->second.hash != storageFiles.hash)) {
             // 在云空间简报里不存在或者hash不一致
             if (storageFiles.size <= BConstants::BIG_FILE_BOUNDARY) {
-                smallFiles.try_emplace(path, storageFiles);
+                smallFiles.push_back(storageFiles);
                 continue;
             }
-            bigFiles.try_emplace(path, storageFiles);
+            bigFiles.push_back(storageFiles);
         }
     }
+    AdDeduplication(allFiles);
+    AdDeduplication(smallFiles);
+    AdDeduplication(bigFiles);
     HILOGI("End Compare, allfile is %{public}zu, samllfile is %{public}zu, bigfile is %{public}zu",
         allFiles.size(), smallFiles.size(), bigFiles.size());
 }
@@ -1363,7 +1380,7 @@ tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
     return {UniqueFd(-1), UniqueFd(-1)};
 }
 
-static void WriteFile(const string &filename, const map<string, struct ReportFileInfo> &srcFiles)
+static void WriteFile(const string &filename, const vector<struct ReportFileInfo> &srcFiles)
 {
     fstream f;
     f.open(filename.data(), ios::out);
@@ -1376,11 +1393,10 @@ static void WriteFile(const string &filename, const map<string, struct ReportFil
     f << "version=1.0&attrNum=8" << endl;
     f << "path;mode;dir;size;mtime;hash;usertar;encodeFlag" << endl;
     for (auto item : srcFiles) {
-        struct ReportFileInfo info = item.second;
-        string path = BReportEntity::EncodeReportItem(item.first, info.encodeFlag);
-        string str = path + ";" + info.mode + ";" + to_string(info.isDir) + ";" + to_string(info.size);
-        str += ";" + to_string(info.mtime) + ";" + info.hash + ";" + to_string(info.userTar)+ ";";
-        if (info.encodeFlag) {
+        string path = BReportEntity::EncodeReportItem(item.filePath, item.encodeFlag);
+        string str = path + ";" + item.mode + ";" + to_string(item.isDir) + ";" + to_string(item.size);
+        str += ";" + to_string(item.mtime) + ";" + item.hash + ";" + to_string(item.userTar)+ ";";
+        if (item.encodeFlag) {
             str += std::to_string(1);
         } else {
             str += std::to_string(0);
@@ -1393,7 +1409,7 @@ static void WriteFile(const string &filename, const map<string, struct ReportFil
 /**
  * 获取增量的大文件的信息
  */
-static TarMap GetIncrmentBigInfos(const map<string, struct ReportFileInfo> &files)
+static TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files)
 {
     auto getStringHash = [](const TarMap &tarMap, const string &str) -> string {
         ostringstream strHex;
@@ -1415,10 +1431,12 @@ static TarMap GetIncrmentBigInfos(const map<string, struct ReportFileInfo> &file
     TarMap bigFiles;
     for (const auto &item : files) {
         struct stat sta = {};
-        stat(item.first.c_str(), &sta);
-        string md5Name = getStringHash(bigFiles, item.first);
+        if (stat(item.filePath.c_str(), &sta) != 0) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Get file stat failed");
+        }
+        string md5Name = getStringHash(bigFiles, item.filePath);
         if (!md5Name.empty()) {
-            bigFiles.emplace(md5Name, make_tuple(item.first, sta, true));
+            bigFiles.emplace(md5Name, make_tuple(item.filePath, sta, true));
         }
     }
 
@@ -1429,7 +1447,7 @@ static TarMap GetIncrmentBigInfos(const map<string, struct ReportFileInfo> &file
  * 增量tar包和简报信息回传
  */
 static ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo,
-                                       const map<string, struct ReportFileInfo> &srcFiles,
+                                       const vector<struct ReportFileInfo> &srcFiles,
                                        sptr<IService> proxy)
 {
     string tarFile = bigFileInfo.begin()->first;
@@ -1455,7 +1473,7 @@ static ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo,
  * 增量大文件和简报信息回传
  */
 ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
-    const map<string, struct ReportFileInfo> &bigInfos, sptr<IService> proxy)
+    const vector<struct ReportFileInfo> &bigInfos, sptr<IService> proxy)
 {
     ErrCode ret {ERR_OK};
     HILOGI("IncrementalBigFileReady Begin, pkgInfo size:%{public}zu", pkgInfo.size());
@@ -1474,10 +1492,14 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
                    errno);
             errCode = errno;
         }
-        struct ReportFileInfo info = bigInfos.find(path)->second;
+        vector<struct ReportFileInfo> bigInfo;
+        for (const auto &tempFile : bigInfos) {
+            if (tempFile.filePath == path) {
+                bigInfo.emplace_back(tempFile);
+                break;
+            }
+        }
         string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append(item.first));
-        map<string, struct ReportFileInfo> bigInfo;
-        bigInfo.try_emplace(path, info);
         WriteFile(file, bigInfo);
         ret = proxy->AppIncrementalFileReady(item.first, std::move(fd), UniqueFd(open(file.data(), O_RDONLY)), errCode);
         if (SUCCEEDED(ret)) {
@@ -1509,9 +1531,6 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
                                   "Ext extension handle have been already released");
             BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
                                   "extension handle have been already released");
-            map<string, struct ReportFileInfo> allFiles;
-            map<string, struct ReportFileInfo> smallFiles;
-            map<string, struct ReportFileInfo> bigFiles;
             UniqueFd incrementalDupFd(dup(incrementalFdDup));
             UniqueFd manifestDupFd(dup(manifestFdDup));
             if (incrementalDupFd < 0) {
@@ -1519,6 +1538,9 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
             }
             close(incrementalFdDup);
             close(manifestFdDup);
+            vector<struct ReportFileInfo> allFiles;
+            vector<struct ReportFileInfo> smallFiles;
+            vector<struct ReportFileInfo> bigFiles;
             ptr->CompareFiles(move(incrementalDupFd), move(manifestDupFd), allFiles, smallFiles, bigFiles);
             auto ret = ptr->DoIncrementalBackup(allFiles, smallFiles, bigFiles);
             ptr->AppIncrementalDone(ret);
@@ -1592,7 +1614,7 @@ static string GetIncrmentPartName()
     return to_string(milliseconds.count()) + "_part";
 }
 
-void BackupExtExtension::IncrementalPacket(const map<string, struct ReportFileInfo> &infos, TarMap &tar,
+void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &infos, TarMap &tar,
     sptr<IService> proxy)
 {
     HILOGI("IncrementalPacket begin, infos count: %{public}zu", infos.size());
@@ -1600,16 +1622,16 @@ void BackupExtExtension::IncrementalPacket(const map<string, struct ReportFileIn
     int64_t totalSize = 0;
     uint32_t fileCount = 0;
     vector<string> packFiles;
-    map<string, struct ReportFileInfo> tarInfos;
+    vector<struct ReportFileInfo> tarInfos;
     TarFile::GetInstance().SetPacketMode(true); // 设置下打包模式
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
     string partName = GetIncrmentPartName();
     for (auto small : infos) {
-        totalSize += small.second.size;
+        totalSize += small.size;
         fileCount += 1;
-        packFiles.emplace_back(small.first);
-        tarInfos.try_emplace(small.first, small.second);
+        packFiles.emplace_back(small.filePath);
+        tarInfos.emplace_back(small);
         if (totalSize >= DEFAULT_SLICE_SIZE || fileCount >= MAX_FILE_COUNT) {
             TarMap tarMap {};
             TarFile::GetInstance().Packet(packFiles, partName, path, tarMap);
@@ -1640,7 +1662,7 @@ void BackupExtExtension::IncrementalPacket(const map<string, struct ReportFileIn
 }
 
 static ErrCode IncrementalAllFileReady(const TarMap &pkgInfo,
-                                       const map<string, struct ReportFileInfo> &srcFiles,
+                                       const vector<struct ReportFileInfo> &srcFiles,
                                        sptr<IService> proxy)
 {
     UniqueFd fdIndex(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
@@ -1670,9 +1692,9 @@ static ErrCode IncrementalAllFileReady(const TarMap &pkgInfo,
     return ret;
 }
 
-int BackupExtExtension::DoIncrementalBackup(const map<string, struct ReportFileInfo> &allFiles,
-                                            const map<string, struct ReportFileInfo> &smallFiles,
-                                            const map<string, struct ReportFileInfo> &bigFiles)
+int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> &allFiles,
+                                            const vector<struct ReportFileInfo> &smallFiles,
+                                            const vector<struct ReportFileInfo> &bigFiles)
 {
     HILOGI("Do increment backup begin");
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
