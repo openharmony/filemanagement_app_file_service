@@ -58,6 +58,7 @@ ohos_shared_library("backup_utils") {
   }
 
   sources = [
+    "src/b_anony/b_anony.cpp",
     "src/b_encryption/b_encryption.cpp",
     "src/b_error/b_error.cpp",
     "src/b_error/b_excep_utils.cpp",

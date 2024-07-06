@@ -17,6 +17,7 @@
 
 #include <utime.h>
 
+#include "b_anony/b_anony.h"
 #include "directory_ex.h"
 #include "filemgmt_libhilog.h"
 #include "securec.h"
@@ -271,7 +272,7 @@ int UntarFile::ParseIncrementalTarFile(const string &rootPath)
 
 void UntarFile::ParseFileByTypeFlag(char typeFlag, FileStatInfo &info)
 {
-    HILOGD("untar file: %{public}s, rootPath: %{public}s", info.fullPath.c_str(), rootPath_.c_str());
+    HILOGD("untar file: %{public}s, rootPath: %{public}s", GetAnonyPath(info.fullPath).c_str(), rootPath_.c_str());
     switch (typeFlag) {
         case REGTYPE:
         case AREGTYPE:
@@ -298,7 +299,7 @@ void UntarFile::ParseFileByTypeFlag(char typeFlag, FileStatInfo &info)
 
 int UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, FileStatInfo &info)
 {
-    HILOGD("untar file: %{public}s, rootPath: %{public}s", info.fullPath.c_str(), rootPath_.c_str());
+    HILOGD("untar file: %{public}s, rootPath: %{public}s", GetAnonyPath(info.fullPath).c_str(), rootPath_.c_str());
     string tmpFullPath = info.fullPath;
     RTrimNull(tmpFullPath);
     switch (typeFlag) {
@@ -364,19 +365,21 @@ void UntarFile::ParseRegularFile(FileStatInfo &info, char typeFlag)
         struct utimbuf times;
         struct stat attr;
         if (stat(info.fullPath.c_str(), &attr) != 0) {
-            HILOGE("Failed to get stat of %{public}s, err = %{public}d", info.fullPath.c_str(), errno);
+            HILOGE("Failed to get stat of %{public}s, err = %{public}d",
+                GetAnonyPath(info.fullPath).c_str(), errno);
             times.actime = info.mtime;
         } else {
             times.actime = attr.st_atime;
         }
         times.modtime = info.mtime;
         if (info.mtime != 0 && utime(info.fullPath.c_str(), &times) != 0) {
-            HILOGE("Failed to set mtime of %{public}s, err = %{public}d", info.fullPath.c_str(), errno);
+            HILOGE("Failed to set mtime of %{public}s, err = %{public}d",
+                GetAnonyPath(info.fullPath).c_str(), errno);
         }
         // anyway, go to correct
         fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET);
     } else {
-        HILOGE("Failed to create file %{public}s, err = %{public}d", info.fullPath.c_str(), errno);
+        HILOGE("Failed to create file %{public}s, err = %{public}d", GetAnonyPath(info.fullPath).c_str(), errno);
         fseeko(tarFilePtr_, tarFileBlockCnt_ * BLOCK_SIZE, SEEK_CUR);
     }
 }
@@ -452,7 +455,8 @@ FILE *UntarFile::CreateFile(string &filePath, mode_t mode, char fileType)
     }
 
     uint32_t len = filePath.length();
-    HILOGW("Failed to open file %{public}d, %{public}s, err = %{public}d", len, filePath.c_str(), errno);
+    HILOGW("Failed to open file %{public}d, %{public}s, err = %{public}d", len,
+        GetAnonyPath(filePath).c_str(), errno);
     size_t pos = filePath.rfind('/');
     if (pos == string::npos) {
         return nullptr;
@@ -462,7 +466,7 @@ FILE *UntarFile::CreateFile(string &filePath, mode_t mode, char fileType)
     if (ForceCreateDirectory(path)) {
         f = fopen(filePath.c_str(), "wb+");
         if (f == nullptr) {
-            HILOGE("Failed to create file %{public}s, err = %{public}d", filePath.c_str(), errno);
+            HILOGE("Failed to create file %{public}s, err = %{public}d", GetAnonyPath(filePath).c_str(), errno);
         }
     }
 
