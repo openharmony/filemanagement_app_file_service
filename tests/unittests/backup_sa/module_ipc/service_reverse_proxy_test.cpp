@@ -45,6 +45,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override {};
     void TearDown() override {};
+
 public:
     static inline shared_ptr<ServiceReverseProxy> proxy_ = nullptr;
     static inline sptr<ServiceReverseMock> mock_ = nullptr;
@@ -91,6 +92,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
         TestManager tm("ServiceReverseProxyTest_GetFd_0100");
         std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
         UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, fd, 0);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -115,6 +117,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -124,6 +127,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -133,6 +137,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -143,6 +148,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -173,6 +179,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -184,6 +191,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -196,6 +204,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
             EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -228,6 +237,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnFileReady_010
             EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
             EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -259,6 +269,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleStarted
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -283,6 +294,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleStarted
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -292,6 +304,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleStarted
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -302,6 +315,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleStarted
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -313,6 +327,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleStarted
             EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
             EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -344,6 +359,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleFinishe
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -368,6 +384,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnBundleFinishe
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -430,6 +447,7 @@ HWTEST_F(ServiceReverseProxyTest,
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->BackupOnAllBundlesFinished(BError(BError::Codes::OK));
         EXPECT_TRUE(true);
     } catch (...) {
@@ -456,6 +474,7 @@ HWTEST_F(ServiceReverseProxyTest,
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnAllBundlesFinished(BError(BError::Codes::OK));
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -506,6 +525,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnResultReport_
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
         std::string bundleName = "app01";
+        EXPECT_NE(proxy_, nullptr);
         proxy_->BackupOnResultReport(RESULT_REPORT, bundleName);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -531,6 +551,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnResultReport_
         std::string bundleName = "app01";
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->BackupOnResultReport(RESULT_REPORT, bundleName);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -590,6 +611,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnBundleStarte
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -614,6 +636,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnBundleStarte
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -675,6 +698,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnBundleFinish
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->RestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -699,6 +723,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnBundleFinish
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->RestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -761,6 +786,7 @@ HWTEST_F(ServiceReverseProxyTest,
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->RestoreOnAllBundlesFinished(BError(BError::Codes::OK));
         EXPECT_TRUE(true);
     } catch (...) {
@@ -787,6 +813,7 @@ HWTEST_F(ServiceReverseProxyTest,
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->RestoreOnAllBundlesFinished(BError(BError::Codes::OK));
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -847,6 +874,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnFileReady_01
         if (fd < 0) {
             errCode = BError::GetCodeByErrno(errno);
         }
+        EXPECT_NE(proxy_, nullptr);
         proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, fd, errCode);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -871,6 +899,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnFileReady_01
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -918,6 +947,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnFileReady_01
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -971,6 +1001,7 @@ HWTEST_F(ServiceReverseProxyTest,
         TestManager tm1("ServiceReverseProxyTest_GetFd_0301");
         std::string manifestFilePath = tm1.GetRootDirCurTest().append(FILE_NAME_MANIFEST);
         UniqueFd manifestFd(open(manifestFilePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, fd, manifestFd, 0);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -997,6 +1028,7 @@ HWTEST_F(ServiceReverseProxyTest,
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1046,6 +1078,7 @@ HWTEST_F(ServiceReverseProxyTest,
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1100,6 +1133,7 @@ HWTEST_F(ServiceReverseProxyTest,
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1158,6 +1192,7 @@ HWTEST_F(ServiceReverseProxyTest,
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->IncrementalBackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1184,6 +1219,7 @@ HWTEST_F(ServiceReverseProxyTest,
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalBackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1247,6 +1283,7 @@ HWTEST_F(ServiceReverseProxyTest,
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1273,6 +1310,7 @@ HWTEST_F(ServiceReverseProxyTest,
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1315,7 +1353,6 @@ HWTEST_F(ServiceReverseProxyTest,
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalBackupOnBundleFinished_0101";
 }
 
-
 /**
  * @tc.number: SUB_ServiceReverse_proxy_IncrementalBackupOnAllBundlesFinished_0100
  * @tc.name: SUB_ServiceReverse_proxy_IncrementalBackupOnAllBundlesFinished_0100
@@ -1337,6 +1374,7 @@ HWTEST_F(ServiceReverseProxyTest,
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->IncrementalBackupOnAllBundlesFinished(BError(BError::Codes::OK));
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1365,6 +1403,7 @@ HWTEST_F(ServiceReverseProxyTest,
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalBackupOnAllBundlesFinished(BError(BError::Codes::OK));
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1418,6 +1457,7 @@ HWTEST_F(ServiceReverseProxyTest,
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1444,6 +1484,7 @@ HWTEST_F(ServiceReverseProxyTest,
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1486,7 +1527,6 @@ HWTEST_F(ServiceReverseProxyTest,
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleStarted_0101";
 }
 
-
 /**
  * @tc.number: SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleFinished_0100
  * @tc.name: SUB_ServiceReverse_proxy_IncrementalRestoreOnBundleFinished_0100
@@ -1509,6 +1549,7 @@ HWTEST_F(ServiceReverseProxyTest,
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->IncrementalRestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1536,6 +1577,7 @@ HWTEST_F(ServiceReverseProxyTest,
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalRestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1599,6 +1641,7 @@ HWTEST_F(ServiceReverseProxyTest,
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->IncrementalRestoreOnAllBundlesFinished(BError(BError::Codes::OK));
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1627,6 +1670,7 @@ HWTEST_F(ServiceReverseProxyTest,
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalRestoreOnAllBundlesFinished(BError(BError::Codes::OK));
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1689,6 +1733,7 @@ HWTEST_F(ServiceReverseProxyTest,
         TestManager tm1("ServiceReverseProxyTest_GetFd_0401");
         std::string manifestFilePath = tm1.GetRootDirCurTest().append(FILE_NAME_MANIFEST);
         UniqueFd manifestFd(open(manifestFilePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        EXPECT_NE(proxy_, nullptr);
         proxy_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, fd, manifestFd, 0);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1715,6 +1760,7 @@ HWTEST_F(ServiceReverseProxyTest,
     try {
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1775,6 +1821,7 @@ HWTEST_F(ServiceReverseProxyTest,
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1830,6 +1877,7 @@ HWTEST_F(ServiceReverseProxyTest,
             EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(true)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, 0, 0, 0);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1874,6 +1922,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnResultReport
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
         std::string bundleName = "app01";
+        EXPECT_NE(proxy_, nullptr);
         proxy_->RestoreOnResultReport(RESULT_REPORT, bundleName);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1899,6 +1948,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnResultReport
         std::string bundleName = "app01";
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->RestoreOnResultReport(RESULT_REPORT, bundleName);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -1959,6 +2009,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalRestoreOnR
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
         std::string bundleName = "app01";
+        EXPECT_NE(proxy_, nullptr);
         proxy_->IncrementalRestoreOnResultReport(RESULT_REPORT, bundleName);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1985,6 +2036,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalRestoreOnR
         std::string bundleName = "app01";
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_NE(proxy_, nullptr);
             proxy_->IncrementalRestoreOnResultReport(RESULT_REPORT, bundleName);
             EXPECT_TRUE(false);
         } catch (BError &err) {

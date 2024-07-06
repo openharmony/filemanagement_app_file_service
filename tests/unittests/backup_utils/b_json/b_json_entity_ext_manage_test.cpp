@@ -74,6 +74,8 @@ bool IsEqual(const map<string, tuple<string, struct stat, bool>> &lf,
 
     auto itemLF = lf.begin();
     auto itemRH = rh.begin();
+    EXPECT_NE(itemLF, nullptr);
+    EXPECT_NE(itemRH, nullptr);
     for (; itemLF != lf.end(); ++itemLF, ++itemRH) {
         if (itemLF->first != itemRH->first) {
             return false;

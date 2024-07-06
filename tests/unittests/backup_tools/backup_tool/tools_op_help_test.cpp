@@ -58,6 +58,7 @@ HWTEST_F(ToolsOpHelpTest, SUB_backup_tools_op_help_0101, testing::ext::TestSize.
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
         auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
+        EXPECT_NE(matchedOp, nullptr);
         if (matchedOp != opeartions.end()) {
             matchedOp->Execute(mapArgToVal);
         }

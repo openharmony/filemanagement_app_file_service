@@ -54,6 +54,7 @@ HWTEST_F(BTarballFactoryTest, b_tarball_factory_0100, testing::ext::TestSize.Lev
         SaveStringToFile(tarballPath, "data/storage/el2/database/");
         // 调用create获取打包解包能力
         auto tarballTar = BTarballFactory::Create(implType, tarballPath);
+        EXPECT_NE(tarballTar, nullptr);
         GTEST_LOG_(INFO) << "BTarballFactoryTest-tar";
         (tarballTar->tar)("/", {}, {"/data/storage/el2/database/", {}});
         GTEST_LOG_(INFO) << "BTarballFactoryTest-untar";
@@ -86,6 +87,7 @@ HWTEST_F(BTarballFactoryTest, b_tarball_factory_0200, testing::ext::TestSize.Lev
         SaveStringToFile(tarballPath, "data/storage/el2/database/");
         // 调用create获取打包解包能力
         auto tarballTar = BTarballFactory::Create(type, tarballPath);
+        EXPECT_NE(tarballTar, nullptr);
         GTEST_LOG_(INFO) << "BTarballFactoryTest-tar";
         (tarballTar->tar)("/", {}, {"/data/storage/el2/database/", {}});
         GTEST_LOG_(INFO) << "BTarballFactoryTest-untar";
@@ -118,6 +120,7 @@ HWTEST_F(BTarballFactoryTest, b_tarball_factory_0300, testing::ext::TestSize.Lev
         SaveStringToFile(path, "data/storage/el2/database/");
         // 调用create获取打包解包能力
         auto tarballTar = BTarballFactory::Create(implType, path);
+        EXPECT_NE(tarballTar, nullptr);
         GTEST_LOG_(INFO) << "BTarballFactoryTest-tar";
         (tarballTar->tar)("/", {}, {"/data/storage/el2/database/", {}});
         GTEST_LOG_(INFO) << "BTarballFactoryTest-untar";
@@ -150,6 +153,7 @@ HWTEST_F(BTarballFactoryTest, b_tarball_factory_0400, testing::ext::TestSize.Lev
         SaveStringToFile(tarballPath, "data/storage/el2/database/");
         // 调用create获取打包解包能力
         auto tarballTar = BTarballFactory::Create(implType, tarballPath);
+        EXPECT_NE(tarballTar, nullptr);
         GTEST_LOG_(INFO) << "BTarballFactoryTest-tar";
         (tarballTar->tar)("/", {}, {"/data/storage/el2/database/", {}});
         GTEST_LOG_(INFO) << "BTarballFactoryTest-untar";

@@ -87,6 +87,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_OnRemoteRequest_0
         MessageParcel reply;
         MessageOption option;
         EXPECT_CALL(*messageParcelMock, ReadInterfaceToken()).WillOnce(Return(u16string()));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->OnRemoteRequest(code, data, reply, option);
         EXPECT_EQ(err, BError(BError::Codes::EXT_INVAL_ARG));
 
@@ -123,6 +124,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdGetFileHandle_
         MessageParcel data;
         MessageParcel reply;
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->CmdGetFileHandle(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_INVAL_ARG));
 
@@ -169,6 +171,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdHandleClear_01
         MessageParcel reply;
         EXPECT_CALL(*stub, HandleClear()).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->CmdHandleClear(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
 
@@ -200,6 +203,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdHandleBackup_0
         MessageParcel reply;
         EXPECT_CALL(*stub, HandleBackup()).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->CmdHandleBackup(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
 
@@ -230,6 +234,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdPublishFile_01
         MessageParcel data;
         MessageParcel reply;
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->CmdPublishFile(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_INVAL_ARG));
 
@@ -268,6 +273,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdHandleRestore_
         MessageParcel reply;
         EXPECT_CALL(*stub, HandleRestore()).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->CmdHandleRestore(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
 
@@ -299,6 +305,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdGetIncremental
         MessageParcel data;
         MessageParcel reply;
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->CmdGetIncrementalFileHandle(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_INVAL_ARG));
 
@@ -337,6 +344,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdPublishIncreme
         MessageParcel data;
         MessageParcel reply;
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->CmdPublishIncrementalFile(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_INVAL_ARG));
 
@@ -377,6 +385,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdHandleIncremen
         EXPECT_CALL(*messageParcelMock, ReadFileDescriptor()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*stub, HandleIncrementalBackup(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->CmdHandleIncrementalBackup(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
 
@@ -410,6 +419,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdIncrementalOnB
         MessageParcel reply;
         EXPECT_CALL(*stub, IncrementalOnBackup()).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->CmdIncrementalOnBackup(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
 
@@ -444,6 +454,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdGetIncremental
         EXPECT_CALL(*stub, GetIncrementalBackupFileHandle())
             .WillOnce(Return(std::tuple<UniqueFd, UniqueFd>(UniqueFd(-1), UniqueFd(-1))));
         EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(false));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->CmdGetIncrementalBackupFileHandle(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
 
@@ -483,6 +494,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdGetBackupInfo_
         MessageParcel reply;
         EXPECT_CALL(*stub, GetBackupInfo(_)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->CmdGetBackupInfo(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
 
@@ -520,6 +532,7 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdUpdateSendRate
         MessageParcel data;
         MessageParcel reply;
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        EXPECT_NE(stub, nullptr);
         auto err = stub->CmdUpdateFdSendRate(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_INVAL_ARG));
 

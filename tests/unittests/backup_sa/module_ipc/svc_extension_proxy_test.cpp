@@ -72,6 +72,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetFileHandle_0100, test
         int32_t errCode = 0;
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+        EXPECT_NE(proxy_, nullptr);
         UniqueFd fd = proxy_->GetFileHandle(fileName, errCode);
         EXPECT_LT(fd, BError(BError::Codes::OK));
 
@@ -117,6 +118,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleClear_0100, testin
     try {
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+        EXPECT_NE(proxy_, nullptr);
         ErrCode ret = proxy_->HandleClear();
         EXPECT_EQ(EPERM, ret);
 
@@ -147,6 +149,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleBackup_0100, testi
     try {
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+        EXPECT_NE(proxy_, nullptr);
         ErrCode ret = proxy_->HandleBackup();
         EXPECT_EQ(EPERM, ret);
 
@@ -178,6 +181,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_PublishFile_0100, testin
         string fileName = "1.tar";
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+        EXPECT_NE(proxy_, nullptr);
         ErrCode ret = proxy_->PublishFile(fileName);
         EXPECT_EQ(EPERM, ret);
 
@@ -215,6 +219,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleRestore_0100, test
     try {
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+        EXPECT_NE(proxy_, nullptr);
         ErrCode ret = proxy_->HandleRestore();
         EXPECT_EQ(EPERM, ret);
 
@@ -246,6 +251,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetBackupInfo_0100, test
         string result = "result_report";
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+        EXPECT_NE(proxy_, nullptr);
         ErrCode ret = proxy_->GetBackupInfo(result);
         EXPECT_EQ(EPERM, ret);
 
@@ -297,6 +303,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetIncrementalFileHandle
         string fileName = "1.tar";
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+        EXPECT_NE(proxy_, nullptr);
         ErrCode ret = proxy_->GetIncrementalFileHandle(fileName);
         EXPECT_EQ(ret, ErrCode(EPERM));
 
@@ -335,6 +342,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_PublishIncrementalFile_0
         string fileName = "1.tar";
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+        EXPECT_NE(proxy_, nullptr);
         ErrCode ret = proxy_->PublishIncrementalFile(fileName);
         EXPECT_EQ(ret, ErrCode(EPERM));
 
@@ -373,6 +381,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleIncrementalBackup_
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteFileDescriptor(_)).WillOnce(Return(true)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+        EXPECT_NE(proxy_, nullptr);
         ErrCode ret = proxy_->HandleIncrementalBackup(UniqueFd(-1), UniqueFd(-1));
         EXPECT_EQ(ret, ErrCode(EPERM));
 
@@ -405,6 +414,7 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetIncrementalBackupFile
     try {
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+        EXPECT_NE(proxy_, nullptr);
         auto [incrementalFd, manifestFd] = proxy_->GetIncrementalBackupFileHandle();
         EXPECT_EQ(incrementalFd, -1);
         EXPECT_EQ(manifestFd, -1);
