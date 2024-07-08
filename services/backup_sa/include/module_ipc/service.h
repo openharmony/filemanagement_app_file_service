@@ -349,6 +349,7 @@ private:
     std::mutex getBackupInfoMutx_;
     std::condition_variable getBackupInfoCondition_;
     static inline std::atomic<uint32_t> seed {1};
+    std::atomic<bool> isConnectDied_ {false};
 
     sptr<SvcSessionManager> session_;
     sptr<SchedScheduler> sched_;

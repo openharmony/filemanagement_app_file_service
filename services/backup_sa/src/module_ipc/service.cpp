@@ -1318,7 +1318,7 @@ std::function<void(const std::string &&)> GetBackupInfoConnectDone(wptr<Service>
 {
     return [obj](const string &&bundleName) {
         HILOGI("GetBackupInfoConnectDone, bundleName: %{public}s", bundleName.c_str());
-        auto thisPtr = ptr.promote();
+        auto thisPtr = obj.promote();
         if (!thisPtr) {
             HILOGW("this pointer is null.");
             return;
@@ -1331,7 +1331,7 @@ std::function<void(const std::string &&)> GetBackupInfoConnectDied(wptr<Service>
 {
     return [obj](const string &&bundleName) {
         HILOGI("GetBackupInfoConnectDied, bundleName: %{public}s", bundleName.c_str());
-        auto thisPtr = ptr.promote();
+        auto thisPtr = obj.promote();
         if (!thisPtr) {
             HILOGW("this pointer is null.");
             return;
