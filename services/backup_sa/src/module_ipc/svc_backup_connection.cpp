@@ -126,4 +126,9 @@ void SvcBackupConnection::SetCallback(function<void(const std::string &&)> callC
 {
     callConnected_ = callConnected;
 }
+
+void SvcBackupConnection::SetCallDied(function<void(const std::string &&)> callDied)
+{
+    callDied_ = callDied;
+}
 } // namespace OHOS::FileManagement::Backup
