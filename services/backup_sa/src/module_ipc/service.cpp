@@ -1314,7 +1314,7 @@ void Service::SessionDeactive()
     }
 }
 
-std::function<void(const std::string &&)> Service::GetBackupInfoConnectDone(wptr<Service> obj, std::string bundleName)
+std::function<void(const std::string &&)> Service::GetBackupInfoConnectDone(wptr<Service> obj, std::string &bundleName)
 {
     return [obj](const string &&bundleName) {
         HILOGI("GetBackupInfoConnectDone, bundleName: %{public}s", bundleName.c_str());
@@ -1327,7 +1327,7 @@ std::function<void(const std::string &&)> Service::GetBackupInfoConnectDone(wptr
     };
 }
 
-std::function<void(const std::string &&)> Service::GetBackupInfoConnectDied(wptr<Service> obj, std::string bundleName)
+std::function<void(const std::string &&)> Service::GetBackupInfoConnectDied(wptr<Service> obj, std::string &bundleName)
 {
     return [obj](const string &&bundleName) {
         HILOGI("GetBackupInfoConnectDied, bundleName: %{public}s", bundleName.c_str());

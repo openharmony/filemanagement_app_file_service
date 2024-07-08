@@ -208,7 +208,7 @@ public:
      * @param bundleName 应用名称
      *
      */
-    std::function<void(const std::string &&)> GetBackupInfoConnectDone(wptr<Service> obj, std::string bundleName);
+    std::function<void(const std::string &&)> GetBackupInfoConnectDone(wptr<Service> obj, std::string &bundleName);
 
     /**
      * @brief GetBackupInfo extension死亡回调
@@ -217,7 +217,7 @@ public:
      * @param bundleName 应用名称
      *
      */
-    std::function<void(const std::string &&)> GetBackupInfoConnectDied(wptr<Service> obj, std::string bundleName);
+    std::function<void(const std::string &&)> GetBackupInfoConnectDied(wptr<Service> obj, std::string &bundleName);
 
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
