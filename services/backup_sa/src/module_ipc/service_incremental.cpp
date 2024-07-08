@@ -419,7 +419,12 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
         string callerName = VerifyCallerAndGetCallerName();
         HILOGI("Begin, callerName is %{publish}s", callerName.c_str());
         if (session_->OnBundleFileReady(callerName)) {
-            auto backUpConnection = session_->GetExtConnection(callerName);
+            auto tempBackUpConnection = session_->GetExtConnection(callerName);
+            auto backUpConnection = tempBackUpConnection.promote();
+            if (backUpConnection == nullptr) {
+                HILOGE("Promote backUpConnection ptr is null.");
+                return BError(BError::Codes::SA_INVAL_ARG);
+            }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
                 throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
