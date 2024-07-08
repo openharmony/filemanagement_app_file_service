@@ -422,8 +422,7 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
             auto tempBackUpConnection = session_->GetExtConnection(callerName);
             auto backUpConnection = tempBackUpConnection.promote();
             if (backUpConnection == nullptr) {
-                HILOGE("Promote backUpConnection ptr is null.");
-                return BError(BError::Codes::SA_INVAL_ARG);
+                return BError(BError::Codes::SA_INVAL_ARG, "Promote backUpConnection ptr is null.");
             }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
@@ -459,9 +458,6 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         return e.GetCode(); // 任意异常产生，终止监听该任务
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
     } catch (...) {
         HILOGI("Unexpected exception");
         return EPERM;
