@@ -67,6 +67,11 @@ void SvcBackupConnection::SetCallback(function<void(const std::string &&)> callC
     callConnected_ = callConnected;
 }
 
+void SvcBackupConnection::SetCallDied(function<void(const std::string &&)> callDied)
+{
+    callDied_ = callDied;
+}
+
 sptr<IExtension> SvcBackupConnection::GetBackupExtProxy()
 {
     return backupProxy_;
