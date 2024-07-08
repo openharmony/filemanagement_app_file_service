@@ -201,6 +201,24 @@ public:
      */
     void OnSARestore(const std::string &bundleName, const std::string &result, const ErrCode &errCode);
 
+    /**
+     * @brief GetBackupInfo extension成功回调
+     *
+     * @param obj 当前对象
+     * @param bundleName 应用名称
+     *
+     */
+    std::function<void(const std::string &&)> GetBackupInfoConnectDone(wptr<Service> obj, std::string bundleName);
+
+    /**
+     * @brief GetBackupInfo extension死亡回调
+     *
+     * @param obj 当前对象
+     * @param bundleName 应用名称
+     *
+     */
+    std::function<void(const std::string &&)> GetBackupInfoConnectDied(wptr<Service> obj, std::string bundleName);
+
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {

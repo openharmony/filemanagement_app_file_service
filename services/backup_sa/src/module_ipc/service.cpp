@@ -1038,19 +1038,25 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("begin %{public}s", bundleName.c_str());
-    auto scenario = session_->GetScenario();
-    if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
-        session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
-    } else if (scenario == IServiceReverse::Scenario::RESTORE && BackupPara().GetBackupOverrideIncrementalRestore() &&
-               session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
-        session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
-    } else if (scenario == IServiceReverse::Scenario::BACKUP) {
-        session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
-    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-        session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
-    };
-    /* If all bundle ext process finish, notice client. */
-    OnAllBundlesFinished(BError(BError::Codes::OK));
+    try {
+        auto scenario = session_->GetScenario();
+        if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
+            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE &&
+                BackupPara().GetBackupOverrideIncrementalRestore() &&
+                session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
+        } else if (scenario == IServiceReverse::Scenario::BACKUP) {
+            session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+            session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
+        };
+        /* If all bundle ext process finish, notice client. */
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+    } catch (...) {
+        HILOGI("Unexpected exception");
+        return;
+    }
 }
 
 void Service::ExtConnectDone(string bundleName)
@@ -1308,6 +1314,33 @@ void Service::SessionDeactive()
     }
 }
 
+std::function<void(const std::string &&)> GetBackupInfoConnectDone(wptr<Service> obj, std::string bundleName)
+{
+    return [obj](const string &&bundleName) {
+        HILOGI("GetBackupInfoConnectDone, bundleName: %{public}s", bundleName.c_str());
+        auto thisPtr = ptr.promote();
+        if (!thisPtr) {
+            HILOGW("this pointer is null.");
+            return;
+        }
+        thisPtr->getBackupInfoCondition_.notify_one();
+    }
+}
+
+std::function<void(const std::string &&)> GetBackupInfoConnectDied(wptr<Service> obj, std::string bundleName)
+{
+    return [obj](const string &&bundleName) {
+        HILOGI("GetBackupInfoConnectDied, bundleName: %{public}s", bundleName.c_str());
+        auto thisPtr = ptr.promote();
+        if (!thisPtr) {
+            HILOGW("this pointer is null.");
+            return;
+        }
+        this->isConnectDied_.store(true);
+        thisPtr->getBackupInfoCondition_.notify_one();
+    }
+}
+
 ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
 {
     try {
@@ -1315,24 +1348,23 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
         session_->IncreaseSessionCnt();
         session_->SetSessionUserId(GetUserIdDefault());
         auto backupConnection = session_->CreateBackupConnection(bundleName);
-        auto callConnected = [ptr {wptr(this)}](const string &&bundleName) {
-            HILOGI("callConnected begin.");
-            auto thisPtr = ptr.promote();
-            if (!thisPtr) {
-                HILOGW("this pointer is null.");
-                return;
-            }
-            thisPtr->getBackupInfoCondition_.notify_one();
-        };
+        auto callConnected = GetBackupInfoConnectDone(wptr(this), bundleName);
+        auto callDied = GetBackupInfoConnectDied(wptr(this), bundleName);
         backupConnection->SetCallback(callConnected);
+        backupConnection->SetCallDied(callDied);
         AAFwk::Want want = CreateConnectWant(bundleName);
         auto ret = backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
         if (ret) {
             HILOGE("ConnectBackupExtAbility faild, please check bundleName: %{public}s", bundleName.c_str());
-            return BError(BError::Codes::OK);
+            return BError(BError::Codes::EXT_ABILITY_DIED);
         }
         std::unique_lock<std::mutex> lock(getBackupInfoMutx_);
         getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
+        if (isConnectDied_.load()) {
+            HILOGE("GetBackupInfoConnectDied, please check bundleName: %{public}s", bundleName.c_str());
+            isConnectDied_.store(false);
+            return BError(BError::Codes::EXT_ABILITY_DIED);
+        }
         auto proxy = backupConnection->GetBackupExtProxy();
         if (!proxy) {
             HILOGE("Extension backup Proxy is empty.");
