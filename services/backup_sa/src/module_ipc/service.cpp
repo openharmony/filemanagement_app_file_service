@@ -1324,7 +1324,7 @@ std::function<void(const std::string &&)> GetBackupInfoConnectDone(wptr<Service>
             return;
         }
         thisPtr->getBackupInfoCondition_.notify_one();
-    }
+    };
 }
 
 std::function<void(const std::string &&)> GetBackupInfoConnectDied(wptr<Service> obj, std::string bundleName)
@@ -1338,7 +1338,7 @@ std::function<void(const std::string &&)> GetBackupInfoConnectDied(wptr<Service>
         }
         this->isConnectDied_.store(true);
         thisPtr->getBackupInfoCondition_.notify_one();
-    }
+    };
 }
 
 ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
