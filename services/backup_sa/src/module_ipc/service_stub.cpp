@@ -225,11 +225,11 @@ int32_t ServiceStub::CmdAppFileReady(MessageParcel &data, MessageParcel &reply)
 
 int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
 {
-    bool success;
-    if (!data.ReadBool(success)) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bool flag");
+    ErrCode errCode;
+    if (!data.ReadInt32(errCode)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive errCode");
     }
-    int res = AppDone(success);
+    int res = AppDone(errCode);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;
