@@ -201,16 +201,16 @@ static bool CallCatchPromise(AbilityRuntime::JsRuntime &jsRuntime, napi_value re
     auto env = jsRuntime.GetNapiEnv();
     napi_value method = nullptr;
     if (napi_get_named_property(env, result, "catch", &method) != napi_ok) {
-        HILOGI("CallCatchPromise, Failed to get method catch");
+        HILOGE("CallCatchPromise, Failed to get method catch");
         return false;
     }
     bool isCallable = false;
     if (napi_is_callable(env, method, &isCallable) != napi_ok) {
-        HILOGI("CallCatchPromise, Failed to check method then is callable");
+        HILOGE("CallCatchPromise, Failed to check method then is callable");
         return false;
     }
     if (!isCallable) {
-        HILOGI("CallCatchPromise, property then is not callable.");
+        HILOGE("CallCatchPromise, property then is not callable.");
         return false;
     }
     napi_value ret;
@@ -227,16 +227,16 @@ static bool CallPromise(AbilityRuntime::JsRuntime &jsRuntime, napi_value result,
     auto env = jsRuntime.GetNapiEnv();
     napi_value method = nullptr;
     if (napi_get_named_property(env, result, "then", &method) != napi_ok) {
-        HILOGI("CallPromise, Failed to get method then");
+        HILOGE("CallPromise, Failed to get method then");
         return false;
     }
     bool isCallable = false;
     if (napi_is_callable(env, method, &isCallable) != napi_ok) {
-        HILOGI("CallPromise, Failed to check method then is callable");
+        HILOGE("CallPromise, Failed to check method then is callable");
         return false;
     }
     if (!isCallable) {
-        HILOGI("CallPromise, property then is not callable.");
+        HILOGE("CallPromise, property then is not callable.");
         return false;
     }
     napi_value ret;
@@ -257,16 +257,16 @@ static bool CallCatchPromiseEx(AbilityRuntime::JsRuntime &jsRuntime, napi_value 
     auto env = jsRuntime.GetNapiEnv();
     napi_value method = nullptr;
     if (napi_get_named_property(env, result, "catch", &method) != napi_ok) {
-        HILOGI("CallCatchPromiseEx, Failed to get method catch");
+        HILOGE("CallCatchPromiseEx, Failed to get method catch");
         return false;
     }
     bool isCallable = false;
     if (napi_is_callable(env, method, &isCallable) != napi_ok) {
-        HILOGI("CallCatchPromiseEx, Failed to check method then is callable");
+        HILOGE("CallCatchPromiseEx, Failed to check method then is callable");
         return false;
     }
     if (!isCallable) {
-        HILOGI("CallCatchPromiseEx, property then is not callable.");
+        HILOGE("CallCatchPromiseEx, property then is not callable.");
         return false;
     }
     napi_value ret;
@@ -283,16 +283,16 @@ static bool CallPromiseEx(AbilityRuntime::JsRuntime &jsRuntime, napi_value resul
     auto env = jsRuntime.GetNapiEnv();
     napi_value method = nullptr;
     if (napi_get_named_property(env, result, "then", &method) != napi_ok) {
-        HILOGI("CallPromise, Failed to get method then");
+        HILOGE("CallPromise, Failed to get method then");
         return false;
     }
     bool isCallable = false;
     if (napi_is_callable(env, method, &isCallable) != napi_ok) {
-        HILOGI("CallPromise, Failed to check method then is callable");
+        HILOGE("CallPromise, Failed to check method then is callable");
         return false;
     }
     if (!isCallable) {
-        HILOGI("CallPromise, property then is not callable.");
+        HILOGE("CallPromise, property then is not callable.");
         return false;
     }
     napi_value ret;
@@ -314,16 +314,16 @@ static bool CallPromiseEx(AbilityRuntime::JsRuntime &jsRuntime, napi_value resul
     auto env = jsRuntime.GetNapiEnv();
     napi_value method = nullptr;
     if (napi_get_named_property(env, result, "then", &method) != napi_ok) {
-        HILOGI("CallPromise, Failed to get method then");
+        HILOGE("CallPromise, Failed to get method then");
         return false;
     }
     bool isCallable = false;
     if (napi_is_callable(env, method, &isCallable) != napi_ok) {
-        HILOGI("CallPromise, Failed to check method then is callable");
+        HILOGE("CallPromise, Failed to check method then is callable");
         return false;
     }
     if (!isCallable) {
-        HILOGI("CallPromise, property then is not callable.");
+        HILOGE("CallPromise, property then is not callable.");
         return false;
     }
     napi_value ret;
@@ -388,6 +388,10 @@ napi_value AttachBackupExtensionContext(napi_env env, void *value, void *)
     }
     auto contextRef =
         AbilityRuntime::JsRuntime::LoadSystemModuleByEngine(env, "application.BackupExtensionContext", &object, 1);
+    if (contextRef == nullptr) {
+        HILOGE("Failed to load BackupExtensionContext.");
+        return nullptr;
+    }
     napi_value contextObj = contextRef->GetNapiValue();
     napi_coerce_to_native_binding_object(env, contextObj, AbilityRuntime::DetachCallbackFunc,
                                          AttachBackupExtensionContext, value, nullptr);
@@ -410,6 +414,10 @@ napi_value AttachBackupExtensionContext(napi_env env, void *value, void *)
 void ExtBackupJs::ExportJsContext(void)
 {
     auto env = jsRuntime_.GetNapiEnv();
+    if (jsObj_ == nullptr) {
+        HILOGE("Failed to get js object.");
+        return;
+    }
     napi_value obj = jsObj_->GetNapiValue();
     if (obj == nullptr) {
         HILOGE("Failed to get BackupExtAbility object");
@@ -435,7 +443,10 @@ void ExtBackupJs::ExportJsContext(void)
     napi_set_named_property(env, obj, "context", contextObj);
 
     auto workContext = new (std::nothrow) std::weak_ptr<ExtBackupContext>(context);
-
+    if (workContext == nullptr) {
+        HILOGE("Failed to create ExtBackupContext.");
+        return;
+    }
     napi_coerce_to_native_binding_object(env, contextObj, AbilityRuntime::DetachCallbackFunc,
                                          AttachBackupExtensionContext, workContext, nullptr);
     HILOGI("Set backup extension ability context pointer is nullptr: %{public}d", context.get() == nullptr);

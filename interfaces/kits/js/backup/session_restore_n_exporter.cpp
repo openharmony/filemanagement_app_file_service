@@ -16,6 +16,7 @@
 
 #include <functional>
 #include <memory>
+#include <fcntl.h>
 
 #include "b_error/b_error.h"
 #include "b_filesystem/b_dir.h"
@@ -467,6 +468,10 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
         if (!(entity && (entity->sessionWhole || entity->sessionSheet))) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
         }
+        if (fcntl(fd, F_GETFD) == -1) {
+            HILOGE("AppendBundles fd is invalid.");
+            return NError(BError(BError::Codes::SDK_INVAL_ARG, "AppendBundles fd is invalid.").GetCode());
+        }
         if (entity->sessionWhole) {
             if (!infos.empty()) {
                 return NError(entity->sessionWhole->AppendBundles(UniqueFd(fd), bundles, infos));
@@ -522,6 +527,10 @@ napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info
         }
         if (SAUtils::IsSABundleName(fileName)) {
             HILOGI("SA %{public}s pushlish file", bundleName.c_str());
+            if (fcntl(std::atoi(fileName.c_str()), F_GETFD) == -1) {
+            HILOGE("PublishFile fd is invalid.");
+            return NError(BError(BError::Codes::SDK_INVAL_ARG, "PublishFile fd is invalid.").GetCode());
+        }
             return NError(entity->sessionSheet->PublishSAFile(fileInfo, UniqueFd(std::atoi(fileName.c_str()))));
         }
         return NError(entity->sessionSheet->PublishFile(fileInfo));
