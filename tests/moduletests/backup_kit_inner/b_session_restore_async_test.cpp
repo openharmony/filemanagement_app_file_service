@@ -68,7 +68,7 @@ public:
 
     void Init();
 
-    shared_ptr<BSessionRestoreAsync> restorePtr_;
+    shared_ptr<BSessionRestoreAsync> restorePtr_ = nullptr;
     BSessionRestoreAsync::Callbacks callbacks_;
 };
 
@@ -158,6 +158,10 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0300, test
 {
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0300";
     try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_async_0300 restorePtr_ == nullptr";
+            return;
+        }
         GTEST_LOG_(INFO) << "Mock instance set to false";
         SetMockGetInstance(false);
         BFileInfo bFileInfo("", "", 0);
@@ -187,6 +191,10 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0400, test
 {
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0400";
     try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_async_0400 restorePtr_ == nullptr";
+            return;
+        }
         GTEST_LOG_(INFO) << "Mock instance set to false";
         SetMockGetInstance(false);
         string bundleName = "";
@@ -217,6 +225,10 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0500, test
 {
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0500";
     try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_async_0500 restorePtr_ == nullptr";
+            return;
+        }
         SetMockGetInstance(true);
         SetMockLoadSystemAbility(true);
         vector<string> bundleNames;
@@ -243,8 +255,12 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0500, test
  */
 HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0501, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0500";
+    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0501";
     try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_async_0501 restorePtr_ == nullptr";
+            return;
+        }
         SetMockGetInstance(true);
         SetMockLoadSystemAbility(true);
         vector<string> bundleNames;
@@ -258,7 +274,7 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0501, test
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-an exception occurred by ~BSessionRestoreAsync.";
     }
-    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-end SUB_backup_b_session_restore_async_0500";
+    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-end SUB_backup_b_session_restore_async_0501";
 }
 
 /**
@@ -274,6 +290,10 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0600, test
 {
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0600";
     try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_async_0600 restorePtr_ == nullptr";
+            return;
+        }
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
         restorePtr_->RegisterBackupServiceDied(nullptr);

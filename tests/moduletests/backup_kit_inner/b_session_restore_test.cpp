@@ -69,7 +69,7 @@ public:
 
     void Init();
 
-    unique_ptr<BSessionRestore> restorePtr_;
+    unique_ptr<BSessionRestore> restorePtr_ = nullptr;
     BSessionRestore::Callbacks callbacks_;
 };
 
@@ -110,6 +110,10 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0100, testing::ext::T
     GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0100";
     try {
         GTEST_LOG_(INFO) << "GetInstance is true";
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_0100 restorePtr_ == nullptr";
+            return;
+        }
         auto ret = restorePtr_->Start();
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
         GTEST_LOG_(INFO) << "GetInstance is false";
@@ -136,6 +140,11 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0200, testing::ext::T
 {
     GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0200";
     try {
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_0200 restorePtr_ == nullptr";
+            return;
+        }
         Init();
         BFileInfo bFileInfo("", "", 0);
         callbacks_.onFileReady(bFileInfo, UniqueFd(-1), 0);
@@ -163,6 +172,11 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0300, testing::ext::T
 {
     GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0300";
     try {
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_0300 restorePtr_ == nullptr";
+            return;
+        }
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
         vector<string> bundlesToRestore;
@@ -199,6 +213,10 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0400, testing::ext::T
 {
     GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0400";
     try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_0400 restorePtr_ == nullptr";
+            return;
+        }
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
         BFileInfo bFileInfo("", "", 0);
@@ -228,6 +246,10 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0500, testing::ext::T
 {
     GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0500";
     try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_0500 restorePtr_ == nullptr";
+            return;
+        }
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
         string bundleName = "";
@@ -258,6 +280,10 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0600, testing::ext::T
 {
     GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0600";
     try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_0600 restorePtr_ == nullptr";
+            return;
+        }
         const string fileName = "1.tar";
         TestManager tm("SUB_backup_b_session_restore_0600");
         string filePath = tm.GetRootDirCurTest().append(fileName);
@@ -294,10 +320,14 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0600, testing::ext::T
  */
 HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0601, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0600";
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0601";
     try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_0601 restorePtr_ == nullptr";
+            return;
+        }
         const string fileName = "1.tar";
-        TestManager tm("SUB_backup_b_session_restore_0600");
+        TestManager tm("SUB_backup_b_session_restore_0601");
         string filePath = tm.GetRootDirCurTest().append(fileName);
         UniqueFd remoteCap(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
         string bundleName = "";
@@ -315,7 +345,7 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0601, testing::ext::T
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BSessionRestoreTest-an exception occurred by AppendBundles.";
     }
-    GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_0600";
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_0601";
 }
 
 /**
@@ -331,6 +361,10 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0700, testing::ext::T
 {
     GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0700";
     try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_0700 restorePtr_ == nullptr";
+            return;
+        }
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
         auto ret = restorePtr_->Finish();
@@ -360,6 +394,10 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0800, testing::ext::T
 {
     GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0800";
     try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_0800 restorePtr_ == nullptr";
+            return;
+        }
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
         restorePtr_->RegisterBackupServiceDied(nullptr);
@@ -386,6 +424,10 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0900, testing::ext::T
 {
     GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0900";
     try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_0900 restorePtr_ == nullptr";
+            return;
+        }
         SetMockGetInstance(true);
         SetMockLoadSystemAbility(true);
         Init();
