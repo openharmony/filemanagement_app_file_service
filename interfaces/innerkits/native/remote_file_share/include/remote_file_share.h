@@ -44,7 +44,7 @@ public:
     static int32_t TransRemoteUriToLocal(const std::vector<std::string> &uriList,
                                          const std::string &networkId,
                                          const std::string &deviceId,
-                                         std::vector<std::string> &resultList)
+                                         std::vector<std::string> &resultList);
     ~RemoteFileShare() {}
 };
 } // namespace ModuleRemoteFileShare
