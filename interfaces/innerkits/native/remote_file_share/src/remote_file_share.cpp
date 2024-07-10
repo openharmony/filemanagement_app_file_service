@@ -464,7 +464,10 @@ int32_t RemoteFileShare::TransRemoteUriToLocal(const std::vector<std::string> &u
                                                const std::string &deviceId,
                                                std::vector<std::string> &resultList)
 {
-    LOGI("TransRemoteUriToLocal begin");
+    if (networkId.empty() || deviceId.empty() || deviceId.size() != HMDFS_CID_SIZE) {
+        LOGE("RemoteFileShare::CreateSharePath, invalid argument with %{public}d", EINVAL);
+        return EINVAL;
+    }
     constexpr int splitThree = 3;
     bool allValid = true;
     std::vector<std::string> tmpResultList;
