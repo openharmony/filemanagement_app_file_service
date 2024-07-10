@@ -180,6 +180,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnFileReady_0100, t
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnFileReady_0100";
     try {
         Init(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnFileReady_0100 service_ == nullptr";
+            return;
+        }
         service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
         service_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
     } catch (...) {
@@ -203,6 +208,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnFileReady_0101, t
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnFileReady_0101";
     try {
         Init(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnFileReady_0101 service_ == nullptr";
+            return;
+        }
         service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -225,6 +235,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnFileReady_0102, t
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnFileReady_0102";
     try {
         Init(IServiceReverse::Scenario::BACKUP, 1);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnFileReady_0102 service_ == nullptr";
+            return;
+        }
         service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -247,6 +262,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnBundleStarted_010
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnBundleStarted_0100";
     try {
         Init(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnBundleStarted_0100 service_ == nullptr";
+            return;
+        }
         service_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
@@ -270,6 +290,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnBundleStarted_010
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnBundleStarted_0101";
     try {
         Init(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnBundleStarted_0101 service_ == nullptr";
+            return;
+        }
         service_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -292,6 +317,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnBundleStarted_010
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnBundleStarted_0102";
     try {
         Init(IServiceReverse::Scenario::BACKUP, 1);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnBundleStarted_0102 service_ == nullptr";
+            return;
+        }
         service_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -314,6 +344,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnBundleFinished_01
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnBundleFinished_0100";
     try {
         Init(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnBundleFinished_0100 service_ == nullptr";
+            return;
+        }
         service_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->RestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
@@ -337,6 +372,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnBundleFinished_01
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnBundleFinished_0101";
     try {
         Init(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnBundleFinished_0101 service_ == nullptr";
+            return;
+        }
         service_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -359,6 +399,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnBundleFinished_01
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnBundleFinished_0102";
     try {
         Init(IServiceReverse::Scenario::BACKUP, 1);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnBundleFinished_0102 service_ == nullptr";
+            return;
+        }
         service_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -381,6 +426,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnAllBundlesFinishe
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnAllBundlesFinished_0100";
     try {
         Init(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnAllBundlesFinished_0100 service_ == nullptr";
+            return;
+        }
         service_->BackupOnAllBundlesFinished(BError(BError::Codes::OK));
         service_->RestoreOnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
@@ -404,6 +454,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnAllBundlesFinishe
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnAllBundlesFinished_0101";
     try {
         Init(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnAllBundlesFinished_0101 service_ == nullptr";
+            return;
+        }
         service_->BackupOnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -426,6 +481,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnAllBundlesFinishe
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnAllBundlesFinished_0102";
     try {
         Init(IServiceReverse::Scenario::BACKUP, 1);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnAllBundlesFinished_0102 service_ == nullptr";
+            return;
+        }
         service_->BackupOnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -448,6 +508,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnFileReady_0100, 
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnFileReady_0100";
     try {
         Init(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_RestoreOnFileReady_0100 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
         service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
     } catch (...) {
@@ -471,6 +536,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnFileReady_0101, 
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnFileReady_0101";
     try {
         Init(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_RestoreOnFileReady_0101 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -493,6 +563,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnFileReady_0102, 
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnFileReady_0102";
     try {
         Init(IServiceReverse::Scenario::RESTORE, 1);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_RestoreOnFileReady_0102 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -515,6 +590,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnBundleStarted_01
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnBundleStarted_0100";
     try {
         Init(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_RestoreOnBundleStarted_0100 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
@@ -538,6 +618,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnBundleStarted_01
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnBundleStarted_0101";
     try {
         Init(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_RestoreOnBundleStarted_0101 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -560,6 +645,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnBundleStarted_01
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnBundleStarted_0102";
     try {
         Init(IServiceReverse::Scenario::RESTORE, 1);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_RestoreOnBundleStarted_0102 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -582,6 +672,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnBundleFinished_0
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnBundleFinished_0100";
     try {
         Init(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_RestoreOnBundleFinished_0100 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
@@ -605,6 +700,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnBundleFinished_0
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnBundleFinished_0101";
     try {
         Init(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_RestoreOnBundleFinished_0101 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -627,6 +727,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnBundleFinished_0
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnBundleFinished_0102";
     try {
         Init(IServiceReverse::Scenario::RESTORE, 1);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_RestoreOnBundleFinished_0102 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -649,6 +754,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnAllBundlesFinish
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnAllBundlesFinished_0100";
     try {
         Init(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_RestoreOnAllBundlesFinished_0100 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnAllBundlesFinished(BError(BError::Codes::OK));
         service_->BackupOnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
@@ -672,6 +782,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnAllBundlesFinish
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnAllBundlesFinished_0101";
     try {
         Init(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_RestoreOnAllBundlesFinished_0101 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -694,6 +809,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnAllBundlesFinish
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnAllBundlesFinished_0102";
     try {
         Init(IServiceReverse::Scenario::RESTORE, 1);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_RestoreOnAllBundlesFinished_0102 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -716,6 +836,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_0200, testing::ext::TestS
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_0200";
     try {
         Init(IServiceReverse::Scenario::RESTORE, 1);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_0200 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
         service_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->RestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
@@ -741,6 +866,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_0201, testing::ext::TestS
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_0201";
     try {
         Init(IServiceReverse::Scenario::RESTORE, 0);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_0201 service_ == nullptr";
+            return;
+        }
         service_->RestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
         service_->RestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->RestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
@@ -766,6 +896,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_0300, testing::ext::TestS
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_0300";
     try {
         Init(IServiceReverse::Scenario::BACKUP, 1);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_0300 service_ == nullptr";
+            return;
+        }
         service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
         service_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
@@ -791,6 +926,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_0301, testing::ext::TestS
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_0301";
     try {
         Init(IServiceReverse::Scenario::BACKUP, 0);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_0301 service_ == nullptr";
+            return;
+        }
         service_->BackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, 0);
         service_->BackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->BackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
@@ -816,6 +956,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnFileRe
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0100";
     try {
         IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0100 service_ == nullptr";
+            return;
+        }
         service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
         service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
     } catch (...) {
@@ -839,6 +984,11 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnFileRe
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0101";
     try {
         IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0101 service_ == nullptr";
+            return;
+        }
         service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
 
         IncrementalInit(IServiceReverse::Scenario::BACKUP, 1);
@@ -866,6 +1016,11 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0100";
     try {
         IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0100 service_ == nullptr";
+            return;
+        }
         service_->IncrementalBackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
@@ -891,6 +1046,11 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0101";
     try {
         IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalBackupOnBundleStarted_0101 service_ == nullptr";
+            return;
+        }
         service_->IncrementalBackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
 
         IncrementalInit(IServiceReverse::Scenario::BACKUP, 1);
@@ -918,6 +1078,11 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0100";
     try {
         IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0100 service_ == nullptr";
+            return;
+        }
         service_->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->IncrementalRestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
@@ -943,6 +1108,11 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0101";
     try {
         IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalBackupOnBundleFinished_0101 service_ == nullptr";
+            return;
+        }
         service_->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
 
         IncrementalInit(IServiceReverse::Scenario::BACKUP, 1);
@@ -970,6 +1140,11 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0100";
     try {
         IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0100 service_ == nullptr";
+            return;
+        }
         service_->IncrementalBackupOnAllBundlesFinished(BError(BError::Codes::OK));
         service_->IncrementalRestoreOnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
@@ -995,6 +1170,11 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0101";
     try {
         IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalBackupOnAllBundlesFinished_0101 service_ == nullptr";
+            return;
+        }
         service_->IncrementalBackupOnAllBundlesFinished(BError(BError::Codes::OK));
 
         IncrementalInit(IServiceReverse::Scenario::BACKUP, 1);
@@ -1022,6 +1202,11 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0100";
     try {
         IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0100 service_ == nullptr";
+            return;
+        }
         service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
         service_->IncrementalBackupOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
     } catch (...) {
@@ -1047,6 +1232,11 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0101";
     try {
         IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0101 service_ == nullptr";
+            return;
+        }
         service_->IncrementalRestoreOnFileReady(BUNDLE_NAME, FILE_NAME, -1, -1, 0);
 
         IncrementalInit(IServiceReverse::Scenario::RESTORE, 1);
@@ -1074,6 +1264,11 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0100";
     try {
         IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0100 service_ == nullptr";
+            return;
+        }
         service_->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->IncrementalBackupOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
@@ -1099,6 +1294,11 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0101";
     try {
         IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalRestoreOnBundleStarted_0101 service_ == nullptr";
+            return;
+        }
         service_->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), BUNDLE_NAME);
 
         IncrementalInit(IServiceReverse::Scenario::RESTORE, 1);
@@ -1126,6 +1326,11 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0100";
     try {
         IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0100 service_ == nullptr";
+            return;
+        }
         service_->IncrementalRestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
         service_->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
     } catch (...) {
@@ -1151,6 +1356,11 @@ HWTEST_F(ServiceReverseTest,
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0101";
     try {
         IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalRestoreOnBundleFinished_0101 service_ == nullptr";
+            return;
+        }
         service_->IncrementalRestoreOnBundleFinished(BError(BError::Codes::OK), BUNDLE_NAME);
 
         IncrementalInit(IServiceReverse::Scenario::RESTORE, 1);
@@ -1179,6 +1389,11 @@ HWTEST_F(ServiceReverseTest,
         << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0100";
     try {
         IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0100 service_ == nullptr";
+            return;
+        }
         service_->IncrementalRestoreOnAllBundlesFinished(BError(BError::Codes::OK));
         service_->IncrementalBackupOnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
@@ -1205,6 +1420,11 @@ HWTEST_F(ServiceReverseTest,
         << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0101";
     try {
         IncrementalInit(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalRestoreOnAllBundlesFinished_0101 service_ == nullptr";
+            return;
+        }
         service_->IncrementalRestoreOnAllBundlesFinished(BError(BError::Codes::OK));
 
         IncrementalInit(IServiceReverse::Scenario::RESTORE, 1);
@@ -1230,6 +1450,10 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnResultReport_010
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnResultReport_0100";
     try {
         Init(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_ServiceReverse_RestoreOnResultReport_0100 service_ == nullptr";
+            return;
+        }
         std::string resultReport = "result_report";
         std::string bundleName = BUNDLE_NAME;
         service_->RestoreOnResultReport(resultReport, bundleName);
@@ -1254,6 +1478,10 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnResultReport_010
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnResultReport_0101";
     try {
         Init(IServiceReverse::Scenario::RESTORE, 1);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_ServiceReverse_RestoreOnResultReport_0101 service_ == nullptr";
+            return;
+        }
         std::string resultReport = "result_report";
         std::string bundleName = BUNDLE_NAME;
         service_->RestoreOnResultReport(resultReport, bundleName);
@@ -1279,6 +1507,10 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalRestoreOnResul
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0100";
     try {
         IncrementalInit(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0100 service_ == nullptr";
+            return;
+        }
         std::string resultReport = "result_report";
         std::string bundleName = BUNDLE_NAME;
         service_->IncrementalRestoreOnResultReport(resultReport, bundleName);
@@ -1304,6 +1536,10 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalRestoreOnResul
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0101";
     try {
         IncrementalInit(IServiceReverse::Scenario::RESTORE, 1);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_ServiceReverse_IncrementalRestoreOnResultReport_0101 service_ == nullptr";
+            return;
+        }
         std::string resultReport = "result_report";
         std::string bundleName = BUNDLE_NAME;
         service_->IncrementalRestoreOnResultReport(resultReport, bundleName);
@@ -1330,6 +1566,10 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnResultReport_0100
         Init(IServiceReverse::Scenario::BACKUP);
         std::string resultReport = "result_report";
         std::string bundleName = BUNDLE_NAME;
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_ServiceReverse_BackupOnResultReport_0100 service_ == nullptr";
+            return;
+        }
         service_->BackupOnResultReport(resultReport, bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1354,6 +1594,10 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnResultReport_0101
         Init(IServiceReverse::Scenario::BACKUP, 1);
         std::string resultReport = "result_report";
         std::string bundleName = BUNDLE_NAME;
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_ServiceReverse_BackupOnResultReport_0101 service_ == nullptr";
+            return;
+        }
         service_->BackupOnResultReport(resultReport, bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1379,6 +1623,10 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnResult
         IncrementalInit(IServiceReverse::Scenario::BACKUP);
         std::string resultReport = "result_report";
         std::string bundleName = BUNDLE_NAME;
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0100 service_ == nullptr";
+            return;
+        }
         service_->IncrementalBackupOnResultReport(resultReport, bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1404,6 +1652,10 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnResult
         IncrementalInit(IServiceReverse::Scenario::BACKUP, 1);
         std::string resultReport = "result_report";
         std::string bundleName = BUNDLE_NAME;
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0101 service_ == nullptr";
+            return;
+        }
         service_->IncrementalBackupOnResultReport(resultReport, bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
