@@ -507,7 +507,7 @@ int32_t RemoteFileShare::TransRemoteUriToLocal(const std::vector<std::string> &u
     }
     resultList = tmpResultList;
     return 0;
-}                                               
+}
 } // namespace ModuleRemoteFileShare
 } // namespace AppFileService
 } // namespace OHOS
