@@ -88,7 +88,6 @@ HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0100, testing::ext::Tes
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
         auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        EXPECT_NE(matchedOp, nullptr);
         if (matchedOp != opeartions.end()) {
             auto ret = matchedOp->Execute(mapArgToVal);
             EXPECT_EQ(ret, 0);
@@ -124,7 +123,6 @@ HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0200, testing::ext::Tes
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
         auto matchedOperation = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        EXPECT_NE(matchedOperation, nullptr);
         int ret = 0;
         if (matchedOperation != opeartions.end()) {
             ret = matchedOperation->Execute(mapArgToVal);
@@ -178,7 +176,6 @@ HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0300, testing::ext::Tes
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
         auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        EXPECT_NE(matchedOp, nullptr);
         int ret = 0;
         if (matchedOp != opeartions.end()) {
             ret = matchedOp->Execute(mapArgToVal);
@@ -238,7 +235,6 @@ HWTEST_F(ToolsOpRestoreTest, SUB_backup_tools_op_restore_0400, testing::ext::Tes
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
         auto matchedOpIterator = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        EXPECT_NE(matchedOpIterator, nullptr);
         int ret = 0;
         if (matchedOpIterator != opeartions.end()) {
             ret = matchedOpIterator->Execute(mapArgToVal);

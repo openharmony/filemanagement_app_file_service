@@ -78,7 +78,7 @@ void SchedSchedulerTest::Init(IServiceReverse::Scenario scenario)
     transform(bundleNames.begin(), bundleNames.end(), inserter(backupExtNameMap, backupExtNameMap.end()),
               setBackupExtNameMap);
               
-    EXPECT_NE(sessionManagerPtr_, nullptr);
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
     sessionManagerPtr_->Active({
         .clientToken = CLIENT_TOKEN_ID,
         .scenario = scenario,
@@ -100,7 +100,7 @@ HWTEST_F(SchedSchedulerTest, SUB_Service_Sched_0100, testing::ext::TestSize.Leve
     GTEST_LOG_(INFO) << "SchedSchedulerTest-begin SUB_Service_Sched_0100";
     try {
         Init(IServiceReverse::Scenario::BACKUP);
-        EXPECT_NE(schedPtr_, nullptr);
+        EXPECT_TRUE(schedPtr_ != nullptr);
         schedPtr_->Sched();
         GTEST_LOG_(INFO) << "SchedSchedulerTest-Sched Branches";
         sessionManagerPtr_->SetServiceSchedAction(BUNDLE_NAME, BConstants::ServiceSchedAction::FINISH);
@@ -134,8 +134,8 @@ HWTEST_F(SchedSchedulerTest, SUB_Service_ExecutingQueueTasks_0100, testing::ext:
 {
     GTEST_LOG_(INFO) << "SchedSchedulerTest-begin SUB_Service_ExecutingQueueTasks_0100";
     try {
-        EXPECT_NE(sessionManagerPtr_, nullptr);
-        EXPECT_NE(schedPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        EXPECT_TRUE(schedPtr_ != nullptr);
         sessionManagerPtr_->SetServiceSchedAction(BUNDLE_NAME, BConstants::ServiceSchedAction::START);
         schedPtr_->ExecutingQueueTasks(BUNDLE_NAME);
         sessionManagerPtr_->SetServiceSchedAction(BUNDLE_NAME, BConstants::ServiceSchedAction::RUNNING);
@@ -160,7 +160,7 @@ HWTEST_F(SchedSchedulerTest, SUB_Service_RemoveExtConn_0100, testing::ext::TestS
 {
     GTEST_LOG_(INFO) << "SchedSchedulerTest-begin SUB_Service_RemoveExtConn_0100";
     try {
-        EXPECT_NE(schedPtr_, nullptr);
+        EXPECT_TRUE(schedPtr_ != nullptr);
         schedPtr_->RemoveExtConn("test");
     } catch (...) {
         EXPECT_TRUE(false);

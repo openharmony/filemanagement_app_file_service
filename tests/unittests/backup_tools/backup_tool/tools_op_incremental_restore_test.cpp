@@ -82,7 +82,6 @@ HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
         auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        EXPECT_NE(matchedOp, nullptr);
         if (matchedOp != opeartions.end()) {
             auto ret = matchedOp->Execute(mapArgToVal);
             EXPECT_EQ(ret, 0);
@@ -120,7 +119,6 @@ HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
         auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        EXPECT_NE(matchedOp, nullptr);
         int ret = 0;
         if (matchedOp != opeartions.end()) {
             ret = matchedOp->Execute(mapArgToVal);
@@ -186,7 +184,6 @@ HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
         auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        EXPECT_NE(matchedOp, nullptr);
         int ret = 0;
         if (matchedOp != opeartions.end()) {
             ret = matchedOp->Execute(mapArgToVal);

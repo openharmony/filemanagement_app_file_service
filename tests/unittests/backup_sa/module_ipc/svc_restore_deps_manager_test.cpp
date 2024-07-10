@@ -363,7 +363,7 @@ HWTEST_F(SvcRestoreDepsManagerTest,
     bool ret = (it != SvcRestoreDepsManager::GetInstance().toRestoreBundleMap_.end());
     EXPECT_TRUE(ret);
     if (ret) {
-        EXPECT_NE(it, nullptr);
+        EXPECT_TRUE(it != nullptr);
         EXPECT_EQ(it->second.fileNames_.size(), 2);
     }
     ClearCache();

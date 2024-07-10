@@ -72,7 +72,7 @@ void SvcSessionManagerTest::Init(IServiceReverse::Scenario scenario)
     vector<string> bundleNames;
     map<string, BackupExtInfo> backupExtNameMap;
     bundleNames.emplace_back(BUNDLE_NAME);
-    EXPECT_NE(sessionManagerPtr_, nullptr);
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
     sessionManagerPtr_->Active(
         {.clientToken = CLIENT_TOKEN_ID, .scenario = scenario, .backupExtNameMap = {}, .clientProxy = remote_});
     sessionManagerPtr_->IsOnAllBundlesFinished();
@@ -95,7 +95,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_VerifyCallerAndScenario_01
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_VerifyCallerAndScenario_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
             sessionManagerPtr_->VerifyCallerAndScenario(CLIENT_TOKEN_ID, IServiceReverse::Scenario::RESTORE);
             EXPECT_TRUE(false);
@@ -138,7 +138,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Active_0100, testing::ext:
     try {
         SvcSessionManager::Impl newImpl;
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
             auto res = sessionManagerPtr_->Active(newImpl);
             EXPECT_EQ(res, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
@@ -195,7 +195,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Deactive_0100, testing::ex
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_Deactive_0100";
     try {
         wptr<IRemoteObject> remoteInAction = nullptr;
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->impl_.clientToken = 0;
         sessionManagerPtr_->Deactive(remoteInAction, false);
         EXPECT_TRUE(true);
@@ -240,7 +240,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_VerifyBundleName_0100, tes
     try {
         string bundleName = BUNDLE_NAME;
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->VerifyBundleName(bundleName);
             EXPECT_TRUE(false);
@@ -282,7 +282,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceReverseProxy_010
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetServiceReverseProxy_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientProxy = nullptr;
             sessionManagerPtr_->GetServiceReverseProxy();
             EXPECT_TRUE(false);
@@ -315,7 +315,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_getscenario_0100, testing:
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_getscenario_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->GetScenario();
             EXPECT_TRUE(false);
@@ -347,7 +347,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_onBundlefileready_0100, te
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_onBundlefileready_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
             EXPECT_TRUE(false);
@@ -404,7 +404,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_onBundlefileready_0101, te
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_onBundlefileready_0101";
     try {
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
@@ -454,7 +454,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBundleExtManageInfo_0100
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_OnBundleExtManageInfo_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->OnBundleExtManageInfo(BUNDLE_NAME, UniqueFd(-1));
             EXPECT_TRUE(false);
@@ -504,7 +504,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupAbilityExt_0100, 
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBackupAbilityExt_0100";
     try {
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->reversePtr_ = nullptr;
         auto ret = sessionManagerPtr_->GetBackupAbilityExt(BUNDLE_NAME);
         ret->callDied_("");
@@ -536,7 +536,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupSAExt_0100, testi
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBackupSAExt_0100";
     try {
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->reversePtr_ = nullptr;
         auto ret = sessionManagerPtr_->GetBackupSAExt(BUNDLE_NAME);
         ret->callDied_("");
@@ -575,7 +575,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_InitClient_0100, testing::
         SvcSessionManager::Impl newImpl;
         try {
             newImpl.clientProxy = nullptr;
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->InitClient(newImpl);
             EXPECT_TRUE(false);
         } catch (BError &err) {
@@ -606,7 +606,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0100
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetExtFileNameRequest_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->SetExtFileNameRequest(BUNDLE_NAME, FILE_NAME);
             EXPECT_TRUE(false);
@@ -641,7 +641,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtConnection_0100, tes
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetExtConnection_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->GetExtConnection(BUNDLE_NAME);
             EXPECT_TRUE(false);
@@ -695,7 +695,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSAExtConnection_0100, t
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetSAExtConnection_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME);
             EXPECT_TRUE(false);
@@ -750,7 +750,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_DumpInfo_0100, testing::ex
         TestManager tm("SvcSessionManagerTest_GetFd_0100");
         string fileUri = tm.GetRootDirCurTest().append(FILE_NAME);
         UniqueFd fd(open(fileUri.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->DumpInfo(fd, {});
     } catch (...) {
         EXPECT_TRUE(false);
@@ -773,7 +773,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSchedBundleName_0100, t
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetSchedBundleName_0100";
     try {
         string bundleName;
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         bool condition = sessionManagerPtr_->GetSchedBundleName(bundleName);
         EXPECT_EQ(bundleName, BUNDLE_NAME);
         EXPECT_TRUE(condition);
@@ -807,7 +807,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceSchedAction_0100
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetServiceSchedAction_0100";
     try {
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         auto action = sessionManagerPtr_->GetServiceSchedAction(BUNDLE_NAME);
         EXPECT_EQ(action, BConstants::ServiceSchedAction::WAIT);
 
@@ -836,7 +836,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceSchedAction_0102
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetServiceSchedAction_0102";
     try {
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         auto action = sessionManagerPtr_->GetServiceSchedAction(BUNDLE_NAME);
         EXPECT_NE(action, BConstants::ServiceSchedAction::WAIT);
 
@@ -868,7 +868,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceSchedAction_0103
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetServiceSchedAction_0103";
     try {
         string bundleName = "";
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         auto action = sessionManagerPtr_->GetServiceSchedAction(bundleName);
         EXPECT_EQ(action, BConstants::ServiceSchedAction::WAIT);
 
@@ -913,7 +913,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupExtName_0100, tes
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBackupExtName_0100";
     try {
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->SetBackupExtName(BUNDLE_NAME, BUNDLE_NAME);
         string extName = sessionManagerPtr_->GetBackupExtName(BUNDLE_NAME);
         EXPECT_EQ(extName, BUNDLE_NAME);
@@ -939,7 +939,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupExtName_0101, tes
     try {
         string bundleName = "";
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->SetBackupExtName(bundleName, bundleName);
             EXPECT_TRUE(false);
@@ -981,7 +981,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBackupExtInfo_0100, tes
         string bundleName = BUNDLE_NAME;
         string extInfo = "test";
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->SetBackupExtInfo(bundleName, extInfo);
             EXPECT_TRUE(false);
@@ -1017,7 +1017,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupExtInfo_0100, tes
         string bundleName = BUNDLE_NAME;
         string extInfo = "test";
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->GetBackupExtInfo(bundleName);
             EXPECT_TRUE(false);
@@ -1054,7 +1054,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_AppendBundles_0100, testin
     try {
         vector<BundleName> bundleNames;
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->AppendBundles(bundleNames);
             EXPECT_TRUE(false);
@@ -1096,7 +1096,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_NeedToUnloadService_0100, 
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_NeedToUnloadService_0100";
     try {
 
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->impl_.restoreDataType = RestoreTypeEnum::RESTORE_DATA_READDY;
         auto ret = sessionManagerPtr_->NeedToUnloadService();
         EXPECT_FALSE(ret);
@@ -1134,7 +1134,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_removeextinfo_0100, testin
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_removeextinfo_0100";
     try {
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->RemoveExtInfo(BUNDLE_NAME);
         EXPECT_EQ(sessionManagerPtr_->impl_.backupExtNameMap.size(), 0);
@@ -1172,7 +1172,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBundleFileReady_0200, te
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_OnBundleFileReady_0200";
     try {
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->Deactive(nullptr, true);
         Init(IServiceReverse::Scenario::BACKUP);
         auto ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, MANAGE_JSON);
@@ -1202,7 +1202,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetSessionUserId_0100, tes
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_backup_sa_session_SetSessionUserId_0100";
     try {
         int32_t userId = 1;
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->SetSessionUserId(userId);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1224,7 +1224,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSessionUserId_0100, tes
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_backup_sa_session_GetSessionUserId_0100";
     try {
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->GetSessionUserId();
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1247,7 +1247,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleRestoreType_0100,
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetBundleRestoreType_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->SetBundleRestoreType(BUNDLE_NAME, RESTORE_DATA_READDY);
             EXPECT_TRUE(false);
@@ -1281,7 +1281,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleRestoreType_0100,
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleRestoreType_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->GetBundleRestoreType(BUNDLE_NAME);
             EXPECT_TRUE(false);
@@ -1315,7 +1315,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleVersionCode_0100,
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetBundleVersionCode_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->SetBundleVersionCode(BUNDLE_NAME, 0);
             EXPECT_TRUE(false);
@@ -1349,7 +1349,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleVersionCode_0100,
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleVersionCode_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->GetBundleVersionCode(BUNDLE_NAME);
             EXPECT_TRUE(false);
@@ -1383,7 +1383,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleVersionName_0100,
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetBundleVersionName_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->SetBundleVersionName(BUNDLE_NAME, "1.0.0");
             EXPECT_TRUE(false);
@@ -1417,7 +1417,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleVersionName_0100,
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleVersionName_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->GetBundleVersionName(BUNDLE_NAME);
             EXPECT_TRUE(false);
@@ -1451,7 +1451,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Start_0100, testing::ext::
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_Start_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->Start();
             EXPECT_TRUE(false);
@@ -1483,7 +1483,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Finish_0100, testing::ext:
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_Finish_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->Finish();
             EXPECT_TRUE(false);
@@ -1515,7 +1515,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_IsOnAllBundlesFinished_010
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_IsOnAllBundlesFinished_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->IsOnAllBundlesFinished();
             EXPECT_TRUE(false);
@@ -1553,7 +1553,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_IsOnOnStartSched_0100, tes
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_IsOnOnStartSched_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->IsOnOnStartSched();
             EXPECT_TRUE(false);
@@ -1597,7 +1597,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleDataSize_0100, te
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetBundleDataSize_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->SetBundleDataSize(BUNDLE_NAME, 0);
             EXPECT_TRUE(false);
@@ -1632,7 +1632,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_BundleExtTimerStart_0100, 
     try {
         auto callback = []() -> void {};
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->BundleExtTimerStart(BUNDLE_NAME, callback);
             EXPECT_TRUE(false);
@@ -1676,7 +1676,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_UpdateTimer_0100, testing:
     try {
         auto callback = []() -> void {};
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, 30, callback);
             EXPECT_TRUE(false);
@@ -1719,7 +1719,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_BundleExtTimerStop_0100, t
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_BundleExtTimerStop_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->BundleExtTimerStop(BUNDLE_NAME);
             EXPECT_TRUE(false);
@@ -1765,7 +1765,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_ClearSessionData_0100, tes
         info.timerStatus = true;
         info.schedAction = BConstants::ServiceSchedAction::RUNNING;
         info.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr));
-        EXPECT_NE(sessionManagerPtr_, nullptr);
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
         sessionManagerPtr_->ClearSessionData();
@@ -1798,7 +1798,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetIsIncrementalBackup_010
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetIsIncrementalBackup_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->GetIsIncrementalBackup();
             EXPECT_TRUE(false);
@@ -1831,7 +1831,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetIncrementalData_0100, t
     try {
         BIncrementalData incrementalData;
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->SetIncrementalData(incrementalData);
             EXPECT_TRUE(false);
@@ -1866,7 +1866,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetIncrementalManifestFd_0
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetIncrementalManifestFd_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->GetIncrementalManifestFd(BUNDLE_NAME);
             EXPECT_TRUE(false);
@@ -1900,7 +1900,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetLastIncrementalTime_010
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetLastIncrementalTime_0100";
     try {
         try {
-            EXPECT_NE(sessionManagerPtr_, nullptr);
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
             sessionManagerPtr_->impl_.clientToken = 0;
             sessionManagerPtr_->GetLastIncrementalTime(BUNDLE_NAME);
             EXPECT_TRUE(false);

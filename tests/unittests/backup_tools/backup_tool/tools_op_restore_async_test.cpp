@@ -91,7 +91,6 @@ HWTEST_F(ToolsOpRestoreAsyncTest, SUB_backup_tools_op_restore_async_0100, testin
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
         auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        EXPECT_NE(matchedOp, nullptr);
         if (matchedOp != opeartions.end()) {
             auto ret = matchedOp->Execute(mapArgToVal);
             EXPECT_EQ(ret, 0);
@@ -128,7 +127,11 @@ HWTEST_F(ToolsOpRestoreAsyncTest, SUB_backup_tools_op_restore_async_0101, testin
         mapArgToVal.insert(make_pair("bundles", bundles));
         mapArgToVal.insert(make_pair("restoreType", restoreTypeF));
         mapArgToVal.insert(make_pair("userId", userId));
-        EXPECT_NE(matchedOp, nullptr);
+        vector<string_view> curOp;
+        curOp.emplace_back("restoreAsync");
+        auto &&opeartions = ToolsOp::GetAllOperations();
+        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
+        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
         if (matchedOp != opeartions.end()) {
             auto ret = matchedOp->Execute(mapArgToVal);
             EXPECT_EQ(ret, 0);
@@ -169,7 +172,6 @@ HWTEST_F(ToolsOpRestoreAsyncTest, SUB_backup_tools_op_restore_async_0200, testin
         auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
         auto &&opeartions = ToolsOp::GetAllOperations();
         auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
-        EXPECT_NE(matchedOp, nullptr);
         int ret = 0;
         if (matchedOp != opeartions.end()) {
             ret = matchedOp->Execute(mapArgToVal);

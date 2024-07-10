@@ -79,8 +79,8 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityConnectDone_0100
     try {
         int resultCode = 0;
         AppExecFwk::ElementName element;
-        EXPECT_NE(backupCon_, nullptr);
-        EXPECT_NE(castMock, nullptr);
+        EXPECT_TRUE(backupCon_ != nullptr);
+        EXPECT_TRUE(castMock != nullptr);
         backupCon_->OnAbilityConnectDone(element, nullptr, resultCode);
         EXPECT_TRUE(true);
 
@@ -113,7 +113,7 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityDisconnectDone_0
         element.SetBundleName(bundleName);
         int resultCode = 1;
 
-        EXPECT_NE(backupCon_, nullptr);
+        EXPECT_TRUE(backupCon_ != nullptr);
         backupCon_->isConnectedDone_ = false;
         backupCon_->OnAbilityDisconnectDone(element, resultCode);
         bool ret = backupCon_->IsExtAbilityConnected();
@@ -142,7 +142,7 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityDisconnectDone_0
 HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_GetBackupExtProxy_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcBackupConnectionTest-begin SUB_BackupConnection_GetBackupExtProxy_0100";
-    EXPECT_NE(backupCon_, nullptr);
+    EXPECT_TRUE(backupCon_ != nullptr);
     auto proxy = backupCon_->GetBackupExtProxy();
     EXPECT_EQ(proxy, nullptr);
     GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_GetBackupExtProxy_0100";

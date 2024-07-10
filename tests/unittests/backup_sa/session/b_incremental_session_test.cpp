@@ -72,7 +72,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0100, testing::e
     try {
         ServiceProxy::serviceProxy_ = nullptr;
         BIncrementalBackupSession::Callbacks callbacks;
-        EXPECT_NE(backupSession, nullptr);
+        EXPECT_TRUE(backupSession != nullptr);
         auto err = backupSession->Init(callbacks);
         EXPECT_EQ(err, nullptr);
 
@@ -104,7 +104,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0200, testing::e
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0200";
     try {
         ServiceProxy::serviceProxy_ = nullptr;
-        EXPECT_NE(backupSession, nullptr);
+        EXPECT_TRUE(backupSession != nullptr);
         backupSession->RegisterBackupServiceDied(nullptr);
 
         ServiceProxy::serviceProxy_ = proxy;
@@ -134,7 +134,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0300, testing::e
     try {
         ServiceProxy::serviceProxy_ = nullptr;
         vector<BIncrementalData> bundlesToBackup;
-        EXPECT_NE(backupSession, nullptr);
+        EXPECT_TRUE(backupSession != nullptr);
         auto err = backupSession->AppendBundles(bundlesToBackup);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
@@ -163,7 +163,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0400, testing::e
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0400";
     try {
         ServiceProxy::serviceProxy_ = nullptr;
-        EXPECT_NE(backupSession, nullptr);
+        EXPECT_TRUE(backupSession != nullptr);
         auto err = backupSession->Release();
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
@@ -193,7 +193,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0500, testing::e
     try {
         ServiceProxy::serviceProxy_ = nullptr;
         BIncrementalRestoreSession::Callbacks callbacks;
-        EXPECT_NE(restoreSession, nullptr);
+        EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->Init(callbacks);
         EXPECT_EQ(err, nullptr);
 
@@ -225,7 +225,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0600, testing::e
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0600";
     try {
         ServiceProxy::serviceProxy_ = nullptr;
-        EXPECT_NE(restoreSession, nullptr);
+        EXPECT_TRUE(restoreSession != nullptr);
         restoreSession->RegisterBackupServiceDied(nullptr);
 
         ServiceProxy::serviceProxy_ = proxy;
@@ -256,7 +256,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0700, testing::e
         ServiceProxy::serviceProxy_ = nullptr;
         UniqueFd remoteCap1;
         vector<BundleName> bundlesToRestore;
-        EXPECT_NE(restoreSession, nullptr);
+        EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->AppendBundles(move(remoteCap1), bundlesToRestore);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
@@ -286,7 +286,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0800, testing::e
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0800";
     try {
         ServiceProxy::serviceProxy_ = nullptr;
-        EXPECT_NE(restoreSession, nullptr);
+        EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->Release();
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
@@ -316,7 +316,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0900, testing::e
     try {
         ServiceProxy::serviceProxy_ = nullptr;
         BFileInfo fileInfo;
-        EXPECT_NE(restoreSession, nullptr);
+        EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->PublishFile(fileInfo);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
@@ -348,7 +348,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1000, testing::e
         ServiceProxy::serviceProxy_ = nullptr;
         string bundleName;
         string fileName;
-        EXPECT_NE(restoreSession, nullptr);
+        EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->GetFileHandle(bundleName, fileName);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
@@ -380,7 +380,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1100, testing::e
         UniqueFd remoteCap;
         vector<BundleName> bundlesToRestore;
         vector<std::string> detailInfos;
-        EXPECT_NE(restoreSession, nullptr);
+        EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->AppendBundles(move(remoteCap), bundlesToRestore, detailInfos);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
@@ -410,7 +410,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1200, testing::e
     try {
         ServiceProxy::serviceProxy_ = nullptr;
         BIncrementalSessionRestoreAsync::Callbacks callbacks;
-        EXPECT_NE(restoreAsyncSession, nullptr);
+        EXPECT_TRUE(restoreAsyncSession != nullptr);
         auto err = restoreAsyncSession->Init(callbacks);
         EXPECT_EQ(err, nullptr);
 
@@ -442,7 +442,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1300, testing::e
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1300";
     try {
         ServiceProxy::serviceProxy_ = nullptr;
-        EXPECT_NE(restoreAsyncSession, nullptr);
+        EXPECT_TRUE(restoreAsyncSession != nullptr);
         restoreAsyncSession->RegisterBackupServiceDied(nullptr);
 
         ServiceProxy::serviceProxy_ = proxy;
@@ -473,7 +473,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1400, testing::e
         ServiceProxy::serviceProxy_ = nullptr;
         UniqueFd remoteCap1;
         vector<BundleName> bundlesToRestore;
-        EXPECT_NE(restoreAsyncSession, nullptr);
+        EXPECT_TRUE(restoreAsyncSession != nullptr);
         auto err = restoreAsyncSession->AppendBundles(move(remoteCap1), bundlesToRestore);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
@@ -504,7 +504,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1500, testing::e
     try {
         ServiceProxy::serviceProxy_ = nullptr;
         BFileInfo fileInfo;
-        EXPECT_NE(restoreAsyncSession, nullptr);
+        EXPECT_TRUE(restoreAsyncSession != nullptr);
         auto err = restoreAsyncSession->PublishFile(fileInfo);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
@@ -536,7 +536,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1600, testing::e
         ServiceProxy::serviceProxy_ = nullptr;
         string bundleName;
         string fileName;
-        EXPECT_NE(restoreAsyncSession, nullptr);
+        EXPECT_TRUE(restoreAsyncSession != nullptr);
         auto err = restoreAsyncSession->GetFileHandle(bundleName, fileName);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
@@ -568,7 +568,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1700, testing::e
         UniqueFd remoteCap;
         vector<BundleName> bundlesToRestore;
         vector<std::string> detailInfos;
-        EXPECT_NE(restoreAsyncSession, nullptr);
+        EXPECT_TRUE(restoreAsyncSession != nullptr);
         auto err = restoreAsyncSession->AppendBundles(move(remoteCap), bundlesToRestore, detailInfos);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
@@ -597,7 +597,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1800, testing::e
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1800";
     try {
         ServiceProxy::serviceProxy_ = nullptr;
-        EXPECT_NE(restoreAsyncSession, nullptr);
+        EXPECT_TRUE(restoreAsyncSession != nullptr);
         auto err = restoreAsyncSession->Release();
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
@@ -628,7 +628,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1900, testing::e
         ServiceProxy::serviceProxy_ = nullptr;
         vector<BIncrementalData> bundlesToBackup;
         vector<std::string> infos;
-        EXPECT_NE(backupSession, nullptr);
+        EXPECT_TRUE(backupSession != nullptr);
         auto err = backupSession->AppendBundles(bundlesToBackup, infos);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
