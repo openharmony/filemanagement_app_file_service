@@ -414,7 +414,7 @@ namespace {
         const vector<string> expectedList = {"file://docs/storage/hmdfs/001/Document/1.txt",
                                              "file://docs/storage/hmdfs/001/Download/Subject/2.jpg",
                                              "file://docs/storage/hmdfs/001/Document/Subject1/Subject2/1.txt",
-                                             "file://docs/storage/hmdfs/001/Document/Subject1/Subject2/1.txt"};                          
+                                             "file://docs/storage/hmdfs/001/Document/Subject1/Subject2/1.txt"};
         const string networkId = "100";
         const string deviceId = "001";
         vector<string> resultList;
