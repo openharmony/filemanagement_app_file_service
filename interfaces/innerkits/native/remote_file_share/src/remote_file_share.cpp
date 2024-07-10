@@ -464,7 +464,7 @@ int32_t RemoteFileShare::TransRemoteUriToLocal(const std::vector<std::string> &u
                                                const std::string &deviceId,
                                                std::vector<std::string> &resultList)
 {
-    if (networkId.empty() || deviceId.empty() || deviceId.size() != HMDFS_CID_SIZE) {
+    if (networkId.empty() || deviceId.empty()) {
         LOGE("RemoteFileShare::TransRemoteUriToLocal, invalid argument with %{public}d", EINVAL);
         return EINVAL;
     }
