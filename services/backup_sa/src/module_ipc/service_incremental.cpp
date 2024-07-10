@@ -419,7 +419,11 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
         string callerName = VerifyCallerAndGetCallerName();
         HILOGI("Begin, callerName is %{publish}s", callerName.c_str());
         if (session_->OnBundleFileReady(callerName)) {
-            auto backUpConnection = session_->GetExtConnection(callerName);
+            auto tempBackUpConnection = session_->GetExtConnection(callerName);
+            auto backUpConnection = tempBackUpConnection.promote();
+            if (backUpConnection == nullptr) {
+                return BError(BError::Codes::SA_INVAL_ARG, "Promote backUpConnection ptr is null.");
+            }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
                 throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
@@ -454,9 +458,6 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         return e.GetCode(); // 任意异常产生，终止监听该任务
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
     } catch (...) {
         HILOGI("Unexpected exception");
         return EPERM;

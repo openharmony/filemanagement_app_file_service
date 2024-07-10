@@ -76,6 +76,13 @@ public:
      * @param callConnected
      */
     void SetCallback(std::function<void(const std::string &&)> callConnected);
+    
+    /**
+     * @brief Set the CallDied object
+     *
+     * @param callDied
+     */
+    void SetCallDied(std::function<void(const std::string &&)> callDied);
 
 public:
     SvcBackupConnection(std::function<void(const std::string &&)> callDied,
