@@ -395,4 +395,111 @@ namespace {
         GTEST_LOG_(INFO) << "RemoteFileShareTest file size is " << hui.fileSize;
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0011";
     }
+
+    /**
+     * @tc.name: remote_file_share_test_0012
+     * @tc.desc: Test function of TransRemoteUriToLocal() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7KDF7
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_TransRemoteUriToLocal_0012, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_TransRemoteUriToLocal_0012";
+        const vector<string> uriList = {"file://docs/storage/Users/currentUser/Document/1.txt",
+                                        "file://docs/storage/Users/currentUser/Download/Subject/2.jpg",
+                                        "file://docs/storage/Users/currentUser/Document/Subject1/Subject2/1.txt",
+                                        "file://docs/storage/100/account/Document/Subject1/Subject2/1.txt"};
+        const vector<string> expectedList = {"file://docs/storage/hmdfs/001/Document/1.txt",
+                                             "file://docs/storage/hmdfs/001/Download/Subject/2.jpg",
+                                             "file://docs/storage/hmdfs/001/Document/Subject1/Subject2/1.txt",
+                                             "file://docs/storage/hmdfs/001/Document/Subject1/Subject2/1.txt"};                          
+        const string networkId = "100";
+        const string deviceId = "001";
+        vector<string> resultList;
+        int ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(resultList, expectedList);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_TransRemoteUriToLocal_0012";
+    }
+
+    /**
+     * @tc.name: remote_file_share_test_0013
+     * @tc.desc: Test function of TransRemoteUriToLocal() interface for FAILURE.
+     *           the sandboxPath of uri does not equal to "storage"
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7KDF7
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_TransRemoteUriToLocal_0013, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_TransRemoteUriToLocal_0013";
+        const vector<string> uriList = {"file://docs/storage/Users/currentUser/Document/1.txt",
+                                        "file://docs/hmdfs/Users/currentUser/Download/Subject/2.jpg",
+                                        "file://docs/tmp/Users/currentUser/Document/Subject1/Subject2/1.txt",
+                                        "file://docs/storage/100/account/Document/Subject1/Subject2/1.txt"};
+        const string networkId = "100";
+        const string deviceId = "001";
+        vector<string> resultList;
+        int ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
+        EXPECT_NE(ret, E_OK);
+        EXPECT_EQ(resultList, uriList);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_TransRemoteUriToLocal_0013";
+    }
+
+    /**
+     * @tc.name: remote_file_share_test_0014
+     * @tc.desc: Test function of TransRemoteUriToLocal() interface for FAILURE.
+     *           the bundlename of uri does not equal to "docs"
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7KDF7
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_TransRemoteUriToLocal_0014, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_TransRemoteUriToLocal_0014";
+        const vector<string> uriList = {"file://docs/storage/Users/currentUser/Document/1.txt",
+                                        "file://doc/storage/Users/currentUser/Download/Subject/2.jpg",
+                                        "file://docs/storage/Users/currentUser/Document/Subject1/Subject2/1.txt",
+                                        "file://doc/storage/100/account/Document/Subject1/Subject2/1.txt"};
+        const string networkId = "100";
+        const string deviceId = "001";
+        vector<string> resultList;
+        int ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
+        EXPECT_NE(ret, E_OK);
+        EXPECT_EQ(resultList, uriList);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_TransRemoteUriToLocal_0014";
+    }
+
+    /**
+     * @tc.name: remote_file_share_test_0015
+     * @tc.desc: Test function of TransRemoteUriToLocal() interface for FAILURE.
+     *           the scheme of uri does not equal to "file"
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7KDF7
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_TransRemoteUriToLocal_0015, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_TransRemoteUriToLocal_0015";
+        const vector<string> uriList = {"FILE://docs/storage/Users/currentUser/Document/1.txt",
+                                        "file://docs/storage/Users/currentUser/Download/Subject/2.jpg",
+                                        "file://docs/storage/Users/currentUser/Document/Subject1/Subject2/1.txt",
+                                        "file://docs/storage/100/account/Document/Subject1/Subject2/1.txt"};
+        const string networkId = "100";
+        const string deviceId = "001";
+        vector<string> resultList;
+        int ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
+        EXPECT_NE(ret, E_OK);
+        EXPECT_EQ(resultList, uriList);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_TransRemoteUriToLocal_0015";
+    }
 }

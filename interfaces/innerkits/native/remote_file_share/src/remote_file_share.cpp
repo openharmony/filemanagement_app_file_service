@@ -58,6 +58,8 @@ namespace {
     const std::string PACKAGE_NAME = "get_dfs_uri_from_local";
     const std::string NETWORK_PARA = "?networkid=";
     const std::string MEDIA_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
+    const std::string FILE_MANAGER_URI_HEAD = "/storage/";
+    const std::string REMOTE_SHARE_PATH_MID = "hmdfs/";
 }
 
 #define HMDFS_IOC_SET_SHARE_PATH    _IOW(HMDFS_IOC, 1, struct HmdfsShareControl)
@@ -456,6 +458,56 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
     LOGD("GetDfsUriFromLocal successfully");
     return 0;
 }
+
+int32_t RemoteFileShare::TransRemoteUriToLocal(const std::vector<std::string> &uriList,
+                                               const std::string &networkId,
+                                               const std::string &deviceId,
+                                               std::vector<std::string> &resultList)
+{
+    LOGI("TransRemoteUriToLocal begin");
+    constexpr int splitThree = 3;
+    bool allValid = true;
+    std::vector<std::string> tmpResultList;
+    for (auto &uriStr : uriList) {
+        Uri uri(uriStr);
+        std::string bundleName = uri.GetAuthority();
+        std::string sandboxPath = SandboxHelper::Decode(uri.GetPath());
+        if (!SandboxHelper::IsValidPath(sandboxPath) || uri.GetScheme() != FILE_SCHEME) {
+            LOGE("Sandbox path from uri is error");
+            allValid = false;
+            break;
+        }
+        if ((bundleName != FILE_MANAGER_AUTHORITY) || (sandboxPath.find(FILE_MANAGER_URI_HEAD) != 0)) {
+            LOGE("Sandbox path doesn't begin with docs/storage");
+            allValid = false;
+            break;
+        }
+        int cnt = 0;
+        size_t pos = 0;
+        std::string part;
+        while (cnt < splitThree && pos != std::string::npos) {
+            pos = sandboxPath.find('/', pos + 1);
+            cnt++;
+        }
+        if (pos != std::string::npos) {
+            part = sandboxPath.substr(pos + 1);
+        }
+        if (part.empty()) {
+            allValid = false;
+            break;
+        }
+        std::string localUri = FILE_SCHEME + "://" + bundleName + FILE_MANAGER_URI_HEAD +
+                               REMOTE_SHARE_PATH_MID + deviceId + "/" + part;
+        tmpResultList.push_back(localUri);
+    }
+    if (!allValid) {
+        LOGW("Failed to update uriList");
+        resultList = uriList;
+        return -EINVAL;
+    }
+    resultList = tmpResultList;
+    return 0;
+}                                               
 } // namespace ModuleRemoteFileShare
 } // namespace AppFileService
 } // namespace OHOS
