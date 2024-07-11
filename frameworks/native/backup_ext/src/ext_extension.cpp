@@ -53,6 +53,7 @@
 #include "service_proxy.h"
 #include "tar_file.h"
 #include "untar_file.h"
+#include "b_anony/b_anony.h"
 
 namespace OHOS::FileManagement::Backup {
 const string DEFAULT_TAR_PKG = "1.tar";
@@ -131,7 +132,7 @@ static bool CheckAndCreateDirectory(const string &filePath)
 static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGE("GetFileHandleForSpecialCloneCloud: fileName is %{public}s", fileName.data());
+    HILOGI("GetFileHandleForSpecialCloneCloud: fileName is %{public}s", GetAnonyPath(fileName).c_str());
     string filePath = fileName;
     if (fileName.front() != BConstants::FILE_SEPARATOR_CHAR) {
         filePath = BConstants::FILE_SEPARATOR_CHAR + fileName;
@@ -162,7 +163,7 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName, int32_t &errC
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
-            HILOGI("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
+            HILOGE("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
 
@@ -232,7 +233,7 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
     }
     auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd), ERR_OK);
     if (ret != ERR_OK) {
-        HILOGI("Failed to AppIncrementalFileReady %{public}d", ret);
+        HILOGE("Failed to AppIncrementalFileReady %{public}d", ret);
     }
     return ERR_OK;
 }
@@ -292,7 +293,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         }
         auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd), errCode);
         if (ret != ERR_OK) {
-            HILOGI("Failed to AppIncrementalFileReady %{public}d", ret);
+            HILOGE("Failed to AppIncrementalFileReady %{public}d", ret);
         }
         return ERR_OK;
     } catch (...) {
@@ -386,7 +387,7 @@ ErrCode BackupExtExtension::BigFileReady(sptr<IService> proxy)
 ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin publish file. fileName is %{public}s", fileName.data());
+    HILOGI("Begin publish file. fileName is %{public}s", GetAnonyPath(fileName).c_str());
     try {
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
@@ -396,7 +397,7 @@ ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
         if (extension_->AllowToBackupRestore()) {
             AsyncTaskRestore(GetIdxFileData(), GetExtManageInfo());
         }
-        HILOGE("End publish file");
+        HILOGI("End publish file");
         return ERR_OK;
     } catch (const BError &e) {
         DoClear();
@@ -454,7 +455,7 @@ ErrCode BackupExtExtension::HandleBackup()
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
     auto cache = cachedEntity.Structuralize();
     if (!cache.GetAllowToBackupRestore()) {
-        HILOGI("Application does not allow backup or restore");
+        HILOGE("Application does not allow backup or restore");
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
             .GetCode();
     }
@@ -630,15 +631,14 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto task = [obj {wptr<BackupExtExtension>(this)}, config]() {
         auto ptr = obj.promote();
-        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                              "Ext extension handle have been already released");
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         try {
             BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
             auto cache = cachedEntity.Structuralize();
             auto ret = ptr->DoBackup(cache);
             // REM: 处理返回结果 ret
             ptr->AppDone(ret);
-            HILOGE("backup app done %{public}d", ret);
+            HILOGI("backup app done %{public}d", ret);
         } catch (const BError &e) {
             ptr->AppDone(e.GetCode());
         } catch (const exception &e) {
@@ -676,11 +676,11 @@ static void RestoreBigFilesForSpecialCloneCloud(ExtManageInfo item)
     struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
     UniqueFd fd(open(fileName.data(), O_RDONLY));
     if (fd < 0) {
-        HILOGE("Failed to open file = %{private}s, err = %{public}d", fileName.c_str(), errno);
+        HILOGE("Failed to open file = %{public}s, err = %{public}d", GetAnonyPath(fileName).c_str(), errno);
         return;
     }
     if (futimens(fd.Get(), tv) != 0) {
-        HILOGE("Failed to change the file time. %{public}s , %{public}d", fileName.c_str(), errno);
+        HILOGE("Failed to change the file time. %{public}s , %{public}d", GetAnonyPath(fileName).c_str(), errno);
     }
 }
 
@@ -749,7 +749,7 @@ static bool RestoreBigFilePrecheck(string &fileName, const string &path, const s
 
     // 不带路径的文件名
     if (access(fileName.data(), F_OK) != 0) {
-        HILOGI("file does not exist");
+        HILOGE("file does not exist");
         return false;
     }
 
@@ -791,11 +791,11 @@ static void RestoreBigFileAfter(const string &fileName,
     struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
     UniqueFd fd(open(filePath.data(), O_RDONLY));
     if (fd < 0) {
-        HILOGE("Failed to open file = %{public}s, err = %{public}d", filePath.c_str(), errno);
+        HILOGE("Failed to open file = %{public}s, err = %{public}d", GetAnonyPath(filePath).c_str(), errno);
         return;
     }
     if (futimens(fd.Get(), tv) != 0) {
-        HILOGI("failed to change the file time. %{public}s , %{public}d", filePath.c_str(), errno);
+        HILOGE("failed to change the file time. %{public}s , %{public}d", GetAnonyPath(filePath).c_str(), errno);
     }
 }
 
@@ -917,7 +917,8 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}, fileSet {fileSet}, extManageInfo {extManageInfo}]() {
         auto ptr = obj.promote();
-        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have already released");
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
             int ret = ERR_OK;
             if (ptr->extension_->SpecialVersionForCloneAndCloud()) {
@@ -943,7 +944,6 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
             RestoreBigFiles(appendTargetPath);
             DeleteBackupTars();
             if (ret == ERR_OK) {
-                HILOGI("after extra, do restore.");
                 ptr->AsyncTaskRestoreForUpgrade();
             } else {
                 ptr->AppDone(ret);
@@ -975,10 +975,8 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
-        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                              "Ext extension handle have been already released");
-        BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
-                              "extension handle have been already released");
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
             // 解压
             int ret = ptr->DoIncrementalRestore();
@@ -1025,10 +1023,7 @@ void BackupExtExtension::AsyncTaskIncreRestoreSpecialVersion()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
-        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                              "Ext extension handle have been already released");
-        BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
-                              "extension handle have been already released");
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         try {
             int ret = RestoreFilesForSpecialCloneCloud();
             if (ret == ERR_OK) {
@@ -1064,22 +1059,22 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
-        auto ptr = obj.promote();
         auto callBackup = [obj](ErrCode errCode) {
             auto extensionPtr = obj.promote();
-            BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                "Ext extension handle have been already released");
+            if (extensionPtr == nullptr) {
+                HILOGE("Ext extension handle have been released");
+                return;
+            }
             HILOGI("Current bundle will execute app done");
             extensionPtr->AppDone(errCode);
             extensionPtr->DoClear();
         };
-        auto callBackupEx = ptr->RestoreResultCallbackEx(obj);
-        auto callBackupExAppDone = ptr->AppDoneCallbackEx(obj);
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                                  "Ext extension handle have been already released");
-            BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
-                                  "extension handle have been already released");
+            auto callBackupEx = ptr->RestoreResultCallbackEx(obj);
+            auto callBackupExAppDone = ptr->AppDoneCallbackEx(obj);
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx, callBackupExAppDone);
             HILOGI("OnRestore done err = %{public}d", err);
         } catch (const BError &e) {
@@ -1113,22 +1108,22 @@ void BackupExtExtension::ExtClear()
 void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
-        auto ptr = obj.promote();
         auto callBackup = [obj](ErrCode errCode) {
             auto extensionPtr = obj.promote();
-            BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                "Ext extension handle have been already released");
+            if (extensionPtr == nullptr) {
+                HILOGE("Ext extension handle have been released");
+                return;
+            }
             HILOGI("Current bundle will execute app done");
             extensionPtr->AppIncrementalDone(errCode);
             extensionPtr->DoClear();
         };
-        auto callBackupEx = ptr->IncRestoreResultCallbackEx(obj);
-        auto callBackupExAppDone = ptr->IncAppDoneCallbackEx(obj);
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                                  "Ext extension handle have been already released");
-            BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
-                                  "extension handle have been already released");
+            auto callBackupEx = ptr->IncRestoreResultCallbackEx(obj);
+            auto callBackupExAppDone = ptr->IncAppDoneCallbackEx(obj);
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx, callBackupExAppDone);
             HILOGI("OnRestore done err = %{public}d", err);
         } catch (const BError &e) {
@@ -1178,7 +1173,7 @@ void BackupExtExtension::DoClear()
             string(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
         unique_lock<shared_mutex> lock(lock_);
     } catch (...) {
-        HILOGI("Failed to clear");
+        HILOGE("Failed to clear");
     }
 }
 
@@ -1209,22 +1204,23 @@ void BackupExtExtension::AsyncTaskOnBackup()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
+        auto callBackup = [obj](ErrCode errCode) {
+            HILOGI("begin call backup");
+            auto extensionPtr = obj.promote();
+            if (extensionPtr == nullptr) {
+                HILOGE("Ext extension handle have been released");
+                return;
+            }
+            if (extensionPtr->extension_ == nullptr) {
+                HILOGE("Extension handle have been released");
+                return;
+            }
+            extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
+        };
         auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                                  "Ext extension handle have been already released");
-            BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
-                                  "extension handle have been already released");
-
-            auto callBackup = [obj](ErrCode errCode) {
-                HILOGI("begin call backup");
-                auto extensionPtr = obj.promote();
-                BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                                      "Ext extension handle have been already released");
-                BExcepUltils::BAssert(extensionPtr->extension_, BError::Codes::EXT_INVAL_ARG,
-                                      "extension handle have been already released");
-                extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
-            };
             auto callBackupEx = ptr->HandleTaskBackupEx(obj);
             ptr->extension_->OnBackup(callBackup, callBackupEx);
         } catch (const BError &e) {
@@ -1252,12 +1248,12 @@ ErrCode BackupExtExtension::HandleRestore()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     VerifyCaller();
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
-        HILOGI("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
+        HILOGE("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
         throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
     }
     // read backup_config is allow to backup or restore
     if (!extension_->AllowToBackupRestore()) {
-        HILOGI("Application does not allow backup or restore");
+        HILOGE("Application does not allow backup or restore");
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
             .GetCode();
     }
@@ -1526,11 +1522,8 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
     }
     auto task = [obj {wptr<BackupExtExtension>(this)}, manifestFdDup, incrementalFdDup]() {
         auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         try {
-            BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                                  "Ext extension handle have been already released");
-            BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
-                                  "extension handle have been already released");
             UniqueFd incrementalDupFd(dup(incrementalFdDup));
             UniqueFd manifestDupFd(dup(manifestFdDup));
             if (incrementalDupFd < 0) {
@@ -1544,7 +1537,7 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
             ptr->CompareFiles(move(incrementalDupFd), move(manifestDupFd), allFiles, smallFiles, bigFiles);
             auto ret = ptr->DoIncrementalBackup(allFiles, smallFiles, bigFiles);
             ptr->AppIncrementalDone(ret);
-            HILOGE("Incremental backup app done %{public}d", ret);
+            HILOGI("Incremental backup app done %{public}d", ret);
         } catch (const BError &e) {
             ptr->AppIncrementalDone(e.GetCode());
         } catch (const exception &e) {
@@ -1568,7 +1561,6 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
 void BackupExtExtension::AsyncTaskOnIncrementalBackup()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
-        auto ptr = obj.promote();
         auto callBackup = [obj](ErrCode errCode) {
             HILOGI("App onbackup end");
             auto proxy = ServiceProxy::GetInstance();
@@ -1578,12 +1570,11 @@ void BackupExtExtension::AsyncTaskOnIncrementalBackup()
             HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
             proxy->GetAppLocalListAndDoIncrementalBackup();
         };
-        auto callBackupEx = ptr->HandleBackupEx(obj);
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                                  "Ext extension handle have been already released");
-            BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG,
-                                  "extension handle have been already released");
+            auto callBackupEx = ptr->HandleBackupEx(obj);
             ptr->extension_->OnBackup(callBackup, callBackupEx);
         } catch (const BError &e) {
             ptr->AppIncrementalDone(e.GetCode());
@@ -1747,13 +1738,25 @@ ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
 {
     auto obj = wptr<BackupExtExtension>(this);
     auto ptr = obj.promote();
+    if (ptr == nullptr) {
+        HILOGE("Failed to get ext extension.");
+        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
+    }
+    if (ptr->extension_ == nullptr) {
+        HILOGE("Failed to get extension.");
+        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
+    }
     auto callBackup = [ptr](ErrCode errCode, const std::string result) {
+        if (ptr == nullptr) {
+            HILOGE("Failed to get ext extension.");
+            return;
+        }
         HILOGI("GetBackupInfo callBackup start. result = %{public}s", result.c_str());
         ptr->backupInfo_ = result;
     };
     auto ret = ptr->extension_->GetBackupInfo(callBackup);
     if (ret != ERR_OK) {
-        HILOGE("Failed to notify the app done. err = %{public}d", ret);
+        HILOGE("Failed to get backupInfo. err = %{public}d", ret);
         return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
     }
     HILOGD("backupInfo = %s", backupInfo_.c_str());
@@ -1781,8 +1784,14 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::RestoreResultCallb
     HILOGI("Begin get callbackEx");
     return [obj](ErrCode errCode, const std::string restoreRetInfo) {
         auto extensionPtr = obj.promote();
-        BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-            "Ext extension handle have been already released");
+        if (extensionPtr == nullptr) {
+            HILOGE("Ext extension handle have been released");
+            return;
+        }
+        if (extensionPtr->extension_ == nullptr) {
+            HILOGE("Extension handle have been released");
+            return;
+        }
         extensionPtr->extension_->CallExtRestore(errCode, restoreRetInfo);
         if (errCode) {
             extensionPtr->AppDone(errCode);
@@ -1802,8 +1811,10 @@ std::function<void(ErrCode)> BackupExtExtension::AppDoneCallbackEx(wptr<BackupEx
     return [obj](ErrCode errCode) {
         HILOGI("begin call callBackupExAppDone");
         auto extensionPtr = obj.promote();
-        BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-            "Ext extension handle have been already released");
+        if (extensionPtr == nullptr) {
+            HILOGE("Ext extension handle have been released");
+            return;
+        }
         extensionPtr->AppDone(errCode);
         extensionPtr->DoClear();
     };
@@ -1815,8 +1826,14 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncRestoreResultCa
     return [obj](ErrCode errCode, const std::string restoreRetInfo) {
         HILOGI("begin call restoreEx");
         auto extensionPtr = obj.promote();
-        BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-            "Ext extension handle have been already released");
+        if (extensionPtr == nullptr) {
+            HILOGE("Ext extension handle have been released");
+            return;
+        }
+        if (extensionPtr->extension_ == nullptr) {
+            HILOGE("Extension handle have been released");
+            return;
+        }
         extensionPtr->extension_->CallExtRestore(errCode, restoreRetInfo);
         if (errCode) {
             extensionPtr->AppIncrementalDone(errCode);
@@ -1834,8 +1851,10 @@ std::function<void(ErrCode)> BackupExtExtension::IncAppDoneCallbackEx(wptr<Backu
     return [obj](ErrCode errCode) {
         HILOGI("begin call callBackupExAppDone for restore");
         auto extensionPtr = obj.promote();
-        BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-            "Ext extension handle have been already released");
+        if (extensionPtr == nullptr) {
+            HILOGE("Ext extension handle have been released");
+            return;
+        }
         extensionPtr->AppIncrementalDone(errCode);
         extensionPtr->DoClear();
     };
@@ -1850,8 +1869,14 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::HandleBackup
             throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
         }
         auto extensionPtr = obj.promote();
-        BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-            "Ext extension handle have been already released");
+        if (extensionPtr == nullptr) {
+            HILOGE("Ext extension handle have been released");
+            return;
+        }
+        if (extensionPtr->extension_ == nullptr) {
+            HILOGE("Extension handle have been released");
+            return;
+        }
         extensionPtr->extension_->CallExtRestore(errCode, backupExRetInfo);
         if (backupExRetInfo.size()) {
             HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
@@ -1868,8 +1893,14 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::HandleTaskBa
     return [obj](ErrCode errCode, const std::string backupExRetInfo) {
         HILOGI("begin call backup");
         auto extensionPtr = obj.promote();
-        BExcepUltils::BAssert(extensionPtr, BError::Codes::EXT_BROKEN_FRAMEWORK,
-            "Ext extension handle have been already released");
+        if (extensionPtr == nullptr) {
+            HILOGE("Ext extension handle have been released");
+            return;
+        }
+        if (extensionPtr->extension_ == nullptr) {
+            HILOGE("Extension handle have been released");
+            return;
+        }
         extensionPtr->extension_->CallExtRestore(errCode, backupExRetInfo);
         if (backupExRetInfo.size()) {
             extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());

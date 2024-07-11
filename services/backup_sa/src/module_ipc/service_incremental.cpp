@@ -417,7 +417,7 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         string callerName = VerifyCallerAndGetCallerName();
-        HILOGI("Begin, callerName is %{publish}s", callerName.c_str());
+        HILOGI("Service AppIncrementalDone start, callerName is %{public}s", callerName.c_str());
         if (session_->OnBundleFileReady(callerName)) {
             auto tempBackUpConnection = session_->GetExtConnection(callerName);
             auto backUpConnection = tempBackUpConnection.promote();
