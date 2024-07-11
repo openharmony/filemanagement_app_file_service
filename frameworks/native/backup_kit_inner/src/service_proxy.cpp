@@ -469,6 +469,10 @@ void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t 
     }
     unique_lock<mutex> lock(proxyMutex_);
     serviceProxy_ = iface_cast<IService>(remoteObject);
+    if (serviceProxy_ == nullptr) {
+        HILOGD("serviceProxy_ is nullptr");
+        return;
+    }
     auto remoteObj = serviceProxy_->AsObject();
     if (!remoteObj) {
         HILOGE("Failed to get remote object");
