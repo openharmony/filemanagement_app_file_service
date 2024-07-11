@@ -22,27 +22,27 @@ using namespace std;
 
 std::string GetAnonyString(const std::string &value)
 {
-    constexpr size_t INT32_SHORT_ID_LENGTH = 20;
-    constexpr size_t INT32_PLAINTEXT_LENGTH = 4;
-    constexpr size_t INT32_MIN_ID_LENGTH = 3;
-    std::string res;
+    const size_t shortPlaintextLength = 20; // 字符串长度小于20，只明文1字节
+    const size_t plaintextLength = 4; // 字符串长度大于20，明文4字节
+    const size_t anonyLength = 3; // 字符串长度小于3，则完全匿名
+    std::string result;
     std::string tmpStr("******");
     size_t strLen = value.length();
-    if (strLen < INT32_MIN_ID_LENGTH) {
+    if (strLen < anonyLength) {
         return tmpStr;
     }
 
-    if (strLen <= INT32_SHORT_ID_LENGTH) {
-        res += value[0];
-        res += tmpStr;
-        res += value[strLen - 1];
+    if (strLen <= shortPlaintextLength) {
+        result += value[0];
+        result += tmpStr;
+        result += value[strLen - 1];
     } else {
-        res.append(value, 0, INT32_PLAINTEXT_LENGTH);
-        res += tmpStr;
-        res.append(value, strLen - INT32_PLAINTEXT_LENGTH, INT32_PLAINTEXT_LENGTH);
+        result += value.substr(0, plaintextLength);
+        result += tmpStr;
+        result += value.substr(strLen - plaintextLength, plaintextLength);
     }
 
-    return res;
+    return result;
 }
 
 std::string GetAnonyPath(const std::string &value)
