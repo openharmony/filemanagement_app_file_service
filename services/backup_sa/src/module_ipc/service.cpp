@@ -591,10 +591,14 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
             return EPERM;
         }
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
-
+        if (backUpConnection == nullptr) {
+            HILOGE("PublishFile error, backUpConnection is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         auto proxy = backUpConnection->GetBackupExtProxy();
         if (!proxy) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+            HILOGE("PublishFile error, Extension backup Proxy is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
         }
         ErrCode res = proxy->PublishFile(fileInfo.fileName);
         if (res) {
@@ -630,9 +634,14 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
 
         if (session_->OnBundleFileReady(callerName, fileName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
+            if (backUpConnection == nullptr) {
+                HILOGE("AppFileReady error, backUpConnection is empty");
+                return BError(BError::Codes::SA_INVAL_ARG);
+            }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
-                throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+                HILOGE("AppFileReady error, Extension backup Proxy is empty");
+                return BError(BError::Codes::SA_INVAL_ARG);
             }
             // 通知extension清空缓存
             proxy->HandleClear();
@@ -757,6 +766,9 @@ void Service::NotifyCloneBundleFinish(std::string bundleName)
 {
     if (session_->OnBundleFileReady(bundleName)) {
         auto backUpConnection = session_->GetExtConnection(bundleName);
+        if (backUpConnection == nullptr) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "backUpConnection is empty");
+        }
         auto proxy = backUpConnection->GetBackupExtProxy();
         if (!proxy) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
@@ -774,7 +786,7 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGE("begin %{public}s", bundleName.data());
+        HILOGI("begin %{public}s", bundleName.data());
         IServiceReverse::Scenario scenario = session_->GetScenario();
         BConstants::ExtensionAction action;
         if (scenario == IServiceReverse::Scenario::BACKUP) {
@@ -805,7 +817,10 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         want.SetParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA, bundleExtInfo);
 
         auto backUpConnection = session_->GetExtConnection(bundleName);
-
+        if (backUpConnection == nullptr) {
+            HILOGE("LaunchBackupExtension error, backUpConnection is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         ErrCode ret = backUpConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
         return ret;
     } catch (const BError &e) {
@@ -852,9 +867,14 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {
             auto backUpConnection = session_->GetExtConnection(bundleName);
+            if (backUpConnection == nullptr) {
+                HILOGE("GetFileHandle error, backUpConnection is empty");
+                return BError(BError::Codes::SA_INVAL_ARG);
+            }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
-                throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+                HILOGE("GetFileHandle error, Extension backup Proxy is empty");
+                return BError(BError::Codes::SA_INVAL_ARG);
             }
             int32_t errCode = 0;
             UniqueFd fd = proxy->GetFileHandle(fileName, errCode);
@@ -901,6 +921,11 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
             }
             thisPtr->ExtConnectDied(bundleName);
         };
+        if (backUpConnection == nullptr) {
+            HILOGE("OnBackupExtensionDied error. backUpConnection is empty");
+            ExtConnectDied(bundleName);
+            return;
+        }
         backUpConnection->SetCallback(callConnected);
         auto ret = LaunchBackupExtension(bundleName);
         if (ret) {
@@ -922,7 +947,7 @@ void Service::ExtConnectDied(const string &callName)
         /* Clear Timer */
         session_->BundleExtTimerStop(callName);
         auto backUpConnection = session_->GetExtConnection(callName);
-        if (backUpConnection->IsExtAbilityConnected()) {
+        if (backUpConnection != nullptr && backUpConnection->IsExtAbilityConnected()) {
             backUpConnection->DisconnectBackupExtAbility();
         }
         /* Clear Session before notice client finish event */
@@ -951,9 +976,12 @@ void Service::ExtStart(const string &bundleName)
         }
         IServiceReverse::Scenario scenario = session_->GetScenario();
         auto backUpConnection = session_->GetExtConnection(bundleName);
+        if (backUpConnection == nullptr) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "ExtStart bundle task error, backUpConnection is empty");
+        }
         auto proxy = backUpConnection->GetBackupExtProxy();
         if (!proxy) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+            throw BError(BError::Codes::SA_INVAL_ARG, "ExtStart bundle task error, Extension backup Proxy is empty");
         }
         if (scenario == IServiceReverse::Scenario::BACKUP) {
             auto ret = proxy->HandleBackup();
@@ -1348,6 +1376,10 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
         session_->IncreaseSessionCnt();
         session_->SetSessionUserId(GetUserIdDefault());
         auto backupConnection = session_->CreateBackupConnection(bundleName);
+        if (backupConnection == nullptr) {
+            HILOGE("backupConnection is null. bundleName: %{public}s", bundleName.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         auto callConnected = GetBackupInfoConnectDone(wptr(this), bundleName);
         auto callDied = GetBackupInfoConnectDied(wptr(this), bundleName);
         backupConnection->SetCallback(callConnected);

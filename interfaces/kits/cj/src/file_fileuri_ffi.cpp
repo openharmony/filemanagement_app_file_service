@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "b_resources/b_constants.h"
 #include "file_fileuri_ffi.h"
 #include "file_uri.h"
 #include "macro.h"
@@ -31,6 +32,10 @@ extern "C" {
 char* MallocCString(const std::string& origin)
 {
     if (origin.empty()) {
+        return nullptr;
+    }
+    if (origin.length() > OHOS::FileManagement::Backup::BConstants::PARAM_STARING_MAX_MEMORY) {
+        LOGE("The param origin is too big");
         return nullptr;
     }
     auto length = origin.length() + 1;

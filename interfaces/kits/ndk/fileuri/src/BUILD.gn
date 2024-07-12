@@ -12,6 +12,7 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//foundation/filemanagement/app_file_service/app_file_service.gni")
+import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ohos_shared_library("ohfileuri") {
   branch_protector_ret = "pac_ret"
@@ -31,8 +32,10 @@ ohos_shared_library("ohfileuri") {
 
   sources = [ "oh_file_uri.cpp" ]
 
-  deps =
-      [ "${app_file_service_path}/interfaces/innerkits/native:fileuri_native" ]
+  deps = [
+    "${app_file_service_path}/interfaces/innerkits/native:fileuri_native",
+    "${path_backup}/utils:backup_utils",
+  ]
 
   external_deps = [
     "ability_base:zuri",

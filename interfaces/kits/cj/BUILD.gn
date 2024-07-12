@@ -39,6 +39,7 @@ ohos_shared_library("cj_file_fileuri_ffi") {
   if (product_name != "ohos-sdk") {
     deps = [
       "${app_file_service_path}/interfaces/innerkits/native:fileuri_native",
+      "${path_backup}/utils:backup_utils",
     ]
     external_deps = [
       "ability_base:zuri",

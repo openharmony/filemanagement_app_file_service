@@ -1912,7 +1912,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::HandleTaskBa
 
 void BackupExtExtension::WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum)
 {
-    HILOGI("WaitToSendFd Begin");
+    HILOGD("WaitToSendFd Begin");
     std::unique_lock<std::mutex> lock(startSendMutex_);
     startSendFdRateCon_.wait(lock, [this] { return sendRate_ > 0; });
     if (fdSendNum >= sendRate_) {
@@ -1930,7 +1930,7 @@ void BackupExtExtension::WaitToSendFd(std::chrono::system_clock::time_point &sta
         fdSendNum = 0;
         startTime = std::chrono::system_clock::now();
     }
-    HILOGI("WaitToSendFd End");
+    HILOGD("WaitToSendFd End");
 }
 
 void BackupExtExtension::RefreshTimeInfo(std::chrono::system_clock::time_point &startTime, int &fdSendNum)
