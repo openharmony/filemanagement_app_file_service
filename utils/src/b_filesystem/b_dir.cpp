@@ -43,7 +43,7 @@ static bool IsEmptyDirectory(const string &path)
         return false;
     }
     bool isEmpty = true;
-    struct dirent *entry;
+    struct dirent *entry = nullptr;
     while ((entry = readdir(dir)) != nullptr) {
         if (entry->d_type != DT_DIR || (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)) {
             isEmpty = false;
