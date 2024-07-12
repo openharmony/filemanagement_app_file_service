@@ -1212,12 +1212,12 @@ void Service::SendStartAppGalleryNotify(const BundleName &bundleName)
         return ;
     }
     DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
-    HILOGI("SendStartAppGalleryNotify StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+    HILOGI("StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
         bundleName.c_str());
     if (!disposal_->IfBundleNameInDisposalConfigFile(bundleName)) {
         HILOGE("WriteDisposalConfigFile Failed");
         DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
-        HILOGI("SendEndAppGalleryNotify EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+        HILOGE("Clear disposal, code=%{public}d, bundleName=%{public}s", disposeErr,
             bundleName.c_str());
         return ;
     }
@@ -1232,10 +1232,10 @@ void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
         return ;
     }
     DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
-    HILOGI("SendEndAppGalleryNotify EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+    HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
         bundleName.c_str());
     if (disposeErr != DisposeErr::OK) {
-        HILOGE("SendEndAppGalleryNotify error,disposal will be clear in the end");
+        HILOGE("Error, disposal will be clear in the end");
         return ;
     }
     if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
@@ -1259,10 +1259,10 @@ void Service::SendErrAppGalleryNotify()
             return ;
         }
         DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
-        HILOGI("SendErrAppGalleryNotify EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+        HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
             bundleName.c_str());
         if (disposeErr != DisposeErr::OK) {
-            HILOGE("SendEndAppGalleryNotify error,disposal will be clear in the end");
+            HILOGE("Error,disposal will be clear in the end");
             return ;
         }
         if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
@@ -1279,7 +1279,7 @@ void Service::ClearDisposalOnSaStart()
         for (vector<string>::iterator it = bundleNameList.begin(); it != bundleNameList.end(); ++it) {
             string bundleName = *it;
             DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
-            HILOGI("SendErrAppGalleryNotify EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+            HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
                 bundleName.c_str());
         }
     }
