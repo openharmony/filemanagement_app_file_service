@@ -92,7 +92,7 @@ static bool ConvertPolicyErrorResult(const std::deque<OHOS::AppFileService::Poli
         return false;
     }
     for (uint32_t i = 0; i < count; i++) {
-        int size = errorResults[i].uri.size() + 1;
+        size_t size = errorResults[i].uri.size() + 1;
         (*result)[i].uri = static_cast<char *>(malloc(size));
         if ((*result)[i].uri == nullptr) {
             LOGE("Failed to apply for URI memory");

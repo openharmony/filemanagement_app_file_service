@@ -169,10 +169,10 @@ static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
     unique_ptr<glob_t, function<void(glob_t *)>> gl {new glob_t, [](glob_t *ptr) { globfree(ptr); }};
     *gl = {};
 
-    int flags = GLOB_DOOFFS | GLOB_MARK;
+    unsigned int flags = GLOB_DOOFFS | GLOB_MARK;
     for (const string &pattern : vec) {
         if (!pattern.empty()) {
-            glob(pattern.data(), flags, NULL, gl.get());
+            glob(pattern.data(), static_cast<int>(flags), NULL, gl.get());
             flags |= GLOB_APPEND;
         }
     }
