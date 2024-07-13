@@ -42,6 +42,10 @@ using namespace std;
 void SchedScheduler::Sched(string bundleName)
 {
     if (bundleName == "") {
+        if (sessionPtr_ == nullptr) {
+            HILOGE("Sched bundle %{public}s error, sessionPtr is empty", bundleName.c_str());
+            return;
+        }
         if (!sessionPtr_->GetSchedBundleName(bundleName)) {
             return;
         }
@@ -50,6 +54,10 @@ void SchedScheduler::Sched(string bundleName)
     auto callStart = [schedPtr {wptr(this)}, bundleName]() {
         try {
             auto ptr = schedPtr.promote();
+            if (ptr == nullptr) {
+                HILOGE("Sched bundle %{public}s error, ptr is empty", bundleName.c_str());
+                return;
+            }
             ptr->ExecutingQueueTasks(bundleName);
         } catch (const BError &e) {
             HILOGE("%{public}s", e.what());
@@ -65,6 +73,10 @@ void SchedScheduler::Sched(string bundleName)
 void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
 {
     HILOGE("start");
+    if (sessionPtr_ == nullptr) {
+        HILOGE("ExecutingQueueTasks bundle %{public}s error, sessionPtr is empty", bundleName.c_str());
+        return;
+    }
     BConstants::ServiceSchedAction action = sessionPtr_->GetServiceSchedAction(bundleName);
     if (action == BConstants::ServiceSchedAction::START) {
         // 注册启动定时器
@@ -80,7 +92,9 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
         bundleTimeVec_.emplace_back(make_tuple(bundleName, iTime));
         lock.unlock();
         // 启动extension
-        reversePtr_->LaunchBackupExtension(bundleName);
+        if (reversePtr_ != nullptr) {
+            reversePtr_->LaunchBackupExtension(bundleName);
+        }
     } else if (action == BConstants::ServiceSchedAction::RUNNING) {
         HILOGI("Current bundle %{public}s process is running", bundleName.data());
         unique_lock<shared_mutex> lock(lock_);
@@ -98,8 +112,10 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
         // 开始执行备份恢复流程
         HILOGI("Current bundle %{public}s extension start", bundleName.data());
         //通知应用市场设置处置
-        reversePtr_->SendStartAppGalleryNotify(bundleName);
-        reversePtr_->ExtStart(bundleName);
+        if (reversePtr_ != nullptr) {
+            reversePtr_->SendStartAppGalleryNotify(bundleName);
+            reversePtr_->ExtStart(bundleName);
+        }
     }
 }
 

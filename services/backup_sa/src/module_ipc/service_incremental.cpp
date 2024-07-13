@@ -144,6 +144,9 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
             throw BError(BError::Codes::SA_INVAL_ARG, "session is nullptr");
         }
         auto backUpConnection = session->GetExtConnection(bundleName);
+        if (backUpConnection == nullptr) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "backUpConnection is empty");
+        }
         auto proxy = backUpConnection->GetBackupExtProxy();
         if (!proxy) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
@@ -327,9 +330,14 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
             return EPERM;
         }
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
+        if (backUpConnection == nullptr) {
+            HILOGE("PublishIncrementalFile error, backUpConnection is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         auto proxy = backUpConnection->GetBackupExtProxy();
         if (!proxy) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+            HILOGE("PublishIncrementalFile error, Extension backup Proxy is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
         }
         ErrCode res = proxy->PublishIncrementalFile(fileInfo.fileName);
         if (res) {
@@ -426,7 +434,7 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
             }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
-                throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+                return BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
             }
             proxy->HandleClear();
             session_->BundleExtTimerStop(callerName);
@@ -472,9 +480,14 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {
             auto backUpConnection = session_->GetExtConnection(bundleName);
+            if (backUpConnection == nullptr) {
+                HILOGE("GetIncrementalFileHandle error, backUpConnection is empty");
+                return BError(BError::Codes::SA_INVAL_ARG);
+            }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
-                throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+                HILOGE("GetIncrementalFileHandle error, Extension backup Proxy is empty");
+                return BError(BError::Codes::SA_INVAL_ARG);
             }
             int res = proxy->GetIncrementalFileHandle(fileName);
             if (res) {
@@ -501,6 +514,9 @@ bool Service::IncrementalBackup(const string &bundleName)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     IServiceReverse::Scenario scenario = session_->GetScenario();
     auto backUpConnection = session_->GetExtConnection(bundleName);
+    if (backUpConnection == nullptr) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "backUpConnection is empty");
+    }
     auto proxy = backUpConnection->GetBackupExtProxy();
     if (!proxy) {
         throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");

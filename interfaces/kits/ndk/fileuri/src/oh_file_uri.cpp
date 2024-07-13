@@ -16,6 +16,7 @@
 
 #include <cstring>
 
+#include "b_resources/b_constants.h"
 #include "file_uri.h"
 #include "log.h"
 #include "securec.h"
@@ -25,6 +26,10 @@ static FileManagement_ErrCode GetValue(std::string_view resultStr, char **result
 {
     size_t count = resultStr.length();
     if (count == 0) {
+        return ERR_UNKNOWN;
+    }
+    if (count > OHOS::FileManagement::Backup::BConstants::PARAM_STARING_MAX_MEMORY) {
+        LOGE("The param resultStr is too big");
         return ERR_UNKNOWN;
     }
     *result = static_cast<char *>(malloc(sizeof(char) * (count + 1)));
