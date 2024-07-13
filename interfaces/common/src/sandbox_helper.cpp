@@ -232,12 +232,21 @@ static int32_t GetFileIdFromFileName(const std::string &fileName)
     if (fileName.empty()) {
         return -EINVAL;
     }
-    size_t pos = fileName.find_last_of('_');
-    if (pos == std::string::npos || pos == fileName.size() - 1) {
+
+    string tmpName = fileName;
+    std::replace(tmpName.begin(), tmpName.end(), '_', ' ');
+    stringstream ss;
+    ss << tmpName;
+
+    string mediaType;
+    string dateTime;
+    string idStr;
+    string other;
+    ss >> mediaType >> dateTime >> idStr >> other;
+    if (idStr.empty()) {
         return -EINVAL;
     }
 
-    std::string idStr = fileName.substr(pos + 1);
     if (!std::all_of(idStr.begin(), idStr.end(), ::isdigit)) {
         return -EINVAL;
     }
