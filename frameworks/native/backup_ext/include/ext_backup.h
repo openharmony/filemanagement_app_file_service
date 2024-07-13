@@ -134,7 +134,7 @@ public:
      * @brief Called do restore.
      */
     virtual ErrCode OnRestore(std::function<void(ErrCode)> callback,
-        std::function<void(ErrCode, const std::string)> callbackEx, std::function<void(ErrCode)> callbackExAppDone);
+        std::function<void(ErrCode, const std::string)> callbackEx);
 
     /**
      * @brief Called do restore.

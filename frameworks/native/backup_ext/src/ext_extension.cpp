@@ -162,6 +162,10 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName, int32_t &errC
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        if (extension_ == nullptr) {
+            HILOGE("Failed to get file handle, extension is nullptr");
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
+        }
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
             HILOGE("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
@@ -252,8 +256,9 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
-            HILOGE("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
+        if ((extension_ == nullptr) || (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE)) {
+            HILOGE("Failed to get incremental file handle, extension or action is invalid, action %{public}d.",
+                extension_->GetExtensionAction());
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
         HILOGI("extension: Start GetIncrementalFileHandle");
@@ -262,7 +267,6 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         if (extension_->SpecialVersionForCloneAndCloud()) {
             return GetIncreFileHandleForSpecialVersion(fileName);
         }
-
         string path = GetIncrementalFileHandlePath();
         string tarName = path + fileName;
         if (access(tarName.c_str(), F_OK) == 0) {
@@ -274,9 +278,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
             HILOGE("Failed to open tar file = %{private}s, err = %{public}d", tarName.c_str(), errno);
             errCode = errno;
         }
-
         // 对应的简报文件
-        HILOGI("extension: Start parse report files");
         string reportName = GetReportFileName(tarName);
         if (access(reportName.c_str(), F_OK) == 0) {
             throw BError(BError::Codes::EXT_INVAL_ARG, string("The report file already exists"));
@@ -307,8 +309,12 @@ ErrCode BackupExtExtension::HandleClear()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("begin clear");
+    if (extension_ == nullptr) {
+        HILOGE("Failed to handle clear, extension is nullptr");
+        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
+    }
     if (extension_->GetExtensionAction() == BConstants::ExtensionAction::INVALID) {
-        throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
+        return BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid").GetCode();
     }
     VerifyCaller();
     DoClear();
@@ -389,7 +395,12 @@ ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin publish file. fileName is %{public}s", GetAnonyPath(fileName).c_str());
     try {
+        if (extension_ == nullptr) {
+            HILOGE("Failed to publish file, extension is nullptr");
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
+        }
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
+            HILOGE("Failed to publish file, action is invalid");
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
         VerifyCaller();
@@ -418,7 +429,12 @@ ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("begin publish incremental file. fileName is %{private}s", fileName.data());
     try {
+        if (extension_ == nullptr) {
+            HILOGE("Failed to publish incremental file, extension is nullptr");
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
+        }
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
+            HILOGE("Failed to publish incremental file, action is invalid");
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
         VerifyCaller();
@@ -451,6 +467,10 @@ ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
 ErrCode BackupExtExtension::HandleBackup()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (extension_ == nullptr) {
+        HILOGE("Failed to handle backup, extension is nullptr");
+        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
+    }
     string usrConfig = extension_->GetUsrConfig();
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
     auto cache = cachedEntity.Structuralize();
@@ -519,6 +539,10 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start Do backup");
+    if (extension_ == nullptr) {
+        HILOGE("Failed to do backup, extension is nullptr");
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
+    }
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
         return EPERM;
     }
@@ -564,6 +588,10 @@ int BackupExtExtension::DoRestore(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Do restore");
+    if (extension_ == nullptr) {
+        HILOGE("Failed to do restore, extension is nullptr");
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
+    }
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
         return EPERM;
     }
@@ -602,6 +630,10 @@ static unordered_map<string, struct ReportFileInfo> GetTarIncludes(const string 
 int BackupExtExtension::DoIncrementalRestore()
 {
     HILOGI("Do incremental restore");
+    if (extension_ == nullptr) {
+        HILOGE("Failed to do incremental restore, extension is nullptr");
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
+    }
     auto fileSet = GetIdxFileData();
     auto extManageInfo = GetExtManageInfo();
     for (auto item : fileSet) { // 处理要解压的tar文件
@@ -1074,8 +1106,7 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
             auto callBackupEx = ptr->RestoreResultCallbackEx(obj);
-            auto callBackupExAppDone = ptr->AppDoneCallbackEx(obj);
-            ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx, callBackupExAppDone);
+            ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx);
             HILOGI("OnRestore done err = %{public}d", err);
         } catch (const BError &e) {
             ptr->AppDone(e.GetCode());
@@ -1123,8 +1154,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
             auto callBackupEx = ptr->IncRestoreResultCallbackEx(obj);
-            auto callBackupExAppDone = ptr->IncAppDoneCallbackEx(obj);
-            ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx, callBackupExAppDone);
+            ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx);
             HILOGI("OnRestore done err = %{public}d", err);
         } catch (const BError &e) {
             ptr->AppIncrementalDone(e.GetCode());
@@ -1247,6 +1277,10 @@ ErrCode BackupExtExtension::HandleRestore()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     VerifyCaller();
+    if (extension_ == nullptr) {
+        HILOGE("Failed to handle restore, extension is nullptr");
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
+    }
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
         HILOGE("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
         throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
@@ -1343,6 +1377,10 @@ ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, Uniq
 {
     HILOGI("Start HandleIncrementalBackup");
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (extension_ == nullptr) {
+        HILOGE("Failed to handle incremental backup, extension is nullptr");
+        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
+    }
     string usrConfig = extension_->GetUsrConfig();
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
     auto cache = cachedEntity.Structuralize();
@@ -1358,6 +1396,10 @@ ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, Uniq
 ErrCode BackupExtExtension::IncrementalOnBackup()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (extension_ == nullptr) {
+        HILOGE("Failed to handle incremental onBackup, extension is nullptr");
+        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
+    }
     string usrConfig = extension_->GetUsrConfig();
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
     auto cache = cachedEntity.Structuralize();
@@ -1688,6 +1730,10 @@ int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> 
                                             const vector<struct ReportFileInfo> &bigFiles)
 {
     HILOGI("Do increment backup begin");
+    if (extension_ == nullptr) {
+        HILOGE("Failed to do incremental backup, extension is nullptr");
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
+    }
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
         return EPERM;
     }
@@ -1843,20 +1889,6 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncRestoreResultCa
         if (restoreRetInfo.size()) {
             extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
         }
-    };
-}
-
-std::function<void(ErrCode)> BackupExtExtension::IncAppDoneCallbackEx(wptr<BackupExtExtension> obj)
-{
-    return [obj](ErrCode errCode) {
-        HILOGI("begin call callBackupExAppDone for restore");
-        auto extensionPtr = obj.promote();
-        if (extensionPtr == nullptr) {
-            HILOGE("Ext extension handle have been released");
-            return;
-        }
-        extensionPtr->AppIncrementalDone(errCode);
-        extensionPtr->DoClear();
     };
 }
 
