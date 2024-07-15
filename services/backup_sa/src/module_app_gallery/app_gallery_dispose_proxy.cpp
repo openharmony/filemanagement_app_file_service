@@ -43,10 +43,7 @@ AppGalleryDisposeProxy::AppGalleryDisposeProxy()
 
 AppGalleryDisposeProxy::~AppGalleryDisposeProxy()
 {
-    if (appGalleryDisposeProxyInstance_ != nullptr) {
-        delete appGalleryDisposeProxyInstance_;
-        appGalleryDisposeProxyInstance_ = nullptr;
-    }
+    appGalleryDisposeProxyInstance_ = nullptr;
 }
 
 sptr<AppGalleryDisposeProxy> AppGalleryDisposeProxy::GetInstance()
