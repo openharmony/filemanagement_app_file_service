@@ -393,25 +393,40 @@ static bool VerifyPublishFileParam(NFuncArg &funcArg, std::string &bundleName, s
     return true;
 }
 
+static bool VerifyNapiObject(napi_env env, NFuncArg &funcArg)
+{
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
+        return true;
+    }
+    return false;
+}
+static bool VerifyNarg(napi_env env, NVal &callbacks)
+{
+    if (!callbacks.TypeIs(napi_object)) {
+        HILOGE("First argument is not an object.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not an object.").GetCode()).ThrowErr(env);
+        return true;
+    }
+    return false;
+}
+
 napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info cbinfo)
 {
     HILOGD("called SessionRestore::Constructor begin");
     NFuncArg funcArg(env, cbinfo);
-    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
-        HILOGE("Number of arguments unmatched.");
-        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
+    if (VerifyNapiObject(env, funcArg)) {
         return nullptr;
     }
-
     NVal callbacks(env, funcArg[NARG_POS::FIRST]);
-    if (!callbacks.TypeIs(napi_object)) {
-        HILOGE("First argument is not an object.");
-        NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not an object.").GetCode()).ThrowErr(env);
+    if (VerifyNarg(env, callbacks)) {
         return nullptr;
     }
 
     NVal ptr(env, funcArg.GetThisVar());
     bool bSheet = BackupPara().GetBackupOverrideIncrementalRestore();
+    HILOGI("BSheet is %{public}d", bSheet);
     auto restoreEntity = std::make_unique<RestoreEntity>();
     restoreEntity->callbacks = make_shared<GeneralCallbacks>(env, ptr, callbacks);
     if (bSheet) {
