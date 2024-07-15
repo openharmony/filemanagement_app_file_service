@@ -272,6 +272,34 @@ int32_t ServiceStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)
     return GetFileHandle(bundleName, fileName);
 }
 
+int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, MessageParcel &reply)
+{
+    UniqueFd fd(data.ReadFileDescriptor());
+    if (fd < 0) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
+    }
+
+    vector<string> bundleNames;
+    if (!data.ReadStringVector(&bundleNames)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
+    }
+    int32_t type;
+    if (!data.ReadInt32(type)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive restoreType");
+    }
+    RestoreTypeEnum restoreType = static_cast<RestoreTypeEnum>(type);
+    int32_t userId;
+    if (!data.ReadInt32(userId)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive userId");
+    }
+
+    int res = AppendBundlesRestoreSession(move(fd), bundleNames, restoreType, userId);
+    if (!reply.WriteInt32(res)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
+    }
+    return BError(BError::Codes::OK);
+}
+
 int32_t ServiceStub::CmdAppendBundlesDetailsRestoreSession(MessageParcel &data, MessageParcel &reply)
 {
     UniqueFd fd(data.ReadFileDescriptor());
@@ -297,35 +325,8 @@ int32_t ServiceStub::CmdAppendBundlesDetailsRestoreSession(MessageParcel &data, 
     if (!data.ReadInt32(userId)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive userId");
     }
+
     int res = AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos, restoreType, userId);
-    if (!reply.WriteInt32(res)) {
-        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
-    }
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, MessageParcel &reply)
-{
-    UniqueFd fd(data.ReadFileDescriptor());
-    if (fd < 0) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fd");
-    }
-
-    vector<string> bundleNames;
-    if (!data.ReadStringVector(&bundleNames)) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
-    }
-    int32_t type;
-    if (!data.ReadInt32(type)) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive restoreType");
-    }
-    RestoreTypeEnum restoreType = static_cast<RestoreTypeEnum>(type);
-    int32_t userId;
-    if (!data.ReadInt32(userId)) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive userId");
-    }
-
-    int res = AppendBundlesRestoreSession(move(fd), bundleNames, restoreType, userId);
     if (!reply.WriteInt32(res)) {
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
     }

@@ -112,6 +112,7 @@ void ServiceReverse::IncrementalRestoreOnFileReady(string bundleName, string fil
 
 void ServiceReverse::IncrementalRestoreOnResultReport(std::string result, std::string bundleName)
 {
+    HILOGI("begin incremental restore on result report,bundleName:%{public}s", bundleName.c_str());
     if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onResultReport) {
         HILOGI("Error scenario or callback is nullptr");
         return;

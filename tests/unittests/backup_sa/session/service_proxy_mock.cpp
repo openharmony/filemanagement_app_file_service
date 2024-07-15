@@ -84,7 +84,8 @@ ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundl
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppendBundlesDetailsBackupSession(const std::vector<BundleName>&, const std::vector<std::string>&)
+ErrCode ServiceProxy::AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
+    const std::vector<std::string> &detailInfos)
 {
     return BError(BError::Codes::OK);
 }

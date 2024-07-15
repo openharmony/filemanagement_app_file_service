@@ -102,7 +102,6 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-
     return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos, restoreType,
         userId);
 }
