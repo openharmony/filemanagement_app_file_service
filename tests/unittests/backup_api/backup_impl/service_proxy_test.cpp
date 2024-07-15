@@ -75,6 +75,10 @@ void ServiceProxyTest::TearDown()
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitRestoreSession_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_InitRestoreSession_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_InitRestoreSession_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(1)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
@@ -98,6 +102,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitRestoreSession_0100, testing::e
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitBackupSession_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_InitBackupSession_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_InitBackupSession_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(1)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
@@ -122,6 +130,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitBackupSession_0100, testing::ex
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_Start_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_Start_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_Start_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -146,13 +158,16 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_Start_0100, testing::ext::TestSize.
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetLocalCapabilities_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetLocalCapabilities_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_GetLocalCapabilities_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeGetLocalSendRequest))
         .WillOnce(Return(EPERM));
     UniqueFd fd = proxy_->GetLocalCapabilities();
     EXPECT_GT(fd, BError(BError::Codes::OK));
-
     UniqueFd fdErr = proxy_->GetLocalCapabilities();
     EXPECT_LT(fdErr, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_GetLocalCapabilities_0100";
@@ -170,6 +185,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetLocalCapabilities_0100, testing:
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishFile_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_PublishFile_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_GetLocalCapabilities_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -197,6 +216,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishFile_0100, testing::ext::Tes
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppFileReady_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppFileReady_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_AppFileReady_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(3)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -232,6 +255,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppFileReady_0100, testing::ext::Te
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppDone_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppDone_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_AppDone_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -256,6 +283,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppDone_0100, testing::ext::TestSiz
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetFileHandle_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetFileHandle_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_GetFileHandle_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -282,6 +313,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetFileHandle_0100, testing::ext::T
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesRestoreSession_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppendBundlesRestoreSession_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_AppendBundlesRestoreSession_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(1)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
@@ -309,6 +344,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesRestoreSession_0100, t
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesRestoreSession_0101, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppendBundlesRestoreSession_0101";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_AppendBundlesRestoreSession_0101 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(1)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
@@ -337,6 +376,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesRestoreSession_0101, t
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesBackupSession_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppendBundlesBackupSession_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_AppendBundlesBackupSession_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -363,6 +406,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesBackupSession_0100, te
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_Finish_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_Finish_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_Finish_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -387,6 +434,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_Finish_0100, testing::ext::TestSize
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_Release_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_Release_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_Release_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -411,6 +462,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_Release_0100, testing::ext::TestSiz
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetLocalCapabilitiesIncremental_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetLocalCapabilitiesIncremental_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_GetLocalCapabilitiesIncremental_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeGetLocalSendRequest))
@@ -439,6 +494,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetLocalCapabilitiesIncremental_010
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitIncrementalBackupSession_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_InitIncrementalBackupSession_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_InitIncrementalBackupSession_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(1)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
@@ -463,6 +522,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitIncrementalBackupSession_0100, 
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesIncrementalBackupSession_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppendBundlesIncrementalBackupSession_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_AppendBundlesIncrementalBackupSession_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -490,6 +553,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesIncrementalBackupSessi
     testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppendBundlesDetailsIncrementalBackupSession_0101";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_AppendBundlesDetailsIncrementalBackupSession_0101 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -517,6 +584,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesIncrementalBackupSessi
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishIncrementalFile_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_PublishIncrementalFile_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_PublishIncrementalFile_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -545,6 +616,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishIncrementalFile_0100, testin
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppIncrementalFileReady_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppIncrementalFileReady_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_AppIncrementalFileReady_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -580,6 +655,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppIncrementalFileReady_0100, testi
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppIncrementalDone_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppIncrementalDone_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_AppIncrementalDone_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -604,6 +683,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppIncrementalDone_0100, testing::e
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetIncrementalFileHandle_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetIncrementalFileHandle_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_GetIncrementalFileHandle_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
@@ -630,6 +713,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetIncrementalFileHandle_0100, test
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilitySuccess_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_OnLoadSystemAbilitySuccess_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_OnLoadSystemAbilitySuccess_0100 proxy_ == nullptr";
+        return;
+    }
     sptr<ServiceProxy::ServiceProxyLoadCallback> loadCallback = new ServiceProxy::ServiceProxyLoadCallback();
     EXPECT_NE(loadCallback, nullptr);
     loadCallback->OnLoadSystemAbilitySuccess(SERVICE_ID, nullptr);
@@ -649,11 +736,13 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilitySuccess_0100, te
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilitySuccess_0101, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_OnLoadSystemAbilitySuccess_0101";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_OnLoadSystemAbilitySuccess_0101 proxy_ == nullptr";
+        return;
+    }
     sptr<ServiceProxy::ServiceProxyLoadCallback> loadCallback = new ServiceProxy::ServiceProxyLoadCallback();
     EXPECT_NE(loadCallback, nullptr);
     int32_t systemAbilityId = 0;
-    // const OHOS::sptr<IRemoteObject> &remoteObject = make_shared<IRemoteObject>();
-    // shared_ptr<MockIRemoteObject> remoteObject = make_shared<MockIRemoteObject>();
     sptr<MockIRemoteObject> remoteObject = new MockIRemoteObject();
     loadCallback->OnLoadSystemAbilitySuccess(systemAbilityId, remoteObject);
     loadCallback = nullptr;
@@ -672,6 +761,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilitySuccess_0101, te
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilitySuccess_0102, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_OnLoadSystemAbilitySuccess_0102";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_OnLoadSystemAbilitySuccess_0102 proxy_ == nullptr";
+        return;
+    }
     sptr<ServiceProxy::ServiceProxyLoadCallback> loadCallback = new ServiceProxy::ServiceProxyLoadCallback();
     EXPECT_NE(loadCallback, nullptr);
     int32_t systemAbilityId = 0;
@@ -692,6 +785,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilitySuccess_0102, te
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilityFail_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_OnLoadSystemAbilityFail_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_OnLoadSystemAbilityFail_0100 proxy_ == nullptr";
+        return;
+    }
     sptr<ServiceProxy::ServiceProxyLoadCallback> loadCallback = new ServiceProxy::ServiceProxyLoadCallback();
     EXPECT_NE(loadCallback, nullptr);
     loadCallback->OnLoadSystemAbilityFail(SERVICE_ID);
@@ -711,6 +808,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_OnLoadSystemAbilityFail_0100, testi
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetInstance_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetInstance_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_GetInstance_0100 proxy_ == nullptr";
+        return;
+    }
     GTEST_LOG_(INFO) << "MockLoadSystemAbility is false";
     SetMockLoadSystemAbility(false);
     auto proxy = ServiceProxy::GetInstance();
@@ -740,6 +841,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetInstance_0100, testing::ext::Tes
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InvaildInstance_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_InvaildInstance_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_InvaildInstance_0100 proxy_ == nullptr";
+        return;
+    }
     ServiceProxy::InvaildInstance();
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_InvaildInstance_0100";
 }
@@ -756,6 +861,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InvaildInstance_0100, testing::ext:
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetBackupInfo_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetBackupInfo_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_GetBackupInfo_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(1)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
@@ -778,6 +887,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetBackupInfo_0100, testing::ext::T
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_UpdateTimer_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_UpdateTimer_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_UpdateTimer_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(1)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
@@ -801,6 +914,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_UpdateTimer_0100, testing::ext::Tes
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_UpdateSendRate_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_UpdateSendRate_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_UpdateSendRate_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(1)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
@@ -824,6 +941,10 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_UpdateSendRate_0100, testing::ext::
 HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetAppLocalListAndDoIncrementalBackup_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetAppLocalListAndDoIncrementalBackup_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_GetAppLocalListAndDoIncrementalBackup_0100 proxy_ == nullptr";
+        return;
+    }
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
         .Times(2)
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))

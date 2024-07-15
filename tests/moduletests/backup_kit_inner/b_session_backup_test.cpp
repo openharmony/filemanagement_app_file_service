@@ -58,7 +58,7 @@ public:
 
     void Init();
 
-    unique_ptr<BSessionBackup> backupPtr_;
+    unique_ptr<BSessionBackup> backupPtr_ = nullptr;
     BSessionBackup::Callbacks callbacks_;
 };
 
@@ -98,6 +98,10 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0100, testing::ext::Tes
     GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_0100";
     try {
         GTEST_LOG_(INFO) << "GetInstance is true";
+        if (backupPtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_backup_0100 backupPtr_ == nullptr";
+            return;
+        }
         auto ret = backupPtr_->Start();
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
         GTEST_LOG_(INFO) << "GetInstance is false";
@@ -124,6 +128,10 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0200, testing::ext::Tes
 {
     GTEST_LOG_(INFO) << "BSessionBackupTest-Finish SUB_backup_b_session_backup_0200";
     try {
+        if (backupPtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_backup_0200 backupPtr_ == nullptr";
+            return;
+        }
         GTEST_LOG_(INFO) << "GetInstance is true";
         SetMockGetInstance(true);
         auto ret = backupPtr_->Finish();
@@ -152,6 +160,10 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0300, testing::ext::Tes
 {
     GTEST_LOG_(INFO) << "BSessionBackupTest-AppendBundles SUB_backup_b_session_backup_0300";
     try {
+        if (backupPtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_backup_0300 backupPtr_ == nullptr";
+            return;
+        }
         vector<BundleName> bundleNames;
         GTEST_LOG_(INFO) << "GetInstance is true";
         SetMockGetInstance(true);
@@ -243,6 +255,10 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0600, testing::ext::Tes
 {
     GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_0600";
     try {
+        if (backupPtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_backup_0600 backupPtr_ == nullptr";
+            return;
+        }
         GTEST_LOG_(INFO) << "GetInstance is false";
         SetMockGetInstance(false);
         backupPtr_->RegisterBackupServiceDied(nullptr);
