@@ -39,6 +39,7 @@
 
 #include "ability_manager_client.h"
 #include "accesstoken_kit.h"
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "b_file_info.h"
@@ -178,7 +179,8 @@ string Service::VerifyCallerAndGetCallerName()
         session_->VerifyBundleName(hapTokenInfo.bundleName);
         return hapTokenInfo.bundleName;
     } else {
-        HILOGE("tokenID = %{private}d", tokenCaller);
+        string str = to_string(tokenCaller);
+        HILOGE("tokenID = %{private}s", GetAnonyString(str).c_str());
         throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
     }
 }
