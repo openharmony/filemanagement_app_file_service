@@ -51,6 +51,7 @@
 #include "bundle_mgr_client.h"
 #include "filemgmt_libhilog.h"
 #include "hisysevent.h"
+#include "hitrace_meter.h"
 #include "ipc_skeleton.h"
 #include "module_app_gallery/app_gallery_dispose_proxy.h"
 #include "module_external/bms_adapter.h"
@@ -60,7 +61,6 @@
 #include "module_notify/notify_work_service.h"
 #include "parameter.h"
 #include "system_ability_definition.h"
-#include "hitrace_meter.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -670,43 +670,32 @@ ErrCode Service::AppDone(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        if (session_ == nullptr) {
+            HILOGE("App finish error, session info is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         string callerName = VerifyCallerAndGetCallerName();
-        if (session_->OnBundleFileReady(callerName)) {
+        HILOGI("Begin, callerName is: %{public}s, errCode: %{public}d", callerName.c_str(), errCode);
+        if (session_->OnBundleFileReady(callerName) || errCode != BError(BError::Codes::OK)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
+            if (backUpConnection == nullptr) {
+                HILOGE("App finish error, backUpConnection is empty");
+                return BError(BError::Codes::SA_INVAL_ARG);
+            }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
                 throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
             }
             proxy->HandleClear();
             session_->BundleExtTimerStop(callerName);
-            IServiceReverse::Scenario scenario = session_->GetScenario();
-            HILOGI("will notify clone data, scenario is: %{public}d", scenario);
-            if (scenario == IServiceReverse::Scenario::BACKUP) {
-                session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, callerName);
-                auto now = std::chrono::system_clock::now();
-                auto time = std::chrono::system_clock::to_time_t(now);
-                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
-                std::stringstream strTime;
-                strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
-                    << (std::setw(INDEX)) << (ms.count() % MS_1000);
-                HiSysEventWrite(
-                    OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-                    FILE_BACKUP_EVENTS,
-                    OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-                    "PROC_NAME", "ohos.appfileservice",
-                    "BUNDLENAME", callerName,
-                    "PID", getpid(),
-                    "TIME", strTime.str()
-                );
-            } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-                session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, callerName);
-            }
+            NotifyCallerCurAppDone(errCode, callerName);
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
         }
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        HILOGE("AppDone error, err code is: %{public}d", e.GetCode());
         return e.GetCode(); // 任意异常产生，终止监听该任务
     } catch (const exception &e) {
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
@@ -1558,6 +1547,33 @@ ErrCode Service::SADone(ErrCode errCode, std::string bundleName)
     } catch(...) {
         HILOGE("Unexpected exception");
         return EPERM;
+    }
+}
+
+void Service::NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerName)
+{
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        HILOGI("will notify clone data, scenario is Backup");
+        session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, callerName);
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+        std::stringstream strTime;
+        strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
+            << (std::setw(INDEX)) << (ms.count() % MS_1000);
+        HiSysEventWrite(
+            OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
+            FILE_BACKUP_EVENTS,
+            OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+            "PROC_NAME", "ohos.appfileservice",
+            "BUNDLENAME", callerName,
+            "PID", getpid(),
+            "TIME", strTime.str()
+        );
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        HILOGI("will notify clone data, scenario is Restore");
+        session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, callerName);
     }
 }
 } // namespace OHOS::FileManagement::Backup

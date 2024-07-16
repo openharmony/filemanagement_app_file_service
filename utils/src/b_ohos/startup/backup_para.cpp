@@ -53,7 +53,7 @@ static tuple<bool, string> GetConfigParameterValue(const string &key, uint32_t l
         HILOGI("end get config param value.");
         return {true, buffer.get()};
     } catch (const bad_alloc &e) {
-        HILOGI("Fail to get parameter value: %{public}s.", e.what());
+        HILOGE("Fail to get parameter value: %{public}s.", e.what());
         return {false, ""};
     }
 }
@@ -85,6 +85,7 @@ bool BackupPara::GetBackupOverrideIncrementalRestore()
     if (!getCfgParaValSucc) {
         throw BError(BError::Codes::SA_INVAL_ARG, "Fail to get configuration parameter value of backup.para");
     }
+    HILOGI("Get Parse IncrementalRestore result, value: %{public}s", value.c_str());
     return value == "true";
 }
 

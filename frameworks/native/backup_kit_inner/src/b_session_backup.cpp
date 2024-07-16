@@ -43,6 +43,7 @@ BSessionBackup::~BSessionBackup()
 unique_ptr<BSessionBackup> BSessionBackup::Init(Callbacks callbacks)
 {
     try {
+        HILOGI("Init BackupSession Begin");
         auto backup = make_unique<BSessionBackup>();
         ServiceProxy::InvaildInstance();
         auto proxy = ServiceProxy::GetInstance();

@@ -343,6 +343,24 @@ private:
     */
     ErrCode BackupSA(std::string bundleName);
 
+    /**
+     * @brief 执行通知调用方
+     *
+     * @param errCode 错误码
+     * @param callerName 业务调用方
+     *
+     */
+    void NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerName);
+
+    /**
+     * @brief 执行通知调用方
+     *
+     * @param errCode 错误码
+     * @param callerName 业务调用方
+     *
+     */
+    void NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string &callerName);
+
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
