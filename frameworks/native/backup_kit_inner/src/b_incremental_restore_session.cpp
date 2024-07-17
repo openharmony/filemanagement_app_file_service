@@ -43,6 +43,7 @@ BIncrementalRestoreSession::~BIncrementalRestoreSession()
 unique_ptr<BIncrementalRestoreSession> BIncrementalRestoreSession::Init(Callbacks callbacks)
 {
     try {
+        HILOGI("Init IncrementalRestoreSession Begin");
         auto restore = make_unique<BIncrementalRestoreSession>();
         ServiceProxy::InvaildInstance();
         auto proxy = ServiceProxy::GetInstance();

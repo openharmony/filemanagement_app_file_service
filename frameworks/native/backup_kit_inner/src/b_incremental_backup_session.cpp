@@ -43,6 +43,7 @@ BIncrementalBackupSession::~BIncrementalBackupSession()
 unique_ptr<BIncrementalBackupSession> BIncrementalBackupSession::Init(Callbacks callbacks)
 {
     try {
+        HILOGI("Init IncrementalBackupSession Begin");
         auto backup = make_unique<BIncrementalBackupSession>();
         ServiceProxy::InvaildInstance();
         auto proxy = ServiceProxy::GetInstance();

@@ -640,6 +640,7 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
             ptr->AppDone(ret);
             HILOGI("backup app done %{public}d", ret);
         } catch (const BError &e) {
+            HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
             ptr->AppDone(e.GetCode());
         } catch (const exception &e) {
             HILOGE("Catched an unexpected low-level exception %{public}s", e.what());

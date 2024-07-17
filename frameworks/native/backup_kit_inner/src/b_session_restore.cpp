@@ -43,6 +43,7 @@ BSessionRestore::~BSessionRestore()
 unique_ptr<BSessionRestore> BSessionRestore::Init(Callbacks callbacks)
 {
     try {
+        HILOGI("Init RestoreSession Begin");
         auto restore = make_unique<BSessionRestore>();
         ServiceProxy::InvaildInstance();
         auto proxy = ServiceProxy::GetInstance();
