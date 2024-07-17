@@ -262,7 +262,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         if (extension_->SpecialVersionForCloneAndCloud()) {
             return GetIncreFileHandleForSpecialVersion(fileName);
         }
-
+        HILOGI("extension: single to single fileName:%{public}s", fileName.c_str());
         string path = GetIncrementalFileHandlePath();
         string tarName = path + fileName;
         if (access(tarName.c_str(), F_OK) == 0) {
