@@ -142,6 +142,7 @@ static void OnFileReadySheet(weak_ptr<GeneralCallbacks> pCallbacks,
 
 static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, const BundleName name)
 {
+    HILOGI("Callback onBundleBegin, bundleName=%{public}s", name.c_str());
     if (pCallbacks.expired()) {
         HILOGI("callbacks is unbound");
         return;
@@ -181,6 +182,7 @@ static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, co
 
 static void onBundleEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, const BundleName name)
 {
+    HILOGI("Callback onBundleEnd, bundleName=%{public}s", name.c_str());
     if (pCallbacks.expired()) {
         HILOGI("callbacks is unbound");
         return;
@@ -254,6 +256,7 @@ static void onAllBundlesEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err)
 
 static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
 {
+    HILOGI("Callback OnBackupServiceDied.");
     if (pCallbacks.expired()) {
         HILOGI("callbacks is unbound");
         return;
@@ -278,7 +281,7 @@ static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
 static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::string bundleName,
     const std::string result)
 {
-    HILOGD("callback function onResultReport begin.");
+    HILOGI("Callback OnResultReport, bundleName=%{public}s", bundleName.c_str());
     if (pCallbacks.expired()) {
         HILOGI("callbacks is unbound");
         return;

@@ -107,26 +107,11 @@ bool GetExtensionActionFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *dat
     return true;
 }
 
-bool OnBackupFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
-{
-    function<void(ErrCode)> callback = nullptr;
-    backup->OnBackup(callback);
-    return true;
-}
-
 bool OnRestoreFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
     function<void(ErrCode)> callback;
     function<void(ErrCode, const string)> callbackEx;
-    function<void(ErrCode)> callbackExAppDone;
-    backup->OnRestore(callback, callbackEx, callbackExAppDone);
-    return true;
-}
-
-bool OnRestore2FuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
-{
-    function<void(ErrCode)> callback = nullptr;
-    backup->OnRestore(callback);
+    backup->OnRestore(callback, callbackEx);
     return true;
 }
 
@@ -296,9 +281,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::OnConnectFuzzTest(extBackup, data, size);
     OHOS::CreateFuzzTest(extBackup, data, size);
     OHOS::GetExtensionActionFuzzTest(extBackup, data, size);
-    OHOS::OnBackupFuzzTest(extBackup, data, size);
     OHOS::OnRestoreFuzzTest(extBackup, data, size);
-    OHOS::OnRestore2FuzzTest(extBackup, data, size);
     OHOS::GetBackupInfoFuzzTest(extBackup, data, size);
     OHOS::WasFromSpecialVersionFuzzTest(extBackup, data, size);
     OHOS::SpecialVersionForCloneAndCloudFuzzTest(extBackup, data, size);

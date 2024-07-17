@@ -68,9 +68,7 @@ struct CallbackInfoBackup {
 
 struct CallbackInfoEx {
     std::function<void(ErrCode, const std::string)> callbackParam;
-    std::function<void(ErrCode)> callbackAppDone;
-    CallbackInfoEx(std::function<void(ErrCode, const std::string)> param, std::function<void(ErrCode)> appDone)
-        : callbackParam(param), callbackAppDone(appDone)
+    CallbackInfoEx(std::function<void(ErrCode, const std::string)> param) : callbackParam(param)
     {
     }
 };
@@ -99,13 +97,6 @@ public:
      */
     static ExtBackupJs *Create(const std::unique_ptr<AbilityRuntime::Runtime> &runtime);
 
-    /**
-     * @brief Call the app's OnBackup.
-     *
-     * @param callback The callback.
-     */
-    ErrCode OnBackup(std::function<void(ErrCode)> callback) override;
-
     ErrCode OnBackup(std::function<void(ErrCode)> callback,
         std::function<void(ErrCode, const std::string)> callbackEx) override;
 
@@ -115,15 +106,9 @@ public:
      * @param callbackEx The callbackEx.
      * @param callback The callBack.
      */
-    ErrCode OnRestore(std::function<void(ErrCode)> callback, std::function<void(ErrCode, const std::string)> callbackEx,
-        std::function<void(ErrCode)> callbackExAppDone) override;
+    ErrCode OnRestore(std::function<void(ErrCode)> callback,
+        std::function<void(ErrCode, const std::string)> callbackEx) override;
 
-    /**
-     * @brief Call the app's OnRestore.
-     *
-     * @param callback The callBack.
-     */
-    ErrCode OnRestore(std::function<void(ErrCode)> callback) override;
     /**
      * @brief get app backup detail
      *

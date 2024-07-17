@@ -472,55 +472,25 @@ ExtBackupJs *ExtBackupJs::Create(const unique_ptr<AbilityRuntime::Runtime> &runt
     return new ExtBackupJs(static_cast<AbilityRuntime::JsRuntime &>(*runtime));
 }
 
-ErrCode ExtBackupJs::OnBackup(function<void(ErrCode)> callback)
-{
-    HILOGI("BackupExtensionAbility(JS) OnBackup.");
-    BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the onBackup interface.");
-    callbackInfo_ = std::make_shared<CallbackInfo>(callback);
-    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env,
-        napi_value result) -> bool {
-        if (!CheckPromise(env, result)) {
-            bool isExceptionPending;
-            napi_is_exception_pending(env, &isExceptionPending);
-            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
-            if (isExceptionPending) {
-                string str;
-                DealNapiException(env, str);
-                callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
-            } else {
-                callbackInfo->callback(BError(BError::Codes::OK));
-            }
-            return true;
-        }
-        HILOGI("CheckPromise(JS) OnBackup ok.");
-        return CallPromise(*jsRuntime, result, callbackInfo.get());
-    };
-
-    auto errCode = CallJsMethod("onBackup", jsRuntime_, jsObj_.get(), {}, retParser);
-    if (errCode != ERR_OK) {
-        HILOGE("CallJsMethod error, code:%{public}d.", errCode);
-    }
-    return errCode;
-}
-
 ErrCode ExtBackupJs::OnBackup(function<void(ErrCode)> callback,
     std::function<void(ErrCode, const std::string)> callbackEx)
 {
     HILOGI("BackupExtensionAbility(JS) OnBackup ex");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the onBackup interface.");
+        "The app does not provide the onBackup interface.");
+    BExcepUltils::BAssert(callback, BError::Codes::EXT_BROKEN_FRAMEWORK, "OnBackup callback is nullptr.");
+    BExcepUltils::BAssert(callbackEx, BError::Codes::EXT_BROKEN_FRAMEWORK, "OnBackup callbackEx is nullptr.");
     needCallOnRestore_.store(false);
     callRestoreExDone_.store(false);
     callbackInfo_ = std::make_shared<CallbackInfo>(callback);
-    callbackInfoBackup_ = std::make_shared<CallbackInfoBackup>(callbackEx);
+    callbackInfoEx_ = std::make_shared<CallbackInfoEx>(callbackEx);
     return CallJsOnBackupEx();
 }
 
 ErrCode ExtBackupJs::CallJsOnBackupEx()
 {
     HILOGI("Start call app js method onBackupEx");
-    auto retParser = [jsRuntime{ &jsRuntime_ }, callbackInfoBackup{ callbackInfoBackup_ }](napi_env envir,
+    auto retParser = [jsRuntime{ &jsRuntime_ }, callbackInfoEx { callbackInfoEx_ }](napi_env envir,
         napi_value result) -> bool {
         if (!CheckPromise(envir, result)) {
             string str;
@@ -529,15 +499,15 @@ ErrCode ExtBackupJs::CallJsOnBackupEx()
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
             if (isExceptionPending) {
                 DealNapiException(envir, str);
-                callbackInfoBackup->callbackParam(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
+                callbackInfoEx->callbackParam(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
             } else {
                 DealNapiStrValue(envir, result, str);
-                callbackInfoBackup->callbackParam(BError(BError::Codes::OK), str);
+                callbackInfoEx->callbackParam(BError(BError::Codes::OK), str);
             }
             return true;
         }
         HILOGI("CheckPromise onBackupEx ok");
-        return CallPromiseEx(*jsRuntime, result, callbackInfoBackup.get());
+        return CallPromiseEx(*jsRuntime, result, callbackInfoEx.get());
     };
     auto errCode = CallJsMethod("onBackupEx", jsRuntime_, jsObj_.get(), ParseBackupExInfo(), retParser);
     if (errCode != ERR_OK) {
@@ -549,10 +519,6 @@ ErrCode ExtBackupJs::CallJsOnBackupEx()
     callJsCon_.wait(lock, [this] { return callRestoreExDone_.load(); });
     HILOGI("Check needCallOnRestore load");
     if (!needCallOnRestore_.load()) {
-        if (callbackInfoEx_) {
-            HILOGI("Will call app done");
-            callbackInfoEx_->callbackAppDone(BError(BError::Codes::OK));
-        }
         HILOGI("Call Js method onRestoreEx done");
         return ERR_OK;
     }
@@ -588,57 +554,18 @@ ErrCode ExtBackupJs::CallJsOnBackup()
 }
 
 ErrCode ExtBackupJs::OnRestore(function<void(ErrCode)> callback,
-    std::function<void(ErrCode, const std::string)> callbackEx, std::function<void(ErrCode)> callbackExAppDone)
+    std::function<void(ErrCode, const std::string)> callbackEx)
 {
     HILOGI("BackupExtensionAbility(JS) OnRestore.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the onRestore interface.");
+        "The app does not provide the onRestore interface.");
+    BExcepUltils::BAssert(callback, BError::Codes::EXT_BROKEN_FRAMEWORK, "OnRestore callback is nullptr.");
+    BExcepUltils::BAssert(callbackEx, BError::Codes::EXT_BROKEN_FRAMEWORK, "OnRestore callbackEx is nullptr.");
     needCallOnRestore_.store(false);
     callRestoreExDone_.store(false);
     callbackInfo_ = std::make_shared<CallbackInfo>(callback);
-    callbackInfoEx_ = std::make_shared<CallbackInfoEx>(callbackEx, callbackExAppDone);
+    callbackInfoEx_ = std::make_shared<CallbackInfoEx>(callbackEx);
     return CallJSRestoreEx();
-}
-
-ErrCode ExtBackupJs::OnRestore(function<void(ErrCode)> callback)
-{
-    HILOGI("Start execute BackupExtensionAbility(JS) OnRestore.");
-    BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the onRestore interface.");
-    auto argParser = [appVersionCode(appVersionCode_),
-        appVersionStr(appVersionStr_)](napi_env env, vector<napi_value> &argv) -> bool {
-        napi_value objValue = nullptr;
-        napi_create_object(env, &objValue);
-        napi_set_named_property(env, objValue, "code", AbilityRuntime::CreateJsValue(env, appVersionCode));
-        napi_set_named_property(env, objValue, "name", AbilityRuntime::CreateJsValue(env, appVersionStr.c_str()));
-        argv.push_back(objValue);
-        return true;
-    };
-    callbackInfo_ = std::make_shared<CallbackInfo>(callback);
-    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env, napi_value result) ->
-        bool {
-        if (!CheckPromise(env, result)) {
-            bool isExceptionPending;
-            napi_is_exception_pending(env, &isExceptionPending);
-            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
-            if (isExceptionPending) {
-                string str;
-                DealNapiException(env, str);
-                callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
-            } else {
-                callbackInfo->callback(BError(BError::Codes::OK));
-            }
-            return true;
-        }
-        HILOGI("CheckPromise Js Method onRestore ok.");
-        return CallPromise(*jsRuntime, result, callbackInfo.get());
-    };
-    auto errCode = CallJsMethod("onRestore", jsRuntime_, jsObj_.get(), argParser, retParser);
-    if (errCode != ERR_OK) {
-        HILOGE("CallJsMethod error, code:%{public}d.", errCode);
-        return errCode;
-    }
-    return ERR_OK;
 }
 
 ErrCode ExtBackupJs::CallJSRestoreEx()
@@ -673,10 +600,6 @@ ErrCode ExtBackupJs::CallJSRestoreEx()
     callJsCon_.wait(lock, [this] { return callRestoreExDone_.load(); });
     HILOGI("Check needCallOnRestore load");
     if (!needCallOnRestore_.load()) {
-        if (callbackInfoEx_) {
-            HILOGI("Will call app done");
-            callbackInfoEx_->callbackAppDone(BError(BError::Codes::OK));
-        }
         HILOGI("Call Js method onRestoreEx done");
         return ERR_OK;
     }
@@ -718,7 +641,7 @@ ErrCode ExtBackupJs::GetBackupInfo(std::function<void(ErrCode, const std::string
                           "The app does not provide the GetBackupInfo interface.");
     callbackInfoBackup_ = std::make_shared<CallbackInfoBackup>(callback);
     auto retParser = [jsRuntime {&jsRuntime_}, callBackInfo {callbackInfoBackup_}](napi_env env,
-                                                                             napi_value result) -> bool {
+        napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
             size_t strLen = 0;
             napi_status status = napi_get_value_string_utf8(env, result, nullptr, -1, &strLen);
