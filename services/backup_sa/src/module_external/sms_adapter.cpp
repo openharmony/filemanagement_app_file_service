@@ -88,10 +88,12 @@ int32_t StorageMgrAdapter::UpdateMemPara(int32_t size)
 }
 
 int32_t StorageMgrAdapter::GetBundleStatsForIncrease(uint32_t userId, const std::vector<std::string> &bundleNames,
-    const std::vector<int64_t> &incrementalBackTimes, std::vector<int64_t> &pkgFileSizes)
+    const std::vector<int64_t> &incrementalBackTimes, std::vector<int64_t> &pkgFileSizes,
+    std::vector<int64_t> &incPkgFileSizes)
 {
     auto storageMgr = GetStorageManager();
-    if (storageMgr->GetBundleStatsForIncrease(userId, bundleNames, incrementalBackTimes, pkgFileSizes)) {
+    if (storageMgr->GetBundleStatsForIncrease(userId, bundleNames, incrementalBackTimes, pkgFileSizes,
+        incPkgFileSizes)) {
         throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get user storage stats");
     }
     return 0;

@@ -141,7 +141,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
             dataSize = GetBundleStats(installedBundle.name, userId);
         }
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
-                                                              installedBundle.versionName, dataSize, allToBackup,
+                                                              installedBundle.versionName, dataSize, 0, allToBackup,
                                                               extName, restoreDeps, supportScene, extraInfo});
     }
     HILOGI("End, bundleInfos size:%{public}zu", bundleInfos.size());
@@ -239,7 +239,9 @@ static bool GenerateBundleStatsIncrease(int32_t userId, const vector<string> &bu
     vector<BJsonEntityCaps::BundleInfo> &newBundleInfos)
 {
     vector<int64_t> pkgFileSizes {};
-    int32_t err = StorageMgrAdapter::GetBundleStatsForIncrease(userId, bundleNames, lastBackTimes, pkgFileSizes);
+    vector<int64_t> incPkgFileSizes {};
+    int32_t err = StorageMgrAdapter::GetBundleStatsForIncrease(userId, bundleNames, lastBackTimes,
+        pkgFileSizes, incPkgFileSizes);
     if (err != 0) {
         HILOGE("Failed to get bundleStats result from storage, err = %{public}d", err);
         return false;
@@ -257,6 +259,7 @@ static bool GenerateBundleStatsIncrease(int32_t userId, const vector<string> &bu
                                                      .versionCode = bundleInfos[i].versionCode,
                                                      .versionName = bundleInfos[i].versionName,
                                                      .spaceOccupied = pkgFileSizes[i],
+                                                     .increSpaceOccupied = incPkgFileSizes[i],
                                                      .allToBackup = bundleInfos[i].allToBackup,
                                                      .extensionName = bundleInfos[i].extensionName,
                                                      .restoreDeps = bundleInfos[i].restoreDeps,
@@ -296,9 +299,10 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
             continue;
         }
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
-                                                              installedBundle.versionName, 0, backupPara.allToBackup,
-                                                              backupPara.extensionName, backupPara.restoreDeps,
-                                                              backupPara.supportScene, backupPara.extraInfo});
+                                                              installedBundle.versionName, 0, 0,
+                                                              backupPara.allToBackup, backupPara.extensionName,
+                                                              backupPara.restoreDeps, backupPara.supportScene,
+                                                              backupPara.extraInfo});
         bundleNames.emplace_back(bundleName);
         incrementalBackTimes.emplace_back(bundleNameTime.lastIncrementalTime);
     }
@@ -312,7 +316,8 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     return newBundleInfos;
 }
 
-vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncremental(int32_t userId)
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncremental(int32_t userId,
+    const std::vector<BIncrementalData> &extraIncreData)
 {
     vector<AppExecFwk::BundleInfo> installedBundles;
     HILOGI("Begin get bundle infos");
@@ -334,9 +339,17 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
             GetAllowAndExtName(installedBundle.extensionInfos);
         if (!allToBackup) {
             bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
-                installedBundle.versionName, 0, allToBackup, extName, restoreDeps, supportScene, extraInfo});
-        } else {
+                installedBundle.versionName, 0, 0, allToBackup, extName, restoreDeps, supportScene, extraInfo});
+            continue;
+        }
+        auto it = std::find_if(extraIncreData.begin(), extraIncreData.end(),
+            [installedBundle](const BIncrementalData &info)->bool {
+                return installedBundle.name == info.bundleName;
+            });
+        if (it == extraIncreData.end()) {
             bundleNames.emplace_back(BIncrementalData {installedBundle.name, 0});
+        } else {
+            bundleNames.emplace_back(*it);
         }
     }
     auto bundleInfosNew = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, userId);
@@ -387,7 +400,8 @@ std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForSA()
     int32_t ret = samgrProxy->GetExtensionSaIds(BConstants::EXTENSION_BACKUP, saIds);
     HILOGI("GetExtensionSaIds ret: %{public}d", ret);
     for (auto saId : saIds) {
-        saBundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {std::to_string(saId), 0, "", 0, true, "", "", "", ""});
+        saBundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {std::to_string(saId), 0, "", 0, 0, true,
+            "", "", "", ""});
     }
     return saBundleInfos;
 }
@@ -416,7 +430,7 @@ void BundleMgrAdapter::GetBundleInfoForSA(std::string bundleName, std::vector<BJ
         HILOGE("SA %{public}d is not surport backup.", saId);
         return;
     }
-    bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {bundleName, 0, "", 0, true, "", "", "", ""});
+    bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {bundleName, 0, "", 0, 0, true, "", "", "", ""});
     HILOGI("SA %{public}s GetBundleInfo end.", bundleName.c_str());
 }
 } // namespace OHOS::FileManagement::Backup

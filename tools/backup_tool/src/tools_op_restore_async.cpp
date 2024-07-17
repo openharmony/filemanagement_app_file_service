@@ -312,6 +312,7 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
                                                                   .versionCode = versionCode,
                                                                   .versionName = versionName,
                                                                   .spaceOccupied = bundleInfo.spaceOccupied,
+                                                                  .increSpaceOccupied = bundleInfo.increSpaceOccupied,
                                                                   .allToBackup = bundleInfo.allToBackup,
                                                                   .extensionName = bundleInfo.extensionName});
         }
