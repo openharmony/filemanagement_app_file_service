@@ -330,7 +330,7 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
 
 off_t TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, off_t read)
 {
-    off_t len = ioBuffer.size();
+    off_t len = static_cast<off_t>(ioBuffer.size());
     if (len > read) {
         len = read;
     }
@@ -345,8 +345,8 @@ off_t TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, off_t read)
                 return count;
             }
         }
-        count += writeBytes;
-        currentTarFileSize_ += writeBytes;
+        count += static_cast<off_t>(writeBytes);
+        currentTarFileSize_ += static_cast<off_t>(writeBytes);
     }
     return count;
 }
@@ -450,7 +450,7 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
             HILOGE("Fill pw_name failed, err = %{public}d", errno);
         }
     } else {
-        auto ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%d", st.st_uid);
+        auto ret = snprintf_s(hdr.uname, sizeof(hdr.uname), sizeof(hdr.uname) - 1, "%u", st.st_uid);
         if (ret < 0 || ret >= static_cast<int>(sizeof(hdr.uname))) {
             HILOGE("Fill uid failed, err = %{public}d", errno);
         }
@@ -463,7 +463,7 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
             HILOGE("Fill gr_name failed, err = %{public}d", errno);
         }
     } else {
-        auto ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%d", st.st_gid);
+        auto ret = snprintf_s(hdr.gname, sizeof(hdr.gname), sizeof(hdr.gname) - 1, "%u", st.st_gid);
         if (ret < 0 || ret >= static_cast<int>(sizeof(hdr.gname))) {
             HILOGE("Fill gid failed, err = %{public}d", errno);
         }
@@ -473,13 +473,13 @@ void TarFile::FillOwnerName(TarHeader &hdr, const struct stat &st)
 off_t TarFile::ReadAll(int fd, vector<uint8_t> &ioBuffer, off_t size)
 {
     off_t count = 0;
-    off_t len = ioBuffer.size();
+    off_t len = static_cast<off_t>(ioBuffer.size());
     if (len > size) {
         len = size;
     }
     while (count < len) {
         auto readLen = read(fd, &ioBuffer[count], len - count);
-        count += readLen;
+        count += static_cast<off_t>(readLen);
         if (readLen == 0) {
             break;
         }
@@ -509,8 +509,8 @@ int TarFile::WriteAll(const vector<uint8_t> &buf, size_t len)
             HILOGE("Failed to fwrite tar file, err = %{public}d", errno);
             return count;
         }
-        count += i;
-        currentTarFileSize_ += i;
+        count += static_cast<off_t>(i);
+        currentTarFileSize_ += static_cast<off_t>(i);
     }
     return count;
 }
@@ -562,11 +562,11 @@ bool TarFile::WriteLongName(string &name, char type)
         return false;
     }
 
-    int sz = name.length() + 1;
+    size_t sz = name.length() + 1;
     if (!WriteNormalData(tmp)) {
         return false;
     }
-    string size = I2Ocs(sizeof(tmp.size), sz);
+    string size = I2Ocs(sizeof(tmp.size), static_cast<off_t>(sz));
     ret = memcpy_s(tmp.size, sizeof(tmp.size), size.c_str(), min(sizeof(tmp.size) - 1, size.length()));
     if (ret != EOK) {
         HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
@@ -594,12 +594,12 @@ bool TarFile::WriteLongName(string &name, char type)
     vector<uint8_t> buffer {};
     buffer.resize(sz);
     buffer.assign(name.begin(), name.end());
-    if (WriteAll(buffer, sz) != sz) {
+    if (static_cast<size_t>(WriteAll(buffer, sz)) != sz) {
         HILOGE("Failed to write long name buffer");
         return false;
     }
 
-    return CompleteBlock(sz);
+    return CompleteBlock(static_cast<off_t>(sz));
 }
 
 void TarFile::SetPacketMode(bool isReset)

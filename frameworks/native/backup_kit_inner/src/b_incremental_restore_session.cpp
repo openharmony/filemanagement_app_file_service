@@ -43,6 +43,7 @@ BIncrementalRestoreSession::~BIncrementalRestoreSession()
 unique_ptr<BIncrementalRestoreSession> BIncrementalRestoreSession::Init(Callbacks callbacks)
 {
     try {
+        HILOGI("Init IncrementalRestoreSession Begin");
         auto restore = make_unique<BIncrementalRestoreSession>();
         ServiceProxy::InvaildInstance();
         auto proxy = ServiceProxy::GetInstance();
@@ -92,6 +93,15 @@ ErrCode BIncrementalRestoreSession::GetFileHandle(const string &bundleName, cons
     return proxy->GetIncrementalFileHandle(bundleName, fileName);
 }
 
+ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore);
+}
+
 ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore,
     std::vector<std::string> detailInfos)
 {
@@ -99,17 +109,8 @@ ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<Bun
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
+
     return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos);
-}
-
-ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)
-{
-    auto proxy = ServiceProxy::GetInstance();
-    if (proxy == nullptr) {
-        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
-    }
-
-    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore);
 }
 
 ErrCode BIncrementalRestoreSession::Release()

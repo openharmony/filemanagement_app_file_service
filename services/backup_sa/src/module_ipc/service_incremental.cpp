@@ -424,9 +424,14 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        if (session_ == nullptr) {
+            HILOGE("AppIncrementalDone error, session is null");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         string callerName = VerifyCallerAndGetCallerName();
-        HILOGI("Service AppIncrementalDone start, callerName is %{public}s", callerName.c_str());
-        if (session_->OnBundleFileReady(callerName)) {
+        HILOGI("Service AppIncrementalDone start, callerName is %{public}s, errCode is: %{public}d",
+            callerName.c_str(), errCode);
+        if (session_->OnBundleFileReady(callerName) || errCode != BError(BError::Codes::OK)) {
             auto tempBackUpConnection = session_->GetExtConnection(callerName);
             auto backUpConnection = tempBackUpConnection.promote();
             if (backUpConnection == nullptr) {
@@ -438,33 +443,14 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
             }
             proxy->HandleClear();
             session_->BundleExtTimerStop(callerName);
-            IServiceReverse::Scenario scenario = session_->GetScenario();
-            HILOGI("will notify clone data, scenario is: %{public}d", scenario);
-            if (scenario == IServiceReverse::Scenario::BACKUP) {
-                session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, callerName);
-                auto now = std::chrono::system_clock::now();
-                auto time = std::chrono::system_clock::to_time_t(now);
-                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
-                std::stringstream strTime;
-                strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
-                    << (std::setw(INDEX)) << (ms.count() % MS_1000);
-                HiSysEventWrite(
-                    OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-                    FILE_BACKUP_EVENTS,
-                    OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-                    "PROC_NAME", "ohos.appfileservice", "BUNDLENAME", callerName,
-                    "PID", getpid(), "TIME", strTime.str()
-                );
-            } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-                SendEndAppGalleryNotify(callerName);
-                session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, callerName);
-            }
+            NotifyCallerCurAppIncrementDone(errCode, callerName);
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
         }
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        HILOGE("AppIncrementalDone error, err code is:%{public}d", e.GetCode());
         return e.GetCode(); // 任意异常产生，终止监听该任务
     } catch (...) {
         HILOGI("Unexpected exception");
@@ -543,5 +529,31 @@ bool Service::IncrementalBackup(const string &bundleName)
         return true;
     }
     return false;
+}
+
+void Service::NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string &callerName)
+{
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        HILOGI("will notify clone data, scenario is incremental backup");
+        session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, callerName);
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+        std::stringstream strTime;
+        strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
+            << (std::setw(INDEX)) << (ms.count() % MS_1000);
+        HiSysEventWrite(
+            OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
+            FILE_BACKUP_EVENTS,
+            OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+            "PROC_NAME", "ohos.appfileservice", "BUNDLENAME", callerName,
+            "PID", getpid(), "TIME", strTime.str()
+        );
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        HILOGI("will notify clone data, scenario is Restore");
+        SendEndAppGalleryNotify(callerName);
+        session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, callerName);
+    }
 }
 } // namespace OHOS::FileManagement::Backup

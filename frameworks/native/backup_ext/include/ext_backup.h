@@ -192,11 +192,8 @@ protected:
 private:
     BConstants::ExtensionAction VerifyAndGetAction(const AAFwk::Want &want,
                                                    std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo);
-
-    ErrCode GetParament(const AAFwk::Want &want);
-
     BConstants::ExtensionAction extAction_ {BConstants::ExtensionAction::INVALID};
-
+    ErrCode GetParament(const AAFwk::Want &want);
     static CreatorFunc creator_;
 };
 } // namespace OHOS::FileManagement::Backup

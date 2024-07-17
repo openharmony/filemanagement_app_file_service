@@ -38,6 +38,7 @@ using namespace std;
 static tuple<bool, string> GetConfigParameterValue(const string &key, uint32_t len)
 {
     int handle = static_cast<int>(FindParameter(key.c_str()));
+    HILOGI("start get config param value.");
     if (handle == -1) {
         HILOGI("Fail to find parameter.");
         return {false, ""};
@@ -49,9 +50,10 @@ static tuple<bool, string> GetConfigParameterValue(const string &key, uint32_t l
             HILOGI("Fail to get parameter value.");
             return {false, ""};
         }
+        HILOGI("end get config param value.");
         return {true, buffer.get()};
     } catch (const bad_alloc &e) {
-        HILOGI("Fail to get parameter value: %{public}s.", e.what());
+        HILOGE("Fail to get parameter value: %{public}s.", e.what());
         return {false, ""};
     }
 }
@@ -83,6 +85,7 @@ bool BackupPara::GetBackupOverrideIncrementalRestore()
     if (!getCfgParaValSucc) {
         throw BError(BError::Codes::SA_INVAL_ARG, "Fail to get configuration parameter value of backup.para");
     }
+    HILOGI("Get Parse IncrementalRestore result, value: %{public}s", value.c_str());
     return value == "true";
 }
 

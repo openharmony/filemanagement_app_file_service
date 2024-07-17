@@ -267,6 +267,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         if (extension_->SpecialVersionForCloneAndCloud()) {
             return GetIncreFileHandleForSpecialVersion(fileName);
         }
+        HILOGI("extension: single to single fileName:%{public}s", fileName.c_str());
         string path = GetIncrementalFileHandlePath();
         string tarName = path + fileName;
         if (access(tarName.c_str(), F_OK) == 0) {
@@ -672,6 +673,7 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
             ptr->AppDone(ret);
             HILOGI("backup app done %{public}d", ret);
         } catch (const BError &e) {
+            HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
             ptr->AppDone(e.GetCode());
         } catch (const exception &e) {
             HILOGE("Catched an unexpected low-level exception %{public}s", e.what());

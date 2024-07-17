@@ -95,18 +95,48 @@ HWTEST_F(ToolsOpRestoreAsyncTest, SUB_backup_tools_op_restore_async_0100, testin
             auto ret = matchedOp->Execute(mapArgToVal);
             EXPECT_EQ(ret, 0);
         }
-
         mapArgToVal.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end SUB_backup_tools_op_restore_async_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_async_0101
+ * @tc.name: SUB_backup_tools_op_restore_async_0101
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7L7A6
+ */
+HWTEST_F(ToolsOpRestoreAsyncTest, SUB_backup_tools_op_restore_async_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin SUB_backup_tools_op_restore_async_0100";
+    try {
+        string localCap = string(BConstants::SA_BUNDLE_BACKUP_TMP_DIR.data()) + "/tmp";
+        vector<string> path = { localCap.data() };
+        vector<string> bundles = { "com.example.app2backup" };
+        vector<string> userId = { "100" };
+        vector<string> restoreTypeF = { "false" };
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-info";
+        map<string, vector<string>> mapArgToVal;
         mapArgToVal.insert(make_pair("pathCapFile", path));
         mapArgToVal.insert(make_pair("bundles", bundles));
-        vector<string> restoreTypeF = { "false" };
         mapArgToVal.insert(make_pair("restoreType", restoreTypeF));
         mapArgToVal.insert(make_pair("userId", userId));
+        vector<string_view> curOp;
+        curOp.emplace_back("restoreAsync");
+        auto &&opeartions = ToolsOp::GetAllOperations();
+        auto tryOpSucceed = [&curOp](const ToolsOp &op) { return op.TryMatch(curOp); };
+        auto matchedOp = find_if(opeartions.begin(), opeartions.end(), tryOpSucceed);
         if (matchedOp != opeartions.end()) {
             auto ret = matchedOp->Execute(mapArgToVal);
             EXPECT_EQ(ret, 0);
         }
-
+        mapArgToVal.clear();
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";

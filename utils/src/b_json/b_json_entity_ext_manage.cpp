@@ -113,7 +113,8 @@ struct stat JsonValue2Stat(const Json::Value &value)
     }
 
     sta.st_size = value.isMember("st_size") && value["st_size"].isInt64() ? value["st_size"].asInt64() : 0;
-    sta.st_mode = value.isMember("st_mode") && value["st_mode"].isInt() ? value["st_mode"].asInt() : DEFAULT_MODE;
+    auto mode = value.isMember("st_mode") && value["st_mode"].isInt() ? value["st_mode"].asInt() : DEFAULT_MODE;
+    sta.st_mode = static_cast<mode_t>(mode);
     if (value.isMember("st_atim")) {
         sta.st_atim.tv_sec = value["st_atim"].isMember("tv_sec") && value["st_atim"]["tv_sec"].isInt64()
                                  ? value["st_atim"]["tv_sec"].asInt64()

@@ -350,7 +350,7 @@ void UntarFile::ParseRegularFile(FileStatInfo &info, char typeFlag)
     if (destFile != nullptr) {
         string destStr("");
         destStr.resize(READ_BUFF_SIZE);
-        off_t remainSize = tarFileSize_;
+        size_t remainSize = static_cast<size_t>(tarFileSize_);
         size_t readBuffSize = READ_BUFF_SIZE;
         while (remainSize > 0) {
             if (remainSize < READ_BUFF_SIZE) {

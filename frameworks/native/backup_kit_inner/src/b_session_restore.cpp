@@ -43,6 +43,7 @@ BSessionRestore::~BSessionRestore()
 unique_ptr<BSessionRestore> BSessionRestore::Init(Callbacks callbacks)
 {
     try {
+        HILOGI("Init RestoreSession Begin");
         auto restore = make_unique<BSessionRestore>();
         ServiceProxy::InvaildInstance();
         auto proxy = ServiceProxy::GetInstance();
@@ -100,7 +101,6 @@ ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bu
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-
     return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos);
 }
 

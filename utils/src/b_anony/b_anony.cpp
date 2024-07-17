@@ -24,7 +24,7 @@ std::string GetAnonyString(const std::string &value)
 {
     const size_t shortPlaintextLength = 20; // 字符串长度小于20，只明文1字节
     const size_t plaintextLength = 4; // 字符串长度大于20，明文4字节
-    const size_t anonyLength = 3; // 字符串长度小于3，则完全匿名
+    const size_t anonyLength = 3; // 字符串长度小于3, 则完全匿名
     std::string result;
     std::string tmpStr("******");
     size_t strLen = value.length();

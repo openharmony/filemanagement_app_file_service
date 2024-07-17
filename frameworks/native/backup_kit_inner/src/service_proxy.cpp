@@ -279,7 +279,7 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<Bund
     if (!data.WriteStringVector(bundleNames)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleNames").GetCode();
     }
-    if (!data.WriteStringVector(detailInfos)) {
+    if (!detailInfos.empty() && !data.WriteStringVector(detailInfos)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send detailInfos").GetCode();
     }
     if (!data.WriteInt32(static_cast<int32_t>(restoreType))) {
@@ -288,10 +288,9 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<Bund
     if (!data.WriteInt32(userId)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send userId").GetCode();
     }
-
     int32_t ret = Remote()->SendRequest(
-        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION_DETAILS),
-        data, reply, option);
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION_DETAILS), data, reply,
+        option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
