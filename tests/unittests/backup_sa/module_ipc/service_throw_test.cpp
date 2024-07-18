@@ -93,4 +93,526 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_GetLocalCapabilities_0100, testing:
     }
     GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_GetLocalCapabilities_0100";
 }
+
+/**
+ * @tc.number: SUB_Service_throw_InitRestoreSession_0100
+ * @tc.name: SUB_Service_throw_InitRestoreSession_0100
+ * @tc.desc: 测试 InitRestoreSession 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_InitRestoreSession_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+            return 0;
+        }));
+        EXPECT_CALL(*sessionMock, Deactive(_, _)).WillOnce(Return());
+        auto ret = service->InitRestoreSession(nullptr);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+
+        EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Invoke([]() {
+            throw runtime_error("运行时错误");
+            return 0;
+        }));
+        ret = service->InitRestoreSession(nullptr);
+        EXPECT_EQ(ret, EPERM);
+
+        EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Invoke([]() {
+            throw "未知错误";
+            return 0;
+        }));
+        ret = service->InitRestoreSession(nullptr);
+        EXPECT_EQ(ret, EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by InitRestoreSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_InitRestoreSession_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_InitBackupSession_0100
+ * @tc.name: SUB_Service_throw_InitBackupSession_0100
+ * @tc.desc: 测试 InitBackupSession 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_InitBackupSession_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        EXPECT_CALL(*sessionMock, SetMemParaCurSize(_)).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        EXPECT_CALL(*sessionMock, Deactive(_, _)).WillOnce(Return());
+        auto ret = service->InitBackupSession(nullptr);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by InitBackupSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_InitBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_AppendBundlesRestoreSession_0100
+ * @tc.name: SUB_Service_throw_AppendBundlesRestoreSession_0100
+ * @tc.desc: 测试 AppendBundlesRestoreSession 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesRestoreSession_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_AppendBundlesRestoreSession_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        auto ret = service->AppendBundlesRestoreSession(UniqueFd(-1), {}, {}, RESTORE_DATA_WAIT_SEND, 0);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+            throw "未知错误";
+        }));
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        ret = service->AppendBundlesRestoreSession(UniqueFd(-1), {}, {}, RESTORE_DATA_WAIT_SEND, 0);
+        EXPECT_EQ(ret, EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by AppendBundlesRestoreSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_AppendBundlesRestoreSession_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_AppendBundlesRestoreSession_0200
+ * @tc.name: SUB_Service_throw_AppendBundlesRestoreSession_0200
+ * @tc.desc: 测试 AppendBundlesRestoreSession 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesRestoreSession_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_AppendBundlesRestoreSession_0200";
+    try {
+        EXPECT_NE(service, nullptr);
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        auto ret = service->AppendBundlesRestoreSession(UniqueFd(-1), {}, RESTORE_DATA_WAIT_SEND, 0);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+            throw "未知错误";
+        }));
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        ret = service->AppendBundlesRestoreSession(UniqueFd(-1), {}, RESTORE_DATA_WAIT_SEND, 0);
+        EXPECT_EQ(ret, EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by AppendBundlesRestoreSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_AppendBundlesRestoreSession_0200";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_AppendBundlesBackupSession_0100
+ * @tc.name: SUB_Service_throw_AppendBundlesBackupSession_0100
+ * @tc.desc: 测试 AppendBundlesBackupSession 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesBackupSession_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_AppendBundlesBackupSession_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        auto ret = service->AppendBundlesBackupSession({});
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+            throw runtime_error("运行时错误");
+        }));
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        ret = service->AppendBundlesBackupSession({});
+        EXPECT_EQ(ret, EPERM);
+
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+            throw "未知错误";
+        }));
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        ret = service->AppendBundlesBackupSession({});
+        EXPECT_EQ(ret, EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by AppendBundlesBackupSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_AppendBundlesBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_AppendBundlesDetailsBackupSession_0100
+ * @tc.name: SUB_Service_throw_AppendBundlesDetailsBackupSession_0100
+ * @tc.desc: 测试 AppendBundlesDetailsBackupSession 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesDetailsBackupSession_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_AppendBundlesDetailsBackupSession_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        auto ret = service->AppendBundlesDetailsBackupSession({}, {});
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+            throw runtime_error("运行时错误");
+        }));
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        ret = service->AppendBundlesDetailsBackupSession({}, {});
+        EXPECT_EQ(ret, EPERM);
+
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+            throw "未知错误";
+        }));
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        ret = service->AppendBundlesDetailsBackupSession({}, {});
+        EXPECT_EQ(ret, EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by AppendBundlesDetailsBackupSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_AppendBundlesDetailsBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_PublishFile_0100
+ * @tc.name: SUB_Service_throw_PublishFile_0100
+ * @tc.desc: 测试 PublishFile 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_PublishFile_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_PublishFile_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        BFileInfo fileInfo;
+        EXPECT_CALL(*sessionMock, VerifyCallerAndScenario(_, _)).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        auto ret = service->PublishFile(fileInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+
+        EXPECT_CALL(*sessionMock, VerifyCallerAndScenario(_, _)).WillOnce(Invoke([]() {
+            throw runtime_error("运行时错误");
+        }));
+        ret = service->PublishFile(fileInfo);
+        EXPECT_EQ(ret, EPERM);
+
+        EXPECT_CALL(*sessionMock, VerifyCallerAndScenario(_, _)).WillOnce(Invoke([]() {
+            throw "未知错误";
+        }));
+        ret = service->PublishFile(fileInfo);
+        EXPECT_EQ(ret, EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by PublishFile.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_PublishFile_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_AppFileReady_0100
+ * @tc.name: SUB_Service_throw_AppFileReady_0100
+ * @tc.desc: 测试 AppFileReady 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppFileReady_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_AppFileReady_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        string fileName;
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        auto ret = service->AppFileReady(fileName, UniqueFd(-1), 0);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
+            throw runtime_error("运行时错误");
+        }));
+        ret = service->AppFileReady(fileName, UniqueFd(-1), 0);
+        EXPECT_EQ(ret, EPERM);
+
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
+            throw "未知错误";
+        }));
+        ret = service->AppFileReady(fileName, UniqueFd(-1), 0);
+        EXPECT_EQ(ret, EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by AppFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_AppFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_AppDone_0100
+ * @tc.name: SUB_Service_throw_AppDone_0100
+ * @tc.desc: 测试 AppDone 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppDone_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_AppDone_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        auto ret = service->AppDone(0);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
+            throw runtime_error("运行时错误");
+        }));
+        ret = service->AppDone(0);
+        EXPECT_EQ(ret, EPERM);
+
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
+            throw "未知错误";
+        }));
+        ret = service->AppDone(0);
+        EXPECT_EQ(ret, EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by AppDone.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_AppDone_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_LaunchBackupExtension_0100
+ * @tc.name: SUB_Service_throw_LaunchBackupExtension_0100
+ * @tc.desc: 测试 LaunchBackupExtension 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_LaunchBackupExtension_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_LaunchBackupExtension_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        BundleName bundleName;
+        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+            return IServiceReverse::Scenario::UNDEFINED;
+        }));
+        auto ret = service->LaunchBackupExtension(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+
+        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
+            throw runtime_error("运行时错误");
+            return IServiceReverse::Scenario::UNDEFINED;
+        }));
+        ret = service->LaunchBackupExtension(bundleName);
+        EXPECT_EQ(ret, EPERM);
+
+        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
+            throw "未知错误";
+            return IServiceReverse::Scenario::UNDEFINED;
+        }));
+        ret = service->LaunchBackupExtension(bundleName);
+        EXPECT_EQ(ret, EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by LaunchBackupExtension.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_LaunchBackupExtension_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_GetFileHandle_0100
+ * @tc.name: SUB_Service_throw_GetFileHandle_0100
+ * @tc.desc: 测试 GetFileHandle 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_GetFileHandle_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_GetFileHandle_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        string bundleName;
+        string fileName;
+        EXPECT_CALL(*sessionMock, VerifyCallerAndScenario(_, _)).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        auto ret = service->GetFileHandle(bundleName, fileName);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+
+        EXPECT_CALL(*sessionMock, VerifyCallerAndScenario(_, _)).WillOnce(Invoke([]() {
+            throw runtime_error("运行时错误");
+        }));
+        ret = service->GetFileHandle(bundleName, fileName);
+        EXPECT_EQ(ret, EPERM);
+
+        EXPECT_CALL(*sessionMock, VerifyCallerAndScenario(_, _)).WillOnce(Invoke([]() {
+            throw "未知错误";
+        }));
+        ret = service->GetFileHandle(bundleName, fileName);
+        EXPECT_EQ(ret, EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by GetFileHandle.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_GetFileHandle_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_OnBackupExtensionDied_0100
+ * @tc.name: SUB_Service_throw_OnBackupExtensionDied_0100
+ * @tc.desc: 测试 OnBackupExtensionDied 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_OnBackupExtensionDied_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_OnBackupExtensionDied_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        string bundleName;
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        EXPECT_CALL(*sessionMock, BundleExtTimerStop(_)).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        EXPECT_CALL(*sessionMock, RemoveExtInfo(_)).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+            return IServiceReverse::Scenario::UNDEFINED;
+        }));
+        service->OnBackupExtensionDied("bundleName");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by OnBackupExtensionDied.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_OnBackupExtensionDied_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_ExtConnectDied_0100
+ * @tc.name: SUB_Service_throw_ExtConnectDied_0100
+ * @tc.desc: 测试 ExtConnectDied 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_ExtConnectDied_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_ExtConnectDied_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        string callName;
+        EXPECT_CALL(*sessionMock, BundleExtTimerStop(_)).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        EXPECT_CALL(*sessionMock, RemoveExtInfo(_)).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+            return IServiceReverse::Scenario::UNDEFINED;
+        }));
+        service->ExtConnectDied(callName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by ExtConnectDied.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_ExtConnectDied_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_throw_ExtStart_0100
+ * @tc.name: SUB_Service_throw_ExtStart_0100
+ * @tc.desc: 测试 ExtStart 接口的 catch 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAC04T
+ */
+HWTEST_F(ServiceThrowTest, SUB_Service_throw_ExtStart_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_ExtStart_0100";
+    try {
+        EXPECT_NE(service, nullptr);
+        string bundleName;
+        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+            return IServiceReverse::Scenario::UNDEFINED;
+        })).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+            return IServiceReverse::Scenario::UNDEFINED;
+        }));
+        EXPECT_CALL(*sessionMock, RemoveExtInfo(_)).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        }));
+        service->ExtStart(bundleName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by ExtStart.";
+    }
+    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_ExtStart_0100";
+}
 } // namespace OHOS::FileManagement::Backup
