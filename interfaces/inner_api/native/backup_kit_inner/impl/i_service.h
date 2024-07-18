@@ -53,7 +53,7 @@ public:
     virtual ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode) = 0;
     virtual ErrCode AppDone(ErrCode errCode) = 0;
     virtual ErrCode ServiceResultReport(const std::string restoreRetInfo,
-        BackupRestoreScenario scenario) = 0;
+        BackupRestoreScenario scenario, ErrCode errCode) = 0;
     virtual ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) = 0;
     virtual ErrCode AppendBundlesRestoreSession(UniqueFd fd,
                                                 const std::vector<BundleName> &bundleNames,

@@ -38,7 +38,7 @@ void ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode) {}
 
 void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName, int fd, int32_t errCode) {}
 
-void ServiceReverseProxy::RestoreOnResultReport(string result, string bundleName) {}
+void ServiceReverseProxy::RestoreOnResultReport(string result, string bundleName, ErrCode errCode) {}
 
 void ServiceReverseProxy::IncrementalBackupOnFileReady(string bundleName, string fileName, int fd, int manifestFd,
     int32_t errCode) {}
@@ -60,5 +60,5 @@ void ServiceReverseProxy::IncrementalRestoreOnAllBundlesFinished(int32_t errCode
 void ServiceReverseProxy::IncrementalRestoreOnFileReady(string bundleName, string fileName, int fd, int manifestFd,
     int32_t errCode) {}
 
-void ServiceReverseProxy::IncrementalRestoreOnResultReport(string result, string bundleName) {}
+void ServiceReverseProxy::IncrementalRestoreOnResultReport(string result, string bundleName, ErrCode errCode) {}
 } // namespace OHOS::FileManagement::Backup

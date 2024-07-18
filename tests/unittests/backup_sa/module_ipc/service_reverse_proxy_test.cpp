@@ -1918,6 +1918,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnResultReport
     try {
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
@@ -1976,6 +1977,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnResultReport
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
             EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
             proxy_->RestoreOnResultReport(RESULT_REPORT, bundleName);
             EXPECT_TRUE(false);
@@ -2005,6 +2007,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalRestoreOnR
     try {
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
             .Times(1)
             .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
@@ -2064,6 +2067,7 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalRestoreOnR
         try {
             EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
             EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
             EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
             proxy_->IncrementalRestoreOnResultReport(RESULT_REPORT, bundleName);
             EXPECT_TRUE(false);

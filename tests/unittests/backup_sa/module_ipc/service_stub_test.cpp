@@ -50,7 +50,8 @@ public:
     MOCK_METHOD1(PublishFile, ErrCode(const BFileInfo &fileInfo));
     MOCK_METHOD3(AppFileReady, ErrCode(const string &fileName, UniqueFd fd, int32_t errCode));
     MOCK_METHOD1(AppDone, ErrCode(ErrCode errCode));
-    MOCK_METHOD2(ServiceResultReport, ErrCode(const string restoreRetInfo, BackupRestoreScenario scenario));
+    MOCK_METHOD3(ServiceResultReport, ErrCode(const string restoreRetInfo,
+        BackupRestoreScenario scenario, ErrCode errCode));
     MOCK_METHOD2(GetFileHandle, ErrCode(const string &bundleName, const string &fileName));
     MOCK_METHOD5(
         AppendBundlesRestoreSession,

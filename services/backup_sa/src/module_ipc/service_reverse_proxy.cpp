@@ -190,12 +190,13 @@ void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName,
     }
 }
 
-void ServiceReverseProxy::RestoreOnResultReport(string result, std::string bundleName)
+void ServiceReverseProxy::RestoreOnResultReport(string result, std::string bundleName, ErrCode errCode)
 {
     HILOGI("ServiceReverseProxy::RestoreOnResultReport Begin with result: %s", result.c_str());
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(result) || !data.WriteString(bundleName)) {
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(result) ||
+        !data.WriteString(bundleName) || !data.WriteInt32(errCode)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
     }
 

@@ -109,7 +109,7 @@ bool GetExtensionActionFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *dat
 
 bool OnRestoreFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
-    function<void(ErrCode)> callback;
+    function<void(ErrCode, string)> callback;
     function<void(ErrCode, const string)> callbackEx;
     backup->OnRestore(callback, callbackEx);
     return true;

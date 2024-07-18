@@ -45,6 +45,7 @@
 #include "b_filesystem/b_file.h"
 #include "b_filesystem/b_file_hash.h"
 #include "b_json/b_json_cached_entity.h"
+#include "b_jsonutil/b_jsonutil.h"
 #include "b_tarball/b_tarball_factory.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
@@ -1093,14 +1094,20 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
-        auto callBackup = [obj](ErrCode errCode) {
+        auto callBackup = [obj](ErrCode errCode, std::string errMsg) {
             auto extensionPtr = obj.promote();
             if (extensionPtr == nullptr) {
                 HILOGE("Ext extension handle have been released");
                 return;
             }
             HILOGI("Current bundle will execute app done");
-            extensionPtr->AppDone(errCode);
+            if (errMsg.empty()) {
+                extensionPtr->AppDone(errCode);
+            } else {
+                std::string errInfo;
+                BJsonUtil::BuildRestoreErrInfo(errInfo, errCode, errMsg);
+                extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::FULL_RESTORE, errCode);
+            }
             extensionPtr->DoClear();
         };
         auto ptr = obj.promote();
@@ -1141,14 +1148,20 @@ void BackupExtExtension::ExtClear()
 void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
-        auto callBackup = [obj](ErrCode errCode) {
+        auto callBackup = [obj](ErrCode errCode, std::string errMsg) {
             auto extensionPtr = obj.promote();
             if (extensionPtr == nullptr) {
                 HILOGE("Ext extension handle have been released");
                 return;
             }
             HILOGI("Current bundle will execute app done");
-            extensionPtr->AppIncrementalDone(errCode);
+            if (errMsg.empty()) {
+                extensionPtr->AppIncrementalDone(errCode);
+            } else {
+                std::string errInfo;
+                BJsonUtil::BuildRestoreErrInfo(errInfo, errCode, errMsg);
+                extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::INCREMENTAL_RESTORE, errCode);
+            }
             extensionPtr->DoClear();
         };
         auto ptr = obj.promote();
@@ -1221,12 +1234,13 @@ void BackupExtExtension::AppDone(ErrCode errCode)
     }
 }
 
-void BackupExtExtension::AppResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario)
+void BackupExtExtension::AppResultReport(const std::string restoreRetInfo,
+    BackupRestoreScenario scenario, ErrCode errCode)
 {
     auto proxy = ServiceProxy::GetInstance();
     BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
     HILOGI("restoreRetInfo is %{public}s", restoreRetInfo.c_str());
-    auto ret = proxy->ServiceResultReport(restoreRetInfo, scenario);
+    auto ret = proxy->ServiceResultReport(restoreRetInfo, scenario, errCode);
     if (ret != ERR_OK) {
         HILOGE("Failed notify app restoreResultReport, errCode: %{public}d", ret);
     }
@@ -1236,7 +1250,7 @@ void BackupExtExtension::AsyncTaskOnBackup()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
-        auto callBackup = [obj](ErrCode errCode) {
+            auto callBackup = [obj](ErrCode errCode, std::string errMsg) {
             HILOGI("begin call backup");
             auto extensionPtr = obj.promote();
             if (extensionPtr == nullptr) {
@@ -1605,7 +1619,7 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
 void BackupExtExtension::AsyncTaskOnIncrementalBackup()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
-        auto callBackup = [obj](ErrCode errCode) {
+        auto callBackup = [obj](ErrCode errCode, std::string errMsg) {
             HILOGI("App onbackup end");
             auto proxy = ServiceProxy::GetInstance();
             if (proxy == nullptr) {
@@ -1841,22 +1855,27 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::RestoreResultCallb
             return;
         }
         extensionPtr->extension_->CallExtRestore(errCode, restoreRetInfo);
-        if (errCode) {
-            extensionPtr->AppDone(errCode);
-            extensionPtr->DoClear();
-            return;
-        }
-        if (restoreRetInfo.size()) {
+        if (errCode == ERR_OK && restoreRetInfo.size()) {
             HILOGI("Will notify restore result report");
             extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::FULL_RESTORE);
+            return;
+        }
+        if (restoreRetInfo.empty()) {
+            extensionPtr->AppDone(errCode);
+            extensionPtr->DoClear();
+        } else {
+            std::string errInfo;
+            BJsonUtil::BuildRestoreErrInfo(errInfo, errCode, restoreRetInfo);
+            extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::FULL_RESTORE, errCode);
+            extensionPtr->DoClear();
         }
     };
 }
 
-std::function<void(ErrCode)> BackupExtExtension::AppDoneCallbackEx(wptr<BackupExtExtension> obj)
+std::function<void(ErrCode, std::string)> BackupExtExtension::AppDoneCallbackEx(wptr<BackupExtExtension> obj)
 {
     HILOGI("Begin get callback for appDone");
-    return [obj](ErrCode errCode) {
+    return [obj](ErrCode errCode, std::string errMsg) {
         HILOGI("begin call callBackupExAppDone");
         auto extensionPtr = obj.promote();
         if (extensionPtr == nullptr) {
@@ -1883,13 +1902,18 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncRestoreResultCa
             return;
         }
         extensionPtr->extension_->CallExtRestore(errCode, restoreRetInfo);
-        if (errCode) {
-            extensionPtr->AppIncrementalDone(errCode);
-            extensionPtr->DoClear();
+        if (errCode == ERR_OK && restoreRetInfo.size()) {
+            extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
             return;
         }
-        if (restoreRetInfo.size()) {
-            extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
+        if (restoreRetInfo.empty()) {
+            extensionPtr->AppIncrementalDone(errCode);
+            extensionPtr->DoClear();
+        } else {
+            std::string errInfo;
+            BJsonUtil::BuildRestoreErrInfo(errInfo, errCode, restoreRetInfo);
+            extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::INCREMENTAL_RESTORE, errCode);
+            extensionPtr->DoClear();
         }
     };
 }

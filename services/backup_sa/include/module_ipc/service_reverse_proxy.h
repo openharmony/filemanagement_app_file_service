@@ -30,7 +30,8 @@ public:
 
     void RestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
     void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override;
-    void RestoreOnResultReport(std::string result, std::string bundleName) override;
+    void RestoreOnResultReport(std::string result, std::string bundleName,
+        ErrCode errCode = 0) override;
     void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void RestoreOnAllBundlesFinished(int32_t errCode) override;
 
@@ -44,7 +45,8 @@ public:
     void IncrementalRestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
     void IncrementalRestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
         int32_t errCode) override;
-    void IncrementalRestoreOnResultReport(std::string result, std::string bundleName) override;
+    void IncrementalRestoreOnResultReport(std::string result, std::string bundleName,
+        ErrCode errCode = 0) override;
     void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) override;
 

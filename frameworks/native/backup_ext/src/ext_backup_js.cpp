@@ -116,7 +116,8 @@ static napi_value PromiseCallback(napi_env env, napi_callback_info info)
         HILOGE("CallbackInfo is nullptr");
         return nullptr;
     }
-    callbackInfo->callback(BError(BError::Codes::OK));
+    string str;
+    callbackInfo->callback(BError(BError::Codes::OK), str);
     data = nullptr;
     return nullptr;
 }
@@ -136,7 +137,7 @@ static napi_value PromiseCatchCallback(napi_env env, napi_callback_info info)
         HILOGE("CallbackInfo is nullptr");
         return nullptr;
     }
-    callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
+    callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION), exceptionInfo);
     data = nullptr;
     return nullptr;
 }
@@ -472,7 +473,7 @@ ExtBackupJs *ExtBackupJs::Create(const unique_ptr<AbilityRuntime::Runtime> &runt
     return new ExtBackupJs(static_cast<AbilityRuntime::JsRuntime &>(*runtime));
 }
 
-ErrCode ExtBackupJs::OnBackup(function<void(ErrCode)> callback,
+ErrCode ExtBackupJs::OnBackup(function<void(ErrCode, std::string)> callback,
     std::function<void(ErrCode, const std::string)> callbackEx)
 {
     HILOGI("BackupExtensionAbility(JS) OnBackup ex");
@@ -531,15 +532,15 @@ ErrCode ExtBackupJs::CallJsOnBackup()
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env,
         napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
+            string str;
             bool isExceptionPending;
             napi_is_exception_pending(env, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
             if (isExceptionPending) {
-                string str;
                 DealNapiException(env, str);
-                callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
+                callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
             } else {
-                callbackInfo->callback(BError(BError::Codes::OK));
+                callbackInfo->callback(BError(BError::Codes::OK), str);
             }
             return true;
         }
@@ -553,7 +554,7 @@ ErrCode ExtBackupJs::CallJsOnBackup()
     return errCode;
 }
 
-ErrCode ExtBackupJs::OnRestore(function<void(ErrCode)> callback,
+ErrCode ExtBackupJs::OnRestore(function<void(ErrCode, std::string)> callback,
     std::function<void(ErrCode, const std::string)> callbackEx)
 {
     HILOGI("BackupExtensionAbility(JS) OnRestore.");
@@ -611,15 +612,15 @@ ErrCode ExtBackupJs::CallJSRestore()
     HILOGI("Start call app js method onRestore");
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {callbackInfo_}](napi_env env, napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
+            string str;
             bool isExceptionPending;
             napi_is_exception_pending(env, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
             if (isExceptionPending) {
-                string str;
                 DealNapiException(env, str);
-                callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION));
+                callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
             } else {
-                callbackInfo->callback(BError(BError::Codes::OK));
+                callbackInfo->callback(BError(BError::Codes::OK), str);
             }
             return true;
         }

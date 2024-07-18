@@ -35,7 +35,8 @@ public:
     ErrCode PublishFile(const BFileInfo &fileInfo) override;
     ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode) override;
     ErrCode AppDone(ErrCode errCode) override;
-    ErrCode ServiceResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario) override;
+    ErrCode ServiceResultReport(const std::string restoreRetInfo,
+        BackupRestoreScenario scenario, ErrCode errCode) override;
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode AppendBundlesRestoreSession(UniqueFd fd,
                                         const std::vector<BundleName> &bundleNames,

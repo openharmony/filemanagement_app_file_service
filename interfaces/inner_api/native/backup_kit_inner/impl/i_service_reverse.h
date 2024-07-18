@@ -40,7 +40,8 @@ public:
 
     virtual void RestoreOnBundleStarted(int32_t errCode, std::string bundleName) = 0;
     virtual void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) = 0;
-    virtual void RestoreOnResultReport(std::string result, std::string bundleName) = 0;
+    virtual void RestoreOnResultReport(std::string result, std::string bundleName,
+        ErrCode errCode = 0) = 0;
     virtual void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
     virtual void RestoreOnAllBundlesFinished(int32_t errCode) = 0;
 
@@ -56,7 +57,8 @@ public:
                                                std::string fileName,
                                                int fd,
                                                int manifestFd, int32_t errCode) = 0;
-    virtual void IncrementalRestoreOnResultReport(std::string result, std::string bundleName) = 0;
+    virtual void IncrementalRestoreOnResultReport(std::string result, std::string bundleName,
+        ErrCode errCode = 0) = 0;
     virtual void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
     virtual void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) = 0;
 

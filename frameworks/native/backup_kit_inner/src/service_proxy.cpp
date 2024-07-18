@@ -206,7 +206,8 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
     return reply.ReadInt32();
 }
 
-ErrCode ServiceProxy::ServiceResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario)
+ErrCode ServiceProxy::ServiceResultReport(const std::string restoreRetInfo,
+    BackupRestoreScenario scenario, ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
@@ -219,6 +220,9 @@ ErrCode ServiceProxy::ServiceResultReport(const std::string restoreRetInfo, Back
     }
     if (!data.WriteInt32(static_cast<int32_t>(scenario))) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the scenario").GetCode();
+    }
+    if (!data.WriteInt32(errCode)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the errCode").GetCode();
     }
     MessageParcel reply;
     MessageOption option;
