@@ -713,7 +713,7 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1301, testing::ext::Tes
 {
     GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_1301";
     try {
-        string pathCapFile = string(BConstants::SA_BUNDLE_BACKUP_TMP_DIR.data()) + "/tmp";
+        string pathCapFile = "/data/test/tmp";
         int fd = open(pathCapFile.data(), O_RDWR | O_CREAT, S_IRWXU);
         EXPECT_GT(fd, 0);
         close(fd);
