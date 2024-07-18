@@ -109,7 +109,8 @@ private:
      *
      * @param restoreRetInfo app restore reportInfo
      */
-    void AppResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario);
+    void AppResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario,
+        ErrCode errCode = 0);
 
     /**
      * @brief Executing Backup Tasks Asynchronously
@@ -185,12 +186,12 @@ private:
      *
      * @param errCode
      */
-    std::function<void(ErrCode)> IncAppDoneCallbackEx(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, std::string)> IncAppDoneCallbackEx(wptr<BackupExtExtension> obj);
 
     /**
      * @brief get callbackEx for execute appDone
      */
-    std::function<void(ErrCode)> AppDoneCallbackEx(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, std::string)> AppDoneCallbackEx(wptr<BackupExtExtension> obj);
     std::function<void(ErrCode, const std::string)> HandleBackupEx(wptr<BackupExtExtension> obj);
     std::function<void(ErrCode, const std::string)> HandleTaskBackupEx(wptr<BackupExtExtension> obj);
 private:

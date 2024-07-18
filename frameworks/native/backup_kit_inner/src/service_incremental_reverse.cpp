@@ -110,7 +110,7 @@ void ServiceReverse::IncrementalRestoreOnFileReady(string bundleName, string fil
     callbacksIncrementalRestore_.onFileReady(bFileInfo, UniqueFd(fd), UniqueFd(manifestFd), errCode);
 }
 
-void ServiceReverse::IncrementalRestoreOnResultReport(std::string result, std::string bundleName)
+void ServiceReverse::IncrementalRestoreOnResultReport(std::string result, std::string bundleName, ErrCode errCode)
 {
     HILOGI("begin incremental restore on result report,bundleName:%{public}s", bundleName.c_str());
     if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onResultReport) {
@@ -122,7 +122,7 @@ void ServiceReverse::IncrementalRestoreOnResultReport(std::string result, std::s
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
-    callbacksIncrementalRestore_.onBundleFinished(BError(BError::Codes::OK), bundleName);
+    callbacksIncrementalRestore_.onBundleFinished(errCode, bundleName);
 }
 
 ServiceReverse::ServiceReverse(BIncrementalBackupSession::Callbacks callbacks)

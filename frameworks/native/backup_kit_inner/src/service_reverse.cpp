@@ -109,7 +109,7 @@ void ServiceReverse::RestoreOnFileReady(string bundleName, string fileName, int 
     callbacksRestore_.onFileReady(bFileInfo, UniqueFd(fd), errCode);
 }
 
-void ServiceReverse::RestoreOnResultReport(string result, std::string bundleName)
+void ServiceReverse::RestoreOnResultReport(string result, std::string bundleName, ErrCode errCode)
 {
     HILOGI("ServiceReverse RestoreOnResultReport bundle %{public}s begin with result: %{public}s", bundleName.c_str(),
         result.c_str());
@@ -122,7 +122,7 @@ void ServiceReverse::RestoreOnResultReport(string result, std::string bundleName
         HILOGI("Error scenario or callback is nullptr");
         return;
     }
-    callbacksRestore_.onBundleFinished(BError(BError::Codes::OK), bundleName);
+    callbacksRestore_.onBundleFinished(errCode, bundleName);
 }
 
 ServiceReverse::ServiceReverse(BSessionBackup::Callbacks callbacks)

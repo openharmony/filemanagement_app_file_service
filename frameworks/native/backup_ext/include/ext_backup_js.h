@@ -54,8 +54,8 @@ struct CallJsParam {
 };
 
 struct CallbackInfo {
-    std::function<void(ErrCode)> callback;
-    CallbackInfo(std::function<void(ErrCode)> callbackIn) : callback(callbackIn) {}
+    std::function<void(ErrCode, std::string)> callback;
+    CallbackInfo(std::function<void(ErrCode, std::string)> callbackIn) : callback(callbackIn) {}
 };
 
 struct CallbackInfoBackup {
@@ -97,7 +97,7 @@ public:
      */
     static ExtBackupJs *Create(const std::unique_ptr<AbilityRuntime::Runtime> &runtime);
 
-    ErrCode OnBackup(std::function<void(ErrCode)> callback,
+    ErrCode OnBackup(std::function<void(ErrCode, std::string)> callback,
         std::function<void(ErrCode, const std::string)> callbackEx) override;
 
     /**
@@ -106,7 +106,7 @@ public:
      * @param callbackEx The callbackEx.
      * @param callback The callBack.
      */
-    ErrCode OnRestore(std::function<void(ErrCode)> callback,
+    ErrCode OnRestore(std::function<void(ErrCode, std::string)> callback,
         std::function<void(ErrCode, const std::string)> callbackEx) override;
 
     /**

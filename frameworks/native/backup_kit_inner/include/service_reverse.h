@@ -35,7 +35,8 @@ public:
     void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void RestoreOnAllBundlesFinished(int32_t errCode) override;
     void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override;
-    void RestoreOnResultReport(std::string result, std::string bundleName) override;
+    void RestoreOnResultReport(std::string result, std::string bundleName,
+        ErrCode errCode = 0) override;
 
     void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
         int32_t errCode) override;
@@ -49,7 +50,8 @@ public:
     void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) override;
     void IncrementalRestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
         int32_t errCode) override;
-    void IncrementalRestoreOnResultReport(std::string result, std::string bundleName) override;
+    void IncrementalRestoreOnResultReport(std::string result, std::string bundleName,
+        ErrCode errCode = 0) override;
 
 public:
     ServiceReverse() = delete;

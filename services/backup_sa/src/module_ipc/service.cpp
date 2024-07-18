@@ -708,16 +708,17 @@ ErrCode Service::AppDone(ErrCode errCode)
     }
 }
 
-ErrCode Service::ServiceResultReport(const std::string restoreRetInfo, BackupRestoreScenario sennario)
+ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
+    BackupRestoreScenario sennario, ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         string callerName = VerifyCallerAndGetCallerName();
         if (sennario == BackupRestoreScenario::FULL_RESTORE) {
-            session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, callerName);
+            session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, callerName, errCode);
             NotifyCloneBundleFinish(callerName);
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
-            session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, callerName);
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, callerName, errCode);
             NotifyCloneBundleFinish(callerName);
         } else if (sennario == BackupRestoreScenario::FULL_BACKUP) {
             session_->GetServiceReverseProxy()->BackupOnResultReport(restoreRetInfo, callerName);

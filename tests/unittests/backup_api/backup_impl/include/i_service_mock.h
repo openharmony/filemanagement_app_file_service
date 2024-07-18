@@ -89,7 +89,8 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode ServiceResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario) override
+    ErrCode ServiceResultReport(const std::string restoreRetInfo,
+        BackupRestoreScenario scenario, ErrCode errCode) override
     {
         return BError(BError::Codes::OK);
     }

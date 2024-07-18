@@ -82,6 +82,18 @@ public:
      */
     static bool FindBundleInfoByName(std::map<std::string, std::vector<BundleDetailInfo>> &bundleNameDetailsMap,
         std::string &bundleName, const std::string &jobType, BundleDetailInfo &bundleDetail);
+
+    /**
+     * @brief 组建恢复错误信息的json
+     *
+     * @param jsonStr 组建结果
+     * @param errCode 错误码
+     * @param errMsg 错误信息
+     *
+     * @return 是否组建成功
+     *
+     */
+    static bool BuildRestoreErrInfo(std::string &jsonStr, int errCode, std::string errMsg);
 };
 } // namespace OHOS::FileManagement::Backup
 

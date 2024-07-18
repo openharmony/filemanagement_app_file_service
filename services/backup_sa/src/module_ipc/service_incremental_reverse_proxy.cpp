@@ -175,11 +175,13 @@ void ServiceReverseProxy::IncrementalRestoreOnAllBundlesFinished(int32_t errCode
     }
 }
 
-void ServiceReverseProxy::IncrementalRestoreOnResultReport(std::string result, std::string bundleName)
+void ServiceReverseProxy::IncrementalRestoreOnResultReport(std::string result,
+    std::string bundleName, ErrCode errCode)
 {
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(result) || !data.WriteString(bundleName)) {
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(result) ||
+        !data.WriteString(bundleName) || !data.WriteInt32(errCode)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
     }
 

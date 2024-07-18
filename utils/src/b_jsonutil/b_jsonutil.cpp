@@ -151,4 +151,33 @@ bool BJsonUtil::FindBundleInfoByName(std::map<std::string, std::vector<BundleDet
     }
     return false;
 }
+
+bool BJsonUtil::BuildRestoreErrInfo(std::string &jsonStr, int errCode, std::string errMsg)
+{
+    cJSON *info = cJSON_CreateObject();
+    if (info == nullptr) {
+        return false;
+    }
+
+    cJSON *errInfo = cJSON_CreateObject();
+    if (errInfo == nullptr) {
+        cJSON_Delete(info);
+        return false;
+    }
+    cJSON_AddNumberToObject(errInfo, "errorCode", errCode);
+    cJSON_AddStringToObject(errInfo, "errorInfo", errMsg.c_str());
+    cJSON_AddStringToObject(errInfo, "type", "ErrorInfo");
+
+    cJSON_AddItemToObject(info, "resultInfo", errInfo);
+
+    char *data = cJSON_Print(info);
+    if (data == nullptr) {
+        cJSON_Delete(info);
+        return false;
+    }
+    jsonStr = std::string(data);
+    cJSON_Delete(info);
+    cJSON_free(data);
+    return true;
+}
 }

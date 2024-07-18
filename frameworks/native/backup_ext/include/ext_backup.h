@@ -125,21 +125,21 @@ public:
     /**
      * @brief do backup. Subclasses can inherit to implement their own custom functionality.
      */
-    virtual ErrCode OnBackup(std::function<void(ErrCode)> callback);
+    virtual ErrCode OnBackup(std::function<void(ErrCode, std::string)> callback);
 
-    virtual ErrCode OnBackup(std::function<void(ErrCode)> callback,
+    virtual ErrCode OnBackup(std::function<void(ErrCode, std::string)> callback,
         std::function<void(ErrCode, const std::string)> callbackEx);
 
     /**
      * @brief Called do restore.
      */
-    virtual ErrCode OnRestore(std::function<void(ErrCode)> callback,
+    virtual ErrCode OnRestore(std::function<void(ErrCode, std::string)> callback,
         std::function<void(ErrCode, const std::string)> callbackEx);
 
     /**
      * @brief Called do restore.
      */
-    virtual ErrCode OnRestore(std::function<void(ErrCode)> callback);
+    virtual ErrCode OnRestore(std::function<void(ErrCode, std::string)> callback);
 
     /**
      * @brief Called do GetBackupInfo.

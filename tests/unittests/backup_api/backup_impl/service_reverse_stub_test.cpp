@@ -49,7 +49,7 @@ public:
     MOCK_METHOD2(RestoreOnBundleFinished, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(RestoreOnAllBundlesFinished, void(int32_t errCode));
     MOCK_METHOD4(RestoreOnFileReady, void(string bundleName, string fileName, int fd, int32_t errCode));
-    MOCK_METHOD2(RestoreOnResultReport, void(string result, string bundleName));
+    MOCK_METHOD3(RestoreOnResultReport, void(string result, string bundleName, ErrCode errCode));
     MOCK_METHOD5(IncrementalBackupOnFileReady,
         void(string bundleName, string fileName, int fd, int manifestFd, int32_t errCode));
     MOCK_METHOD2(IncrementalBackupOnBundleStarted, void(int32_t errCode, string bundleName));
@@ -61,7 +61,7 @@ public:
     MOCK_METHOD1(IncrementalRestoreOnAllBundlesFinished, void(int32_t errCode));
     MOCK_METHOD5(IncrementalRestoreOnFileReady,
         void(string bundleName, string fileName, int fd, int manifestFd, int32_t errCode));
-    MOCK_METHOD2(IncrementalRestoreOnResultReport, void(string result, string bundleName));
+    MOCK_METHOD3(IncrementalRestoreOnResultReport, void(string result, string bundleName, ErrCode errCode));
 };
 
 class ServiceReverseStubTest : public testing::Test {
@@ -816,7 +816,7 @@ HWTEST_F(ServiceReverseStubTest,
         << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_RestoreOnResultReport_0100";
     try {
         MockServiceReverse service;
-        EXPECT_CALL(service, RestoreOnResultReport(_, _)).WillOnce(Return());
+        EXPECT_CALL(service, RestoreOnResultReport(_, _, _)).WillOnce(Return());
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -824,6 +824,7 @@ HWTEST_F(ServiceReverseStubTest,
         EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
         EXPECT_TRUE(data.WriteString(resultReport));
         EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
+        EXPECT_TRUE(data.WriteInt32(0));
 
         EXPECT_EQ(
             BError(BError::Codes::OK),
@@ -855,13 +856,14 @@ HWTEST_F(ServiceReverseStubTest,
         << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_RestoreOnResultReport_0100";
     try {
         MockServiceReverse service;
-        EXPECT_CALL(service, IncrementalRestoreOnResultReport(_, _)).WillOnce(Return());
+        EXPECT_CALL(service, IncrementalRestoreOnResultReport(_, _, _)).WillOnce(Return());
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
         std::string resultReport = "result_report";
         EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
         EXPECT_TRUE(data.WriteString(resultReport));
+        EXPECT_TRUE(data.WriteInt32(0));
 
         EXPECT_EQ(
             BError(BError::Codes::OK),

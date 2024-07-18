@@ -165,8 +165,10 @@ int32_t ServiceStub::CmdResultReport(MessageParcel &data, MessageParcel &reply)
     data.ReadString(restoreRetInfo);
     int32_t scenario;
     data.ReadInt32(scenario);
+    ErrCode errCode;
+    data.ReadInt32(errCode);
     BackupRestoreScenario type = static_cast<BackupRestoreScenario>(scenario);
-    int res = ServiceResultReport(restoreRetInfo, type);
+    int res = ServiceResultReport(restoreRetInfo, type, errCode);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }
