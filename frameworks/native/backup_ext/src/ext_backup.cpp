@@ -25,6 +25,7 @@
 #include "bundle_mgr_client.h"
 #include "unique_fd.h"
 
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "b_json/b_json_cached_entity.h"
@@ -154,7 +155,7 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         appVersionCode_ = want.GetLongParam(BConstants::EXTENSION_VERSION_CODE_PARA, 0);
         restoreType_ = want.GetIntParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, 0);
         restoreExtInfo_ = want.GetStringParam(BConstants::EXTENSION_RESTORE_EXT_INFO_PARA);
-        HILOGI("restoreExtInfo_ is %{public}s", restoreExtInfo_.c_str());
+        HILOGI("restoreExtInfo_ is %{public}s", GetAnonyString(restoreExtInfo_).c_str());
         HILOGI("Get version %{public}s type %{public}d from want when restore.", appVersionStr_.c_str(), restoreType_);
     } else if (extAction_ == BConstants::ExtensionAction::BACKUP) {
         backupExtInfo_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA);
