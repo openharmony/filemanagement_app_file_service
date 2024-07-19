@@ -509,7 +509,7 @@ int TarFile::WriteAll(const vector<uint8_t> &buf, size_t len)
             HILOGE("Failed to fwrite tar file, err = %{public}d", errno);
             return count;
         }
-        count += static_cast<off_t>(i);
+        count += i;
         currentTarFileSize_ += static_cast<off_t>(i);
     }
     return count;
