@@ -27,6 +27,7 @@ public:
         int64_t versionCode;
         std::string versionName;
         int64_t spaceOccupied;
+        int64_t increSpaceOccupied;
         bool allToBackup;
         std::string extensionName;
         std::string restoreDeps;
@@ -63,7 +64,7 @@ public:
         obj_["deviceType"] = deviceType;
     }
 
-    void SetBundleInfos(std::vector<BundleInfo> bundleInfos)
+    void SetBundleInfos(std::vector<BundleInfo> bundleInfos, bool incre = false)
     {
         if (obj_.isMember("bundleInfos")) {
             obj_["bundleInfos"].clear();
@@ -74,6 +75,9 @@ public:
             arrObj["versionCode"] = item.versionCode;
             arrObj["versionName"] = item.versionName;
             arrObj["spaceOccupied"] = item.spaceOccupied;
+            if (incre) {
+                arrObj["increSpaceOccupied"] = item.increSpaceOccupied;
+            }
             arrObj["allToBackup"] = item.allToBackup;
             arrObj["extensionName"] = item.extensionName;
             arrObj["restoreDeps"] = item.restoreDeps;
@@ -165,8 +169,13 @@ public:
             if (item.isMember("extraInfo") && item["extraInfo"].isObject()) {
                 extraInfo = item["extraInfo"];
             }
+            int64_t increSpaceOccupied = 0;
+            if (item.isMember("increSpaceOccupied") && item["increSpaceOccupied"].isInt64()) {
+                increSpaceOccupied = item["increSpaceOccupied"].asInt64();
+            }
             bundleInfos.emplace_back(BundleInfo {item["name"].asString(), item["versionCode"].asInt64(),
                                                  item["versionName"].asString(), item["spaceOccupied"].asInt64(),
+                                                 increSpaceOccupied,
                                                  item["allToBackup"].asBool(), item["extensionName"].asString(),
                                                  restoreDeps, supportScene, extraInfo});
         }

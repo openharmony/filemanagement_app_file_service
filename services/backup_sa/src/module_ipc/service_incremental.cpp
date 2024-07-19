@@ -110,8 +110,8 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
 
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
-        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session_->GetSessionUserId());
-        cache.SetBundleInfos(bundleInfos);
+        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(session_->GetSessionUserId(), bundleNames);
+        cache.SetBundleInfos(bundleInfos, true);
         cachedEntity.Persist();
         HILOGI("Service GetLocalCapabilitiesIncremental persist");
         session_->DecreaseSessionCnt();
