@@ -1268,16 +1268,17 @@ void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
 void Service::SendErrAppGalleryNotify()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    if (scenario != IServiceReverse::Scenario::RESTORE) {
+        return ;
+    }
     vector<string> bundleNameList = disposal_->GetBundleNameFromConfigFile();
     if (bundleNameList.empty()) {
         HILOGI("End, All disposal pasitions have been cleared");
+        return ;
     }
     for (vector<string>::iterator it = bundleNameList.begin(); it != bundleNameList.end(); ++it) {
         string bundleName = *it;
-        IServiceReverse::Scenario scenario = session_->GetScenario();
-        if (scenario != IServiceReverse::Scenario::RESTORE) {
-            return ;
-        }
         DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
         HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
             bundleName.c_str());
@@ -1308,13 +1309,19 @@ void Service::ClearDisposalOnSaStart()
 
 void Service::DeleteDisConfigFile()
 {
-    vector<string> bundleNameList = disposal_->GetBundleNameFromConfigFile();
-    if (bundleNameList.empty()) {
-        if (!disposal_->DeleteConfigFile()) {
-            HILOGE("DeleteConfigFile failed");
-        }
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    if (scenario != IServiceReverse::Scenario::RESTORE) {
+        return ;
     }
-    HILOGE("DisposalConfigFile is not empty");
+    vector<string> bundleNameList = disposal_->GetBundleNameFromConfigFile();
+    if (!bundleNameList.empty()) {
+        HILOGE("DisposalConfigFile is not empty");
+        return ;
+    }
+    if (!disposal_->DeleteConfigFile()) {
+        HILOGE("DeleteConfigFile failed");
+    }
 }
 
 void Service::SessionDeactive()
@@ -1322,6 +1329,9 @@ void Service::SessionDeactive()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
+        //清理处置状态
+        SendErrAppGalleryNotify();
+        DeleteDisConfigFile();
         // 结束定时器
         sched_->ClearSchedulerData();
         // 清除缓存数据
