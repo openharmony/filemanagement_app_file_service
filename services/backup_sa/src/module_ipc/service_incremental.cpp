@@ -79,8 +79,6 @@ ErrCode Service::Release()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("KILL");
     VerifyCaller(session_->GetScenario());
-    SendErrAppGalleryNotify();
-    DeleteDisConfigFile();
     SessionDeactive();
     return BError(BError::Codes::OK);
 }
