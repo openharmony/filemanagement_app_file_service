@@ -41,53 +41,6 @@ struct RestoreEntity {
     shared_ptr<GeneralCallbacks> callbacks;
 };
 
-static void OnFileReadyWhole(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &fileInfo,
-    UniqueFd fd, int32_t sysErrno)
-{
-    if (pCallbacks.expired()) {
-        HILOGI("callbacks is unbound");
-        return;
-    }
-    auto callbacks = pCallbacks.lock();
-    if (!callbacks) {
-        HILOGI("callback function onFileReady has already been released");
-        return;
-    }
-    if (!bool(callbacks->onFileReady)) {
-        HILOGI("callback function onFileReady is undefined");
-        return;
-    }
-    ErrCode errCode = BError::GetCodeByErrno(sysErrno);
-    std::string errMsg = "system errno: " + to_string(sysErrno);
-    std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, errMsg);
-
-    auto cbCompl = [bundleName {fileInfo.owner}, fileName {fileInfo.fileName},
-                    fd {make_shared<UniqueFd>(fd.Release())},
-                    errInfo](napi_env env, NError err) -> NVal {
-        if (err) {
-            return {env, err.GetNapiErr(env)};
-        }
-        HILOGI("callback function restore OnFileReadyWhole errCode: %{public}d", std::get<0>(errInfo));
-        NVal obj;
-        ErrParam errorParam = [ errInfo ]() {
-            return errInfo;
-        };
-        if (std::get<0>(errInfo) != 0) {
-            obj = NVal {env, NError(errorParam).GetNapiErr(env)};
-        } else {
-            obj = NVal::CreateObject(env);
-        }
-        obj.AddProp({
-            NVal::DeclareNapiProperty(BConstants::BUNDLE_NAME.c_str(), NVal::CreateUTF8String(env, bundleName).val_),
-            NVal::DeclareNapiProperty(BConstants::URI.c_str(), NVal::CreateUTF8String(env, fileName).val_),
-            NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
-
-        return {obj};
-    };
-
-    callbacks->onFileReady.ThreadSafeSchedule(cbCompl);
-}
-
 static void OnFileReadySheet(weak_ptr<GeneralCallbacks> pCallbacks,
                              const BFileInfo &fileInfo,
                              UniqueFd fd,
@@ -417,7 +370,7 @@ static bool VerifyNarg(napi_env env, NVal &callbacks)
 
 napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info cbinfo)
 {
-    HILOGD("called SessionRestore::Constructor begin");
+    HILOGI("called SessionRestore::Constructor begin");
     NFuncArg funcArg(env, cbinfo);
     if (VerifyNapiObject(env, funcArg)) {
         return nullptr;
@@ -428,32 +381,18 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
     }
 
     NVal ptr(env, funcArg.GetThisVar());
-    bool bSheet = BackupPara().GetBackupOverrideIncrementalRestore();
-    HILOGI("BSheet is %{public}d", bSheet);
     auto restoreEntity = std::make_unique<RestoreEntity>();
     restoreEntity->callbacks = make_shared<GeneralCallbacks>(env, ptr, callbacks);
-    if (bSheet) {
-        restoreEntity->sessionWhole = nullptr;
-        restoreEntity->sessionSheet = BIncrementalRestoreSession::Init(BIncrementalRestoreSession::Callbacks {
-            .onFileReady = bind(OnFileReadySheet, restoreEntity->callbacks, placeholders::_1, placeholders::_2,
-                placeholders::_3, placeholders::_4),
-            .onBundleStarted = bind(onBundleBegin, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
-            .onBundleFinished = bind(onBundleEnd, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
-            .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
-            .onResultReport = bind(OnResultReport, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
-            .onBackupServiceDied = bind(OnBackupServiceDied, restoreEntity->callbacks)});
-    } else {
-        restoreEntity->sessionSheet = nullptr;
-        restoreEntity->sessionWhole = BSessionRestore::Init(BSessionRestore::Callbacks {
-            .onFileReady = bind(OnFileReadyWhole, restoreEntity->callbacks, placeholders::_1,
-                placeholders::_2, placeholders::_3),
-            .onBundleStarted = bind(onBundleBegin, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
-            .onBundleFinished = bind(onBundleEnd, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
-            .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
-            .onResultReport = bind(OnResultReport, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
-            .onBackupServiceDied = bind(OnBackupServiceDied, restoreEntity->callbacks)});
-    }
-    if (!restoreEntity->sessionWhole && !restoreEntity->sessionSheet) {
+    restoreEntity->sessionWhole = nullptr;
+    restoreEntity->sessionSheet = BIncrementalRestoreSession::Init(BIncrementalRestoreSession::Callbacks {
+        .onFileReady = bind(OnFileReadySheet, restoreEntity->callbacks, placeholders::_1, placeholders::_2,
+            placeholders::_3, placeholders::_4),
+        .onBundleStarted = bind(onBundleBegin, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
+        .onBundleFinished = bind(onBundleEnd, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
+        .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
+        .onResultReport = bind(OnResultReport, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
+        .onBackupServiceDied = bind(OnBackupServiceDied, restoreEntity->callbacks)});
+    if (!restoreEntity->sessionSheet) {
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to init restore").GetCode()).ThrowErr(env);
         return nullptr;
     }
@@ -462,7 +401,7 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
         return nullptr;
     }
 
-    HILOGD("called SessionRestore::Constructor end");
+    HILOGI("called SessionRestore::Constructor end");
     return funcArg.GetThisVar();
 }
 
@@ -628,7 +567,7 @@ napi_value SessionRestoreNExporter::GetFileHandle(napi_env env, napi_callback_in
 
 napi_value SessionRestoreNExporter::Release(napi_env env, napi_callback_info cbinfo)
 {
-    HILOGD("called SessionRestore::Release begin");
+    HILOGI("called SessionRestore::Release begin");
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
         HILOGE("Number of arguments unmatched.");
@@ -656,7 +595,7 @@ napi_value SessionRestoreNExporter::Release(napi_env env, napi_callback_info cbi
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
 
-    HILOGD("Called SessionRestore::Release end.");
+    HILOGI("Called SessionRestore::Release end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
