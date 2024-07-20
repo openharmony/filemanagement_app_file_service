@@ -59,7 +59,7 @@ shared_ptr<BSessionRestoreAsync> BSessionRestoreAsync::Init(Callbacks callbacks)
                                                  .onAllBundlesFinished = callbacks.onAllBundlesFinished,
                                                  .onResultReport = callbacks.onResultReport,
                                                  .onBackupServiceDied = callbacks.onBackupServiceDied};
-        int32_t res = proxy->InitRestoreSession(new ServiceReverse(callbacksTmp));
+        int32_t res = proxy->InitRestoreSession(sptr(new ServiceReverse(callbacksTmp)));
         if (res != 0) {
             HILOGE("Failed to Restore because of %{public}d", res);
             return nullptr;

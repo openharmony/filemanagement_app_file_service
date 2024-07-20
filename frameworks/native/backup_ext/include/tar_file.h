@@ -115,9 +115,8 @@ private:
      *
      * @param filename 文件名
      * @param st 文件参数结构体
-     * @param isSplit 是否分片
      */
-    bool AddFile(std::string &fileName, const struct stat &st, bool isSplit);
+    bool AddFile(std::string &fileName, const struct stat &st);
 
     /**
      * @brief write files to content
@@ -213,7 +212,7 @@ private:
      * @param st   文件信息结构体
      * @param hdr  tar包文件头
      */
-    bool I2OcsConvert(const struct stat &st, TarHeader &hdr, std::string &fileName, bool isSplit);
+    bool I2OcsConvert(const struct stat &st, TarHeader &hdr, std::string &fileName);
 
 private:
     uint32_t fileCount_ {0};
