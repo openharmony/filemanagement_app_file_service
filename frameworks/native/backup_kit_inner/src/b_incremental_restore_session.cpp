@@ -51,7 +51,7 @@ unique_ptr<BIncrementalRestoreSession> BIncrementalRestoreSession::Init(Callback
             HILOGI("Failed to get backup service");
             return nullptr;
         }
-        int32_t res = proxy->InitRestoreSession(new ServiceReverse(callbacks));
+        int32_t res = proxy->InitRestoreSession(sptr(new ServiceReverse(callbacks)));
         if (res != 0) {
             HILOGE("Failed to Restore because of %{public}d", res);
             return nullptr;
