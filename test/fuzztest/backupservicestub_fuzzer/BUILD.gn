@@ -58,5 +58,7 @@ ohos_fuzztest("BackupServiceStubFuzzTest") {
     "LOG_DOMAIN=0xD004303",
     "private=public",
   ]
+
+  use_exceptions = true
 }
 ###############################################################################
