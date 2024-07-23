@@ -1860,9 +1860,11 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::RestoreResultCallb
             return;
         }
         extensionPtr->extension_->CallExtRestore(errCode, restoreRetInfo);
-        if (errCode == ERR_OK && restoreRetInfo.size()) {
-            HILOGI("Will notify restore result report");
-            extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::FULL_RESTORE);
+        if (errCode == ERR_OK) {
+            if (restoreRetInfo.size()) {
+                HILOGI("Will notify restore result report");
+                extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::FULL_RESTORE);
+            }
             return;
         }
         if (restoreRetInfo.empty()) {
@@ -1907,8 +1909,10 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncRestoreResultCa
             return;
         }
         extensionPtr->extension_->CallExtRestore(errCode, restoreRetInfo);
-        if (errCode == ERR_OK && restoreRetInfo.size()) {
-            extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
+        if (errCode == ERR_OK) {
+            if (restoreRetInfo.size()) {
+                extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
+            }
             return;
         }
         if (restoreRetInfo.empty()) {
