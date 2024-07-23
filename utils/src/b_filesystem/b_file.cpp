@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -97,14 +97,14 @@ bool BFile::CopyFile(const string &from, const string &to)
     }
 
     try {
-        auto resolvedPath = make_unique<char[]>(PATH_MAX);
+        auto resolvedPath = make_unique<char[]>(PATH_MAX + 1); // 1: size for '\0'
         if (!realpath(from.data(), resolvedPath.get())) {
             HILOGI("failed to real path for the file %{public}s", from.c_str());
             return false;
         }
         string oldPath(resolvedPath.get());
         UniqueFd fdFrom(open(oldPath.data(), O_RDONLY));
-        if (fdFrom == -1) {
+        if (fdFrom == -1) { // -1: fd error code
             HILOGE("failed to open the file %{public}s", from.c_str());
             throw BError(errno);
         }
@@ -114,7 +114,7 @@ bool BFile::CopyFile(const string &from, const string &to)
             throw BError(errno);
         }
         if (!realpath(dirname(dir.get()), resolvedPath.get())) {
-            HILOGI("failed to real path for %{public}s", to.c_str());
+            HILOGE("failed to real path for %{public}s", to.c_str());
             return false;
         }
         string newPath(resolvedPath.get());
@@ -124,12 +124,56 @@ bool BFile::CopyFile(const string &from, const string &to)
         }
         newPath.append("/").append(basename(name.get()));
         UniqueFd fdTo(open(newPath.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
-        if (fdTo == -1) {
+        if (fdTo == -1) { // -1: fd error code
             HILOGE("failed to open the file %{public}s", to.c_str());
             throw BError(errno);
         }
 
         SendFile(fdTo, fdFrom);
+        return true;
+    } catch (const BError &e) {
+        HILOGE("%{public}s", e.what());
+    } catch (const exception &e) {
+        HILOGE("%{public}s", e.what());
+    } catch (...) {
+        HILOGE("");
+    }
+    return false;
+}
+
+bool BFile::MoveFile(const string &from, const string &to)
+{
+    if (from == to) {
+        return true;
+    }
+    try {
+        auto fromPath = make_unique<char[]>(PATH_MAX + 1);
+        if (!realpath(from.data(), fromPath.get())) {
+            HILOGE("failed to real path for the file %{public}s", from.c_str());
+            return false;
+        }
+        string oldPath(fromPath.get());
+
+        unique_ptr<char, function<void(void *p)>> dir {strdup(to.data()), free};
+        if (!dir) {
+            throw BError(errno);
+        }
+        auto toPath = make_unique<char[]>(PATH_MAX + 1);
+        if (!realpath(dirname(dir.get()), toPath.get())) {
+            HILOGE("failed to real path for %{public}s", to.c_str());
+            return false;
+        }
+        string newPath(toPath.get());
+        unique_ptr<char, function<void(void *p)>> name {strdup(to.data()), free};
+        if (!name) {
+            throw BError(errno);
+        }
+        newPath.append("/").append(basename(name.get()));
+        if (rename(oldPath.c_str(), newPath.c_str())) {
+            HILOGE("failed to rename path, oldPath:%{public}s ,newPath: %{public}s",
+                GetAnonyPath(oldPath).c_str(), GetAnonyPath(newPath).c_str());
+            throw BError(errno);
+        }
         return true;
     } catch (const BError &e) {
         HILOGE("%{public}s", e.what());

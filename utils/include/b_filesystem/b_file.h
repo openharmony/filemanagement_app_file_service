@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,8 @@
 
 #include "unique_fd.h"
 #include "json/json.h"
+
+#include "b_anony/b_anony.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -60,6 +62,16 @@ public:
      * @return false some error occur
      */
     static bool CopyFile(const string &from, const string &to);
+
+    /**
+     * @brief move file from old path to new path
+     *
+     * @param from old path
+     * @param to new path
+     * @return true copy succeess
+     * @return false some error occur
+     */
+    static bool MoveFile(const string &from, const string &to);
 
 private:
 };

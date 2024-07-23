@@ -796,33 +796,11 @@ static bool RestoreBigFilePrecheck(string &fileName, const string &path, const s
     return true;
 }
 
-static void RestoreBigFileAfter(const string &fileName,
-                                const string &filePath,
-                                const struct stat &sta)
+static void RestoreBigFileAfter(const string &filePath, const struct stat &sta)
 {
     if (chmod(filePath.c_str(), sta.st_mode) != 0) {
         HILOGE("Failed to chmod filePath, err = %{public}d", errno);
     }
-
-    if (fileName != filePath) {
-        auto resolvedFileName = make_unique<char[]>(PATH_MAX);
-        auto resolvedFilePath = make_unique<char[]>(PATH_MAX);
-        bool allOk = true;
-        if (!realpath(fileName.data(), resolvedFileName.get())) {
-            HILOGE("failed to real path for fileName");
-            allOk = false;
-        }
-        if (!realpath(filePath.data(), resolvedFilePath.get())) {
-            HILOGE("failed to real path for filePath");
-            allOk = false;
-        }
-        if (allOk && string_view(resolvedFileName.get()) != string_view(resolvedFilePath.get())) {
-            if (!RemoveFile(fileName)) {
-                HILOGE("Failed to delete the big file");
-            }
-        }
-    }
-
     struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
     UniqueFd fd(open(filePath.data(), O_RDONLY));
     if (fd < 0) {
@@ -872,12 +850,12 @@ static void RestoreBigFiles(bool appendTargetPath)
             continue;
         }
 
-        if (!BFile::CopyFile(fileName, filePath)) {
-            HILOGE("failed to copy the file. err = %{public}d", errno);
+        if (!BFile::MoveFile(fileName, filePath)) {
+            HILOGE("failed to move the file. err = %{public}d", errno);
             continue;
         }
 
-        RestoreBigFileAfter(fileName, filePath, item.sta);
+        RestoreBigFileAfter(filePath, item.sta);
     }
     HILOGI("End Restore Big Files");
 }
