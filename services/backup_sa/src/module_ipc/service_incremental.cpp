@@ -31,6 +31,7 @@
 #include <unique_fd.h>
 
 #include "accesstoken_kit.h"
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "b_json/b_json_cached_entity.h"
@@ -92,6 +93,10 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
            so there must be set init userId.
         */
         HILOGI("Begin");
+        if (session_ == nullptr) {
+            HILOGE("Get LocalCapabilities Incremental Error, session is empty");
+            return UniqueFd(-ENOENT);
+        }
         session_->IncreaseSessionCnt();
         session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
@@ -219,6 +224,10 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         VerifyCaller();
+        if (session_ == nullptr) {
+            HILOGE("Init Incremental backup session  error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         return session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
                                  .scenario = IServiceReverse::Scenario::BACKUP,
                                  .clientProxy = remote,
@@ -234,6 +243,10 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        if (session_ == nullptr) {
+            HILOGE("Init Incremental backup session  error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         vector<string> bundleNames {};
@@ -296,7 +309,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
             bool uniCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, info.name, UNICAST_TYPE,
                 uniCastInfo);
             if (uniCastRet) {
-                HILOGI("current bundle, unicast info:%{public}s", uniCastInfo.detail.c_str());
+                HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
                 session_->SetBackupExtInfo(info.name, uniCastInfo.detail);
             }
         }

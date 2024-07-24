@@ -120,6 +120,10 @@ void FilePermission::ParseErrorResults(const vector<uint32_t> &resultCodes,
                                        const vector<PolicyInfo> &pathPolicies,
                                        deque<struct PolicyErrorResult> &errorResults)
 {
+    if (resultCodes.size() != pathPolicies.size()) {
+        LOGE("resultCodes size is not equals pathPolicies size");
+        return;
+    }
     for (size_t i = 0; i < resultCodes.size(); i++) {
         PolicyErrorResult result;
         Uri uri(pathPolicies[i].path);
@@ -248,6 +252,10 @@ int32_t FilePermission::PersistPermission(const vector<UriPolicyInfo> &uriPolici
     vector<uint32_t> resultCodes;
     int32_t sandboxManagerErrorCode = SandboxManagerKit::PersistPolicy(pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
+    if (resultCodes.size() > MAX_ARRAY_SIZE) {
+        LOGE("The number of result codes exceeds the maximum");
+        return FileManagement::LibN::E_PARAMS;
+    }
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
@@ -264,6 +272,10 @@ int32_t FilePermission::RevokePermission(const vector<UriPolicyInfo> &uriPolicie
     vector<uint32_t> resultCodes;
     int32_t sandboxManagerErrorCode = SandboxManagerKit::UnPersistPolicy(pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
+    if (resultCodes.size() > MAX_ARRAY_SIZE) {
+        LOGE("The number of result codes exceeds the maximum");
+        return FileManagement::LibN::E_PARAMS;
+    }
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
@@ -280,6 +292,10 @@ int32_t FilePermission::ActivatePermission(const vector<UriPolicyInfo> &uriPolic
     vector<uint32_t> resultCodes;
     int32_t sandboxManagerErrorCode = SandboxManagerKit::StartAccessingPolicy(pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
+    if (resultCodes.size() > MAX_ARRAY_SIZE) {
+        LOGE("The number of result codes exceeds the maximum");
+        return FileManagement::LibN::E_PARAMS;
+    }
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
@@ -296,6 +312,10 @@ int32_t FilePermission::DeactivatePermission(const vector<UriPolicyInfo> &uriPol
     vector<uint32_t> resultCodes;
     int32_t sandboxManagerErrorCode = SandboxManagerKit::StopAccessingPolicy(pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
+    if (resultCodes.size() > MAX_ARRAY_SIZE) {
+        LOGE("The number of result codes exceeds the maximum");
+        return FileManagement::LibN::E_PARAMS;
+    }
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }

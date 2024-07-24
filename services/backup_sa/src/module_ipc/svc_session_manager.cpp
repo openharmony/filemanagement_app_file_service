@@ -161,7 +161,7 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
             it->second.receExtAppDone = true;
         }
         if (it->second.receExtManageJson && it->second.fileNameInfo.empty() && it->second.receExtAppDone) {
-            HILOGI("Current bundle manage json info and file info support current app done");
+            HILOGI("The bundle manage json info and file info support current app done");
             it->second.isBundleFinished = true;
             return true;
         }
@@ -738,11 +738,20 @@ void SvcSessionManager::ClearSessionData()
         }
         // disconnect extension
         if (it.second.schedAction == BConstants::ServiceSchedAction::RUNNING) {
-            auto proxy = it.second.backUpConnection->GetBackupExtProxy();
-            if (proxy && impl_.restoreDataType != RestoreTypeEnum::RESTORE_DATA_READDY) {
+            auto backUpConnection = it.second.backUpConnection;
+            if (backUpConnection == nullptr) {
+                HILOGE("Clear session error, backUpConnection is empty");
+                return;
+            }
+            auto proxy = backUpConnection->GetBackupExtProxy();
+            if (proxy == nullptr) {
+                HILOGE("Clear session error, proxy is empty");
+                return;
+            }
+            if (impl_.restoreDataType != RestoreTypeEnum::RESTORE_DATA_READDY) {
                 proxy->HandleClear();
             }
-            it.second.backUpConnection->DisconnectBackupExtAbility();
+            backUpConnection->DisconnectBackupExtAbility();
         }
         // clear data
         it.second.schedAction = BConstants::ServiceSchedAction::FINISH;

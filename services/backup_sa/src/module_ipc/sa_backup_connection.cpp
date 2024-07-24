@@ -110,7 +110,7 @@ ErrCode SABackupConnection::LoadBackupSAExtInner()
         HILOGE("SamgrProxy is nullptr");
         return BError(BError::Codes::SA_EXT_ERR_SAMGR);
     }
-    sptr<SALoadCallback> loadCallback = new SALoadCallback();
+    sptr<SALoadCallback> loadCallback(new SALoadCallback());
     if (loadCallback == nullptr) {
         HILOGE("loadCallback is nullptr");
         return BError(BError::Codes::SA_INVAL_ARG);

@@ -72,6 +72,9 @@ string FileUri::GetPath()
     string bundleName = uri_.GetAuthority();
     if (bundleName == MEDIA_AUTHORITY && sandboxPath.find(".") != string::npos) {
         size_t pos = sandboxPath.rfind("/");
+        if (pos == string::npos) {
+            return "";
+        }
         return sandboxPath.substr(0, pos);
     }
 

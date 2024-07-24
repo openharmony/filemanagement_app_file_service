@@ -486,7 +486,7 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         bool uniCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, restoreInfo.name, UNICAST_TYPE,
             uniCastInfo);
         if (uniCastRet) {
-            HILOGI("current bundle, unicast info:%{public}s", uniCastInfo.detail.c_str());
+            HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
             session_->SetBackupExtInfo(restoreInfo.name, uniCastInfo.detail);
         }
     }
@@ -552,7 +552,7 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
             bool uniCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, info.name, UNICAST_TYPE,
                 uniCastInfo);
             if (uniCastRet) {
-                HILOGI("current bundle, unicast info:%{public}s", uniCastInfo.detail.c_str());
+                HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
                 session_->SetBackupExtInfo(info.name, uniCastInfo.detail);
             }
         }
@@ -798,7 +798,7 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         int64_t versionCode = session_->GetBundleVersionCode(bundleName);         /* old device app version code */
         RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
         string bundleExtInfo = session_->GetBackupExtInfo(bundleName);
-        HILOGI("bundleExtInfo is:%{public}s", bundleExtInfo.c_str());
+        HILOGI("bundleExtInfo is:%{public}s", GetAnonyString(bundleExtInfo).c_str());
 
         want.SetElementName(bundleName, backupExtName);
         want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
@@ -1333,13 +1333,21 @@ void Service::SessionDeactive()
         SendErrAppGalleryNotify();
         DeleteDisConfigFile();
         // 结束定时器
+        if (sched_ == nullptr) {
+            HILOGE("Session deactive error, sched is empty");
+            return;
+        }
         sched_->ClearSchedulerData();
         // 清除缓存数据
+        if (session_ == nullptr) {
+            HILOGE("Session deactive error, session is empty");
+            return;
+        }
         session_->ClearSessionData();
         // 卸载服务
         sched_->TryUnloadService();
     } catch (...) {
-        HILOGI("Unexpected exception");
+        HILOGE("Unexpected exception");
         return;
     }
 }
