@@ -110,7 +110,7 @@ bool TarFile::TraversalFile(string &filePath)
         HILOGE("Failed to lstat, err = %{public}d", errno);
         return false;
     }
-    if (!AddFile(filePath, curFileStat, false)) {
+    if (!AddFile(filePath, curFileStat)) {
         HILOGE("Failed to add file to tar package");
         throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "TraversalFile Failed to add file to tar package");
     }
@@ -165,7 +165,7 @@ static bool CopyData(TarHeader &hdr, const string &mode, const string &uid, cons
     return true;
 }
 
-bool TarFile::I2OcsConvert(const struct stat &st, TarHeader &hdr, string &fileName, bool isSplit)
+bool TarFile::I2OcsConvert(const struct stat &st, TarHeader &hdr, string &fileName)
 {
     auto ret = memset_s(&hdr, sizeof(hdr), 0, sizeof(hdr));
     if (ret != EOK) {
@@ -249,13 +249,13 @@ static bool ReadyHeader(TarHeader &hdr, const string &fileName)
     return true;
 }
 
-bool TarFile::AddFile(string &fileName, const struct stat &st, bool isSplit)
+bool TarFile::AddFile(string &fileName, const struct stat &st)
 {
     HILOGD("tar file %{public}s", fileName.c_str());
     currentFileName_ = fileName;
 
     TarHeader hdr;
-    if (!I2OcsConvert(st, hdr, fileName, isSplit)) {
+    if (!I2OcsConvert(st, hdr, fileName)) {
         HILOGE("Failed to I2OcsConvert");
         return false;
     }
@@ -509,7 +509,7 @@ int TarFile::WriteAll(const vector<uint8_t> &buf, size_t len)
             HILOGE("Failed to fwrite tar file, err = %{public}d", errno);
             return count;
         }
-        count += static_cast<off_t>(i);
+        count += i;
         currentTarFileSize_ += static_cast<off_t>(i);
     }
     return count;
@@ -517,6 +517,10 @@ int TarFile::WriteAll(const vector<uint8_t> &buf, size_t len)
 
 string TarFile::I2Ocs(int len, off_t val)
 {
+    if (len < 1) {
+        HILOGE("Invalid parameter");
+        return "";
+    }
     char tmp[OCTSTR_LEN] = {0};
     if (sprintf_s(tmp, sizeof(tmp), "%0*llo", len - 1, val) < 0) {
         return "";

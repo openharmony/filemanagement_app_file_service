@@ -80,8 +80,6 @@ ErrCode Service::Release()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("KILL");
     VerifyCaller(session_->GetScenario());
-    SendErrAppGalleryNotify();
-    DeleteDisConfigFile();
     SessionDeactive();
     return BError(BError::Codes::OK);
 }
@@ -115,8 +113,8 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
 
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
-        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session_->GetSessionUserId());
-        cache.SetBundleInfos(bundleInfos);
+        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(session_->GetSessionUserId(), bundleNames);
+        cache.SetBundleInfos(bundleInfos, true);
         cachedEntity.Persist();
         HILOGI("Service GetLocalCapabilitiesIncremental persist");
         session_->DecreaseSessionCnt();
@@ -139,44 +137,44 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
 
 void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
 {
-        auto thisPtr = ptr.promote();
-        if (!thisPtr) {
-            HILOGE("this pointer is null");
-            return;
-        }
-        auto session = thisPtr->session_;
-        if (session == nullptr) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "session is nullptr");
-        }
-        auto backUpConnection = session->GetExtConnection(bundleName);
-        if (backUpConnection == nullptr) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "backUpConnection is empty");
-        }
-        auto proxy = backUpConnection->GetBackupExtProxy();
-        if (!proxy) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
-        }
-        int64_t lastTime = session->GetLastIncrementalTime(bundleName);
-        std::vector<BIncrementalData> bundleNames;
-        bundleNames.emplace_back(BIncrementalData {bundleName, lastTime});
-        BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session->GetSessionUserId());
-        string path = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId()).
-                        append(bundleName).
-                        append("/").
-                        append(BConstants::BACKUP_STAT_SYMBOL).
-                        append(to_string(lastTime));
-        HILOGD("path = %{public}s,bundleName = %{public}s", path.c_str(), bundleName.c_str());
-        UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP));
-        if (fdLocal < 0) {
-            HILOGE("fdLocal open fail, error = %{public}d", errno);
-            throw BError(BError::Codes::SA_INVAL_ARG, "open local Manifest file failed");
-        }
-        UniqueFd lastManifestFd(session->GetIncrementalManifestFd(bundleName));
-        auto ret = proxy->HandleIncrementalBackup(move(fdLocal), move(lastManifestFd));
-        if (ret) {
-            thisPtr->ClearSessionAndSchedInfo(bundleName);
-            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
-        }
+    auto thisPtr = ptr.promote();
+    if (!thisPtr) {
+        HILOGE("this pointer is null");
+        return;
+    }
+    auto session = thisPtr->session_;
+    if (session == nullptr) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "session is nullptr");
+    }
+    auto backUpConnection = session->GetExtConnection(bundleName);
+    if (backUpConnection == nullptr) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "backUpConnection is empty");
+    }
+    auto proxy = backUpConnection->GetBackupExtProxy();
+    if (!proxy) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+    }
+    int64_t lastTime = session->GetLastIncrementalTime(bundleName);
+    std::vector<BIncrementalData> bundleNames;
+    bundleNames.emplace_back(BIncrementalData {bundleName, lastTime});
+    BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session->GetSessionUserId());
+    string path = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId()).
+                    append(bundleName).
+                    append("/").
+                    append(BConstants::BACKUP_STAT_SYMBOL).
+                    append(to_string(lastTime));
+    HILOGD("path = %{public}s,bundleName = %{public}s", path.c_str(), bundleName.c_str());
+    UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP));
+    if (fdLocal < 0) {
+        HILOGD("fdLocal open fail, error = %{public}d", errno);
+        throw BError(BError::Codes::SA_INVAL_ARG, "open local Manifest file failed");
+    }
+    UniqueFd lastManifestFd(session->GetIncrementalManifestFd(bundleName));
+    auto ret = proxy->HandleIncrementalBackup(move(fdLocal), move(lastManifestFd));
+    if (ret) {
+        thisPtr->ClearSessionAndSchedInfo(bundleName);
+        thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
+    }
 }
 
 ErrCode Service::GetAppLocalListAndDoIncrementalBackup()

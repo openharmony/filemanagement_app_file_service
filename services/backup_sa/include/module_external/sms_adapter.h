@@ -54,9 +54,11 @@ public:
      * @param bundleNames
      * @param incrementalBackTimes
      * @param pkgFileSizes bundle backup file size
+     * @param incPkgFileSizes Incremental bundle backup file size
      */
     static int32_t GetBundleStatsForIncrease(uint32_t userId, const std::vector<std::string> &bundleNames,
-        const std::vector<int64_t> &incrementalBackTimes, std::vector<int64_t> &pkgFileSizes);
+        const std::vector<int64_t> &incrementalBackTimes, std::vector<int64_t> &pkgFileSizes,
+        std::vector<int64_t> &incPkgFileSizes);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_STORAGE_MGR_ADAPTER_H

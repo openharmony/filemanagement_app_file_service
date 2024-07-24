@@ -1355,16 +1355,21 @@ void BackupExtExtension::CompareFiles(UniqueFd incrementalFd,
             HILOGD("GetStorageReportInfos failed");
             continue;
         }
-        bool isExist = cloudFiles.find(path) != cloudFiles.end() ? true : false;
+        auto it = cloudFiles.find(path);
+        bool isExist = (it != cloudFiles.end()) ? true : false;
         if (storageFiles.isIncremental == true && storageFiles.isDir == true && !isExist) {
             smallFiles.push_back(storageFiles);
         }
-        if (storageFiles.isIncremental == true && storageFiles.isDir == false) {
+        bool isChange = (isExist && storageFiles.size == it->second.size &&
+            storageFiles.mtime == it->second.mtime) ? false : true;
+        if (storageFiles.isDir == false && isChange) {
             auto [res, fileHash] = BackupFileHash::HashWithSHA256(path);
             if (fileHash.empty()) {
                 continue;
             }
             storageFiles.hash = fileHash;
+        } else if (storageFiles.isDir == false) {
+            storageFiles.hash = it->second.hash;
         }
 
         if (storageFiles.isDir == false && CheckTar(path)) {
@@ -1855,9 +1860,11 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::RestoreResultCallb
             return;
         }
         extensionPtr->extension_->CallExtRestore(errCode, restoreRetInfo);
-        if (errCode == ERR_OK && restoreRetInfo.size()) {
-            HILOGI("Will notify restore result report");
-            extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::FULL_RESTORE);
+        if (errCode == ERR_OK) {
+            if (restoreRetInfo.size()) {
+                HILOGI("Will notify restore result report");
+                extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::FULL_RESTORE);
+            }
             return;
         }
         if (restoreRetInfo.empty()) {
@@ -1902,8 +1909,10 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncRestoreResultCa
             return;
         }
         extensionPtr->extension_->CallExtRestore(errCode, restoreRetInfo);
-        if (errCode == ERR_OK && restoreRetInfo.size()) {
-            extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
+        if (errCode == ERR_OK) {
+            if (restoreRetInfo.size()) {
+                extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
+            }
             return;
         }
         if (restoreRetInfo.empty()) {

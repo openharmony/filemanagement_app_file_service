@@ -50,6 +50,9 @@ int64_t FfiOHOSFILEUriCreateUri(const char* uriOrPath)
 {
     LOGI("FILEURI_TEST::FfiOHOSFILEUriCreateUri");
     auto nativeUri = FFIData::Create<FileUriImpl>(uriOrPath);
+    if (!nativeUri) {
+        return ERR_INVALID_INSTANCE_CODE;
+    }
     int64_t id = nativeUri->GetID();
     LOGI("FILEURI_TEST::FfiOHOSFILEUriCreateUri %{public}" PRId64, id);
     return id;
@@ -59,6 +62,9 @@ char* FfiOHOSFILEUriGetPath(int64_t id)
 {
     LOGI("FILEURI_TEST::FfiOHOSFILEUriGetPath");
     auto instance = FFIData::GetData<FileUriImpl>(id);
+    if (!instance) {
+        return nullptr;
+    }
     auto path = instance->GetPath();
     char* result = MallocCString(path);
     return result;
@@ -68,6 +74,9 @@ char* FfiOHOSFILEUriGetName(int64_t id)
 {
     LOGI("FILEURI_TEST::FfiOHOSFILEUriGetName");
     auto instance = FFIData::GetData<FileUriImpl>(id);
+    if (!instance) {
+        return nullptr;
+    }
     auto name = instance->GetName();
     char* result = MallocCString(name);
     return result;
@@ -77,6 +86,9 @@ char* FfiOHOSFILEUriToString(int64_t id)
 {
     LOGI("FILEURI_TEST::FfiOHOSFILEUriToString");
     auto instance = FFIData::GetData<FileUriImpl>(id);
+    if (!instance) {
+        return nullptr;
+    }
     auto str = instance->ToString();
     char* result = MallocCString(str);
     return result;
@@ -90,5 +102,5 @@ char* FfiOHOSFILEUriGetUriFromPath(const char* path)
 }
 }
 }
-} //namespace CJSystemapi
-} //namespace OHOS
+} // namespace CJSystemapi
+} // namespace OHOS

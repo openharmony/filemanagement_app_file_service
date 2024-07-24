@@ -38,6 +38,7 @@ BackupRestoreCallback::~BackupRestoreCallback()
     napi_status status = napi_get_uv_event_loop(env_, &loop);
     if (status != napi_ok) {
         HILOGE("Failed to get uv event loop");
+        ptr->cb_.CleanJsEnv();
         return;
     }
 

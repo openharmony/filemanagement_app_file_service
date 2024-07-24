@@ -26,6 +26,7 @@ class FileUri {
 public:
     std::string GetName();
     std::string GetPath();
+    std::string GetRealPathBySA(const std::string &targetBundleName = "");
     std::string GetRealPath();
     std::string ToString();
     std::string GetFullDirectoryUri();

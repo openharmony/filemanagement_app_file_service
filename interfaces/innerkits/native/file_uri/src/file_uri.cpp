@@ -102,6 +102,20 @@ string FileUri::GetRealPath()
     return realPath;
 }
 
+string FileUri::GetRealPathBySA(const std::string &targetBundleName)
+{
+    string sandboxPath = SandboxHelper::Decode(uri_.GetPath());
+    string realPath = sandboxPath;
+    string bundleName = uri_.GetAuthority();
+    if (bundleName == FILE_MANAGER_AUTHORITY &&
+        uri_.ToString().find(NETWORK_PARA) == string::npos &&
+        (access(realPath.c_str(), F_OK) == 0 || CheckFileManagerFullMountEnable())) {
+        return realPath;
+    }
+    realPath = PATH_SHARE + MODE_R + bundleName + sandboxPath;
+    return realPath;
+}
+
 string FileUri::ToString()
 {
     return uri_.ToString();

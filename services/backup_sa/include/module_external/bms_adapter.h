@@ -55,7 +55,8 @@ public:
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForIncremental(
         const std::vector<BIncrementalData> &incrementalDataList, int32_t userId);
 
-    static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForIncremental(int32_t userId);
+    static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForIncremental(int32_t userId,
+        const std::vector<BIncrementalData> &extraIncreData = {});
 
     static std::string GetExtName(string bundleName, int32_t userId);
 
