@@ -285,9 +285,9 @@ ErrCode ExtBackup::GetBackupInfo(function<void(ErrCode, std::string)> callback)
     return ERR_OK;
 }
 
-ErrCode ExtBackup::CallExtRestore(ErrCode errCode, const std::string result)
+ErrCode ExtBackup::InvokeAppExtMethod(ErrCode errCode, const std::string result)
 {
-    HILOGI("BackupExtensionAbility(base) CallExtRestore.");
+    HILOGI("BackupExtensionAbility(base) InvokeAppExtMethod.");
     return ERR_OK;
 }
 

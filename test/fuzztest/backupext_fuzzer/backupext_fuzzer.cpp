@@ -140,10 +140,10 @@ bool RestoreDataReadyFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data,
     return true;
 }
 
-bool CallExtRestoreFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
+bool InvokeAppExtMethodFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
     string result = string(reinterpret_cast<const char*>(data), size);
-    backup->CallExtRestore(BError(BError::Codes::OK), result);
+    backup->InvokeAppExtMethod(BError(BError::Codes::OK), result);
     return true;
 }
 
@@ -286,7 +286,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::WasFromSpecialVersionFuzzTest(extBackup, data, size);
     OHOS::SpecialVersionForCloneAndCloudFuzzTest(extBackup, data, size);
     OHOS::RestoreDataReadyFuzzTest(extBackup, data, size);
-    OHOS::CallExtRestoreFuzzTest(extBackup, data, size);
+    OHOS::InvokeAppExtMethodFuzzTest(extBackup, data, size);
     OHOS::SetCreatorFuzzTest(extBackup, data, size);
 
     try {
@@ -304,6 +304,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
-    
+
     return 0;
 }
