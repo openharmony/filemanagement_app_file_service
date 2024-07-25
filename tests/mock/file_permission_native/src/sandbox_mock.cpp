@@ -12,31 +12,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#ifdef SANDBOX_MANAGER
 #include "sandbox_mock.h"
 
+namespace OHOS {
+using namespace AppFileService;
 using namespace OHOS::AccessControl::SandboxManager;
-int32_t CheckPersistPolicy(uint64_t tokenId, const std::vector<PolicyInfo> &policy, std::vector<bool> &result)
+int32_t SandboxManagerKit::CheckPersistPolicy(uint32_t tokenId,
+    const std::vector<PolicyInfo> &policy, std::vector<bool> &result)
 {
-    return SandboxManagerKit::sandboxManagerKit->CheckPersistPolicy(tokenId, policy, result);
+    return SandboxManagerKitMock::sandboxManagerKitMock->CheckPersistPolicy(tokenId, policy, result);
 }
 
-int32_t PersistPolicy(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result)
+int32_t SandboxManagerKit::PersistPolicy(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result)
 {
-    return SandboxManagerKit::sandboxManagerKit->PersistPolicy(policy, result);
+    return SandboxManagerKitMock::sandboxManagerKitMock->PersistPolicy(policy, result);
 }
 
-int32_t UnPersistPolicy(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result)
+int32_t SandboxManagerKit::UnPersistPolicy(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result)
 {
-    return SandboxManagerKit::sandboxManagerKit->UnPersistPolicy(policy, result);
+    return SandboxManagerKitMock::sandboxManagerKitMock->UnPersistPolicy(policy, result);
 }
 
-int32_t StartAccessingPolicy(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result)
+int32_t SandboxManagerKit::StartAccessingPolicy(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result)
 {
-    return SandboxManagerKit::sandboxManagerKit->StartAccessingPolicy(policy, result);
+    return SandboxManagerKitMock::sandboxManagerKitMock->StartAccessingPolicy(policy, result);
 }
 
-int32_t StopAccessingPolicy(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result)
+int32_t SandboxManagerKit::StopAccessingPolicy(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result)
 {
-    return SandboxManagerKit::sandboxManagerKit->StopAccessingPolicy(policy, result);
+    return SandboxManagerKitMock::sandboxManagerKitMock->StopAccessingPolicy(policy, result);
 }
+}
+#endif
