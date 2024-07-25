@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 
 ohos_unittest("file_permission_test") {
   branch_protector_ret = "pac_ret"
@@ -20,14 +21,19 @@ ohos_unittest("file_permission_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "${app_file_service_path}/cfi_blocklist.txt"
   }
 
   module_out_path = "filemanagement/app_file_service"
   include_dirs = [
     "include",
+    "${app_file_service_path}/tests/mock/file_permission_native/include",
     "//third_party/googletest/include",
   ]
-  sources = [ "src/file_permission_test.cpp" ]
+  sources = [
+    "${app_file_service_path}/tests/mock/file_permission_native/src/sandbox_mock.cpp",
+    "src/file_permission_test.cpp",
+  ]
 
   external_deps = [
     "ability_base:base",
@@ -44,6 +50,11 @@ ohos_unittest("file_permission_test") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
+  defines = []
+  if (sandbox_manarer) {
+    external_deps += [ "sandbox_manager:libsandbox_manager_sdk" ]
+    defines += [ "SANDBOX_MANAGER" ]
+  }
   deps = [
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",

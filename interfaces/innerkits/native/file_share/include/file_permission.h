@@ -85,7 +85,7 @@ private:
                                                                  deque<struct PolicyErrorResult> &errorResults);
     static vector<PolicyInfo> GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
                                                                  vector<bool> &errorResults);
-    static int32_t CheckUriPersistentPermission(uint64_t tokenId,
+    static int32_t CheckUriPersistentPermission(uint32_t tokenId,
                                                 const vector<UriPolicyInfo> &uriPolicies,
                                                 vector<bool> &errorResults);
 #endif
