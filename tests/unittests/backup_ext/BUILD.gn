@@ -264,10 +264,75 @@ ohos_unittest("untar_file_test") {
   use_exceptions = true
 }
 
+ohos_unittest("ext_backup_js_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/tests/mock/backup_ext/src/ext_backup_mock.cpp",
+    "ext_backup_js_test.cpp",
+  ]
+
+  include_dirs = [
+    "${path_backup}/frameworks/native/backup_ext/include",
+    "${path_backup}/frameworks/native/backup_ext/src",
+    "${path_backup}/frameworks/native/backup_kit_inner/src",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/interfaces/common/include",
+    "${path_backup}/tests/mock/backup_ext/include",
+    "${path_backup}/utils/include",
+  ]
+
+  deps = [
+    "${path_backup}/utils:backup_utils",
+    "${path_googletest}:gmock_main",
+    "${path_googletest}:gtest_main",
+    "${path_jsoncpp}:jsoncpp",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:appkit_native",
+    "ability_runtime:runtime",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "napi:ace_napi",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  cflags = [ "--coverage" ]
+  ldflags = [ "--coverage" ]
+  cflags_cc = [ "--coverage" ]
+
+  defines = [
+    "LOG_TAG=\"app_file_service\"",
+    "LOG_DOMAIN=0xD004303",
+    "private=public",
+  ]
+
+  use_exceptions = true
+}
+
 group("backup_ext_test") {
   testonly = true
 
   deps = [
+    ":ext_backup_js_test",
     ":ext_extension_stub_test",
     ":ext_extension_test",
     ":tar_file_test",
