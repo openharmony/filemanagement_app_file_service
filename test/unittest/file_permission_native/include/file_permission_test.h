@@ -17,14 +17,20 @@
 
 #include <gtest/gtest.h>
 
+#include "sandbox_mock.h"
+
 namespace OHOS {
 namespace AppFileService {
+using namespace std;
 class FilePermissionTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
     void SetUp() {};
     void TearDown() {};
+    #ifdef SANDBOX_MANAGER
+    static inline shared_ptr<SandboxMock> sandboxMock_ = nullptr;
+    #endif
 };
 } // namespace AppFileService
 } // namespace OHOS

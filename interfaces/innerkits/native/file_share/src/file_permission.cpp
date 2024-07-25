@@ -213,7 +213,7 @@ static bool IsFileManagerUri(const string &pathStr)
     return pathStr.find(DOWNLOAD_PATH) == 0 || pathStr.find(DESKTOP_PATH) == 0 || pathStr.find(DOCUMENTS_PATH) == 0;
 }
 
-static bool CheckFileManagerUriPermission(uint64_t providerTokenId, const string &pathStr)
+static bool CheckFileManagerUriPermission(uint32_t providerTokenId, const string &pathStr)
 {
     return (IsFileManagerUri(pathStr) && CheckPermission(providerTokenId, FILE_ACCESS_MANAGER_PERMISSION)) ||
            (pathStr.find(DOWNLOAD_PATH) == 0 && CheckPermission(providerTokenId, READ_WRITE_DOWNLOAD_PERMISSION)) ||
@@ -221,7 +221,7 @@ static bool CheckFileManagerUriPermission(uint64_t providerTokenId, const string
            (pathStr.find(DOCUMENTS_PATH) == 0 && CheckPermission(providerTokenId, READ_WRITE_DOCUMENTS_PERMISSION));
 }
 
-int32_t FilePermission::CheckUriPersistentPermission(uint64_t tokenId,
+int32_t FilePermission::CheckUriPersistentPermission(uint32_t tokenId,
                                                      const vector<UriPolicyInfo> &uriPolicies,
                                                      vector<bool> &errorResults)
 {
@@ -230,13 +230,18 @@ int32_t FilePermission::CheckUriPersistentPermission(uint64_t tokenId,
     if (pathPolicies.size() == 0) {
         return EPERM;
     }
+
     vector<bool> resultCodes;
     int32_t sandboxManagerErrorCode = SandboxManagerKit::CheckPersistPolicy(tokenId, pathPolicies, resultCodes);
+    for (size_t i = resultCodes.size(); i < pathPolicies.size(); i++) {
+        resultCodes.emplace_back(false);
+    }
     for (size_t i = 0; i < pathPolicies.size(); i++) {
         if (!resultCodes[i]) {
             resultCodes[i] = CheckFileManagerUriPermission(tokenId, pathPolicies[i].path);
         }
     }
+
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode);
     ParseErrorResults(resultCodes, errorResults);
     return errorCode;
