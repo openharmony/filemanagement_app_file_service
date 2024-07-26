@@ -358,9 +358,9 @@ static int32_t SetPublicDirHmdfsInfo(const std::string &physicalPath, const std:
 
 int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int32_t &userId, struct HmdfsUriInfo &hui)
 {
+    LOGI("GetDfsUriFromLocal start");
     Uri uri(uriStr);
     std::string bundleName = uri.GetAuthority();
-    LOGD("GetDfsUriFromLocal begin");
     std::string physicalPath = GetPhysicalPath(uri, std::to_string(userId));
     if (physicalPath == "") {
         LOGE("Failed to get physical path");
@@ -386,7 +386,7 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
 
     struct HmdfsDstInfo hdi;
     InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
-
+    LOGI("open ioctlDir Create ioctl start");
     std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + SHAER_PATH_MID;
     UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
     if (dirFd < 0) {
@@ -401,7 +401,7 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
     }
 
     SetHmdfsUriInfo(hui, uri, hdi.size, networkId, bundleName);
-    LOGD("GetDfsUriFromLocal successfully");
+    LOGI("GetDfsUriFromLocal successfully");
     return 0;
 }
 
@@ -409,12 +409,14 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
                                              const int32_t &userId,
                                              std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
 {
+    LOGI("GetDfsUrisFromLocal start");
     std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + SHAER_PATH_MID;
     UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
     if (dirFd < 0) {
         LOGE("Open share path failed with %{public}d", errno);
         return errno;
     }
+    LOGI("open ioctlDir end");
     std::string networkId = NETWORK_PARA + GetLocalNetworkId();
     for (auto &uriStr : uriList) {
         Uri uri(uriStr);
@@ -455,7 +457,7 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
         SetHmdfsUriInfo(dfsUriInfo, uri, hdi.size, networkId, bundleName);
         uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
     }
-    LOGD("GetDfsUriFromLocal successfully");
+    LOGI("GetDfsUrisFromLocal successfully");
     return 0;
 }
 
