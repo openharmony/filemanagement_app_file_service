@@ -159,11 +159,11 @@ static int32_t GetSharePath(const string &uri, FileShareInfo &info, uint32_t fla
 
 static int32_t GetShareFileType(FileShareInfo &info)
 {
+    LOGI("GetShareFileType start");
     if (!SandboxHelper::CheckValidPath(info.providerLowerPath_)) {
         LOGE("info.providerLowerPath_ is invalid");
         return -EINVAL;
     }
-
     if (IsExistFile(info.providerLowerPath_, info)) {
         info.type_ = ShareFileType::FILE_TYPE;
         return 0;
@@ -171,6 +171,7 @@ static int32_t GetShareFileType(FileShareInfo &info)
         info.type_ = ShareFileType::DIR_TYPE;
         return 0;
     }
+    LOGI("GetShareFileType end");
     return -ENOENT;
 }
 
@@ -349,7 +350,7 @@ static int32_t CreateSingleShareFile(const string &uri, uint32_t tokenId, uint32
     if (ret != 0) {
         return ret;
     }
-
+    LOGI("StartShareFile start");
     ret = StartShareFile(info);
     if (ret != 0) {
         return ret;
@@ -365,6 +366,7 @@ int32_t FileShare::CreateShareFile(const vector<string> &uriList,
                                    uint32_t flag,
                                    vector<int32_t> &retList)
 {
+    LOGI("CreateShareFile start");
     lock_guard<mutex> lock(mapMutex_);
     FileShareInfo info;
     int32_t ret = GetTargetInfo(tokenId, info.targetBundleName_, info.currentUid_);
