@@ -121,7 +121,7 @@ public:
      *
      * @param result The result.
     */
-    ErrCode CallExtRestore(ErrCode, const std::string) override;
+    ErrCode InvokeAppExtMethod(ErrCode, const std::string) override;
 
 public:
     explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
@@ -157,8 +157,8 @@ private:
     std::shared_ptr<CallbackInfo> callbackInfo_;
     std::condition_variable callJsCon_;
     std::mutex callJsMutex_;
-    std::atomic<bool> needCallOnRestore_;
-    std::atomic<bool> callRestoreExDone_;
+    std::atomic<bool> callExtDefaultFunc_ {false}; // extension default method, onBackup or onRestore
+    std::atomic<bool> callJsExMethodDone_ {false};
 };
 } // namespace OHOS::FileManagement::Backup
 

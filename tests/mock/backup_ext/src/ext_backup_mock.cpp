@@ -129,8 +129,8 @@ ErrCode ExtBackup::GetBackupInfo(function<void(ErrCode, std::string)> callback)
     return BExtBackup::extBackup->GetBackupInfo(callback);
 }
 
-ErrCode ExtBackup::CallExtRestore(ErrCode errCode, const std::string result)
+ErrCode ExtBackup::InvokeAppExtMethod(ErrCode errCode, const std::string result)
 {
-    return BExtBackup::extBackup->CallExtRestore(errCode, result);
+    return BExtBackup::extBackup->InvokeAppExtMethod(errCode, result);
 }
 } // namespace OHOS::FileManagement::Backup

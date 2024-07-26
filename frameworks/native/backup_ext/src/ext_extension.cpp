@@ -1859,7 +1859,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::RestoreResultCallb
             HILOGE("Extension handle have been released");
             return;
         }
-        extensionPtr->extension_->CallExtRestore(errCode, restoreRetInfo);
+        extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
         if (errCode == ERR_OK) {
             if (restoreRetInfo.size()) {
                 HILOGI("Will notify restore result report");
@@ -1908,7 +1908,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncRestoreResultCa
             HILOGE("Extension handle have been released");
             return;
         }
-        extensionPtr->extension_->CallExtRestore(errCode, restoreRetInfo);
+        extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
         if (errCode == ERR_OK) {
             if (restoreRetInfo.size()) {
                 extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
@@ -1944,7 +1944,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::HandleBackup
             HILOGE("Extension handle have been released");
             return;
         }
-        extensionPtr->extension_->CallExtRestore(errCode, backupExRetInfo);
+        extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
         if (backupExRetInfo.size()) {
             HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
             proxy->GetAppLocalListAndDoIncrementalBackup();
@@ -1968,7 +1968,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::HandleTaskBa
             HILOGE("Extension handle have been released");
             return;
         }
-        extensionPtr->extension_->CallExtRestore(errCode, backupExRetInfo);
+        extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
         if (backupExRetInfo.size()) {
             extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
             HILOGI("Will notify backup result report");

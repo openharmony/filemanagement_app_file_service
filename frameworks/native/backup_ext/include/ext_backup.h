@@ -171,9 +171,9 @@ public:
     bool RestoreDataReady();
 
     /**
-     * @brief Called Extention to notify
+     * @brief Invoke the extended function of the APP
      */
-    virtual ErrCode CallExtRestore(ErrCode, const std::string);
+    virtual ErrCode InvokeAppExtMethod(ErrCode, const std::string);
 
 public:
     ExtBackup() = default;

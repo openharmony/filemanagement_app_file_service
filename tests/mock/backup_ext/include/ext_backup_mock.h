@@ -46,7 +46,7 @@ public:
     virtual bool WasFromSpecialVersion(void) = 0;
     virtual bool SpecialVersionForCloneAndCloud(void) = 0;
     virtual bool RestoreDataReady() = 0;
-    virtual ErrCode CallExtRestore(ErrCode, const std::string) = 0;
+    virtual ErrCode InvokeAppExtMethod(ErrCode, const std::string) = 0;
     virtual void SetCreator(const CreatorFunc &) = 0;
     virtual BConstants::ExtensionAction VerifyAndGetAction(const AAFwk::Want &,
         std::shared_ptr<AppExecFwk::AbilityInfo>) = 0;
@@ -85,7 +85,7 @@ public:
     MOCK_METHOD(bool, WasFromSpecialVersion, ());
     MOCK_METHOD(bool, SpecialVersionForCloneAndCloud, ());
     MOCK_METHOD(bool, RestoreDataReady, ());
-    MOCK_METHOD(ErrCode, CallExtRestore, (ErrCode, const std::string));
+    MOCK_METHOD(ErrCode, InvokeAppExtMethod, (ErrCode, const std::string));
     MOCK_METHOD(void, SetCreator, (const CreatorFunc &));
     MOCK_METHOD(BConstants::ExtensionAction, VerifyAndGetAction, (const AAFwk::Want &,
         std::shared_ptr<AppExecFwk::AbilityInfo>));

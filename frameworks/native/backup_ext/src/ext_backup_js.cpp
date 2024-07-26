@@ -481,8 +481,8 @@ ErrCode ExtBackupJs::OnBackup(function<void(ErrCode, std::string)> callback,
         "The app does not provide the onBackup interface.");
     BExcepUltils::BAssert(callback, BError::Codes::EXT_BROKEN_FRAMEWORK, "OnBackup callback is nullptr.");
     BExcepUltils::BAssert(callbackEx, BError::Codes::EXT_BROKEN_FRAMEWORK, "OnBackup callbackEx is nullptr.");
-    needCallOnRestore_.store(false);
-    callRestoreExDone_.store(false);
+    callExtDefaultFunc_.store(false);
+    callJsExMethodDone_.store(false);
     callbackInfo_ = std::make_shared<CallbackInfo>(callback);
     callbackInfoEx_ = std::make_shared<CallbackInfoEx>(callbackEx);
     return CallJsOnBackupEx();
@@ -515,12 +515,12 @@ ErrCode ExtBackupJs::CallJsOnBackupEx()
         HILOGE("Call onBackupEx error");
         return errCode;
     }
-    HILOGI("Check callRestoreExDone load");
+    HILOGI("Check call onBackupEx load");
     std::unique_lock<std::mutex> lock(callJsMutex_);
-    callJsCon_.wait(lock, [this] { return callRestoreExDone_.load(); });
-    HILOGI("Check needCallOnRestore load");
-    if (!needCallOnRestore_.load()) {
-        HILOGI("Call Js method onRestoreEx done");
+    callJsCon_.wait(lock, [this] { return callJsExMethodDone_.load(); });
+
+    if (!callExtDefaultFunc_.load()) {
+        HILOGI("Call Js method onBackupEx done");
         return ERR_OK;
     }
     return CallJsOnBackup();
@@ -562,8 +562,8 @@ ErrCode ExtBackupJs::OnRestore(function<void(ErrCode, std::string)> callback,
         "The app does not provide the onRestore interface.");
     BExcepUltils::BAssert(callback, BError::Codes::EXT_BROKEN_FRAMEWORK, "OnRestore callback is nullptr.");
     BExcepUltils::BAssert(callbackEx, BError::Codes::EXT_BROKEN_FRAMEWORK, "OnRestore callbackEx is nullptr.");
-    needCallOnRestore_.store(false);
-    callRestoreExDone_.store(false);
+    callExtDefaultFunc_.store(false);
+    callJsExMethodDone_.store(false);
     callbackInfo_ = std::make_shared<CallbackInfo>(callback);
     callbackInfoEx_ = std::make_shared<CallbackInfoEx>(callbackEx);
     return CallJSRestoreEx();
@@ -598,9 +598,9 @@ ErrCode ExtBackupJs::CallJSRestoreEx()
     }
     HILOGI("Check callRestoreExDone load");
     std::unique_lock<std::mutex> lock(callJsMutex_);
-    callJsCon_.wait(lock, [this] { return callRestoreExDone_.load(); });
+    callJsCon_.wait(lock, [this] { return callJsExMethodDone_.load(); });
     HILOGI("Check needCallOnRestore load");
-    if (!needCallOnRestore_.load()) {
+    if (!callExtDefaultFunc_.load()) {
         HILOGI("Call Js method onRestoreEx done");
         return ERR_OK;
     }
@@ -824,18 +824,18 @@ std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::Pa
     return onRestoreFun;
 }
 
-ErrCode ExtBackupJs::CallExtRestore(ErrCode errCode, const std::string result)
+ErrCode ExtBackupJs::InvokeAppExtMethod(ErrCode errCode, const std::string result)
 {
-    HILOGI("Start CallExtRestore, errCode is: %{public}d, result is: %{public}s", errCode, result.c_str());
-    // no need call OnRestor/onBackup when occur exception
+    HILOGI("Start Get onBackupEx/onRestoreEx method result, errCode: %{public}d, result: %{public}s",
+        errCode, result.c_str());
     if ((result.size() == 0) && (errCode == BError(BError::Codes::OK))) {
-        needCallOnRestore_.store(true);
+        callExtDefaultFunc_.store(true);
     } else {
-        needCallOnRestore_.store(false);
+        callExtDefaultFunc_.store(false);
     }
+    callJsExMethodDone_.store(true);
     callJsCon_.notify_one();
-    callRestoreExDone_.store(true);
-    HILOGI("End CallExtRestore");
+    HILOGI("End Get App onBackupEx/onRestoreEx method result");
     return ERR_OK;
 }
 } // namespace OHOS::FileManagement::Backup
