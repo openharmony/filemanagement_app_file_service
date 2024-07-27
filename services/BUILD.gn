@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -15,7 +15,11 @@ import("//build/ohos.gni")
 import("//build/ohos/sa_profile/sa_profile.gni")
 
 group("backup_para_etc") {
-  deps = [ ":backup.para" ]
+  deps = [
+    ":backup.para",
+    ":backupservice.para",
+    ":backupservice.para.dac",
+  ]
 }
 
 ohos_sa_profile("backup_sa_profile") {
@@ -36,4 +40,18 @@ ohos_prebuilt_etc("backup.para") {
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
   relative_install_dir = "param"
+}
+
+ohos_prebuilt_etc("backupservice.para") {
+  source = "backupservice.para"
+  part_name = "app_file_service"
+  module_install_dir = "etc/param"
+  subsystem_name = "filemanagement"
+}
+
+ohos_prebuilt_etc("backupservice.para.dac") {
+  source = "backupservice.para.dac"
+  part_name = "app_file_service"
+  module_install_dir = "etc/param"
+  subsystem_name = "filemanagement"
 }

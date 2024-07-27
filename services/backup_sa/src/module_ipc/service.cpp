@@ -61,6 +61,7 @@
 #include "module_ipc/svc_restore_deps_manager.h"
 #include "module_notify/notify_work_service.h"
 #include "parameter.h"
+#include "parameters.h"
 #include "system_ability_definition.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -76,6 +77,9 @@ const static string BROADCAST_TYPE = "broadcast";
 const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 const static string UNICAST_TYPE = "unicast";
 const int32_t CONNECT_WAIT_TIME_S = 15;
+const std::string BACKUPSERVICE_WORK_STATUS_KEY = "persist.backupservice.workstatus";
+const std::string BACKUPSERVICE_WORK_STATUS_ON = "true";
+const std::string BACKUPSERVICE_WORK_STATUS_OFF = "false";
 } // namespace
 
 /* Shell/Xts user id equal to 0/1, we need set default 100 */
@@ -96,22 +100,39 @@ static inline int32_t GetUserIdDefault()
 void Service::OnStart()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("SA OnStart Begin.");
     ClearDisposalOnSaStart();
     bool res = SystemAbility::Publish(sptr(this));
     sched_ = sptr(new SchedScheduler(wptr(this), wptr(session_)));
     sched_->StartTimer();
-    HILOGI("End, res = %{public}d", res);
+    string work_status = system::GetParameter(BACKUPSERVICE_WORK_STATUS_KEY, "");
+    HILOGI("Param %{public}s value is %{public}s", BACKUPSERVICE_WORK_STATUS_KEY.c_str(), work_status.c_str());
+    if (work_status.compare(BACKUPSERVICE_WORK_STATUS_ON) == 0) {
+        bool isSetSucc = system::SetParameter(BACKUPSERVICE_WORK_STATUS_KEY, BACKUPSERVICE_WORK_STATUS_OFF);
+        HILOGI("SetParameter %{public}s false end, result %{public}d.", BACKUPSERVICE_WORK_STATUS_KEY.c_str(),
+            isSetSucc);
+        sched_->TryUnloadService();
+    }
+    HILOGI("SA OnStart End, res = %{public}d", res);
 }
 
 void Service::OnStop()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Called");
+    HILOGI("SA OnStop Begin.");
     int32_t oldMemoryParaSize = BConstants::DEFAULT_VFS_CACHE_PRESSURE;
     if (session_ != nullptr) {
         oldMemoryParaSize = session_->GetMemParaCurSize();
     }
     StorageMgrAdapter::UpdateMemPara(oldMemoryParaSize);
+    string work_status = system::GetParameter(BACKUPSERVICE_WORK_STATUS_KEY, "");
+    HILOGI("Param %{public}s value is %{public}s", BACKUPSERVICE_WORK_STATUS_KEY.c_str(), work_status.c_str());
+    if (work_status.compare(BACKUPSERVICE_WORK_STATUS_ON) == 0) {
+        bool isSetSucc = system::SetParameter(BACKUPSERVICE_WORK_STATUS_KEY, BACKUPSERVICE_WORK_STATUS_OFF);
+        HILOGI("SetParameter %{public}s false end, result %{public}d.", BACKUPSERVICE_WORK_STATUS_KEY.c_str(),
+            isSetSucc);
+    }
+    HILOGI("SA OnStop End.");
 }
 
 UniqueFd Service::GetLocalCapabilities()
@@ -1234,6 +1255,13 @@ void Service::SendStartAppGalleryNotify(const BundleName &bundleName)
     DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
     HILOGI("StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
         bundleName.c_str());
+    string work_status = system::GetParameter(BACKUPSERVICE_WORK_STATUS_KEY, "");
+    HILOGI("Param %{public}s value is %{public}s", BACKUPSERVICE_WORK_STATUS_KEY.c_str(), work_status.c_str());
+    if (work_status.compare(BACKUPSERVICE_WORK_STATUS_OFF) == 0) {
+        bool isSetSucc = system::SetParameter(BACKUPSERVICE_WORK_STATUS_KEY, BACKUPSERVICE_WORK_STATUS_ON);
+        HILOGI("SetParameter %{public}s true end, result %{public}d.", BACKUPSERVICE_WORK_STATUS_KEY.c_str(),
+            isSetSucc);
+    }
     if (!disposal_->IfBundleNameInDisposalConfigFile(bundleName)) {
         HILOGE("WriteDisposalConfigFile Failed");
         DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
