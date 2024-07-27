@@ -26,6 +26,9 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+namespace {
+    const auto APP_FOUNDATION_SERVICE = u"appgalleryservice.openapi.privacymanager.AppFoundationService";
+}
 mutex AppGalleryDisposeProxy::instanceLock_;
 mutex AppGalleryDisposeProxy::conditionMutex_;
 
@@ -98,6 +101,11 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
 
     if (!data.WriteRemoteObject(this)) {
         HILOGI("write RemoteObject failed");
+        return DisposeErr::IPC_FAIL;
+    }
+    const auto interfaceToken = APP_FOUNDATION_SERVICE;
+    if (!data.WriteInterfaceToken(interfaceToken)) {
+        HILOGI("write WriteInterfaceToken failed");
         return DisposeErr::IPC_FAIL;
     }
 
