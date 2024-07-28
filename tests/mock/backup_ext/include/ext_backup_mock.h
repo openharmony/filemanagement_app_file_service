@@ -52,6 +52,10 @@ public:
         std::shared_ptr<AppExecFwk::AbilityInfo>) = 0;
     virtual ErrCode GetParament(const AAFwk::Want &) = 0;
 public:
+    virtual std::unique_ptr<NativeReference> LoadSystemModuleByEngine(napi_env, const std::string&, const napi_value*,
+        size_t) = 0;
+    virtual napi_env GetNapiEnv() const = 0;
+public:
     virtual napi_value CreateExtBackupJsContext(napi_env, std::shared_ptr<ExtBackupContext>) = 0;
 public:
     BExtBackup() = default;
@@ -91,6 +95,10 @@ public:
         std::shared_ptr<AppExecFwk::AbilityInfo>));
     MOCK_METHOD(ErrCode, GetParament, (const AAFwk::Want &));
     MOCK_METHOD(napi_value, CreateExtBackupJsContext, (napi_env, std::shared_ptr<ExtBackupContext>));
+public:
+    MOCK_METHOD((std::unique_ptr<NativeReference>), LoadSystemModuleByEngine, (napi_env, const std::string&,
+        const napi_value*, size_t));
+    MOCK_METHOD(napi_env, GetNapiEnv, (), (const));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_EXT_BACKUP_H
