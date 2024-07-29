@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_resources/b_constants.h"
 #include "directory_ex.h"
@@ -71,7 +72,7 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
     for (const auto &filePath : srcFiles) {
         rootPath_ = filePath;
         if (!TraversalFile(rootPath_)) {
-            HILOGE("Failed to traversal file");
+            HILOGE("Failed to traversal file, file path is:%{public}s", GetAnonyPath(filePath).c_str());
         }
         index++;
         if (index >= WAIT_INDEX) {
@@ -111,8 +112,8 @@ bool TarFile::TraversalFile(string &filePath)
         return false;
     }
     if (!AddFile(filePath, curFileStat)) {
-        HILOGE("Failed to add file to tar package");
-        throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "TraversalFile Failed to add file to tar package");
+        HILOGE("Failed to add file to tar package, file path is:%{public}s", GetAnonyPath(filePath).c_str());
+        return false;
     }
 
     if (isReset_) {
