@@ -103,4 +103,37 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0100, testing::ext::TestSize
     }
     GTEST_LOG_(INFO) << "BJsonUtilTest-end b_dir_BuildBundleInfos_0100";
 }
+
+/* *
+ * @tc.number: b_jsonutil_BuildBundleInfos_0101
+ * @tc.name: b_jsonutil_BuildBundleInfos_0101
+ * @tc.desc: Test function of BuildBundleInfos for enmpty.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0101, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0101";
+    try {
+        std::vector<std::string> bundleNames;
+        std::string bundleName = "com.hos.app01:1";
+        std::string bundleName1 = "com.hos.app02";
+        bundleNames.push_back(bundleName);
+        bundleNames.push_back(bundleName1);
+        std::string pattern = ":";
+        std::vector<std::string> detailInfos;
+        detailInfos.push_back("");
+        int32_t userId = 100;
+        std::vector<std::string> realBundleNames;
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
+            BJsonUtil::BuildBundleInfos(bundleNames, detailInfos, realBundleNames, userId);
+        EXPECT_EQ(0, bundleNameDetailMap.size());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end b_jsonutil_BuildBundleInfos_0101";
+}
 } // namespace OHOS::FileManagement::Backup
