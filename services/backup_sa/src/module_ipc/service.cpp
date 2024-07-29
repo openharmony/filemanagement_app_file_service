@@ -1252,9 +1252,6 @@ void Service::SendStartAppGalleryNotify(const BundleName &bundleName)
     if (scenario != IServiceReverse::Scenario::RESTORE) {
         return ;
     }
-    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
-    HILOGI("StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
-        bundleName.c_str());
     string work_status = system::GetParameter(BACKUPSERVICE_WORK_STATUS_KEY, "");
     HILOGI("Param %{public}s value is %{public}s", BACKUPSERVICE_WORK_STATUS_KEY.c_str(), work_status.c_str());
     if (work_status.compare(BACKUPSERVICE_WORK_STATUS_OFF) == 0) {
@@ -1264,12 +1261,12 @@ void Service::SendStartAppGalleryNotify(const BundleName &bundleName)
     }
     if (!disposal_->IfBundleNameInDisposalConfigFile(bundleName)) {
         HILOGE("WriteDisposalConfigFile Failed");
-        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
-        HILOGE("Clear disposal, code=%{public}d, bundleName=%{public}s", disposeErr,
-            bundleName.c_str());
         return ;
     }
     HILOGI("AppendIntoDisposalConfigFile OK, bundleName=%{public}s", bundleName.c_str());
+    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
+    HILOGI("StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
+        bundleName.c_str());
 }
 
 void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
@@ -1313,9 +1310,6 @@ void Service::SendErrAppGalleryNotify()
         if (disposeErr != DisposeErr::OK) {
             HILOGE("Error,disposal will be clear in the end");
             return ;
-        }
-        if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
-            HILOGE("DeleteFromDisposalConfigFile Failed");
         }
     }
 }
