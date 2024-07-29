@@ -356,6 +356,24 @@ static int32_t SetPublicDirHmdfsInfo(const std::string &physicalPath, const std:
     return 0;
 }
 
+static int32_t GetMergePathFd(HmdfsDstInfo &hdi, UniqueFd &dirFd, const int32_t &userId)
+{
+    LOGI("Open merge path start");
+    std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + SHAER_PATH_MID;
+    UniqueFd dirMergeFd(open(ioctlDir.c_str(), O_RDONLY));
+    if (dirFd < 0) {
+        LOGE("Open merge path failed with %{public}d", errno);
+        return errno;
+    }
+    int32_t ret = ioctl(dirMergeFd, HMDFS_IOC_GET_DST_PATH, &hdi);
+    if (ret != 0) {
+        LOGE("Ioctl merge failed with %{public}d", errno);
+        return -errno;
+    }
+    dirFd = std::move(dirMergeFd);
+    return 0;
+}
+
 int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int32_t &userId, struct HmdfsUriInfo &hui)
 {
     LOGI("GetDfsUriFromLocal start");
@@ -387,7 +405,7 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
     struct HmdfsDstInfo hdi;
     InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
     LOGI("open ioctlDir Create ioctl start");
-    std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + SHAER_PATH_MID;
+    std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
     UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
     if (dirFd < 0) {
         LOGE("Open share path failed with %{public}d", errno);
@@ -395,11 +413,9 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
     }
 
     ret = ioctl(dirFd, HMDFS_IOC_GET_DST_PATH, &hdi);
-    if (ret != 0) {
-        LOGE("Ioctl failed with %{public}d", errno);
-        return -errno;
+    if (ret != 0 && GetMergePathFd(hdi, dirFd, userId) != 0) {
+        return errno;
     }
-
     SetHmdfsUriInfo(hui, uri, hdi.size, networkId, bundleName);
     LOGI("GetDfsUriFromLocal successfully");
     return 0;
@@ -410,7 +426,7 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
                                              std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
 {
     LOGI("GetDfsUrisFromLocal start");
-    std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + SHAER_PATH_MID;
+    std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
     UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
     if (dirFd < 0) {
         LOGE("Open share path failed with %{public}d", errno);
@@ -445,13 +461,11 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
             LOGE("Path is too long with %{public}d", ret);
             return ret;
         }
-
         struct HmdfsDstInfo hdi;
         InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
         ret = ioctl(dirFd, HMDFS_IOC_GET_DST_PATH, &hdi);
-        if (ret != 0) {
-            LOGE("Ioctl failed with %{public}d", errno);
-            return -errno;
+        if (ret != 0 && GetMergePathFd(hdi, dirFd, userId) != 0) {
+            return errno;
         }
         HmdfsUriInfo dfsUriInfo;
         SetHmdfsUriInfo(dfsUriInfo, uri, hdi.size, networkId, bundleName);
