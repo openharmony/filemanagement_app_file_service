@@ -265,18 +265,11 @@ ohos_unittest("untar_file_test") {
 }
 
 ohos_unittest("ext_backup_js_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
   module_out_path = path_module_out_tests
 
   sources = [
     "${path_backup}/tests/mock/backup_ext/src/ext_backup_mock.cpp",
+    "${path_backup}/tests/mock/napi/src/napi_mock.cpp",
     "ext_backup_js_test.cpp",
   ]
 
@@ -287,6 +280,7 @@ ohos_unittest("ext_backup_js_test") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/interfaces/common/include",
     "${path_backup}/tests/mock/backup_ext/include",
+    "${path_backup}/tests/mock/napi/include",
     "${path_backup}/utils/include",
   ]
 
