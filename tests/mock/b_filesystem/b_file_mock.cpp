@@ -83,4 +83,9 @@ bool BFile::CopyFile(const string &from, const string &to)
 {
     return true;
 }
+
+bool BFile::MoveFile(const string &from, const string &to)
+{
+    return true;
+}
 } // namespace OHOS::FileManagement::Backup

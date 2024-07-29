@@ -135,6 +135,35 @@ HWTEST_F(BFileTest, b_file_CopyFile_0100, testing::ext::TestSize.Level1)
 }
 
 /**
+ * @tc.number: SUB_backup_b_file_MoveFile_0100
+ * @tc.name: b_file_MoveFile_0100
+ * @tc.desc: 测试MoveFile接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BFileTest, b_file_MoveFile_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BFileTest-begin b_file_MoveFile_0100";
+    try {
+        TestManager tm(__func__);
+        const auto [filePath, content] = GetTestFile(tm);
+        TestManager tmInFile("b_file_GetFd_0200");
+        string fileInPath = tmInFile.GetRootDirCurTest().append("1.txt");
+        auto ret = BFile::MoveFile(filePath, fileInPath);
+        EXPECT_TRUE(ret);
+        GTEST_LOG_(INFO) << "BFileTest-MoveFile Branches";
+        ret = BFile::MoveFile(filePath, filePath);
+        EXPECT_TRUE(ret);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BFileTest-an exception occurred by MoveFile.";
+        e.what();
+    }
+    GTEST_LOG_(INFO) << "BFileTest-end b_file_MoveFile_0100";
+}
+
+/**
  * @tc.number: SUB_backup_b_file_Write_0100
  * @tc.name: b_file_Write_0100
  * @tc.desc: 测试Write接口
