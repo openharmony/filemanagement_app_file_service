@@ -40,7 +40,9 @@ using namespace testing;
 using namespace testing::ext;
 namespace OHOS {
 namespace AppFileService {
+#ifdef SANDBOX_MANAGER
 const char *g_fileManagerFullMountEnableParameter = "const.filemanager.full_mount.enable";
+#endif
 const std::string SET_POLICY_PERMISSION = "ohos.permission.SET_SANDBOX_POLICY";
 const std::string ACCESS_PERSIST_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
 const std::string READ_WRITE_DOWNLOAD_PERMISSION = "ohos.permission.READ_WRITE_DOWNLOAD_DIRECTORY";
@@ -124,6 +126,7 @@ void FilePermissionTest::TearDownTestCase()
     #endif
 }
 
+#ifdef SANDBOX_MANAGER
 static bool CheckFileManagerFullMountEnable()
 {
     char value[] = "false";
@@ -135,7 +138,6 @@ static bool CheckFileManagerFullMountEnable()
     return false;
 }
 
-#ifdef SANDBOX_MANAGER
 /**
  * @tc.name: PersistPermission_test_0000
  * @tc.desc: Test function of PersistPermission() interface for SUCCESS.
