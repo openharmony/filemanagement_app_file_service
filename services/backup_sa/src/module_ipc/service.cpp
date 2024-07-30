@@ -1405,6 +1405,9 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
 {
     try {
         HILOGI("Service::GetBackupInfo begin.");
+        if (session_->GetImpl().clientToken) {
+            return BError(BError::Codes::SA_REFUSED_ACT, "Already have an active session");
+        }
         session_->IncreaseSessionCnt();
         session_->SetSessionUserId(GetUserIdDefault());
         auto backupConnection = session_->CreateBackupConnection(bundleName);
