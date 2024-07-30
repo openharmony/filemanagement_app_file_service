@@ -29,6 +29,7 @@ public:
         int64_t spaceOccupied;
         int64_t increSpaceOccupied;
         bool allToBackup;
+        bool useFullBackupOnly;
         std::string extensionName;
         std::string restoreDeps;
         std::string supportScene;
@@ -36,6 +37,7 @@ public:
     };
     struct BundleBackupConfigPara {
         bool allToBackup;
+        bool useFullBackupOnly;
         std::string extensionName;
         std::string restoreDeps;
         std::string supportScene;
@@ -79,6 +81,7 @@ public:
                 arrObj["increSpaceOccupied"] = item.increSpaceOccupied;
             }
             arrObj["allToBackup"] = item.allToBackup;
+            arrObj["useFullBackupOnly"] = item.useFullBackupOnly;
             arrObj["extensionName"] = item.extensionName;
             arrObj["restoreDeps"] = item.restoreDeps;
             arrObj["supportScene"] = item.supportScene;
@@ -143,6 +146,18 @@ public:
         return obj_["extraInfo"];
     }
 
+    bool CheckBundlePropertiesFailed(const Json::Value &bundleInfo)
+    {
+        if (!bundleInfo || !bundleInfo["name"].isString() || !bundleInfo["versionCode"].isInt64() ||
+            !bundleInfo["versionName"].isString() || !bundleInfo["spaceOccupied"].isInt64() ||
+            !bundleInfo["allToBackup"].isBool() ||
+            !bundleInfo["useFullBackupOnly"].isBool() || !bundleInfo["extensionName"].isString()) {
+            HILOGE("Failed to get field bundleInfos, type error");
+            return true;
+        }
+        return false;
+    }
+
     std::vector<BundleInfo> GetBundleInfos()
     {
         if (!obj_ || !obj_.isMember("bundleInfos") || !obj_["bundleInfos"].isArray()) {
@@ -151,10 +166,7 @@ public:
         }
         std::vector<BundleInfo> bundleInfos;
         for (const auto &item : obj_["bundleInfos"]) {
-            if (!item || !item["name"].isString() || !item["versionCode"].isInt64() ||
-                !item["versionName"].isString() || !item["spaceOccupied"].isInt64() || !item["allToBackup"].isBool() ||
-                !item["extensionName"].isString()) {
-                HILOGI("Failed to get field bundleInfos, type error");
+            if (CheckBundlePropertiesFailed(item)) {
                 return {};
             }
             string restoreDeps("");
@@ -176,7 +188,8 @@ public:
             bundleInfos.emplace_back(BundleInfo {item["name"].asString(), item["versionCode"].asInt64(),
                                                  item["versionName"].asString(), item["spaceOccupied"].asInt64(),
                                                  increSpaceOccupied,
-                                                 item["allToBackup"].asBool(), item["extensionName"].asString(),
+                                                 item["allToBackup"].asBool(), item["useFullBackupOnly"].asBool(),
+                                                 item["extensionName"].asString(),
                                                  restoreDeps, supportScene, extraInfo});
         }
         return bundleInfos;

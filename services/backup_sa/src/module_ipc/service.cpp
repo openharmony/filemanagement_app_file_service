@@ -337,6 +337,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
                                                 .versionName = restoreInfo.versionName,
                                                 .spaceOccupied = restoreInfo.spaceOccupied,
                                                 .allToBackup = restoreInfo.allToBackup,
+                                                .useFullBackupOnly = restoreInfo.useFullBackupOnly,
                                                 .extensionName = restoreInfo.extensionName,
                                                 .restoreDeps = restoreInfo.restoreDeps};
             restoreBundleInfos.emplace_back(info);
@@ -353,6 +354,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
                                             .versionName = (*it).versionName,
                                             .spaceOccupied = (*it).spaceOccupied,
                                             .allToBackup = (*it).allToBackup,
+                                            .useFullBackupOnly = (*it).useFullBackupOnly,
                                             .extensionName = restoreInfo.extensionName,
                                             .restoreDeps = restoreInfo.restoreDeps};
         restoreBundleInfos.emplace_back(info);
