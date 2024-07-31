@@ -388,6 +388,11 @@ bool SvcSessionManager::ValidRestoreDataType(RestoreTypeEnum restoreDataType)
     return impl_.restoreDataType == restoreDataType;
 }
 
+SvcSessionManager::Impl SvcSessionManager::GetImpl()
+{
+    return impl_;
+}
+
 void SvcSessionManager::SetIncrementalData(const BIncrementalData &incrementalData) {}
 
 int32_t SvcSessionManager::GetIncrementalManifestFd(const string &bundleName)

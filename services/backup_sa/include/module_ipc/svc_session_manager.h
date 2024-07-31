@@ -474,6 +474,8 @@ public:
 
     bool ValidRestoreDataType(RestoreTypeEnum restoreType);
 
+    Impl GetImpl();
+
 private:
     /**
      * @brief 获取backup extension ability
