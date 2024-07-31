@@ -93,7 +93,7 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_GetRestoreBundleNa
                                          .spaceOccupied = 0,
                                          .versionName = "1.0.0",
                                          .allToBackup = false,
-                                         .useFullBackupOnly = false,
+                                         .fullBackupOnly = false,
                                          .extensionName = "",
                                          .restoreDeps = ""};
     BJsonEntityCaps::BundleInfo info2 = {.name = "com.example.app2",
@@ -101,7 +101,7 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_GetRestoreBundleNa
                                          .spaceOccupied = 0,
                                          .versionName = "1.0.0",
                                          .allToBackup = false,
-                                         .useFullBackupOnly = false,
+                                         .fullBackupOnly = false,
                                          .extensionName = "",
                                          .restoreDeps = "com.example.app1"};
     vector<BJsonEntityCaps::BundleInfo> bundleInfos {info1, info2};
@@ -130,7 +130,7 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_GetRestoreBundleNa
                                         .versionName = "1.0.0",
                                         .spaceOccupied = 0,
                                         .allToBackup = false,
-                                        .useFullBackupOnly = false,
+                                        .fullBackupOnly = false,
                                         .extensionName = "",
                                         .restoreDeps = "com.example.app1"};
     vector<BJsonEntityCaps::BundleInfo> bundleInfos {info};
@@ -278,7 +278,7 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_GetAllBundles_0200
                                         .versionName = "1.0.0",
                                         .spaceOccupied = 0,
                                         .allToBackup = false,
-                                        .useFullBackupOnly = false,
+                                        .fullBackupOnly = false,
                                         .extensionName = "",
                                         .restoreDeps = ""};
     SvcRestoreDepsManager::GetInstance().allBundles_.emplace_back(info);
@@ -410,7 +410,7 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_BuildDepsMap_0200,
                                          .versionName = "1.0.0",
                                          .spaceOccupied = 0,
                                          .allToBackup = false,
-                                         .useFullBackupOnly = false,
+                                         .fullBackupOnly = false,
                                          .extensionName = "",
                                          .restoreDeps = ""};
     BJsonEntityCaps::BundleInfo info2 = {.name = "com.example.app2",
@@ -418,7 +418,7 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_BuildDepsMap_0200,
                                          .versionName = "1.0.0",
                                          .spaceOccupied = 0,
                                          .allToBackup = false,
-                                         .useFullBackupOnly = false,
+                                         .fullBackupOnly = false,
                                          .extensionName = "",
                                          .restoreDeps = "com.example.app1"};
     BJsonEntityCaps::BundleInfo info3 = {.name = "com.example.app3",
@@ -426,7 +426,7 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_BuildDepsMap_0200,
                                          .versionName = "1.0.0",
                                          .spaceOccupied = 0,
                                          .allToBackup = false,
-                                         .useFullBackupOnly = false,
+                                         .fullBackupOnly = false,
                                          .extensionName = "",
                                          .restoreDeps = "com.example.app1,com.example.app2"};
     vector<BJsonEntityCaps::BundleInfo> bundleInfos = {info1, info2, info3};
@@ -454,7 +454,7 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_BuildDepsMap_0300,
                                         .versionName = "1.0.0",
                                         .spaceOccupied = 0,
                                         .allToBackup = false,
-                                        .useFullBackupOnly = false,
+                                        .fullBackupOnly = false,
                                         .extensionName = "",
                                         .restoreDeps = ""};
     vector<BJsonEntityCaps::BundleInfo> bundleInfos = {info};
