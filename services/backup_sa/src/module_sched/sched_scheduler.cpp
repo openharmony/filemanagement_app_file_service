@@ -87,7 +87,7 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
                 ptr->ExtConnectFailed(bundleName, BError(BError::Codes::SA_BOOT_TIMEOUT));
             }
         };
-        auto iTime = extTime_.Register(callStart, BConstants::EXT_CONNECT_MAX_TIME);
+        auto iTime = extTime_.Register(callStart, BConstants::EXT_CONNECT_MAX_TIME, true);
         unique_lock<shared_mutex> lock(lock_);
         bundleTimeVec_.emplace_back(make_tuple(bundleName, iTime));
         lock.unlock();
