@@ -68,11 +68,20 @@ public:
      *
      * @param from old path
      * @param to new path
-     * @return true copy succeess
+     * @return true move succeess
      * @return false some error occur
      */
     static bool MoveFile(const string &from, const string &to);
 
+    /**
+     * @brief get real path
+     *
+     * @param path src path
+     * @param realPath real path
+     * @return true get real path success
+     * @return false some error occur
+     */
+    static bool GetRealPath(const string &path, string &realPath);
 private:
 };
 } // namespace OHOS::FileManagement::Backup

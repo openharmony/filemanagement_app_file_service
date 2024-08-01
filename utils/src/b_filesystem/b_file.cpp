@@ -26,6 +26,7 @@
 
 #include "b_error/b_error.h"
 #include "filemgmt_libhilog.h"
+#include "securec.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -141,29 +142,45 @@ bool BFile::CopyFile(const string &from, const string &to)
     return false;
 }
 
+bool BFile::GetRealPath(const string &path, string &realPath)
+{
+    auto tmpPath = make_unique<char[]>(PATH_MAX + 1);
+    int ret = memset_s(tmpPath.get(), PATH_MAX + 1, 0, PATH_MAX + 1);
+    if (ret != EOK) {
+        HILOGE("Failed to call path memset_s, err = %{public}d", ret);
+        return false;
+    }
+    if (!realpath(path.c_str(), tmpPath.get())) {
+        HILOGE("failed to real path for the file %{public}s, errno: %{public}d",
+            GetAnonyPath(path).c_str(), errno);
+        return false;
+    }
+    realPath = string(tmpPath.get());
+    return true;
+}
+
 bool BFile::MoveFile(const string &from, const string &to)
 {
+    if (from.size() >= PATH_MAX || to.size() >= PATH_MAX) {
+        HILOGE("from or to path err (Exceeding the maximum length)");
+        return false;
+    }
     if (from == to) {
         return true;
     }
     try {
-        auto fromPath = make_unique<char[]>(PATH_MAX + 1);
-        if (!realpath(from.data(), fromPath.get())) {
-            HILOGE("failed to real path for the file %{public}s", from.c_str());
+        std::string oldPath = "";
+        if (!GetRealPath(from, oldPath)) {
             return false;
         }
-        string oldPath(fromPath.get());
-
         unique_ptr<char, function<void(void *p)>> dir {strdup(to.data()), free};
         if (!dir) {
             throw BError(errno);
         }
-        auto toPath = make_unique<char[]>(PATH_MAX + 1);
-        if (!realpath(dirname(dir.get()), toPath.get())) {
-            HILOGE("failed to real path for %{public}s", to.c_str());
+        std::string newPath = "";
+        if (!GetRealPath(dirname(dir.get()), newPath)) {
             return false;
         }
-        string newPath(toPath.get());
         unique_ptr<char, function<void(void *p)>> name {strdup(to.data()), free};
         if (!name) {
             throw BError(errno);
@@ -180,7 +197,7 @@ bool BFile::MoveFile(const string &from, const string &to)
     } catch (const exception &e) {
         HILOGE("%{public}s", e.what());
     } catch (...) {
-        HILOGE("");
+        HILOGE("unknow error");
     }
     return false;
 }
