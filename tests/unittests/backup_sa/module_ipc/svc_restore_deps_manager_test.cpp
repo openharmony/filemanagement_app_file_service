@@ -107,8 +107,8 @@ HWTEST_F(SvcRestoreDepsManagerTest, SUB_SvcRestoreDepsManager_GetRestoreBundleNa
     vector<BJsonEntityCaps::BundleInfo> bundleInfos {info1, info2};
     RestoreTypeEnum restoreType = RESTORE_DATA_WAIT_SEND;
     auto bundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(bundleInfos, restoreType);
-    EXPECT_EQ(bundleNames.size(), 1);
-    EXPECT_FALSE(SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored());
+    EXPECT_EQ(bundleNames.size(), 2);
+    EXPECT_TRUE(SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored());
     ClearCache();
     GTEST_LOG_(INFO) << "SvcRestoreDepsManagerTest-end SUB_SvcRestoreDepsManager_GetRestoreBundleNames_0200";
 }

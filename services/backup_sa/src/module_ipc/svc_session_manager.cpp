@@ -40,6 +40,7 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
 {
     shared_lock<shared_mutex> lock(lock_);
     if (impl_.scenario != scenario) {
+        HILOGE("Inconsistent scenario, impl scenario:%{public}d", impl_.scenario);
         throw BError(BError::Codes::SDK_MIXED_SCENARIO);
     }
     if (impl_.clientToken != clientToken) {
