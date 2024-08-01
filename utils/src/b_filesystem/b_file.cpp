@@ -170,8 +170,8 @@ bool BFile::MoveFile(const string &from, const string &to)
         }
         newPath.append("/").append(basename(name.get()));
         if (rename(oldPath.c_str(), newPath.c_str())) {
-            HILOGE("failed to rename path, oldPath:%{public}s ,newPath: %{public}s",
-                GetAnonyPath(oldPath).c_str(), GetAnonyPath(newPath).c_str());
+            HILOGE("failed to rename path, oldPath: %{public}s, newPath: %{public}s, errno: %{public}d",
+                GetAnonyPath(oldPath).c_str(), GetAnonyPath(newPath).c_str(), errno);
             throw BError(errno);
         }
         return true;

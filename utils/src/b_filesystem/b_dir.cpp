@@ -40,6 +40,7 @@ static bool IsEmptyDirectory(const string &path)
 {
     DIR *dir = opendir(path.c_str());
     if (dir == nullptr) {
+        HILOGE("Opendir failed, errno:%{public}d", errno);
         return false;
     }
     bool isEmpty = true;

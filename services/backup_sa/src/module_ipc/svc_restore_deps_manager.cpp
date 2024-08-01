@@ -28,23 +28,15 @@ vector<string> SvcRestoreDepsManager::GetRestoreBundleNames(const vector<BJsonEn
     BuildDepsMap(bundleInfos);            // 构建依赖Map
 
     for (auto &bundleInfo : bundleInfos) {
+        restoreBundleNames.emplace_back(bundleInfo.name);
         string restoreDeps = bundleInfo.restoreDeps;
-        if (restoreDeps.empty()) {
-            // 将没有依赖的应用加入到需要恢复的应用列表
-            restoreBundleNames.emplace_back(bundleInfo.name);
-        } else {
-            RestoreInfo info {};
-            info.restoreType_ = restoreType;
-            toRestoreBundleMap_.insert(make_pair(bundleInfo.name, info));
-
-            // 如果该应用的依赖项已经完成备份，也需要加到需要恢复的应用列表
+        if (!restoreDeps.empty()) {
+            HILOGI("RestoreDeps is not empty, bundleName=%{public}s", bundleInfo.name.c_str());
             if (IsAllDepsRestored(bundleInfo.name)) {
-                restoreBundleNames.emplace_back(bundleInfo.name);
-                toRestoreBundleMap_.erase(bundleInfo.name);
+                HILOGI("RestoreDeps is all restored, bundleName=%{public}s", bundleInfo.name.c_str());
             }
         }
     }
-
     return restoreBundleNames;
 }
 
