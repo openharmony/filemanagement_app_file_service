@@ -314,7 +314,7 @@ static int32_t ChangeBundleInfo(const string &pathCapFile, const vector<string> 
                                                                   .spaceOccupied = bundleInfo.spaceOccupied,
                                                                   .increSpaceOccupied = bundleInfo.increSpaceOccupied,
                                                                   .allToBackup = bundleInfo.allToBackup,
-                                                                  .fullBackupOnly = bundleInfo.useFullBackupOnly,
+                                                                  .fullBackupOnly = bundleInfo.fullBackupOnly,
                                                                   .extensionName = bundleInfo.extensionName});
         }
     }

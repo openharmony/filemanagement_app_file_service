@@ -48,6 +48,11 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
     HILOGD("Succeed to verify the caller");
 }
 
+SvcSessionManager::Impl SvcSessionManager::GetImpl()
+{
+    return impl_;
+}
+
 ErrCode SvcSessionManager::Active(Impl newImpl)
 {
     unique_lock<shared_mutex> lock(lock_);

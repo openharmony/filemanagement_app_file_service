@@ -270,6 +270,11 @@ bool SvcSessionManager::ValidRestoreDataType(RestoreTypeEnum restoreDataType)
     return BackupSvcSessionManager::session->ValidRestoreDataType(restoreDataType);
 }
 
+SvcSessionManager::Impl SvcSessionManager::GetImpl()
+{
+    return BackupSvcSessionManager::session->GetImpl();
+}
+
 void SvcSessionManager::SetIncrementalData(const BIncrementalData &incrementalData)
 {
     BackupSvcSessionManager::session->SetIncrementalData(incrementalData);

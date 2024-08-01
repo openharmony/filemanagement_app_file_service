@@ -146,37 +146,37 @@ public:
         return obj_["extraInfo"];
     }
 
-    bool CheckBundlePropertiesFailed(const Json::Value &bundleInfo)
+    bool CheckBundlePropertiesIsValid(const Json::Value &bundleInfo)
     {
         if (!bundleInfo) {
             HILOGE("Failed Check bundleInfo");
-            return true;
+            return false;
         }
         if (!bundleInfo.isMember("name") || !bundleInfo["name"].isString()) {
             HILOGE("Failed Check bundleInfo name property");
-            return true;
+            return false;
         }
         if (!bundleInfo.isMember("versionCode") || !bundleInfo["versionCode"].isInt64()) {
             HILOGE("Failed Check bundleInfo versionCode property");
-            return true;
+            return false;
         }
         if (!bundleInfo.isMember("versionName") || !bundleInfo["versionName"].isString()) {
             HILOGE("Failed Check bundleInfo versionName property");
-            return true;
+            return false;
         }
         if (!bundleInfo.isMember("spaceOccupied") || !bundleInfo["spaceOccupied"].isInt64()) {
             HILOGE("Failed Check bundleInfo spaceOccupied property");
-            return true;
+            return false;
         }
         if (!bundleInfo.isMember("allToBackup") || !bundleInfo["allToBackup"].isBool()) {
             HILOGE("Failed Check bundleInfo allToBackup property");
-            return true;
+            return false;
         }
         if (!bundleInfo.isMember("extensionName") || !bundleInfo["extensionName"].isString()) {
             HILOGE("Failed Check bundleInfo extensionName property");
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
     std::vector<BundleInfo> GetBundleInfos()
@@ -187,7 +187,7 @@ public:
         }
         std::vector<BundleInfo> bundleInfos;
         for (const auto &item : obj_["bundleInfos"]) {
-            if (CheckBundlePropertiesFailed(item)) {
+            if (!CheckBundlePropertiesIsValid(item)) {
                 return {};
             }
             string restoreDeps("");

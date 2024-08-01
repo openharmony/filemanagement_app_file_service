@@ -259,9 +259,7 @@ void BReportEntity::CheckAndUpdateIfReportLineEncoded(std::string &path)
     unordered_map<string, struct ReportFileInfo> infos = GetReportInfos();
     if (infos.size() == 1) {
         auto info = infos.begin();
-        if (info->second.encodeFlag) {
-            path = info->first;
-        }
+        path = info->first;
     } else {
         HILOGE("Invalid item sizes in report, current is %{public}zu", infos.size());
     }
