@@ -324,12 +324,13 @@ ohos_unittest("ext_backup_js_test") {
 
 group("backup_ext_test") {
   testonly = true
-
-  deps = [
-    ":ext_backup_js_test",
-    ":ext_extension_stub_test",
-    ":ext_extension_test",
-    ":tar_file_test",
-    ":untar_file_test",
-  ]
+  if (!use_libfuzzer) {
+    deps = [
+      ":ext_backup_js_test",
+      ":ext_extension_stub_test",
+      ":ext_extension_test",
+      ":tar_file_test",
+      ":untar_file_test",
+    ]
+  }
 }
