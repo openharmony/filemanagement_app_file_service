@@ -600,6 +600,120 @@ HWTEST_F(FilePermissionTest, CheckPersistentPermission_test_0003, testing::ext::
     };
     GTEST_LOG_(INFO) << "FileShareTest-end CheckPersistentPermission_test_0003";
 }
+
+/**
+ * @tc.name: GetPathPolicyInfoFromUriPolicyInfo_test_0001
+ * @tc.desc: Test function of GetPathPolicyInfoFromUriPolicyInfo() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, GetPathPolicyInfoFromUriPolicyInfo_test_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin GetPathPolicyInfoFromUriPolicyInfo_test_0001";
+    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/001.txt"};
+    UriPolicyInfo infoB = {.uri = BUNDLE_NAME_A + "/storage/001.txt"};
+    UriPolicyInfo infoC = {.uri = "file://media/Photo/10/1.jpeg"};
+    UriPolicyInfo infoD = {.uri = "file://" + BUNDLE_NAME_A + "/storage/001.txt?networkid=5454541547878787878748748"};
+    UriPolicyInfo infoE = {.uri = "file://" + BUNDLE_NAME_A + "/storage"};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoA);
+    uriPolicies.emplace_back(infoB);
+    uriPolicies.emplace_back(infoC);
+    uriPolicies.emplace_back(infoD);
+    uriPolicies.emplace_back(infoE);
+    vector<bool> errorResult;
+    auto pathPolicies = FilePermission::GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResult);
+    EXPECT_EQ(pathPolicies.size(), 1);
+    EXPECT_EQ(pathPolicies[0].path, "/storage");
+    ASSERT_TRUE(errorResult.size() == 5);
+    EXPECT_EQ(errorResult[4], true);
+    GTEST_LOG_(INFO) << "FileShareTest-end GetPathPolicyInfoFromUriPolicyInfo_test_0001";
+}
+
+/**
+ * @tc.name: ParseErrorResults_test_0001
+ * @tc.desc: Test function of ParseErrorResults() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, ParseErrorResults_test_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin ParseErrorResults_test_0001";
+    vector<bool> resultCodes;
+    vector<bool> errorResults;
+    FilePermission::ParseErrorResults(resultCodes, errorResults);
+    EXPECT_EQ(errorResults.size(), 0);
+
+    resultCodes.push_back(false);
+    FilePermission::ParseErrorResults(resultCodes, errorResults);
+    EXPECT_EQ(errorResults.size(), 0);
+    
+    resultCodes.push_back(false);
+    errorResults.push_back(true);
+    FilePermission::ParseErrorResults(resultCodes, errorResults);
+    ASSERT_TRUE(errorResults.size() == 1);
+    EXPECT_EQ(errorResults[0], false);
+
+    errorResults.push_back(true);
+    errorResults.push_back(true);
+    FilePermission::ParseErrorResults(resultCodes, errorResults);
+    ASSERT_TRUE(errorResults.size() == 3);
+    EXPECT_EQ(errorResults[0], false);
+    EXPECT_EQ(errorResults[1], false);
+    EXPECT_EQ(errorResults[2], false);
+    GTEST_LOG_(INFO) << "FileShareTest-end ParseErrorResults_test_0001";
+}
+
+/**
+ * @tc.name: ParseErrorResults_test_002
+ * @tc.desc: Test function of ParseErrorResults() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, ParseErrorResults_test_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin ParseErrorResults_test_002";
+    PolicyInfo infoA = {.path = "file://" + BUNDLE_NAME_A + "/storage/001.txt"};
+    PolicyInfo infoB = {.path = BUNDLE_NAME_A + "/storage/001.txt"};
+    PolicyInfo infoC = {.path = "file://media/Photo/10/1.jpeg"};
+    PolicyInfo infoD = {.path = "file://" + BUNDLE_NAME_A + "/storage/001.txt?networkid=5454541547878787878748748"};
+    PolicyInfo infoE = {.path = "file://" + BUNDLE_NAME_A + "/storage"};
+    std::vector<PolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoA);
+    uriPolicies.emplace_back(infoB);
+    uriPolicies.emplace_back(infoC);
+    uriPolicies.emplace_back(infoD);
+    uriPolicies.emplace_back(infoE);
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::PERSISTENCE_FORBIDDEN));
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_MODE));
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_PATH));
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::PERMISSION_NOT_PERSISTED));
+
+    deque<struct PolicyErrorResult> errorResults;
+    FilePermission::ParseErrorResults(resultCodes, uriPolicies, errorResults);
+    ASSERT_TRUE(errorResults.size() == 0);
+
+    resultCodes.emplace_back(5);
+    FilePermission::ParseErrorResults(resultCodes, uriPolicies, errorResults);
+    ASSERT_TRUE(errorResults.size() == 4);
+    EXPECT_EQ(errorResults[0].uri, infoA.path);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::PERSISTENCE_FORBIDDEN);
+    EXPECT_EQ(errorResults[1].uri, infoB.path);
+    EXPECT_EQ(errorResults[1].code, PolicyErrorCode::INVALID_MODE);
+    EXPECT_EQ(errorResults[2].uri, infoC.path);
+    EXPECT_EQ(errorResults[2].code, PolicyErrorCode::INVALID_PATH);
+    EXPECT_EQ(errorResults[3].uri, infoD.path);
+    EXPECT_EQ(errorResults[3].code, PolicyErrorCode::PERMISSION_NOT_PERSISTED);
+    GTEST_LOG_(INFO) << "FileShareTest-end ParseErrorResults_test_002";
+}
+
 #endif
 } // namespace AppFileService
 } // namespace OHOS
