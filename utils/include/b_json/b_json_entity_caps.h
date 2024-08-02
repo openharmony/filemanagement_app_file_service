@@ -29,7 +29,7 @@ public:
         int64_t spaceOccupied;
         int64_t increSpaceOccupied;
         bool allToBackup;
-        bool useFullBackupOnly;
+        bool fullBackupOnly;
         std::string extensionName;
         std::string restoreDeps;
         std::string supportScene;
@@ -37,7 +37,7 @@ public:
     };
     struct BundleBackupConfigPara {
         bool allToBackup;
-        bool useFullBackupOnly;
+        bool fullBackupOnly;
         std::string extensionName;
         std::string restoreDeps;
         std::string supportScene;
@@ -81,7 +81,7 @@ public:
                 arrObj["increSpaceOccupied"] = item.increSpaceOccupied;
             }
             arrObj["allToBackup"] = item.allToBackup;
-            arrObj["useFullBackupOnly"] = item.useFullBackupOnly;
+            arrObj["fullBackupOnly"] = item.fullBackupOnly;
             arrObj["extensionName"] = item.extensionName;
             arrObj["restoreDeps"] = item.restoreDeps;
             arrObj["supportScene"] = item.supportScene;
@@ -146,16 +146,37 @@ public:
         return obj_["extraInfo"];
     }
 
-    bool CheckBundlePropertiesFailed(const Json::Value &bundleInfo)
+    bool CheckBundlePropertiesIsValid(const Json::Value &bundleInfo)
     {
-        if (!bundleInfo || !bundleInfo["name"].isString() || !bundleInfo["versionCode"].isInt64() ||
-            !bundleInfo["versionName"].isString() || !bundleInfo["spaceOccupied"].isInt64() ||
-            !bundleInfo["allToBackup"].isBool() ||
-            !bundleInfo["useFullBackupOnly"].isBool() || !bundleInfo["extensionName"].isString()) {
-            HILOGE("Failed to get field bundleInfos, type error");
-            return true;
+        if (!bundleInfo) {
+            HILOGE("Failed Check bundleInfo");
+            return false;
         }
-        return false;
+        if (!bundleInfo.isMember("name") || !bundleInfo["name"].isString()) {
+            HILOGE("Failed Check bundleInfo name property");
+            return false;
+        }
+        if (!bundleInfo.isMember("versionCode") || !bundleInfo["versionCode"].isInt64()) {
+            HILOGE("Failed Check bundleInfo versionCode property");
+            return false;
+        }
+        if (!bundleInfo.isMember("versionName") || !bundleInfo["versionName"].isString()) {
+            HILOGE("Failed Check bundleInfo versionName property");
+            return false;
+        }
+        if (!bundleInfo.isMember("spaceOccupied") || !bundleInfo["spaceOccupied"].isInt64()) {
+            HILOGE("Failed Check bundleInfo spaceOccupied property");
+            return false;
+        }
+        if (!bundleInfo.isMember("allToBackup") || !bundleInfo["allToBackup"].isBool()) {
+            HILOGE("Failed Check bundleInfo allToBackup property");
+            return false;
+        }
+        if (!bundleInfo.isMember("extensionName") || !bundleInfo["extensionName"].isString()) {
+            HILOGE("Failed Check bundleInfo extensionName property");
+            return false;
+        }
+        return true;
     }
 
     std::vector<BundleInfo> GetBundleInfos()
@@ -166,7 +187,7 @@ public:
         }
         std::vector<BundleInfo> bundleInfos;
         for (const auto &item : obj_["bundleInfos"]) {
-            if (CheckBundlePropertiesFailed(item)) {
+            if (!CheckBundlePropertiesIsValid(item)) {
                 return {};
             }
             string restoreDeps("");
@@ -185,10 +206,14 @@ public:
             if (item.isMember("increSpaceOccupied") && item["increSpaceOccupied"].isInt64()) {
                 increSpaceOccupied = item["increSpaceOccupied"].asInt64();
             }
+            bool fullBackupOnly = false;
+            if (item.isMember("fullBackupOnly") && item["fullBackupOnly"].isBool()) {
+                fullBackupOnly = item["fullBackupOnly"].asBool();
+            }
             bundleInfos.emplace_back(BundleInfo {item["name"].asString(), item["versionCode"].asInt64(),
                                                  item["versionName"].asString(), item["spaceOccupied"].asInt64(),
                                                  increSpaceOccupied,
-                                                 item["allToBackup"].asBool(), item["useFullBackupOnly"].asBool(),
+                                                 item["allToBackup"].asBool(), fullBackupOnly,
                                                  item["extensionName"].asString(),
                                                  restoreDeps, supportScene, extraInfo});
         }

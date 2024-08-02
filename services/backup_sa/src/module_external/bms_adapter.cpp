@@ -134,7 +134,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
         }
-        auto [allToBackup, useFullBackupOnly, extName, restoreDeps, supportScene, extraInfo] =
+        auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo] =
             GetAllowAndExtName(installedBundle.extensionInfos);
         int64_t dataSize = 0;
         if (allToBackup) {
@@ -142,7 +142,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
         }
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, dataSize, 0, allToBackup,
-                                                              useFullBackupOnly, extName, restoreDeps, supportScene,
+                                                              fullBackupOnly, extName, restoreDeps, supportScene,
                                                               extraInfo});
     }
     HILOGI("End, bundleInfos size:%{public}zu", bundleInfos.size());
@@ -179,7 +179,7 @@ static bool GetBackupExtConfig(const vector<AppExecFwk::ExtensionAbilityInfo> &e
         BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(out[0], ext.bundleName);
         auto cache = cachedEntity.Structuralize();
         backupPara.allToBackup = cache.GetAllowToBackupRestore();
-        backupPara.useFullBackupOnly = cache.GetFullBackupOnly();
+        backupPara.fullBackupOnly = cache.GetFullBackupOnly();
         backupPara.extensionName = ext.name;
         backupPara.restoreDeps = cache.GetRestoreDeps();
         backupPara.supportScene = cache.GetSupportScene();
@@ -263,7 +263,7 @@ static bool GenerateBundleStatsIncrease(int32_t userId, const vector<string> &bu
                                                      .spaceOccupied = pkgFileSizes[i],
                                                      .increSpaceOccupied = incPkgFileSizes[i],
                                                      .allToBackup = bundleInfos[i].allToBackup,
-                                                     .useFullBackupOnly = bundleInfos[i].useFullBackupOnly,
+                                                     .fullBackupOnly = bundleInfos[i].fullBackupOnly,
                                                      .extensionName = bundleInfos[i].extensionName,
                                                      .restoreDeps = bundleInfos[i].restoreDeps,
                                                      .supportScene = bundleInfos[i].supportScene,
@@ -303,7 +303,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         }
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
                                                               installedBundle.versionName, 0, 0,
-                                                              backupPara.allToBackup, backupPara.useFullBackupOnly,
+                                                              backupPara.allToBackup, backupPara.fullBackupOnly,
                                                               backupPara.extensionName,
                                                               backupPara.restoreDeps, backupPara.supportScene,
                                                               backupPara.extraInfo});
@@ -339,11 +339,11 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
         }
-        auto [allToBackup, useFullBackupOnly, extName, restoreDeps, supportScene, extraInfo] =
+        auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo] =
             GetAllowAndExtName(installedBundle.extensionInfos);
         if (!allToBackup) {
             bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
-                installedBundle.versionName, 0, 0, allToBackup, useFullBackupOnly, extName, restoreDeps, supportScene,
+                installedBundle.versionName, 0, 0, allToBackup, fullBackupOnly, extName, restoreDeps, supportScene,
                 extraInfo});
             continue;
         }
