@@ -79,6 +79,7 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
         callDied_(move(bundleName));
     }
     condition_.notify_all();
+    waitCondition_.notify_all();
     HILOGI("called end, name: %{public}s", bundleName.c_str());
 }
 
@@ -110,6 +111,17 @@ ErrCode SvcBackupConnection::DisconnectBackupExtAbility()
     }
     HILOGI("called end, ret=%{public}d", ret);
     return ret;
+}
+
+bool SvcBackupConnection::WaitDisconnectDone()
+{
+    std::unique_lock<std::mutex> lock(waitMutex_);
+    if (waitCondition_.wait_for(lock, std::chrono::seconds(WAIT_TIME),
+        [this]() { return isConnected_.load() == false; })) {
+        HILOGI("Wait disconnected done success");
+        return true;
+    }
+    return false;
 }
 
 bool SvcBackupConnection::IsExtAbilityConnected()
