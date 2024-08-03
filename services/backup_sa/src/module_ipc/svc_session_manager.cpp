@@ -205,12 +205,18 @@ void SvcSessionManager::RemoveExtInfo(const string &bundleName)
     unique_lock<shared_mutex> lock(lock_);
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
+        HILOGI("BackupExtNameMap not contain %{public}s", bundleName.c_str());
         return;
     }
-    impl_.backupExtNameMap.erase(it);
     if (extConnectNum_) {
         extConnectNum_--;
     }
+    int32_t &appendNum = impl_.backupExtNameMap[bundleName].appendNum;
+    if (--appendNum > 0) {
+        HILOGI("No need remove bundleName:%{public}s, appendNum=%{public}d", bundleName.c_str(), appendNum);
+        return;
+    }
+    impl_.backupExtNameMap.erase(it);
 }
 
 wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &bundleName)
@@ -483,6 +489,14 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
     for (auto &&bundleName : bundleNames) {
         HILOGD("bundleName: %{public}s", bundleName.c_str());
         BackupExtInfo info {};
+        auto it = impl_.backupExtNameMap.find(bundleName);
+        if (it != impl_.backupExtNameMap.end()) {
+            HILOGI("BackupExtNameMap already contain %{public}s", bundleName.c_str());
+            info.backUpConnection = impl_.backupExtNameMap[bundleName].backUpConnection;
+            info.appendNum = impl_.backupExtNameMap[bundleName].appendNum + 1;
+            impl_.backupExtNameMap[bundleName] = info;
+            continue;
+        }
         if (SAUtils::IsSABundleName(bundleName)) {
             info.saBackupConnection = GetBackupSAExt(bundleName);
         } else {

@@ -362,6 +362,8 @@ private:
      */
     void NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string &callerName);
 
+    void SetWant(AAFwk::Want &want, const BundleName &bundleName, const BConstants::ExtensionAction &action);
+
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

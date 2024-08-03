@@ -797,6 +797,25 @@ void Service::NotifyCloneBundleFinish(std::string bundleName)
     OnAllBundlesFinished(BError(BError::Codes::OK));
 }
 
+void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BConstants::ExtensionAction &action)
+{
+    string backupExtName = session_->GetBackupExtName(bundleName); /* new device app ext name */
+    HILOGD("BackupExtName: %{public}s, bundleName: %{public}s", backupExtName.data(), bundleName.data());
+    string versionName = session_->GetBundleVersionName(bundleName); /* old device app version name */
+    int64_t versionCode = session_->GetBundleVersionCode(bundleName); /* old device app version code */
+    RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
+    string bundleExtInfo = session_->GetBackupExtInfo(bundleName);
+    HILOGI("BundleExtInfo is:%{public}s", GetAnonyString(bundleExtInfo).c_str());
+
+    want.SetElementName(bundleName, backupExtName);
+    want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
+    want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<long>(versionCode));
+    want.SetParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, static_cast<int>(restoreType));
+    want.SetParam(BConstants::EXTENSION_VERSION_NAME_PARA, versionName);
+    want.SetParam(BConstants::EXTENSION_RESTORE_EXT_INFO_PARA, bundleExtInfo);
+    want.SetParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA, bundleExtInfo);
+}
+
 ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -815,25 +834,14 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
             return LaunchBackupSAExtension(bundleName);
         }
         AAFwk::Want want;
-        string backupExtName = session_->GetBackupExtName(bundleName); /* new device app ext name */
-        HILOGD("backupExtName: %{public}s, bundleName: %{public}s", backupExtName.data(), bundleName.data());
-        string versionName = session_->GetBundleVersionName(bundleName);          /* old device app version name */
-        int64_t versionCode = session_->GetBundleVersionCode(bundleName);         /* old device app version code */
-        RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
-        string bundleExtInfo = session_->GetBackupExtInfo(bundleName);
-        HILOGI("bundleExtInfo is:%{public}s", GetAnonyString(bundleExtInfo).c_str());
-
-        want.SetElementName(bundleName, backupExtName);
-        want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
-        want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<long>(versionCode));
-        want.SetParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, static_cast<int>(restoreType));
-        want.SetParam(BConstants::EXTENSION_VERSION_NAME_PARA, versionName);
-        want.SetParam(BConstants::EXTENSION_RESTORE_EXT_INFO_PARA, bundleExtInfo);
-        want.SetParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA, bundleExtInfo);
-
+        SetWant(want, bundleName, action);
         auto backUpConnection = session_->GetExtConnection(bundleName);
         if (backUpConnection == nullptr) {
             HILOGE("LaunchBackupExtension error, backUpConnection is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        if (backUpConnection->IsExtAbilityConnected() && !backUpConnection->WaitDisconnectDone()) {
+            HILOGE("LaunchBackupExtension error, WaitDisconnectDone failed");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         ErrCode ret = backUpConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
