@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -433,6 +433,129 @@ HWTEST_F(ToolsOpRestoreTest, tools_op_restore_OnBundleStarted_0601, testing::ext
 }
 
 /**
+ * @tc.number: SUB_backup_tools_op_restore_0700
+ * @tc.name: tools_op_restore_OnBundleFinished_0700
+ * @tc.desc: test func
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreTest, tools_op_restore_OnBundleFinished_0700, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-begin tools_op_restore_OnBundleFinished_0700";
+    try {
+        auto ctx = make_shared<Session>();
+        ctx->cnt_ = 1;
+        ErrCode err = 0;
+        BundleName name = BUNDLE_NAME;
+        OnBundleFinished(ctx, err, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end tools_op_restore_OnBundleFinished_0700";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_0701
+ * @tc.name: tools_op_restore_OnBundleFinished_0701
+ * @tc.desc: test func
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreTest, tools_op_restore_OnBundleFinished_0701, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-begin tools_op_restore_OnBundleFinished_0701";
+    try {
+        auto ctx = make_shared<Session>();
+        ctx->cnt_ = 1;
+        ErrCode err = -1;
+        BundleName name = BUNDLE_NAME;
+        OnBundleFinished(ctx, err, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end tools_op_restore_OnBundleFinished_0701";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_0702
+ * @tc.name: tools_op_restore_OnBundleFinished_0702
+ * @tc.desc: test func
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreTest, tools_op_restore_OnBundleFinished_0702, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-begin tools_op_restore_OnBundleFinished_0702";
+    try {
+        auto ctx = make_shared<Session>();
+        ErrCode err = 0;
+        OnAllBundlesFinished(ctx, err);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end tools_op_restore_OnBundleFinished_0702";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_0703
+ * @tc.name: tools_op_restore_OnBundleFinished_0703
+ * @tc.desc: test func
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreTest, tools_op_restore_OnBundleFinished_0703, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-begin tools_op_restore_OnBundleFinished_0703";
+    try {
+        auto ctx = make_shared<Session>();
+        ErrCode err = -1;
+        OnAllBundlesFinished(ctx, err);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end tools_op_restore_OnBundleFinished_0703";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_0704
+ * @tc.name: tools_op_restore_OnBundleFinished_0704
+ * @tc.desc: test func
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreTest, tools_op_restore_OnBundleFinished_0704, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-begin tools_op_restore_OnBundleFinished_0704";
+    try {
+        auto ctx = make_shared<Session>();
+        OnBackupServiceDied(ctx);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end tools_op_restore_OnBundleFinished_0704";
+}
+
+/**
  * @tc.number: SUB_backup_tools_op_restore_0800
  * @tc.name: tools_op_restore_OnResultReport_0800
  * @tc.desc: 测试当err=0时
@@ -640,6 +763,31 @@ HWTEST_F(ToolsOpRestoreTest, tools_op_restore_InitRestoreSession_1100, testing::
 }
 
 /**
+ * @tc.number: SUB_backup_tools_op_restore_1101
+ * @tc.name: tools_op_restore_InitRestoreSession_1101
+ * @tc.desc: 测试当ctx
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreTest, tools_op_restore_InitRestoreSession_1101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-begin tools_op_restore_InitRestoreSession_1101";
+    try {
+        shared_ptr<Session> ctx = make_shared<Session>();
+        InitRestoreSession(ctx);
+    } catch (BError &e) {
+        EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end tools_op_restore_InitRestoreSession_1101";
+}
+
+/**
  * @tc.number: SUB_backup_tools_op_restore_1200
  * @tc.name: tools_op_restore_InitPathCapFile_1200
  * @tc.desc: realPath 为空
@@ -662,6 +810,56 @@ HWTEST_F(ToolsOpRestoreTest, tools_op_restore_InitPathCapFile_1200, testing::ext
         GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end tools_op_restore_InitPathCapFile_1200";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_1201
+ * @tc.name: tools_op_restore_InitPathCapFile_1201
+ * @tc.desc: test func
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreTest, tools_op_restore_InitPathCapFile_1201, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-begin tools_op_restore_InitPathCapFile_1201";
+    try {
+        string pathCapFile = "/data/backup/tmp";
+        vector<string> bundleNames = {"com.example.app2backup/"};
+        bool depMode = true;
+        int32_t ret = InitPathCapFile(pathCapFile, bundleNames, depMode);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end tools_op_restore_InitPathCapFile_1201";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_1202
+ * @tc.name: tools_op_restore_InitPathCapFile_1202
+ * @tc.desc: test func
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreTest, tools_op_restore_InitPathCapFile_1202, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-begin tools_op_restore_InitPathCapFile_1202";
+    try {
+        string pathCapFile = "/data/backup/tmp";
+        vector<string> bundleNames = {"com.example.app2backup/"};
+        bool depMode = false;
+        int32_t ret = InitPathCapFile(pathCapFile, bundleNames, depMode);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end tools_op_restore_InitPathCapFile_1202";
 }
 
 /**
@@ -766,5 +964,30 @@ HWTEST_F(ToolsOpRestoreTest, tools_op_restore_Exec_1303, testing::ext::TestSize.
         GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end tools_op_restore_Exec_1303";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_1304
+ * @tc.name: tools_op_restore_Exec_1304
+ * @tc.desc: test func
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreTest, tools_op_restore_Exec_1304, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-begin tools_op_restore_Exec_1304";
+    try {
+        map<string, vector<string>> mapArgToVal;
+        mapArgToVal["pathCapFile"] = {"/data/backup/recived/com.example.app2backup/"};
+        mapArgToVal["bundles"] = {"com.example.app2backup/"};
+        int ret = Exec(mapArgToVal);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreTest-end tools_op_restore_Exec_1304";
 }
 } // namespace OHOS::FileManagement::Backup
