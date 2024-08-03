@@ -50,7 +50,7 @@ ohos_unittest("file_permission_test") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
-  defines = []
+  defines = [ "private = public" ]
   if (sandbox_manarer) {
     external_deps += [ "sandbox_manager:libsandbox_manager_sdk" ]
     defines += [ "SANDBOX_MANAGER" ]
