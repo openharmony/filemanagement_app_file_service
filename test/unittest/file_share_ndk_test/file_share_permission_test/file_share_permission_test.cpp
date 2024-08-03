@@ -27,6 +27,7 @@
 #include "accesstoken_kit.h"
 #include "common_func.h"
 #include "error_code.h"
+#include "file_permission.h"
 #include "ipc_skeleton.h"
 #include "log.h"
 #include "oh_file_share.h"
@@ -149,7 +150,7 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_PersistPermission_test_002, Te
     } else {
         EXPECT_EQ(ret, E_EPERM);
         if (result != nullptr) {
-            EXPECT_EQ(INVALID_PATH, result[0].code);
+            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
         } else {
             EXPECT_FALSE(true);
         }
@@ -169,11 +170,29 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_PersistPermission_test_002, Te
 HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_PersistPermission_test_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_003 start";
-    FileShare_PolicyInfo *policies = nullptr;
     unsigned int policiesNum = SET_ZERO;
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
-    FileManagement_ErrCode ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
+    FileManagement_ErrCode ret = OH_FileShare_PersistPermission(nullptr, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    char policyUriChar[] = "file://com.example.filesharea/data/storage/fileShare02.txt";
+    FileShare_PolicyInfo policy = {.uri = policyUriChar,
+                                   .length = sizeof(policyUriChar) - 1,
+                                   .operationMode =
+                                       FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE};
+    FileShare_PolicyInfo policies[] = {policy};
+    ret = OH_FileShare_PersistPermission(policies, policiesNum, nullptr, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, nullptr);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    policiesNum = OHOS::AppFileService::MAX_ARRAY_SIZE + 1;
+    ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
     EXPECT_EQ(ret, E_PARAMS);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_003 end";
@@ -210,7 +229,7 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_PersistPermission_test_004, Te
     } else {
         EXPECT_EQ(ret, E_EPERM);
         if (result != nullptr) {
-            EXPECT_EQ(INVALID_PATH, result[0].code);
+            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
         } else {
             EXPECT_FALSE(true);
         }
@@ -282,7 +301,7 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_RevokePermission_test_002, Tes
     } else {
         EXPECT_EQ(ret, E_EPERM);
         if (result != nullptr) {
-            EXPECT_EQ(INVALID_PATH, result[0].code);
+            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
         } else {
             EXPECT_FALSE(true);
         }
@@ -307,6 +326,25 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_RevokePermission_test_003, Tes
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_RevokePermission(policies, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    char policyUriChar[] = "file://com.example.filesharea/data/storage/fileShare02.txt";
+    FileShare_PolicyInfo policy = {.uri = policyUriChar,
+                                   .length = sizeof(policyUriChar) - 1,
+                                   .operationMode =
+                                       FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE};
+    FileShare_PolicyInfo policiesTwo[] = {policy};
+    ret = OH_FileShare_RevokePermission(policiesTwo, policiesNum, nullptr, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    ret = OH_FileShare_RevokePermission(policiesTwo, policiesNum, &result, nullptr);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    ret = OH_FileShare_RevokePermission(policiesTwo, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    policiesNum = OHOS::AppFileService::MAX_ARRAY_SIZE + 1;
+    ret = OH_FileShare_RevokePermission(policiesTwo, policiesNum, &result, &resultNum);
     EXPECT_EQ(ret, E_PARAMS);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_RevokePermission_test_003 end";
@@ -352,7 +390,7 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_RevokePermission_test_004, Tes
     } else {
         EXPECT_EQ(ret, E_EPERM);
         if (result != nullptr) {
-            EXPECT_EQ(INVALID_PATH, result[0].code);
+            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
         } else {
             EXPECT_FALSE(true);
         }
@@ -424,7 +462,7 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ActivatePermission_test_002, T
     } else {
         EXPECT_EQ(ret, E_EPERM);
         if (result != nullptr) {
-            EXPECT_EQ(INVALID_PATH, result[0].code);
+            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
         } else {
             EXPECT_FALSE(true);
         }
@@ -449,6 +487,25 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ActivatePermission_test_003, T
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_ActivatePermission(policies, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    char policyUriChar[] = "file://com.example.filesharea/data/storage/fileShare02.txt";
+    FileShare_PolicyInfo policy = {.uri = policyUriChar,
+                                   .length = sizeof(policyUriChar) - 1,
+                                   .operationMode =
+                                       FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE};
+    FileShare_PolicyInfo policiesTwo[] = {policy};
+    ret = OH_FileShare_ActivatePermission(policiesTwo, policiesNum, nullptr, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    ret = OH_FileShare_ActivatePermission(policiesTwo, policiesNum, &result, nullptr);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    ret = OH_FileShare_ActivatePermission(policiesTwo, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    policiesNum = OHOS::AppFileService::MAX_ARRAY_SIZE + 1;
+    ret = OH_FileShare_ActivatePermission(policiesTwo, policiesNum, &result, &resultNum);
     EXPECT_EQ(ret, E_PARAMS);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_ActivatePermission_test_003 end";
@@ -494,7 +551,7 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ActivatePermission_test_004, T
     } else {
         EXPECT_EQ(ret, E_EPERM);
         if (result != nullptr) {
-            EXPECT_EQ(INVALID_PATH, result[0].code);
+            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
         } else {
             EXPECT_FALSE(true);
         }
@@ -574,7 +631,7 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_DeactivatePermission_test_002,
     } else {
         EXPECT_EQ(ret, E_EPERM);
         if (result != nullptr) {
-            EXPECT_EQ(INVALID_PATH, result[0].code);
+            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
         } else {
             EXPECT_FALSE(true);
         }
@@ -599,6 +656,25 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_DeactivatePermission_test_003,
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_DeactivatePermission(policies, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    char policyUriChar[] = "file://com.example.filesharea/data/storage/fileShare02.txt";
+    FileShare_PolicyInfo policy = {.uri = policyUriChar,
+                                   .length = sizeof(policyUriChar) - 1,
+                                   .operationMode =
+                                       FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE};
+    FileShare_PolicyInfo policiesTwo[] = {policy};
+    ret = OH_FileShare_DeactivatePermission(policiesTwo, policiesNum, nullptr, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    ret = OH_FileShare_DeactivatePermission(policiesTwo, policiesNum, &result, nullptr);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    ret = OH_FileShare_DeactivatePermission(policiesTwo, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    policiesNum = OHOS::AppFileService::MAX_ARRAY_SIZE + 1;
+    ret = OH_FileShare_DeactivatePermission(policiesTwo, policiesNum, &result, &resultNum);
     EXPECT_EQ(ret, E_PARAMS);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_DeactivatePermission_test_003 end";
@@ -651,7 +727,7 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_DeactivatePermission_test_004,
     } else {
         EXPECT_EQ(ret, E_EPERM);
         if (result != nullptr) {
-            EXPECT_EQ(INVALID_PATH, result[0].code);
+            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
         } else {
             EXPECT_FALSE(true);
         }
@@ -760,6 +836,25 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_CheckPersistentPermission_test
     bool *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    char policyUriChar[] = "file://com.example.filesharea/data/storage/fileShare02.txt";
+    FileShare_PolicyInfo policy = {.uri = policyUriChar,
+                                   .length = sizeof(policyUriChar) - 1,
+                                   .operationMode =
+                                       FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE};
+    FileShare_PolicyInfo policiesTwo[] = {policy};
+    ret = OH_FileShare_CheckPersistentPermission(policiesTwo, policiesNum, nullptr, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    ret = OH_FileShare_CheckPersistentPermission(policiesTwo, policiesNum, &result, nullptr);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    ret = OH_FileShare_CheckPersistentPermission(policiesTwo, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+
+    policiesNum = OHOS::AppFileService::MAX_ARRAY_SIZE + 1;
+    ret = OH_FileShare_CheckPersistentPermission(policiesTwo, policiesNum, &result, &resultNum);
     EXPECT_EQ(ret, E_PARAMS);
     if (result != nullptr) {
         free(result);

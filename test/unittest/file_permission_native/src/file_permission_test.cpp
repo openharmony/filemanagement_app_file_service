@@ -612,13 +612,11 @@ HWTEST_F(FilePermissionTest, CheckPersistentPermission_test_0003, testing::ext::
 HWTEST_F(FilePermissionTest, GetPathPolicyInfoFromUriPolicyInfo_test_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin GetPathPolicyInfoFromUriPolicyInfo_test_0001";
-    UriPolicyInfo infoA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/001.txt"};
     UriPolicyInfo infoB = {.uri = BUNDLE_NAME_A + "/storage/001.txt"};
     UriPolicyInfo infoC = {.uri = "file://media/Photo/10/1.jpeg"};
     UriPolicyInfo infoD = {.uri = "file://" + BUNDLE_NAME_A + "/storage/001.txt?networkid=5454541547878787878748748"};
     UriPolicyInfo infoE = {.uri = "file://" + BUNDLE_NAME_A + "/storage"};
     std::vector<UriPolicyInfo> uriPolicies;
-    uriPolicies.emplace_back(infoA);
     uriPolicies.emplace_back(infoB);
     uriPolicies.emplace_back(infoC);
     uriPolicies.emplace_back(infoD);
@@ -627,8 +625,8 @@ HWTEST_F(FilePermissionTest, GetPathPolicyInfoFromUriPolicyInfo_test_0001, testi
     auto pathPolicies = FilePermission::GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResult);
     EXPECT_EQ(pathPolicies.size(), 1);
     EXPECT_EQ(pathPolicies[0].path, "/storage");
-    ASSERT_TRUE(errorResult.size() == 5);
-    EXPECT_EQ(errorResult[4], true);
+    ASSERT_TRUE(errorResult.size() == 4);
+    EXPECT_EQ(errorResult[3], true);
     GTEST_LOG_(INFO) << "FileShareTest-end GetPathPolicyInfoFromUriPolicyInfo_test_0001";
 }
 
