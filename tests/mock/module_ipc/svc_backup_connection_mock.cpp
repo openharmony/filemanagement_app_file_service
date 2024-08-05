@@ -55,6 +55,11 @@ ErrCode SvcBackupConnection::DisconnectBackupExtAbility()
     return 0;
 }
 
+bool SvcBackupConnection::WaitDisconnectDone()
+{
+    return true;
+}
+
 bool SvcBackupConnection::IsExtAbilityConnected()
 {
     bool bFlag = g_bExtAbilityConnected;
