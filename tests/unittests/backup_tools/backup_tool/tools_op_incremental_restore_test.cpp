@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,7 @@
 
 #include "b_resources/b_constants.h"
 #include "tools_op.h"
-#include "tools_op_incremental_restore.h"
+#include "tools_op_incremental_restore.cpp"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -194,5 +194,595 @@ HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_
         GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_restore_0300";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_0400
+ * @tc.name: SUB_backup_tools_op_incremental_restore_0400
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_0400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_0400";
+    try {
+        auto ctx = make_shared<SessionRestore>();
+        BFileInfo fileInfo;
+        fileInfo.owner = "test";
+        fileInfo.fileName = "/manage.json";
+        fileInfo.sn = 1;
+        UniqueFd fd(open("textFile", O_RDONLY));
+        UniqueFd manifestFd(open("textManifest", O_RDONLY));
+        OnFileReady(ctx, fileInfo, move(fd), move(manifestFd), 0);
+    } catch (BError &e) {
+        EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_0400";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_0500
+ * @tc.name: SUB_backup_tools_op_incremental_restore_0500
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_0500, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_0500";
+    try {
+        auto ctx = make_shared<SessionRestore>();
+        vector<BundleName> bundleNames;
+        bundleNames.push_back("bundle1");
+        bundleNames.push_back("bundle2");
+        vector<string> times = {"100"};
+        int32_t ret = InitRestoreSession(ctx, bundleNames, times);
+        EXPECT_EQ(-EPERM, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_0500";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_0501
+ * @tc.name: SUB_backup_tools_op_incremental_restore_0501
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_0501, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_0501";
+    try {
+        auto ctx = make_shared<SessionRestore>();
+        vector<BundleName> bundleNames;
+        bundleNames.push_back("bundle1");
+        bundleNames.push_back("bundle2");
+        vector<string> times;
+        times.push_back("100");
+        times.push_back("200");
+        int32_t ret = InitRestoreSession(nullptr, bundleNames, times);
+        EXPECT_EQ(-EPERM, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_0501";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_0502
+ * @tc.name: SUB_backup_tools_op_incremental_restore_0502
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_0502, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_0502";
+    try {
+        auto ctx = make_shared<SessionRestore>();
+        vector<BundleName> bundleNames;
+        bundleNames.push_back("bundle1");
+        bundleNames.push_back("bundle2");
+        vector<string> times;
+        times.push_back("10");
+        times.push_back("20");
+        int32_t ret = InitRestoreSession(nullptr, bundleNames, times);
+        EXPECT_EQ(0, ret);
+
+        BFileInfo fileInfo;
+        fileInfo.owner = "test";
+        fileInfo.fileName = "manage.json";
+        fileInfo.sn = 1;
+        UniqueFd fd(open("textFile", O_RDONLY));
+        UniqueFd manifestFd(open("textManifest", O_RDONLY));
+        OnFileReady(ctx, fileInfo, move(fd), move(manifestFd), 0);
+    } catch (BError &e) {
+        EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_0502";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_0600
+ * @tc.name: SUB_backup_tools_op_incremental_restore_0600
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_0600, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_0600";
+    try {
+        auto ctx = make_shared<SessionRestore>();
+        ErrCode err = 0;
+        BundleName name = "bundle";
+        OnBundleStarted(ctx, err, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_0600";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_0601
+ * @tc.name: SUB_backup_tools_op_incremental_restore_0601
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_0601, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_0601";
+    try {
+        auto ctx = make_shared<SessionRestore>();
+        ctx->cnt_ = 1;
+        ErrCode err = -1;
+        BundleName name = "bundle";
+        OnBundleStarted(ctx, err, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_0601";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_0700
+ * @tc.name: SUB_backup_tools_op_incremental_restore_0700
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_0700, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_0700";
+    try {
+        auto ctx = make_shared<SessionRestore>();
+        ctx->cnt_ = 1;
+        ErrCode err = 0;
+        BundleName name = "bundle";
+        OnBundleFinished(ctx, err, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_0700";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_0701
+ * @tc.name: SUB_backup_tools_op_incremental_restore_0701
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_0701, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_0701";
+    try {
+        auto ctx = make_shared<SessionRestore>();
+        ctx->cnt_ = 1;
+        ErrCode err = -1;
+        BundleName name = "bundle";
+        OnBundleFinished(ctx, err, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_0701";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_0800
+ * @tc.name: SUB_backup_tools_op_incremental_restore_0800
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_0800, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_0800";
+    try {
+        auto ctx = make_shared<SessionRestore>();
+        ErrCode err = 0;
+        OnAllBundlesFinished(ctx, err);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_0800";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_0801
+ * @tc.name: SUB_backup_tools_op_incremental_restore_0801
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_0801, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_0801";
+    try {
+        auto ctx = make_shared<SessionRestore>();
+        ErrCode err = -1;
+        OnAllBundlesFinished(ctx, err);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_0801";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_0900
+ * @tc.name: SUB_backup_tools_op_incremental_restore_0900
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_0900, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_0900";
+    try {
+        auto ctx = make_shared<SessionRestore>();
+        OnBackupServiceDied(ctx);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_0900";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_1000
+ * @tc.name: SUB_backup_tools_op_incremental_restore_1000
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_1000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_1000";
+    try {
+        shared_ptr<SessionRestore> restore = nullptr;
+        RestoreApp(restore);
+    } catch (BError &e) {
+        EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_1000";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_1001
+ * @tc.name: SUB_backup_tools_op_incremental_restore_1001
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_1001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_1001";
+    try {
+        shared_ptr<SessionRestore> restore = make_shared<SessionRestore>();
+        restore->session_ = nullptr;
+        RestoreApp(restore);
+    } catch (BError &e) {
+        EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_1001";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_1002
+ * @tc.name: SUB_backup_tools_op_incremental_restore_1002
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_1002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_1002";
+    try {
+        shared_ptr<SessionRestore> restore = make_shared<SessionRestore>();
+        restore->session_ = {};
+        BIncrementalData data("text", 1);
+        restore->lastIncrementalData = {data};
+        RestoreApp(restore);
+        EXPECT_TRUE(true);
+    } catch (BError &e) {
+        EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_1002";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_1100
+ * @tc.name: SUB_backup_tools_op_incremental_restore_1100
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_1100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_1100";
+    try {
+        string pathCapFile = "";
+        vector<string> bundleNames = {"com.example.app2backup/"};
+        bool depMode = true;
+        vector<string> times = {"10"};
+        int32_t ret = Init(pathCapFile, bundleNames, depMode, times);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_1100";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_1101
+ * @tc.name: SUB_backup_tools_op_incremental_restore_1101
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_1101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_1101";
+    try {
+        string pathCapFile = "/data/backup";
+        vector<string> bundleNames = {"com.example.app2backup/"};
+        bool depMode = true;
+        vector<string> times = {"1"};
+        int32_t ret = Init(pathCapFile, bundleNames, depMode, times);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_1101";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_1200
+ * @tc.name: SUB_backup_tools_op_incremental_restore_1200
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_1200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_1200";
+    try {
+        map<string, vector<string>> mapArgToVal;
+        mapArgToVal["depMode"] = {"false"};
+        g_exec(mapArgToVal);
+        EXPECT_EQ(mapArgToVal["depMode"][0], "false");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_1200";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_1201
+ * @tc.name: SUB_backup_tools_op_incremental_restore_1201
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_1201, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_1201";
+    try {
+        map<string, vector<string>> mapArgToVal = {
+            {"pathCapFile", {"path"}},
+            {"bundles", {"bundle1"}},
+            {"incrementalTime", {"time"}}
+        };
+        int ret = g_exec(mapArgToVal);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_1201";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_1202
+ * @tc.name: SUB_backup_tools_op_incremental_restore_1202
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_1202, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_1202";
+    try {
+        map<string, vector<string>> mapArgToVal = {
+            {"bundles", {"bundle1"}},
+            {"incrementalTime", {"time"}}
+        };
+        int ret = g_exec(mapArgToVal);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_1202";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_1203
+ * @tc.name: SUB_backup_tools_op_incremental_restore_1203
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_1203, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_1203";
+    try {
+        map<string, vector<string>> mapArgToVal = {
+            {"pathCapFile", {"path"}},
+            {"bundles", {"bundle1"}},
+            {"incrementalTime", {"time"}},
+            {"depMode", {"true"}}
+        };
+        int ret = g_exec(mapArgToVal);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_1203";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_1204
+ * @tc.name: SUB_backup_tools_op_incremental_restore_1204
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_1204, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_1204";
+    try {
+        map<string, vector<string>> mapArgToVal = {
+            {"pathCapFile", {"path"}},
+            {"incrementalTime", {"time"}}
+        };
+        int ret = g_exec(mapArgToVal);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_1204";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_incremental_restore_1205
+ * @tc.name: SUB_backup_tools_op_incremental_restore_1205
+ * @tc.desc: 测试
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_1205, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-begin SUB_backup_tools_op_incremental_restore_1205";
+    try {
+        map<string, vector<string>> mapArgToVal = {
+            {"pathCapFile", {"path"}},
+            {"bundles", {"bundle1"}}
+        };
+        int ret = g_exec(mapArgToVal);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_1205";
 }
 } // namespace OHOS::FileManagement::Backup
