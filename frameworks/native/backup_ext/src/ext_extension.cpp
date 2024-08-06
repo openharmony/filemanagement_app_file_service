@@ -352,36 +352,26 @@ static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
     return ret;
 }
 
-ErrCode BackupExtExtension::BigFileReady(sptr<IService> proxy)
+ErrCode BackupExtExtension::BigFileReady(const TarMap &bigFileInfo, sptr<IService> proxy)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    UniqueFd fd(open(INDEX_FILE_BACKUP.data(), O_RDONLY));
-    if (fd < 0) {
-        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_BACKUP.c_str(), errno);
-        return BError::GetCodeByErrno(errno);
-    }
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
-    auto cache = cachedEntity.Structuralize();
-    auto pkgInfo = cache.GetExtManageInfo();
-    HILOGI("BigFileReady Begin: pkgInfo file size is: %{public}zu", pkgInfo.size());
+    HILOGI("BigFileReady Begin: bigFileInfo file size is: %{public}zu", bigFileInfo.size());
     ErrCode ret {ERR_OK};
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
-    for (auto &item : pkgInfo) {
-        if (item.hashName.empty() || item.fileName.empty()) {
-            continue;
-        }
+    for (auto &item : bigFileInfo) {
         WaitToSendFd(startTime, fdNum);
         int32_t errCode = ERR_OK;
-        UniqueFd fd(open(item.fileName.data(), O_RDONLY));
+        string fllePath = std::get<0>(item.second);
+        UniqueFd fd(open(fllePath.data(), O_RDONLY));
         if (fd < 0) {
-            HILOGE("open file failed, file name is %{public}s, err = %{public}d", item.fileName.c_str(), errno);
+            HILOGE("open file failed, file name is %{public}s, err = %{public}d", fllePath.c_str(), errno);
             errCode = errno;
         }
 
-        ret = proxy->AppFileReady(item.hashName, std::move(fd), errCode);
+        ret = proxy->AppFileReady(item.first, std::move(fd), errCode);
         if (SUCCEEDED(ret)) {
-            HILOGI("The application is packaged successfully, package name is %{public}s", item.hashName.c_str());
+            HILOGI("The application is packaged successfully, package name is %{public}s", item.first.c_str());
         } else {
             HILOGW("Current file execute app file ready interface failed, ret is:%{public}d", ret);
         }
@@ -501,7 +491,7 @@ static bool IsUserTar(const string &tarFile, const std::vector<ExtManageInfo> &e
     return false;
 }
 
-static pair<TarMap, vector<string>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes)
+static pair<TarMap, map<string, size_t>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto [errCode, files, smallFiles] = BDir::GetBigFiles(includes, excludes);
@@ -537,6 +527,76 @@ static pair<TarMap, vector<string>> GetFileInfos(const vector<string> &includes,
     return {bigFiles, smallFiles};
 }
 
+/**
+ * 全量tar包回传
+ */
+static ErrCode TarFileReady(const TarMap &tarFileInfo, sptr<IService> proxy)
+{
+    if (tarFileInfo.empty()) {
+        HILOGI("TarFileReady: No tar file found");
+        return ERR_OK;
+    }
+    string tarName = tarFileInfo.begin()->first;
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    string tarPath = path + tarName;
+    int32_t errCode = ERR_OK;
+    UniqueFd fd(open(tarPath.data(), O_RDONLY));
+    if (fd < 0) {
+        HILOGE("TarFileReady open file failed, file name is %{public}s, err = %{public}d", tarName.c_str(), errno);
+        errCode = errno;
+    }
+    int ret = proxy->AppFileReady(tarName, std::move(fd), errCode);
+    if (SUCCEEDED(ret)) {
+        HILOGI("TarFileReady: AppFileReady success for %{public}s", tarName.c_str());
+        // 删除文件
+        RemoveFile(tarName);
+    } else {
+        HILOGE("TarFileReady AppFileReady fail to be invoked for %{public}s: ret = %{public}d", tarName.c_str(), ret);
+    }
+    return ret;
+}
+
+void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &tar, sptr<IService> proxy)
+{
+    HILOGI("DoPacket begin, infos count: %{public}zu", srcFiles.size());
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    int64_t totalSize = 0;
+    uint32_t fileCount = 0;
+    vector<string> packFiles;
+    TarFile::GetInstance().SetPacketMode(true); // 设置下打包模式
+    auto startTime = std::chrono::system_clock::now();
+    int fdNum = 0;
+    for (auto small : srcFiles) {
+        totalSize += small.second;
+        fileCount += 1;
+        packFiles.emplace_back(small.first);
+        if (totalSize >= DEFAULT_SLICE_SIZE || fileCount >= MAX_FILE_COUNT) {
+            TarMap tarMap {};
+            TarFile::GetInstance().Packet(packFiles, "part", path, tarMap);
+            tar.insert(tarMap.begin(), tarMap.end());
+            // 执行tar包回传功能
+            WaitToSendFd(startTime, fdNum);
+            TarFileReady(tarMap, proxy);
+            totalSize = 0;
+            fileCount = 0;
+            packFiles.clear();
+            fdNum += FILE_AND_MANIFEST_FD_COUNT;
+            RefreshTimeInfo(startTime, fdNum);
+        }
+    }
+    if (fileCount > 0) {
+        // 打包回传
+        TarMap tarMap {};
+        TarFile::GetInstance().Packet(packFiles, "part", path, tarMap);
+        TarFileReady(tarMap, proxy);
+        fdNum = 1;
+        WaitToSendFd(startTime, fdNum);
+        tar.insert(tarMap.begin(), tarMap.end());
+        packFiles.clear();
+        RefreshTimeInfo(startTime, fdNum);
+    }
+}
+
 int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -557,6 +617,11 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
     vector<string> includes = usrConfig.GetIncludes();
     vector<string> excludes = usrConfig.GetExcludes();
 
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
+    }
+
     // 大文件处理
     HILOGI("Start packet bigfiles and small files");
     auto [bigFileInfo, smallFiles] = GetFileInfos(includes, excludes);
@@ -567,21 +632,22 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
         }
     }
 
+    // 回传大文件
+    HILOGI("Will notify BigFileReady");
+    auto res = BigFileReady(bigFileInfo, proxy);
+
     HILOGI("Start packet Tar files");
-    // 分片打包
+    // 分片打包， 回传tar包
     TarMap tarMap {};
-    TarFile::GetInstance().Packet(smallFiles, "part", path, tarMap);
+    DoPacket(smallFiles, tarMap, proxy);
     bigFileInfo.insert(tarMap.begin(), tarMap.end());
-    auto proxy = ServiceProxy::GetInstance();
-    if (proxy == nullptr) {
-        throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
-    }
+    HILOGI("Do backup, DoPacket end");
+
     HILOGI("Will notify IndexFileReady");
     if (auto ret = IndexFileReady(bigFileInfo, proxy); ret) {
         return ret;
     }
-    HILOGI("Will notify BigFileReady");
-    auto res = BigFileReady(proxy);
+
     HILOGI("HandleBackup finish, ret = %{public}d", res);
     return res;
 }
