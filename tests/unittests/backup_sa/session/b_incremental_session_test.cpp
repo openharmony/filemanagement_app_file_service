@@ -168,6 +168,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0400, testing::e
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
         EXPECT_CALL(*proxy, Release()).WillOnce(Return(0));
+        EXPECT_CALL(*proxy, AsObject()).WillOnce(Return(nullptr));
         ServiceProxy::serviceProxy_ = proxy;
         err = backupSession->Release();
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
@@ -291,6 +292,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0800, testing::e
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
         EXPECT_CALL(*proxy, Release()).WillOnce(Return(0));
+        EXPECT_CALL(*proxy, AsObject()).WillOnce(Return(nullptr));
         ServiceProxy::serviceProxy_ = proxy;
         err = restoreSession->Release();
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
@@ -602,6 +604,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1800, testing::e
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
         EXPECT_CALL(*proxy, Release()).WillOnce(Return(0));
+        EXPECT_CALL(*proxy, AsObject()).WillOnce(Return(nullptr));
         ServiceProxy::serviceProxy_ = proxy;
         err = restoreAsyncSession->Release();
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
