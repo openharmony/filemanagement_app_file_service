@@ -125,6 +125,11 @@ ErrCode BSessionRestoreAsync::Release()
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
+    auto remoteObject = proxy->AsObject();
+    if (remoteObject != nullptr) {
+        remoteObject->RemoveDeathRecipient(deathRecipient_);
+    }
+    deathRecipient_ = nullptr;
 
     return proxy->Release();
 }
