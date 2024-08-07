@@ -237,9 +237,6 @@ HWTEST_F(NDKFileUriTest, get_path_from_uri_test_007, TestSize.Level1)
     fileUriStr += "data/storage/el2/base/haps/entry/files/GetPathFromUri006.txt";
     fileUriStr += "?networkid=64799ecdf70788e396f454ff4a6e6ae4b09e20227c39c21f6e67a2aacbcef7b9";
     const char *fileUri = fileUriStr.c_str();
-    std::string filePathUri = "/data/storage/el2/share/r/" + bundleB;
-    filePathUri += "/data/storage/el2/distributedfiles/.remote_share/";
-    filePathUri += "data/storage/el2/base/haps/entry/files/GetPathFromUri006.txt";
     char *result = nullptr;
     unsigned int length = fileUriStr.size();
     FileManagement_ErrCode ret = OH_FileUri_GetPathFromUri(nullptr, length, &result);
@@ -410,7 +407,7 @@ HWTEST_F(NDKFileUriTest, is_valid_uri_test_003, TestSize.Level1)
     bool flags = OH_FileUri_IsValidUri(nullptr, length);
     EXPECT_EQ(flags, false);
 
-    flags = OH_FileUri_IsValidUri(nullptr, length - 1);
+    flags = OH_FileUri_IsValidUri(fileUri, length - 1);
     EXPECT_EQ(flags, false);
     GTEST_LOG_(INFO) << "is_valid_uri_test_003";
 }
