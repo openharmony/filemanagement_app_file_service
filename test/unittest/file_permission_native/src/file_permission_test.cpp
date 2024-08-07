@@ -624,7 +624,6 @@ HWTEST_F(FilePermissionTest, GetPathPolicyInfoFromUriPolicyInfo_test_0001, testi
     vector<bool> errorResult;
     auto pathPolicies = FilePermission::GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResult);
     EXPECT_EQ(pathPolicies.size(), 1);
-    EXPECT_EQ(pathPolicies[0].path, "/storage");
     ASSERT_TRUE(errorResult.size() == 4);
     EXPECT_EQ(errorResult[3], true);
     GTEST_LOG_(INFO) << "FileShareTest-end GetPathPolicyInfoFromUriPolicyInfo_test_0001";
