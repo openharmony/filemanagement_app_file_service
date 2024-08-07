@@ -53,7 +53,7 @@ static void CallDone(const std::string &&name)
 
 void SvcBackupConnectionTest::SetUpTestCase()
 {
-    backupCon_ = sptr(new SvcBackupConnection(CallDied, CallDone));
+    backupCon_ = sptr(new SvcBackupConnection(CallDied, CallDone, "com.example.app"));
     castMock = std::make_shared<IfaceCastMock>();
     IfaceCastMock::cast = castMock;
 }

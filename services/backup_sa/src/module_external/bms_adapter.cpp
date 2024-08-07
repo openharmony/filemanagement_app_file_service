@@ -22,6 +22,7 @@
 
 #include "b_error/b_error.h"
 #include "b_file_info.h"
+#include "b_jsonutil/b_jsonutil.h"
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
@@ -47,7 +48,6 @@ const string LINUX_HAP_CODE_PATH = "2";
 const string MEDIA_LIBRARY_HAP = "com.ohos.medialibrary.medialibrarydata";
 const string EXTERNAL_FILE_HAP = "com.ohos.UserFile.ExternalFileManager";
 const int E_ERR = -1;
-const int SINGLE_BUNDLE_NUM = 1;
 const vector<string> dataDir = {"app", "local", "distributed", "database", "cache"};
 } // namespace
 
@@ -95,7 +95,8 @@ static int64_t GetBundleStats(const string &bundleName, int32_t userId)
     }
     auto bms = GetBundleManager();
     vector<int64_t> bundleStats;
-    bool res = bms->GetBundleStats(bundleName, userId, bundleStats);
+    BJsonUtil::BundleDetailInfo bundleDetailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
+    bool res = bms->GetBundleStats(bundleDetailInfo.bundleName, userId, bundleStats, bundleDetailInfo.bundleIndex);
     if (!res || bundleStats.size() != dataDir.size()) {
         HILOGE("An error occurred in querying bundle stats. name:%{public}s", bundleName.c_str());
         return 0;
@@ -122,25 +123,20 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
             continue;
         }
         AppExecFwk::BundleInfo installedBundle;
-        if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
-            if (bundleNames.size() != SINGLE_BUNDLE_NUM) {
-                HILOGE("bundleName:%{public}s, current bundle info for backup/restore is empty", bundleName.c_str());
-                continue;
-            }
-            throw BError(BError::Codes::SA_BUNDLE_INFO_EMPTY, "Failed to get bundle info");
-        }
-        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
-            installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
-            HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
+        std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos;
+        bool getBundleSuccess = GetCurBundleExtenionInfo(installedBundle, bundleName, extensionInfos, bms, userId);
+        if (!getBundleSuccess) {
+            HILOGE("Get current extension failed");
             continue;
         }
         auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo] =
-            GetAllowAndExtName(installedBundle.extensionInfos);
+            GetAllowAndExtName(extensionInfos);
         int64_t dataSize = 0;
         if (allToBackup) {
             dataSize = GetBundleStats(installedBundle.name, userId);
         }
-        bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
+        bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.appIndex,
+                                                              installedBundle.versionCode,
                                                               installedBundle.versionName, dataSize, 0, allToBackup,
                                                               fullBackupOnly, extName, restoreDeps, supportScene,
                                                               extraInfo});
@@ -258,6 +254,7 @@ static bool GenerateBundleStatsIncrease(int32_t userId, const vector<string> &bu
         std::string curBundleName = bundleInfos[i].name;
         HILOGD("BundleMgrAdapter name for %{public}s", curBundleName.c_str());
         BJsonEntityCaps::BundleInfo newBundleInfo = {.name = curBundleName,
+                                                     .appIndex = bundleInfos[i].appIndex,
                                                      .versionCode = bundleInfos[i].versionCode,
                                                      .versionName = bundleInfos[i].versionName,
                                                      .spaceOccupied = pkgFileSizes[i],
@@ -284,16 +281,14 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         auto bundleName = bundleNameTime.bundleName;
         HILOGD("Begin get bundleName:%{private}s", bundleName.c_str());
         AppExecFwk::BundleInfo installedBundle;
-        if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
-            throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle info");
-        }
-        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
-            installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
-            HILOGI("Unsupported applications, name : %{private}s", installedBundle.name.data());
+        std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos;
+        bool getBundleSuccess = GetCurBundleExtenionInfo(installedBundle, bundleName, extensionInfos, bms, userId);
+        if (!getBundleSuccess) {
+            HILOGE("Failed to get bundle info from bms, bundleName:%{public}s", bundleName.c_str());
             continue;
         }
         struct BJsonEntityCaps::BundleBackupConfigPara backupPara;
-        if (!GetBackupExtConfig(installedBundle.extensionInfos, backupPara)) {
+        if (!GetBackupExtConfig(extensionInfos, backupPara)) {
             HILOGE("No backup extension ability found");
             continue;
         }
@@ -301,7 +296,8 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
             backupPara.excludes)) {
             continue;
         }
-        bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
+        bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.appIndex,
+                                                              installedBundle.versionCode,
                                                               installedBundle.versionName, 0, 0,
                                                               backupPara.allToBackup, backupPara.fullBackupOnly,
                                                               backupPara.extensionName,
@@ -342,9 +338,9 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo] =
             GetAllowAndExtName(installedBundle.extensionInfos);
         if (!allToBackup) {
-            bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
-                installedBundle.versionName, 0, 0, allToBackup, fullBackupOnly, extName, restoreDeps, supportScene,
-                extraInfo});
+            bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.appIndex,
+                installedBundle.versionCode, installedBundle.versionName, 0, 0, allToBackup, fullBackupOnly, extName,
+                restoreDeps, supportScene, extraInfo});
             continue;
         }
         auto it = std::find_if(extraIncreData.begin(), extraIncreData.end(),
@@ -405,7 +401,7 @@ std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForSA()
     int32_t ret = samgrProxy->GetExtensionSaIds(BConstants::EXTENSION_BACKUP, saIds);
     HILOGI("GetExtensionSaIds ret: %{public}d", ret);
     for (auto saId : saIds) {
-        saBundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {std::to_string(saId), 0, "", 0, 0, true, false,
+        saBundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {std::to_string(saId), 0, 0, "", 0, 0, true, false,
             "", "", "", ""});
     }
     return saBundleInfos;
@@ -435,7 +431,38 @@ void BundleMgrAdapter::GetBundleInfoForSA(std::string bundleName, std::vector<BJ
         HILOGE("SA %{public}d is not surport backup.", saId);
         return;
     }
-    bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {bundleName, 0, "", 0, 0, true, false, "", "", "", ""});
+    bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {bundleName, 0, 0, "", 0, 0, true, false, "", "", "", ""});
     HILOGI("SA %{public}s GetBundleInfo end.", bundleName.c_str());
+}
+
+bool BundleMgrAdapter::GetCurBundleExtenionInfo(AppExecFwk::BundleInfo &installedBundle,
+    const std::string &bundleName, std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos,
+    sptr<AppExecFwk::IBundleMgr> bms, int32_t userId)
+{
+    BJsonUtil::BundleDetailInfo bundleDetailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
+    int32_t flags = static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY) |
+        static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
+    ErrCode ret = bms->GetCloneBundleInfo(bundleDetailInfo.bundleName, flags, bundleDetailInfo.bundleIndex,
+        installedBundle, userId);
+    if (ret != ERR_OK) {
+        HILOGE("bundleName:%{public}s, ret:%{public}d, current bundle info for backup/restore is empty",
+            bundleName.c_str(), ret);
+        return false;
+    }
+    if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+        installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
+        HILOGE("Unsupported applications, name : %{public}s", installedBundle.name.data());
+        return false;
+    }
+    HILOGI("bundleName:%{public}s, hapMoudleInfos size:%{public}zu", bundleName.c_str(),
+        installedBundle.hapModuleInfos.size());
+    std::vector<AppExecFwk::HapModuleInfo> hapModuleInfos = installedBundle.hapModuleInfos;
+    for (auto &hapModuleInfo : hapModuleInfos) {
+        extensionInfos.insert(extensionInfos.end(), hapModuleInfo.extensionInfos.begin(),
+            hapModuleInfo.extensionInfos.end());
+    }
+    HILOGI("bundleName:%{public}s, extensionInfos size:%{public}zu", bundleName.c_str(), extensionInfos.size());
+    return true;
 }
 } // namespace OHOS::FileManagement::Backup

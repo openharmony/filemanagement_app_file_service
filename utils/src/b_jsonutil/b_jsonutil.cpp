@@ -28,11 +28,10 @@ namespace {
     const static std::string BUNDLE_INDEX_SPLICE = ":";
 }
 
-BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string &bundleNameStr,
-    const std::string &patternInfo)
+BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string &bundleNameStr)
 {
     HILOGI("Start parse bundle name and index");
-    size_t hasPos = bundleNameStr.find(patternInfo);
+    size_t hasPos = bundleNameStr.find(BUNDLE_INDEX_SPLICE);
     BundleDetailInfo bundleDetailInfo;
     if (hasPos == std::string::npos) {
         bundleDetailInfo.bundleName = bundleNameStr;
@@ -74,7 +73,7 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
             bundleNamesOnly.emplace_back(bundleName);
         } else {
             std::string bundleNameSplit = bundleName.substr(0, pos);
-            std::string indexSplit = bundleName.substr(pos, bundleName.size() - 1);
+            std::string indexSplit = bundleName.substr(pos + 1);
             int index = std::stoi(indexSplit);
             bundleNameOnly = bundleNameSplit;
             bundleIndex = index;
@@ -82,7 +81,7 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
         }
         std::string bundleInfo = bundleInfos[i];
         ParseBundleInfoJson(bundleInfo, bundleDetailInfos, bundleNameOnly, bundleIndex, userId);
-        bundleNameDetailMap[bundleNameOnly] = bundleDetailInfos;
+        bundleNameDetailMap[bundleName] = bundleDetailInfos;
     }
     HILOGI("End BuildBundleInfos");
     return bundleNameDetailMap;
@@ -179,5 +178,16 @@ bool BJsonUtil::BuildRestoreErrInfo(std::string &jsonStr, int errCode, std::stri
     cJSON_Delete(info);
     cJSON_free(data);
     return true;
+}
+
+std::string BJsonUtil::BuildBundleNameIndexInfo(const std::string &bundleName, int appIndex)
+{
+    std::string result = bundleName;
+    if (appIndex == BUNDLE_INDEX_DEFAULT_VAL) {
+        return result;
+    }
+    result += BUNDLE_INDEX_SPLICE;
+    result += std::to_string(appIndex);
+    return result;
 }
 }

@@ -668,7 +668,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtConnection_0100, tes
         }
 
         BackupExtInfo info;
-        info.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr));
+        info.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr, BUNDLE_NAME));
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
         auto ret = sessionManagerPtr_->GetExtConnection(BUNDLE_NAME);
@@ -1764,7 +1764,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_ClearSessionData_0100, tes
         BackupExtInfo info;
         info.timerStatus = true;
         info.schedAction = BConstants::ServiceSchedAction::RUNNING;
-        info.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr));
+        info.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr, BUNDLE_NAME));
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
