@@ -94,6 +94,11 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
     }
 
     MessageParcel data;
+    const auto interfaceToken = APP_FOUNDATION_SERVICE;
+    if (!data.WriteInterfaceToken(interfaceToken)) {
+        HILOGI("write WriteInterfaceToken failed");
+        return DisposeErr::IPC_FAIL;
+    }
     if (!data.WriteString16(Str8ToStr16(bundleName))) {
         HILOGI("write ownerInfo and bundleName failed");
         return DisposeErr::IPC_FAIL;
@@ -101,11 +106,6 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
 
     if (!data.WriteRemoteObject(this)) {
         HILOGI("write RemoteObject failed");
-        return DisposeErr::IPC_FAIL;
-    }
-    const auto interfaceToken = APP_FOUNDATION_SERVICE;
-    if (!data.WriteInterfaceToken(interfaceToken)) {
-        HILOGI("write WriteInterfaceToken failed");
         return DisposeErr::IPC_FAIL;
     }
 
