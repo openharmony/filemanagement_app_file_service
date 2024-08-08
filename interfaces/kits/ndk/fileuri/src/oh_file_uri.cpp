@@ -84,7 +84,7 @@ FileManagement_ErrCode OH_FileUri_GetFullDirectoryUri(const char *uri, unsigned 
 bool OH_FileUri_IsValidUri(const char *uri, unsigned int length)
 {
     if (uri == nullptr || strlen(uri) != length) {
-        return ERR_PARAMS;
+        return false;
     }
     std::string uriStr(uri, length);
     OHOS::AppFileService::ModuleFileUri::FileUri fileUri(uriStr);
