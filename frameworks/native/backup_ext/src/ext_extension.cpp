@@ -141,14 +141,14 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
     size_t filePathPrefix = filePath.find_last_of(BConstants::FILE_SEPARATOR_CHAR);
     if (filePathPrefix == string::npos) {
         HILOGE("GetFileHandleForSpecialCloneCloud: Invalid fileName");
-        throw BError(BError::Codes::EXT_INVAL_ARG, fileName);
+        return UniqueFd(-1);
     }
     string path = filePath.substr(0, filePathPrefix);
     if (access(path.c_str(), F_OK) != 0) {
         bool created = ForceCreateDirectory(path.data());
         if (!created) {
-            string str = string("Failed to create restore folder.");
-            throw BError(BError::Codes::EXT_INVAL_ARG, str);
+            HILOGE("Failed to create restore folder.");
+            return UniqueFd(-1);
         }
     }
     UniqueFd fd(open(fileName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
@@ -214,43 +214,47 @@ static string GetReportFileName(const string &fileName)
 
 static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
 {
+    HILOGI("extension:GetIncreFileHandleForSpecialVersion, filename:%{public}s", fileName.c_str());
+    ErrCode errCode = ERR_OK;
     UniqueFd fd = GetFileHandleForSpecialCloneCloud(fileName);
     if (fd < 0) {
         HILOGE("Failed to open file = %{private}s, err = %{public}d", fileName.c_str(), errno);
-        throw BError(BError::Codes::EXT_INVAL_ARG, string("open tar file failed"));
+        errCode = errno;
     }
 
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
-        string str = string("Failed to create restore folder. ").append(std::generic_category().message(errno));
-        throw BError(BError::Codes::EXT_INVAL_ARG, str);
+        HILOGE("Failed to create restore folder : %{private}s, err = %{public}d", path.c_str(), errno);
+        errCode = errno;
     }
     string reportName = path + BConstants::BLANK_REPORT_NAME;
     UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
     if (reportFd < 0) {
         HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
-        throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
+        errCode = errno;
     }
 
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
+        HILOGE("Failed to get file handle for special version clone");
+        return BError(BError::Codes::EXT_BROKEN_BACKUP_SA).GetCode();
     }
-    auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd), ERR_OK);
+    auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd), errCode);
     if (ret != ERR_OK) {
         HILOGE("Failed to AppIncrementalFileReady %{public}d", ret);
     }
     return ERR_OK;
 }
 
-static string GetIncrementalFileHandlePath()
+static string GetIncrementalFileHandlePath(const string &fileName)
 {
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
         string str = string("Failed to create restore folder. ").append(std::generic_category().message(errno));
         throw BError(BError::Codes::EXT_INVAL_ARG, str);
     }
-    return path;
+    string tarName = path + fileName;
+    return tarName;
 }
 
 ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
@@ -262,19 +266,18 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
                 extension_->GetExtensionAction());
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
-        HILOGI("extension: Start GetIncrementalFileHandle");
         VerifyCaller();
 
         if (extension_->SpecialVersionForCloneAndCloud()) {
             return GetIncreFileHandleForSpecialVersion(fileName);
         }
-        HILOGI("extension: single to single fileName:%{public}s", GetAnonyPath(fileName).c_str());
-        string path = GetIncrementalFileHandlePath();
-        string tarName = path + fileName;
-        if (access(tarName.c_str(), F_OK) == 0) {
-            throw BError(BError::Codes::EXT_INVAL_ARG, string("The file already exists"));
-        }
+        HILOGI("extension: GetIncrementalFileHandle single to single Name:%{public}s", GetAnonyPath(fileName).c_str());
+        string tarName = GetIncrementalFileHandlePath(fileName);
         int32_t errCode = ERR_OK;
+        if (access(tarName.c_str(), F_OK) == 0) {
+            HILOGE("The file already exists, tarname = %{private}s, err =%{public}d", tarName.c_str(), errno);
+            errCode = errno;
+        }
         UniqueFd fd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("Failed to open tar file = %{private}s, err = %{public}d", tarName.c_str(), errno);
@@ -283,7 +286,8 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
         // 对应的简报文件
         string reportName = GetReportFileName(tarName);
         if (access(reportName.c_str(), F_OK) == 0) {
-            throw BError(BError::Codes::EXT_INVAL_ARG, string("The report file already exists"));
+            HILOGE("The report file already exists, Name = %{private}s, err =%{public}d", reportName.c_str(), errno);
+            errCode = errno;
         }
         UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (reportFd < 0) {
@@ -303,24 +307,29 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
     } catch (...) {
         HILOGE("Failed to get incremental file handle");
         DoClear();
-        return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
     }
 }
 
 ErrCode BackupExtExtension::HandleClear()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("begin clear");
-    if (extension_ == nullptr) {
-        HILOGE("Failed to handle clear, extension is nullptr");
-        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
+    try {
+        HILOGI("begin clear");
+        if (extension_ == nullptr) {
+            HILOGE("Failed to handle clear, extension is nullptr");
+            return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
+        }
+        if (extension_->GetExtensionAction() == BConstants::ExtensionAction::INVALID) {
+            return BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid").GetCode();
+        }
+        VerifyCaller();
+        DoClear();
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to handle clear");
+        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
     }
-    if (extension_->GetExtensionAction() == BConstants::ExtensionAction::INVALID) {
-        return BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid").GetCode();
-    }
-    VerifyCaller();
-    DoClear();
-    return ERR_OK;
 }
 
 static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
@@ -482,7 +491,7 @@ ErrCode BackupExtExtension::HandleBackup()
             .GetCode();
     }
     AsyncTaskOnBackup();
-    return 0;
+    return ERR_OK;
 }
 
 static bool IsUserTar(const string &tarFile, const std::vector<ExtManageInfo> &extManageInfo)
@@ -1293,29 +1302,33 @@ void BackupExtExtension::AsyncTaskOnBackup()
 ErrCode BackupExtExtension::HandleRestore()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    VerifyCaller();
-    if (extension_ == nullptr) {
-        HILOGE("Failed to handle restore, extension is nullptr");
-        throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
-    }
-    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
-        HILOGE("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
-        throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
-    }
-    // read backup_config is allow to backup or restore
-    if (!extension_->AllowToBackupRestore()) {
-        HILOGE("Application does not allow backup or restore");
-        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
-            .GetCode();
-    }
+    try {
+        VerifyCaller();
+        if (extension_ == nullptr) {
+            HILOGE("Failed to handle restore, extension is nullptr");
+            return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
+        }
+        if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
+            HILOGE("Failed to get file handle, because action is %{public}d invalid", extension_->GetExtensionAction());
+            return BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid").GetCode();
+        }
+        // read backup_config is allow to backup or restore
+        if (!extension_->AllowToBackupRestore()) {
+            HILOGE("Application does not allow backup or restore");
+            return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+                .GetCode();
+        }
 
-    // async do restore.
-    if (extension_->WasFromSpecialVersion() && extension_->RestoreDataReady()) {
-        HILOGI("Restore directly when upgrading.");
-        AsyncTaskRestoreForUpgrade();
+        // async do restore.
+        if (extension_->WasFromSpecialVersion() && extension_->RestoreDataReady()) {
+            HILOGI("Restore directly when upgrading.");
+            AsyncTaskRestoreForUpgrade();
+        }
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to handle restore");
+        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
     }
-
-    return 0;
 }
 
 static bool CheckTar(const string &fileName)
@@ -1397,22 +1410,27 @@ void BackupExtExtension::CompareFiles(UniqueFd incrementalFd,
 
 ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
 {
-    HILOGI("Start HandleIncrementalBackup");
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    if (extension_ == nullptr) {
-        HILOGE("Failed to handle incremental backup, extension is nullptr");
-        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
+    try {
+        HILOGI("Start HandleIncrementalBackup");
+        if (extension_ == nullptr) {
+            HILOGE("Failed to handle incremental backup, extension is nullptr");
+            return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
+        }
+        string usrConfig = extension_->GetUsrConfig();
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
+        auto cache = cachedEntity.Structuralize();
+        if (!cache.GetAllowToBackupRestore()) {
+            HILOGE("Application does not allow backup or restore");
+            return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+                .GetCode();
+        }
+        AsyncTaskDoIncrementalBackup(move(incrementalFd), move(manifestFd));
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to handle incremental backup");
+        return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
     }
-    string usrConfig = extension_->GetUsrConfig();
-    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
-    auto cache = cachedEntity.Structuralize();
-    if (!cache.GetAllowToBackupRestore()) {
-        HILOGE("Application does not allow backup or restore");
-        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
-            .GetCode();
-    }
-    AsyncTaskDoIncrementalBackup(move(incrementalFd), move(manifestFd));
-    return 0;
 }
 
 ErrCode BackupExtExtension::IncrementalOnBackup()
@@ -1431,7 +1449,7 @@ ErrCode BackupExtExtension::IncrementalOnBackup()
             .GetCode();
     }
     AsyncTaskOnIncrementalBackup();
-    return 0;
+    return ERR_OK;
 }
 
 tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
@@ -1840,15 +1858,20 @@ ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
 
 ErrCode BackupExtExtension::UpdateFdSendRate(std::string &bundleName, int32_t sendRate)
 {
-    std::lock_guard<std::mutex> lock(updateSendRateLock_);
-    HILOGI("Update SendRate, bundleName:%{public}s, sendRate:%{public}d", bundleName.c_str(), sendRate);
-    VerifyCaller();
-    bundleName_ = bundleName;
-    sendRate_ = sendRate;
-    if (sendRate > 0) {
-        startSendFdRateCon_.notify_one();
+    try {
+        std::lock_guard<std::mutex> lock(updateSendRateLock_);
+        HILOGI("Update SendRate, bundleName:%{public}s, sendRate:%{public}d", bundleName.c_str(), sendRate);
+        VerifyCaller();
+        bundleName_ = bundleName;
+        sendRate_ = sendRate;
+        if (sendRate > 0) {
+            startSendFdRateCon_.notify_one();
+        }
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to UpdateFdSendRate");
+        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
     }
-    return ERR_OK;
 }
 
 std::function<void(ErrCode, std::string)> BackupExtExtension::RestoreResultCallbackEx(wptr<BackupExtExtension> obj)
