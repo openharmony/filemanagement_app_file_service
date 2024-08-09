@@ -38,7 +38,6 @@ using namespace std;
 static tuple<bool, string> GetConfigParameterValue(const string &key, uint32_t len)
 {
     int handle = static_cast<int>(FindParameter(key.c_str()));
-    HILOGI("start get config param value.");
     if (handle == -1) {
         HILOGI("Fail to find parameter.");
         return {false, ""};
@@ -50,7 +49,6 @@ static tuple<bool, string> GetConfigParameterValue(const string &key, uint32_t l
             HILOGI("Fail to get parameter value.");
             return {false, ""};
         }
-        HILOGI("end get config param value.");
         return {true, buffer.get()};
     } catch (const bad_alloc &e) {
         HILOGE("Fail to get parameter value: %{public}s.", e.what());

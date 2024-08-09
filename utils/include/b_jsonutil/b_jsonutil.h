@@ -34,11 +34,10 @@ public:
      * @brief 带有拼接字符的bundleName按照拼接字符进行分割
      *
      * @param bundleNameStr bundleName拼接index的字符串
-     * @param patternInfo 拼接字符串
      *
      * @return 分割好的结果赋值给结构体
      */
-    static BundleDetailInfo ParseBundleNameIndexStr (const std::string &bundleNameStr, const std::string &patternInfo);
+    static BundleDetailInfo ParseBundleNameIndexStr (const std::string &bundleNameStr);
 
     /**
      * @brief 将传进来的bundleNames的集合进行按照拼接字符分割处理
@@ -94,6 +93,16 @@ public:
      *
      */
     static bool BuildRestoreErrInfo(std::string &jsonStr, int errCode, std::string errMsg);
+
+    /**
+     * @brief 拼接包名和分身对应的索引
+     *
+     * @param bundleName 包名
+     * @param bundleIndex 索引
+     *
+     * @return 拼接结果
+     */
+    static std::string BuildBundleNameIndexInfo(const std::string &bundleName, int bundleIndex);
 };
 } // namespace OHOS::FileManagement::Backup
 

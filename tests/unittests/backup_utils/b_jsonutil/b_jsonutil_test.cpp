@@ -56,8 +56,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext::T
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin b_dir_GetDirFiles_0100";
     try {
         std::string bundleName = "com.hos.app01:1";
-        std::string pattern = ":";
-        BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName, pattern);
+        BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
         EXPECT_EQ("com.hos.app01", detailInfo.bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -80,8 +79,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0200, testing::ext::T
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin ParseBundleNameIndexStr_0200";
     try {
         std::string bundleName = "com.hos.app01";
-        std::string pattern = ":";
-        BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName, pattern);
+        BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
         EXPECT_EQ("com.hos.app01", detailInfo.bundleName);
     } catch (...) {
         EXPECT_TRUE(false);

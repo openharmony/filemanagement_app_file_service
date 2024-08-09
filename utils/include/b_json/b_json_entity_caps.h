@@ -24,6 +24,7 @@ class BJsonEntityCaps : public BJsonEntity {
 public:
     struct BundleInfo {
         std::string name;
+        int appIndex;
         int64_t versionCode;
         std::string versionName;
         int64_t spaceOccupied;
@@ -74,6 +75,7 @@ public:
         for (const auto &item : bundleInfos) {
             Json::Value arrObj;
             arrObj["name"] = item.name;
+            arrObj["appIndex"] = item.appIndex;
             arrObj["versionCode"] = item.versionCode;
             arrObj["versionName"] = item.versionName;
             arrObj["spaceOccupied"] = item.spaceOccupied;
@@ -210,7 +212,11 @@ public:
             if (item.isMember("fullBackupOnly") && item["fullBackupOnly"].isBool()) {
                 fullBackupOnly = item["fullBackupOnly"].asBool();
             }
-            bundleInfos.emplace_back(BundleInfo {item["name"].asString(), item["versionCode"].asInt64(),
+            int appIndex = 0;
+            if (item.isMember("appIndex") && item["appIndex"].isInt()) {
+                appIndex = item["appIndex"].asInt();
+            }
+            bundleInfos.emplace_back(BundleInfo {item["name"].asString(), appIndex, item["versionCode"].asInt64(),
                                                  item["versionName"].asString(), item["spaceOccupied"].asInt64(),
                                                  increSpaceOccupied,
                                                  item["allToBackup"].asBool(), fullBackupOnly,
