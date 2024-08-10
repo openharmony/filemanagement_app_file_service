@@ -27,6 +27,7 @@ ohos_unittest("file_share_permission_ndk_test") {
   include_dirs = [
     "include",
     "${app_file_service_path}/interfaces/kits/ndk/fileshare/include",
+    "${app_file_service_path}/interfaces/kits/ndk/fileshare/src",
     "//third_party/googletest/include",
   ]
   resource_config_file = "../../resource/ohos_test.xml"

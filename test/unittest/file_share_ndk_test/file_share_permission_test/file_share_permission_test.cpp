@@ -30,7 +30,7 @@
 #include "file_permission.h"
 #include "ipc_skeleton.h"
 #include "log.h"
-#include "oh_file_share.h"
+#include "oh_file_share.cpp"
 #include "parameter.h"
 #include "sandbox_helper.h"
 #include "uri.h"
@@ -915,5 +915,284 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_CheckPersistentPermission_test
         free(result);
     }
     GTEST_LOG_(INFO) << "OH_FileShare_CheckPersistentPermission_test_004 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_ConvertPolicyInfo_0100
+ * @tc.desc: Test function of OH_FileShare_ConvertPolicyInfo_0100() interface for no permission.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ConvertPolicyInfo_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyInfo_0100 start";
+    char policyUriChar[] = "file://com.example.filesharea/storage";
+    FileShare_PolicyInfo policy = {
+        .uri = policyUriChar,
+        .length = sizeof(policyUriChar) - 1,
+        .operationMode = FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE
+    };
+    FileShare_PolicyInfo policies[] = {policy};
+    int policiesNum = sizeof(policies) / sizeof(policies[0]);
+    std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
+    bool ret = ConvertPolicyInfo(policies, policiesNum, uriPolicies);
+    EXPECT_TRUE(ret);
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyInfo_0100 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_ConvertPolicyInfo_0200
+ * @tc.desc: Test function of OH_FileShare_ConvertPolicyInfo_0200() interface for no permission.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ConvertPolicyInfo_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyInfo_0200 start";
+    FileShare_PolicyInfo policy = {
+        .uri = nullptr,
+        .length = 1,
+        .operationMode = FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE
+    };
+    FileShare_PolicyInfo policies[] = {policy};
+    int policiesNum = 1;
+    std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
+    bool ret = ConvertPolicyInfo(policies, policiesNum, uriPolicies);
+    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyInfo_0200 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_ConvertPolicyInfo_0300
+ * @tc.desc: Test function of OH_FileShare_ConvertPolicyInfo_0300() interface for no permission.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ConvertPolicyInfo_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyInfo_0300 start";
+    char policyUriChar[] = "file://com.example.filesharea/storage";
+    FileShare_PolicyInfo policy = {
+        .uri = policyUriChar,
+        .length = 0,
+        .operationMode = FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE
+    };
+    FileShare_PolicyInfo policies[] = {policy};
+    int policiesNum = 1;
+    std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
+    bool ret = ConvertPolicyInfo(policies, policiesNum, uriPolicies);
+    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyInfo_0300 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_ConvertPolicyInfo_0400
+ * @tc.desc: Test function of OH_FileShare_ConvertPolicyInfo_0400() interface for no permission.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ConvertPolicyInfo_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyInfo_0400 start";
+    char policyUriChar[] = "file://com.example.filesharea/storage";
+    FileShare_PolicyInfo policy = {
+        .uri = policyUriChar,
+        .length = sizeof(policyUriChar) + 1,
+        .operationMode = FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE
+    };
+    FileShare_PolicyInfo policies[] = {policy};
+    int policiesNum = sizeof(policies) / sizeof(policies[0]);
+    std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
+    bool ret = ConvertPolicyInfo(policies, policiesNum, uriPolicies);
+    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyInfo_0400 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_ConvertPolicyErrorResult_0100
+ * @tc.desc: Test function of OH_FileShare_ConvertPolicyErrorResult_0100() interface for no permission.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ConvertPolicyErrorResult_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResult_0100 start";
+    std::deque<OHOS::AppFileService::PolicyErrorResult> errorResults;
+    FileShare_PolicyErrorResult *result = nullptr;
+    unsigned int resultNum = 0;
+    bool ret = ConvertPolicyErrorResult(errorResults, &result, resultNum);
+    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResult_0100 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_ConvertPolicyErrorResult_0200
+ * @tc.desc: Test function of OH_FileShare_ConvertPolicyErrorResult_0200() interface for no permission.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ConvertPolicyErrorResult_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResult_0200 start";
+    std::deque<OHOS::AppFileService::PolicyErrorResult> errorResults;
+    for (int32_t i = 0; i <= FOO_MAX_LEN + 1; i++) {
+        OHOS::AppFileService::PolicyErrorResult errorResult;
+        errorResults.push_back(errorResult);
+    }
+    FileShare_PolicyErrorResult *result = nullptr;
+    unsigned int resultNum = 0;
+    bool ret = ConvertPolicyErrorResult(errorResults, &result, resultNum);
+    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResult_0200 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_ConvertPolicyErrorResult_0300
+ * @tc.desc: Test function of OH_FileShare_ConvertPolicyErrorResult_0300() interface for no permission.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ConvertPolicyErrorResult_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResult_0300 start";
+    std::deque<OHOS::AppFileService::PolicyErrorResult> errorResults;
+    OHOS::AppFileService::PolicyErrorResult errorResult;
+    errorResults.push_back(errorResult);
+    FileShare_PolicyErrorResult *result = nullptr;
+    unsigned int resultNum = 0;
+    bool ret = ConvertPolicyErrorResult(errorResults, &result, resultNum);
+    EXPECT_TRUE(ret);
+    if (result[0].uri != nullptr) {
+        free(result[0].uri);
+    }
+    if (result[0].message != nullptr) {
+        free(result[0].message);
+    }
+    if (result != nullptr) {
+        free(result);
+    }
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResult_0300 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_ConvertPolicyErrorResult_0400
+ * @tc.desc: Test function of OH_FileShare_ConvertPolicyErrorResult_0400() interface for no permission.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ConvertPolicyErrorResult_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResult_0400 start";
+    std::deque<OHOS::AppFileService::PolicyErrorResult> errorResults;
+    OHOS::AppFileService::PolicyErrorResult errorResult;
+    errorResult.uri = "uri";
+    errorResult.message = "message";
+    errorResults.push_back(errorResult);
+    FileShare_PolicyErrorResult *result = nullptr;
+    unsigned int resultNum = 0;
+    bool ret = ConvertPolicyErrorResult(errorResults, &result, resultNum);
+    EXPECT_TRUE(ret);
+    if (result[0].uri != nullptr) {
+        free(result[0].uri);
+    }
+    if (result[0].message != nullptr) {
+        free(result[0].message);
+    }
+    if (result != nullptr) {
+        free(result);
+    }
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResult_0400 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_ConvertPolicyErrorResultBool_0100
+ * @tc.desc: Test function of OH_FileShare_ConvertPolicyErrorResultBool_0100() interface for no permission.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ConvertPolicyErrorResultBool_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResultBool_0100 start";
+    std::vector<bool> errorResults;
+    bool *result = nullptr;
+    bool ret = ConvertPolicyErrorResultBool(errorResults, &result);
+    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResultBool_0100 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_ConvertPolicyErrorResultBool_0200
+ * @tc.desc: Test function of OH_FileShare_ConvertPolicyErrorResultBool_0200() interface for no permission.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ConvertPolicyErrorResultBool_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResultBool_0200 start";
+    std::vector<bool> errorResults(FOO_MAX_LEN + 1, true);
+    bool *result = nullptr;
+    bool ret = ConvertPolicyErrorResultBool(errorResults, &result);
+    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResultBool_0200 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_ConvertPolicyErrorResultBool_0300
+ * @tc.desc: Test function of OH_FileShare_ConvertPolicyErrorResultBool_0300() interface for no permission.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ConvertPolicyErrorResultBool_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResultBool_0300 start";
+    std::vector<bool> errorResults(1, true);
+    bool *result = nullptr;
+    bool ret = ConvertPolicyErrorResultBool(errorResults, &result);
+    EXPECT_TRUE(ret);
+    if (result != nullptr) {
+        free(result);
+    }
+    GTEST_LOG_(INFO) << "OH_FileShare_ConvertPolicyErrorResultBool_0300 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_ErrorCodeConversion_0100
+ * @tc.desc: Test function of OH_FileShare_ErrorCodeConversion_0100() interface for no permission.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ErrorCodeConversion_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_ErrorCodeConversion_0100 start";
+    EXPECT_EQ(ErrorCodeConversion(static_cast<int32_t>(E_NO_ERROR)), E_NO_ERROR);
+    EXPECT_EQ(ErrorCodeConversion(static_cast<int32_t>(E_PERMISSION)), E_PERMISSION);
+    EXPECT_EQ(ErrorCodeConversion(static_cast<int32_t>(E_PARAMS)), E_PARAMS);
+    EXPECT_EQ(ErrorCodeConversion(EPERM), E_EPERM);
+    EXPECT_EQ(ErrorCodeConversion(-EPERM), E_UNKNOWN_ERROR);
+    GTEST_LOG_(INFO) << "OH_FileShare_ErrorCodeConversion_0100 end";
 }
 } // namespace OHOS::AppFileService::ModuleFileSharePermission
