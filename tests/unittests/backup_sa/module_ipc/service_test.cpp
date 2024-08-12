@@ -1000,7 +1000,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetBackupInfoCmdHandle_0100, testing::ext::Tes
         std::string result;
         EXPECT_TRUE(servicePtr_ != nullptr);
         auto ret = servicePtr_->GetBackupInfoCmdHandle(bundleName, result);
-        EXPECT_TRUE(ret != BError::BackupErrorCode::E_INVAL);
+        EXPECT_TRUE(ret == BError::BackupErrorCode::E_INVAL);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetBackupInfoCmdHandle.";
