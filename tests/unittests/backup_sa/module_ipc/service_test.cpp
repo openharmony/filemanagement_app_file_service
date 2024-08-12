@@ -442,6 +442,43 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0102, testing::ext::TestSize.Level1)
 }
 
 /**
+ * @tc.number: SUB_Service_ServiceResultReport_0000
+ * @tc.name: SUB_Service_ServiceResultReport_0000
+ * @tc.desc: 测试 ServiceResultReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_ServiceResultReport_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ServiceResultReport_0000";
+    try {
+        GTEST_LOG_(INFO) << "SUB_Service_ServiceResultReport Branches Start";
+        string bundleName = "";
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        auto ret = servicePtr_->ServiceResultReport("test", BackupRestoreScenario::FULL_RESTORE, 0);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+        ret = servicePtr_->ServiceResultReport("test", BackupRestoreScenario::INCREMENTAL_RESTORE, 0);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+        ret = servicePtr_->ServiceResultReport("test", BackupRestoreScenario::FULL_BACKUP, 0);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+        ret = servicePtr_->ServiceResultReport("test", BackupRestoreScenario::INCREMENTAL_BACKUP, 0);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+        ret = servicePtr_->ServiceResultReport("test", static_cast<BackupRestoreScenario>(1000), 0);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by ServiceResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ServiceResultReport_0000";
+}
+
+/**
  * @tc.number: SUB_Service_LaunchBackupExtension_0100
  * @tc.name: SUB_Service_LaunchBackupExtension_0100
  * @tc.desc: 测试 LaunchBackupExtension 接口
@@ -944,5 +981,30 @@ HWTEST_F(ServiceTest, SUB_Service_UpdateTimer_0100, testing::ext::TestSize.Level
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by UpdateTimer.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_UpdateTimer_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_GetBackupInfoCmdHandle_0100
+ * @tc.name: SUB_Service_GetBackupInfoCmdHandle_0100
+ * @tc.desc: 测试 GetBackupInfoCmdHandle 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetBackupInfoCmdHandle_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetBackupInfoCmdHandle_0100";
+    try {
+        std::string bundleName = "com.example.app2backup";
+        std::string result;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        auto ret = servicePtr_->GetBackupInfoCmdHandle(bundleName, result);
+        EXPECT_TRUE(ret != BError::BackupErrorCode::E_INVAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetBackupInfoCmdHandle.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetBackupInfoCmdHandle_0100";
 }
 } // namespace OHOS::FileManagement::Backup
