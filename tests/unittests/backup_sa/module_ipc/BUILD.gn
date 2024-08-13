@@ -143,6 +143,7 @@ ohos_unittest("backup_service_test") {
     blocklist = "${path_backup}/cfi_blocklist.txt"
   }
 
+  defines = [ "private=public" ]
   use_exceptions = true
 }
 
