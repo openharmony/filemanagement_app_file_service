@@ -30,13 +30,13 @@ public:
     virtual ~IExtension() = default;
     virtual UniqueFd GetFileHandle(const std::string &fileName, int32_t &errCode) = 0;
     virtual ErrCode HandleClear() = 0;
-    virtual ErrCode HandleBackup() = 0;
+    virtual ErrCode HandleBackup(bool isClearData) = 0;
     virtual ErrCode PublishFile(const std::string &fileName) = 0;
-    virtual ErrCode HandleRestore() = 0;
+    virtual ErrCode HandleRestore(bool isClearData) = 0;
     virtual ErrCode GetIncrementalFileHandle(const std::string &fileName) = 0;
     virtual ErrCode PublishIncrementalFile(const std::string &fileName) = 0;
     virtual ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) = 0;
-    virtual ErrCode IncrementalOnBackup() = 0;
+    virtual ErrCode IncrementalOnBackup(bool isClearData) = 0;
     virtual std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() = 0;
     virtual ErrCode GetBackupInfo(std::string &result) = 0;
     virtual ErrCode UpdateFdSendRate(std::string &bundleName, int32_t sendRate) = 0;

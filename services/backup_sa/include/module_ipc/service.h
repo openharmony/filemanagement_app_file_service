@@ -318,12 +318,13 @@ private:
      * @param restoreBundleInfos 待恢复的应用
      * @param restoreBundleNames 待恢复的应用包信息
      * @param bundleNameDetailMap bundle和detail的对应关系
+     * @param isClearDataFlags 清理数据标志集合
      * @param restoreType 任务类型
      */
     void SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
         std::vector<std::string> &restoreBundleNames,
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-        RestoreTypeEnum restoreType);
+        std::map<std::string, bool> &isClearDataFlags, RestoreTypeEnum restoreType);
 
     /**
      * @brief set session info

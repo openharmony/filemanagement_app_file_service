@@ -466,9 +466,10 @@ ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
     }
 }
 
-ErrCode BackupExtExtension::HandleBackup()
+ErrCode BackupExtExtension::HandleBackup(bool isClearData)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    SetClearDataFlag(isClearData);
     if (extension_ == nullptr) {
         HILOGE("Failed to handle backup, extension is nullptr");
         return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
@@ -872,8 +873,12 @@ static void RestoreBigFiles(bool appendTargetPath)
     HILOGI("End Restore Big Files");
 }
 
-static void DeleteBackupTars()
+void BackupExtExtension::DeleteBackupTars()
 {
+    if (!isClearData_) {
+        HILOGI("configured not clear data.");
+        return;
+    }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     UniqueFd fd(open(INDEX_FILE_RESTORE.data(), O_RDONLY));
     if (fd < 0) {
@@ -901,8 +906,12 @@ static void DeleteBackupTars()
     HILOGI("End execute DeleteBackupTars");
 }
 
-static void DeleteBackupIncrementalTars()
+void BackupExtExtension::DeleteBackupIncrementalTars()
 {
+    if (!isClearData_) {
+        HILOGI("configured not clear data.");
+        return;
+    }
     UniqueFd fd(open(INDEX_FILE_RESTORE.data(), O_RDONLY));
     if (fd < 0) {
         HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_RESTORE.c_str(), errno);
@@ -937,6 +946,19 @@ static void DeleteBackupIncrementalTars()
     }
 }
 
+void BackupExtExtension::HandleSpecialVersionRestore(wptr<BackupExtExtension> obj)
+{
+    auto ptr = obj.promote();
+    BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+    auto ret = RestoreFilesForSpecialCloneCloud();
+    if (ret == ERR_OK) {
+        ptr->AsyncTaskRestoreForUpgrade();
+    } else {
+        ptr->AppDone(ret);
+        ptr->DoClear();
+    }
+}
+
 void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
     const std::vector<ExtManageInfo> extManageInfo)
 {
@@ -947,13 +969,7 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
         try {
             int ret = ERR_OK;
             if (ptr->extension_->SpecialVersionForCloneAndCloud()) {
-                ret = RestoreFilesForSpecialCloneCloud();
-                if (ret == ERR_OK) {
-                    ptr->AsyncTaskRestoreForUpgrade();
-                } else {
-                    ptr->AppDone(ret);
-                    ptr->DoClear();
-                }
+                ptr->HandleSpecialVersionRestore(obj);
                 return;
             }
             // 解压
@@ -967,7 +983,7 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
             bool appendTargetPath =
                 ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpecialVersionForCloneAndCloud();
             RestoreBigFiles(appendTargetPath);
-            DeleteBackupTars();
+            ptr->DeleteBackupTars();
             if (ret == ERR_OK) {
                 ptr->AsyncTaskRestoreForUpgrade();
             } else {
@@ -1012,7 +1028,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
             RestoreBigFiles(appendTargetPath);
 
             // delete 1.tar/manage.json
-            DeleteBackupIncrementalTars();
+            ptr->DeleteBackupIncrementalTars();
 
             if (ret == ERR_OK) {
                 HILOGI("after extra, do incremental restore.");
@@ -1198,6 +1214,10 @@ void BackupExtExtension::DoClear()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        if (!isClearData_) {
+            HILOGI("configured not clear data.");
+            return;
+        }
         string backupCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
         string restoreCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
 
@@ -1224,7 +1244,11 @@ void BackupExtExtension::AppDone(ErrCode errCode)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("AppDone Begin.");
     auto proxy = ServiceProxy::GetInstance();
-    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+    if (proxy == nullptr) {
+        HILOGE("Failed to obtain the ServiceProxy handle");
+        DoClear();
+        return;
+    }
     auto ret = proxy->AppDone(errCode);
     if (ret != ERR_OK) {
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
@@ -1290,10 +1314,11 @@ void BackupExtExtension::AsyncTaskOnBackup()
     });
 }
 
-ErrCode BackupExtExtension::HandleRestore()
+ErrCode BackupExtExtension::HandleRestore(bool isClearData)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     VerifyCaller();
+    SetClearDataFlag(isClearData);
     if (extension_ == nullptr) {
         HILOGE("Failed to handle restore, extension is nullptr");
         throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
@@ -1415,9 +1440,10 @@ ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, Uniq
     return 0;
 }
 
-ErrCode BackupExtExtension::IncrementalOnBackup()
+ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    SetClearDataFlag(isClearData);
     if (extension_ == nullptr) {
         HILOGE("Failed to handle incremental onBackup, extension is nullptr");
         return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
@@ -1799,7 +1825,11 @@ void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
 {
     HILOGI("Begin");
     auto proxy = ServiceProxy::GetInstance();
-    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+        if (proxy == nullptr) {
+        HILOGE("Failed to obtain the ServiceProxy handle");
+        DoClear();
+        return;
+    }
     auto ret = proxy->AppIncrementalDone(errCode);
     if (ret != ERR_OK) {
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
@@ -2013,6 +2043,20 @@ void BackupExtExtension::RefreshTimeInfo(std::chrono::system_clock::time_point &
         HILOGI("RefreshTimeInfo Begin, fdSendNum is:%{public}d", fdSendNum);
         startTime = std::chrono::system_clock::now();
         fdSendNum = 0;
+    }
+}
+
+void BackupExtExtension::SetClearDataFlag(bool isClearData)
+{
+    isClearData_ = isClearData;
+    HILOGI("set clear data flag:%{public}d", isClearData);
+    if (extension_ == nullptr) {
+        HILOGE("Extension handle have been released");
+        return;
+    }
+    extension_->SetClearDataFlag(isClearData);
+    if (!extension_->WasFromSpecialVersion() && !extension_->RestoreDataReady()) {
+        DoClear();
     }
 }
 } // namespace OHOS::FileManagement::Backup
