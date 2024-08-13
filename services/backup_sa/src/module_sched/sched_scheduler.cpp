@@ -83,7 +83,7 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
             HILOGE("Extension connect failed = %{public}s", bundleName.data());
             auto ptr = reversePtr.promote();
             if (ptr) {
-                ptr->ExtConnectFailed(bundleName, BError(BError::Codes::SA_BOOT_TIMEOUT));
+                ptr->ExtConnectFailed(bundleName, BError(BError::Codes::SA_BOOT_EXT_TIMEOUT));
             }
         };
         auto iTime = extTime_.Register(callStart, BConstants::EXT_CONNECT_MAX_TIME, true);
