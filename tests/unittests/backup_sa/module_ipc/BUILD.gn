@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ohos_unittest("module_ipc_test") {
@@ -245,6 +246,7 @@ ohos_unittest("backup_service_session_test") {
   ]
 
   deps = [
+    "${app_file_service_path}/services/backup_sa:backup_sa",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
