@@ -29,29 +29,9 @@
 #include "tokenid_kit.h"
 
 const int32_t FOO_MAX_LEN = sizeof(FileShare_PolicyErrorResult) * OHOS::AppFileService::MAX_ARRAY_SIZE;
-const std::string FILE_ACCESS_PERSIST_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
-const std::string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
 
 using Exec = std::function<int(const std::vector<OHOS::AppFileService::UriPolicyInfo> &uriPolicies,
                                std::deque<struct OHOS::AppFileService::PolicyErrorResult> &errorResults)>;
-static bool CheckPermission(const std::string &permission)
-{
-    OHOS::Security::AccessToken::AccessTokenID tokenCaller = OHOS::IPCSkeleton::GetCallingTokenID();
-    return OHOS::Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
-           OHOS::Security::AccessToken::PermissionState::PERMISSION_GRANTED;
-}
-
-static bool CheckFileManagerFullMountEnable()
-{
-    char value[] = "false";
-    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER.c_str(), "false", value, sizeof(value));
-    if (retSystem > 0 && !strcmp(value, "true")) {
-        LOGI("The full mount enable parameter is true");
-        return true;
-    }
-    LOGI("The full mount enable parameter is false");
-    return false;
-}
 
 static bool ConvertPolicyInfo(const FileShare_PolicyInfo *policies,
                               int policyNum,
@@ -173,12 +153,6 @@ static FileManagement_ErrCode ExecAction(const FileShare_PolicyInfo *policies,
                                          Exec exec)
 {
     (*resultNum) = 0;
-    if (!CheckFileManagerFullMountEnable()) {
-        return E_DEVICE_NOT_SUPPORT;
-    }
-    if (!CheckPermission(FILE_ACCESS_PERSIST_PERMISSION)) {
-        return E_PERMISSION;
-    }
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (!ConvertPolicyInfo(policies, policyNum, uriPolicies)) {
         return E_PARAMS;
@@ -274,12 +248,6 @@ FileManagement_ErrCode OH_FileShare_CheckPersistentPermission(const FileShare_Po
         return E_PARAMS;
     }
     *resultNum = 0;
-    if (!CheckFileManagerFullMountEnable()) {
-        return E_DEVICE_NOT_SUPPORT;
-    }
-    if (!CheckPermission(FILE_ACCESS_PERSIST_PERMISSION)) {
-        return E_PERMISSION;
-    }
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (!ConvertPolicyInfo(policies, policyNum, uriPolicies)) {
         return E_PARAMS;
