@@ -24,6 +24,7 @@
 #include <unordered_map>
 
 #include "remote_file_share.h"
+#include "remote_file_share.cpp"
 
 namespace {
     using namespace std;
@@ -597,6 +598,11 @@ namespace {
         deviceId = "";
         ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
         EXPECT_EQ(ret, EINVAL);
+
+        networkId = "";
+        deviceId = "";
+        ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
+        EXPECT_EQ(ret, EINVAL);
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_TransRemoteUriToLocal_0016";
     }
 
@@ -639,5 +645,22 @@ namespace {
         ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
         EXPECT_NE(ret, EINVAL);
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end remote_file_share_test_0017";
+    }
+
+    /**
+     * @tc.name: remote_file_share_test_0000
+     * @tc.desc: Test function of RemoteFileShare() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: SR000H63TL
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_DeleteShareDir_0000, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_DeleteShareDir_0000";
+        string packagePath = "/data/filetest";
+        string sharePath = "/data/filetest";
+        EXPECT_EQ(true, DeleteShareDir(packagePath, sharePath));
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_DeleteShareDir_0000";
 }
 }
