@@ -14,41 +14,41 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 
-ohos_unittest("file_share_permission_ndk_test") {
+ohos_unittest("file_share_no_permission_ndk_sup_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
     integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "${app_file_service_path}/cfi_blocklist.txt"
   }
 
   module_out_path = "filemanagement/app_file_service"
   include_dirs = [
     "include",
     "${app_file_service_path}/interfaces/kits/ndk/fileshare/include",
-    "${app_file_service_path}/interfaces/kits/ndk/fileshare/src",
+    "${app_file_service_path}/tests/mock/parameter_mock/include",
     "//third_party/googletest/include",
   ]
-  resource_config_file = "../../resource/ohos_test.xml"
-  sources = [ "file_share_permission_test.cpp" ]
+
+  sources = [
+    "${app_file_service_path}/interfaces/kits/ndk/fileshare/src/oh_file_share.cpp",
+    "${app_file_service_path}/tests/mock/parameter_mock/src/parameter_mock.cpp",
+    "file_share_nopermission_sup_test.cpp",
+  ]
   external_deps = [
-    "ability_base:base",
-    "ability_base:want",
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
-    "access_token:libnativetoken",
-    "access_token:libtoken_setproc",
     "c_utils:utils",
-    "common_event_service:cesfwk_innerkits",
+    "file_api:filemgmt_libn",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "samgr:samgr_proxy",
   ]
+
   deps = [
     "${app_file_service_path}/interfaces/innerkits/native:fileshare_native",
-    "${app_file_service_path}/interfaces/kits/ndk/fileshare/src:ohfileshare",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]

@@ -397,6 +397,74 @@ namespace {
     }
 
     /**
+     * @tc.name: Remote_file_share_GetDfsUriFromLocal_0012
+     * @tc.desc: Test function of GetDfsUriFromLocal() interface for FAILURE.
+     *           the file name is chinese which has been encoded
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7KDF7
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetDfsUriFromLocal_0012, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_GetDfsUriFromLocal_0012";
+        string uriStr = "datashare://media/Photo/12/IMG_12345_0011/test.jpg";
+        const int userId = 100;
+
+        HmdfsUriInfo hui;
+        auto ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
+        EXPECT_EQ(ret, -EINVAL);
+
+        uriStr = "datashare://media/Photo/12/IMG_12345_0011/test.jpg/others";
+        ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
+        EXPECT_EQ(ret, -EINVAL);
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0012";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetDfsUriFromLocal_0013
+     * @tc.desc: Test function of GetDfsUriFromLocal() interface for SUCCESS.
+     *           the file name is chinese which has been encoded
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7KDF7
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetDfsUriFromLocal_0013, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_GetDfsUriFromLocal_0013";
+        const string uriStr = "file://media/Photo/12/IMG_12345_0011/test.jpg";
+        const int userId = 100;
+
+        HmdfsUriInfo hui;
+        auto ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
+        EXPECT_NE(ret, 0);
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0013";
+    }
+
+        /**
+     * @tc.name: Remote_file_share_GetDfsUriFromLocal_0014
+     * @tc.desc: Test function of GetDfsUriFromLocal() interface for SUCCESS.
+     *           the file name is chinese which has been encoded
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7KDF7
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetDfsUriFromLocal_0014, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_GetDfsUriFromLocal_0014";
+        const string uriStr = "file://docs/storage/Users/currentUser/Documents/1.txt";
+        const int userId = 100;
+
+        HmdfsUriInfo hui;
+        auto ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(hui.fileSize, 0);
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0014";
+    }
+
+    /**
      * @tc.name: remote_file_share_test_0012
      * @tc.desc: Test function of TransRemoteUriToLocal() interface for SUCCESS.
      * @tc.size: MEDIUM
@@ -502,4 +570,74 @@ namespace {
 
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_TransRemoteUriToLocal_0015";
     }
+
+    /**
+     * @tc.name: remote_file_share_test_0016
+     * @tc.desc: Test function of TransRemoteUriToLocal() interface for FAILURE.
+     *           the inpute param is invalid
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7KDF7
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_TransRemoteUriToLocal_0016, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_TransRemoteUriToLocal_0016";
+        const vector<string> uriList = {"FILE://docs/storage/Users/currentUser/Document/1.txt",
+                                        "file://docs/storage/Users/currentUser/Download/Subject/2.jpg",
+                                        "file://docs/storage/Users/currentUser/Document/Subject1/Subject2/1.txt",
+                                        "file://docs/storage/100/account/Document/Subject1/Subject2/1.txt"};
+        string networkId = "";
+        string deviceId = "001";
+        vector<string> resultList;
+        int ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
+        EXPECT_EQ(ret, EINVAL);
+        
+        networkId = "100";
+        deviceId = "";
+        ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
+        EXPECT_EQ(ret, EINVAL);
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_TransRemoteUriToLocal_0016";
+    }
+
+    /**
+     * @tc.name: remote_file_share_test_0017
+     * @tc.desc: Test function of TransRemoteUriToLocal() interface for FAILURE.
+     *           the inpute param is invalid
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7KDF7
+     */
+    HWTEST_F(RemoteFileShareTest, remote_file_share_test_0017, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  remote_file_share_test_0017";
+        vector<string> uriList = {"file://docs/storage/Users/currentUser/./Document/1.txt"};
+        const string networkId = "100";
+        const string deviceId = "001";
+        vector<string> resultList;
+        int ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
+        EXPECT_NE(ret, EINVAL);
+        
+        uriList[0].clear();
+        uriList[0] = "datashare://docs/storage/Users/currentUser/Document/1.txt";
+        ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
+        EXPECT_NE(ret, EINVAL);
+
+        uriList[0].clear();
+        uriList[0] = "file://media/Photo/12/IMG_12345_0011/test.jpg";
+        ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
+        EXPECT_NE(ret, EINVAL);
+
+        uriList[0].clear();
+        uriList[0] = "file://docs/test/";
+        ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
+        EXPECT_NE(ret, EINVAL);
+
+        uriList[0].clear();
+        uriList[0] = "file://docs/storage/";
+        ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
+        EXPECT_NE(ret, EINVAL);
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end remote_file_share_test_0017";
+}
 }

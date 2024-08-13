@@ -287,16 +287,27 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
     } catch (const BError &e) {
         StopAll(nullptr, true);
         return e.GetCode();
+    } catch (const exception &e) {
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
+        return EPERM;
+    } catch (...) {
+        HILOGI("Unexpected exception");
+        return EPERM;
     }
 }
 
 ErrCode Service::Start()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    VerifyCaller(session_->GetScenario());
-    session_->Start();
-    OnStartSched();
-    return BError(BError::Codes::OK);
+    try {
+        VerifyCaller(session_->GetScenario());
+        session_->Start();
+        OnStartSched();
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        HILOGE("Failde to Start");
+        return e.GetCode();
+    }
 }
 
 static bool SpecialVersion(const string &versionName)
@@ -644,10 +655,15 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
 ErrCode Service::Finish()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    VerifyCaller(session_->GetScenario());
-    session_->Finish();
-    OnAllBundlesFinished(BError(BError::Codes::OK));
-    return BError(BError::Codes::OK);
+    try {
+        VerifyCaller(session_->GetScenario());
+        session_->Finish();
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        HILOGE("Failde to Finish");
+        return e.GetCode();
+    }
 }
 
 ErrCode Service::PublishFile(const BFileInfo &fileInfo)

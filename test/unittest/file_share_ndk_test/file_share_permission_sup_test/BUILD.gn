@@ -14,24 +14,31 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 
-ohos_unittest("file_share_permission_ndk_test") {
+ohos_unittest("file_share_permission_ndk_sup_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
     integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "${app_file_service_path}/cfi_blocklist.txt"
   }
 
   module_out_path = "filemanagement/app_file_service"
   include_dirs = [
     "include",
     "${app_file_service_path}/interfaces/kits/ndk/fileshare/include",
-    "${app_file_service_path}/interfaces/kits/ndk/fileshare/src",
+    "${app_file_service_path}/tests/mock/file_permission_native_mock/include",
+    "${app_file_service_path}/tests/mock/parameter_mock/include",
     "//third_party/googletest/include",
   ]
   resource_config_file = "../../resource/ohos_test.xml"
-  sources = [ "file_share_permission_test.cpp" ]
+  sources = [
+    "${app_file_service_path}/interfaces/kits/ndk/fileshare/src/oh_file_share.cpp",
+    "${app_file_service_path}/tests/mock/file_permission_native_mock/src/file_permission_mock.cpp",
+    "${app_file_service_path}/tests/mock/parameter_mock/src/parameter_mock.cpp",
+    "file_share_permission_sup_test.cpp",
+  ]
   external_deps = [
     "ability_base:base",
     "ability_base:want",
@@ -48,7 +55,6 @@ ohos_unittest("file_share_permission_ndk_test") {
   ]
   deps = [
     "${app_file_service_path}/interfaces/innerkits/native:fileshare_native",
-    "${app_file_service_path}/interfaces/kits/ndk/fileshare/src:ohfileshare",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]

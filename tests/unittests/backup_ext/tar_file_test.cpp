@@ -104,6 +104,13 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0100, testing::ext::TestSize.Level1)
         bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap);
         EXPECT_TRUE(tarMap.empty());
         EXPECT_FALSE(ret);
+
+        TestManager tm("SUB_Tar_File_Packet_0100");
+        string root = tm.GetRootDirCurTest();
+        pkPath = root;
+        ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap);
+        EXPECT_TRUE(tarMap.empty());
+        EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "TarFileTest-an exception occurred by TarFile.";
