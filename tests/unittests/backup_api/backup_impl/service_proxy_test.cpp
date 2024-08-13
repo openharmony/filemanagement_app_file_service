@@ -295,6 +295,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_ServiceResultReport_0100, testing::
     BackupRestoreScenario scenario = FULL_BACKUP;
     int32_t result = proxy_->ServiceResultReport(restoreRetInfo, scenario, BError(BError::Codes::OK));
     EXPECT_EQ(result, BError(BError::Codes::OK));
+
     result = proxy_->ServiceResultReport(restoreRetInfo, scenario, BError(BError::Codes::OK));
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_ServiceResultReport_0100";
@@ -449,6 +450,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesDetailsBackupSession_0
 
     int32_t result = proxy_->AppendBundlesDetailsBackupSession(bundleNames, detailInfos);
     EXPECT_EQ(result, BError(BError::Codes::OK));
+    
     result = proxy_->AppendBundlesDetailsBackupSession(bundleNames, detailInfos);
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppendBundlesDetailsBackupSession_0100";
