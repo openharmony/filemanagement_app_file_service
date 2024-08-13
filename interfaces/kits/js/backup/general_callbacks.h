@@ -43,7 +43,8 @@ public:
           onBundleEnd(env, thisPtr, jsCallbacks.GetProp("onBundleEnd")),
           onAllBundlesEnd(env, thisPtr, jsCallbacks.GetProp("onAllBundlesEnd")),
           onBackupServiceDied(env, thisPtr, jsCallbacks.GetProp("onBackupServiceDied")),
-          onResultReport(env, thisPtr, jsCallbacks.GetProp("onResultReport")) {};
+          onResultReport(env, thisPtr, jsCallbacks.GetProp("onResultReport")),
+          onProcess(env, thisPtr, jsCallbacks.GetProp("onProcess")) {};
 
 public:
     LibN::NAsyncWorkCallback onFileReady;
@@ -52,6 +53,7 @@ public:
     LibN::NAsyncWorkCallback onAllBundlesEnd;
     LibN::NAsyncWorkCallback onBackupServiceDied;
     BackupRestoreCallback onResultReport;
+    LibN::NAsyncWorkCallback onProcess;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // INTERFACES_KITS_JS_SRC_MOD_BACKUP_PROPERTIES_GENERAL_CALLBACKS_H

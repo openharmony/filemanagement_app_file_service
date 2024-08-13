@@ -42,6 +42,7 @@ private:
     ErrCode CmdIncrementalOnBackup(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdGetIncrementalBackupFileHandle(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply);
+    ErrCode CmdGetProcessInfo(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdUpdateFdSendRate(MessageParcel &data, MessageParcel &reply);
 
 private:

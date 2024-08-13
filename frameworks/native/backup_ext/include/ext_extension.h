@@ -32,6 +32,7 @@
 #include "i_service.h"
 #include "tar_file.h"
 #include "thread_pool.h"
+#include "timer.h"
 #include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -51,6 +52,7 @@ public:
     ErrCode IncrementalOnBackup() override;
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
     ErrCode GetBackupInfo(std::string &result) override;
+    ErrCode GetBundleProcessInfo();
     ErrCode UpdateFdSendRate(std::string &bundleName, int32_t sendRate) override;
 
     void AsyncTaskRestoreForUpgrade(void);
@@ -110,6 +112,14 @@ private:
      * @param restoreRetInfo app restore reportInfo
      */
     void AppResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario,
+        ErrCode errCode = 0);
+
+    /**
+     * @brief extension backup restore is done
+     *
+     * @param restoreRetInfo app restore reportInfo
+     */
+    void ReportAppProcessInfo(const std::string restoreRetInfo, BackupRestoreScenario scenario,
         ErrCode errCode = 0);
 
     /**
@@ -198,15 +208,16 @@ private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
     std::string backupInfo_;
+    std::string bundleProcessInfo_;
     OHOS::ThreadPool threadPool_;
     std::mutex updateSendRateLock_;
-    std::atomic<bool> isStopSendFd_ {false};
     std::condition_variable startSendFdRateCon_;
     std::condition_variable waitSendFdCon_;
     std::mutex startSendMutex_;
     std::mutex waitTimeLock_;
     std::string bundleName_;
     int32_t sendRate_ = BConstants::DEFAULT_FD_SEND_RATE;
+    Utils::Timer extTime_ {"queryOnProcessTimer"};
 };
 } // namespace OHOS::FileManagement::Backup
 

@@ -147,6 +147,11 @@ public:
     virtual ErrCode GetBackupInfo(std::function<void(ErrCode, std::string)> callback);
 
     /**
+     * @brief Called do OnProcess
+     */
+    virtual ErrCode OnProcess(std::function<void(ErrCode, std::string)> callback);
+
+    /**
      * @brief 数据迁移判断
      *
      * @return true

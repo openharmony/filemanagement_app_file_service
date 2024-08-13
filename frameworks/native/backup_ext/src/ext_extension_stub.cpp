@@ -47,6 +47,8 @@ ExtExtensionStub::ExtExtensionStub()
         &ExtExtensionStub::CmdGetIncrementalBackupFileHandle;
     opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_GET_BACKUP_INFO)] =
         &ExtExtensionStub::CmdGetBackupInfo;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_GET_PROCESS_INFO)] =
+        &ExtExtensionStub::CmdGetProcessInfo;
     opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_INCREMENTAL_ON_BACKUP)] =
         &ExtExtensionStub::CmdIncrementalOnBackup;
     opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_UPDATE_FD_SENDRATE)] =
@@ -236,6 +238,20 @@ ErrCode ExtExtensionStub::CmdUpdateFdSendRate(MessageParcel &data, MessageParcel
     int ret = UpdateFdSendRate(bundleName, sendRate);
     if (!reply.WriteInt32(ret)) {
         return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the ret").GetCode();
+    }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ExtExtensionStub::CmdGetProcessInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("CmdGetProcessInfo Begin");
+    std::string result;
+    int ret = GetBackupInfo(result);
+    if (!reply.WriteInt32(ret)) {
+        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the ret").GetCode();
+    }
+    if (!reply.WriteString(result)) {
+        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the result").GetCode();
     }
     return BError(BError::Codes::OK);
 }

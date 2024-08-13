@@ -70,6 +70,16 @@ void ServiceReverse::IncrementalBackupOnAllBundlesFinished(int32_t errCode)
     callbacksIncrementalBackup_.onAllBundlesFinished(errCode);
 }
 
+void ServiceReverse::IncrementalBackupOnProcessInfo(std::string bundleName, std::string processInfo)
+{
+    HILOGI("errCode = %{public}d", errCode);
+    if (scenario_ != Scenario::BACKUP || !callbacksIncrementalBackup_.onProcess) {
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
+        return;
+    }
+    callbacksIncrementalBackup_.onProcess(bundleName, processInfo);
+}
+
 void ServiceReverse::IncrementalRestoreOnBundleStarted(int32_t errCode, string bundleName)
 {
     if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onBundleStarted) {
@@ -123,6 +133,16 @@ void ServiceReverse::IncrementalRestoreOnResultReport(std::string result, std::s
         return;
     }
     callbacksIncrementalRestore_.onBundleFinished(errCode, bundleName);
+}
+
+void ServiceReverse::IncrementalRestoreOnProcessInfo(std::string bundleName, std::string processInfo)
+{
+    HILOGI("begin incremental restore on result report, bundleName:%{public}s", bundleName.c_str());
+    if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onProcess) {
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
+        return;
+    }
+    callbacksIncrementalRestore_.onProcess(bundleName, processInfo);
 }
 
 ServiceReverse::ServiceReverse(BIncrementalBackupSession::Callbacks callbacks)

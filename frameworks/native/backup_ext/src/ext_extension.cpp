@@ -2015,4 +2015,54 @@ void BackupExtExtension::RefreshTimeInfo(std::chrono::system_clock::time_point &
         fdSendNum = 0;
     }
 }
+
+ErrCode BackupExtExtension::GetBundleProcessInfo(std::string &result)
+{
+    auto obj = wptr<BackupExtExtension>(this);
+    auto ptr = obj.promote();
+    if (ptr == nullptr) {
+        HILOGE("Failed to get ext extension.");
+        return BError(BError::Codes::EXT_INVAL_ARG, "extension GetBundleProcessInfo exception").GetCode();
+    }
+    if (ptr->extension_ == nullptr) {
+        HILOGE("Failed to get extension.");
+        return BError(BError::Codes::EXT_INVAL_ARG, "extension GetBundleProcessInfo exception").GetCode();
+    }
+    auto onProcessCallBack = [ptr](ErrCode errCode, const std::string result) {
+        if (ptr == nullptr) {
+            HILOGE("Failed to get ext extension.");
+            return;
+        }
+        HILOGI("GetBundleProcessInfo start. result = %{public}s", result.c_str());
+        ptr->bundleProcessInfo_ = result;
+    };
+    auto ret = ptr->extension_->OnProcess(onProcessCallBack);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to get bundleProcessInfo. err = %{public}d", ret);
+        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
+    }
+    HILOGD("bundleProcessInfo = %s", bundleProcessInfo_.c_str());
+    result = bundleProcessInfo_;
+    if (!result.size()) {
+
+    } else {
+
+    }
+    backupInfo_.clear();
+
+    return ERR_OK;
+}
+
+void BackupExtExtension::ReportAppProcessInfo(const std::string restoreRetInfo, BackupRestoreScenario scenario, ErrCode errCode)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("ReportAppProcessInfo error, proxy is empty");
+    }
+    auto ret = proxy->ServiceResultReport(restoreRetInfo, scenario, errCode);
+    if (ret != ERR_OK) {
+        HILOGE("Failed notify app restoreResultReport, errCode: %{public}d", ret);
+    }
+
+}
 } // namespace OHOS::FileManagement::Backup

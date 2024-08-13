@@ -43,6 +43,9 @@ void ServiceStub::ServiceStubSupplement()
     opToInterfaceMap_[static_cast<uint32_t>(
         IServiceInterfaceCode::SERVICE_CMD_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP)] =
         &ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceInterfaceCode::SERVICE_CMD_REPORT_BUNDLE_PROCESS_INFO)] =
+        &ServiceStub::CmdReportBundleProcessInfo;
 }
 
 void ServiceStub::ServiceStubSuppAppendBundles()
@@ -620,6 +623,19 @@ int32_t ServiceStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessagePar
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fileName").GetCode();
     }
     return GetIncrementalFileHandle(bundleName, fileName);
+}
+
+int32_t ServiceStub::CmdReportBundleProcessInfo(MessageParcel &data, MessageParcel &reply)
+{
+    string processInfo;
+    if (!data.ReadString(processInfo)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleName").GetCode();
+    }
+    BackupRestoreScenario secenrioInfo = static_cast<BackupRestoreScenario>(scenario);
+    if (!data.ReadInt32(errCode)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive errCode");
+    }
+    return ReportBundleProcessInfo(processInfo, secenrioInfo);
 }
 
 template <typename T>

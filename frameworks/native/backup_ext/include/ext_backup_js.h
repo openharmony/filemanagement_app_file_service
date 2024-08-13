@@ -123,6 +123,13 @@ public:
     */
     ErrCode InvokeAppExtMethod(ErrCode, const std::string) override;
 
+    /**
+     * @brief get app onProcess info
+     *
+     * @param callback The callBack.
+    */
+    ErrCode OnProcess(std::function<void(ErrCode, const std::string)> callback) override;
+
 public:
     explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
     ~ExtBackupJs()
@@ -141,7 +148,6 @@ private:
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseRestoreInfo();
 
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseBackupExInfo();
-    std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseBackupInfo();
 
     ErrCode CallJSRestoreEx();
     ErrCode CallJSRestore();

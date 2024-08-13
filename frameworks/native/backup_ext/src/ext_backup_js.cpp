@@ -838,4 +838,36 @@ ErrCode ExtBackupJs::InvokeAppExtMethod(ErrCode errCode, const std::string resul
     HILOGI("End Get App onBackupEx/onRestoreEx method result");
     return ERR_OK;
 }
+
+ErrCode ExtBackupJs::OnProcess(std::function<void(ErrCode, const std::string)> callback)
+{
+    HILOGI("BackupExtensionAbility(JS) OnProcess begin.");
+    BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                          "The app does not provide the OnProcess interface.");
+    callbackInfoBackup_ = std::make_shared<CallbackInfoBackup>(callback);
+    auto retParser = [jsRuntime {&jsRuntime_}, callBackInfo {callbackInfoBackup_}](napi_env env,
+        napi_value result) -> bool {
+        if (!CheckPromise(env, result)) {
+            size_t strLen = 0;
+            napi_status status = napi_get_value_string_utf8(env, result, nullptr, -1, &strLen);
+            if (status != napi_ok) {
+                return false;
+            }
+            size_t bufLen = strLen + 1;
+            unique_ptr<char[]> str = make_unique<char[]>(bufLen);
+            status = napi_get_value_string_utf8(env, result, str.get(), bufLen, &strLen);
+            callBackInfo->callbackParam(BError(BError::Codes::OK), str.get());
+            return true;
+        }
+        HILOGI("BackupExtensionAbulity(JS) OnProcess ok.");
+        return CallPromiseEx(*jsRuntime, result, callBackInfo.get());
+    };
+
+    auto errCode = CallJsMethod("onProcess", jsRuntime_, jsObj_.get(), {}, retParser);
+    if (errCode != ERR_OK) {
+        HILOGE("CallJsMethod error, code:%{public}d.", errCode);
+    }
+    HILOGI("BackupExtensionAbulity(JS) OnProcess end.");
+    return errCode;
+}
 } // namespace OHOS::FileManagement::Backup
