@@ -93,7 +93,6 @@ ohos_unittest("backup_service_test") {
     "${path_backup_mock}/module_ipc/app_gallery_dispose_proxy_mock.cpp",
     "${path_backup_mock}/timer/timer_mock.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/sa_backup_connection.cpp",
-    "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
@@ -107,6 +106,7 @@ ohos_unittest("backup_service_test") {
   include_dirs = [
     "${path_backup}/services/backup_sa/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/services/backup_sa/src/module_ipc",
     "${path_backup}/tests/unittests/backup_api/backup_impl/include",
     "${path_access_token}/interfaces/innerkits/accesstoken/include",
     "${path_backup_mock}/b_process/",
@@ -145,6 +145,15 @@ ohos_unittest("backup_service_test") {
 
   defines = [ "private=public" ]
   use_exceptions = true
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
 }
 
 ohos_unittest("backup_service_throw_test") {
