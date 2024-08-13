@@ -524,6 +524,46 @@ HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0100, testing::ext::TestSize.Lev
 }
 
 /**
+ * @tc.number: SUB_Service_GetFileHandle_0101
+ * @tc.name: SUB_Service_GetFileHandle_0101
+ * @tc.desc: 测试 GetFileHandle 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetFileHandle_0101";
+    try {
+        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 1;
+        BackupExtInfo extInfo {};
+        auto callDied = [](const string &&bundleName) {};
+        auto callConnected = [](const string &&bundleName) {};
+        string bundleNameIndexInfo = "123456";
+        extInfo.backUpConnection(new SvcBackupConnection(callDied, callConnected, bundleNameIndexInfo));
+        extInfo.schedAction = BConstants::ServiceSchedAction::RUNNING;
+        impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
+        extInfo.backUpConnection->backupProxy_ = nullptr;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        ret = servicePtr_->GetFileHandle(BUNDLE_NAME, FILE_NAME);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+
+        extInfo.backUpConnection->backupProxy_(new IExtension());
+        ret = servicePtr_->GetFileHandle(BUNDLE_NAME, FILE_NAME);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetFileHandle.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetFileHandle_0101";
+}
+
+/**
  * @tc.number: SUB_Service_OnBackupExtensionDied_0100
  * @tc.name: SUB_Service_OnBackupExtensionDied_0100
  * @tc.desc: 测试 OnBackupExtensionDied 接口
@@ -555,6 +595,48 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0100, testing::ext::Test
 }
 
 /**
+ * @tc.number: SUB_Service_OnBackupExtensionDied_0101
+ * @tc.name: SUB_Service_OnBackupExtensionDied_0101
+ * @tc.desc: 测试 OnBackupExtensionDied 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBackupExtensionDied_0101";
+    try {
+        GTEST_LOG_(INFO) << "SUB_Service_OnBackupExtensionDied_0101 RESTORE";
+        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        string bundleName = BUNDLE_NAME;
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 1;
+        BackupExtInfo extInfo {};
+        extInfo.backUpConnection = nullptr;
+        extInfo.versionName = "0.0.0.0-0.0.0.0";
+        impl_.restoreDataType = RESTORE_DATA_WAIT_SEND;
+        impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
+        impl_.scenario = IServiceReverse::Scenario::RESTORE;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->OnBackupExtensionDied(move(bundleName));
+        GTEST_LOG_(INFO) << "SUB_Service_OnBackupExtensionDied_0101 BACKUP";
+
+        ret = Init(IServiceReverse::Scenario::BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        impl_.restoreDataType = RESTORE_DATA_READDY;
+        bundleName = "123456789";
+        impl_.backupExtNameMap[bundleName] = extInfo;
+        servicePtr_->OnBackupExtensionDied(move(bundleName));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetFileHandle.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnBackupExtensionDied_0101";
+}
+
+/**
  * @tc.number: SUB_Service_ExtStart_0100
  * @tc.name: SUB_Service_ExtStart_0100
  * @tc.desc: 测试 ExtStart 接口
@@ -582,6 +664,60 @@ HWTEST_F(ServiceTest, SUB_Service_ExtStart_0100, testing::ext::TestSize.Level1)
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by ExtStart.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ExtStart_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_ExtStart_0101
+ * @tc.name: SUB_Service_ExtStart_0101
+ * @tc.desc: 测试 ExtStart 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_ExtStart_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtStart_0101";
+    try {
+        GTEST_LOG_(INFO) << "SUB_Service_ExtStart_0101 BACKUP";
+        std::string bundleName = "123456";
+        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->ExtStart(bundleName);
+
+        GTEST_LOG_(INFO) << "SUB_Service_ExtStart_0101 RESTORE";
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 1;
+        BackupExtInfo extInfo {};
+        auto callDied = [](const string &&bundleName) {};
+        auto callConnected = [](const string &&bundleName) {};
+        string bundleNameIndexInfo = "123456789";
+        extInfo.backUpConnection(new SvcBackupConnection(callDied, callConnected, bundleNameIndexInfo));
+        extInfo.backUpConnection->backupProxy_ = nullptr;
+        impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
+        impl_.scenario = IServiceReverse::Scenario::UNDEFINED;
+        ret = Init(IServiceReverse::Scenario::UNDEFINED);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        servicePtr_->ExtStart(BUNDLE_NAME);
+
+        extInfo.backUpConnection->backupProxy_(new IExtension());
+        ret = Init(IServiceReverse::Scenario::BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        servicePtr_->ExtStart(BUNDLE_NAME);
+
+        ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        servicePtr_->ExtStart(BUNDLE_NAME);
+
+        ret = Init(IServiceReverse::Scenario::UNDEFINED);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        servicePtr_->ExtStart(BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by ExtStart.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ExtStart_0101";
 }
 
 /**
@@ -676,6 +812,13 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectFailed_0100, testing::ext::TestSize.
         servicePtr_->ExtConnectFailed(BUNDLE_NAME, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "SUB_Service_ExtConnectFailed_0100 BACKUP";
         ret = Init(IServiceReverse::Scenario::BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        servicePtr_->ExtConnectFailed(BUNDLE_NAME, BError(BError::Codes::OK));
+
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 1;
+        impl_.restoreDataType = RESTORE_DATA_READDY;
+        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->ExtConnectFailed(BUNDLE_NAME, BError(BError::Codes::OK));
     } catch (...) {
@@ -939,10 +1082,662 @@ HWTEST_F(ServiceTest, SUB_Service_UpdateTimer_0100, testing::ext::TestSize.Level
         uint32_t timeOut = 30000;
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->UpdateTimer(bundleName, timeOut, result);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by UpdateTimer.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_UpdateTimer_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SpecialVersion_0100
+ * @tc.name: SUB_Service_SpecialVersion_0100
+ * @tc.desc: 测试 SpecialVersion 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_SpecialVersion_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SpecialVersion_0100";
+    try {
+        std::string versionName = "0.0.0.0-0.0.0.0";
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        bool ret = servicePtr_->SpecialVersion(versionName);
+        EXPECT_EQ(ret, true);
+        versionName = "1.1.1.1-1.1.1.1";
+        bool ret = servicePtr_->SpecialVersion(versionName);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SpecialVersion.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SpecialVersion_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_OnBundleStarted_0100
+ * @tc.name: SUB_Service_OnBundleStarted_0100
+ * @tc.desc: 测试 OnBundleStarted 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_OnBundleStarted_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBundleStarted_0100";
+    try {
+        int32_t saID = 2503;
+        wptr<Service> reversePtr(new Service(saID));
+        sptr<SvcSessionManager> session(new SvcSessionManager(reversePtr));
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->OnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), session, BUNDLE_NAME);
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 1;
+        impl_.scenario = IServiceReverse::Scenario::RESTORE;
+        servicePtr_->OnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), session, BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnBundleStarted.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnBundleStarted_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_HandleExceptionOnAppendBundles_0100
+ * @tc.name: SUB_Service_HandleExceptionOnAppendBundles_0100
+ * @tc.desc: 测试 HandleExceptionOnAppendBundles 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_HandleExceptionOnAppendBundles_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_HandleExceptionOnAppendBundles_0100";
+    try {
+        int32_t saID = 4801;
+        wptr<Service> reversePtr(new Service(saID));
+        sptr<SvcSessionManager> session(new SvcSessionManager(reversePtr));
+        vector<BundleName> appendBundleNames {"123456"};
+        vector<BundleName> restoreBundleNames {"abcdef"};
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->HandleExceptionOnAppendBundles(session, appendBundleNames, restoreBundleNames);
+
+        appendBundleNames.push_back("789");
+        servicePtr_->HandleExceptionOnAppendBundles(session, appendBundleNames, restoreBundleNames);
+
+        restoreBundleNames.push_back("123456");
+        restoreBundleNames.push_back("123");
+        servicePtr_->HandleExceptionOnAppendBundles(session, appendBundleNames, restoreBundleNames);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleExceptionOnAppendBundles.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleExceptionOnAppendBundles_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SetCurrentSessProperties_0100
+ * @tc.name: SUB_Service_SetCurrentSessProperties_0100
+ * @tc.desc: 测试 SetCurrentSessProperties 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetCurrentSessProperties_0100";
+    try {
+        BundleInfo aInfo {};
+        aInfo.name = "123456";
+        aInfo.extensionName = "abcdef";
+        aInfo.allToBackup = true;
+        std::vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {aInfo};
+        std::vector<std::string> restoreBundleNames {"12345678"};
+        RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+
+        restoreBundleNames.push_back("123456");
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.allToBackup = true;
+        aInfo.versionName = "0.0.0.0-0.0.0.0";
+        aInfo.extensionName = "";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.name = "123456a";
+        restoreBundleInfos.push_back(aInfo);
+        restoreBundleNames.push_back("123456a");
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.allToBackup = false;
+        aInfo.extensionName = "";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.allToBackup = false;
+        aInfo.extensionName = "";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetCurrentSessProperties_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SetCurrentSessProperties_0101
+ * @tc.name: SUB_Service_SetCurrentSessProperties_0101
+ * @tc.desc: 测试 SetCurrentSessProperties 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetCurrentSessProperties_0101";
+    try {
+        BundleInfo aInfo {};
+        aInfo.name = "123456";
+        aInfo.versionName = "0.0.0.0-0.0.0.0";
+        aInfo.extensionName = "abcdef";
+        aInfo.allToBackup = false;
+        std::vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {aInfo};
+        std::vector<std::string> restoreBundleNames {"123456"};
+        RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.extensionName = "";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.name = "123456a";
+        restoreBundleInfos.push_back(aInfo);
+        restoreBundleNames.push_back("123456a");
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetCurrentSessProperties_0101";
+}
+
+/**
+ * @tc.number: SUB_Service_SetCurrentSessProperties_0102
+ * @tc.name: SUB_Service_SetCurrentSessProperties_0102
+ * @tc.desc: 测试 SetCurrentSessProperties 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetCurrentSessProperties_0102";
+    try {
+        BundleInfo aInfo {};
+        aInfo.name = "123456";
+        aInfo.versionName = "0.0.0.0-0.0.0.0";
+        aInfo.extensionName = "abcdef";
+        aInfo.allToBackup = false;
+        std::vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {aInfo};
+        std::vector<std::string> restoreBundleNames {"123456"};
+        RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.versionName = "1.1.1.1-1.1.1.1";
+        aInfo.extensionName = "";
+        aInfo.name = "123456";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.name = "123456a";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.extensionName = "abcdef";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.name = "123456";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetCurrentSessProperties_0102";
+}
+
+/**
+ * @tc.number: SUB_Service_AppendBundlesRestoreSession_0100
+ * @tc.name: SUB_Service_AppendBundlesRestoreSession_0100
+ * @tc.desc: 测试 AppendBundlesRestoreSession 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppendBundlesRestoreSession_0100";
+    try {
+        UniqueFd fd = servicePtr_->GetLocalCapabilities();
+        EXPECT_GE(fd, BError(BError::Codes::OK));
+        vector<BundleName> bundleNames {};
+        RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        int32_t userId = 1;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        auto ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, restoreType, userId);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppendBundlesRestoreSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppendBundlesRestoreSession_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SetCurrentSessProperties_0100
+ * @tc.name: SUB_Service_SetCurrentSessProperties_0100
+ * @tc.desc: 测试 SetCurrentSessProperties 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetCurrentSessProperties_0100";
+    try {
+        BundleInfo aInfo {};
+        aInfo.name = "123456";
+        aInfo.appIndex = 0;
+        aInfo.versionName = "0.0.0.0-0.0.0.0";
+        aInfo.extensionName = "abcdef";
+        aInfo.allToBackup = true;
+        std::vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {aInfo};
+        std::vector<std::string> restoreBundleNames {"1234567"};
+        RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap {};
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+
+        restoreBundleNames.push_back("123456");
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.allToBackup = true;
+        aInfo.versionName = "0.0.0.0-0.0.0.0";
+        aInfo.extensionName = "";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.name = "123456a";
+        restoreBundleInfos.push_back(aInfo);
+        restoreBundleNames.push_back("123456a");
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.allToBackup = false;
+        aInfo.extensionName = "";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.allToBackup = false;
+        aInfo.extensionName = "";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetCurrentSessProperties_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SetCurrentSessProperties_0101
+ * @tc.name: SUB_Service_SetCurrentSessProperties_0101
+ * @tc.desc: 测试 SetCurrentSessProperties 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetCurrentSessProperties_0101";
+    try {
+        BundleInfo aInfo {};
+        aInfo.name = "123456";
+        aInfo.appIndex = 0;
+        aInfo.versionName = "0.0.0.0-0.0.0.0";
+        aInfo.extensionName = "abcdef";
+        aInfo.allToBackup = false;
+        std::vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {aInfo};
+        std::vector<std::string> restoreBundleNames {"123456"};
+        RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap {};
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.extensionName = "";
+        restoreBundleInfos.push_back(aInfo);
+        bundleDetailInfos detailInfo {};
+        detailInfo.type = "broadcast";
+        std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos {detailInfo};
+        bundleNameDetailMap["123456"] = bundleDetailInfos;
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.name = "123456a";
+        restoreBundleInfos.push_back(aInfo);
+        restoreBundleNames.push_back("123456a");
+        bundleDetailInfos.clear();
+        detailInfo.type = "unicast";
+        bundleDetailInfos.push_back(detailInfo);
+        bundleNameDetailMap["123456"] = bundleDetailInfos;
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetCurrentSessProperties_0101";
+}
+
+/**
+ * @tc.number: SUB_Service_SetCurrentSessProperties_0102
+ * @tc.name: SUB_Service_SetCurrentSessProperties_0102
+ * @tc.desc: 测试 SetCurrentSessProperties 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetCurrentSessProperties_0102";
+    try {
+        BundleInfo aInfo {};
+        aInfo.name = "123456";
+        aInfo.appIndex = 0;
+        aInfo.versionName = "0.0.0.0-0.0.0.0";
+        aInfo.extensionName = "abcdef";
+        aInfo.allToBackup = false;
+        std::vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {aInfo};
+        std::vector<std::string> restoreBundleNames {"123456"};
+        RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap {};
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.versionName = "1.1.1.1-1.1.1.1";
+        aInfo.extensionName = "";
+        aInfo.name = "123456";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.name = "123456a";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.extensionName = "abcdef";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+
+        restoreBundleInfos.clear();
+        aInfo.name = "123456";
+        restoreBundleInfos.push_back(aInfo);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetCurrentSessProperties_0102";
+}
+
+/**
+ * @tc.number: SUB_Service_ServiceResultReport_0100
+ * @tc.name: SUB_Service_ServiceResultReport_0100
+ * @tc.desc: 测试 ServiceResultReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_ServiceResultReport_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ServiceResultReport_0100";
+    try {
+        std::string restoreRetInfo = "123456789";
+        BackupRestoreScenario sennario = FULL_RESTORE;
+        ErrCode errCode = BError(BError::Codes::OK);
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        auto ret = servicePtr_->ServiceResultReport(restoreRetInfo, sennario, errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        sennario = INCREMENTAL_RESTORE;
+        ret = servicePtr_->ServiceResultReport(restoreRetInfo, sennario, errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        sennario = FULL_BACKUP;
+        ret = servicePtr_->ServiceResultReport(restoreRetInfo, sennario, errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        sennario = INCREMENTAL_BACKUP;
+        ret = servicePtr_->ServiceResultReport(restoreRetInfo, sennario, errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by ServiceResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ServiceResultReport_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SAResultReport_0100
+ * @tc.name: SUB_Service_SAResultReport_0100
+ * @tc.desc: 测试 SAResultReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_SAResultReport_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SAResultReport_0100";
+    try {
+        std::string bundleName = "0.0.0.0-0.0.0.0";
+        std::string restoreRetInfo = "123456789";
+        BackupRestoreScenario sennario = FULL_RESTORE;
+        ErrCode errCode = BError(BError::Codes::OK);
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        auto ret = servicePtr_->SAResultReport(restoreRetInfo, sennario, errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        sennario = INCREMENTAL_RESTORE;
+        ret = servicePtr_->SAResultReport(restoreRetInfo, sennario, errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        sennario = FULL_BACKUP;
+        ret = servicePtr_->SAResultReport(restoreRetInfo, sennario, errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        sennario = INCREMENTAL_BACKUP;
+        ret = servicePtr_->SAResultReport(restoreRetInfo, sennario, errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SAResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SAResultReport_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_NotifyCloneBundleFinish_0100
+ * @tc.name: SUB_Service_NotifyCloneBundleFinish_0100
+ * @tc.desc: 测试 NotifyCloneBundleFinish 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_NotifyCloneBundleFinish_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_NotifyCloneBundleFinish_0100";
+    try {
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 1;
+        BackupExtInfo extInfo {};
+        extInfo.backUpConnection = nullptr;
+        impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
+        impl_.scenario = IServiceReverse::Scenario::RESTORE;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->NotifyCloneBundleFinish(BUNDLE_NAME);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by NotifyCloneBundleFinish.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_NotifyCloneBundleFinish_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_LaunchBackupSAExtension_0100
+ * @tc.name: SUB_Service_LaunchBackupSAExtension_0100
+ * @tc.desc: 测试 LaunchBackupSAExtension 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_LaunchBackupSAExtension_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_LaunchBackupSAExtension_0100";
+    try {
+        std::string bundleName = "123456";
+        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        ret = servicePtr_->LaunchBackupSAExtension(BUNDLE_NAME);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 1;
+        BackupExtInfo extInfo {};
+        extInfo.backUpConnection = nullptr;
+
+        auto callDied = [](const string &&bundleName) {};
+        auto callConnected = [](const string &&bundleName) {};
+        auto callBackup = [](const std::string &&bundleName, const int &&fd, const std::string &&result,
+                             const ErrCode &&errCode) {};
+        auto callRestore = [](const std::string &&bundleName, const std::string &&result, const ErrCode &&errCode) {};
+        extInfo.saBackupConnection =
+            std::make_shared<SABackupConnection>(callDied, callConnected, callBackup, callRestore);
+
+        impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
+        ret = servicePtr_->LaunchBackupSAExtension(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        ret = servicePtr_->LaunchBackupSAExtension(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by LaunchBackupSAExtension.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_LaunchBackupSAExtension_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_ExtConnectDied_0100
+ * @tc.name: SUB_Service_ExtConnectDied_0100
+ * @tc.desc: 测试 ExtConnectDied 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtConnectDied_0100";
+    try {
+        std::string callName = "123456";
+        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 1;
+        BackupExtInfo extInfo {};
+        auto callDied = [](const string &&bundleName) {};
+        auto callConnected = [](const string &&bundleName) {};
+        string bundleNameIndexInfo = "123456789";
+        extInfo.backUpConnection(new SvcBackupConnection(callDied, callConnected, bundleNameIndexInfo));
+        impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
+        impl_.scenario = IServiceReverse::Scenario::RESTORE;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->ExtConnectDied(callName);
+        extInfo.backUpConnection->isConnected_.store(true);
+        servicePtr_->ExtConnectDied(callName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by ExtConnectDied.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ExtConnectDied_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_NoticeClientFinish_0100
+ * @tc.name: SUB_Service_NoticeClientFinish_0100
+ * @tc.desc: 测试 NoticeClientFinish 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_NoticeClientFinish_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_NoticeClientFinish_0100";
+    try {
+        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->NoticeClientFinish(BUNDLE_NAME, BError(BError::Codes::OK));
+        GTEST_LOG_(INFO) << "SUB_Service_NoticeClientFinish_0100 BACKUP";
+        ret = Init(IServiceReverse::Scenario::BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        servicePtr_->NoticeClientFinish(BUNDLE_NAME, BError(BError::Codes::OK));
+
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 1;
+        impl_.restoreDataType = RESTORE_DATA_READDY;
+        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        servicePtr_->NoticeClientFinish(BUNDLE_NAME, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by NoticeClientFinish.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_NoticeClientFinish_0100";
 }
 } // namespace OHOS::FileManagement::Backup
