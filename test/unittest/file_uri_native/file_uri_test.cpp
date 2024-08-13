@@ -106,6 +106,11 @@ namespace OHOS::AppFileService::ModuleFileUri {
         FileUri fileUri(fileStr);
         string name = fileUri.GetName();
         EXPECT_EQ(name, "test.txt");
+
+        string fileStr2 = "/data/storage/el2/base/files/test.txt/";
+        string uri2 = "file://" + BUNDLE_A + fileStr;
+        FileUri fileUri2(fileStr2);
+        EXPECT_EQ(fileUri2.GetName(), "");
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetName_0000";
     }
 
@@ -130,6 +135,10 @@ namespace OHOS::AppFileService::ModuleFileUri {
         FileUri fileUri2(uri2);
         path = fileUri2.GetPath();
         EXPECT_EQ(path, "/Photo/12/IMG_12345_999999");
+
+        string uri4 = "file://media/Photo/12/IMG_12345_999999";
+        FileUri fileUri4(uri4);
+        EXPECT_EQ(fileUri2.GetPath(), "/Photo/12/IMG_12345_999999");
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0000";
     }
 

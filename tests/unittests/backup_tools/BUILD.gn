@@ -21,12 +21,16 @@ ohos_unittest("backup_tool_test") {
 
   sources = [
     "${path_backup_mock}/b_filesystem/b_file_mock.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_incremental_backup_session.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_incremental_data.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",
     "${path_backup}/tests/mock/backup_kit_inner/b_session_backup_mock.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_backup.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_check_sa.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_help.cpp",
-    "${path_backup}/tools/backup_tool/src/tools_op_incremental_backup.cpp",
     "backup_tool/tools_op_backup_test.cpp",
     "backup_tool/tools_op_check_sa_test.cpp",
     "backup_tool/tools_op_help_test.cpp",
@@ -37,9 +41,11 @@ ohos_unittest("backup_tool_test") {
 
   include_dirs = [
     "${path_base}/include",
+    "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner",
     "${path_backup}/tools/backup_tool/include",
+    "${path_backup}/tools/backup_tool/src",
   ]
   include_dirs += backup_mock_utils_include
 
