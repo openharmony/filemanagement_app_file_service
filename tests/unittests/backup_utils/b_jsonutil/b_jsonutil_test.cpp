@@ -111,7 +111,9 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0100, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo2);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        std::map<std::string, bool> isClearDataFlags;
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
         EXPECT_TRUE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -141,7 +143,9 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0200, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        std::map<std::string, bool> isClearDataFlags;
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -171,7 +175,9 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0300, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        std::map<std::string, bool> isClearDataFlags;
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
         EXPECT_TRUE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -201,7 +207,9 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0301, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        std::map<std::string, bool> isClearDataFlags;
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
         EXPECT_TRUE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -227,12 +235,16 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0400, testing::ext::TestSize
         std::string bundleName = "bundle1";
         bundleNames.push_back(bundleName);
         std::vector<std::string> bundleInfos;
-        std::string bundleInfo = {"{\"infos\":[{\"type\":\"type1\",\"details\":\"details1\"}]}"};
+        std::string bundleInfo = {
+            "{\"infos\":[{\"type\":\"type1\",\"details\":\"details1\"}],\"clearBackupData\": \"false\"}"
+        };
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        std::map<std::string, bool> isClearDataFlags;
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_EQ(isClearDataFlags[bundleName], false);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -262,8 +274,11 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0500, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
 
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_EQ(isClearDataFlags[bundleName], true);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -289,12 +304,15 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0600, testing::ext::TestSize
         std::string bundleName = "bundle";
         bundleNames.push_back(bundleName);
         std::vector<std::string> bundleInfos;
-        std::string bundleInfo = {"{\"infos\":[{\"type\":123}]}"};
+        std::string bundleInfo = {"{\"infos\":[{\"type\":123}],\"clearBackupData\": \"true\"}"};
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
 
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_EQ(isClearDataFlags[bundleName], true);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -324,8 +342,10 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0700, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
 
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -355,8 +375,10 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0800, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
 
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -386,8 +408,10 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0900, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
 
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -417,8 +441,10 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_1000, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
 
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);

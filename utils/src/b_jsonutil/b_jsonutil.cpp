@@ -49,7 +49,8 @@ BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string
 
 std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::BuildBundleInfos(
     const std::vector<std::string> &bundleNames, const std::vector<std::string> &bundleInfos,
-    std::vector<std::string> &bundleNamesOnly, int32_t userId)
+    std::vector<std::string> &bundleNamesOnly, int32_t userId,
+    std::map<std::string, bool> &isClearDataFlags)
 {
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
     if (bundleNames.size() != bundleInfos.size()) {
@@ -80,7 +81,13 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
             bundleNamesOnly.emplace_back(bundleNameSplit);
         }
         std::string bundleInfo = bundleInfos[i];
-        ParseBundleInfoJson(bundleInfo, bundleDetailInfos, bundleNameOnly, bundleIndex, userId);
+        bool isClearData = true;
+        BJsonUtil::BundleDetailInfo bundleDetailInfo;
+        bundleDetailInfo.bundleName = bundleNameOnly;
+        bundleDetailInfo.bundleIndex = bundleIndex;
+        bundleDetailInfo.userId = userId;
+        ParseBundleInfoJson(bundleInfo, bundleDetailInfos, bundleDetailInfo, isClearData);
+        isClearDataFlags[bundleName] = isClearData;
         bundleNameDetailMap[bundleName] = bundleDetailInfos;
     }
     HILOGI("End BuildBundleInfos");
@@ -88,12 +95,20 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
 }
 
 void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
-    std::string &bundleNameOnly, int bundleIndex, int32_t userId)
+    BJsonUtil::BundleDetailInfo bundleDetailInfo, bool &isClearData)
 {
     cJSON *root = cJSON_Parse(bundleInfo.c_str());
     if (root == nullptr) {
         HILOGE("Parse json error,root is null");
         return;
+    }
+    cJSON *clearBackupData = cJSON_GetObjectItem(root, "clearBackupData");
+    if (clearBackupData == nullptr || !cJSON_IsString(clearBackupData) || (clearBackupData->valuestring == nullptr)) {
+        HILOGE("Parse json error.");
+    } else {
+        std::string value = clearBackupData->valuestring;
+        isClearData = value.compare("false") != 0;
+        HILOGI("bundleName:%{public}s clear data falg:%{public}d", bundleDetailInfo.bundleName.c_str(), isClearData);
     }
     cJSON *infos = cJSON_GetObjectItem(root, "infos");
     if (infos == nullptr || !cJSON_IsArray(infos) || cJSON_GetArraySize(infos) == 0) {
@@ -103,10 +118,6 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<B
     }
     int infosCount = cJSON_GetArraySize(infos);
     for (int i = 0; i < infosCount; i++) {
-        BJsonUtil::BundleDetailInfo bundleDetailInfo;
-        bundleDetailInfo.bundleName = bundleNameOnly;
-        bundleDetailInfo.bundleIndex = bundleIndex;
-        bundleDetailInfo.userId = userId;
         cJSON *infoItem = cJSON_GetArrayItem(infos, i);
         if (!cJSON_IsObject(infoItem)) {
             HILOGE("Parse json error, info item is not an object");
