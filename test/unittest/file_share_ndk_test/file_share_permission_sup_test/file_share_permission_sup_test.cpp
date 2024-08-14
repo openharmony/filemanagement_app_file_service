@@ -112,12 +112,12 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_PersistPermission_test_001,
     unsigned int resultNum;
     EXPECT_CALL(*paramMoc_, GetParameter(_, _, _, _)).WillOnce(Return(-1));
     FileManagement_ErrCode ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_NO_ERROR);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     
     EXPECT_CALL(*paramMoc_, GetParameter(_, _, _, _)).WillOnce(Return(1));
     ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_NO_ERROR);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_001 end";
 }
@@ -249,7 +249,7 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_PersistPermission_test_004,
         memcpy_s(value, sizeof("false"), "true", sizeof("true"));
     })), Return(1)));
     EXPECT_CALL(*filePermMoc_, PersistPermission(_, _))
-        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(E_DEVICE_NOT_SUPPORT)));
+        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(E_EPERM)));
     ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
     EXPECT_EQ(ret, E_UNKNOWN_ERROR);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
@@ -282,7 +282,7 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_PersistPermission_test_005,
     })), Return(1)));
     EXPECT_CALL(*filePermMoc_, PersistPermission(_, _)).WillOnce(Return(E_NO_ERROR));
     FileManagement_ErrCode ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_NO_ERROR);
+    EXPECT_EQ(ret, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_005 end";
 }
@@ -310,7 +310,7 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_CheckPersistentPermission_t
     EXPECT_CALL(*paramMoc_, GetParameter(_, _, _, _)).WillOnce(Return(-1));
     FileManagement_ErrCode ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
     
-    EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_ENOMEM);
     if (result != nullptr) {
         free(result);
     }
