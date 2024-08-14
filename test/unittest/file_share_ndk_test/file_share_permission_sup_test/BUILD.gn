@@ -36,7 +36,6 @@ ohos_unittest("file_share_permission_ndk_sup_test") {
   sources = [
     "${app_file_service_path}/interfaces/kits/ndk/fileshare/src/oh_file_share.cpp",
     "${app_file_service_path}/tests/mock/file_permission_native_mock/src/file_permission_mock.cpp",
-    "${app_file_service_path}/tests/mock/parameter_mock/src/parameter_mock.cpp",
     "file_share_permission_sup_test.cpp",
   ]
   external_deps = [
