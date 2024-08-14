@@ -17,6 +17,7 @@
 #include "b_error/b_error.h"
 #include "b_incremental_data.h"
 #include "b_resources/b_constants.h"
+#include "b_sa/b_sa_utils.h"
 #include "filemgmt_libhilog.h"
 #include "filemgmt_libn.h"
 #include "incremental_backup_data.h"
@@ -31,19 +32,6 @@ using namespace std;
 using namespace LibN;
 
 const int32_t H_TO_MS = 3600 * 1000;
-
-static bool CheckPermission(const string &permission)
-{
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
-           Security::AccessToken::PermissionState::PERMISSION_GRANTED;
-}
-
-static bool IsSystemApp()
-{
-    uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
-    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
-}
 
 static napi_value AsyncCallback(napi_env env, const NFuncArg& funcArg)
 {
@@ -182,6 +170,16 @@ static napi_value AsyncDataList(napi_env env, const NFuncArg& funcArg)
 napi_value PropNOperation::Async(napi_env env, napi_callback_info info)
 {
     HILOGD("called LocalCapabilities::Async begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
         HILOGE("Number of arguments unmatched.");
@@ -203,6 +201,16 @@ napi_value PropNOperation::Async(napi_env env, napi_callback_info info)
 napi_value PropNOperation::DoGetBackupInfo(napi_env env, napi_callback_info info)
 {
     HILOGD("called DoGetBackupInfo begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
     std::string result;
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
@@ -278,12 +286,12 @@ bool PropNOperation::UpdateSendRate(std::string &bundleName, int32_t sendRate)
 napi_value PropNOperation::DoUpdateTimer(napi_env env, napi_callback_info info)
 {
     HILOGD("called DoUpdateTimer begin");
-    if (!CheckPermission("ohos.permission.BACKUP")) {
-        HILOGE("has not permission!");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
         NError(E_PERMISSION).ThrowErr(env);
         return nullptr;
     }
-    if (!IsSystemApp()) {
+    if (!SAUtils::IsSystemApp()) {
         HILOGE("System App check fail!");
         NError(E_PERMISSION_SYS).ThrowErr(env);
         return nullptr;
@@ -326,12 +334,12 @@ napi_value PropNOperation::DoUpdateTimer(napi_env env, napi_callback_info info)
 napi_value PropNOperation::DoUpdateSendRate(napi_env env, napi_callback_info info)
 {
     HILOGD("called DoUpdateSendRate begin");
-    if (!CheckPermission("ohos.permission.BACKUP")) {
-        HILOGE("has not permission!");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
         NError(E_PERMISSION).ThrowErr(env);
         return nullptr;
     }
-    if (!IsSystemApp()) {
+    if (!SAUtils::IsSystemApp()) {
         HILOGE("System App check fail!");
         NError(E_PERMISSION_SYS).ThrowErr(env);
         return nullptr;

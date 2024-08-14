@@ -59,7 +59,7 @@ string FileUri::GetName()
         return "";
     }
 
-    if (posLast == sandboxPath.size()) {
+    if (posLast == (sandboxPath.size() - 1)) {
         return "";
     }
 

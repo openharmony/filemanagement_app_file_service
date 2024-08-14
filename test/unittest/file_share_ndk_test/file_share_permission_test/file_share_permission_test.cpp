@@ -70,17 +70,6 @@ void GrantNativePermission()
     delete[] perms;
 }
 
-static bool CheckFileManagerFullMountEnable()
-{
-    char value[] = "false";
-    int retSystem = GetParameter(FILE_MANAGER_FULL_MOUNT_ENABLE_PARAMETER_STR.c_str(), "false", value, sizeof(value));
-    if (retSystem > 0 && !std::strcmp(value, "true")) {
-        return true;
-    }
-    GTEST_LOG_(INFO) << "Not supporting all mounts";
-    return false;
-}
-
 class NDKFileSharePermissionTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -115,11 +104,7 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_PersistPermission_test_001, Te
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(ret, E_NO_ERROR);
-    }
+    EXPECT_EQ(ret, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_001 end";
 }
@@ -145,15 +130,11 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_PersistPermission_test_002, Te
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_EPERM);
+    if (result != nullptr) {
+        EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
     } else {
-        EXPECT_EQ(ret, E_EPERM);
-        if (result != nullptr) {
-            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
-        } else {
-            EXPECT_FALSE(true);
-        }
+        EXPECT_FALSE(true);
     }
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_002 end";
@@ -224,15 +205,11 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_PersistPermission_test_004, Te
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_EPERM);
+    if (result != nullptr) {
+        EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
     } else {
-        EXPECT_EQ(ret, E_EPERM);
-        if (result != nullptr) {
-            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
-        } else {
-            EXPECT_FALSE(true);
-        }
+        EXPECT_FALSE(true);
     }
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_004 end";
@@ -259,18 +236,10 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_RevokePermission_test_001, Tes
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode retPersist = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(retPersist, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(retPersist, E_NO_ERROR);
-    }
+    EXPECT_EQ(retPersist, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     FileManagement_ErrCode ret = OH_FileShare_RevokePermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(ret, E_NO_ERROR);
-    }
+    EXPECT_EQ(ret, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_RevokePermission_test_001 end";
 }
@@ -296,15 +265,11 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_RevokePermission_test_002, Tes
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_RevokePermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_EPERM);
+    if (result != nullptr) {
+        EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
     } else {
-        EXPECT_EQ(ret, E_EPERM);
-        if (result != nullptr) {
-            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
-        } else {
-            EXPECT_FALSE(true);
-        }
+        EXPECT_FALSE(true);
     }
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_RevokePermission_test_002 end";
@@ -371,11 +336,7 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_RevokePermission_test_004, Tes
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode retPersist = OH_FileShare_PersistPermission(policiesA, policiesNumA, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(retPersist, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(retPersist, E_NO_ERROR);
-    }
+    EXPECT_EQ(retPersist, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     char policyUriCharB[] = "file://com.example.filesharea/data/storage/fileShare04.txt";
     FileShare_PolicyInfo policyB = {.uri = policyUriCharB,
@@ -385,15 +346,11 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_RevokePermission_test_004, Tes
     FileShare_PolicyInfo policies[] = {policyA, policyB};
     unsigned int policiesNum = sizeof(policies) / sizeof(policies[0]);
     FileManagement_ErrCode ret = OH_FileShare_RevokePermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_EPERM);
+    if (result != nullptr) {
+        EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
     } else {
-        EXPECT_EQ(ret, E_EPERM);
-        if (result != nullptr) {
-            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
-        } else {
-            EXPECT_FALSE(true);
-        }
+        EXPECT_FALSE(true);
     }
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_RevokePermission_test_004 end";
@@ -420,18 +377,10 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ActivatePermission_test_001, T
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode retPersist = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(retPersist, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(retPersist, E_NO_ERROR);
-    }
+    EXPECT_EQ(retPersist, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     FileManagement_ErrCode ret = OH_FileShare_ActivatePermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(ret, E_NO_ERROR);
-    }
+    EXPECT_EQ(ret, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_ActivatePermission_test_001 end";
 }
@@ -457,15 +406,11 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ActivatePermission_test_002, T
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_ActivatePermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_EPERM);
+    if (result != nullptr) {
+        EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
     } else {
-        EXPECT_EQ(ret, E_EPERM);
-        if (result != nullptr) {
-            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
-        } else {
-            EXPECT_FALSE(true);
-        }
+        EXPECT_FALSE(true);
     }
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_ActivatePermission_test_002 end";
@@ -532,11 +477,7 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ActivatePermission_test_004, T
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode retPersist = OH_FileShare_PersistPermission(policiesA, policiesNumA, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(retPersist, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(retPersist, E_NO_ERROR);
-    }
+    EXPECT_EQ(retPersist, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     char policyUriCharB[] = "file://com.example.filesharea/data/storage/fileShare04.txt";
     FileShare_PolicyInfo policyB = {.uri = policyUriCharB,
@@ -546,15 +487,11 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_ActivatePermission_test_004, T
     FileShare_PolicyInfo policies[] = {policyA, policyB};
     unsigned int policiesNum = sizeof(policies) / sizeof(policies[0]);
     FileManagement_ErrCode ret = OH_FileShare_ActivatePermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_EPERM);
+    if (result != nullptr) {
+        EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
     } else {
-        EXPECT_EQ(ret, E_EPERM);
-        if (result != nullptr) {
-            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
-        } else {
-            EXPECT_FALSE(true);
-        }
+        EXPECT_FALSE(true);
     }
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_ActivatePermission_test_004 end";
@@ -581,25 +518,13 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_DeactivatePermission_test_001,
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode retPersist = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(retPersist, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(retPersist, E_NO_ERROR);
-    }
+    EXPECT_EQ(retPersist, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     FileManagement_ErrCode retActivate = OH_FileShare_ActivatePermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(retActivate, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(retActivate, E_NO_ERROR);
-    }
+    EXPECT_EQ(retActivate, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     FileManagement_ErrCode ret = OH_FileShare_DeactivatePermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(ret, E_NO_ERROR);
-    }
+    EXPECT_EQ(ret, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_DeactivatePermission_test_001 end";
 }
@@ -626,15 +551,11 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_DeactivatePermission_test_002,
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_DeactivatePermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_EPERM);
+    if (result != nullptr) {
+        EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
     } else {
-        EXPECT_EQ(ret, E_EPERM);
-        if (result != nullptr) {
-            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
-        } else {
-            EXPECT_FALSE(true);
-        }
+        EXPECT_FALSE(true);
     }
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_DeactivatePermission_test_002 end";
@@ -701,18 +622,10 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_DeactivatePermission_test_004,
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode retPersist = OH_FileShare_PersistPermission(policiesA, policiesNumA, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(retPersist, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(retPersist, E_NO_ERROR);
-    }
+    EXPECT_EQ(retPersist, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     FileManagement_ErrCode retActivate = OH_FileShare_ActivatePermission(policiesA, policiesNumA, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(retActivate, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(retActivate, E_NO_ERROR);
-    }
+    EXPECT_EQ(retActivate, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     char policyUriCharB[] = "file://com.example.filesharea/data/storage/fileShare04.txt";
     FileShare_PolicyInfo policyB = {.uri = policyUriCharB,
@@ -722,15 +635,11 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_DeactivatePermission_test_004,
     FileShare_PolicyInfo policies[] = {policyA, policyB};
     unsigned int policiesNum = sizeof(policies) / sizeof(policies[0]);
     FileManagement_ErrCode ret = OH_FileShare_DeactivatePermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_EPERM);
+    if (result != nullptr) {
+        EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
     } else {
-        EXPECT_EQ(ret, E_EPERM);
-        if (result != nullptr) {
-            EXPECT_EQ(FileShare_PolicyErrorCode::INVALID_PATH, result[0].code);
-        } else {
-            EXPECT_FALSE(true);
-        }
+        EXPECT_FALSE(true);
     }
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_DeactivatePermission_test_004 end";
@@ -758,24 +667,16 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_CheckPersistentPermission_test
     unsigned int resultPersistNum;
     FileManagement_ErrCode retPersist =
         OH_FileShare_PersistPermission(policies, policiesNum, &resultPersist, &resultPersistNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(retPersist, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(retPersist, E_NO_ERROR);
-    }
+    EXPECT_EQ(retPersist, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(resultPersist, resultPersistNum);
     bool *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_NO_ERROR);
+    if (result != nullptr) {
+        EXPECT_EQ(result[0], false);
     } else {
-        EXPECT_EQ(ret, E_NO_ERROR);
-        if (result != nullptr) {
-            EXPECT_EQ(result[0], true);
-        } else {
-            EXPECT_FALSE(true);
-        }
+        EXPECT_FALSE(true);
     }
     if (result != nullptr) {
         free(result);
@@ -804,15 +705,11 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_CheckPersistentPermission_test
     bool *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_NO_ERROR);
+    if (result != nullptr) {
+        EXPECT_EQ(result[0], false);
     } else {
-        EXPECT_EQ(ret, E_NO_ERROR);
-        if (result != nullptr) {
-            EXPECT_EQ(result[0], false);
-        } else {
-            EXPECT_FALSE(true);
-        }
+        EXPECT_FALSE(true);
     }
     if (result != nullptr) {
         free(result);
@@ -884,11 +781,7 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_CheckPersistentPermission_test
     unsigned int resultPersistNum;
     FileManagement_ErrCode retPersist =
         OH_FileShare_PersistPermission(policiesA, policiesNumA, &resultPersist, &resultPersistNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(retPersist, E_DEVICE_NOT_SUPPORT);
-    } else {
-        EXPECT_EQ(retPersist, E_NO_ERROR);
-    }
+    EXPECT_EQ(retPersist, E_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(resultPersist, resultPersistNum);
     char policyUriCharB[] = "file://com.example.filesharea/data/storage/fileShare04.txt";
     FileShare_PolicyInfo policyB = {.uri = policyUriCharB,
@@ -900,16 +793,12 @@ HWTEST_F(NDKFileSharePermissionTest, OH_FileShare_CheckPersistentPermission_test
     bool *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
-    if (!CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_NO_ERROR);
+    if (result != nullptr && resultNum == 2) {
+        EXPECT_EQ(result[0], false);
+        EXPECT_EQ(result[1], false);
     } else {
-        EXPECT_EQ(ret, E_NO_ERROR);
-        if (result != nullptr && resultNum == 2) {
-            EXPECT_EQ(result[0], true);
-            EXPECT_EQ(result[1], false);
-        } else {
-            EXPECT_FALSE(true);
-        }
+        EXPECT_FALSE(true);
     }
     if (result != nullptr) {
         free(result);

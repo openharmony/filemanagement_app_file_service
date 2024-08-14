@@ -112,12 +112,12 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_PersistPermission_test_001,
     unsigned int resultNum;
     EXPECT_CALL(*paramMoc_, GetParameter(_, _, _, _)).WillOnce(Return(-1));
     FileManagement_ErrCode ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_NO_ERROR);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     
     EXPECT_CALL(*paramMoc_, GetParameter(_, _, _, _)).WillOnce(Return(1));
     ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_DEVICE_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_NO_ERROR);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_001 end";
 }
@@ -249,10 +249,200 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_PersistPermission_test_004,
         memcpy_s(value, sizeof("false"), "true", sizeof("true"));
     })), Return(1)));
     EXPECT_CALL(*filePermMoc_, PersistPermission(_, _))
-        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(E_DEVICE_NOT_SUPPORT)));
+        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(E_EPERM)));
     ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
     EXPECT_EQ(ret, E_UNKNOWN_ERROR);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_004 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_PersistPermission_test_005
+ * @tc.desc: Test function of OH_FileShare_PersistPermission() interface for invalid path.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_PersistPermission_test_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_005 start";
+    char policyUriChar[] = "file://com.example.filesharea/data/storage/fileShare02.txt";
+    FileShare_PolicyInfo policy = {.uri = policyUriChar,
+                                   .length = strlen(policyUriChar),
+                                   .operationMode =
+                                       FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE};
+    FileShare_PolicyInfo policies[] = {policy};
+    unsigned int policiesNum = sizeof(policies) / sizeof(policies[0]);
+    FileShare_PolicyErrorResult *result = nullptr;
+    unsigned int resultNum;
+
+    EXPECT_CALL(*paramMoc_, GetParameter(_, _, _, _)).WillOnce(DoAll(WithArgs<2>(Invoke([](char *value) {
+        memcpy_s(value, sizeof("false"), "true", sizeof("true"));
+    })), Return(1)));
+    EXPECT_CALL(*filePermMoc_, PersistPermission(_, _)).WillOnce(Return(E_NO_ERROR));
+    FileManagement_ErrCode ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_EPERM);
+    OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
+    GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_005 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_CheckPersistentPermission_test_001
+ * @tc.desc: Test function of OH_FileShare_CheckPersistentPermission() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_CheckPersistentPermission_test_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_CheckPersistentPermission_test_001 start";
+    char policyUriChar[] = "file://com.example.filesharea/data/storage/fileShare02.txt";
+    FileShare_PolicyInfo policy = {.uri = policyUriChar,
+                                   .length = strlen(policyUriChar),
+                                   .operationMode =
+                                       FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE};
+    FileShare_PolicyInfo policies[] = {policy};
+    unsigned int policiesNum = sizeof(policies) / sizeof(policies[0]);
+    bool *result = nullptr;
+    unsigned int resultNum;
+    EXPECT_CALL(*paramMoc_, GetParameter(_, _, _, _)).WillOnce(Return(-1));
+    FileManagement_ErrCode ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
+    
+    EXPECT_EQ(ret, E_ENOMEM);
+    if (result != nullptr) {
+        free(result);
+    }
+    GTEST_LOG_(INFO) << "OH_FileShare_CheckPersistentPermission_test_001 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_CheckPersistentPermission_test_002
+ * @tc.desc: Test function of OH_FileShare_CheckPersistentPermission() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_CheckPersistentPermission_test_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_CheckPersistentPermission_test_002 start";
+    char policyUriChar[] = "file://com.example.filesharea/data/storage/fileShare02.txt";
+    FileShare_PolicyInfo policy = {.uri = policyUriChar,
+                                   .length = 0,
+                                   .operationMode =
+                                       FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE};
+    FileShare_PolicyInfo policies[] = {policy};
+    unsigned int policiesNum = sizeof(policies) / sizeof(policies[0]);
+    bool *result = nullptr;
+    unsigned int resultNum;
+    EXPECT_CALL(*paramMoc_, GetParameter(_, _, _, _)).WillOnce(DoAll(WithArgs<2>(Invoke([](char *value) {
+        memcpy_s(value, sizeof("false"), "true", sizeof("true"));
+    })), Return(1)));
+    FileManagement_ErrCode ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_PARAMS);
+    if (result != nullptr) {
+        free(result);
+    }
+
+    policies[0].length = strlen(policyUriChar);
+    EXPECT_CALL(*paramMoc_, GetParameter(_, _, _, _)).WillOnce(DoAll(WithArgs<2>(Invoke([](char *value) {
+        memcpy_s(value, sizeof("false"), "true", sizeof("true"));
+    })), Return(1)));
+    EXPECT_CALL(*filePermMoc_, CheckPersistentPermission(_, _)).WillOnce(Return(EPERM));
+    ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_EPERM);
+    if (result != nullptr) {
+        free(result);
+    }
+    GTEST_LOG_(INFO) << "OH_FileShare_CheckPersistentPermission_test_002 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_CheckPersistentPermission_test_003
+ * @tc.desc: Test function of OH_FileShare_CheckPersistentPermission() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_CheckPersistentPermission_test_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_CheckPersistentPermission_test_003 start";
+    char policyUriChar[] = "file://com.example.filesharea/data/storage/fileShare02.txt";
+    FileShare_PolicyInfo policy = {.uri = policyUriChar,
+                                   .length = strlen(policyUriChar),
+                                   .operationMode =
+                                       FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE};
+    FileShare_PolicyInfo policies[] = {policy};
+    unsigned int policiesNum = sizeof(policies) / sizeof(policies[0]);
+    bool *result = nullptr;
+    unsigned int resultNum;
+    EXPECT_CALL(*paramMoc_, GetParameter(_, _, _, _)).WillOnce(DoAll(WithArgs<2>(Invoke([](char *value) {
+        memcpy_s(value, sizeof("false"), "true", sizeof("true"));
+    })), Return(1)));
+    EXPECT_CALL(*filePermMoc_, CheckPersistentPermission(_, _)).WillOnce(Return(E_NO_ERROR));
+    FileManagement_ErrCode ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_ENOMEM);
+    if (result != nullptr) {
+        free(result);
+    }
+    
+    std::vector<bool> errorResults;
+    for (int i = 0; i <= sizeof(FileShare_PolicyErrorResult) * MAX_ARRAY_SIZE; i++) {
+        errorResults.push_back(false);
+    }
+
+    EXPECT_CALL(*paramMoc_, GetParameter(_, _, _, _)).WillOnce(DoAll(WithArgs<2>(Invoke([](char *value) {
+        memcpy_s(value, sizeof("false"), "true", sizeof("true"));
+    })), Return(1)));
+    EXPECT_CALL(*filePermMoc_, CheckPersistentPermission(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(E_NO_ERROR)));
+    ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_ENOMEM);
+    if (result != nullptr) {
+        free(result);
+    }
+    GTEST_LOG_(INFO) << "OH_FileShare_CheckPersistentPermission_test_003 end";
+}
+
+/**
+ * @tc.name: OH_FileShare_CheckPersistentPermission_test_004
+ * @tc.desc: Test function of OH_FileShare_CheckPersistentPermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_CheckPersistentPermission_test_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OH_FileShare_CheckPersistentPermission_test_004 start";
+    char policyUriChar[] = "file://com.example.filesharea/data/storage/fileShare02.txt";
+    FileShare_PolicyInfo policy = {.uri = policyUriChar,
+                                   .length = strlen(policyUriChar),
+                                   .operationMode =
+                                       FileShare_OperationMode::READ_MODE | FileShare_OperationMode::WRITE_MODE};
+    FileShare_PolicyInfo policies[] = {policy};
+    unsigned int policiesNum = sizeof(policies) / sizeof(policies[0]);
+    bool *result = nullptr;
+    unsigned int resultNum;
+    //char value[] = "false";
+
+    std::vector<bool> errorResults;
+    errorResults.push_back(false);
+
+    EXPECT_CALL(*paramMoc_, GetParameter(_, _, _, _)).WillOnce(DoAll(WithArgs<2>(Invoke([](char *value) {
+        memcpy_s(value, sizeof("false"), "true", sizeof("true"));
+    })), Return(1)));
+    EXPECT_CALL(*filePermMoc_, CheckPersistentPermission(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(E_NO_ERROR)));
+    FileManagement_ErrCode ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
+    EXPECT_EQ(ret, E_NO_ERROR);
+
+    if (result != nullptr) {
+        free(result);
+    }
+    GTEST_LOG_(INFO) << "OH_FileShare_CheckPersistentPermission_test_004 end";
 }
 } // namespace OHOS::AppFileService::ModuleFileSharePermission

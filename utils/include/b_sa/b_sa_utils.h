@@ -21,6 +21,9 @@ namespace OHOS::FileManagement::Backup {
 class SAUtils {
 public:
     static bool IsSABundleName(std::string bundleName);
+    static bool CheckBackupPermission();
+    static bool CheckPermission(const std::string &permission);
+    static bool IsSystemApp();
 };
 } // namespace OHOS::FileManagement::Backup::BEncryption
 #endif // OHOS_FILEMGMT_BACKUP_B_SA_H

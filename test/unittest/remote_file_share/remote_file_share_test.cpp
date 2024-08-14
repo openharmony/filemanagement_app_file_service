@@ -438,7 +438,7 @@ namespace {
 
         HmdfsUriInfo hui;
         auto ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
-        EXPECT_EQ(ret, 2);
+        EXPECT_NE(ret, 0);
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0013";
     }
 

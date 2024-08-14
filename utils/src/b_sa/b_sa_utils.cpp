@@ -14,8 +14,16 @@
  */
 
 #include "b_sa/b_sa_utils.h"
+#include "access_token.h"
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
 
 namespace OHOS::FileManagement::Backup {
+
+namespace {
+    const std::string BACKUP_PERMISSION = "ohos.permission.BACKUP";
+}
 
 bool SAUtils::IsSABundleName(std::string bundleName)
 {
@@ -28,5 +36,25 @@ bool SAUtils::IsSABundleName(std::string bundleName)
         }
     }
     return true;
+}
+
+bool SAUtils::CheckBackupPermission()
+{
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+    return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, BACKUP_PERMISSION) ==
+        Security::AccessToken::PermissionState::PERMISSION_GRANTED;
+}
+
+bool SAUtils::CheckPermission(const std::string &permission)
+{
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+    return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
+        Security::AccessToken::PermissionState::PERMISSION_GRANTED;
+}
+
+bool SAUtils::IsSystemApp()
+{
+    uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
 }
 } // namespace OHOS::FileManagement::Backup
