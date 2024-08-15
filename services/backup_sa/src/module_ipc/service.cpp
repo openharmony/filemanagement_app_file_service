@@ -144,6 +144,10 @@ UniqueFd Service::GetLocalCapabilities()
            so there must be set init userId.
         */
         HILOGI("Begin");
+        if (session_ == nullptr) {
+            HILOGE("GetLocalCapabilities error, session is empty.");
+            return UniqueFd(-EPERM);
+        }
         session_->IncreaseSessionCnt();
         session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
@@ -152,7 +156,8 @@ UniqueFd Service::GetLocalCapabilities()
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("Failed to open config file = %{private}s, err = %{public}d", path.c_str(), errno);
-            return UniqueFd(-1);
+            session_->DecreaseSessionCnt();
+            return UniqueFd(-EPERM);
         }
         BJsonCachedEntity<BJsonEntityCaps> cachedEntity(std::move(fd));
 
@@ -1348,6 +1353,18 @@ void Service::DeleteDisConfigFile()
     }
 }
 
+void Service::UnloadService()
+{
+    if (sched_ == nullptr) {
+        HILOGE("Unload Service error, sched is empty");
+        return;
+    }
+    if (!isUnloadService_.load()) {
+        isUnloadService_.store(true);
+        sched_->TryUnloadService();
+    }
+}
+
 void Service::SessionDeactive()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -1368,8 +1385,12 @@ void Service::SessionDeactive()
             return;
         }
         session_->ClearSessionData();
-        // 卸载服务
-        sched_->TryUnloadService();
+        // close session
+        StopAll(nullptr, true);
+        if (session_->GetSessionCnt() <= 0) {
+            HILOGI("do unload Service.");
+            sched_->TryUnloadService();
+        }
     } catch (...) {
         HILOGE("Unexpected exception");
         return;
@@ -1403,51 +1424,66 @@ std::function<void(const std::string &&)> Service::GetBackupInfoConnectDied(wptr
     };
 }
 
+ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &result)
+{
+    if (session_ == nullptr) {
+        HILOGE("Get BackupInfo error, session is empty.");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    session_->SetSessionUserId(GetUserIdDefault());
+    auto backupConnection = session_->CreateBackupConnection(bundleName);
+    if (backupConnection == nullptr) {
+        HILOGE("backupConnection is null. bundleName: %{public}s", bundleName.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    auto callConnected = GetBackupInfoConnectDone(wptr(this), bundleName);
+    auto callDied = GetBackupInfoConnectDied(wptr(this), bundleName);
+    backupConnection->SetCallback(callConnected);
+    backupConnection->SetCallDied(callDied);
+    AAFwk::Want want = CreateConnectWant(bundleName);
+    auto ret = backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
+    if (ret) {
+        HILOGE("ConnectBackupExtAbility faild, please check bundleName: %{public}s", bundleName.c_str());
+        return BError(BError::Codes::EXT_ABILITY_DIED);
+    }
+    std::unique_lock<std::mutex> lock(getBackupInfoMutx_);
+    getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
+    if (isConnectDied_.load()) {
+        HILOGE("GetBackupInfoConnectDied, please check bundleName: %{public}s", bundleName.c_str());
+        isConnectDied_.store(false);
+        return BError(BError::Codes::EXT_ABILITY_DIED);
+    }
+    auto proxy = backupConnection->GetBackupExtProxy();
+    if (!proxy) {
+        HILOGE("Extension backup Proxy is empty.");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    ret = proxy->GetBackupInfo(result);
+    backupConnection->DisconnectBackupExtAbility();
+    if (ret != ERR_OK) {
+        HILOGE("Call Ext GetBackupInfo faild.");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
 {
     try {
         HILOGI("Service::GetBackupInfo begin.");
+        if (session_ == nullptr) {
+            HILOGE("Get BackupInfo error, session is empty.");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         if (session_->GetImpl().clientToken) {
             return BError(BError::Codes::SA_REFUSED_ACT, "Already have an active session");
         }
         session_->IncreaseSessionCnt();
-        session_->SetSessionUserId(GetUserIdDefault());
-        auto backupConnection = session_->CreateBackupConnection(bundleName);
-        if (backupConnection == nullptr) {
-            HILOGE("backupConnection is null. bundleName: %{public}s", bundleName.c_str());
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        auto callConnected = GetBackupInfoConnectDone(wptr(this), bundleName);
-        auto callDied = GetBackupInfoConnectDied(wptr(this), bundleName);
-        backupConnection->SetCallback(callConnected);
-        backupConnection->SetCallDied(callDied);
-        AAFwk::Want want = CreateConnectWant(bundleName);
-        auto ret = backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
-        if (ret) {
-            HILOGE("ConnectBackupExtAbility faild, please check bundleName: %{public}s", bundleName.c_str());
-            return BError(BError::Codes::EXT_ABILITY_DIED);
-        }
-        std::unique_lock<std::mutex> lock(getBackupInfoMutx_);
-        getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
-        if (isConnectDied_.load()) {
-            HILOGE("GetBackupInfoConnectDied, please check bundleName: %{public}s", bundleName.c_str());
-            isConnectDied_.store(false);
-            return BError(BError::Codes::EXT_ABILITY_DIED);
-        }
-        auto proxy = backupConnection->GetBackupExtProxy();
-        if (!proxy) {
-            HILOGE("Extension backup Proxy is empty.");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        ret = proxy->GetBackupInfo(result);
-        backupConnection->DisconnectBackupExtAbility();
-        if (ret != ERR_OK) {
-            HILOGE("Call Ext GetBackupInfo faild.");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
+        auto ret = GetBackupInfoCmdHandle(bundleName, result);
         HILOGI("Service::GetBackupInfo end. result: %s", result.c_str());
         session_->DecreaseSessionCnt();
-        return BError(BError::Codes::OK);
+        return ret;
     } catch (...) {
         session_->DecreaseSessionCnt();
         HILOGI("Unexpected exception");
@@ -1483,8 +1519,13 @@ ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &res
     };
     try {
         HILOGI("Service::UpdateTimer begin.");
-        VerifyCaller();
+        if (session_ == nullptr) {
+            HILOGE("Update Timer error, session is empty.");
+            result = false;
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         session_->IncreaseSessionCnt();
+        VerifyCaller();
         result = session_->UpdateTimer(bundleName, timeOut, timeoutCallback);
         session_->DecreaseSessionCnt();
         return BError(BError::Codes::OK);
@@ -1498,25 +1539,42 @@ ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &res
 
 ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result)
 {
-    HILOGI("Begin, bundle name:%{public}s, sendRate is:%{public}d", bundleName.c_str(), sendRate);
-    VerifyCaller();
-    IServiceReverse::Scenario scenario = session_ -> GetScenario();
-    if (scenario != IServiceReverse::Scenario::BACKUP) {
-        HILOGE("This method is applicable to the backup scenario");
-        return BError(BError::Codes::SA_INVAL_ARG);
-    }
-    auto backupConnection  = session_->GetExtConnection(bundleName);
-    auto proxy = backupConnection->GetBackupExtProxy();
-    if (!proxy) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
-    }
-    auto ret = proxy->UpdateFdSendRate(bundleName, sendRate);
-    if (ret != NO_ERROR) {
+    try {
+        HILOGI("Begin, bundle name:%{public}s, sendRate is:%{public}d", bundleName.c_str(), sendRate);
+        if (session_ == nullptr) {
+            HILOGE("Update Send Rate error, session is empty.");
+            result = false;
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        session_->IncreaseSessionCnt();
+        VerifyCaller();
+        IServiceReverse::Scenario scenario = session_ -> GetScenario();
+        if (scenario != IServiceReverse::Scenario::BACKUP) {
+            HILOGE("This method is applicable to the backup scenario");
+            result = false;
+            session_->DecreaseSessionCnt();
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        auto backupConnection  = session_->GetExtConnection(bundleName);
+        auto proxy = backupConnection->GetBackupExtProxy();
+        if (!proxy) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+        }
+        auto ret = proxy->UpdateFdSendRate(bundleName, sendRate);
+        if (ret != NO_ERROR) {
+            result = false;
+            session_->DecreaseSessionCnt();
+            return BError(BError::Codes::EXT_BROKEN_IPC);
+        }
+        result = true;
+        session_->DecreaseSessionCnt();
+        return BError(BError::Codes::OK);
+    } catch (...) {
         result = false;
-        return BError(BError::Codes::EXT_BROKEN_IPC);
+        session_->DecreaseSessionCnt();
+        HILOGI("Unexpected exception");
+        return EPERM;
     }
-    result = true;
-    return BError(BError::Codes::OK);
 }
 
 AAFwk::Want Service::CreateConnectWant (BundleName &bundleName)

@@ -475,6 +475,7 @@ public:
     bool ValidRestoreDataType(RestoreTypeEnum restoreType);
 
     Impl GetImpl();
+    int GetSessionCnt();
 
 private:
     /**
@@ -541,6 +542,7 @@ private:
     uint32_t extConnectNum_ {0};
     Utils::Timer extBundleTimer {"backupBundleExtTimer"};
     std::atomic<int> sessionCnt_ {0};
+    bool unloadSAFlag_ {false};
     int32_t memoryParaCurSize_ {BConstants::DEFAULT_VFS_CACHE_PRESSURE};
 };
 } // namespace OHOS::FileManagement::Backup

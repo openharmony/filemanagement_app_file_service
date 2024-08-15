@@ -53,6 +53,11 @@ SvcSessionManager::Impl SvcSessionManager::GetImpl()
     return impl_;
 }
 
+int SvcSessionManager::GetSessionCnt()
+{
+    return sessionCnt_.load();
+}
+
 ErrCode SvcSessionManager::Active(Impl newImpl)
 {
     unique_lock<shared_mutex> lock(lock_);
@@ -71,6 +76,7 @@ ErrCode SvcSessionManager::Active(Impl newImpl)
 
     InitClient(newImpl);
     impl_ = newImpl;
+    unloadSAFlag_ = false;
     return BError(BError::Codes::OK);
 }
 
@@ -92,6 +98,7 @@ void SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool
     deathRecipient_ = nullptr;
     HILOGI("Succeed to deactive a session");
     impl_ = {};
+    unloadSAFlag_ = true;
     extConnectNum_ = 0;
 }
 
@@ -729,6 +736,15 @@ void SvcSessionManager::DecreaseSessionCnt()
         sessionCnt_--;
     } else {
         HILOGE("Invalid sessionCount.");
+        return;
+    }
+    if (reversePtr_ == nullptr) {
+        HILOGE("Service reverse pointer is empty.");
+        return;
+    }
+    if (sessionCnt_.load() <= 0 && unloadSAFlag_ == true) {
+        HILOGI("do unload Service.");
+        reversePtr_->UnloadService();
     }
 }
 

@@ -257,7 +257,8 @@ void BReportEntity::CheckAndUpdateIfReportLineEncoded(std::string &path)
     }
 
     unordered_map<string, struct ReportFileInfo> infos = GetReportInfos();
-    if (infos.size() == 1) {
+    constexpr int BIG_FILE_REPORT_INFO_NUM = 1;
+    if (infos.size() == BIG_FILE_REPORT_INFO_NUM) {
         auto info = infos.begin();
         path = info->first;
     } else {
