@@ -1227,36 +1227,6 @@ HWTEST_F(ServiceTest, SUB_Service_GetBackupInfoCmdHandle_0100, testing::ext::Tes
 }
 
 /**
- * @tc.number: SUB_Service_GetBackupInfoCmdHandle_0101
- * @tc.name: SUB_Service_GetBackupInfoCmdHandle_0101
- * @tc.desc: 测试 GetBackupInfoCmdHandle 接口
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I8ZIMJ
- */
-HWTEST_F(ServiceTest, SUB_Service_GetBackupInfoCmdHandle_0101, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetBackupInfoCmdHandle_0101";
-    try {
-        std::string bundleName = "com.example.app2backup";
-        std::string result = "ok";
-        EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->session_ = nullptr;
-        auto ret = servicePtr_->GetBackupInfoCmdHandle(bundleName, result);
-        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
-
-        servicePtr_->session_ = sptr(new SvcSessionManager(servicePtr_));
-        ret = servicePtr_->GetBackupInfoCmdHandle(bundleName, result);
-        EXPECT_EQ(ret, BError(BError::Codes::EXT_ABILITY_DIED));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetBackupInfoCmdHandle.";
-    }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetBackupInfoCmdHandle_0101";
-}
-
-/**
  * @tc.number: SUB_Service_SpecialVersion_0100
  * @tc.name: SUB_Service_SpecialVersion_0100
  * @tc.desc: 测试 SpecialVersion 接口

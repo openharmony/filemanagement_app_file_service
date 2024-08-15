@@ -236,6 +236,9 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0500, test
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
         ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+        SetMockGetInstance(false);
+        ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames);
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
         restorePtr_ = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
@@ -269,6 +272,9 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0501, test
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
         ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames, detailInfos);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+        SetMockGetInstance(false);
+        ret = restorePtr_->AppendBundles(UniqueFd(-1), bundleNames, detailInfos);
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
         restorePtr_ = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
@@ -300,10 +306,43 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0600, test
         GTEST_LOG_(INFO) << "GetInstance is true but not equal to parameter";
         SetMockGetInstance(true);
         restorePtr_->RegisterBackupServiceDied(nullptr);
+        Init();
+        SetMockGetInstance(true);
+        restorePtr_->RegisterBackupServiceDied(callbacks_.onBackupServiceDied);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-an exception occurred by RegisterBackupServiceDied.";
     }
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-end SUB_backup_b_session_restore_async_0600";
+}
+
+/**
+ * @tc.number: SUB_backup_b_session_restore_async_0700
+ * @tc.name: SUB_backup_b_session_restore_async_0700
+ * @tc.desc: 测试Release接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7L7A6
+ */
+HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0700, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0700";
+    try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_async_0700 restorePtr_ == nullptr";
+            return;
+        }
+        SetMockGetInstance(false);
+        ErrCode ret = restorePtr_->Release();
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
+        SetMockGetInstance(true);
+        ret = restorePtr_->Release();
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-an exception occurred by ~BSessionRestoreAsync.";
+    }
+    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-end SUB_backup_b_session_restore_async_0700";
 }
 } // namespace OHOS::FileManagement::Backup
