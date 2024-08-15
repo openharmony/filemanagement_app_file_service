@@ -667,6 +667,43 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishIncrementalFile_0100, testin
 }
 
 /**
+ * @tc.number: SUB_Service_proxy_PublishSAIncrementalFile_0100
+ * @tc.name: SUB_Service_proxy_PublishSAIncrementalFile_0100
+ * @tc.desc: 测试 PublishSAIncrementalFile 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishSAIncrementalFile_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_PublishSAIncrementalFile_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_PublishSAIncrementalFile_0100 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+
+    string bundleName = "com.example.app2backup";
+    string fileName = "";
+    BFileInfo fileInfo(bundleName, fileName, -1);
+    TestManager tm("AppIncrementalFileReady_GetFd_0100");
+    std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
+    UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+    ErrCode ret = proxy_->PublishSAIncrementalFile(fileInfo, move(fd));
+    EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+    TestManager tmErr("AppIncrementalFileReady_GetFd_0200");
+    UniqueFd fdErr(open(tmErr.GetRootDirCurTest().append(FILE_NAME).data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+    ret = proxy_->PublishSAIncrementalFile(fileInfo, move(fdErr));
+    EXPECT_NE(ret, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_PublishSAIncrementalFile_0100";
+}
+
+/**
  * @tc.number: SUB_Service_proxy_AppIncrementalFileReady_0100
  * @tc.name: SUB_Service_proxy_AppIncrementalFileReady_0100
  * @tc.desc: 测试 AppIncrementalFileReady 接口成功和失败
