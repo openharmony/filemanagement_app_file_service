@@ -275,6 +275,11 @@ SvcSessionManager::Impl SvcSessionManager::GetImpl()
     return BackupSvcSessionManager::session->GetImpl();
 }
 
+int SvcSessionManager::GetSessionCnt()
+{
+    return BackupSvcSessionManager::session->GetSessionCnt();
+}
+
 void SvcSessionManager::SetIncrementalData(const BIncrementalData &incrementalData)
 {
     BackupSvcSessionManager::session->SetIncrementalData(incrementalData);

@@ -393,6 +393,11 @@ SvcSessionManager::Impl SvcSessionManager::GetImpl()
     return impl_;
 }
 
+int SvcSessionManager::GetSessionCnt()
+{
+    return sessionCnt_.load();
+}
+
 void SvcSessionManager::SetIncrementalData(const BIncrementalData &incrementalData) {}
 
 int32_t SvcSessionManager::GetIncrementalManifestFd(const string &bundleName)

@@ -173,6 +173,13 @@ public:
      *
      */
     void SessionDeactive();
+
+    /**
+     * @brief 卸载服务
+     *
+     */
+    void UnloadService();
+
     /**
      * @brief 构造拉起应用所需的want
      *
@@ -363,6 +370,14 @@ private:
     void NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string &callerName);
 
     void SetWant(AAFwk::Want &want, const BundleName &bundleName, const BConstants::ExtensionAction &action);
+    /**
+     * @brief GetBackupInfo 任务执行
+     *
+     * @param bundleName 应用名称
+     * @param result 业务结果出参
+     *
+     */
+    ErrCode GetBackupInfoCmdHandle(BundleName &bundleName, std::string &result);
 
 private:
     static sptr<Service> instance_;
@@ -371,6 +386,7 @@ private:
     std::condition_variable getBackupInfoCondition_;
     static inline std::atomic<uint32_t> seed {1};
     std::atomic<bool> isConnectDied_ {false};
+    std::atomic<bool> isUnloadService_ {false};
 
     sptr<SvcSessionManager> session_;
     sptr<SchedScheduler> sched_;

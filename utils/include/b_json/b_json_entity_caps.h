@@ -146,7 +146,7 @@ public:
         return obj_["extraInfo"];
     }
 
-    bool CheckBundlePropertiesIsValid(const Json::Value &bundleInfo)
+    bool CheckBundlePropertiesValid(const Json::Value &bundleInfo)
     {
         if (!bundleInfo) {
             HILOGE("Failed Check bundleInfo");
@@ -187,7 +187,7 @@ public:
         }
         std::vector<BundleInfo> bundleInfos;
         for (const auto &item : obj_["bundleInfos"]) {
-            if (!CheckBundlePropertiesIsValid(item)) {
+            if (!CheckBundlePropertiesValid(item)) {
                 return {};
             }
             string restoreDeps("");
