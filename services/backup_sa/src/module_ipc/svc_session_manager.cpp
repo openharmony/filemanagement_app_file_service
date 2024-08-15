@@ -501,6 +501,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
         if (it != impl_.backupExtNameMap.end()) {
             HILOGI("BackupExtNameMap already contain %{public}s", bundleName.c_str());
             info.backUpConnection = impl_.backupExtNameMap[bundleName].backUpConnection;
+            info.saBackupConnection = impl_.backupExtNameMap[bundleName].saBackupConnection;
             info.appendNum = impl_.backupExtNameMap[bundleName].appendNum + 1;
             impl_.backupExtNameMap[bundleName] = info;
             continue;
