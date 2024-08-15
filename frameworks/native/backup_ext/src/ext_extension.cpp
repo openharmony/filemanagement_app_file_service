@@ -604,9 +604,17 @@ int BackupExtExtension::DoRestore(const string &fileName)
 
     // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
     if (extension_->SpecialVersionForCloneAndCloud() || extension_->UseFullBackupOnly()) {
-        UntarFile::GetInstance().UnPacket(tarName, path);
+        ErrCode err = UntarFile::GetInstance().UnPacket(tarName, path);
+        if (err != 0) {
+            HILOGE("Failed to untar file = %{public}s, err = %{public}d", tarName.c_str(), err);
+            return err;
+        }
     } else {
-        UntarFile::GetInstance().UnPacket(tarName, "/");
+        ErrCode err = UntarFile::GetInstance().UnPacket(tarName, "/");
+        if (err != 0) {
+            HILOGE("Failed to untar file = %{public}s, err = %{public}d", tarName.c_str(), err);
+            return err;
+        }
     }
     HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
 
@@ -638,6 +646,7 @@ int BackupExtExtension::DoIncrementalRestore()
     }
     auto fileSet = GetIdxFileData();
     auto extManageInfo = GetExtManageInfo();
+    ErrCode err = ERR_OK;
     for (auto item : fileSet) { // 处理要解压的tar文件
         if (ExtractFileExt(item) == "tar" && !IsUserTar(item, extManageInfo)) {
             if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
@@ -650,14 +659,14 @@ int BackupExtExtension::DoIncrementalRestore()
 
             // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
             if (extension_->SpecialVersionForCloneAndCloud() || extension_->UseFullBackupOnly()) {
-                UntarFile::GetInstance().IncrementalUnPacket(tarName, path, GetTarIncludes(tarName));
+                err = UntarFile::GetInstance().IncrementalUnPacket(tarName, path, GetTarIncludes(tarName));
             } else {
-                UntarFile::GetInstance().IncrementalUnPacket(tarName, "/", GetTarIncludes(tarName));
+                err = UntarFile::GetInstance().IncrementalUnPacket(tarName, "/", GetTarIncludes(tarName));
             }
             HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
         }
     }
-    return ERR_OK;
+    return err;
 }
 
 void BackupExtExtension::AsyncTaskBackup(const string config)
@@ -731,8 +740,11 @@ static ErrCode RestoreTarForSpecialCloneCloud(ExtManageInfo item)
     if (untarPath.back() != BConstants::FILE_SEPARATOR_CHAR) {
         untarPath += BConstants::FILE_SEPARATOR_CHAR;
     }
-    UntarFile::GetInstance().UnPacket(tarName, untarPath);
-
+    ErrCode err = UntarFile::GetInstance().UnPacket(tarName, untarPath);
+    if (err != ERR_OK) {
+        HILOGE("Failed to untar file = %{public}s, err = %{public}d", tarName.c_str(), err);
+        return err;
+    }
     if (!RemoveFile(tarName)) {
         HILOGE("Failed to delete the backup tar %{public}s", tarName.c_str());
     }
@@ -1094,7 +1106,10 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
         try {
             auto callBackupEx = ptr->RestoreResultCallbackEx(obj);
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx);
-            HILOGI("OnRestore done err = %{public}d", err);
+            if (err != ERR_OK) {
+                ptr->AppDone(BError::GetCodeByErrno(err));
+                ptr->DoClear();
+            }
         } catch (const BError &e) {
             ptr->AppDone(e.GetCode());
             ptr->DoClear();
@@ -1148,7 +1163,11 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
         try {
             auto callBackupEx = ptr->IncRestoreResultCallbackEx(obj);
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx);
-            HILOGI("OnRestore done err = %{public}d", err);
+            if (err != ERR_OK) {
+                HILOGE("OnRestore done, err = %{pubilc}d", err);
+                ptr->AppIncrementalDone(BError::GetCodeByErrno(err));
+                ptr->DoClear();
+            }
         } catch (const BError &e) {
             ptr->AppIncrementalDone(e.GetCode());
             ptr->DoClear();
@@ -1246,7 +1265,11 @@ void BackupExtExtension::AsyncTaskOnBackup()
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
             auto callBackupEx = ptr->HandleTaskBackupEx(obj);
-            ptr->extension_->OnBackup(callBackup, callBackupEx);
+            ErrCode err = ptr->extension_->OnBackup(callBackup, callBackupEx);
+            if (err != ERR_OK) {
+                HILOGE("OnBackup done, err = %{pubilc}d", err);
+                ptr->AppDone(BError::GetCodeByErrno(err));
+            }
         } catch (const BError &e) {
             ptr->AppDone(e.GetCode());
         } catch (const exception &e) {
@@ -1616,7 +1639,11 @@ void BackupExtExtension::AsyncTaskOnIncrementalBackup()
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
             auto callBackupEx = ptr->HandleBackupEx(obj);
-            ptr->extension_->OnBackup(callBackup, callBackupEx);
+            ErrCode err = ptr->extension_->OnBackup(callBackup, callBackupEx);
+            if (err != ERR_OK) {
+                HILOGE("OnBackup done, err = %{pubilc}d", err);
+                ptr->AppIncrementalDone(BError::GetCodeByErrno(err));
+            }
         } catch (const BError &e) {
             ptr->AppIncrementalDone(e.GetCode());
         } catch (const exception &e) {
@@ -1748,9 +1775,9 @@ int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> 
     if (smallFiles.size() == 0 && bigFiles.size() == 0) {
         // 没有增量，则不需要上传
         TarMap tMap;
-        IncrementalAllFileReady(tMap, allFiles, proxy);
+        ErrCode err = IncrementalAllFileReady(tMap, allFiles, proxy);
         HILOGI("Do increment backup, IncrementalAllFileReady end, file empty");
-        return ERR_OK;
+        return err;
     }
     // tar包数据
     TarMap tarMap;
@@ -1762,10 +1789,10 @@ int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> 
     HILOGI("Do increment backup, IncrementalBigFileReady end");
     bigMap.insert(tarMap.begin(), tarMap.end());
     // 回传manage.json和全量文件
-    IncrementalAllFileReady(bigMap, allFiles, proxy);
+    ErrCode err = IncrementalAllFileReady(bigMap, allFiles, proxy);
     HILOGI("End, bigFiles num:%{public}zu, smallFiles num:%{public}zu, allFiles num:%{public}zu", bigFiles.size(),
         smallFiles.size(), allFiles.size());
-    return ERR_OK;
+    return err;
 }
 
 void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
