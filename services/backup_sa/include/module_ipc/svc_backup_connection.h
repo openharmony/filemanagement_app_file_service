@@ -84,6 +84,11 @@ public:
      */
     void SetCallDied(std::function<void(const std::string &&)> callDied);
 
+    /**
+     * @brief wait disconnect done
+     */
+    bool WaitDisconnectDone();
+
 public:
     SvcBackupConnection(std::function<void(const std::string &&)> callDied,
                         std::function<void(const std::string &&)> callConnected)
@@ -94,7 +99,9 @@ public:
 
 private:
     std::mutex mutex_;
+    std::mutex waitMutex_;
     std::condition_variable condition_;
+    std::condition_variable waitCondition_;
     std::atomic<bool> isConnected_ = {false};
     std::atomic<bool> isConnectedDone_ = {false};
     sptr<IExtension> backupProxy_;

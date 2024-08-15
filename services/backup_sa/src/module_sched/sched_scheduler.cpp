@@ -72,14 +72,13 @@ void SchedScheduler::Sched(string bundleName)
 
 void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
 {
-    HILOGE("start");
     if (sessionPtr_ == nullptr) {
         HILOGE("ExecutingQueueTasks bundle %{public}s error, sessionPtr is empty", bundleName.c_str());
         return;
     }
     BConstants::ServiceSchedAction action = sessionPtr_->GetServiceSchedAction(bundleName);
     if (action == BConstants::ServiceSchedAction::START) {
-        // 注册启动定时器
+        // register timer for connect extension
         auto callStart = [reversePtr {reversePtr_}, bundleName]() {
             HILOGE("Extension connect failed = %{public}s", bundleName.data());
             auto ptr = reversePtr.promote();
@@ -91,9 +90,12 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
         unique_lock<shared_mutex> lock(lock_);
         bundleTimeVec_.emplace_back(make_tuple(bundleName, iTime));
         lock.unlock();
-        // 启动extension
+        // launch extension
         if (reversePtr_ != nullptr) {
-            reversePtr_->LaunchBackupExtension(bundleName);
+            ErrCode errCode = reversePtr_->LaunchBackupExtension(bundleName);
+            if (errCode) {
+                reversePtr_->ExtConnectFailed(bundleName, errCode);
+            }
         }
     } else if (action == BConstants::ServiceSchedAction::RUNNING) {
         HILOGI("Current bundle %{public}s process is running", bundleName.data());
@@ -106,12 +108,10 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
             throw BError(BError::Codes::SA_INVAL_ARG, "Failed to find timer");
         }
         auto &[bName, iTime] = *iter;
-        // 移除启动定时器 当前逻辑无启动成功后的ext心跳检测
+        // unregister timer
         extTime_.Unregister(iTime);
         lock.unlock();
-        // 开始执行备份恢复流程
-        HILOGI("Current bundle %{public}s extension start", bundleName.data());
-        //通知应用市场设置处置
+        //notify AppGallery to start restore
         if (reversePtr_ != nullptr) {
             reversePtr_->SendStartAppGalleryNotify(bundleName);
             reversePtr_->ExtStart(bundleName);

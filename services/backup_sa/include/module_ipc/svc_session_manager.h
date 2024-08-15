@@ -65,6 +65,7 @@ struct BackupExtInfo {
     std::string backupParameters;
     int32_t backupPriority;
     std::string extInfo;
+    int32_t appendNum {1};
 };
 
 class Service;
