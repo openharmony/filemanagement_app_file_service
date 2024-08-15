@@ -425,6 +425,33 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
     }
 }
 
+void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
+    std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType)
+{
+    HILOGI("Start");
+    for (auto restoreInfo : restoreBundleInfos) {
+        auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
+            [&restoreInfo](const auto &bundleName) { return bundleName == restoreInfo.name; });
+        if (it == restoreBundleNames.end()) {
+            throw BError(BError::Codes::SA_BUNDLE_INFO_EMPTY, "Can't find bundle name");
+        }
+        HILOGI("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
+            restoreInfo.extensionName.c_str());
+        if ((restoreInfo.allToBackup == false && !SpecialVersion(restoreInfo.versionName)) ||
+            (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) {
+            OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, restoreInfo.name);
+            session_->RemoveExtInfo(restoreInfo.name);
+            continue;
+        }
+        session_->SetBundleRestoreType(restoreInfo.name, restoreType);
+        session_->SetBundleVersionCode(restoreInfo.name, restoreInfo.versionCode);
+        session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
+        session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
+        session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
+    }
+    HILOGI("End");
+}
+
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              const vector<BundleName> &bundleNames,
                                              RestoreTypeEnum restoreType,
@@ -439,41 +466,26 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
+        HandleExceptionOnAppendBundles(session_, bundleNames, restoreBundleNames);
         if (restoreBundleNames.empty()) {
             session_->DecreaseSessionCnt();
             HILOGW("RestoreBundleNames is empty.");
             return BError(BError::Codes::OK);
         }
         session_->AppendBundles(restoreBundleNames);
-        for (auto restoreInfo : restoreInfos) {
-            auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
-                [&restoreInfo](const auto &bundleName) { return bundleName == restoreInfo.name; });
-            if (it == restoreBundleNames.end()) {
-                throw BError(BError::Codes::SA_BUNDLE_INFO_EMPTY, "Can't find bundle name");
-            }
-            HILOGI("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
-                   restoreInfo.extensionName.c_str());
-            if ((restoreInfo.allToBackup == false && !SpecialVersion(restoreInfo.versionName)) ||
-                (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) {
-                OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, restoreInfo.name);
-                session_->RemoveExtInfo(restoreInfo.name);
-                continue;
-            }
-            session_->SetBundleRestoreType(restoreInfo.name, restoreType);
-            session_->SetBundleVersionCode(restoreInfo.name, restoreInfo.versionCode);
-            session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
-            session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
-            session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
-        }
+        SetCurrentSessProperties(restoreInfos, restoreBundleNames, restoreType);
         OnStartSched();
         session_->DecreaseSessionCnt();
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        HILOGE("Catch exception");
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt();
         return e.GetCode();
     } catch (...) {
+        HILOGE("Unexpected exception");
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt();
-        HILOGI("Unexpected exception");
         return EPERM;
     }
 }
@@ -542,16 +554,19 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
         session_->DecreaseSessionCnt();
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt();
         HILOGE("Failed, errCode = %{public}d", e.GetCode());
         return e.GetCode();
     } catch (const exception &e) {
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt();
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
+        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt();
-        HILOGI("Unexpected exception");
+        HILOGE("Unexpected exception");
         return EPERM;
     }
 }
@@ -588,16 +603,19 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
         session_->DecreaseSessionCnt();
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        session_->DecreaseSessionCnt();
         HILOGE("Failed, errCode = %{public}d", e.GetCode());
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
+        session_->DecreaseSessionCnt();
         return e.GetCode();
     } catch (const exception &e) {
-        session_->DecreaseSessionCnt();
         HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
+        session_->DecreaseSessionCnt();
         return EPERM;
     } catch(...) {
-        session_->DecreaseSessionCnt();
         HILOGE("Unexpected exception");
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
+        session_->DecreaseSessionCnt();
         return EPERM;
     }
 }

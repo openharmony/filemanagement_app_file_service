@@ -326,6 +326,16 @@ private:
         RestoreTypeEnum restoreType);
 
     /**
+     * @brief set session info
+     *
+     * @param restoreBundleInfos: bundles to be restored
+     * @param restoreBundleNames: bundles info to be restored
+     * @param restoreType: retore type
+     */
+    void SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
+        std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType);
+
+    /**
      * @brief 通知权限模块
      *
      * @param bundleName 包名称
