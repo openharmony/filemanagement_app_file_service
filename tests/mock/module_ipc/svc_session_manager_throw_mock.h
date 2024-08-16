@@ -67,9 +67,11 @@ public:
     virtual void SetBundleVersionName(const std::string &, std::string) = 0;
     virtual std::string GetBundleVersionName(const std::string &) = 0;
     virtual void SetBundleDataSize(const std::string &, int64_t) = 0;
-    virtual void BundleExtTimerStart(const std::string &, const Utils::Timer::TimerCallback &) = 0;
+    virtual bool StartFwkTimer(const std::string &, const Utils::Timer::TimerCallback &) = 0;
+    virtual bool StopFwkTimer(const std::string &) = 0;
+    virtual bool StartExtTimer(const std::string &, const Utils::Timer::TimerCallback &) = 0;
+    virtual bool StopExtTimer(const std::string &) = 0;
     virtual bool UpdateTimer(const std::string &, uint32_t, const Utils::Timer::TimerCallback &) = 0;
-    virtual void BundleExtTimerStop(const std::string &) = 0;
     virtual void IncreaseSessionCnt() = 0;
     virtual void DecreaseSessionCnt() = 0;
     virtual int32_t GetMemParaCurSize() = 0;
@@ -130,9 +132,11 @@ public:
     MOCK_METHOD(void, SetBundleVersionName, (const std::string &, std::string));
     MOCK_METHOD(std::string, GetBundleVersionName, (const std::string &));
     MOCK_METHOD(void, SetBundleDataSize, (const std::string &, int64_t));
-    MOCK_METHOD(void, BundleExtTimerStart, (const std::string &, const Utils::Timer::TimerCallback &));
+    MOCK_METHOD(bool, StartFwkTimer, (const std::string &, const Utils::Timer::TimerCallback &));
+    MOCK_METHOD(bool, StopFwkTimer, (const std::string &));
+    MOCK_METHOD(bool, StartExtTimer, (const std::string &, const Utils::Timer::TimerCallback &));
+    MOCK_METHOD(bool, StopExtTimer, (const std::string &));
     MOCK_METHOD(bool, UpdateTimer, (const std::string &, uint32_t, const Utils::Timer::TimerCallback &));
-    MOCK_METHOD(void, BundleExtTimerStop, (const std::string &));
     MOCK_METHOD(void, IncreaseSessionCnt, ());
     MOCK_METHOD(void, DecreaseSessionCnt, ());
     MOCK_METHOD(int32_t, GetMemParaCurSize, ());

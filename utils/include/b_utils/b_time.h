@@ -13,17 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_BACKUP_B_SA_H
-#define OHOS_FILEMGMT_BACKUP_B_SA_H
+#ifndef OHOS_FILEMGMT_BACKUP_B_TIME_H
+#define OHOS_FILEMGMT_BACKUP_B_TIME_H
 #include <string>
 
 namespace OHOS::FileManagement::Backup {
-class SAUtils {
+class TimeUtils {
 public:
-    static bool IsSABundleName(std::string bundleName);
-    static bool CheckBackupPermission();
-    static bool CheckPermission(const std::string &permission);
-    static bool IsSystemApp();
+    static int64_t GetTimeS();
+    static int64_t GetTimeMS();
+    static int64_t GetTimeUS();
 };
-} // namespace OHOS::FileManagement::Backup::SAUtils
-#endif // OHOS_FILEMGMT_BACKUP_B_SA_H
+} // namespace OHOS::FileManagement::TimeUtils
+#endif // OHOS_FILEMGMT_BACKUP_B_TIME_H

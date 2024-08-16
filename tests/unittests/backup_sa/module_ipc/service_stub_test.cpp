@@ -80,6 +80,8 @@ public:
     MOCK_METHOD2(GetIncrementalFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
     MOCK_METHOD2(GetBackupInfo, ErrCode(string &bundleName, string &result));
     MOCK_METHOD3(UpdateTimer, ErrCode(BundleName &bundleName, uint32_t timeOut, bool &result));
+    MOCK_METHOD1(StartExtTimer, ErrCode(bool &isExtStart));
+    MOCK_METHOD1(StartFwkTimer, ErrCode(bool &isFwkStart));
     MOCK_METHOD3(UpdateSendRate, ErrCode(std::string &bundleName, int32_t sendRate, bool &result));
 };
 

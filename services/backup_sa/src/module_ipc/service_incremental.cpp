@@ -413,7 +413,8 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
             // 通知extension清空缓存
             proxy->HandleClear();
             // 清除Timer
-            session_->BundleExtTimerStop(callerName);
+            session_->StopFwkTimer(callerName);
+            session_->StopExtTimer(callerName);
             // 通知TOOL 备份完成
             HILOGI("reverse: Will notify IncrementalBackupOnBundleFinished");
             session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK),
@@ -457,7 +458,8 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
                 return BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
             }
             proxy->HandleClear();
-            session_->BundleExtTimerStop(callerName);
+            session_->StopFwkTimer(callerName);
+            session_->StopExtTimer(callerName);
             NotifyCallerCurAppIncrementDone(errCode, callerName);
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
