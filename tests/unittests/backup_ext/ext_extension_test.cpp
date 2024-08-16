@@ -27,6 +27,7 @@
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "ext_extension.cpp"
+#include "sub_ext_extension.cpp"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -153,8 +154,10 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0300, testing::ext::TestSize.Level
     try {
         string tarFile = " ";
         vector<ExtManageInfo> extManageInfo;
-        bool ret = IsUserTar(tarFile, extManageInfo);
+        off_t tarFileSize = 0;
+        bool ret = IsUserTar(tarFile, extManageInfo, tarFileSize);
         EXPECT_FALSE(ret);
+        EXPECT_TRUE(tarFileSize == 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
@@ -177,8 +180,10 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0301, testing::ext::TestSize.Level
     try {
         string tarFile = TAR_FILE;
         vector<ExtManageInfo> extManageInfo;
-        bool ret = IsUserTar(tarFile, extManageInfo);
+        off_t tarFileSize = 0;
+        bool ret = IsUserTar(tarFile, extManageInfo, tarFileSize);
         EXPECT_FALSE(ret);
+        EXPECT_TRUE(tarFileSize == 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
@@ -204,9 +209,12 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0302, testing::ext::TestSize.Level
         ExtManageInfo info;
         info.hashName = TAR_FILE;
         info.isUserTar = true;
+        info.sta.st_size = 1; // 1: test number;
         extManageInfo.push_back(info);
-        bool ret = IsUserTar(tarFile, extManageInfo);
+        off_t tarFileSize = 0;
+        bool ret = IsUserTar(tarFile, extManageInfo, tarFileSize);
         EXPECT_TRUE(ret);
+        EXPECT_TRUE(tarFileSize == 1);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";

@@ -201,4 +201,41 @@ std::string BJsonUtil::BuildBundleNameIndexInfo(const std::string &bundleName, i
     result += std::to_string(appIndex);
     return result;
 }
+
+bool BJsonUtil::BuildRestoreErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo)
+{
+    cJSON *errJson = cJSON_CreateObject();
+    if (errJson == nullptr) {
+        HILOGE("Creat json failed");
+        return false;
+    }
+    cJSON *arrJson = cJSON_CreateArray();
+    if (arrJson == nullptr) {
+        cJSON_Delete(errJson);
+        return false;
+    }
+    for (const auto &it : errFileInfo) {
+        for (const auto &codeIt : it.second) {
+            cJSON *eleJson = cJSON_CreateObject();
+            if (eleJson == nullptr) {
+                HILOGE("Creat eleJson failed");
+                continue;
+            }
+            cJSON_AddStringToObject(eleJson, "type", "ErrorInfo");
+            cJSON_AddStringToObject(eleJson, "errorInfo", it.first.c_str());
+            cJSON_AddNumberToObject(eleJson, "errorCode", codeIt);
+            cJSON_AddItemToArray(arrJson, eleJson);
+        }
+    }
+    cJSON_AddItemToObject(errJson, "resultInfo", arrJson);
+    char *data = cJSON_Print(errJson);
+    if (data == nullptr) {
+        cJSON_Delete(errJson);
+        return false;
+    }
+    jsonStr = std::string(data);
+    cJSON_Delete(errJson);
+    cJSON_free(data);
+    return true;
+}
 }

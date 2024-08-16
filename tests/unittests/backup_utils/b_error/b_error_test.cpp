@@ -485,7 +485,7 @@ HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0200, testing::ext::TestSize.Level0)
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCodeByErrno_0200";
     int32_t errnoSys = EPERM;
     int result = BError::GetCodeByErrno(errnoSys);
-    EXPECT_EQ(result, BError::BackupErrorCode::E_IPCSS);
+    EXPECT_EQ(result, BError::BackupErrorCode::E_PERM);
     GTEST_LOG_(INFO) << "BErrorTest-end b_error_GetCodeByErrno_0200";
 }
 

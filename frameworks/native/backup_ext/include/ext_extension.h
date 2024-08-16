@@ -33,6 +33,7 @@
 #include "tar_file.h"
 #include "thread_pool.h"
 #include "unique_fd.h"
+#include "untar_file.h"
 
 namespace OHOS::FileManagement::Backup {
 using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
@@ -52,7 +53,6 @@ public:
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
     ErrCode GetBackupInfo(std::string &result) override;
     ErrCode UpdateFdSendRate(std::string &bundleName, int32_t sendRate) override;
-
     void AsyncTaskRestoreForUpgrade(void);
     void ExtClear(void);
     void AsyncTaskIncrementalRestoreForUpgrade(void);
@@ -86,7 +86,7 @@ private:
      *
      * @param fileName name of the file that to be untar
      */
-    int DoRestore(const string &fileName);
+    int DoRestore(const string &fileName, const off_t fileSize);
 
     /**
      * @brief incremental restore
@@ -160,7 +160,9 @@ private:
     void RefreshTimeInfo(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
     void IncrementalPacket(const vector<struct ReportFileInfo> &infos, TarMap &tar, sptr<IService> proxy);
     void DoPacket(const map<string, size_t> &srcFiles, TarMap &tar, sptr<IService> proxy);
-
+    void CheckTmpDirFileInfos(bool isSpecialVersion = false);
+    std::map<std::string, off_t> GetIdxFileInfos(bool isSpecialVersion = false);
+    tuple<bool, vector<string>> CheckRestoreFileInfos();
     /**
      * @brief extension incremental backup restore is done
      *
@@ -195,10 +197,19 @@ private:
     std::function<void(ErrCode, std::string)> AppDoneCallbackEx(wptr<BackupExtExtension> obj);
     std::function<void(ErrCode, const std::string)> HandleBackupEx(wptr<BackupExtExtension> obj);
     std::function<void(ErrCode, const std::string)> HandleTaskBackupEx(wptr<BackupExtExtension> obj);
-    void HandleSpecialVersionRestore(wptr<BackupExtExtension> obj);
+    void HandleSpecialVersionRestore();
     void DeleteBackupIncrementalTars();
     void DeleteBackupTars();
     void SetClearDataFlag(bool isClearData);
+    std::vector<ExtManageInfo> GetExtManageInfo();
+    ErrCode RestoreFilesForSpecialCloneCloud();
+    void RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo &item);
+    ErrCode RestoreTarForSpecialCloneCloud(const ExtManageInfo &item);
+    void RestoreBigFiles(bool appendTargetPath);
+    void FillEndFileInfos(const std::string &path, const unordered_map<string, struct ReportFileInfo> &result);
+    void RestoreBigFileAfter(const string &filePath, const struct stat &sta);
+    void DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
+        const std::tuple<int, EndFileInfo, ErrFileInfo> &result);
 
 private:
     std::shared_mutex lock_;
@@ -214,6 +225,10 @@ private:
     std::string bundleName_;
     int32_t sendRate_ = BConstants::DEFAULT_FD_SEND_RATE;
     bool isClearData_ {true};
+    bool isDebug_ {false};
+    std::map<std::string, off_t> endFileInfos_;
+    std::map<std::string, std::vector<ErrCode>> errFileInfos_;
+    bool isRpValid_ {false};
 };
 } // namespace OHOS::FileManagement::Backup
 

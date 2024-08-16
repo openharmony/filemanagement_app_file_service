@@ -104,6 +104,17 @@ public:
      * @return 拼接结果
      */
     static std::string BuildBundleNameIndexInfo(const std::string &bundleName, int bundleIndex);
+
+    /**
+     * @brief 组建恢复文件错误信息的json
+     *
+     * @param jsonStr 组建结果
+     * @param errCode 错误码
+     *
+     * @return 是否组建成功
+     *
+     */
+    static bool BuildRestoreErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo);
 };
 } // namespace OHOS::FileManagement::Backup
 
