@@ -71,7 +71,7 @@ void ServiceReverse::BackupOnAllBundlesFinished(int32_t errCode)
 
 void ServiceReverse::BackupOnProcessInfo(std::string bundleName, std::string processInfo)
 {
-    HILOGI("errCode = %{public}d", errCode);
+    HILOGI("bundleName = %{public}s", bundleName.c_str());
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onProcess) {
         HILOGI("Error scenario or callback is nullptr");
         return;
@@ -137,7 +137,7 @@ void ServiceReverse::RestoreOnResultReport(string result, std::string bundleName
 
 void ServiceReverse::RestoreOnProcessInfo(std::string bundleName, std::string processInfo)
 {
-    HILOGI("errCode = %{public}d", errCode);
+    HILOGI("bundleName = %{public}s", bundleName.c_str());
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onProcess) {
         HILOGI("Error scenario or callback is nullptr");
         return;

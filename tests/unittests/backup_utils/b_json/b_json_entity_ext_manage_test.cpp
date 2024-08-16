@@ -527,6 +527,31 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0803, testing::ext::
 }
 
 /**
+ * @tc.number: SUB_backup_b_json_entity_ext_manage_0804
+ * @tc.name: b_json_entity_ext_manage_0804
+ * @tc.desc: 测试GetExtManageInfo
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0804, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0804";
+    try {
+        string_view sv = R"([{"isBigFile":false}, {"fileName":"test"}])";
+        BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(sv);
+        auto cache = cachedEntity.Structuralize();
+        auto mp = cache.GetExtManageInfo();
+        EXPECT_TRUE(mp.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-end b_json_entity_ext_manage_0804";
+}
+
+/**
  * @tc.number: SUB_backup_b_json_entity_ext_manage_0900
  * @tc.name: b_json_entity_ext_manage_0900
  * @tc.desc: 测试CheckBigFile中st_size的两种情况
@@ -673,5 +698,33 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0903, testing::ext::
         GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-end b_json_entity_ext_manage_0903";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_ext_manage_0904
+ * @tc.name: b_json_entity_ext_manage_0904
+ * @tc.desc: 测试CheckOwnPackTar各种异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9JXNH
+ */
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0904, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0904";
+    try {
+        string fileName = "/home/user/test.tar";
+        auto ret = CheckOwnPackTar(fileName);
+        EXPECT_FALSE(ret);
+
+        fileName = string(BConstants::PATH_BUNDLE_BACKUP_HOME)
+            .append(BConstants::SA_BUNDLE_BACKUP_BACKUP).append("/part1.tar");
+        ret = CheckOwnPackTar(fileName);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-end b_json_entity_ext_manage_0904";
 }
 } // namespace OHOS::FileManagement::Backup

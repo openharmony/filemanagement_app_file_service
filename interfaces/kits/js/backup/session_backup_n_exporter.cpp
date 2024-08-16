@@ -269,7 +269,7 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
         napi_create_string_utf8(env, bundleName.c_str(), bundleName.size(), &napi_bName);
         argv.push_back(napi_bName);
         napi_value napi_process = nullptr;
-        napi_create_string_utf8(env, process.c_str(), process.size(), &napi_res);
+        napi_create_string_utf8(env, process.c_str(), process.size(), &napi_process);
         argv.push_back(napi_process);
         return true;
     };
@@ -279,6 +279,16 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
 napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info cbinfo)
 {
     HILOGD("called SessionBackup::Constructor begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         HILOGE("Number of arguments unmatched.");
@@ -355,6 +365,16 @@ static bool VerifyParamSuccess(NFuncArg &funcArg, std::vector<std::string> &bund
 napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_info cbinfo)
 {
     HILOGD("called SessionBackup::AppendBundles begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
     std::vector<std::string> bundleNames;
     std::vector<std::string> bundleInfos;
     NFuncArg funcArg(env, cbinfo);
@@ -398,6 +418,16 @@ napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_inf
 napi_value SessionBackupNExporter::Release(napi_env env, napi_callback_info cbinfo)
 {
     HILOGD("called SessionBackup::Release begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
         HILOGE("Number of arguments unmatched.");

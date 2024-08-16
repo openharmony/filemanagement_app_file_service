@@ -54,6 +54,8 @@
 #include "hisysevent.h"
 #include "hitrace_meter.h"
 #include "ipc_skeleton.h"
+#include "access_token.h"
+#include "tokenid_kit.h"
 #include "module_app_gallery/app_gallery_dispose_proxy.h"
 #include "module_external/bms_adapter.h"
 #include "module_external/sms_adapter.h"
@@ -80,6 +82,7 @@ const int32_t CONNECT_WAIT_TIME_S = 15;
 const std::string BACKUPSERVICE_WORK_STATUS_KEY = "persist.backupservice.workstatus";
 const std::string BACKUPSERVICE_WORK_STATUS_ON = "true";
 const std::string BACKUPSERVICE_WORK_STATUS_OFF = "false";
+const std::string BACKUP_PERMISSION = "ohos.permission.BACKUP";
 } // namespace
 
 /* Shell/Xts user id equal to 0/1, we need set default 100 */
@@ -202,8 +205,10 @@ string Service::VerifyCallerAndGetCallerName()
         if (Security::AccessToken::AccessTokenKit::GetHapTokenInfo(tokenCaller, hapTokenInfo) != 0) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Get hap token info failed");
         }
-        session_->VerifyBundleName(hapTokenInfo.bundleName);
-        return hapTokenInfo.bundleName;
+        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(hapTokenInfo.bundleName,
+            hapTokenInfo.instIndex);
+        session_->VerifyBundleName(bundleNameIndexInfo);
+        return bundleNameIndexInfo;
     } else {
         string str = to_string(tokenCaller);
         HILOGE("tokenID = %{private}s", GetAnonyString(str).c_str());
@@ -217,23 +222,34 @@ void Service::VerifyCaller()
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
     int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
     switch (tokenType) {
-        case Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE: /* Update Service */
+        case Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE: { /* Update Service */
+            if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, BACKUP_PERMISSION) !=
+                Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+                throw BError(BError::Codes::SA_REFUSED_ACT,
+                    string("Permission denied, token type is ").append(to_string(tokenType)));
+            }
+            break;
+        }
         case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP: {
-            const string permission = "ohos.permission.BACKUP";
-            if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
-                Security::AccessToken::TypePermissionState::PERMISSION_DENIED) {
-                throw BError(BError::Codes::SA_INVAL_ARG,
-                             string("Permission denied, token type is ").append(to_string(tokenType)));
+            if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, BACKUP_PERMISSION) !=
+                Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+                throw BError(BError::Codes::SA_REFUSED_ACT,
+                    string("Permission denied, token type is ").append(to_string(tokenType)));
+            }
+            uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
+            if (!Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+                throw BError(BError::Codes::SA_REFUSED_ACT,
+                    string("Permission denied, token type is ").append(to_string(tokenType)));
             }
             break;
         }
         case Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL:
             if (IPCSkeleton::GetCallingUid() != BConstants::SYSTEM_UID) {
-                throw BError(BError::Codes::SA_INVAL_ARG, "Calling uid is invalid");
+                throw BError(BError::Codes::SA_REFUSED_ACT, "Calling uid is invalid");
             }
             break;
         default:
-            throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
+            throw BError(BError::Codes::SA_REFUSED_ACT, string("Invalid token type ").append(to_string(tokenType)));
             break;
     }
 }
@@ -285,16 +301,27 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
     } catch (const BError &e) {
         StopAll(nullptr, true);
         return e.GetCode();
+    } catch (const exception &e) {
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
+        return EPERM;
+    } catch (...) {
+        HILOGI("Unexpected exception");
+        return EPERM;
     }
 }
 
 ErrCode Service::Start()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    VerifyCaller(session_->GetScenario());
-    session_->Start();
-    OnStartSched();
-    return BError(BError::Codes::OK);
+    try {
+        VerifyCaller(session_->GetScenario());
+        session_->Start();
+        OnStartSched();
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        HILOGE("Failde to Start");
+        return e.GetCode();
+    }
 }
 
 static bool SpecialVersion(const string &versionName)
@@ -338,6 +365,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     for (auto &restoreInfo : restoreInfos) {
         if (SAUtils::IsSABundleName(restoreInfo.name)) {
             BJsonEntityCaps::BundleInfo info = {.name = restoreInfo.name,
+                                                .appIndex = restoreInfo.appIndex,
                                                 .versionCode = restoreInfo.versionCode,
                                                 .versionName = restoreInfo.versionName,
                                                 .spaceOccupied = restoreInfo.spaceOccupied,
@@ -355,6 +383,7 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
             continue;
         }
         BJsonEntityCaps::BundleInfo info = {.name = (*it).name,
+                                            .appIndex = (*it).appIndex,
                                             .versionCode = (*it).versionCode,
                                             .versionName = (*it).versionName,
                                             .spaceOccupied = (*it).spaceOccupied,
@@ -372,7 +401,8 @@ static void HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
     const vector<BundleName> &appendBundleNames, const vector<BundleName> &restoreBundleNames)
 {
     if (appendBundleNames.size() != restoreBundleNames.size()) {
-        HILOGE("AppendBundleNames not equal restoreBundleNames.");
+        HILOGE("AppendBundleNames not equal restoreBundleNames, appendBundleNames size:%{public}zu,"
+            "restoreBundleNames size:%{public}zu", appendBundleNames.size(), restoreBundleNames.size());
         for (auto bundleName : appendBundleNames) {
             auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
                 [&bundleName](const auto &obj) { return obj == bundleName; });
@@ -396,9 +426,10 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
         }
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
-            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
-        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNamesOnly);
+            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId, isClearDataFlags);
+        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         HandleExceptionOnAppendBundles(session_, bundleNames, restoreBundleNames);
         if (restoreBundleNames.empty()) {
@@ -407,7 +438,8 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
             return BError(BError::Codes::OK);
         }
         session_->AppendBundles(restoreBundleNames);
-        SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+        SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap,
+            isClearDataFlags, restoreType);
         OnStartSched();
         session_->DecreaseSessionCnt();
         HILOGI("End");
@@ -492,42 +524,52 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
     std::vector<std::string> &restoreBundleNames,
-    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap, RestoreTypeEnum restoreType)
+    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
+    std::map<std::string, bool> &isClearDataFlags, RestoreTypeEnum restoreType)
 {
     HILOGI("Start");
     for (auto restoreInfo : restoreBundleInfos) {
         auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
-            [&restoreInfo](const auto &bundleName) { return bundleName == restoreInfo.name; });
+            [&restoreInfo](const auto &bundleName) {
+            std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name,
+                restoreInfo.appIndex);
+            return bundleName == bundleNameIndexInfo;
+        });
         if (it == restoreBundleNames.end()) {
             throw BError(BError::Codes::SA_BUNDLE_INFO_EMPTY, "Can't find bundle name");
         }
         HILOGD("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
             restoreInfo.extensionName.c_str());
+        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
         if ((restoreInfo.allToBackup == false && !SpecialVersion(restoreInfo.versionName)) ||
             (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) {
             OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, restoreInfo.name);
-            session_->RemoveExtInfo(restoreInfo.name);
+            session_->RemoveExtInfo(bundleNameIndexInfo);
             continue;
         }
-        session_->SetBundleRestoreType(restoreInfo.name, restoreType);
-        session_->SetBundleVersionCode(restoreInfo.name, restoreInfo.versionCode);
-        session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
-        session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
-        session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
+        session_->SetBundleRestoreType(bundleNameIndexInfo, restoreType);
+        session_->SetBundleVersionCode(bundleNameIndexInfo, restoreInfo.versionCode);
+        session_->SetBundleVersionName(bundleNameIndexInfo, restoreInfo.versionName);
+        session_->SetBundleDataSize(bundleNameIndexInfo, restoreInfo.spaceOccupied);
+        session_->SetBackupExtName(bundleNameIndexInfo, restoreInfo.extensionName);
+        auto iter = isClearDataFlags.find(bundleNameIndexInfo);
+        if (iter != isClearDataFlags.end()) {
+            session_->SetClearDataFlag(bundleNameIndexInfo, iter->second);
+        }
         BJsonUtil::BundleDetailInfo broadCastInfo;
         BJsonUtil::BundleDetailInfo uniCastInfo;
-        bool broadCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, restoreInfo.name, BROADCAST_TYPE,
+        bool broadCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, BROADCAST_TYPE,
             broadCastInfo);
         if (broadCastRet) {
             bool notifyRet =
                     DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(broadCastInfo);
             HILOGI("Publish event end, notify result is:%{public}d", notifyRet);
         }
-        bool uniCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, restoreInfo.name, UNICAST_TYPE,
+        bool uniCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE,
             uniCastInfo);
         if (uniCastRet) {
             HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
-            session_->SetBackupExtInfo(restoreInfo.name, uniCastInfo.detail);
+            session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }
     }
     HILOGI("End");
@@ -579,22 +621,26 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
         session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
-            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, session_->GetSessionUserId());
+            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            session_->GetSessionUserId(), isClearDataFlags);
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
         for (auto info : backupInfos) {
             session_->SetBundleDataSize(info.name, info.spaceOccupied);
             session_->SetBackupExtName(info.name, info.extensionName);
+            auto iter = isClearDataFlags.find(info.name);
+            if (iter != isClearDataFlags.end()) {
+                session_->SetClearDataFlag(info.name, iter->second);
+            }
             if (info.allToBackup == false) {
                 session_->GetServiceReverseProxy()->BackupOnBundleStarted(
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
                 session_->RemoveExtInfo(info.name);
             }
             BJsonUtil::BundleDetailInfo uniCastInfo;
-            bool uniCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, info.name, UNICAST_TYPE,
-                uniCastInfo);
-            if (uniCastRet) {
+            if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, info.name, UNICAST_TYPE, uniCastInfo)) {
                 HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
                 session_->SetBackupExtInfo(info.name, uniCastInfo.detail);
             }
@@ -623,10 +669,15 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
 ErrCode Service::Finish()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    VerifyCaller(session_->GetScenario());
-    session_->Finish();
-    OnAllBundlesFinished(BError(BError::Codes::OK));
-    return BError(BError::Codes::OK);
+    try {
+        VerifyCaller(session_->GetScenario());
+        session_->Finish();
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        HILOGE("Failde to Finish");
+        return e.GetCode();
+    }
 }
 
 ErrCode Service::PublishFile(const BFileInfo &fileInfo)
@@ -822,21 +873,23 @@ void Service::NotifyCloneBundleFinish(std::string bundleName)
 
 void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BConstants::ExtensionAction &action)
 {
+    BJsonUtil::BundleDetailInfo bundleDetail = BJsonUtil::ParseBundleNameIndexStr(bundleName);
     string backupExtName = session_->GetBackupExtName(bundleName); /* new device app ext name */
-    HILOGD("BackupExtName: %{public}s, bundleName: %{public}s", backupExtName.data(), bundleName.data());
+    HILOGI("BackupExtName: %{public}s, bundleName: %{public}s", backupExtName.data(), bundleName.data());
     string versionName = session_->GetBundleVersionName(bundleName); /* old device app version name */
     int64_t versionCode = session_->GetBundleVersionCode(bundleName); /* old device app version code */
     RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
     string bundleExtInfo = session_->GetBackupExtInfo(bundleName);
     HILOGI("BundleExtInfo is:%{public}s", GetAnonyString(bundleExtInfo).c_str());
 
-    want.SetElementName(bundleName, backupExtName);
+    want.SetElementName(bundleDetail.bundleName, backupExtName);
     want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
     want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<long>(versionCode));
     want.SetParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, static_cast<int>(restoreType));
     want.SetParam(BConstants::EXTENSION_VERSION_NAME_PARA, versionName);
     want.SetParam(BConstants::EXTENSION_RESTORE_EXT_INFO_PARA, bundleExtInfo);
     want.SetParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA, bundleExtInfo);
+    want.SetParam(BConstants::EXTENSION_APP_CLONE_INDEX_PARA, bundleDetail.bundleIndex);
 }
 
 ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
@@ -868,7 +921,11 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         ErrCode ret = backUpConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
-        return ret;
+        if (ret) {
+            HILOGE("ConnectBackupExtAbility faild, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
+            return BError(BError::Codes::SA_BOOT_EXT_FAIL);
+        }
+        return BError(BError::Codes::OK);
     } catch (const BError &e) {
         return e.GetCode();
     } catch (const exception &e) {
@@ -1030,7 +1087,7 @@ void Service::ExtStart(const string &bundleName)
             throw BError(BError::Codes::SA_INVAL_ARG, "ExtStart bundle task error, Extension backup Proxy is empty");
         }
         if (scenario == IServiceReverse::Scenario::BACKUP) {
-            auto ret = proxy->HandleBackup();
+            auto ret = proxy->HandleBackup(session_->GetClearDataFlag(bundleName));
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
             if (ret) {
                 ClearSessionAndSchedInfo(bundleName);
@@ -1041,7 +1098,7 @@ void Service::ExtStart(const string &bundleName)
         if (scenario != IServiceReverse::Scenario::RESTORE) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Failed to scenario");
         }
-        auto ret = proxy->HandleRestore();
+        auto ret = proxy->HandleRestore(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (auto &fileName : fileNameVec) {
@@ -1469,8 +1526,8 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
     AAFwk::Want want = CreateConnectWant(bundleName);
     auto ret = backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
     if (ret) {
-        HILOGE("ConnectBackupExtAbility faild, please check bundleName: %{public}s", bundleName.c_str());
-        return BError(BError::Codes::EXT_ABILITY_DIED);
+        HILOGE("ConnectBackupExtAbility faild, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
+        return BError(BError::Codes::SA_BOOT_EXT_FAIL);
     }
     std::unique_lock<std::mutex> lock(getBackupInfoMutx_);
     getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
@@ -1709,7 +1766,7 @@ void Service::NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerN
     }
 }
 
-ErrCode Service::ReportBundleProcessInfo(const std::string processInfo, BackupRestoreScenario sennario)
+ErrCode Service::ReportAppProcessInfo(const std::string processInfo, BackupRestoreScenario sennario)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
@@ -1728,9 +1785,6 @@ ErrCode Service::ReportBundleProcessInfo(const std::string processInfo, BackupRe
         return e.GetCode(); // 任意异常产生，终止监听该任务
     } catch (const exception &e) {
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
-    } catch (...) {
-        HILOGI("Unexpected exception");
         return EPERM;
     }
 }

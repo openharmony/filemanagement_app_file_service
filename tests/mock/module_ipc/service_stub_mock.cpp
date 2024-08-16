@@ -81,6 +81,8 @@ void ServiceStub::ServiceStubSupplement()
         &ServiceStub::CmdUpdateTimer;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_SENDRATE)] =
         &ServiceStub::CmdUpdateSendRate;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_REPORT_APP_PROCESS_INFO)] =
+        &ServiceStub::CmdReportAppProcessInfo;
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -308,6 +310,11 @@ int32_t ServiceStub::CmdAppIncrementalFileReady(MessageParcel &data, MessageParc
 }
 
 int32_t ServiceStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessageParcel &reply)
+{
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdReportAppProcessInfo(MessageParcel &data, MessageParcel &reply)
 {
     return BError(BError::Codes::OK);
 }

@@ -597,14 +597,14 @@ ErrCode ServiceProxy::ReportAppProcessInfo(const std::string processInfo, const 
     if (!data.WriteString(processInfo)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleName").GetCode();
     }
-    if (!data.WriteInt32(static_cast<int32_t>(scenario))) {
+    if (!data.WriteInt32(static_cast<int32_t>(sennario))) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the scenario").GetCode();
     }
     MessageParcel reply;
     MessageOption option;
     option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
     int32_t ret = Remote()-> SendRequest(static_cast<uint32_t>(
-        IServiceInterfaceCode::SERVICE_CMD_NOTIFY_BUNDLE_PROCESS_INFO), data, reply, option);
+        IServiceInterfaceCode::SERVICE_CMD_REPORT_APP_PROCESS_INFO), data, reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();

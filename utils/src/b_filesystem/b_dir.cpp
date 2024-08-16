@@ -55,10 +55,10 @@ static bool IsEmptyDirectory(const string &path)
     return isEmpty;
 }
 
-static tuple<ErrCode, map<string, struct stat>, vector<string>> GetFile(const string &path, off_t size = -1)
+static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetFile(const string &path, off_t size = -1)
 {
     map<string, struct stat> files;
-    vector<string> smallFiles;
+    map<string, size_t> smallFiles;
     struct stat sta = {};
     if (stat(path.data(), &sta) == -1) {
         return {BError(errno).GetCode(), files, smallFiles};
@@ -67,7 +67,7 @@ static tuple<ErrCode, map<string, struct stat>, vector<string>> GetFile(const st
         return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
     }
     if (sta.st_size <= size) {
-        smallFiles.emplace_back(path);
+        smallFiles.insert(make_pair(path, sta.st_size));
     } else {
         files.try_emplace(path, sta);
     }
@@ -85,19 +85,19 @@ static uint32_t CheckOverLongPath(const string &path)
     return len;
 }
 
-static tuple<ErrCode, map<string, struct stat>, vector<string>> GetDirFilesDetail(const string &path,
-                                                                                  bool recursion,
-                                                                                  off_t size = -1)
+static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFilesDetail(const string &path,
+                                                                                       bool recursion,
+                                                                                       off_t size = -1)
 {
     map<string, struct stat> files;
-    vector<string> smallFiles;
+    map<string, size_t> smallFiles;
 
     if (IsEmptyDirectory(path)) {
         string newPath = path;
         if (path.at(path.size()-1) != '/') {
             newPath += '/';
         }
-        smallFiles.emplace_back(newPath);
+        smallFiles.insert(make_pair(newPath, 0));
         return {ERR_OK, files, smallFiles};
     }
 
@@ -111,32 +111,33 @@ static tuple<ErrCode, map<string, struct stat>, vector<string>> GetDirFilesDetai
         // current dir OR parent dir
         if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
             continue;
-        } else if (ptr->d_type == DT_DIR) {
-            if (!recursion) {
-                continue;
-            }
-            auto [errCode, subFiles, subSmallFiles] =
-                GetDirFilesDetail(IncludeTrailingPathDelimiter(path) + string(ptr->d_name), recursion, size);
-            if (errCode != 0) {
-                return {errCode, files, smallFiles};
-            }
-            files.merge(subFiles);
-            smallFiles.insert(smallFiles.end(), subSmallFiles.begin(), subSmallFiles.end());
-        } else if (ptr->d_type == DT_LNK) {
-            continue;
-        } else {
+        } else if (ptr->d_type == DT_REG) {
             struct stat sta = {};
             string fileName = IncludeTrailingPathDelimiter(path) + string(ptr->d_name);
             if (CheckOverLongPath(fileName) >= PATH_MAX_LEN || stat(fileName.data(), &sta) == -1) {
                 continue;
             }
             if (sta.st_size <= size) {
-                smallFiles.emplace_back(fileName);
+                smallFiles.insert(make_pair(fileName, sta.st_size));
                 continue;
             }
 
             files.try_emplace(fileName, sta);
+        } else if (ptr->d_type != DT_DIR) {
+            HILOGE("Not support file type");
+            continue;
         }
+        // DT_DIR type
+        if (!recursion) {
+            continue;
+        }
+        auto [errCode, subFiles, subSmallFiles] =
+            GetDirFilesDetail(IncludeTrailingPathDelimiter(path) + string(ptr->d_name), recursion, size);
+        if (errCode != 0) {
+            return {errCode, files, smallFiles};
+        }
+        files.merge(subFiles);
+        smallFiles.insert(subSmallFiles.begin(), subSmallFiles.end());
     }
     return {ERR_OK, files, smallFiles};
 }
@@ -198,20 +199,20 @@ static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
     return filteredPath;
 }
 
-tuple<ErrCode, map<string, struct stat>, vector<string>> BDir::GetBigFiles(const vector<string> &includes,
-                                                                           const vector<string> &excludes)
+tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(const vector<string> &includes,
+                                                                                const vector<string> &excludes)
 {
     set<string> inc = ExpandPathWildcard(includes, false);
 
     map<string, struct stat> incFiles;
-    vector<string> incSmallFiles;
+    map<string, size_t> incSmallFiles;
     for (const auto &item : inc) {
         auto [errCode, files, smallFiles] = GetDirFilesDetail(item, true, BConstants::BIG_FILE_BOUNDARY);
         if (errCode == 0) {
             int32_t num = static_cast<int32_t>(files.size());
             incFiles.merge(move(files));
             HILOGI("big files: %{public}d; small files: %{public}d", num, static_cast<int32_t>(smallFiles.size()));
-            incSmallFiles.insert(incSmallFiles.end(), smallFiles.begin(), smallFiles.end());
+            incSmallFiles.insert(smallFiles.begin(), smallFiles.end());
         }
     }
 
@@ -234,10 +235,10 @@ tuple<ErrCode, map<string, struct stat>, vector<string>> BDir::GetBigFiles(const
         return false;
     };
 
-    vector<string> resSmallFiles;
+    map<string, size_t> resSmallFiles;
     for (const auto &item : incSmallFiles) {
-        if (!isMatch(excludes, item)) {
-            resSmallFiles.emplace_back(item);
+        if (!isMatch(excludes, item.first)) {
+            resSmallFiles.insert(make_pair(item.first, item.second));
         }
     }
 
@@ -259,5 +260,4 @@ vector<string> BDir::GetDirs(const vector<string_view> &paths)
     vector<string> dirs(inc.begin(), inc.end());
     return dirs;
 }
-
 } // namespace OHOS::FileManagement::Backup

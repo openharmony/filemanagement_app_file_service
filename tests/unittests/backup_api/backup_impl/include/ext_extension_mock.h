@@ -79,7 +79,7 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    ErrCode HandleBackup() override
+    ErrCode HandleBackup(bool isClearData) override
     {
         GTEST_LOG_(INFO) << "HandleBackup";
         if (nHandleBackupNum_ == 1) {
@@ -99,7 +99,7 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    ErrCode HandleRestore() override
+    ErrCode HandleRestore(bool isClearData) override
     {
         return BError(BError::Codes::OK);
     };
@@ -119,7 +119,7 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    ErrCode IncrementalOnBackup() override
+    ErrCode IncrementalOnBackup(bool isClearData) override
     {
         return BError(BError::Codes::OK);
     };

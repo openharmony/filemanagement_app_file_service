@@ -628,6 +628,92 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0100
 }
 
 /**
+ * @tc.number: SUB_backup_sa_session_GetExtFileNameRequest_0101
+ * @tc.name: SUB_backup_sa_session_GetExtFileNameRequest_0101
+ * @tc.desc: 测试 GetExtFileNameRequest 获取暂存真实文件请求
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetExtFileNameRequest_0101";
+    try {
+        try {
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+            sessionManagerPtr_->impl_.clientToken = 0;
+            sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
+            EXPECT_TRUE(true);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetExtFileNameRequest.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetExtFileNameRequest_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetExtFileNameRequest_0102
+ * @tc.name: SUB_backup_sa_session_GetExtFileNameRequest_0102
+ * @tc.desc: 测试 GetExtFileNameRequest 获取暂存真实文件请求
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetExtFileNameRequest_0102";
+    try {
+        try {
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+            sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::UNDEFINED;
+            sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
+            EXPECT_TRUE(true);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetExtFileNameRequest.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetExtFileNameRequest_0102";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetExtFileNameRequest_0103
+ * @tc.name: SUB_backup_sa_session_GetExtFileNameRequest_0103
+ * @tc.desc: 测试 GetExtFileNameRequest 获取暂存真实文件请求
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0103, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetExtFileNameRequest_0103";
+    try {
+        try {
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+            sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
+            sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
+            EXPECT_TRUE(true);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetExtFileNameRequest.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetExtFileNameRequest_0103";
+}
+
+/**
  * @tc.number: SUB_backup_sa_session_GetExtConnection_0100
  * @tc.name: SUB_backup_sa_session_GetExtConnection_0100
  * @tc.desc: 测试 GetExtConnection 接口
@@ -668,7 +754,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtConnection_0100, tes
         }
 
         BackupExtInfo info;
-        info.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr));
+        info.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr, BUNDLE_NAME));
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
         auto ret = sessionManagerPtr_->GetExtConnection(BUNDLE_NAME);
@@ -1764,7 +1850,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_ClearSessionData_0100, tes
         BackupExtInfo info;
         info.timerStatus = true;
         info.schedAction = BConstants::ServiceSchedAction::RUNNING;
-        info.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr));
+        info.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr, BUNDLE_NAME));
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
@@ -1886,37 +1972,5 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetIncrementalManifestFd_0
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetIncrementalManifestFd_0100";
 }
 
-/**
- * @tc.number: SUB_backup_sa_session_GetLastIncrementalTime_0100
- * @tc.name: SUB_backup_sa_session_GetLastIncrementalTime_0100
- * @tc.desc: 测试 GetLastIncrementalTime
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetLastIncrementalTime_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetLastIncrementalTime_0100";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetLastIncrementalTime(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
-
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->GetLastIncrementalTime(BUNDLE_NAME);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetLastIncrementalTime.";
-    }
-    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetLastIncrementalTime_0100";
-}
+#include "svc_session_manager_ex_test.cpp"
 } // namespace OHOS::FileManagement::Backup

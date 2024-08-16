@@ -79,6 +79,8 @@ public:
     virtual bool ValidRestoreDataType(RestoreTypeEnum) = 0;
     virtual SvcSessionManager::Impl GetImpl() = 0;
     virtual int GetSessionCnt() = 0;
+    virtual void SetClearDataFlag(const std::string &bundleName, bool isNotClear) = 0;
+    virtual bool GetClearDataFlag(const std::string &bundleName) = 0;
     virtual void SetIncrementalData(const BIncrementalData &) = 0;
     virtual int32_t GetIncrementalManifestFd(const std::string &) = 0;
     virtual int64_t GetLastIncrementalTime(const std::string &) = 0;
@@ -140,6 +142,8 @@ public:
     MOCK_METHOD(bool, ValidRestoreDataType, (RestoreTypeEnum));
     MOCK_METHOD(SvcSessionManager::Impl, GetImpl, ());
     MOCK_METHOD(int, GetSessionCnt, ());
+    MOCK_METHOD(void, SetClearDataFlag, (const std::string &, bool));
+    MOCK_METHOD(bool, GetClearDataFlag, (const std::string &));
     MOCK_METHOD(void, SetIncrementalData, (const BIncrementalData &));
     MOCK_METHOD(int32_t, GetIncrementalManifestFd, (const std::string &));
     MOCK_METHOD(int64_t, GetLastIncrementalTime, (const std::string &));

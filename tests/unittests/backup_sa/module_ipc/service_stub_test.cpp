@@ -81,6 +81,7 @@ public:
     MOCK_METHOD2(GetBackupInfo, ErrCode(string &bundleName, string &result));
     MOCK_METHOD3(UpdateTimer, ErrCode(BundleName &bundleName, uint32_t timeOut, bool &result));
     MOCK_METHOD3(UpdateSendRate, ErrCode(std::string &bundleName, int32_t sendRate, bool &result));
+    MOCK_METHOD2(ReportAppProcessInfo, ErrCode(const std::string processInfo, BackupRestoreScenario sennario));
 };
 
 class ServiceStubTest : public testing::Test {
@@ -1330,5 +1331,161 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_GetIncrementalFileHandle_010
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by GetIncrementalFileHandle.";
     }
     GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_GetIncrementalFileHandle_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_CmdResultReport_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_CmdResultReport_0100
+ * @tc.desc: Test function of CmdResultReport interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdResultReport_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_CmdResultReport_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        EXPECT_TRUE(service != nullptr);
+        auto err = service->CmdResultReport(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+        err = service->CmdResultReport(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(false));
+        err = service->CmdResultReport(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*service, ServiceResultReport(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdResultReport(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by CmdResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_CmdResultReport_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_CmdResultReport_0200
+ * @tc.name: SUB_backup_sa_ServiceStub_CmdResultReport_0200
+ * @tc.desc: Test function of GetIncrementalFileHandle interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdResultReport_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_CmdResultReport_0200";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        EXPECT_TRUE(service != nullptr);
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*service, ServiceResultReport(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        auto ret = service->CmdResultReport(data, reply);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by CmdResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_CmdResultReport_0200";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_CmdUpdateSendRate_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_CmdUpdateSendRate_0100
+ * @tc.desc: Test function of CmdUpdateSendRate interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdUpdateSendRate_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_CmdUpdateSendRate_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        EXPECT_TRUE(service != nullptr);
+        auto err = service->CmdUpdateSendRate(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
+        err = service->CmdUpdateSendRate(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, UpdateSendRate(_, _, _)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+        err = service->CmdUpdateSendRate(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, UpdateSendRate(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteBool(_)).WillOnce(Return(false));
+        err = service->CmdUpdateSendRate(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, UpdateSendRate(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteBool(_)).WillOnce(Return(true));
+        err = service->CmdUpdateSendRate(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by CmdUpdateSendRate.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_CmdUpdateSendRate_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_CmdGetAppLocalListAndDoIncrementalBackup_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_CmdGetAppLocalListAndDoIncrementalBackup_0100
+ * @tc.desc: Test function of CmdGetAppLocalListAndDoIncrementalBackup interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdGetAppLocalListAndDoIncrementalBackup_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_CmdGetAppLocalListAndDoIncrementalBackup_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        EXPECT_TRUE(service != nullptr);
+        EXPECT_CALL(*service, GetAppLocalListAndDoIncrementalBackup()).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        auto err = service->CmdGetAppLocalListAndDoIncrementalBackup(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+
+        EXPECT_CALL(*service, GetAppLocalListAndDoIncrementalBackup()).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        err = service->CmdGetAppLocalListAndDoIncrementalBackup(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by CmdGetAppLocalListAndDoIncrementalBackup.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_CmdGetAppLocalListAndDoIncrementalBackup_0100";
 }
 } // namespace OHOS::FileManagement::Backup

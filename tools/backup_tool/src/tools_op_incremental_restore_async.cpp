@@ -248,10 +248,7 @@ static void OnResultReport(shared_ptr<InrementalSessionAsync> ctx, const std::st
 
 static void OnProcess(shared_ptr<Session> ctx, const std::string bundleName, const std::string processInfo)
 {
-    printf("static void OnProcess(shared_ptr<Session> ctx, const std::string bundleName, const std::string processInfo)
-{
-    printf("OnResultReport bundleName = %s, result = %s\n", bundleName.c_str(), processInfo.c_str());
-} bundleName = %s, result = %s\n", bundleName.c_str(), processInfo.c_str());
+    printf("OnProcess bundleName = %s, processInfo = %s\n", bundleName.c_str(), processInfo.c_str());
 }
 
 static void RestoreApp(shared_ptr<InrementalSessionAsync> restore, vector<BundleName> &bundleNames)

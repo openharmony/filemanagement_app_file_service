@@ -46,7 +46,7 @@ public:
      * @param excludes 需要排除的文件及目录集合
      * @return 错误码、大文件名集合
      */
-    static std::tuple<ErrCode, std::map<std::string, struct stat>, std::vector<std::string>> GetBigFiles(
+    static std::tuple<ErrCode, std::map<std::string, struct stat>, std::map<std::string, size_t>> GetBigFiles(
         const std::vector<std::string> &includes, const std::vector<std::string> &excludes);
 
     /**

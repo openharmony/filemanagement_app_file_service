@@ -148,15 +148,17 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleBackup_0100, testi
     GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_HandleBackup_0100";
     try {
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
         EXPECT_TRUE(proxy_ != nullptr);
-        ErrCode ret = proxy_->HandleBackup();
+        ErrCode ret = proxy_->HandleBackup(true);
         EXPECT_EQ(EPERM, ret);
 
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
-        ret = proxy_->HandleBackup();
+        ret = proxy_->HandleBackup(true);
         EXPECT_EQ(BError(BError::Codes::OK), ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -218,15 +220,17 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleRestore_0100, test
     GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_HandleRestore_0100";
     try {
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
         EXPECT_TRUE(proxy_ != nullptr);
-        ErrCode ret = proxy_->HandleRestore();
+        ErrCode ret = proxy_->HandleRestore(true);
         EXPECT_EQ(EPERM, ret);
 
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
-        ret = proxy_->HandleRestore();
+        ret = proxy_->HandleRestore(true);
         EXPECT_EQ(BError(BError::Codes::OK), ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -285,6 +289,66 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetBackupInfo_0100, test
         GTEST_LOG_(INFO) << "SvcExtensionProxyTest-an exception occurred by GetBackupInfo.";
     }
     GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_GetBackupInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_proxy_UpdateFdSendRate_0100
+ * @tc.name: SUB_Ext_Extension_proxy_UpdateFdSendRate_0100
+ * @tc.desc: 测试 HandleRestore 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcExtensionProxyTest, SUB_Service_GetBackupInfoCmdHandle_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_UpdateFdSendRate_0100";
+    try {
+        std::string bundleName = "bundleName";
+        int32_t sendRate = 0;
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+        EXPECT_TRUE(proxy_ != nullptr);
+        ErrCode ret = proxy_->UpdateFdSendRate(bundleName, sendRate);
+        EXPECT_EQ(EPERM, ret);
+
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+        EXPECT_TRUE(proxy_ != nullptr);
+        ret = proxy_->UpdateFdSendRate(bundleName, sendRate);
+        EXPECT_EQ(EPERM, ret);
+        
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+        EXPECT_TRUE(proxy_ != nullptr);
+        ret = proxy_->UpdateFdSendRate(bundleName, sendRate);
+        EXPECT_EQ(EPERM, ret);
+
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(NO_ERROR));
+        EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(false));
+        EXPECT_TRUE(proxy_ != nullptr);
+        ret = proxy_->UpdateFdSendRate(bundleName, sendRate);
+        EXPECT_EQ(BError(BError::Codes::OK), ret);
+
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(NO_ERROR));
+        EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+        EXPECT_TRUE(proxy_ != nullptr);
+        ret = proxy_->UpdateFdSendRate(bundleName, sendRate);
+        EXPECT_EQ(BError(BError::Codes::OK), ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcExtensionProxyTest-an exception occurred by UpdateFdSendRate.";
+    }
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_UpdateFdSendRate_0100";
 }
 
 /**
@@ -396,6 +460,51 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleIncrementalBackup_
         GTEST_LOG_(INFO) << "SvcExtensionProxyTest-an exception occurred by HandleIncrementalBackup.";
     }
     GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_HandleIncrementalBackup_0100";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_proxy_IncrementalOnBackup_0100
+ * @tc.name: SUB_Ext_Extension_proxy_IncrementalOnBackup_0100
+ * @tc.desc: 测试 IncrementalOnBackup 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_IncrementalOnBackup_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_IncrementalOnBackup_0100";
+    try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
+        EXPECT_TRUE(proxy_ != nullptr);
+        ErrCode ret = proxy_->IncrementalOnBackup(true);
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
+
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(false));
+        EXPECT_TRUE(proxy_ != nullptr);
+        ret = proxy_->IncrementalOnBackup(true);
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
+
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+        EXPECT_TRUE(proxy_ != nullptr);
+        ret = proxy_->IncrementalOnBackup(true);
+        EXPECT_EQ(ret, ErrCode(EPERM));
+        
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(NO_ERROR));
+        EXPECT_TRUE(proxy_ != nullptr);
+        ret = proxy_->IncrementalOnBackup(true);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcExtensionProxyTest-an exception occurred by IncrementalOnBackup.";
+    }
+    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_IncrementalOnBackup_0100";
 }
 
 /**

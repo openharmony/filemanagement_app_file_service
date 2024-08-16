@@ -122,6 +122,30 @@ HWTEST_F(SchedSchedulerTest, SUB_Service_Sched_0100, testing::ext::TestSize.Leve
 }
 
 /**
+ * @tc.number: SUB_Service_Sched_0200
+ * @tc.name: SUB_Service_Sched_0200
+ * @tc.desc: 测试 Sched接口,sessionPtr_为空场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SchedSchedulerTest, SUB_Service_Sched_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SchedSchedulerTest-begin SUB_Service_Sched_0200";
+    try {
+        sptr<SchedScheduler> schedPtrNull = sptr(new SchedScheduler(wptr(servicePtr_), nullptr));
+        schedPtrNull->Sched();
+        schedPtrNull->ExecutingQueueTasks("test");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SchedSchedulerTest-an exception occurred by Sched.";
+    }
+    GTEST_LOG_(INFO) << "SchedSchedulerTest-end SUB_Service_Sched_0200";
+}
+
+/**
  * @tc.number: SUB_Service_ExecutingQueueTasks_0100
  * @tc.name: SUB_Service_ExecutingQueueTasks_0100
  * @tc.desc: 测试 ExecutingQueueTasks 接口
@@ -167,5 +191,50 @@ HWTEST_F(SchedSchedulerTest, SUB_Service_RemoveExtConn_0100, testing::ext::TestS
         GTEST_LOG_(INFO) << "SchedSchedulerTest-an exception occurred by RemoveExtConn.";
     }
     GTEST_LOG_(INFO) << "SchedSchedulerTest-end SUB_Service_RemoveExtConn_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_TryUnloadServiceTimer_0100
+ * @tc.name: SUB_Service_TryUnloadServiceTimer_0100
+ * @tc.desc: 测试 TryUnloadServiceTimer 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SchedSchedulerTest, SUB_Service_TryUnloadServiceTimer_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SchedSchedulerTest-begin SUB_Service_TryUnloadServiceTimer_0100";
+    try {
+        EXPECT_TRUE(schedPtr_ != nullptr);
+        schedPtr_->TryUnloadServiceTimer(true);
+        schedPtr_->TryUnloadServiceTimer(false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SchedSchedulerTest-an exception occurred by TryUnloadServiceTimer.";
+    }
+    GTEST_LOG_(INFO) << "SchedSchedulerTest-end SUB_Service_TryUnloadServiceTimer_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_TryUnloadService_0100
+ * @tc.name: SUB_Service_TryUnloadServicer_0100
+ * @tc.desc: 测试 TryUnloadService 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SchedSchedulerTest, SUB_Service_TryUnloadService_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SchedSchedulerTest-begin SUB_Service_TryUnloadService_0100";
+    try {
+        EXPECT_TRUE(schedPtr_ != nullptr);
+        schedPtr_->TryUnloadService();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SchedSchedulerTest-an exception occurred by TryUnloadService.";
+    }
+    GTEST_LOG_(INFO) << "SchedSchedulerTest-end SUB_Service_TryUnloadService_0100";
 }
 } // namespace OHOS::FileManagement::Backup

@@ -52,6 +52,7 @@ string BError::WrapMessageWithExtraInfos(const char *fileName,
     (void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, LOG_DOMAIN, LOG_TAG, "%{public}s", res.c_str());
     return res;
 }
+
 int BError::GetCode() const
 {
     int code = static_cast<int>(GetRawCode());

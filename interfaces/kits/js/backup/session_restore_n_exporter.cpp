@@ -281,7 +281,7 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
         napi_create_string_utf8(env, bundleName.c_str(), bundleName.size(), &napi_bName);
         argv.push_back(napi_bName);
         napi_value napi_process = nullptr;
-        napi_create_string_utf8(env, process.c_str(), process.size(), &napi_res);
+        napi_create_string_utf8(env, process.c_str(), process.size(), &napi_process);
         argv.push_back(napi_process);
         return true;
     };
@@ -399,6 +399,16 @@ static bool VerifyNarg(napi_env env, NVal &callbacks)
 napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info cbinfo)
 {
     HILOGI("called SessionRestore::Constructor begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
     NFuncArg funcArg(env, cbinfo);
     if (VerifyNapiObject(env, funcArg)) {
         return nullptr;
@@ -434,23 +444,16 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
     return funcArg.GetThisVar();
 }
 
-napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_info cbinfo)
+static NContextCBExec GetAppendBundlesCBExec(napi_env env, NFuncArg &funcArg, const int32_t fdRestore,
+    const std::vector<std::string> &bundleNames, const std::vector<std::string> &bundleInfos)
 {
-    HILOGI("called SessionRestore::AppendBundles begin");
-    int32_t fdRestore = BConstants::INVALID_FD_NUM;
-    std::vector<std::string> bundleNames;
-    std::vector<std::string> bundleInfos;
-    NFuncArg funcArg(env, cbinfo);
-    if (!VerifyAppendBundlesParam(funcArg, fdRestore, bundleNames, bundleInfos, env)) {
-        return nullptr;
-    }
     auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
     if (!(restoreEntity && (restoreEntity->sessionWhole || restoreEntity->sessionSheet))) {
         HILOGE("Failed to get RestoreSession entity.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-    auto cbExec = [entity {restoreEntity}, fd {fdRestore}, bundles {bundleNames}, infos {bundleInfos}]() -> NError {
+    return [entity {restoreEntity}, fd {fdRestore}, bundles {bundleNames}, infos {bundleInfos}]() -> NError {
         if (!(entity && (entity->sessionWhole || entity->sessionSheet))) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
         }
@@ -469,10 +472,38 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
         }
         return NError(entity->sessionSheet->AppendBundles(UniqueFd(fd), bundles));
     };
+}
+
+napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_info cbinfo)
+{
+    HILOGI("called SessionRestore::AppendBundles begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+    int32_t fdRestore = BConstants::INVALID_FD_NUM;
+    std::vector<std::string> bundleNames;
+    std::vector<std::string> bundleInfos;
+    NFuncArg funcArg(env, cbinfo);
+    if (!VerifyAppendBundlesParam(funcArg, fdRestore, bundleNames, bundleInfos, env)) {
+        return nullptr;
+    }
+    auto cbExec = GetAppendBundlesCBExec(env, funcArg, fdRestore, bundleNames, bundleInfos);
+    if (cbExec == nullptr) {
+        HILOGE("GetAppendBundlesCBExec fail!");
+        return nullptr;
+    }
     auto cbCompl = [](napi_env env, NError err) -> NVal {
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
     HILOGD("Called SessionRestore::AppendBundles end.");
+
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::TWO) {
         return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
@@ -486,24 +517,16 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
     }
 }
 
-napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info cbinfo)
+static NContextCBExec GetPublishFileCBExec(napi_env env, NFuncArg &funcArg, const std::string &bundleName,
+    const std::string &fileName)
 {
-    HILOGD("called SessionRestore::PublishFile begin");
-    std::string bundleName;
-    std::string fileName;
-    NFuncArg funcArg(env, cbinfo);
-    if (!VerifyPublishFileParam(funcArg, bundleName, fileName, env)) {
-        return nullptr;
-    }
-
     auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
     if (!(restoreEntity && (restoreEntity->sessionWhole || restoreEntity->sessionSheet))) {
         HILOGE("Failed to get RestoreSession entity.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-
-    auto cbExec = [entity {restoreEntity}, bundleName {bundleName}, fileName {fileName}]() -> NError {
+    return [entity {restoreEntity}, bundleName {bundleName}, fileName {fileName}]() -> NError {
         if (!(entity && (entity->sessionWhole || entity->sessionSheet))) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
         }
@@ -514,17 +537,42 @@ napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info
         if (SAUtils::IsSABundleName(fileName)) {
             HILOGI("SA %{public}s pushlish file", bundleName.c_str());
             if (fcntl(std::atoi(fileName.c_str()), F_GETFD) == -1) {
-            HILOGE("PublishFile fd is invalid.");
-            return NError(BError(BError::Codes::SDK_INVAL_ARG, "PublishFile fd is invalid.").GetCode());
-        }
+                HILOGE("PublishFile fd is invalid.");
+                return NError(BError(BError::Codes::SDK_INVAL_ARG, "PublishFile fd is invalid.").GetCode());
+            }
             return NError(entity->sessionSheet->PublishSAFile(fileInfo, UniqueFd(std::atoi(fileName.c_str()))));
         }
         return NError(entity->sessionSheet->PublishFile(fileInfo));
     };
+}
+
+napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info cbinfo)
+{
+    HILOGD("called SessionRestore::PublishFile begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+    std::string bundleName;
+    std::string fileName;
+    NFuncArg funcArg(env, cbinfo);
+    if (!VerifyPublishFileParam(funcArg, bundleName, fileName, env)) {
+        return nullptr;
+    }
+    auto cbExec = GetPublishFileCBExec(env, funcArg, bundleName, fileName);
+    if (cbExec == nullptr) {
+        HILOGE("GetPublishFileCBExec fail!");
+        return nullptr;
+    }
     auto cbCompl = [](napi_env env, NError err) -> NVal {
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
-
     HILOGD("Called SessionRestore::PublishFile end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
@@ -536,9 +584,42 @@ napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info
     }
 }
 
+static NContextCBExec GetFileHandleCBExec(napi_env env, NFuncArg &funcArg, std::unique_ptr<char[]> bundleName,
+    std::unique_ptr<char[]> fileName)
+{
+    auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
+    if (!(restoreEntity && (restoreEntity->sessionWhole || restoreEntity->sessionSheet))) {
+        HILOGE("Failed to get RestoreSession entity.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    return [entity {restoreEntity}, bundleName {string(bundleName.get())},
+        fileName {string(fileName.get())}]() -> NError {
+        if (!(entity && (entity->sessionWhole || entity->sessionSheet))) {
+            return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
+        }
+        string bundle = bundleName;
+        string file = fileName;
+        if (entity->sessionWhole) {
+            return NError(entity->sessionWhole->GetFileHandle(bundle, file));
+        }
+        return NError(entity->sessionSheet->GetFileHandle(bundle, file));
+    };
+}
+
 napi_value SessionRestoreNExporter::GetFileHandle(napi_env env, napi_callback_info cbinfo)
 {
     HILOGD("called SessionRestore::GetFileHandle begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         HILOGE("Number of arguments unmatched.");
@@ -560,29 +641,14 @@ napi_value SessionRestoreNExporter::GetFileHandle(napi_env env, napi_callback_in
         return nullptr;
     }
 
-    auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
-    if (!(restoreEntity && (restoreEntity->sessionWhole || restoreEntity->sessionSheet))) {
-        HILOGE("Failed to get RestoreSession entity.");
-        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
+    auto cbExec = GetFileHandleCBExec(env, funcArg, move(bundleName), move(fileName));
+    if (cbExec == nullptr) {
+        HILOGE("GetFileHandleCBExec fail!");
         return nullptr;
     }
-
-    auto cbExec = [entity {restoreEntity}, bundleName {string(bundleName.get())},
-        fileName {string(fileName.get())}]() -> NError {
-        if (!(entity && (entity->sessionWhole || entity->sessionSheet))) {
-            return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
-        }
-        string bundle = bundleName;
-        string file = fileName;
-        if (entity->sessionWhole) {
-            return NError(entity->sessionWhole->GetFileHandle(bundle, file));
-        }
-        return NError(entity->sessionSheet->GetFileHandle(bundle, file));
-    };
     auto cbCompl = [](napi_env env, NError err) -> NVal {
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
-
     HILOGD("Called SessionRestore::GetFileHandle end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
@@ -597,6 +663,16 @@ napi_value SessionRestoreNExporter::GetFileHandle(napi_env env, napi_callback_in
 napi_value SessionRestoreNExporter::Release(napi_env env, napi_callback_info cbinfo)
 {
     HILOGI("called SessionRestore::Release begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
         HILOGE("Number of arguments unmatched.");
@@ -623,7 +699,6 @@ napi_value SessionRestoreNExporter::Release(napi_env env, napi_callback_info cbi
     auto cbCompl = [](napi_env env, NError err) -> NVal {
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
-
     HILOGI("Called SessionRestore::Release end.");
 
     NVal thisVar(env, funcArg.GetThisVar());

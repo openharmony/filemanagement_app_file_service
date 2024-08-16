@@ -53,7 +53,7 @@ public:
     LibN::NAsyncWorkCallback onAllBundlesEnd;
     LibN::NAsyncWorkCallback onBackupServiceDied;
     BackupRestoreCallback onResultReport;
-    LibN::NAsyncWorkCallback onProcess;
+    BackupRestoreCallback onProcess;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // INTERFACES_KITS_JS_SRC_MOD_BACKUP_PROPERTIES_GENERAL_CALLBACKS_H

@@ -24,6 +24,7 @@
 #include <gtest/gtest.h>
 
 #include "b_filesystem/b_dir.h"
+#include "b_dir.cpp"
 #include "b_process/b_process.h"
 #include "test_manager.h"
 
@@ -318,4 +319,28 @@ HWTEST_F(BDirTest, b_dir_GetDirs_0100, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetDirs_0100";
 }
 
+/**
+ * @tc.number: SUB_backup_b_dir_GetFile_0100
+ * @tc.name: b_dir_GetFile_0100
+ * @tc.desc: Test function of GetFile interface for SUCCESS
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_GetFile_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetFile_0100";
+    try {
+        string path = "/";
+        auto [errCode, subFiles, subSmallFiles] = GetFile(path);
+        string pathData = "/data";
+        auto [errCode1, subFiles1, subSmallFiles1] = GetFile(pathData, PATH_MAX_LEN);
+        auto [errCode2, subFiles2, subSmallFiles2] = GetFile(pathData);
+        EXPECT_EQ(errCode, 0);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetFile_0100";
+}
 } // namespace OHOS::FileManagement::Backup

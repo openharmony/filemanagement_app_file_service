@@ -76,7 +76,7 @@ public:
      * @param callConnected
      */
     void SetCallback(std::function<void(const std::string &&)> callConnected);
-    
+
     /**
      * @brief Set the CallDied object
      *
@@ -91,8 +91,9 @@ public:
 
 public:
     SvcBackupConnection(std::function<void(const std::string &&)> callDied,
-                        std::function<void(const std::string &&)> callConnected)
-        : callDied_(callDied), callConnected_(callConnected)
+                        std::function<void(const std::string &&)> callConnected,
+                        std::string bundleNameIndexInfo)
+        : callDied_(callDied), callConnected_(callConnected), bundleNameIndexInfo_(bundleNameIndexInfo)
     {
     }
     ~SvcBackupConnection() override {};
@@ -108,6 +109,7 @@ private:
 
     std::function<void(const std::string &&)> callDied_;
     std::function<void(const std::string &&)> callConnected_;
+    std::string bundleNameIndexInfo_;
 };
 } // namespace OHOS::FileManagement::Backup
 

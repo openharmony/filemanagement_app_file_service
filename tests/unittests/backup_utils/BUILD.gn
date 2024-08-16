@@ -54,6 +54,8 @@ ohos_unittest("b_file_test") {
     "b_filesystem/b_file_test.cpp",
   ]
 
+  include_dirs = [ "${path_backup}/utils/src/b_filesystem" ]
+
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",

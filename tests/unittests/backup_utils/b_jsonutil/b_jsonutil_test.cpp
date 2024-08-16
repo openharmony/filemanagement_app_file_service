@@ -30,6 +30,10 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+namespace {
+constexpr uint32_t TEST_USER_ID = 100;
+} // namespace
+
 class BJsonUtilTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
@@ -52,8 +56,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext::T
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin b_dir_GetDirFiles_0100";
     try {
         std::string bundleName = "com.hos.app01:1";
-        std::string pattern = ":";
-        BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName, pattern);
+        BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
         EXPECT_EQ("com.hos.app01", detailInfo.bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -76,8 +79,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0200, testing::ext::T
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin ParseBundleNameIndexStr_0200";
     try {
         std::string bundleName = "com.hos.app01";
-        std::string pattern = ":";
-        BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName, pattern);
+        BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
         EXPECT_EQ("com.hos.app01", detailInfo.bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -107,9 +109,11 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0100, testing::ext::TestSize
         std::string bundleInfo2 = "info2";
         bundleInfos.push_back(bundleInfo);
         bundleInfos.push_back(bundleInfo2);
-        int32_t userId = 100;
+        int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        std::map<std::string, bool> isClearDataFlags;
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
         EXPECT_TRUE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -135,11 +139,13 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0200, testing::ext::TestSize
         std::string bundleName = "bundle";
         bundleNames.push_back(bundleName);
         std::vector<std::string> bundleInfos;
-        std::string bundleInfo = "info1";
+        std::string bundleInfo = "{\"infos\":\"infos\"}";
         bundleInfos.push_back(bundleInfo);
-        int32_t userId = 100;
+        int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        std::map<std::string, bool> isClearDataFlags;
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -162,29 +168,54 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0300, testing::ext::TestSize
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0300";
     try {
         std::vector<std::string> bundleNames;
-        std::string bundleName = "bundle1";
-        std::string bundleName2 = "bundle2";
-        std::string bundleName3 = "bundle3";
+        std::string bundleName = "bundle1:";
         bundleNames.push_back(bundleName);
-        bundleNames.push_back(bundleName2);
-        bundleNames.push_back(bundleName3);
         std::vector<std::string> bundleInfos;
         std::string bundleInfo = "info1";
-        std::string bundleInfo2 = "info2";
-        std::string bundleInfo3 = "info3";
         bundleInfos.push_back(bundleInfo);
-        bundleInfos.push_back(bundleInfo2);
-        bundleInfos.push_back(bundleInfo3);
-        int32_t userId = 100;
+        int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        int32_t size = 3;
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
-        EXPECT_EQ(bundleNamesOnly.size(), size);
+        std::map<std::string, bool> isClearDataFlags;
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_TRUE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfos_0300";
+}
+
+/**
+ * @tc.number: b_jsonutil_BuildBundleInfos_0301
+ * @tc.name: b_jsonutil_BuildBundleInfos_0301
+ * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0301, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0301";
+    try {
+        std::vector<std::string> bundleNames;
+        std::string bundleName = ":bundle1";
+        bundleNames.push_back(bundleName);
+        std::vector<std::string> bundleInfos;
+        std::string bundleInfo = "info1";
+        bundleInfos.push_back(bundleInfo);
+        int32_t userId = TEST_USER_ID;
+        std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_TRUE(result.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfos_0301";
 }
 
 /**
@@ -204,18 +235,222 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0400, testing::ext::TestSize
         std::string bundleName = "bundle1";
         bundleNames.push_back(bundleName);
         std::vector<std::string> bundleInfos;
-        std::string bundleInfo = {"{\"infos\":[{\"type\":\"type1\",\"details\":\"details1\"}]}"};
+        std::string bundleInfo = {
+            "{\"infos\":[{\"type\":\"type1\",\"details\":\"details1\"}],\"clearBackupData\": \"false\"}"
+        };
         bundleInfos.push_back(bundleInfo);
-        int32_t userId = 100;
+        int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+        std::map<std::string, bool> isClearDataFlags;
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_EQ(isClearDataFlags[bundleName], false);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfos_0400";
+}
+
+/**
+ * @tc.number: b_jsonutil_BuildBundleInfos_0500
+ * @tc.name: b_jsonutil_BuildBundleInfos_0500
+ * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0500, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0500";
+    try {
+        std::vector<std::string> bundleNames;
+        std::string bundleName = "bundle";
+        bundleNames.push_back(bundleName);
+        std::vector<std::string> bundleInfos;
+        std::string bundleInfo = {"{\"infos\":[{\"type\":null}]}"};
+        bundleInfos.push_back(bundleInfo);
+        int32_t userId = TEST_USER_ID;
+        std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
+
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_EQ(isClearDataFlags[bundleName], true);
+        EXPECT_FALSE(result.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfos_0500";
+}
+
+/**
+ * @tc.number: b_jsonutil_BuildBundleInfos_0600
+ * @tc.name: b_jsonutil_BuildBundleInfos_0600
+ * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0600, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0600";
+    try {
+        std::vector<std::string> bundleNames;
+        std::string bundleName = "bundle";
+        bundleNames.push_back(bundleName);
+        std::vector<std::string> bundleInfos;
+        std::string bundleInfo = {"{\"infos\":[{\"type\":123}],\"clearBackupData\": \"true\"}"};
+        bundleInfos.push_back(bundleInfo);
+        int32_t userId = TEST_USER_ID;
+        std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
+
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_EQ(isClearDataFlags[bundleName], true);
+        EXPECT_FALSE(result.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfos_0600";
+}
+
+/**
+ * @tc.number: b_jsonutil_BuildBundleInfos_0700
+ * @tc.name: b_jsonutil_BuildBundleInfos_0700
+ * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0700, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0700";
+    try {
+        std::vector<std::string> bundleNames;
+        std::string bundleName = "bundle";
+        bundleNames.push_back(bundleName);
+        std::vector<std::string> bundleInfos;
+        std::string bundleInfo = {"{\"infos\":[{\"type\":\"testType\",\"details\":null}]}"};
+        bundleInfos.push_back(bundleInfo);
+        int32_t userId = TEST_USER_ID;
+        std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
+
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_FALSE(result.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfos_0700";
+}
+
+/**
+ * @tc.number: b_jsonutil_BuildBundleInfos_0800
+ * @tc.name: b_jsonutil_BuildBundleInfos_0800
+ * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0800, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0800";
+    try {
+        std::vector<std::string> bundleNames;
+        std::string bundleName = "bundle";
+        bundleNames.push_back(bundleName);
+        std::vector<std::string> bundleInfos;
+        std::string bundleInfo = {"{\"infos\":[{\"type\":\"testType\",\"details\":[]}]}"};
+        bundleInfos.push_back(bundleInfo);
+        int32_t userId = TEST_USER_ID;
+        std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
+
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_FALSE(result.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfos_0800";
+}
+
+/**
+ * @tc.number: b_jsonutil_BuildBundleInfos_0900
+ * @tc.name: b_jsonutil_BuildBundleInfos_0900
+ * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0900, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0900";
+    try {
+        std::vector<std::string> bundleNames;
+        std::string bundleName = "bundle";
+        bundleNames.push_back(bundleName);
+        std::vector<std::string> bundleInfos;
+        std::string bundleInfo = {"{\"infos\":[{\"type\":\"testType\",\"details\":[\"detail\"]}]}"};
+        bundleInfos.push_back(bundleInfo);
+        int32_t userId = TEST_USER_ID;
+        std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
+
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_FALSE(result.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfos_0900";
+}
+
+/**
+ * @tc.number: b_jsonutil_BuildBundleInfos_1000
+ * @tc.name: b_jsonutil_BuildBundleInfos_1000
+ * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_1000, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_1000";
+    try {
+        std::vector<std::string> bundleNames;
+        std::string bundleName = "bundle";
+        bundleNames.push_back(bundleName);
+        std::vector<std::string> bundleInfos;
+        std::string bundleInfo = {"{\"infos\":[\"infos\"]}"};
+        bundleInfos.push_back(bundleInfo);
+        int32_t userId = TEST_USER_ID;
+        std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
+
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_FALSE(result.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfos_1000";
 }
 
 /**
@@ -275,6 +510,38 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_FindBundleInfoByName_0200, testing::ext::Test
         GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "BJsonUtilTest-end FindBundleInfoByName_0200";
+}
+
+/**
+ * @tc.number: b_jsonutil_FindBundleInfoByName_0300
+ * @tc.name: b_jsonutil_FindBundleInfoByName_0300
+ * @tc.desc: Test function of FindBundleInfoByName interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_FindBundleInfoByName_0300, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin FindBundleInfoByName_0300";
+    try {
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailsMap;
+        std::string bundleName = "bundle1";
+        std::string jobType = "type";
+        std::string jobType1 = "type1";
+        BJsonUtil::BundleDetailInfo detailInfo;
+        detailInfo.bundleName = bundleName;
+        detailInfo.type = jobType;
+        bundleNameDetailsMap[bundleName] = {detailInfo};
+        BJsonUtil::BundleDetailInfo bundleDetail;
+
+        bool result = BJsonUtil::FindBundleInfoByName(bundleNameDetailsMap, bundleName, jobType1, bundleDetail);
+        EXPECT_EQ(false, result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end FindBundleInfoByName_0300";
 }
 
 /**

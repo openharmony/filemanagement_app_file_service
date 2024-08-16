@@ -77,7 +77,7 @@ public:
     ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;
     ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) override;
     ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) override;
-    ErrCode ReportBundleProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario) override;
+    ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario) override;
 
     ErrCode SAResultReport(const std::string bundleName, const std::string resultInfo,
                            const ErrCode errCode, const BackupRestoreScenario sennario);
@@ -319,12 +319,13 @@ private:
      * @param restoreBundleInfos 待恢复的应用
      * @param restoreBundleNames 待恢复的应用包信息
      * @param bundleNameDetailMap bundle和detail的对应关系
+     * @param isClearDataFlags 清理数据标志集合
      * @param restoreType 任务类型
      */
     void SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
         std::vector<std::string> &restoreBundleNames,
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-        RestoreTypeEnum restoreType);
+        std::map<std::string, bool> &isClearDataFlags, RestoreTypeEnum restoreType);
 
     /**
      * @brief set session info

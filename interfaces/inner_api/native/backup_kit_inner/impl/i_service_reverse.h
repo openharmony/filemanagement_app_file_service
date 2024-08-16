@@ -64,7 +64,7 @@ public:
         ErrCode errCode = 0) = 0;
     virtual void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
     virtual void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) = 0;
-    virtual void IncrementalRestoreOnProcessInfo(const std::string &bundleName, const std::string &processInfo) = 0;
+    virtual void IncrementalRestoreOnProcessInfo(const std::string bundleName, const std::string processInfo) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.FileManagement.Backup.IServiceReverse")
 };

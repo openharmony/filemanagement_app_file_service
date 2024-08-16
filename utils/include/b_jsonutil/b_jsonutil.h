@@ -34,11 +34,10 @@ public:
      * @brief 带有拼接字符的bundleName按照拼接字符进行分割
      *
      * @param bundleNameStr bundleName拼接index的字符串
-     * @param patternInfo 拼接字符串
      *
      * @return 分割好的结果赋值给结构体
      */
-    static BundleDetailInfo ParseBundleNameIndexStr (const std::string &bundleNameStr, const std::string &patternInfo);
+    static BundleDetailInfo ParseBundleNameIndexStr (const std::string &bundleNameStr);
 
     /**
      * @brief 将传进来的bundleNames的集合进行按照拼接字符分割处理
@@ -48,26 +47,27 @@ public:
      * @param patternInfo 拼接的字符
      * @param realBundleNames 分割后真正的bundleNames
      * @param userId userId
+     * @param isClearDataFlags 框架是否清理标志集合
      *
      * @return 包名和解析结果的对应关系集合
      *
      */
     static std::map<std::string, std::vector<BundleDetailInfo>> BuildBundleInfos(
         const std::vector<std::string> &bundleNames, const std::vector<std::string> &details,
-        std::vector<std::string> &realBundleNames, int32_t userId);
+        std::vector<std::string> &realBundleNames, int32_t userId,
+        std::map<std::string, bool> &isClearDataFlags);
 
     /**
      * @brief 解析单个bundle对应的json串
      *
-     * @param bundleDetailInfo json串
-     * @param bundleDetail 结构体对象
-     * @param bundleNameOnly bundle名称
-     * @param bundleIndex bundle对应的索引
-     * @param userId userId
+     * @param bundleInfo json串
+     * @param bundleDetails 结构体对象
+     * @param bundleDetailInfo bundle信息
+     * @param isClearData 框架是否清理标志
      *
      */
     static void ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
-        std::string &bundleNameOnly, int bundleIndex, int32_t userId);
+        BJsonUtil::BundleDetailInfo bundleDetailInfo, bool &isClearData);
 
     /**
      * @brief 根据业务类型和bundleName确定唯一的bundleInfo
@@ -94,6 +94,27 @@ public:
      *
      */
     static bool BuildRestoreErrInfo(std::string &jsonStr, int errCode, std::string errMsg);
+
+    /**
+     * @brief 拼接包名和分身对应的索引
+     *
+     * @param bundleName 包名
+     * @param bundleIndex 索引
+     *
+     * @return 拼接结果
+     */
+    static std::string BuildBundleNameIndexInfo(const std::string &bundleName, int bundleIndex);
+
+    /**
+     * @brief 组建恢复文件错误信息的json
+     *
+     * @param jsonStr 组建结果
+     * @param errCode 错误码
+     *
+     * @return 是否组建成功
+     *
+     */
+    static bool BuildRestoreErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo);
 };
 } // namespace OHOS::FileManagement::Backup
 

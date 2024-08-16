@@ -189,12 +189,6 @@ sptr<IRemoteObject> ExtBackup::OnConnect(const AAFwk::Want &want)
 
         auto remoteObject =
             sptr<BackupExtExtension>(new BackupExtExtension(std::static_pointer_cast<ExtBackup>(shared_from_this())));
-
-        // 排除特殊场景
-        if (!WasFromSpecialVersion() && !RestoreDataReady()) {
-            remoteObject->ExtClear();
-        }
-
         return remoteObject->AsObject();
     } catch (const BError &e) {
         return nullptr;
@@ -211,6 +205,11 @@ void ExtBackup::OnDisconnect(const AAFwk::Want &want)
 {
     try {
         HILOGI("begin disconnect");
+        if (isClearData_) {
+            auto remoteObject = sptr<BackupExtExtension>(
+                new BackupExtExtension(std::static_pointer_cast<ExtBackup>(shared_from_this())));
+            remoteObject->ExtClear();
+        }
         Extension::OnDisconnect(want);
         extAction_ = BConstants::ExtensionAction::INVALID;
         HILOGI("end");
@@ -251,6 +250,11 @@ bool ExtBackup::SpecialVersionForCloneAndCloud(void)
 bool ExtBackup::RestoreDataReady()
 {
     return restoreType_ == RestoreTypeEnum::RESTORE_DATA_READDY;
+}
+
+void ExtBackup::SetClearDataFlag(bool isClearData)
+{
+    isClearData_ = isClearData;
 }
 
 ErrCode ExtBackup::OnBackup(function<void(ErrCode, std::string)> callback)

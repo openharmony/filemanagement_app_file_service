@@ -76,7 +76,7 @@ ServiceReverseStub::ServiceReverseStub()
         &ServiceReverseStub::CmdBackupOnBundleFinished;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_TASK_FINISHED)] =
         &ServiceReverseStub::CmdBackupOnAllBundlesFinished;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_PROCESS_INFO)] =
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_PROCESS_INFO)] =
         &ServiceReverseStub::CmdBackupOnProcessInfo;
 
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_FILE_READY)] =
@@ -89,7 +89,7 @@ ServiceReverseStub::ServiceReverseStub()
         &ServiceReverseStub::CmdRestoreOnBundleFinished;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_TASK_FINISHED)] =
         &ServiceReverseStub::CmdRestoreOnAllBundlesFinished;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_PROCESS_INFO)] =
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_PROCESS_INFO)] =
         &ServiceReverseStub::CmdRestoreOnProcessInfo;
 
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_FILE_READY)] =

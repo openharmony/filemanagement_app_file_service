@@ -47,8 +47,6 @@ ExtExtensionStub::ExtExtensionStub()
         &ExtExtensionStub::CmdGetIncrementalBackupFileHandle;
     opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_GET_BACKUP_INFO)] =
         &ExtExtensionStub::CmdGetBackupInfo;
-    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_GET_PROCESS_INFO)] =
-        &ExtExtensionStub::CmdGetProcessInfo;
     opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_INCREMENTAL_ON_BACKUP)] =
         &ExtExtensionStub::CmdIncrementalOnBackup;
     opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_UPDATE_FD_SENDRATE)] =
@@ -108,7 +106,9 @@ ErrCode ExtExtensionStub::CmdHandleClear(MessageParcel &data, MessageParcel &rep
 
 ErrCode ExtExtensionStub::CmdHandleBackup(MessageParcel &data, MessageParcel &reply)
 {
-    ErrCode res = HandleBackup();
+    bool isClearData = true;
+    isClearData = data.ReadBool();
+    ErrCode res = HandleBackup(isClearData);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;
@@ -135,7 +135,9 @@ ErrCode ExtExtensionStub::CmdPublishFile(MessageParcel &data, MessageParcel &rep
 
 ErrCode ExtExtensionStub::CmdHandleRestore(MessageParcel &data, MessageParcel &reply)
 {
-    ErrCode res = HandleRestore();
+    bool isClearData = true;
+    isClearData = data.ReadBool();
+    ErrCode res = HandleRestore(isClearData);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;
@@ -189,7 +191,9 @@ ErrCode ExtExtensionStub::CmdHandleIncrementalBackup(MessageParcel &data, Messag
 
 ErrCode ExtExtensionStub::CmdIncrementalOnBackup(MessageParcel &data, MessageParcel &reply)
 {
-    ErrCode res = IncrementalOnBackup();
+    bool isClearData = true;
+    isClearData = data.ReadBool();
+    ErrCode res = IncrementalOnBackup(isClearData);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;
@@ -238,20 +242,6 @@ ErrCode ExtExtensionStub::CmdUpdateFdSendRate(MessageParcel &data, MessageParcel
     int ret = UpdateFdSendRate(bundleName, sendRate);
     if (!reply.WriteInt32(ret)) {
         return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the ret").GetCode();
-    }
-    return BError(BError::Codes::OK);
-}
-
-ErrCode ExtExtensionStub::CmdGetProcessInfo(MessageParcel &data, MessageParcel &reply)
-{
-    HILOGI("CmdGetProcessInfo Begin");
-    std::string result;
-    int ret = GetBackupInfo(result);
-    if (!reply.WriteInt32(ret)) {
-        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the ret").GetCode();
-    }
-    if (!reply.WriteString(result)) {
-        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the result").GetCode();
     }
     return BError(BError::Codes::OK);
 }

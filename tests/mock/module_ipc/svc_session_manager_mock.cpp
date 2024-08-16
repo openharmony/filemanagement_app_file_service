@@ -104,7 +104,8 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
     if (!it->second.backUpConnection) {
         auto callDied = [](const string &&bundleName) {};
         auto callConnected = [](const string &&bundleName) {};
-        it->second.backUpConnection = sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnected));
+        it->second.backUpConnection = sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnected,
+            bundleName));
         sptr<BackupExtExtensionMock> mock = sptr(new BackupExtExtensionMock());
         it->second.backUpConnection->OnAbilityConnectDone({}, mock->AsObject(), 0);
     }
@@ -114,7 +115,7 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
 sptr<SvcBackupConnection> SvcSessionManager::GetBackupAbilityExt(const string &bundleName)
 {
     GTEST_LOG_(INFO) << "GetBackupAbilityExt";
-    return sptr<SvcBackupConnection>(new SvcBackupConnection(nullptr, nullptr));
+    return sptr<SvcBackupConnection>(new SvcBackupConnection(nullptr, nullptr, bundleName));
 }
 
 void SvcSessionManager::DumpInfo(const int fd, const std::vector<std::u16string> &args)
@@ -396,6 +397,13 @@ SvcSessionManager::Impl SvcSessionManager::GetImpl()
 int SvcSessionManager::GetSessionCnt()
 {
     return sessionCnt_.load();
+}
+
+void SvcSessionManager::SetClearDataFlag(const std::string &bundleName, bool isNotClear) {}
+
+bool SvcSessionManager::GetClearDataFlag(const std::string &bundleName)
+{
+    return true;
 }
 
 void SvcSessionManager::SetIncrementalData(const BIncrementalData &incrementalData) {}

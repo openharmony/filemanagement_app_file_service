@@ -63,6 +63,10 @@ public:
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForSA();
 
     static void GetBundleInfoForSA(std::string bundleName, std::vector<BJsonEntityCaps::BundleInfo> &bundleInfos);
+private:
+    static bool GetCurBundleExtenionInfo(AppExecFwk::BundleInfo &installedBundle, const std::string &bundleName,
+        std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos, sptr<AppExecFwk::IBundleMgr> bms,
+        int32_t userId);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_BUNDLE_MGR_ADAPTER_H
