@@ -15,6 +15,7 @@
 
 #include "ext_backup_context.h"
 
+#include "b_filesystem/b_file.h"
 #include "b_resources/b_constants.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -24,7 +25,16 @@ const std::string ExtBackupContext::GetBackupDir()
     if (area > 1) { // 1 : el2 area
         return "";
     }
-    return std::string(BConstants::BACKUP_DIR_PRE) + std::string(BConstants::CONTEXT_ELS[area]) +
+
+    std::string path = std::string(BConstants::BACKUP_DIR_PRE) + std::string(BConstants::CONTEXT_ELS[area]) +
         std::string(BConstants::BACKUP_DIR_END);
+    std::string bundleName = GetBundleName();
+    if (BFile::EndsWith(bundleName, BConstants::BUNDLE_FILE_MANAGER) && bundleName.size() == BConstants::FM_LEN) {
+        path = std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME) + BConstants::FILE_SEPARATOR_CHAR;
+    } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
+        path = std::string(BConstants::PATH_MEDIALDATA_BACKUP_HOME) + BConstants::FILE_SEPARATOR_CHAR;
+    }
+
+    return path;
 }
 } // namespace OHOS::FileManagement::Backup

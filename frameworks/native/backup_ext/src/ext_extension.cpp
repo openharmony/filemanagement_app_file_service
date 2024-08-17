@@ -57,7 +57,6 @@
 #include "b_anony/b_anony.h"
 
 namespace OHOS::FileManagement::Backup {
-const string DEFAULT_TAR_PKG = "1.tar";
 const string INDEX_FILE_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
                                  append(BConstants::SA_BUNDLE_BACKUP_BACKUP).
                                  append(BConstants::EXT_BACKUP_MANAGE);
@@ -68,17 +67,39 @@ const string INDEX_FILE_INCREMENTAL_BACKUP = string(BConstants::PATH_BUNDLE_BACK
                                              append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
 using namespace std;
 
-namespace {
-const int64_t DEFAULT_SLICE_SIZE = 100 * 1024 * 1024; // 分片文件大小为100M
-const uint32_t MAX_FILE_COUNT = 6000;                 // 单个tar包最多包含6000个文件
-const int FILE_AND_MANIFEST_FD_COUNT = 2;          // 每组文件和简报数量统计
+static string GetIndexFileRestorePath(const string &bundleName)
+{
+    if (BFile::EndsWith(bundleName, BConstants::BUNDLE_FILE_MANAGER) && bundleName.size() == BConstants::FM_LEN) {
+        return string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE).
+               append(BConstants::EXT_BACKUP_MANAGE);
+    } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
+        return string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE).
+               append(BConstants::EXT_BACKUP_MANAGE);
+    }
+    return INDEX_FILE_RESTORE;
 }
 
-static std::set<std::string> GetIdxFileData()
+static string GetRestoreTempPath(const string &bundleName)
 {
-    UniqueFd idxFd(open(INDEX_FILE_RESTORE.data(), O_RDONLY));
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    if (BFile::EndsWith(bundleName, BConstants::BUNDLE_FILE_MANAGER) && bundleName.size() == BConstants::FM_LEN) {
+        if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).data(), S_IRWXU) && errno != EEXIST) {
+            string str = string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
+            throw BError(BError::Codes::EXT_INVAL_ARG, str);
+        }
+        path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
+        path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    }
+    return path;
+}
+
+static std::set<std::string> GetIdxFileData(const string &bundleName)
+{
+    string indexFileRestorePath = GetIndexFileRestorePath(bundleName);
+    UniqueFd idxFd(open(indexFileRestorePath.data(), O_RDONLY));
     if (idxFd < 0) {
-        HILOGE("Failed to open idxFile = %{private}s, err = %{public}d", INDEX_FILE_RESTORE.c_str(), errno);
+        HILOGE("Failed to open idxFile = %{private}s, err = %{public}d", indexFileRestorePath.c_str(), errno);
         return std::set<std::string>();
     }
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(std::move(idxFd));
@@ -88,7 +109,8 @@ static std::set<std::string> GetIdxFileData()
 
 std::vector<ExtManageInfo> BackupExtExtension::GetExtManageInfo()
 {
-    string filePath = BExcepUltils::Canonicalize(INDEX_FILE_RESTORE);
+    string indexFileRestorePath = GetIndexFileRestorePath(bundleName_);
+    string filePath = BExcepUltils::Canonicalize(indexFileRestorePath);
     UniqueFd idxFd(open(filePath.data(), O_RDONLY));
     if (idxFd < 0) {
         HILOGE("Failed to open cano_idxFile = %{private}s, err = %{public}d", filePath.c_str(), errno);
@@ -181,7 +203,7 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName, int32_t &errC
             return fd;
         }
 
-        string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+        string path = GetRestoreTempPath(bundleName_);
         if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
             string str = string("Failed to create restore folder. ").append(std::generic_category().message(errno));
             throw BError(BError::Codes::EXT_INVAL_ARG, str);
@@ -245,9 +267,18 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
     return ERR_OK;
 }
 
-static string GetIncrementalFileHandlePath(const string &fileName)
+static string GetIncrementalFileHandlePath(const string &fileName, const string &bundleName)
 {
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    if (BFile::EndsWith(bundleName, BConstants::BUNDLE_FILE_MANAGER) && bundleName.size() == BConstants::FM_LEN) {
+        if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).data(), S_IRWXU) && errno != EEXIST) {
+            string str = string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
+            throw BError(BError::Codes::EXT_INVAL_ARG, str);
+        }
+        path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
+        path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    }
     if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
         string str = string("Failed to create restore folder. ").append(std::generic_category().message(errno));
         throw BError(BError::Codes::EXT_INVAL_ARG, str);
@@ -271,7 +302,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
             return GetIncreFileHandleForSpecialVersion(fileName);
         }
         HILOGI("extension: GetIncrementalFileHandle single to single Name:%{public}s", GetAnonyPath(fileName).c_str());
-        string tarName = GetIncrementalFileHandlePath(fileName);
+        string tarName = GetIncrementalFileHandlePath(fileName, bundleName_);
         int32_t errCode = ERR_OK;
         if (access(tarName.c_str(), F_OK) == 0) {
             HILOGE("The file already exists, tarname = %{private}s, err =%{public}d", tarName.c_str(), errno);
@@ -406,7 +437,7 @@ ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
         VerifyCaller();
         // 异步执行解压操作
         if (extension_->AllowToBackupRestore()) {
-            AsyncTaskRestore(GetIdxFileData(), GetExtManageInfo());
+            AsyncTaskRestore(GetIdxFileData(bundleName_), GetExtManageInfo());
         }
         HILOGI("End publish file");
         return ERR_OK;
@@ -562,7 +593,7 @@ static ErrCode TarFileReady(const TarMap &tarFileInfo, sptr<IService> proxy)
     if (SUCCEEDED(ret)) {
         HILOGI("TarFileReady: AppFileReady success for %{public}s", tarName.c_str());
         // 删除文件
-        RemoveFile(tarName);
+        RemoveFile(tarPath);
     } else {
         HILOGE("TarFileReady AppFileReady fail to be invoked for %{public}s: ret = %{public}d", tarName.c_str(), ret);
     }
@@ -583,7 +614,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
         totalSize += small.second;
         fileCount += 1;
         packFiles.emplace_back(small.first);
-        if (totalSize >= DEFAULT_SLICE_SIZE || fileCount >= MAX_FILE_COUNT) {
+        if (totalSize >= BConstants::DEFAULT_SLICE_SIZE || fileCount >= BConstants::MAX_FILE_COUNT) {
             TarMap tarMap {};
             TarFile::GetInstance().Packet(packFiles, "part", path, tarMap);
             tar.insert(tarMap.begin(), tarMap.end());
@@ -593,7 +624,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
             totalSize = 0;
             fileCount = 0;
             packFiles.clear();
-            fdNum += FILE_AND_MANIFEST_FD_COUNT;
+            fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
             RefreshTimeInfo(startTime, fdNum);
         }
     }
@@ -678,7 +709,7 @@ int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
     }
     // REM: 给定version
     // REM: 解压启动Extension时即挂载好的备份目录中的数据
-    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    string path = GetRestoreTempPath(bundleName_);
     string tarName = path + fileName;
 
     // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
@@ -746,7 +777,7 @@ int BackupExtExtension::DoIncrementalRestore()
         HILOGE("Failed to do incremental restore, extension is nullptr");
         throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
     }
-    auto fileSet = GetIdxFileData();
+    auto fileSet = GetIdxFileData(bundleName_);
     auto extManageInfo = GetExtManageInfo();
     std::tuple<int, EndFileInfo, ErrFileInfo> unPacketRes;
     ErrCode err = ERR_OK;
@@ -758,7 +789,7 @@ int BackupExtExtension::DoIncrementalRestore()
             }
             // REM: 给定version
             // REM: 解压启动Extension时即挂载好的备份目录中的数据
-            string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+            string path = GetRestoreTempPath(bundleName_);
             string tarName = path + item;
 
             // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
@@ -955,10 +986,12 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     // 获取索引文件内容
-    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
-    UniqueFd fd(open(INDEX_FILE_RESTORE.data(), O_RDONLY));
+    string path = GetRestoreTempPath(bundleName_);
+
+    string indexFileRestorePath = GetIndexFileRestorePath(bundleName_);
+    UniqueFd fd(open(indexFileRestorePath.data(), O_RDONLY));
     if (fd < 0) {
-        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_RESTORE.c_str(), errno);
+        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", indexFileRestorePath.c_str(), errno);
         return;
     }
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
@@ -1028,16 +1061,17 @@ void BackupExtExtension::DeleteBackupTars()
         return;
     }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    UniqueFd fd(open(INDEX_FILE_RESTORE.data(), O_RDONLY));
+    string indexFileRestorePath = GetIndexFileRestorePath(bundleName_);
+    UniqueFd fd(open(indexFileRestorePath.data(), O_RDONLY));
     if (fd < 0) {
-        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_RESTORE.c_str(), errno);
+        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", indexFileRestorePath.c_str(), errno);
         return;
     }
     // The directory include tars and manage.json which would be deleted
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManage();
-    auto path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    auto path = GetRestoreTempPath(bundleName_);
     auto extManageInfo = GetExtManageInfo();
     for (auto &item : info) {
         off_t tarFileSize = 0;
@@ -1049,8 +1083,8 @@ void BackupExtExtension::DeleteBackupTars()
             HILOGE("Failed to delete the backup tar %{public}s", tarPath.c_str());
         }
     }
-    if (!RemoveFile(INDEX_FILE_RESTORE)) {
-        HILOGE("Failed to delete the backup index %{public}s", INDEX_FILE_RESTORE.c_str());
+    if (!RemoveFile(indexFileRestorePath)) {
+        HILOGE("Failed to delete the backup index %{public}s", indexFileRestorePath.c_str());
     }
     HILOGI("End execute DeleteBackupTars");
 }
@@ -1061,16 +1095,17 @@ void BackupExtExtension::DeleteBackupIncrementalTars()
         HILOGI("configured not clear data.");
         return;
     }
-    UniqueFd fd(open(INDEX_FILE_RESTORE.data(), O_RDONLY));
+    string indexFileRestorePath = GetIndexFileRestorePath(bundleName_);
+    UniqueFd fd(open(indexFileRestorePath.data(), O_RDONLY));
     if (fd < 0) {
-        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_RESTORE.c_str(), errno);
+        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", indexFileRestorePath.c_str(), errno);
         return;
     }
     // The directory include tars and manage.json which would be deleted
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManage();
-    auto path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    auto path = GetRestoreTempPath(bundleName_);
     auto extManageInfo = GetExtManageInfo();
     for (auto &item : info) {
         off_t tarFileSize = 0;
@@ -1087,10 +1122,10 @@ void BackupExtExtension::DeleteBackupIncrementalTars()
             HILOGE("Failed to delete the backup report %{private}s, err = %{public}d", reportPath.c_str(), errno);
         }
     }
-    if (!RemoveFile(INDEX_FILE_RESTORE)) {
-        HILOGE("Failed to delete the backup index %{public}s", INDEX_FILE_RESTORE.c_str());
+    if (!RemoveFile(indexFileRestorePath)) {
+        HILOGE("Failed to delete the backup index %{public}s", indexFileRestorePath.c_str());
     }
-    string reportManagePath = GetReportFileName(INDEX_FILE_RESTORE); // GetIncrementalFileHandle创建的空fd
+    string reportManagePath = GetReportFileName(indexFileRestorePath); // GetIncrementalFileHandle创建的空fd
     if (!RemoveFile(reportManagePath)) {
         HILOGE("Failed to delete the backup report index %{public}s", reportManagePath.c_str());
     }
@@ -1380,6 +1415,7 @@ void BackupExtExtension::DoClear()
         }
         string backupCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
         string restoreCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+        string specialRestoreCache = GetRestoreTempPath(bundleName_);
 
         if (!ForceRemoveDirectory(backupCache)) {
             HILOGI("Failed to delete the backup cache %{public}s", backupCache.c_str());
@@ -1387,6 +1423,10 @@ void BackupExtExtension::DoClear()
 
         if (!ForceRemoveDirectory(restoreCache)) {
             HILOGI("Failed to delete the restore cache %{public}s", restoreCache.c_str());
+        }
+
+        if (!ForceRemoveDirectory(specialRestoreCache)) {
+            HILOGI("Failed to delete cache for filemanager or medialibrary %{public}s", specialRestoreCache.c_str());
         }
         // delete el1 backup/restore
         ForceRemoveDirectory(
@@ -1764,7 +1804,7 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
         } else {
             HILOGE("IncrementalBigFileReady interface fails to be invoked: %{public}d", ret);
         }
-        fdNum += FILE_AND_MANIFEST_FD_COUNT;
+        fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
         RefreshTimeInfo(startTime, fdNum);
     }
     HILOGI("IncrementalBigFileReady End");
@@ -1886,7 +1926,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
         fileCount += 1;
         packFiles.emplace_back(small.filePath);
         tarInfos.emplace_back(small);
-        if (totalSize >= DEFAULT_SLICE_SIZE || fileCount >= MAX_FILE_COUNT) {
+        if (totalSize >= BConstants::DEFAULT_SLICE_SIZE || fileCount >= BConstants::MAX_FILE_COUNT) {
             TarMap tarMap {};
             TarFile::GetInstance().Packet(packFiles, partName, path, tarMap);
             tar.insert(tarMap.begin(), tarMap.end());
@@ -1897,7 +1937,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
             fileCount = 0;
             packFiles.clear();
             tarInfos.clear();
-            fdNum += FILE_AND_MANIFEST_FD_COUNT;
+            fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
             RefreshTimeInfo(startTime, fdNum);
         }
     }

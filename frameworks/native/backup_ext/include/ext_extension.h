@@ -58,8 +58,10 @@ public:
     void AsyncTaskIncrementalRestoreForUpgrade(void);
 
 public:
-    explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension) : extension_(extension)
+    explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
+        const std::string &bundleName) : extension_(extension)
     {
+        bundleName_ = bundleName;
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
     }
     ~BackupExtExtension()
