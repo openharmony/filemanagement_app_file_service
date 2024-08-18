@@ -63,6 +63,8 @@ private:
     int32_t CmdUpdateTimer(MessageParcel &data, MessageParcel &reply);
     int32_t CmdUpdateSendRate(MessageParcel &data, MessageParcel &reply);
     int32_t CmdReportAppProcessInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdStartExtTimer(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdStartFwkTimer(MessageParcel &data, MessageParcel &reply);
     void ServiceStubSupplement();
     void ServiceStubSuppAppendBundles();
 

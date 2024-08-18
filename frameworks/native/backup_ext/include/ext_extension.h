@@ -118,7 +118,6 @@ private:
      *
      * @param restoreRetInfo app processInfo
      * @param scenario backup or restore
-     * @param errCode errCode
      */
     void ReportAppProcessInfo(const std::string processInfo, BackupRestoreScenario scenario);
 
@@ -181,47 +180,57 @@ private:
     void AppIncrementalDone(ErrCode errCode);
 
     /**
-     * @brief get callbackEx for execute onRestore
+     * @brief start extension timer by ipc
      *
-     * @param errCode
+     * @param result
      */
-    std::function<void(ErrCode, const std::string)> FullRestoreCallbackEx(wptr<BackupExtExtension> obj);
-
-     /**
-     * @brief get callback for execute onRestore
-     *
-     * @param errCode
-     */
-    std::function<void(ErrCode, const std::string)> FullRestoreCallback(wptr<BackupExtExtension> obj);
+    void StartExtTimer(bool &isExtStart);
 
     /**
-     * @brief get callbackEx for execute onRestore with string param
+     * @brief start fwk timer by ipc
      *
      * @param errCode
      */
-    std::function<void(ErrCode, const std::string)> IncRestoreResultCallbackEx(wptr<BackupExtExtension> obj);
+    void StartFwkTimer(bool &isFwkStart);
+
+    /**
+     * @brief get increCallbackEx for execute onRestore with string param
+     *
+     * @param errCode
+     */
+    std::function<void(ErrCode, const std::string)> IncreOnRestoreExCallback(wptr<BackupExtExtension> obj);
+
+    /**
+     * @brief get increCallback for execute onRestore with string param
+     *
+     * @param errCode
+     */
+    std::function<void(ErrCode, const std::string)> IncreOnRestoreCallback(wptr<BackupExtExtension> obj);
 
     /**
      * @brief get callback for execute onRestore with string param
      *
      * @param errCode
      */
-    std::function<void(ErrCode, const std::string)> IncRestoreResultCallback(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, std::string)> OnRestoreCallback(wptr<BackupExtExtension> obj);
 
     /**
-     * @brief get callbackEx for execute onRestore
+     * @brief get callbackEx for execute onRestore with string param
      *
      * @param errCode
      */
-    std::function<void(ErrCode, std::string)> IncAppDoneCallbackEx(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, std::string)> OnRestoreExCallback(wptr<BackupExtExtension> obj);
 
     /**
      * @brief get callbackEx for execute appDone
      */
     std::function<void(ErrCode, std::string)> AppDoneCallbackEx(wptr<BackupExtExtension> obj);
-    std::function<void(ErrCode, const std::string)> HandleBackupEx(wptr<BackupExtExtension> obj);
-    std::function<void(ErrCode, const std::string)> HandleFullBackupCallbackEx(wptr<BackupExtExtension> obj);
-    std::function<void(ErrCode, const std::string)> HandleFullBackupCallback(wptr<BackupExtExtension> obj);
+
+    std::function<void(ErrCode, const std::string)> IncOnBackupExCallback(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, const std::string)> IncOnBackupCallback(wptr<BackupExtExtension> obj);
+
+    std::function<void(ErrCode, const std::string)> OnBackupExCallback(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, const std::string)> OnBackupCallback(wptr<BackupExtExtension> obj);
 
     void HandleSpecialVersionRestore();
     void DeleteBackupIncrementalTars();
@@ -237,30 +246,18 @@ private:
     void DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
         const std::tuple<int, EndFileInfo, ErrFileInfo> &result);
 
-
-
-
-
-
-
-
-
-
-    void StartOnProcessTaskThread(BackupRestoreScenario scenario);
+    void StartOnProcessTaskThread(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void FinishOnProcessTask();
     void ExecCallOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void AsyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
-
+    void SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj);
     void CloseOnProcessTimeOutTimer();
-
-
 
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
     std::string backupInfo_;
-    std::string bundleProcessInfo_;
     OHOS::ThreadPool threadPool_;
     std::mutex updateSendRateLock_;
     std::condition_variable startSendFdRateCon_;
@@ -275,7 +272,6 @@ private:
     std::map<std::string, std::vector<ErrCode>> errFileInfos_;
     bool isRpValid_ {false};
 
-
     std::thread callJsOnProcessThread_;
     Utils::Timer onProcessTimeoutTimer_ {"onProcessTimeoutTimer_"};
     uint32_t onProcessTimeoutTimerId_;
@@ -284,7 +280,6 @@ private:
     std::condition_variable execOnProcessCon_;
     std::mutex onProcessLock_;
     std::atomic<bool> onProcessTimeout_ {false};
-
 };
 } // namespace OHOS::FileManagement::Backup
 

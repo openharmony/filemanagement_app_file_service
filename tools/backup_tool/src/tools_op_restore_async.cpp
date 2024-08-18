@@ -170,7 +170,7 @@ static void OnBackupServiceDied(shared_ptr<SessionAsync> ctx)
     ctx->TryNotify(true);
 }
 
-static void OnProcess(shared_ptr<Session> ctx, const std::string bundleName, const std::string processInfo)
+static void OnProcess(shared_ptr<SessionAsync> ctx, const std::string bundleName, const std::string processInfo)
 {
     printf("OnProcess bundleName = %s, processInfo = %s\n", bundleName.c_str(), processInfo.c_str());
 }

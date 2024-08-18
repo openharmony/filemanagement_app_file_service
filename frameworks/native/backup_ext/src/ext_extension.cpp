@@ -785,6 +785,14 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         try {
+            HILOGI("Do backup, start fwk timer begin.");
+            bool isFwkStart;
+            ptr->StartFwkTimer(isFwkStart);
+            if (!isFwkStart) {
+                HILOGE("Do backup, start fwk timer fail.");
+                return;
+            }
+            HILOGI("Do backup, start fwk timer end.");
             BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
             auto cache = cachedEntity.Structuralize();
             auto ret = ptr->DoBackup(cache);
@@ -1259,15 +1267,21 @@ void BackupExtExtension::AsyncTaskIncreRestoreSpecialVersion()
 void BackupExtExtension::AsyncTaskRestoreForUpgrade()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    StartOnProcessTaskThread(BackupRestoreScenario::FULL_RESTORE);
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            auto callBackup = ptr->FullRestoreCallback(obj);
-            auto callBackupEx = ptr->FullRestoreCallbackEx(obj);
-            ptr->CreateExecOnProcessTask(BackupRestoreScenario::FULL_RESTORE);
+            HILOGI("On restore, start ext timer begin.");
+            bool isExtStart;
+            ptr->StartExtTimer(isExtStart);
+            if (!isExtStart) {
+                HILOGE("On restore, start ext timer fail.");
+                return;
+            }
+            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_RESTORE);
+            auto callBackup = ptr->OnRestoreCallback(obj);
+            auto callBackupEx = ptr->OnRestoreExCallback(obj);
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx);
             if (err != ERR_OK) {
                 ptr->AppDone(BError::GetCodeByErrno(err));
@@ -1303,15 +1317,21 @@ void BackupExtExtension::ExtClear()
 
 void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
 {
-    StartOnProcessTaskThread(BackupRestoreScenario::INCREMENTAL_RESTORE);
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            auto callBackup = ptr->IncRestoreResultCallback(obj);
-            auto callBackupEx = ptr->IncRestoreResultCallbackEx(obj);
-            ptr->CreateExecOnProcessTask(BackupRestoreScenario::INCREMENTAL_RESTORE);
+            HILOGI("On incrementalRestore, start ext timer begin.");
+            bool isExtStart;
+            ptr->StartExtTimer(isExtStart);
+            if (!isExtStart) {
+                HILOGE("On incrementalRestore, start ext timer fail.");
+                return;
+            }
+            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_RESTORE);
+            auto callBackup = ptr->IncreOnRestoreCallback(obj);
+            auto callBackupEx = ptr->IncreOnRestoreExCallback(obj);
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx);
             if (err != ERR_OK) {
                 HILOGE("OnRestore done, err = %{pubilc}d", err);
@@ -1401,17 +1421,39 @@ void BackupExtExtension::AppResultReport(const std::string restoreRetInfo,
     }
 }
 
+void BackupExtExtension::StartExtTimer(bool &isExtStart)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+    HILOGI("Start ext timer by ipc.");
+    auto ret = proxy->StartExtTimer(isExtStart);
+    if (ret != ERR_OK) {
+        HILOGE("Start ext timer failed, errCode: %{public}d", ret);
+    }
+}
+
+void BackupExtExtension::StartFwkTimer(bool &isFwkStart)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+    HILOGI("Start fwk timer by ipc.");
+    auto ret = proxy->StartFwkTimer(isFwkStart);
+    if (ret != ERR_OK) {
+        HILOGE("Start fwk timer failed, errCode: %{public}d", ret);
+    }
+}
+
 void BackupExtExtension::AsyncTaskOnBackup()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    StartOnProcessTaskThread(BackupRestoreScenario::FULL_BACKUP);
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            auto callBackup = ptr->HandleFullBackupCallback(obj);
-            auto callBackupEx = ptr->HandleFullBackupCallbackEx(obj);
+            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_BACKUP);
+            auto callBackup = ptr->OnBackupCallback(obj);
+            auto callBackupEx = ptr->OnBackupExCallback(obj);
             ErrCode err = ptr->extension_->OnBackup(callBackup, callBackupEx);
             if (err != ERR_OK) {
                 HILOGE("OnBackup done, err = %{pubilc}d", err);
@@ -1736,7 +1778,14 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
 
 void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
 {
-    HILOGI("Start AsyncTaskDoIncrementalBackup");
+    HILOGI("Do IncrementalBackup, start fwk timer begin.");
+    bool isFwkStart;
+    StartFwkTimer(isFwkStart);
+    if (!isFwkStart) {
+        HILOGE("Do IncrementalBackup, start fwk timer fail.");
+        return;
+    }
+    HILOGI("Do IncrementalBackup, start fwk timer end.");
     int incrementalFdDup = dup(incrementalFd);
     int manifestFdDup = dup(manifestFd);
     if (incrementalFdDup < 0) {
@@ -1782,28 +1831,14 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
 
 void BackupExtExtension::AsyncTaskOnIncrementalBackup()
 {
-    StartOnProcessTaskThread(BackupRestoreScenario::INCREMENTAL_BACKUP);
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
-        auto callBackup = [obj](ErrCode errCode, std::string errMsg) {
-            HILOGI("App onbackup end");
-            auto proxy = ServiceProxy::GetInstance();
-            if (proxy == nullptr) {
-                throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
-            }
-            auto extPtr = obj.promote();
-            if (extPtr == nullptr) {
-                HILOGE("Current extension execute call backup error, extPtr is empty");
-                return;
-            }
-            HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
-            extPtr->FinishOnProcessTask();
-            proxy->GetAppLocalListAndDoIncrementalBackup();
-        };
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            auto callBackupEx = ptr->HandleBackupEx(obj);
+            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_BACKUP);
+            auto callBackup = ptr->IncOnBackupCallback(obj);
+            auto callBackupEx = ptr->IncOnBackupExCallback(obj);
             ErrCode err = ptr->extension_->OnBackup(callBackup, callBackupEx);
             if (err != ERR_OK) {
                 HILOGE("OnBackup done, err = %{pubilc}d", err);
@@ -1958,147 +1993,5 @@ int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> 
     HILOGI("End, bigFiles num:%{public}zu, smallFiles num:%{public}zu, allFiles num:%{public}zu", bigFiles.size(),
         smallFiles.size(), allFiles.size());
     return err;
-}
-
-void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
-{
-    HILOGI("Begin");
-    auto proxy = ServiceProxy::GetInstance();
-        if (proxy == nullptr) {
-        HILOGE("Failed to obtain the ServiceProxy handle");
-        DoClear();
-        return;
-    }
-    auto ret = proxy->AppIncrementalDone(errCode);
-    if (ret != ERR_OK) {
-        HILOGE("Failed to notify the app done. err = %{public}d", ret);
-    }
-}
-
-ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
-{
-    auto obj = wptr<BackupExtExtension>(this);
-    auto ptr = obj.promote();
-    if (ptr == nullptr) {
-        HILOGE("Failed to get ext extension.");
-        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
-    }
-    if (ptr->extension_ == nullptr) {
-        HILOGE("Failed to get extension.");
-        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
-    }
-    auto callBackup = [ptr](ErrCode errCode, const std::string result) {
-        if (ptr == nullptr) {
-            HILOGE("Failed to get ext extension.");
-            return;
-        }
-        HILOGI("GetBackupInfo callBackup start. result = %{public}s", result.c_str());
-        ptr->backupInfo_ = result;
-    };
-    auto ret = ptr->extension_->GetBackupInfo(callBackup);
-    if (ret != ERR_OK) {
-        HILOGE("Failed to get backupInfo. err = %{public}d", ret);
-        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
-    }
-    HILOGD("backupInfo = %s", backupInfo_.c_str());
-    result = backupInfo_;
-    backupInfo_.clear();
-
-    return ERR_OK;
-}
-
-ErrCode BackupExtExtension::UpdateFdSendRate(std::string &bundleName, int32_t sendRate)
-{
-    try {
-        std::lock_guard<std::mutex> lock(updateSendRateLock_);
-        HILOGI("Update SendRate, bundleName:%{public}s, sendRate:%{public}d", bundleName.c_str(), sendRate);
-        VerifyCaller();
-        bundleName_ = bundleName;
-        sendRate_ = sendRate;
-        if (sendRate > 0) {
-            startSendFdRateCon_.notify_one();
-        }
-        return ERR_OK;
-    } catch (...) {
-        HILOGE("Failed to UpdateFdSendRate");
-        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
-    }
-}
-
-std::function<void(ErrCode, std::string)> BackupExtExtension::AppDoneCallbackEx(wptr<BackupExtExtension> obj)
-{
-    HILOGI("Begin get callback for appDone");
-    return [obj](ErrCode errCode, std::string errMsg) {
-        HILOGI("begin call callBackupExAppDone");
-        auto extensionPtr = obj.promote();
-        if (extensionPtr == nullptr) {
-            HILOGE("Ext extension handle have been released");
-            return;
-        }
-        extensionPtr->AppDone(errCode);
-        extensionPtr->DoClear();
-    };
-}
-
-std::function<void(ErrCode, std::string)> BackupExtExtension::IncRestoreResultCallbackEx(wptr<BackupExtExtension> obj)
-{
-    HILOGI("Begin get callback for onRestore");
-    return [obj](ErrCode errCode, const std::string restoreRetInfo) {
-        HILOGI("begin call restoreEx");
-        auto extensionPtr = obj.promote();
-        if (extensionPtr == nullptr) {
-            HILOGE("Ext extension handle have been released");
-            return;
-        }
-        if (extensionPtr->extension_ == nullptr) {
-            HILOGE("Extension handle have been released");
-            return;
-        }
-        extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
-        extensionPtr->FinishOnProcessTask();
-        if (errCode == ERR_OK) {
-            if (restoreRetInfo.size()) {
-                extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
-            }
-            return;
-        }
-        if (restoreRetInfo.empty()) {
-            extensionPtr->AppIncrementalDone(errCode);
-            extensionPtr->DoClear();
-        } else {
-            std::string errInfo;
-            BJsonUtil::BuildRestoreErrInfo(errInfo, errCode, restoreRetInfo);
-            extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::INCREMENTAL_RESTORE, errCode);
-            extensionPtr->DoClear();
-        }
-    };
-}
-
-std::function<void(ErrCode, const std::string)> BackupExtExtension::HandleBackupEx(wptr<BackupExtExtension> obj)
-{
-    HILOGI("Begin get HandleBackupEx");
-    return [obj](ErrCode errCode, const std::string backupExRetInfo) {
-        auto proxy = ServiceProxy::GetInstance();
-        if (proxy == nullptr) {
-            throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
-        }
-        auto extensionPtr = obj.promote();
-        if (extensionPtr == nullptr) {
-            HILOGE("Ext extension handle have been released");
-            return;
-        }
-        if (extensionPtr->extension_ == nullptr) {
-            HILOGE("Extension handle have been released");
-            return;
-        }
-        extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
-        if (backupExRetInfo.size()) {
-            HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
-            extensionPtr->FinishOnProcessTask();
-            proxy->GetAppLocalListAndDoIncrementalBackup();
-            HILOGI("Will notify backup result report");
-            extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::INCREMENTAL_BACKUP);
-        }
-    };
 }
 } // namespace OHOS::FileManagement::Backup

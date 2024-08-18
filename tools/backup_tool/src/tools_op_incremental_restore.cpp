@@ -219,7 +219,7 @@ static void OnResultReport(shared_ptr<SessionRestore> ctx, const std::string &bu
     printf("OnResultReport bundleName = %s, resultInfo = %s\n", bundleName.c_str(), resultInfo.c_str());
 }
 
-static void OnProcess(shared_ptr<Session> ctx, const std::string bundleName, const std::string processInfo)
+static void OnProcess(shared_ptr<SessionRestore> ctx, const std::string bundleName, const std::string processInfo)
 {
     printf("OnProcess bundleName = %s, processInfo = %s\n", bundleName.c_str(), processInfo.c_str());
 }

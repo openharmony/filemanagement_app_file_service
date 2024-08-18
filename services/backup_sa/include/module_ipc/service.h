@@ -78,6 +78,8 @@ public:
     ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) override;
     ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) override;
     ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario) override;
+    ErrCode StartExtTimer(bool &isExtStart) override;
+    ErrCode StartFwkTimer(bool &isFwkStart) override;
 
     ErrCode SAResultReport(const std::string bundleName, const std::string resultInfo,
                            const ErrCode errCode, const BackupRestoreScenario sennario);
@@ -227,6 +229,14 @@ public:
      *
      */
     std::function<void(const std::string &&)> GetBackupInfoConnectDied(wptr<Service> obj, std::string &bundleName);
+
+    /**
+     * @brief timeout callback
+     *
+     * @param ptr 当前对象
+     * @param bundleName 应用名称
+     */
+    std::function<void()> TimeOutCallback(wptr<Service> ptr, std::string bundleName);
 
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)

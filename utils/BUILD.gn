@@ -77,6 +77,7 @@ ohos_shared_library("backup_utils") {
     "src/b_sa/b_sa_utils.cpp",
     "src/b_tarball/b_tarball_cmdline.cpp",
     "src/b_tarball/b_tarball_factory.cpp",
+    "src/b_utils/b_time.cpp",
   ]
 
   configs = [ ":utils_private_config" ]

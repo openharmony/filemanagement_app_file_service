@@ -126,11 +126,6 @@ public:
      *
      */
     static bool BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet);
-
-    /**
-     * @brief 生成当前时间的时间戳字符串
-     */
-    static std::string GetCurrentTimeInfo();
 };
 } // namespace OHOS::FileManagement::Backup
 

@@ -162,7 +162,22 @@ ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::StartExtTimer(bool &isExtStart)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::StartFwkTimer(bool &isFwkStart)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceProxy::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario)
 {
     return BError(BError::Codes::OK);
 }

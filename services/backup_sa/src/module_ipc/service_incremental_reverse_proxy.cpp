@@ -132,8 +132,8 @@ void ServiceReverseProxy::IncrementalBackupOnProcessInfo(std::string bundleName,
     MessageParcel reply;
     MessageOption option;
     if (int err = Remote()->SendRequest(
-        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_PROCESS_INFO),
-            data, reply, option);
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_PROCESS_INFO), data,
+        reply, option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }
@@ -247,8 +247,8 @@ void ServiceReverseProxy::IncrementalRestoreOnProcessInfo(std::string bundleName
     MessageParcel reply;
     MessageOption option;
     if (int err = Remote()->SendRequest(
-        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_PROCESS_INFO),
-            data, reply, option);
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_PROCESS_INFO), data,
+        reply, option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }

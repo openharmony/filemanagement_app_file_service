@@ -273,7 +273,7 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
         argv.push_back(napi_process);
         return true;
     };
-   callbacks->onProcess.CallJsMethod(cbCompl);
+    callbacks->onProcess.CallJsMethod(cbCompl);
 }
 
 napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info cbinfo)

@@ -133,4 +133,9 @@ ErrCode ExtBackup::InvokeAppExtMethod(ErrCode errCode, const std::string result)
 {
     return BExtBackup::extBackup->InvokeAppExtMethod(errCode, result);
 }
+
+ErrCode ExtBackup::OnProcess(function<void(ErrCode, std::string)> callback)
+{
+    return BExtBackup::extBackup->OnProcess(callback);
+}
 } // namespace OHOS::FileManagement::Backup

@@ -295,7 +295,7 @@ ErrCode ExtBackup::InvokeAppExtMethod(ErrCode errCode, const std::string result)
     return ERR_OK;
 }
 
-ErrCode ExtBackup::OnProcess(std::function<void(ErrCode,std::string)> callback)
+ErrCode ExtBackup::OnProcess(std::function<void(ErrCode, std::string)> callback)
 {
     HILOGI("BackupExtensionAbility(base) OnProcess.");
     return ERR_OK;

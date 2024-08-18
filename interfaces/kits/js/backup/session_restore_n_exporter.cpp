@@ -285,7 +285,7 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
         argv.push_back(napi_process);
         return true;
     };
-   callbacks->onProcess.CallJsMethod(cbCompl);
+    callbacks->onProcess.CallJsMethod(cbCompl);
 }
 
 static bool VerifyAppendBundlesParam(NFuncArg &funcArg, int32_t &fd, std::vector<std::string> &bundleNames,
@@ -386,6 +386,7 @@ static bool VerifyNapiObject(napi_env env, NFuncArg &funcArg)
     }
     return false;
 }
+
 static bool VerifyNarg(napi_env env, NVal &callbacks)
 {
     if (!callbacks.TypeIs(napi_object)) {

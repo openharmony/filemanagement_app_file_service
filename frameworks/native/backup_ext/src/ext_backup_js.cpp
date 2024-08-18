@@ -724,7 +724,7 @@ static int DoCallJsMethod(CallJsParam *param)
         return EINVAL;
     }
     napi_value result;
-    HILOGI("Extension start do call current js method");
+    HILOGI("Extension start do call current js method, methodName:%{public}s", param->funcName.c_str());
     napi_call_function(env, value, method, argv.size(), argv.data(), &result);
     if (!param->retParser(env, handleEscape.Escape(result))) {
         HILOGE("Parser js result fail.");
@@ -865,15 +865,9 @@ ErrCode ExtBackupJs::OnProcess(std::function<void(ErrCode, const std::string)> c
     onProcessCallback_ = std::make_shared<OnProcessCallBackInfo>(callback);
     auto retParser = [jsRuntime {&jsRuntime_}, callBackInfo {onProcessCallback_}](napi_env env,
         napi_value result) -> bool {
-            size_t strLen = 0;
-            napi_status status = napi_get_value_string_utf8(env, result, nullptr, -1, &strLen);
-            if (status != napi_ok) {
-                return false;
-            }
-            size_t bufLen = strLen + 1;
-            unique_ptr<char[]> str = make_unique<char[]>(bufLen);
-            status = napi_get_value_string_utf8(env, result, str.get(), bufLen, &strLen);
-            callBackInfo->onProcessCallback(BError(BError::Codes::OK), str.get());
+            string processStr;
+            DealNapiStrValue(env, result, processStr);
+            callBackInfo->onProcessCallback(BError(BError::Codes::OK), processStr);
             return true;
     };
     auto errCode = CallJsMethod("onProcess", jsRuntime_, jsObj_.get(), {}, retParser);

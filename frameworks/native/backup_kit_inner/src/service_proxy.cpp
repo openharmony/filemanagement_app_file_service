@@ -612,4 +612,48 @@ ErrCode ServiceProxy::ReportAppProcessInfo(const std::string processInfo, const 
     HILOGI("ServiceProxy NotifyBundleProcessInfo end. ret = %{public}d", ret);
     return BError(BError::Codes::OK, "success");
 }
+
+ErrCode ServiceProxy::StartExtTimer(bool &isExtStart)
+{
+    HILOGI("ServiceProxy StartExtTimer Begin.");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START_EXT_TIMER),
+                                        data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    reply.ReadBool(isExtStart);
+    HILOGI("ServiceProxy StartExtTimer end. isExtStart = %d", isExtStart);
+    return BError(BError::Codes::OK, "success");
+}
+
+ErrCode ServiceProxy::StartFwkTimer(bool &isFwkStart)
+{
+    HILOGI("ServiceProxy StartFwkTimer Begin.");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START_FWK_TIMER),
+                                        data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    reply.ReadBool(isFwkStart);
+    HILOGI("ServiceProxy StartFwkTimer end. isFwkStart = %d", isFwkStart);
+    return BError(BError::Codes::OK, "success");
+}
 } // namespace OHOS::FileManagement::Backup

@@ -23,7 +23,7 @@
 
 #include "b_error/b_error.h"
 #include "filemgmt_libhilog.h"
-#include "b_jsonutil.h"
+#include "b_utils/b_time.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -250,18 +250,15 @@ bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessRetInfo(std::string 
     if (info == nullptr) {
         return false;
     }
-
     cJSON *processInfo = cJSON_CreateObject();
     if (processInfo == nullptr) {
         cJSON_Delete(info);
         return false;
     }
-    std::string timeInfo = GetCurrentTimeInfo();
+    std::string timeInfo = std::to_string(TimeUtils::GetTimeS());
     cJSON_AddStringToObject(processInfo, "timeInfo", timeInfo.c_str());
     cJSON_AddStringToObject(processInfo, "resultInfo", onProcessRet.c_str());
-
     cJSON_AddItemToObject(info, "processResult", processInfo);
-
     char *data = cJSON_Print(info);
     if (data == nullptr) {
         cJSON_Delete(info);
@@ -271,14 +268,4 @@ bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessRetInfo(std::string 
     cJSON_Delete(info);
     cJSON_free(data);
     return true;
-}
-
-std::string OHOS::FileManagement::Backup::BJsonUtil::GetCurrentTimeInfo()
-{
-    auto now = std::chrono::system_clock::now();
-    auto timePoint = std::chrono::system_clock::to_time_t(now);
-    std::stringstream timestream;
-    timestream << std::put_time(std::localtime(&timePoint), "%Y-%m-%d %H:%M:%S");
-    std::string result = timestream.str();
-    return result;
 }
