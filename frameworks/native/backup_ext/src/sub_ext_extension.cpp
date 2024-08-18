@@ -425,8 +425,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::HandleFullBa
         extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
         if (backupExRetInfo.size()) {
             HILOGI("Will notify backup result report");
-            extensionPtr->appExecFinished_ = true;
-            extensionPtr->ShutDownExecOnProcessTask();
+            extensionPtr->FinishOnProcessTask();
             extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
             extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::FULL_BACKUP);
         }
@@ -445,12 +444,11 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::HandleFullBa
             HILOGE("Ext extension handle have been released");
             return;
         }
-        extensionPtr->appExecFinished_ = true;
-        extensionPtr->ShutDownExecOnProcessTask();
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
             return;
         }
+        extensionPtr->FinishOnProcessTask();
         extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
     };
 }
@@ -468,6 +466,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::FullRestoreCallbac
             HILOGE("Extension handle have been released");
             return;
         }
+        extensionPtr->FinishOnProcessTask();
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
         if (errCode == ERR_OK) {
             if (restoreRetInfo.size()) {
@@ -496,9 +495,8 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::FullRestoreCallbac
             HILOGE("Ext extension handle have been released");
             return;
         }
-        extensionPtr->appExecFinished_ = true;
-        extensionPtr->ShutDownExecOnProcessTask();
         HILOGI("Current bundle will execute app done");
+        extensionPtr->FinishOnProcessTask();
         if (errMsg.empty()) {
             extensionPtr->AppDone(errCode);
         } else {
@@ -519,8 +517,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncRestoreResultCa
             HILOGE("Ext extension handle have been released");
             return;
         }
-        extensionPtr->appExecFinished_ = true;
-        extensionPtr->ShutDownExecOnProcessTask();
+        extensionPtr->FinishOnProcessTask();
         HILOGI("Current bundle will execute app done");
         if (errMsg.empty()) {
             extensionPtr->AppIncrementalDone(errCode);
@@ -547,105 +544,142 @@ void BackupExtExtension::ReportAppProcessInfo(const std::string processInfo, Bac
     }
 }
 
-std::function<void(ErrCode, const std::string)> BackupExtExtension::ExecOnProcessCallback(wptr<BackupExtExtension> obj,
-        BackupRestoreScenario scenario)
+// 2024-08-18
+void BackupExtExtension::StartOnProcessTaskThread(BackupRestoreScenario scenario)
 {
-    return [obj, scenario](ErrCode errCode, const std::string processInfo) {
+    HILOGI("Begin Create onProcess Task Thread");
+    callJsOnProcessThread_ = std::thread[obj { wptr<BackupExtExtension>(this) }, scenario]() {
         auto extPtr = obj.promote();
         if (extPtr == nullptr) {
-            HILOGE("Execute onProcess callback error, extPtr is empty");
+            HILOGE("Create onProcess Task thread failed, extPtr is empty");
             return;
         }
-        extPtr->ShutDownOnProcessTimeoutTask();
-        if (extPtr->isSameClock_ && extPtr->execOnProcessTimeoutTimes_ > 0) {
-            HILOGE("Current time call onProcess no result, timeOut count:%{public}d",
-                extPtr->execOnProcessTimeoutTimes_);
-            return;
-        }
-        extPtr->execOnProcessTimeoutTimes_ = 0; // 正常场景重置超时次数
-        if (processInfo.size()) {
-            extPtr->ReportAppProcessInfo(processInfo, scenario);
-        } else {
-            extPtr->ShutDownExecOnProcessTask(); // 认为没实现onProcess,停掉定时器
-            return;
-        }
-    };
+        extPtr->ExecCallOnProcessTask(obj, scenario);
+    }
+    HILOGI("End Create onProcess Task End");
 }
 
-// std::function<void(ErrCode, const std::string)> BackupExtExtension::ExecOnProcessTimeoutCallback(
-//     wptr<BackupExtExtension> obj)
-// {
-
-// }
-
-bool BackupExtExtension::CreateExecOnProcessTask(BackupRestoreScenario scenario)
+void BackupExtExtension::ExecCallOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
 {
-    auto taskCallBack = [obj{ wptr<BackupExtExtension>(this) }, scenario]() {
-        HILOGI("1111");
-        auto extPtr = obj.promote();
-        if (extPtr == nullptr) {
-            HILOGE("CreateExecOnProcessTask error, extPtr is empty");
+    HILOGI("Begin");
+    onProcessTimeoutTimer_.Setup();
+    AsyncCallJsOnProcessTask(obj, scenario);
+    StartOnProcessTimeOutTimer(obj);
+    while (!stopCallJsOnProcess_.load()) {
+        std::unique_lock<std::mutex> lock(onProcessLock_);
+        execOnProcessCon_.wait_for(lock, std::chrono::seconds(BConstants::CALL_APP_ON_PROCESS_TIME_INTERVAL),
+            [this] { return this->stopCallJsOnProcess_.load(); });
+        if (stopCallJsOnProcess_.load()) {
+            HILOGE("Current extension js onProcess finished");
             return;
         }
-        extPtr->isSameClock_ = true;
-        auto onProcessCallback = extPtr->ExecOnProcessCallback(obj, scenario);
-        if (!extPtr->appExecFinished_) { // app没有结束，就继续执行
-            extPtr->ExecOnProcessTimeoutTask(obj);
-            ErrCode ret = extPtr->extension_->OnProcess(onProcessCallback);
-            if (ret != ERR_OK) {
-                HILOGE("Execute js method onProcess error, ret:%{public}d", ret);
+        if (onProcessTimeout_.load()) {
+            HILOGE("Current extension js onProcess status is timeout");
+            StartOnProcessTimeOutTimer(obj);
+            continue;
+        }
+        AsyncCallJsOnProcessTask(obj, scenario);
+        StartOnProcessTimeOutTimer(obj);
+    }
+    HILOGI("End");
+}
+
+void BackupExtExtension::AsyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
+{
+    HILOGI("Begin");
+    auto task = [obj, scenario]() {
+        auto callBack = [obj, scenario](ErrCode errCode, const std::string processInfo) {
+            // 进入此方法说明onProcess正常1s内响应,则关闭超时的定时器，超时计数减一
+            auto extPtr = obj.promote();
+            if (extPtr == nullptr) {
+                HILOGE("Async call js onPreocess callback failed, exPtr is empty");
                 return;
             }
+            extPtr->CloseOnProcessTimeOutTimer();
+            extPtr->onProcessTimeout_.store(false);
+            if (extPtr->onProcessTimeoutCnt_.load() != 0) {
+                extPtr->onProcessTimeoutCnt_--;
+            }
+            if (processInfo.size == 0) {
+                extPtr->stopCallJsOnProcess_.store(true);
+                extPtr->execOnProcessCon_.notify_one();
+                return;
+            }
+            std::string processInfoJsonStr;
+            BJsonUtil::BuildOnProcessRetInfo(processInfoJsonStr, processInfo);
+            extPtr->ReportAppProcessInfo(processInfoJsonStr, scenario);
+        };
+        auto extenionPtr = obj.promote();
+        if (extenionPtr == nullptr) {
+            HILOGE("Async call js onPreocess failed, extenionPtr is empty");
+            return;
         }
-        extPtr->isSameClock_ = false;
+        ErrCode ret = extenionPtr->extension_->OnProcess(callBack);
+        if (ret != ERR_OK) {
+            HILOGE("Call OnProcess Failed, ret:%{public}d", ret);
+            return;
+        }
     };
-    execOnProcessTaskTimer_.Setup();
-    uint32_t onProcessTimerId = execOnProcessTaskTimer_.Register(taskCallBack,
-        BConstants::CALL_APP_ON_PROCESS_TIME_INTERVAL, false);
-    execOnProcessTaskTimerId_ = onProcessTimerId;
-    return true;
+    threadPool_.AddTask([task]() {
+        task();
+    });
+    HILOGI("End");
 }
 
-bool BackupExtExtension::ShutDownExecOnProcessTask()
+void BackupExtExtension::FinishOnProcessTask()
 {
-    HILOGI("Start Shutdown onProcess task timer");
-    execOnProcessTaskTimer_.Shutdown();
-    execOnProcessTaskTimer_.Unregister(execOnProcessTaskTimerId_);
-    HILOGI("End Shutdown onProcess task timer, execOnProcessTaskTimerId: %{public}d", execOnProcessTaskTimerId_);
-    return true;
+    HILOGI("Begin");
+    stopCallJsOnProcess_.store(true);
+    execOnProcessCon_.notify_one();
+    if (callJsOnProcessThread_.joinable()) {
+        callJsOnProcessThread_.join();
+    }
+    HILOGI("End");
 }
 
-bool BackupExtExtension::ExecOnProcessTimeoutTask(wptr<BackupExtExtension> obj)
+void BackupExtExtension::StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj)
 {
+    HILOGI("Begin");
+    if (stopCallJsOnProcess_.load()) {
+        HILOGE("Current extension execute finished");
+        return;
+    }
     auto timeoutCallback = [obj]() {
         auto extPtr = obj.promote();
         if (extPtr == nullptr) {
-            HILOGE("CreateExecOnProcessTask error, extPtr is empty");
+            HILOGE("Start Create timeout callback failed, extPtr is empty");
             return;
         }
-        if (extPtr->execOnProcessTimeoutTimes_ >= BConstants::APP_ON_PROCESS_TIMEOUT_MAX_COUNT) {
-            HILOGE("Current App timeout more than three times, Will Report");
-            extPtr->execOnProcessTimeoutTimes_ = 0; // 已经满足三次超时条件
-            extPtr->ShutDownOnProcessTimeoutTask();
-            extPtr->ShutDownExecOnProcessTask();
-            extPtr->AppDone(BError(BError::Codes::EXT_ABILITY_DIED));
-        } else {
-            extPtr->execOnProcessTimeoutTimes_++;
+        if (extPtr->onProcessTimeoutCnt_.load() >= BConstants::APP_ON_PROCESS_TIMEOUT_MAX_COUNT) {
+            HILOGE("Current extension onProcess timeout more than three times");
+            extPtr->stopCallJsOnProcess_.store(true);
+            extPtr->onProcessTimeoutCnt_ = 0;
+            extPtr->execOnProcessCon_.notify_one();
+            extPtr->AppDone(BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+            return;
         }
+        extPtr->onProcessTimeoutCnt_++;
+        extPtr->onProcessTimeout_.store(true);
+        HILOGE("Current extension onProcess status is timeout,
+            onProcessTimeoutCnt:%{public}d", extPtr->onProcessTimeoutCnt_);
     };
-    execOnProcessTimeoutTimer_.Setup();
-    uint32_t timeoutTimerId = execOnProcessTimeoutTimer_.Register(timeoutCallback,
-        BConstants::APP_ON_PROCESS_MAX_TIMEOUT, true);
-    execOnProcessTimeoutTimerId_ = timeoutTimerId;
-    return true;
+    uint32_t timerId = onProcessTimeoutTimer_.Register(timeoutCallback, BConstants::APP_ON_PROCESS_MAX_TIMEOUT, true);
+    onProcessTimeoutTimerId_ = timerId;
+    HILOGI("End");
 }
 
-bool BackupExtExtension::ShutDownOnProcessTimeoutTask()
+void BackupExtExtension::CloseOnProcessTimeOutTimer()
 {
-    HILOGI("Start Shutdown onProcess Timeout timer");
-    execOnProcessTimeoutTimer_.Shutdown();
-    execOnProcessTimeoutTimer_.Unregister(execOnProcessTimeoutTimerId_);
-    HILOGI("End Shutdown onProcess Timeout timer, timeoutTimerId: %{public}d", execOnProcessTimeoutTimerId_);
-    return true;
+    HILOGI("Begin");
+    onProcessTimeoutTimer_.Unregister(onProcessTimeoutTimerId_);
+    HILOGI("End");
 }
+
+
+
+
+
+
+
+
 } // namespace OHOS::FileManagement::Backup

@@ -245,13 +245,15 @@ private:
 
 
 
-    std::function<void(ErrCode, const std::string)> ExecOnProcessCallback(wptr<BackupExtExtension> obj,
-        BackupRestoreScenario scenario);
-    // std::function<void(ErrCode, const std::string)> ExecOnProcessTimeoutCallback(wptr<BackupExtExtension> obj);
-    bool CreateExecOnProcessTask(BackupRestoreScenario scenario);
-    bool ShutDownExecOnProcessTask();
-    bool ExecOnProcessTimeoutTask(wptr<BackupExtExtension> obj);
-    bool ShutDownOnProcessTimeoutTask();
+
+    void StartOnProcessTaskThread(BackupRestoreScenario scenario);
+    void FinishOnProcessTask();
+    void ExecCallOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
+    void AsyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
+
+    void StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj);
+    void CloseOnProcessTimeOutTimer();
+
 
 
 private:
@@ -274,33 +276,14 @@ private:
     bool isRpValid_ {false};
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    Utils::Timer execOnProcessTaskTimer_ {"execOnProcessTaskTimer_"};
-    uint32_t execOnProcessTaskTimerId_;
-    Utils::Timer execOnProcessTimeoutTimer_ {"execOnProcessTimeoutTimer_"};
-    uint32_t execOnProcessTimeoutTimerId_;
-    int execOnProcessTimeoutTimes_;
-    bool isSameClock_ {false};
-    bool appExecFinished_ {false};
+    std::thread callJsOnProcessThread_;
+    Utils::Timer onProcessTimeoutTimer_ {"onProcessTimeoutTimer_"};
+    uint32_t onProcessTimeoutTimerId_;
+    std::atomic<int> onProcessTimeoutCnt_;
+    std::atomic<bool> stopCallJsOnProcess_ {false};
+    std::condition_variable execOnProcessCon_;
+    std::mutex onProcessLock_;
+    std::atomic<bool> onProcessTimeout_ {false};
 
 };
 } // namespace OHOS::FileManagement::Backup

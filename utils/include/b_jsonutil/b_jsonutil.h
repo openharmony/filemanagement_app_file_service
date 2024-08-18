@@ -115,6 +115,22 @@ public:
      *
      */
     static bool BuildRestoreErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo);
+
+    /**
+     * @brief 组建App进度返回的信息
+     *
+     * @param jsonStr 组建结果
+     * @param onProcessRet onProcess接口返回值
+     *
+     * @return 是否组建成功
+     *
+     */
+    static bool BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet);
+
+    /**
+     * @brief 生成当前时间的时间戳字符串
+     */
+    static std::string GetCurrentTimeInfo();
 };
 } // namespace OHOS::FileManagement::Backup
 

@@ -130,7 +130,7 @@ std::tuple<int, EndFileInfo, ErrFileInfo> UntarFile::UnPacket(
     fclose(tarFilePtr_);
     tarFilePtr_ = nullptr;
 
-    return {ret, fileInfos, errInfos};
+    return {0, fileInfos, errInfos};
 }
 
 std::tuple<int, EndFileInfo, ErrFileInfo> UntarFile::IncrementalUnPacket(
@@ -151,7 +151,7 @@ std::tuple<int, EndFileInfo, ErrFileInfo> UntarFile::IncrementalUnPacket(
     fclose(tarFilePtr_);
     tarFilePtr_ = nullptr;
 
-    return {ret, fileInfos, errFileInfos};
+    return {0, fileInfos, errFileInfos};
 }
 
 off_t UntarFile::HandleTarBuffer(const string &buff, const string &name, FileStatInfo &info)
@@ -225,8 +225,8 @@ bool UntarFile::CheckIfTarBlockValid(char *buff, size_t buffLen, TarHeader *head
         if (tailRead == BLOCK_SIZE && IsEmptyBlock(tailBuff)) {
             HILOGE("Parsing tar file completed, tailBuff is empty.");
             ret = 0;
+            return false;
         }
-        return false;
     }
     // check header
     if (!IsValidTarBlock(*header)) {
@@ -284,9 +284,9 @@ int UntarFile::DealIncreParseTarFileResult(const std::tuple<int, bool, ErrFileIn
     }
     if (!isFilter) {
         fileInfos[fileName] = fileSize;
-        if (!subErrInfo.empty()) {
-            errInfos.merge(subErrInfo);
-        }
+    }
+    if (!subErrInfo.empty()) {
+        errInfos.merge(subErrInfo);
     }
     return 0;
 }
