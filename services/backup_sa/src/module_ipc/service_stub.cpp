@@ -43,6 +43,10 @@ void ServiceStub::ServiceStubSupplement()
     opToInterfaceMap_[static_cast<uint32_t>(
         IServiceInterfaceCode::SERVICE_CMD_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP)] =
         &ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START_EXT_TIMER)] =
+        &ServiceStub::CmdStartExtTimer;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START_FWK_TIMER)] =
+        &ServiceStub::CmdStartFwkTimer;
 }
 
 void ServiceStub::ServiceStubSuppAppendBundles()
@@ -444,6 +448,38 @@ int32_t ServiceStub::CmdUpdateSendRate(MessageParcel &data, MessageParcel &reply
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to write result"));
     }
     HILOGI("ServiceStub::CmdUpdateSendRate end.");
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdStartExtTimer(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("ServiceStub::CmdStartExtTimer Begin.");
+    int ret = ERR_OK;
+    bool isExtStart;
+    ret = StartExtTimer(isExtStart);
+    if (ret != ERR_OK) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to call UpdateTimer"));
+    }
+    if (!reply.WriteBool(isExtStart)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to write result"));
+    }
+    HILOGI("ServiceStub::CmdStartExtTimer end.");
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdStartFwkTimer(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("ServiceStub::CmdStartFwkTimer Begin.");
+    int ret = ERR_OK;
+    bool isFwkStart;
+    ret = StartFwkTimer(isFwkStart);
+    if (ret != ERR_OK) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to call UpdateTimer"));
+    }
+    if (!reply.WriteBool(isFwkStart)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to write result"));
+    }
+    HILOGI("ServiceStub::CmdStartFwkTimer end.");
     return BError(BError::Codes::OK);
 }
 

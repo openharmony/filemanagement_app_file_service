@@ -219,20 +219,30 @@ void SvcSessionManager::SetBundleDataSize(const std::string &bundleName, int64_t
     BackupSvcSessionManager::session->SetBundleDataSize(bundleName, dataSize);
 }
 
-void SvcSessionManager::BundleExtTimerStart(const std::string &bundleName, const Utils::Timer::TimerCallback &callback)
+bool SvcSessionManager::StartFwkTimer(const std::string &bundleName, const Utils::Timer::TimerCallback &callback)
 {
-    BackupSvcSessionManager::session->BundleExtTimerStart(bundleName, callback);
+    return BackupSvcSessionManager::session->StartFwkTimer(bundleName, callback);
+}
+
+bool SvcSessionManager::StopFwkTimer(const std::string &bundleName)
+{
+    return BackupSvcSessionManager::session->StopFwkTimer(bundleName);
+}
+
+bool SvcSessionManager::StartExtTimer(const std::string &bundleName, const Utils::Timer::TimerCallback &callback)
+{
+    return BackupSvcSessionManager::session->StartExtTimer(bundleName, callback);
+}
+
+bool SvcSessionManager::StopExtTimer(const std::string &bundleName)
+{
+    return BackupSvcSessionManager::session->StopExtTimer(bundleName);
 }
 
 bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeOut,
     const Utils::Timer::TimerCallback &callback)
 {
     return BackupSvcSessionManager::session->UpdateTimer(bundleName, timeOut, callback);
-}
-
-void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName)
-{
-    BackupSvcSessionManager::session->BundleExtTimerStop(bundleName);
 }
 
 void SvcSessionManager::IncreaseSessionCnt()

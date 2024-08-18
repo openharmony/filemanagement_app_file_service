@@ -28,6 +28,7 @@
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
+#include "b_utils/b_time.h"
 #include "filemgmt_libhilog.h"
 #include "module_ipc/service.h"
 #include "module_ipc/svc_restore_deps_manager.h"
@@ -684,60 +685,131 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
     }
     timeout = timeout < minTimeout ? minTimeout : timeout;
     resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX); /* conver second to millisecond */
-    HILOGI("Calculate App extension process run timeout=%{public}u(us), bundleName=%{public}s ", resTimeoutMs,
+    HILOGI("Calculate App extension process run timeout=%{public}u(ms), bundleName=%{public}s ", resTimeoutMs,
            bundleName.c_str());
     return resTimeoutMs;
 }
 
-void SvcSessionManager::BundleExtTimerStart(const std::string &bundleName, const Utils::Timer::TimerCallback &callback)
+bool SvcSessionManager::StartFwkTimer(const std::string &bundleName, const Utils::Timer::TimerCallback &callback)
 {
     unique_lock<shared_mutex> lock(lock_);
+    HILOGI("StartFwkTimer begin bundleName %{public}s", bundleName.c_str());
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified");
+        return false;
+    }
+    auto it = GetBackupExtNameMap(bundleName);
+    if (it->second.fwkTimerStatus == true) {
+        HILOGE("FwkTimer is registered, unregister first.");
+        return false;
     }
     uint32_t timeout = CalAppProcessTime(bundleName);
 
-    auto it = GetBackupExtNameMap(bundleName);
-    if (it->second.timerStatus == false) {
-        it->second.timerStatus = true;
-        it->second.extTimerId = extBundleTimer.Register(callback, timeout, true);
+    it->second.fwkTimerStatus = true;
+    it->second.timerId = timer_.Register(callback, timeout, true);
+    HILOGI("StartFwkTimer end bundleName %{public}s", bundleName.c_str());
+    return true;
+}
+
+bool SvcSessionManager::StopFwkTimer(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    HILOGI("StopFwkTimer begin bundleName %{public}s", bundleName.c_str());
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified");
+        return false;
     }
+    auto it = GetBackupExtNameMap(bundleName);
+    if (it->second.fwkTimerStatus == false) {
+        HILOGE("FwkTimer is unregistered, register first.");
+        return true;
+    }
+
+    it->second.fwkTimerStatus = false;
+    timer_.Unregister(it->second.timerId);
+    HILOGI("StopFwkTimer end bundleName %{public}s", bundleName.c_str());
+    return true;
+}
+
+bool SvcSessionManager::StartExtTimer(const std::string &bundleName, const Utils::Timer::TimerCallback &callback)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    HILOGI("StartExtTimer begin bundleName %{public}s", bundleName.c_str());
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified");
+        return false;
+    }
+    auto it = GetBackupExtNameMap(bundleName);
+    if (it->second.extTimerStatus == true) {
+        HILOGE("ExtTimer is registered, unregister first.");
+        return false;
+    }
+    uint32_t timeout = it->second.timeCount;
+    timeout = (timeout != 0) ? timeout : CalAppProcessTime(bundleName);
+    it->second.extTimerStatus = true;
+    it->second.startTime = static_cast<uint32_t>(TimeUtils::GetTimeMS());
+    it->second.timeCount = timeout;
+    it->second.timerId = timer_.Register(callback, timeout, true);
+    HILOGI("StartExtTimer end, timeout %{public}u(ms), bundleName %{public}s", timeout, bundleName.c_str());
+    return true;
+}
+
+bool SvcSessionManager::StopExtTimer(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    HILOGI("StopExtTimer begin bundleName %{public}s", bundleName.c_str());
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified");
+        return false;
+    }
+    auto it = GetBackupExtNameMap(bundleName);
+    if (it->second.extTimerStatus == false) {
+        HILOGE("ExtTimer is unregistered, register first.");
+        return true;
+    }
+
+    it->second.extTimerStatus = false;
+    it->second.startTime = 0;
+    it->second.timeCount = 0;
+    timer_.Unregister(it->second.timerId);
+    HILOGI("StopExtTimer end bundleName %{public}s", bundleName.c_str());
+    return true;
 }
 
 bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeOut,
     const Utils::Timer::TimerCallback &callback)
 {
     unique_lock<shared_mutex> lock(lock_);
+    HILOGI("UpdateTimer begin bundleName %{public}s", bundleName.c_str());
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified");
+        return false;
     }
 
     auto it = GetBackupExtNameMap(bundleName);
-    if (it->second.timerStatus == true) {
-        // 定时器已存在，则先销毁，再重新注册
-        it->second.timerStatus = false;
-        extBundleTimer.Unregister(it->second.extTimerId);
-        HILOGI("UpdateTimer timeout=%{public}u(ms), bundleName=%{public}s ",
-            timeOut, bundleName.c_str());
-        it->second.extTimerId = extBundleTimer.Register(callback, timeOut, true);
-        it->second.timerStatus = true;
+    if (it->second.extTimerStatus == false) {
+        HILOGI("ExtTimer is unregistered, just count. timeout %{public}u(ms), timeCount %{public}u(ms)",
+            timeOut, it->second.timeCount);
         return true;
     }
-    return false;
-}
 
-void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName)
-{
-    unique_lock<shared_mutex> lock(lock_);
-    if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    if (it->second.startTime == 0) {
+        HILOGE("ExtTimer is registered, but start time is zero.");
+        return false;
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
-    if (it->second.timerStatus == true) {
-        it->second.timerStatus = false;
-        extBundleTimer.Unregister(it->second.extTimerId);
-    }
+    it->second.timeCount += timeOut;
+    uint32_t updateTime = static_cast<uint32_t>(TimeUtils::GetTimeMS());
+    uint32_t elapseTime = updateTime - it->second.startTime;
+    uint32_t realTimeout = it->second.timeCount - elapseTime;
+    timer_.Unregister(it->second.timerId);
+    HILOGI("UpdateTimer timeout %{public}u(ms), timeCount %{public}u(ms), elapseTime %{public}u(ms),"
+        "realTimeout %{public}u(ms), bundleName %{public}s ",
+        timeOut, it->second.timeCount, elapseTime, realTimeout, bundleName.c_str());
+    it->second.timerId = timer_.Register(callback, realTimeout, true);
+    it->second.extTimerStatus = true;
+    HILOGI("UpdateTimer end bundleName %{public}s", bundleName.c_str());
+    return true;
 }
 
 void SvcSessionManager::IncreaseSessionCnt()
@@ -769,9 +841,10 @@ void SvcSessionManager::ClearSessionData()
     unique_lock<shared_mutex> lock(lock_);
     for (auto &&it : impl_.backupExtNameMap) {
         // clear timer
-        if (it.second.timerStatus == true) {
-            it.second.timerStatus = false;
-            extBundleTimer.Unregister(it.second.extTimerId);
+        if (it.second.fwkTimerStatus == true || it.second.extTimerStatus == true) {
+            it.second.fwkTimerStatus = false;
+            it.second.extTimerStatus = false;
+            timer_.Unregister(it.second.timerId);
         }
         // disconnect extension
         if (it.second.schedAction == BConstants::ServiceSchedAction::RUNNING) {

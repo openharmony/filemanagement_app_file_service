@@ -171,6 +171,20 @@ private:
     void AppIncrementalDone(ErrCode errCode);
 
     /**
+     * @brief start extension timer by ipc
+     *
+     * @param result
+     */
+    void StartExtTimer(bool &isExtStart);
+
+    /**
+     * @brief start fwk timer by ipc
+     *
+     * @param errCode
+     */
+    void StartFwkTimer(bool &isFwkStart);
+
+    /**
      * @brief get callbackEx for execute onRestore
      *
      * @param errCode
@@ -178,11 +192,25 @@ private:
     std::function<void(ErrCode, const std::string)> RestoreResultCallbackEx(wptr<BackupExtExtension> obj);
 
     /**
-     * @brief get callbackEx for execute onRestore with string param
+     * @brief get increCallbackEx for execute onRestore with string param
      *
      * @param errCode
      */
     std::function<void(ErrCode, const std::string)> IncRestoreResultCallbackEx(wptr<BackupExtExtension> obj);
+
+    /**
+     * @brief get increCallback for execute onRestore with string param
+     *
+     * @param errCode
+     */
+    std::function<void(ErrCode, const std::string)> IncRestoreResultCallback(wptr<BackupExtExtension> obj);
+
+    /**
+     * @brief get callback for execute onRestore with string param
+     *
+     * @param errCode
+     */
+    std::function<void(ErrCode, std::string)> RestoreResultCallback(wptr<BackupExtExtension> obj);
 
     /**
      * @brief get callbackEx for execute onRestore

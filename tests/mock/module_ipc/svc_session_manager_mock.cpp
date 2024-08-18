@@ -354,8 +354,24 @@ void SvcSessionManager::SetBundleDataSize(const std::string &bundleName, int64_t
     it->second.dataSize = dataSize;
 }
 
-void SvcSessionManager::BundleExtTimerStart(const std::string &bundleName, const Utils::Timer::TimerCallback &callback)
+bool SvcSessionManager::StartFwkTimer(const std::string &bundleName, const Utils::Timer::TimerCallback &callback)
 {
+    return true;
+}
+
+bool SvcSessionManager::StopFwkTimer(const std::string &bundleName)
+{
+    return true;
+}
+
+bool SvcSessionManager::StartExtTimer(const std::string &bundleName, const Utils::Timer::TimerCallback &callback)
+{
+    return true;
+}
+
+bool SvcSessionManager::StopExtTimer(const std::string &bundleName)
+{
+    return true;
 }
 
 bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeOut,
@@ -363,8 +379,6 @@ bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t time
 {
     return true;
 }
-
-void SvcSessionManager::BundleExtTimerStop(const std::string &bundleName) {}
 
 void SvcSessionManager::IncreaseSessionCnt() {}
 
