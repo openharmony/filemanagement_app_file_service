@@ -84,12 +84,10 @@ static napi_status DealNapiStrValue(napi_env env, const napi_value napi_StrValue
     return status;
 }
 
-static napi_status DealNapiException(napi_env env, std::string &exceptionInfo)
+static napi_status DealNapiException(napi_env env, napi_value &exception, std::string &exceptionInfo)
 {
     HILOGI("call DealNapiException start.");
-    napi_status status;
-    napi_value exception;
-    status = napi_get_and_clear_last_exception(env, &exception);
+    napi_status status = napi_get_and_clear_last_exception(env, &exception);
     if (status != napi_ok) {
         HILOGE("call napi_get_and_clear_last_exception failed.");
         return status;
@@ -124,7 +122,7 @@ static napi_value PromiseCallback(napi_env env, napi_callback_info info)
 
 static napi_value PromiseCatchCallback(napi_env env, napi_callback_info info)
 {
-    HILOGI("Promise catch callback.");
+    HILOGI("Promise catch callback begin.");
     size_t argc = 1;
     napi_value argv = {nullptr};
     void *data = nullptr;
@@ -137,8 +135,14 @@ static napi_value PromiseCatchCallback(napi_env env, napi_callback_info info)
         HILOGE("CallbackInfo is nullptr");
         return nullptr;
     }
+    napi_status throwStatus = napi_fatal_exception(env, argv);
+    if (throwStatus != napi_ok) {
+        HILOGE("Failed to throw an exception, %{public}d", throwStatus);
+        return nullptr;
+    }
     callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION), exceptionInfo);
     data = nullptr;
+    HILOGI("Promise catch callback end.");
     return nullptr;
 }
 
@@ -163,7 +167,7 @@ static napi_value PromiseCallbackEx(napi_env env, napi_callback_info info)
 
 static napi_value PromiseCatchCallbackEx(napi_env env, napi_callback_info info)
 {
-    HILOGI("PromiseEx catch callback.");
+    HILOGI("PromiseEx catch callback begin.");
     void *data = nullptr;
     size_t argc = 1;
     napi_value argv = {nullptr};
@@ -176,8 +180,14 @@ static napi_value PromiseCatchCallbackEx(napi_env env, napi_callback_info info)
         HILOGE("CallbackInfo is nullPtr");
         return nullptr;
     }
+    napi_status throwStatus = napi_fatal_exception(env, argv);
+    if (throwStatus != napi_ok) {
+        HILOGE("Failed to throw an exception, %{public}d", throwStatus);
+        return nullptr;
+    }
     callbackInfoEx->callbackParam(BError(BError::Codes::EXT_THROW_EXCEPTION), exceptionInfo);
     data = nullptr;
+    HILOGI("PromiseEx catch callback end.");
     return nullptr;
 }
 
@@ -499,7 +509,9 @@ ErrCode ExtBackupJs::CallJsOnBackupEx()
             napi_is_exception_pending(envir, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
             if (isExceptionPending) {
-                DealNapiException(envir, str);
+                napi_value exception;
+                DealNapiException(envir, exception, str);
+                napi_fatal_exception(envir, exception);
                 callbackInfoEx->callbackParam(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
             } else {
                 DealNapiStrValue(envir, result, str);
@@ -537,7 +549,9 @@ ErrCode ExtBackupJs::CallJsOnBackup()
             napi_is_exception_pending(env, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
             if (isExceptionPending) {
-                DealNapiException(env, str);
+                napi_value exception;
+                DealNapiException(env, exception, str);
+                napi_fatal_exception(env, exception);
                 callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
             } else {
                 callbackInfo->callback(BError(BError::Codes::OK), str);
@@ -580,7 +594,9 @@ ErrCode ExtBackupJs::CallJSRestoreEx()
             napi_is_exception_pending(envir, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
             if (isExceptionPending) {
-                DealNapiException(envir, str);
+                napi_value exception;
+                DealNapiException(envir, exception, str);
+                napi_fatal_exception(envir, exception);
                 callbackInfoEx->callbackParam(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
             } else {
                 DealNapiStrValue(envir, result, str);
@@ -617,7 +633,9 @@ ErrCode ExtBackupJs::CallJSRestore()
             napi_is_exception_pending(env, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
             if (isExceptionPending) {
-                DealNapiException(env, str);
+                napi_value exception;
+                DealNapiException(env, exception, str);
+                napi_fatal_exception(env, exception);
                 callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
             } else {
                 callbackInfo->callback(BError(BError::Codes::OK), str);

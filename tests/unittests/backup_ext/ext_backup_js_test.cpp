@@ -195,18 +195,19 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_DealNapiException_0100, testing::ext
     try {
         napi_env env = nullptr;
         string exceptionInfo = "";
+        napi_value exception;
         EXPECT_CALL(*napiMock, napi_get_and_clear_last_exception(_, _)).WillOnce(Return(napi_invalid_arg));
-        auto ret = DealNapiException(env, exceptionInfo);
+        auto ret = DealNapiException(env, exception, exceptionInfo);
         EXPECT_EQ(ret, napi_invalid_arg);
 
         EXPECT_CALL(*napiMock, napi_get_and_clear_last_exception(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
-        ret = DealNapiException(env, exceptionInfo);
+        ret = DealNapiException(env, exception, exceptionInfo);
         EXPECT_EQ(ret, napi_invalid_arg);
 
         EXPECT_CALL(*napiMock, napi_get_and_clear_last_exception(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_ok));
-        ret = DealNapiException(env, exceptionInfo);
+        ret = DealNapiException(env, exception, exceptionInfo);
         EXPECT_EQ(ret, napi_ok);
     } catch (...) {
         EXPECT_TRUE(false);
