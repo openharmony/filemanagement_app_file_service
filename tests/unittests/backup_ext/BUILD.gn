@@ -193,6 +193,81 @@ ohos_unittest("tar_file_test") {
   use_exceptions = true
 }
 
+ohos_unittest("untar_file_sup_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_js.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_extension.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_extension_stub.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/sub_ext_extension.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
+    "${path_backup}/tests/mock/library_func_mock/library_func_mock.cpp",
+    "untar_file_sup_test.cpp",
+  ]
+  sources += backup_mock_proxy_src
+
+  include_dirs = [
+    "${path_ability_runtime}/services/common/include",
+    "${path_ability_runtime}/interfaces/kits/napi/aafwk/inner/napi_common",
+    "${path_ability_runtime}/interfaces/kits/native/appkit/ability_runtime",
+    "${path_backup}/frameworks/native/backup_ext/include",
+    "${path_backup}/frameworks/native/backup_ext/src",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/frameworks/native/backup_kit_inner/include",
+    "${path_backup}/tests/mock/library_func_mock",
+    "${path_backup}/utils/include",
+    "${path_napi}/native_engine",
+  ]
+  include_dirs += backup_mock_utils_include
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+    "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
+  ]
+
+  cflags = [ "--coverage" ]
+  ldflags = [ "--coverage" ]
+  cflags_cc = [ "--coverage" ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:appkit_native",
+    "ability_runtime:runtime",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "napi:ace_napi",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("untar_file_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -333,6 +408,7 @@ group("backup_ext_test") {
       ":ext_extension_stub_test",
       ":ext_extension_test",
       ":tar_file_test",
+      ":untar_file_sup_test",
       ":untar_file_test",
     ]
   }
