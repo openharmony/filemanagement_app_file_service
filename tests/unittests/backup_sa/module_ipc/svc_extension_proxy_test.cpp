@@ -148,15 +148,17 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleBackup_0100, testi
     GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_HandleBackup_0100";
     try {
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
         EXPECT_TRUE(proxy_ != nullptr);
-        ErrCode ret = proxy_->HandleBackup();
+        ErrCode ret = proxy_->HandleBackup(true);
         EXPECT_EQ(EPERM, ret);
 
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
-        ret = proxy_->HandleBackup();
+        ret = proxy_->HandleBackup(true);
         EXPECT_EQ(BError(BError::Codes::OK), ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -218,15 +220,17 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_HandleRestore_0100, test
     GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_HandleRestore_0100";
     try {
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
         EXPECT_TRUE(proxy_ != nullptr);
-        ErrCode ret = proxy_->HandleRestore();
+        ErrCode ret = proxy_->HandleRestore(true);
         EXPECT_EQ(EPERM, ret);
 
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
-        ret = proxy_->HandleRestore();
+        ret = proxy_->HandleRestore(true);
         EXPECT_EQ(BError(BError::Codes::OK), ret);
     } catch (...) {
         EXPECT_TRUE(false);

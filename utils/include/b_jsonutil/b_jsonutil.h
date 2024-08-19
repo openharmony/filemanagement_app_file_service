@@ -48,26 +48,27 @@ public:
      * @param patternInfo 拼接的字符
      * @param realBundleNames 分割后真正的bundleNames
      * @param userId userId
+     * @param isClearDataFlags 框架是否清理标志集合
      *
      * @return 包名和解析结果的对应关系集合
      *
      */
     static std::map<std::string, std::vector<BundleDetailInfo>> BuildBundleInfos(
         const std::vector<std::string> &bundleNames, const std::vector<std::string> &details,
-        std::vector<std::string> &realBundleNames, int32_t userId);
+        std::vector<std::string> &realBundleNames, int32_t userId,
+        std::map<std::string, bool> &isClearDataFlags);
 
     /**
      * @brief 解析单个bundle对应的json串
      *
-     * @param bundleDetailInfo json串
-     * @param bundleDetail 结构体对象
-     * @param bundleNameOnly bundle名称
-     * @param bundleIndex bundle对应的索引
-     * @param userId userId
+     * @param bundleInfo json串
+     * @param bundleDetails 结构体对象
+     * @param bundleDetailInfo bundle信息
+     * @param isClearData 框架是否清理标志
      *
      */
     static void ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
-        std::string &bundleNameOnly, int bundleIndex, int32_t userId);
+        BJsonUtil::BundleDetailInfo bundleDetailInfo, bool &isClearData);
 
     /**
      * @brief 根据业务类型和bundleName确定唯一的bundleInfo

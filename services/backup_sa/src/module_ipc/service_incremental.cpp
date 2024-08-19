@@ -293,22 +293,26 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
             bundleNames.emplace_back(bundle.bundleName);
         }
         std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
-            BJsonUtil::BuildBundleInfos(bundleNames, infos, bundleNamesOnly, session_->GetSessionUserId());
+            BJsonUtil::BuildBundleInfos(bundleNames, infos, bundleNamesOnly,
+            session_->GetSessionUserId(), isClearDataFlags);
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
         for (auto info : backupInfos) {
             session_->SetBundleDataSize(info.name, info.spaceOccupied);
             session_->SetBackupExtName(info.name, info.extensionName);
+            auto iter = isClearDataFlags.find(info.name);
+            if (iter != isClearDataFlags.end()) {
+                session_->SetClearDataFlag(info.name, iter->second);
+            }
             if (info.allToBackup == false) {
                 session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
                 session_->RemoveExtInfo(info.name);
             }
             BJsonUtil::BundleDetailInfo uniCastInfo;
-            bool uniCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, info.name, UNICAST_TYPE,
-                uniCastInfo);
-            if (uniCastRet) {
+            if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, info.name, UNICAST_TYPE, uniCastInfo)) {
                 HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
                 session_->SetBackupExtInfo(info.name, uniCastInfo.detail);
             }
@@ -519,7 +523,7 @@ bool Service::IncrementalBackup(const string &bundleName)
         throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
     }
     if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
-        auto ret = proxy->IncrementalOnBackup();
+        auto ret = proxy->IncrementalOnBackup(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
         if (ret) {
             ClearSessionAndSchedInfo(bundleName);
@@ -528,7 +532,7 @@ bool Service::IncrementalBackup(const string &bundleName)
         return true;
     } else if (scenario == IServiceReverse::Scenario::RESTORE && BackupPara().GetBackupOverrideIncrementalRestore() &&
                session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
-        auto ret = proxy->HandleRestore();
+        auto ret = proxy->HandleRestore(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(ret, bundleName);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (auto &fileName : fileNameVec) {

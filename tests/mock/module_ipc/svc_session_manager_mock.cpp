@@ -398,6 +398,13 @@ int SvcSessionManager::GetSessionCnt()
     return sessionCnt_.load();
 }
 
+void SvcSessionManager::SetClearDataFlag(const std::string &bundleName, bool isNotClear) {}
+
+bool SvcSessionManager::GetClearDataFlag(const std::string &bundleName)
+{
+    return true;
+}
+
 void SvcSessionManager::SetIncrementalData(const BIncrementalData &incrementalData) {}
 
 int32_t SvcSessionManager::GetIncrementalManifestFd(const string &bundleName)
