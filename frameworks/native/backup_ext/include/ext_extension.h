@@ -65,6 +65,7 @@ public:
     }
     ~BackupExtExtension()
     {
+        onProcessTimeoutTimer_.Shutdown();
         threadPool_.Stop();
     }
 
