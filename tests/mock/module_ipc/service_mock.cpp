@@ -236,6 +236,11 @@ ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool 
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario)
+{
+    return BError(BError::Codes::OK);
+}
+
 void Service::OnSABackup(const std::string &bundleName,
                          const int &fd,
                          const std::string &result,

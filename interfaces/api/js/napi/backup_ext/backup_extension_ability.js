@@ -29,6 +29,10 @@ class BackupExtensionAbility {
     onRestoreEx(versionBackupedBundle, restoreInfo) {
         console.log();
     }
+
+    onProcess() {
+        console.log();
+    }
 }
 
 export default BackupExtensionAbility

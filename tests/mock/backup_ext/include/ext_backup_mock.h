@@ -51,6 +51,7 @@ public:
     virtual BConstants::ExtensionAction VerifyAndGetAction(const AAFwk::Want &,
         std::shared_ptr<AppExecFwk::AbilityInfo>) = 0;
     virtual ErrCode GetParament(const AAFwk::Want &) = 0;
+    virtual ErrCode OnProcess(std::function<void(ErrCode, std::string)> callback) = 0;
 public:
     virtual std::unique_ptr<NativeReference> LoadSystemModuleByEngine(napi_env, const std::string&, const napi_value*,
         size_t) = 0;
@@ -86,6 +87,7 @@ public:
         std::function<void(ErrCode, const std::string)>));
     MOCK_METHOD(ErrCode, OnRestore, (std::function<void(ErrCode, std::string)>));
     MOCK_METHOD(ErrCode, GetBackupInfo, (std::function<void(ErrCode, std::string)>));
+    MOCK_METHOD(ErrCode, OnProcess, (std::function<void(ErrCode, std::string)>));
     MOCK_METHOD(bool, WasFromSpecialVersion, ());
     MOCK_METHOD(bool, SpecialVersionForCloneAndCloud, ());
     MOCK_METHOD(bool, RestoreDataReady, ());

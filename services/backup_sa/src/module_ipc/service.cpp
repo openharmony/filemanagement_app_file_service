@@ -1791,6 +1791,29 @@ void Service::NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerN
     }
 }
 
+ErrCode Service::ReportAppProcessInfo(const std::string processInfo, BackupRestoreScenario sennario)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        string bundleName = VerifyCallerAndGetCallerName();
+        if (sennario == BackupRestoreScenario::FULL_RESTORE) {
+            session_->GetServiceReverseProxy()->RestoreOnProcessInfo(bundleName, processInfo);
+        } else if (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnProcessInfo(bundleName, processInfo);
+        } else if (sennario == BackupRestoreScenario::FULL_BACKUP) {
+            session_->GetServiceReverseProxy()->BackupOnProcessInfo(bundleName, processInfo);
+        } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
+            session_->GetServiceReverseProxy()->IncrementalBackupOnProcessInfo(bundleName, processInfo);
+        }
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        return e.GetCode(); // 任意异常产生，终止监听该任务
+    } catch (const exception &e) {
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
+        return EPERM;
+    }
+}
+
 std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bundleName)
 {
     return [ptr, bundleName]() {

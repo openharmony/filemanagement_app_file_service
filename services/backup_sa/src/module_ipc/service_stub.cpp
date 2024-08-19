@@ -43,6 +43,9 @@ void ServiceStub::ServiceStubSupplement()
     opToInterfaceMap_[static_cast<uint32_t>(
         IServiceInterfaceCode::SERVICE_CMD_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP)] =
         &ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceInterfaceCode::SERVICE_CMD_REPORT_APP_PROCESS_INFO)] =
+        &ServiceStub::CmdReportAppProcessInfo;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START_EXT_TIMER)] =
         &ServiceStub::CmdStartExtTimer;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START_FWK_TIMER)] =
@@ -656,6 +659,20 @@ int32_t ServiceStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessagePar
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive fileName").GetCode();
     }
     return GetIncrementalFileHandle(bundleName, fileName);
+}
+
+int32_t ServiceStub::CmdReportAppProcessInfo(MessageParcel &data, MessageParcel &reply)
+{
+    string processInfo;
+    if (!data.ReadString(processInfo)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleName").GetCode();
+    }
+    int32_t scenario;
+    if (!data.ReadInt32(scenario)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive errCode");
+    }
+    BackupRestoreScenario secenrioInfo = static_cast<BackupRestoreScenario>(scenario);
+    return ReportAppProcessInfo(processInfo, secenrioInfo);
 }
 
 template <typename T>

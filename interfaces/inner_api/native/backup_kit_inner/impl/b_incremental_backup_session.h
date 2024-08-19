@@ -37,6 +37,7 @@ public:
         std::function<void(ErrCode)> onAllBundlesFinished; // 当整个备份流程结束或意外中止时执行的回调函数
         std::function<void(const std::string, const std::string)> onResultReport; // 某个应用备份流程中自定义错误信息的上报的回调函数
         std::function<void()> onBackupServiceDied;         // 当备份服务意外死亡时执行的回调函数
+        std::function<void(const std::string, const std::string)> onProcess; // 上报备份恢复过程中的进度和异常
     };
 
 public:

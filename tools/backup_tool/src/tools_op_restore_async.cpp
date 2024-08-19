@@ -170,6 +170,11 @@ static void OnBackupServiceDied(shared_ptr<SessionAsync> ctx)
     ctx->TryNotify(true);
 }
 
+static void OnProcess(shared_ptr<SessionAsync> ctx, const std::string bundleName, const std::string processInfo)
+{
+    printf("OnProcess bundleName = %s, processInfo = %s\n", bundleName.c_str(), processInfo.c_str());
+}
+
 static map<string, tuple<string, struct stat, bool, bool>> ReadyExtManage(const string &path,
     std::vector<ExtManageInfo>& pkgInfo)
 {
@@ -385,7 +390,8 @@ static int32_t InitArg(const string &pathCapFile,
         .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
         .onResultReport = bind(OnResultReport, ctx, placeholders::_1, placeholders::_2),
-        .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
+        .onBackupServiceDied = bind(OnBackupServiceDied, ctx),
+        .onProcess = bind(OnProcess, ctx, placeholders::_1, placeholders::_2)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init restore\n");
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);

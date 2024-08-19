@@ -213,6 +213,11 @@ public:
     {
         return BError(BError::Codes::OK);
     }
+
+    ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario)
+    {
+        return BError(BError::Codes::OK);
+    }
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // MOCK_I_SERVICE_MOCK_H

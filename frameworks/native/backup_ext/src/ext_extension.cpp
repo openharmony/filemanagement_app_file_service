@@ -1279,9 +1279,9 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
                 HILOGE("On restore, start ext timer fail.");
                 return;
             }
-            HILOGI("On restore, start ext timer end.");
-            auto callBackup = ptr->RestoreResultCallback(obj);
-            auto callBackupEx = ptr->RestoreResultCallbackEx(obj);
+            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_RESTORE);
+            auto callBackup = ptr->OnRestoreCallback(obj);
+            auto callBackupEx = ptr->OnRestoreExCallback(obj);
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx);
             if (err != ERR_OK) {
                 ptr->AppDone(BError::GetCodeByErrno(err));
@@ -1329,9 +1329,9 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
                 HILOGE("On incrementalRestore, start ext timer fail.");
                 return;
             }
-            HILOGI("On incrementalRestore, start ext timer end.");
-            auto callBackup = ptr->IncRestoreResultCallback(obj);
-            auto callBackupEx = ptr->IncRestoreResultCallbackEx(obj);
+            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_RESTORE);
+            auto callBackup = ptr->IncreOnRestoreCallback(obj);
+            auto callBackupEx = ptr->IncreOnRestoreExCallback(obj);
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx);
             if (err != ERR_OK) {
                 HILOGE("OnRestore done, err = %{pubilc}d", err);
@@ -1447,24 +1447,13 @@ void BackupExtExtension::AsyncTaskOnBackup()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
-            auto callBackup = [obj](ErrCode errCode, std::string errMsg) {
-            HILOGI("begin call backup");
-            auto extensionPtr = obj.promote();
-            if (extensionPtr == nullptr) {
-                HILOGE("Ext extension handle have been released");
-                return;
-            }
-            if (extensionPtr->extension_ == nullptr) {
-                HILOGE("Extension handle have been released");
-                return;
-            }
-            extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
-        };
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            auto callBackupEx = ptr->HandleTaskBackupEx(obj);
+            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_BACKUP);
+            auto callBackup = ptr->OnBackupCallback(obj);
+            auto callBackupEx = ptr->OnBackupExCallback(obj);
             ErrCode err = ptr->extension_->OnBackup(callBackup, callBackupEx);
             if (err != ERR_OK) {
                 HILOGE("OnBackup done, err = %{pubilc}d", err);
@@ -1843,20 +1832,13 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
 void BackupExtExtension::AsyncTaskOnIncrementalBackup()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
-        auto callBackup = [obj](ErrCode errCode, std::string errMsg) {
-            HILOGI("App onbackup end");
-            auto proxy = ServiceProxy::GetInstance();
-            if (proxy == nullptr) {
-                throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
-            }
-            HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
-            proxy->GetAppLocalListAndDoIncrementalBackup();
-        };
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            auto callBackupEx = ptr->HandleBackupEx(obj);
+            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_BACKUP);
+            auto callBackup = ptr->IncOnBackupCallback(obj);
+            auto callBackupEx = ptr->IncOnBackupExCallback(obj);
             ErrCode err = ptr->extension_->OnBackup(callBackup, callBackupEx);
             if (err != ERR_OK) {
                 HILOGE("OnBackup done, err = %{pubilc}d", err);

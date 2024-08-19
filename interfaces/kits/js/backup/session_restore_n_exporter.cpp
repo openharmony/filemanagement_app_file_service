@@ -260,6 +260,34 @@ static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::str
     callbacks->onResultReport.CallJsMethod(cbCompl);
 }
 
+static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName name, const std::string processInfo)
+{
+    HILOGI("Callback OnProcess, bundleName=%{public}s", name.c_str());
+    if (pCallbacks.expired()) {
+        HILOGI("callbacks is unbound");
+        return;
+    }
+    auto callbacks = pCallbacks.lock();
+    if (!callbacks) {
+        HILOGI("callback function OnProcess has already been released");
+        return;
+    }
+    if (!bool(callbacks->onProcess)) {
+        HILOGI("callback function OnProcess is undefined");
+        return;
+    }
+    auto cbCompl = [bundleName {name}, process {processInfo}](napi_env env, vector<napi_value> &argv) -> bool {
+        napi_value napi_bName = nullptr;
+        napi_create_string_utf8(env, bundleName.c_str(), bundleName.size(), &napi_bName);
+        argv.push_back(napi_bName);
+        napi_value napi_process = nullptr;
+        napi_create_string_utf8(env, process.c_str(), process.size(), &napi_process);
+        argv.push_back(napi_process);
+        return true;
+    };
+    callbacks->onProcess.CallJsMethod(cbCompl);
+}
+
 static bool VerifyAppendBundlesParam(NFuncArg &funcArg, int32_t &fd, std::vector<std::string> &bundleNames,
     std::vector<std::string> &bundleInfos, napi_env env)
 {
@@ -358,6 +386,7 @@ static bool VerifyNapiObject(napi_env env, NFuncArg &funcArg)
     }
     return false;
 }
+
 static bool VerifyNarg(napi_env env, NVal &callbacks)
 {
     if (!callbacks.TypeIs(napi_object)) {
@@ -401,7 +430,8 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
         .onBundleFinished = bind(onBundleEnd, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
         .onResultReport = bind(OnResultReport, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
-        .onBackupServiceDied = bind(OnBackupServiceDied, restoreEntity->callbacks)});
+        .onBackupServiceDied = bind(OnBackupServiceDied, restoreEntity->callbacks),
+        .onProcess = bind(OnProcess, restoreEntity->callbacks, placeholders::_1, placeholders::_2)});
     if (!restoreEntity->sessionSheet) {
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to init restore").GetCode()).ThrowErr(env);
         return nullptr;

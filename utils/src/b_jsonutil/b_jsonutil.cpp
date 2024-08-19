@@ -16,10 +16,14 @@
 #include "b_jsonutil/b_jsonutil.h"
 
 #include <cstring>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 #include "cJSON.h"
 
 #include "b_error/b_error.h"
 #include "filemgmt_libhilog.h"
+#include "b_utils/b_time.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -238,4 +242,30 @@ bool BJsonUtil::BuildRestoreErrInfo(std::string &jsonStr, std::map<std::string, 
     cJSON_free(data);
     return true;
 }
+}
+
+bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet)
+{
+    cJSON *info = cJSON_CreateObject();
+    if (info == nullptr) {
+        return false;
+    }
+    cJSON *processInfo = cJSON_CreateObject();
+    if (processInfo == nullptr) {
+        cJSON_Delete(info);
+        return false;
+    }
+    std::string timeInfo = std::to_string(TimeUtils::GetTimeS());
+    cJSON_AddStringToObject(processInfo, "timeInfo", timeInfo.c_str());
+    cJSON_AddStringToObject(processInfo, "resultInfo", onProcessRet.c_str());
+    cJSON_AddItemToObject(info, "processResult", processInfo);
+    char *data = cJSON_Print(info);
+    if (data == nullptr) {
+        cJSON_Delete(info);
+        return false;
+    }
+    jsonStr = std::string(data);
+    cJSON_Delete(info);
+    cJSON_free(data);
+    return true;
 }

@@ -41,12 +41,14 @@ public:
     void BackupOnResultReport(std::string result, std::string bundleName) override {};
     void BackupOnBundleFinished(int32_t errCode, std::string bundleName) override {}
     void BackupOnAllBundlesFinished(int32_t errCode) override {}
+    void BackupOnProcessInfo(std::string bundleName, std::string processInfo) override {}
 
     void RestoreOnBundleStarted(int32_t errCode, std::string bundleName) override {}
     void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) override {}
     void RestoreOnAllBundlesFinished(int32_t errCode) override {}
     void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override {}
     void RestoreOnResultReport(std::string result, std::string bundleName, ErrCode errCode) override {}
+    void RestoreOnProcessInfo(std::string bundleName, std::string processInfo) override {}
 
     void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
         int32_t errCode) override {}
@@ -54,6 +56,7 @@ public:
     void IncrementalBackupOnResultReport(std::string result, std::string bundleName) override {}
     void IncrementalBackupOnBundleFinished(int32_t errCode, std::string bundleName) override {}
     void IncrementalBackupOnAllBundlesFinished(int32_t errCode) override {}
+    void IncrementalBackupOnProcessInfo(std::string bundleName, std::string processInfo) override {}
 
     void IncrementalRestoreOnBundleStarted(int32_t errCode, std::string bundleName) override {}
     void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) override {}
@@ -61,6 +64,7 @@ public:
     void IncrementalRestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
         int32_t errCode) override {}
     void IncrementalRestoreOnResultReport(std::string result, std::string bundleName, ErrCode errCode) override {};
+    void IncrementalRestoreOnProcessInfo(std::string bundleName, std::string processInfo) override {}
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // MOCK_SERVICE_REVERSE_MOCK_H

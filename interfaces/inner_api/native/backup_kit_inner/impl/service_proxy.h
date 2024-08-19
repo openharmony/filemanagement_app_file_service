@@ -68,6 +68,7 @@ public:
     ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;
     ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) override;
     ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) override;
+    ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario) override;
     ErrCode StartExtTimer(bool &isExtStart) override;
     ErrCode StartFwkTimer(bool &isFwkStart) override;
 

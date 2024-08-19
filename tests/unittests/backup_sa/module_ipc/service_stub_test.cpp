@@ -83,6 +83,7 @@ public:
     MOCK_METHOD1(StartExtTimer, ErrCode(bool &isExtStart));
     MOCK_METHOD1(StartFwkTimer, ErrCode(bool &isFwkStart));
     MOCK_METHOD3(UpdateSendRate, ErrCode(std::string &bundleName, int32_t sendRate, bool &result));
+    MOCK_METHOD2(ReportAppProcessInfo, ErrCode(const std::string processInfo, BackupRestoreScenario sennario));
 };
 
 class ServiceStubTest : public testing::Test {
@@ -1443,7 +1444,7 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdUpdateSendRate_0100, test
         EXPECT_CALL(*messageParcelMock, WriteBool(_)).WillOnce(Return(false));
         err = service->CmdUpdateSendRate(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
-       
+
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*service, UpdateSendRate(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
