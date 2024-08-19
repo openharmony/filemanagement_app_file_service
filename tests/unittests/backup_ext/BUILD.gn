@@ -200,6 +200,7 @@ ohos_unittest("untar_file_sup_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "${path_backup}/cfi_blocklist.txt"
   }
 
   module_out_path = path_module_out_tests
