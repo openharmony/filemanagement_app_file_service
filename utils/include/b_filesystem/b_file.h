@@ -82,6 +82,16 @@ public:
      * @return false some error occur
      */
     static bool GetRealPath(const string &path, string &realPath);
+
+    /**
+     * @brief check if string is endswith suffix
+     *
+     * @param str str
+     * @param suffix suffix str
+     * @return true str is endswith suffix
+     * @return false str is not endswith suffix
+     */
+    static bool EndsWith(const string &str, const string &suffix);
 private:
 };
 } // namespace OHOS::FileManagement::Backup

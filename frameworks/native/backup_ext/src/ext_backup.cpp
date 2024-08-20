@@ -188,7 +188,8 @@ sptr<IRemoteObject> ExtBackup::OnConnect(const AAFwk::Want &want)
         Extension::OnConnect(want);
 
         auto remoteObject =
-            sptr<BackupExtExtension>(new BackupExtExtension(std::static_pointer_cast<ExtBackup>(shared_from_this())));
+            sptr<BackupExtExtension>(new BackupExtExtension(std::static_pointer_cast<ExtBackup>(shared_from_this()),
+            want.GetBundle()));
         return remoteObject->AsObject();
     } catch (const BError &e) {
         return nullptr;
@@ -207,7 +208,7 @@ void ExtBackup::OnDisconnect(const AAFwk::Want &want)
         HILOGI("begin disconnect");
         if (isClearData_) {
             auto remoteObject = sptr<BackupExtExtension>(
-                new BackupExtExtension(std::static_pointer_cast<ExtBackup>(shared_from_this())));
+                new BackupExtExtension(std::static_pointer_cast<ExtBackup>(shared_from_this()), want.GetBundle()));
             remoteObject->ExtClear();
         }
         Extension::OnDisconnect(want);
