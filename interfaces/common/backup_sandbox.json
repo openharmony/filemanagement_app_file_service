@@ -12,6 +12,12 @@
             "sandbox-path" : "/data/storage/el2/database/",
             "src-path" : "/data/app/el2/<currentUserId>/database/<PackageName>/"
         }, {
+            "sandbox-path" : "/data/storage/el5/base/",
+            "src-path" : "/data/app/el5/<currentUserId>/base/<PackageName>/"
+        }, {
+            "sandbox-path" : "/data/storage/el5/database/",
+            "src-path" : "/data/app/el5/<currentUserId>/database/<PackageName>/"
+        }, {
             "sandbox-path" : "/data/storage/el2/distributedfiles/",
             "src-path" : "/mnt/hmdfs/<currentUserId>/account/device_view/<networkId>/data/<PackageName>/"
         }, {
