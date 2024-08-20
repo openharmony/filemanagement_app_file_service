@@ -210,4 +210,12 @@ bool BFile::MoveFile(const string &from, const string &to)
     }
     return false;
 }
+
+bool BFile::EndsWith(const string &str, const string &suffix)
+{
+    if (suffix.length() > str.length()) {
+        return false;
+    }
+    return (str.rfind(suffix) == (str.length() - suffix.length()));
+}
 } // namespace OHOS::FileManagement::Backup
