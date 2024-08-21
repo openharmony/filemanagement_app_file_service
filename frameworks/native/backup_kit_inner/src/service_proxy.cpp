@@ -415,6 +415,12 @@ ErrCode ServiceProxy::Finish()
     return reply.ReadInt32();
 }
 
+sptr<IService> ServiceProxy::GetServiceProxyPointer()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    return serviceProxy_;
+}
+
 sptr<IService> ServiceProxy::GetInstance()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);

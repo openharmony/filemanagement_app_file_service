@@ -22,6 +22,7 @@
 
 #include "module_app_gallery/app_gallery_service_connection.h"
 #include "filemgmt_libhilog.h"
+#include "b_sa/b_sa_utils.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -75,12 +76,20 @@ DisposeErr AppGalleryDisposeProxy::EndBackup(const std::string &bundleName)
 
 DisposeErr AppGalleryDisposeProxy::StartRestore(const std::string &bundleName)
 {
+    if (SAUtils::IsSABundleName(bundleName)) {
+        HILOGI("SA does not need to StartRestore");
+        return DisposeErr::OK;
+    }
     HILOGI("StartRestore, app %{public}s", bundleName.c_str());
     return DoDispose(bundleName, DisposeOperation::START_RESTORE);
 }
 
 DisposeErr AppGalleryDisposeProxy::EndRestore(const std::string &bundleName)
 {
+    if (SAUtils::IsSABundleName(bundleName)) {
+        HILOGI("SA does not need to EndRestore");
+        return DisposeErr::OK;
+    }
     HILOGI("EndRestore, app %{public}s", bundleName.c_str());
     return DoDispose(bundleName, DisposeOperation::END_RESTORE);
 }

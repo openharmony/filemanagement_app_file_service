@@ -5,6 +5,7 @@
             "name": 5203,
             "libpath": "libbackup_sa.z.so",
             "run-on-create": false,
+            "auto-restart": true,
             "distributed": false,
             "dump_level": 1,
             "start-on-demand": {

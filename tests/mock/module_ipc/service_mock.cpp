@@ -249,4 +249,8 @@ void Service::OnSABackup(const std::string &bundleName,
 }
 
 void Service::OnSARestore(const std::string &bundleName, const std::string &result, const ErrCode &errCode) {}
+
+void Service::ClearResidualBundleData(const std::string &bundleName)
+{
+}
 } // namespace OHOS::FileManagement::Backup

@@ -101,7 +101,6 @@ void BackupExtExtension::SetClearDataFlag(bool isClearData)
         HILOGE("Extension handle have been released");
         return;
     }
-    extension_->SetClearDataFlag(isClearData);
     if (!extension_->WasFromSpecialVersion() && !extension_->RestoreDataReady()) {
         DoClear();
     }

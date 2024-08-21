@@ -43,6 +43,7 @@ enum ServiceSchedAction {
     START = 1,
     RUNNING = 2,
     FINISH = 3,
+    CLEAN = 4,
 };
 
 constexpr int SPAN_USERID_UID = 200000;
