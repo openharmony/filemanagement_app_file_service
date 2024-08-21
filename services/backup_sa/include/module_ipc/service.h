@@ -77,6 +77,7 @@ public:
     ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;
     ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) override;
     ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) override;
+    ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario) override;
 
     ErrCode SAResultReport(const std::string bundleName, const std::string resultInfo,
                            const ErrCode errCode, const BackupRestoreScenario sennario);

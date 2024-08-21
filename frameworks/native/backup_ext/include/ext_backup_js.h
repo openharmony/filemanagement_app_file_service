@@ -73,6 +73,13 @@ struct CallbackInfoEx {
     }
 };
 
+struct OnProcessCallBackInfo {
+    std::function<void(ErrCode, const std::string)> onProcessCallback;
+    OnProcessCallBackInfo(std::function<void(ErrCode, const std::string)> param) : onProcessCallback(param)
+    {
+    }
+};
+
 class ExtBackupJs : public ExtBackup {
 public:
     /**
@@ -123,6 +130,13 @@ public:
     */
     ErrCode InvokeAppExtMethod(ErrCode, const std::string) override;
 
+    /**
+     * @brief get app onProcess info
+     *
+     * @param callback The callBack.
+    */
+    ErrCode OnProcess(std::function<void(ErrCode, const std::string)> callback) override;
+
 public:
     explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
     ~ExtBackupJs()
@@ -141,7 +155,6 @@ private:
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseRestoreInfo();
 
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseBackupExInfo();
-    std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseBackupInfo();
 
     ErrCode CallJSRestoreEx();
     ErrCode CallJSRestore();
@@ -155,6 +168,7 @@ private:
     std::shared_ptr<CallbackInfoBackup> callbackInfoBackup_;
     std::shared_ptr<CallbackInfoEx> callbackInfoEx_;
     std::shared_ptr<CallbackInfo> callbackInfo_;
+    std::shared_ptr<OnProcessCallBackInfo> onProcessCallback_;
     std::condition_variable callJsCon_;
     std::mutex callJsMutex_;
     std::atomic<bool> callExtDefaultFunc_ {false}; // extension default method, onBackup or onRestore

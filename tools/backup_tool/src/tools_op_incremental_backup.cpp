@@ -224,6 +224,11 @@ static void OnBackupServiceDied(shared_ptr<SessionBckup> ctx)
     ctx->TryNotify(true);
 }
 
+static void OnProcess(shared_ptr<SessionBckup> ctx, const std::string &bundleName, const std::string &processInfo)
+{
+    printf("OnProcess bundleName = %s, processInfo = %s\n", bundleName.c_str(), processInfo.c_str());
+}
+
 static void BackupToolDirSoftlinkToBackupDir()
 {
     // 判断BConstants::BACKUP_TOOL_LINK_DIR 是否是软链接
@@ -308,7 +313,8 @@ static int32_t Init(const string &pathCapFile, const vector<string>& bundleNames
         .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
         .onResultReport = bind(OnResultReport, ctx, placeholders::_1, placeholders::_2),
-        .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
+        .onBackupServiceDied = bind(OnBackupServiceDied, ctx),
+        .onProcess = bind(OnProcess, ctx, placeholders::_1, placeholders::_2)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init backup\n");
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);

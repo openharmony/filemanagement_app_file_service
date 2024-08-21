@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,26 +13,16 @@
  * limitations under the License.
  */
 
-class BackupExtensionAbility {
-    onBackup() {
-        console.log();
-    }
+#ifndef OHOS_FILEMGMT_BACKUP_B_TIME_H
+#define OHOS_FILEMGMT_BACKUP_B_TIME_H
+#include <string>
 
-    onRestore(versionBackupedBundle) {
-        console.log(versionBackupedBundle);
-    }
-
-    getBackupInfo() {
-        console.log();
-    }
-
-    onRestoreEx(versionBackupedBundle, restoreInfo) {
-        console.log();
-    }
-
-    onProcess() {
-        console.log();
-    }
-}
-
-export default BackupExtensionAbility
+namespace OHOS::FileManagement::Backup {
+class TimeUtils {
+public:
+    static int64_t GetTimeS();
+    static int64_t GetTimeMS();
+    static int64_t GetTimeUS();
+};
+} // namespace OHOS::FileManagement::TimeUtils
+#endif // OHOS_FILEMGMT_BACKUP_B_TIME_H

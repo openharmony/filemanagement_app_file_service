@@ -27,6 +27,7 @@ public:
     void BackupOnResultReport(std::string result, std::string bundleName) override;
     void BackupOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void BackupOnAllBundlesFinished(int32_t errCode) override;
+    void BackupOnProcessInfo(std::string bundleName, std::string processInfo) override;
 
     void RestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
     void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override;
@@ -34,6 +35,7 @@ public:
         ErrCode errCode = 0) override;
     void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void RestoreOnAllBundlesFinished(int32_t errCode) override;
+    void RestoreOnProcessInfo(std::string bundleName, std::string processInfo) override;
 
     void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) override;
     void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
@@ -41,6 +43,7 @@ public:
     void IncrementalBackupOnResultReport(std::string result, std::string bundleName) override;
     void IncrementalBackupOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void IncrementalBackupOnAllBundlesFinished(int32_t errCode) override;
+    void IncrementalBackupOnProcessInfo(std::string bundleName, std::string processInfo) override;
 
     void IncrementalRestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
     void IncrementalRestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
@@ -49,6 +52,7 @@ public:
         ErrCode errCode = 0) override;
     void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) override;
+    void IncrementalRestoreOnProcessInfo(std::string bundleName, std::string processInfo) override;
 
 public:
     explicit ServiceReverseProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IServiceReverse>(impl) {}

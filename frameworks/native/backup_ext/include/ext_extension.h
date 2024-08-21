@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,12 +32,12 @@
 #include "i_service.h"
 #include "tar_file.h"
 #include "thread_pool.h"
+#include "timer.h"
 #include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
-using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
-                                 map<string, struct ReportFileInfo>,
-                                 map<string, struct ReportFileInfo>>;
+using CompareFilesResult =
+    tuple<map<string, struct ReportFileInfo>, map<string, struct ReportFileInfo>, map<string, struct ReportFileInfo>>;
 class BackupExtExtension : public ExtExtensionStub {
 public:
     UniqueFd GetFileHandle(const std::string &fileName, int32_t &errCode) override;
@@ -64,55 +64,63 @@ public:
     }
     ~BackupExtExtension()
     {
+        onProcessTimeoutTimer_.Shutdown();
         threadPool_.Stop();
     }
 
 private:
-    /**
+    /* *
      * @brief verify caller uid
      *
      */
     void VerifyCaller();
 
-    /**
+    /* *
      * @brief backup
      *
      * @param usrConfig user configure
      */
     int DoBackup(const BJsonEntityExtensionConfig &usrConfig);
 
-    /**
+    /* *
      * @brief restore
      *
      * @param fileName name of the file that to be untar
      */
     int DoRestore(const string &fileName);
 
-    /**
+    /* *
      * @brief incremental restore
      *
      */
     int DoIncrementalRestore();
 
-    /** @brief clear backup restore data */
+    /* * @brief clear backup restore data */
     void DoClear();
 
-    /**
+    /* *
      * @brief extension backup restore is done
      *
      * @param errCode
      */
     void AppDone(ErrCode errCode);
 
-    /**
+    /* *
      * @brief extension backup restore is done
      *
      * @param restoreRetInfo app restore reportInfo
      */
-    void AppResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario,
-        ErrCode errCode = 0);
+    void AppResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario, ErrCode errCode = 0);
 
     /**
+     * @brief extension process Info
+     *
+     * @param restoreRetInfo app processInfo
+     * @param scenario backup or restore
+     */
+    void ReportAppProcessInfo(const std::string processInfo, BackupRestoreScenario scenario);
+
+    /* *
      * @brief Executing Backup Tasks Asynchronously
      *
      * @param extAction action
@@ -121,19 +129,19 @@ private:
      */
     void AsyncTaskBackup(const std::string config);
 
-    /**
+    /* *
      * @brief Executing Restoration Tasks Asynchronously
      *
      */
     void AsyncTaskRestore(std::set<std::string> fileSet, const std::vector<ExtManageInfo> extManageInfo);
 
-    /**
+    /* *
      * @brief Executing Incremental Restoration Tasks Asynchronously
      *
      */
     void AsyncTaskIncrementalRestore();
 
-    /**
+    /* *
      * @brief Executing Incremental Restoration Tasks Asynchronously for special clone & cloud
      *
      */
@@ -142,14 +150,10 @@ private:
     void AsyncTaskOnBackup();
 
     int DoIncrementalBackup(const std::vector<struct ReportFileInfo> &allFiles,
-                            const std::vector<struct ReportFileInfo> &smallFiles,
-                            const std::vector<struct ReportFileInfo> &bigFiles);
+        const std::vector<struct ReportFileInfo> &smallFiles, const std::vector<struct ReportFileInfo> &bigFiles);
 
-    void CompareFiles(UniqueFd incrementalFd,
-                      UniqueFd manifestFd,
-                      vector<struct ReportFileInfo> &allFiles,
-                      vector<struct ReportFileInfo> &smallFiles,
-                      vector<struct ReportFileInfo> &bigFiles);
+    void CompareFiles(UniqueFd incrementalFd, UniqueFd manifestFd, vector<struct ReportFileInfo> &allFiles,
+        vector<struct ReportFileInfo> &smallFiles, vector<struct ReportFileInfo> &bigFiles);
 
     void AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     void AsyncTaskOnIncrementalBackup();
@@ -161,53 +165,81 @@ private:
     void IncrementalPacket(const vector<struct ReportFileInfo> &infos, TarMap &tar, sptr<IService> proxy);
     void DoPacket(const map<string, size_t> &srcFiles, TarMap &tar, sptr<IService> proxy);
 
-    /**
+    /* *
      * @brief extension incremental backup restore is done
      *
      * @param errCode
      */
     void AppIncrementalDone(ErrCode errCode);
 
-    /**
-     * @brief get callbackEx for execute onRestore
+    /* *
+     * @brief get increCallbackEx for execute onRestore with string param
      *
-     * @param errCode
+     * @param obj
      */
-    std::function<void(ErrCode, const std::string)> RestoreResultCallbackEx(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, const std::string)> IncreOnRestoreExCallback(wptr<BackupExtExtension> obj);
 
-    /**
+    /* *
+     * @brief get increCallback for execute onRestore with string param
+     *
+     * @param obj
+     */
+    std::function<void(ErrCode, const std::string)> IncreOnRestoreCallback(wptr<BackupExtExtension> obj);
+
+    /* *
+     * @brief get callback for execute onRestore with string param
+     *
+     * @param obj
+     */
+    std::function<void(ErrCode, std::string)> OnRestoreCallback(wptr<BackupExtExtension> obj);
+
+    /* *
      * @brief get callbackEx for execute onRestore with string param
      *
-     * @param errCode
+     * @param obj
      */
-    std::function<void(ErrCode, const std::string)> IncRestoreResultCallbackEx(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, std::string)> OnRestoreExCallback(wptr<BackupExtExtension> obj);
 
-    /**
-     * @brief get callbackEx for execute onRestore
-     *
-     * @param errCode
-     */
-    std::function<void(ErrCode, std::string)> IncAppDoneCallbackEx(wptr<BackupExtExtension> obj);
-
-    /**
+    /* *
      * @brief get callbackEx for execute appDone
      */
     std::function<void(ErrCode, std::string)> AppDoneCallbackEx(wptr<BackupExtExtension> obj);
-    std::function<void(ErrCode, const std::string)> HandleBackupEx(wptr<BackupExtExtension> obj);
-    std::function<void(ErrCode, const std::string)> HandleTaskBackupEx(wptr<BackupExtExtension> obj);
+
+    std::function<void(ErrCode, const std::string)> IncOnBackupExCallback(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, const std::string)> IncOnBackupCallback(wptr<BackupExtExtension> obj);
+
+    std::function<void(ErrCode, const std::string)> OnBackupExCallback(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, const std::string)> OnBackupCallback(wptr<BackupExtExtension> obj);
+
+    void StartOnProcessTaskThread(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
+    void FinishOnProcessTask();
+    void ExecCallOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
+    void AsyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
+    void SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
+    void StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
+    void CloseOnProcessTimeOutTimer();
+
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
     std::string backupInfo_;
     OHOS::ThreadPool threadPool_;
     std::mutex updateSendRateLock_;
-    std::atomic<bool> isStopSendFd_ {false};
     std::condition_variable startSendFdRateCon_;
     std::condition_variable waitSendFdCon_;
     std::mutex startSendMutex_;
     std::mutex waitTimeLock_;
     std::string bundleName_;
     int32_t sendRate_ = BConstants::DEFAULT_FD_SEND_RATE;
+
+    std::thread callJsOnProcessThread_;
+    Utils::Timer onProcessTimeoutTimer_ {"onProcessTimeoutTimer_"};
+    uint32_t onProcessTimeoutTimerId_;
+    std::atomic<int> onProcessTimeoutCnt_;
+    std::atomic<bool> stopCallJsOnProcess_ {false};
+    std::condition_variable execOnProcessCon_;
+    std::mutex onProcessLock_;
+    std::atomic<bool> onProcessTimeout_ {false};
 };
 } // namespace OHOS::FileManagement::Backup
 
