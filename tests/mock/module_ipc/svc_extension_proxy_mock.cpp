@@ -28,7 +28,7 @@ ErrCode SvcExtensionProxy::HandleClear()
     return 0;
 }
 
-ErrCode SvcExtensionProxy::HandleBackup()
+ErrCode SvcExtensionProxy::HandleBackup(bool isClearData)
 {
     return 0;
 }
@@ -38,7 +38,7 @@ ErrCode SvcExtensionProxy::PublishFile(const string &fileName)
     return 0;
 }
 
-ErrCode SvcExtensionProxy::HandleRestore()
+ErrCode SvcExtensionProxy::HandleRestore(bool isClearData)
 {
     return 0;
 }
@@ -63,7 +63,7 @@ ErrCode SvcExtensionProxy::HandleIncrementalBackup(UniqueFd incrementalFd, Uniqu
     return 0;
 }
 
-ErrCode SvcExtensionProxy::IncrementalOnBackup()
+ErrCode SvcExtensionProxy::IncrementalOnBackup(bool isClearData)
 {
     return 0;
 }

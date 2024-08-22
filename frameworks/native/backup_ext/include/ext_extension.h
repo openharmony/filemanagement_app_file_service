@@ -43,12 +43,12 @@ public:
     UniqueFd GetFileHandle(const std::string &fileName, int32_t &errCode) override;
     ErrCode HandleClear() override;
     ErrCode PublishFile(const std::string &fileName) override;
-    ErrCode HandleBackup() override;
-    ErrCode HandleRestore() override;
+    ErrCode HandleBackup(bool isClearData) override;
+    ErrCode HandleRestore(bool isClearData) override;
     ErrCode GetIncrementalFileHandle(const std::string &fileName) override;
     ErrCode PublishIncrementalFile(const std::string &fileName) override;
     ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) override;
-    ErrCode IncrementalOnBackup() override;
+    ErrCode IncrementalOnBackup(bool isClearData) override;
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
     ErrCode GetBackupInfo(std::string &result) override;
     ErrCode UpdateFdSendRate(std::string &bundleName, int32_t sendRate) override;
@@ -195,6 +195,11 @@ private:
     std::function<void(ErrCode, std::string)> AppDoneCallbackEx(wptr<BackupExtExtension> obj);
     std::function<void(ErrCode, const std::string)> HandleBackupEx(wptr<BackupExtExtension> obj);
     std::function<void(ErrCode, const std::string)> HandleTaskBackupEx(wptr<BackupExtExtension> obj);
+    void HandleSpecialVersionRestore(wptr<BackupExtExtension> obj);
+    void DeleteBackupIncrementalTars();
+    void DeleteBackupTars();
+    void SetClearDataFlag(bool isClearData);
+
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
@@ -208,6 +213,7 @@ private:
     std::mutex waitTimeLock_;
     std::string bundleName_;
     int32_t sendRate_ = BConstants::DEFAULT_FD_SEND_RATE;
+    bool isClearData_ {true};
 };
 } // namespace OHOS::FileManagement::Backup
 

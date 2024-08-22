@@ -847,6 +847,26 @@ void SvcSessionManager::SetMemParaCurSize(int32_t size)
     memoryParaCurSize_ = size;
 }
 
+void SvcSessionManager::SetClearDataFlag(const std::string &bundleName, bool isClearData)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    auto it = GetBackupExtNameMap(bundleName);
+    it->second.isClearData = isClearData;
+    HILOGI("bundleName:%{public}s, set clear data flag:%{public}d.", bundleName.c_str(), isClearData);
+}
+bool SvcSessionManager::GetClearDataFlag(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    auto it = GetBackupExtNameMap(bundleName);
+    return it->second.isClearData;
+}
+
 bool SvcSessionManager::ValidRestoreDataType(RestoreTypeEnum restoreDataType)
 {
     return impl_.restoreDataType == restoreDataType;

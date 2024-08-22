@@ -93,8 +93,10 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0100, testing::ext::TestSize
         detailInfos.push_back("");
         int32_t userId = 100;
         std::vector<std::string> realBundleNames;
+        std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
-            BJsonUtil::BuildBundleInfos(bundleNames, detailInfos, realBundleNames, userId);
+            BJsonUtil::BuildBundleInfos(bundleNames, detailInfos, realBundleNames,
+            userId, isClearDataFlags);
         std::string key = "com.hos.app01";
         EXPECT_EQ("com.hos.app01", bundleNameDetailMap[key].bundleName[0]);
     } catch (...) {
@@ -127,8 +129,10 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0101, testing::ext::TestSize
         detailInfos.push_back("");
         int32_t userId = 100;
         std::vector<std::string> realBundleNames;
+        std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
-            BJsonUtil::BuildBundleInfos(bundleNames, detailInfos, realBundleNames, userId);
+            BJsonUtil::BuildBundleInfos(bundleNames, detailInfos, realBundleNames,
+            userId, isClearDataFlags);
         EXPECT_EQ(0, bundleNameDetailMap.size());
     } catch (...) {
         EXPECT_TRUE(false);
