@@ -604,7 +604,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
 {
     HILOGI("DoPacket begin, infos count: %{public}zu", srcFiles.size());
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
-    int64_t totalSize = 0;
+    uint64_t totalSize = 0;
     uint32_t fileCount = 0;
     vector<string> packFiles;
     TarFile::GetInstance().SetPacketMode(true); // 设置下打包模式
@@ -1918,7 +1918,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
 {
     HILOGI("IncrementalPacket begin, infos count: %{public}zu", infos.size());
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
-    int64_t totalSize = 0;
+    uint64_t totalSize = 0;
     uint32_t fileCount = 0;
     vector<string> packFiles;
     vector<struct ReportFileInfo> tarInfos;
