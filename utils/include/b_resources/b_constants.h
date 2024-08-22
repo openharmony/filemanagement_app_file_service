@@ -69,7 +69,7 @@ constexpr int MAX_PARCELABLE_VECTOR_NUM = 10000;
 constexpr char FILE_SEPARATOR_CHAR = '/';
 
 // 分片打包常量
-const int64_t DEFAULT_SLICE_SIZE = 100 * 1024 * 1024; // 分片文件大小为100M
+const uint64_t DEFAULT_SLICE_SIZE = 100 * 1024 * 1024; // 分片文件大小为100M
 const uint32_t MAX_FILE_COUNT = 6000; // 单个tar包最多包含6000个文件
 const int FILE_AND_MANIFEST_FD_COUNT = 2; // 每组文件和简报数量统计
 
