@@ -195,7 +195,7 @@ static bool CreateIPCInteractionFiles(int32_t userId, const string &bundleName, 
         bundleName + BConstants::FILE_SEPARATOR_CHAR;
     if (access(backupSaBundleDir.data(), F_OK) != 0) {
         int32_t err = mkdir(backupSaBundleDir.data(), S_IRWXU | S_IRWXG);
-        if (err != 0) {
+        if (err != 0 && errno != EEXIST) {
             HILOGE("Failed to create folder in backup_sa bundleName:%{public}s, sys err:%{public}d",
                 bundleName.c_str(), errno);
             return false;

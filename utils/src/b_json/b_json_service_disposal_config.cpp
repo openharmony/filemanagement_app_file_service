@@ -93,13 +93,13 @@ bool BJsonDisposalConfig::AppendIntoDisposalConfigFile(const string& bundleName)
     }
 
     cJSON *configArray = cJSON_GetObjectItem(jsonObjectDis, "DispoasalConfigFile");
-    if (configArray == nullptr) {
+    if (configArray == nullptr || !cJSON_IsArray(configArray)) {
         HILOGE("parse json failed");
         cJSON_Delete(jsonObjectDis);
         return false;
     }
     cJSON *newItem = cJSON_CreateObject();
-    if (configArray == nullptr || newItem == nullptr) {
+    if (newItem == nullptr) {
         HILOGE("parse json failed");
         cJSON_Delete(jsonObjectDis);
         return false;
@@ -148,7 +148,7 @@ bool BJsonDisposalConfig::DeleteFromDisposalConfigFile(const string& bundleName)
     }
 
     cJSON *configArray = cJSON_GetObjectItem(jsonObjectDis, "DispoasalConfigFile");
-    if (configArray == nullptr) {
+    if (configArray == nullptr || !cJSON_IsArray(configArray)) {
         cJSON_Delete(jsonObjectDis);
         return false;
     }
@@ -202,7 +202,7 @@ bool BJsonDisposalConfig::IfBundleNameInDisposalConfigFile(const string& bundleN
     }
 
     cJSON *configArray = cJSON_GetObjectItem(jsonObjectDis, "DispoasalConfigFile");
-    if (configArray == nullptr) {
+    if (configArray == nullptr || !cJSON_IsArray(configArray)) {
         HILOGE("parse json failed");
         cJSON_Delete(jsonObjectDis);
         return false;
@@ -246,7 +246,7 @@ vector<string> BJsonDisposalConfig::GetBundleNameFromConfigFile()
     }
 
     cJSON *configArray = cJSON_GetObjectItem(jsonObjectDis, "DispoasalConfigFile");
-    if (configArray == nullptr) {
+    if (configArray == nullptr || !cJSON_IsArray(configArray)) {
         HILOGE("parse json failed");
         cJSON_Delete(jsonObjectDis);
         return {};
