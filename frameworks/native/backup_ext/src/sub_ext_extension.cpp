@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -109,7 +109,8 @@ void BackupExtExtension::SetClearDataFlag(bool isClearData)
 
 std::map<std::string, off_t> BackupExtExtension::GetIdxFileInfos(bool isSpecialVersion)
 {
-    string restoreDir = isSpecialVersion ? "" :
+    string restoreDir = isSpecialVersion ?
+        "" :
         string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     auto extManageInfo = GetExtManageInfo();
     std::map<std::string, off_t> idxFileInfos;
@@ -473,8 +474,8 @@ void BackupExtExtension::StartOnProcessTaskThread(wptr<BackupExtExtension> obj, 
 {
     HILOGI("Begin Create onProcess Task Thread");
     onProcessTimeoutTimer_.Setup();
+    StartOnProcessTimeOutTimer(obj, scenario);
     SyncCallJsOnProcessTask(obj, scenario);
-    StartOnProcessTimeOutTimer(obj);
     callJsOnProcessThread_ = std::thread([obj, scenario]() {
         auto extPtr = obj.promote();
         if (extPtr == nullptr) {
@@ -489,8 +490,6 @@ void BackupExtExtension::StartOnProcessTaskThread(wptr<BackupExtExtension> obj, 
 void BackupExtExtension::ExecCallOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
 {
     HILOGI("Begin");
-    AsyncCallJsOnProcessTask(obj, scenario);
-    StartOnProcessTimeOutTimer(obj);
     while (!stopCallJsOnProcess_.load()) {
         std::unique_lock<std::mutex> lock(onProcessLock_);
         execOnProcessCon_.wait_for(lock, std::chrono::seconds(BConstants::CALL_APP_ON_PROCESS_TIME_INTERVAL),
@@ -501,12 +500,12 @@ void BackupExtExtension::ExecCallOnProcessTask(wptr<BackupExtExtension> obj, Bac
         }
         if (onProcessTimeout_.load()) {
             HILOGE("Current extension execute js method onProcess timeout");
-            StartOnProcessTimeOutTimer(obj);
+            StartOnProcessTimeOutTimer(obj, scenario);
             continue;
         }
         HILOGI("Continue call js method onProcess");
         AsyncCallJsOnProcessTask(obj, scenario);
-        StartOnProcessTimeOutTimer(obj);
+        StartOnProcessTimeOutTimer(obj, scenario);
     }
     HILOGI("End");
 }
@@ -514,6 +513,10 @@ void BackupExtExtension::ExecCallOnProcessTask(wptr<BackupExtExtension> obj, Bac
 void BackupExtExtension::AsyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
 {
     HILOGI("Begin");
+    if (stopCallJsOnProcess_.load()) {
+        HILOGE("Current extension execute finished");
+        return;
+    }
     auto task = [obj, scenario]() {
         auto extPtr = obj.promote();
         if (extPtr == nullptr) {
@@ -529,6 +532,10 @@ void BackupExtExtension::AsyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, 
 void BackupExtExtension::SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
 {
     HILOGI("Begin");
+    if (stopCallJsOnProcess_.load()) {
+        HILOGE("Current extension execute finished");
+        return;
+    }
     auto callBack = [obj, scenario](ErrCode errCode, const std::string processInfo) {
         auto extPtr = obj.promote();
         if (extPtr == nullptr) {
@@ -538,9 +545,8 @@ void BackupExtExtension::SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, B
         extPtr->CloseOnProcessTimeOutTimer();
         extPtr->onProcessTimeout_.store(false);
         if (extPtr->onProcessTimeoutCnt_.load() > 0) {
-            HILOGI("onProcess resturn right result, decrease onProcessTimeoutCnt, cnt is:%{public}d",
-                extPtr->onProcessTimeoutCnt_.load());
             extPtr->onProcessTimeoutCnt_--;
+            HILOGI("onProcess execute success, decrease cnt is:%{public}d", extPtr->onProcessTimeoutCnt_.load());
         }
         if (processInfo.size() == 0) {
             HILOGE("Current extension has no js method named onProcess.");
@@ -578,14 +584,14 @@ void BackupExtExtension::FinishOnProcessTask()
     HILOGI("End");
 }
 
-void BackupExtExtension::StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj)
+void BackupExtExtension::StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
 {
     HILOGI("Begin");
     if (stopCallJsOnProcess_.load()) {
         HILOGE("Current extension execute finished");
         return;
     }
-    auto timeoutCallback = [obj]() {
+    auto timeoutCallback = [obj, scenario]() {
         auto extPtr = obj.promote();
         if (extPtr == nullptr) {
             HILOGE("Start Create timeout callback failed, extPtr is empty");
@@ -596,12 +602,17 @@ void BackupExtExtension::StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj
             extPtr->stopCallJsOnProcess_.store(true);
             extPtr->onProcessTimeoutCnt_ = 0;
             extPtr->execOnProcessCon_.notify_one();
-            extPtr->AppDone(BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+            if (scenario == BackupRestoreScenario::FULL_BACKUP || scenario == BackupRestoreScenario::FULL_RESTORE) {
+                extPtr->AppDone(BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+            } else if (scenario == BackupRestoreScenario::INCREMENTAL_BACKUP ||
+                scenario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
+                extPtr->AppIncrementalDone(BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+            }
             return;
         }
         extPtr->onProcessTimeoutCnt_++;
         extPtr->onProcessTimeout_.store(true);
-        HILOGE("Extension onProcess timeout, onProcessTimeoutCnt:%{public}d", extPtr->onProcessTimeoutCnt_.load());
+        HILOGE("Extension onProcess timeout, Increase cnt:%{public}d", extPtr->onProcessTimeoutCnt_.load());
     };
     uint32_t timerId = onProcessTimeoutTimer_.Register(timeoutCallback, BConstants::APP_ON_PROCESS_MAX_TIMEOUT, true);
     onProcessTimeoutTimerId_ = timerId;

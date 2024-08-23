@@ -787,6 +787,7 @@ bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t time
     }
 
     auto it = GetBackupExtNameMap(bundleName);
+    it->second.timeCount += timeOut;
     if (it->second.extTimerStatus == false) {
         HILOGI("ExtTimer is unregistered, just count. timeout %{public}u(ms), timeCount %{public}u(ms)",
             timeOut, it->second.timeCount);
@@ -797,8 +798,6 @@ bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t time
         HILOGE("ExtTimer is registered, but start time is zero.");
         return false;
     }
-
-    it->second.timeCount += timeOut;
     uint32_t updateTime = static_cast<uint32_t>(TimeUtils::GetTimeMS());
     uint32_t elapseTime = updateTime - it->second.startTime;
     uint32_t realTimeout = it->second.timeCount - elapseTime;

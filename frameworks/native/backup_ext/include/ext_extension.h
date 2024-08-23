@@ -67,6 +67,7 @@ public:
     }
     ~BackupExtExtension()
     {
+        onProcessTimeoutTimer_.Shutdown();
         threadPool_.Stop();
     }
 
@@ -253,7 +254,7 @@ private:
     void ExecCallOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void AsyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
-    void StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj);
+    void StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void CloseOnProcessTimeOutTimer();
 
 private:
