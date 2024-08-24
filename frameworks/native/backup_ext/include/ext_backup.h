@@ -26,6 +26,7 @@ namespace OHOS::FileManagement::Backup {
 
 class ExtBackup;
 using CreatorFunc = std::function<ExtBackup *(const std::unique_ptr<AbilityRuntime::Runtime> &runtime)>;
+class BackupExtExtension;
 
 class ExtBackup : public AbilityRuntime::ExtensionBase<ExtBackupContext> {
 public:
@@ -175,8 +176,6 @@ public:
      */
     bool RestoreDataReady();
 
-    void SetClearDataFlag(bool isClearData);
-
     /**
      * @brief Invoke the extended function of the APP
      */
@@ -187,6 +186,8 @@ public:
     ~ExtBackup() override = default;
 
     static void SetCreator(const CreatorFunc &creator);
+
+    void SetBackupExtExtension(const wptr<BackupExtExtension> &extExtension);
 
 protected:
     std::string appVersionStr_;
@@ -202,7 +203,7 @@ private:
     BConstants::ExtensionAction extAction_ {BConstants::ExtensionAction::INVALID};
     ErrCode GetParament(const AAFwk::Want &want);
     static CreatorFunc creator_;
-    bool isClearData_ {true};
+    wptr<BackupExtExtension> bakExtExtension_;
 };
 } // namespace OHOS::FileManagement::Backup
 

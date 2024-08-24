@@ -20,6 +20,7 @@
 #include <mutex>
 
 #include "b_jsonutil/b_jsonutil.h"
+#include "b_json/b_json_clear_data_config.h"
 #include "b_json/b_json_entity_caps.h"
 #include "b_json/b_json_service_disposal_config.h"
 #include "i_service_reverse.h"
@@ -178,12 +179,6 @@ public:
     void SessionDeactive();
 
     /**
-     * @brief 卸载服务
-     *
-     */
-    void UnloadService();
-
-    /**
      * @brief 构造拉起应用所需的want
      *
      * @param bundleName 应用名称
@@ -238,12 +233,37 @@ public:
      */
     std::function<void()> TimeOutCallback(wptr<Service> ptr, std::string bundleName);
 
+    /**
+     * @brief 清理残留数据
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void ClearResidualBundleData(const std::string &bundleName);
+
+    /**
+     * @brief 添加清理记录
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void AddClearBundleRecord(const std::string &bundleName);
+
+    /**
+     * @brief 删除清理记录
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void DelClearBundleRecord(const std::string &bundleName);
+
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(this)));
         disposal_ = make_shared<BJsonDisposalConfig>();
+        clearRecorder_ = make_shared<BJsonClearDataConfig>();
     };
     ~Service() override
     {
@@ -347,6 +367,8 @@ private:
     void SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
         std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType);
 
+    void SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info, std::map<std::string, bool> &isClearDataFlags);
+
     /**
      * @brief 通知权限模块
      *
@@ -402,6 +424,13 @@ private:
      */
     ErrCode GetBackupInfoCmdHandle(BundleName &bundleName, std::string &result);
 
+    /**
+     * @brief 添加需要清理的Session
+     *
+     * @param bundleNames 需要清理的应用包信息
+     *
+     */
+    ErrCode AppendBundlesClearSession(const std::vector<BundleName> &bundleNames);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -409,11 +438,12 @@ private:
     std::condition_variable getBackupInfoCondition_;
     static inline std::atomic<uint32_t> seed {1};
     std::atomic<bool> isConnectDied_ {false};
-    std::atomic<bool> isUnloadService_ {false};
+    std::atomic<bool> isCleanService_ {false};
 
     sptr<SvcSessionManager> session_;
     sptr<SchedScheduler> sched_;
     std::shared_ptr<BJsonDisposalConfig> disposal_;
+    std::shared_ptr<BJsonClearDataConfig> clearRecorder_;
 
     friend class ServiceTest;
 
