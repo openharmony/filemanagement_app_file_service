@@ -280,7 +280,7 @@ private:
 
     std::thread callJsOnProcessThread_;
     Utils::Timer onProcessTimeoutTimer_ {"onProcessTimeoutTimer_"};
-    uint32_t onProcessTimeoutTimerId_;
+    uint32_t onProcessTimeoutTimerId_ { 0 };
     std::atomic<int> onProcessTimeoutCnt_;
     std::atomic<bool> stopCallJsOnProcess_ {false};
     std::condition_variable execOnProcessCon_;
