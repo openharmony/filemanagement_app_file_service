@@ -19,20 +19,16 @@
 #include <string>
 
 namespace OHOS::FileManagement::Backup {
-enum class BizScene : int32_t {
-    BACKUP = 1,
-    RESTORE = 2
-};
-
-enum class BizStage : int32_t {
-    BIZ_STAGE_GET_LOCAL_CAPABILITIES = 1,
-    BIZ_STAGE_GET_BACKUP_INFO,
-    BIZ_STAGE_CREATE_SESSION_BACKUP,
+enum class BizStageBackup : int32_t {
+    BIZ_STAGE_DEFAULT = 0,
     BIZ_STAGE_BACKUP_SA,
+    BIZ_STAGE_GET_LOCAL_CAPABILITIES,
+    BIZ_STAGE_CREATE_SESSION_BACKUP,
     BIZ_STAGE_APPEND_BUNDLES,
     BIZ_STAGE_BACKUP_EXTENSION,
     BIZ_STAGE_APPLICATION,
     BIZ_STAGE_EXTENSION_STATUS,
+    BIZ_STAGE_GET_BACKUP_INFO,
     BIZ_STAGE_ON_BACKUP,
     BIZ_STAGE_DO_BACKUP,
     BIZ_STAGE_DATA_CONSISTENCY,
@@ -42,9 +38,10 @@ enum class BizStage : int32_t {
 };
 
 enum class BizStageRestore : int32_t {
-    BIZ_STAGE_GET_LOCAL_CAPABILITIES = 1,
-    BIZ_STAGE_CREATE_SESSION_RESTORE,
+    BIZ_STAGE_DEFAULT = 0,
     BIZ_STAGE_BACKUP_SA,
+    BIZ_STAGE_GET_LOCAL_CAPABILITIES,
+    BIZ_STAGE_CREATE_SESSION_RESTORE,
     BIZ_STAGE_APPEND_BUNDLES,
     BIZ_STAGE_CONNECT_BACKUP_EXTENSION,
     BIZ_STAGE_APPLICATION,
@@ -67,29 +64,23 @@ public:
     }
 
 public:
+    struct Info {
+        std::string bundleName;
+        std::string status;
+        std::string resInfo;
+
+        Info(const std::string &bundleName, const std::string &status, const std::string &resInfo)
+            : bundleName(bundleName), status(status), resInfo(resInfo) {}
+    };
+
+public:
     int32_t GetUserId();
-    void RecordBackUpFuncResWithBundle(const std::string &func, const std::string &bundleName, int32_t userId,
-                                       enum BizStage bizStage, int32_t resultCode,
-                                       const std::string &resultInfo = "{\"reason\":\"failed\"}");
-    void RecordBackUpFuncResWithoutBundle(const std::string &func, int32_t userId,
-                                          enum BizStage bizStage, int32_t resultCode,
-                                          const std::string &resultInfo = "{\"reason\":\"failed\"}");
-    void RecordDoBackUpRes(const std::string &func, int32_t userId, int32_t resultCode, int32_t exportDuration);
-    void RecordRestoreFuncRes(int32_t userId, const std::string &func, enum BizStageRestore bizStage,
-                              int32_t resultCode);
-    void RecordRestoreFuncResWithBundle(const std::string &bundleName, int32_t userId, const std::string &func,
-                                        enum BizStageRestore bizStage, int32_t resultCode);
-    void RecordRestoreFuncResWithResult(const std::string &bundleName, int32_t userId, const std::string &func,
-                                        enum BizStageRestore bizStage, int32_t resultCode,
-                                        const std::string &resultInfo);
-    void RecordRestoreFuncResWithStatus(const std::string &bundleName, int32_t userId, const std::string &func,
-                                        enum BizStageRestore bizStage, const std::string &execStatus,
-                                        int32_t resultCode);
-    void RecordGetFileHandleRes(const std::string &bundleName, int32_t userId, int32_t resultCode,
-                                const std::string &resultInfo);
-    void RecordOnRestoreRes(const std::string &bundleName, int32_t userId, const std::string &func,
-                            const std::string &execStatus, int32_t resultCode);
-    void RecordBackupSARes(int32_t userId, const std::string &func, int32_t resultCode, const std::string &resultInfo);
+    void RecordDefaultFuncRes(Info &info, const std::string &func, int32_t userId,
+                              enum BizStageBackup bizStage, int32_t resultCode);
+    void RecordBackupFuncRes(Info &info, const std::string &func, int32_t userId,
+                             enum BizStageBackup bizStage, int32_t resultCode);
+    void RecordRestoreFuncRes(Info &info, const std::string &func, int32_t userId,
+                              enum BizStageRestore bizStage, int32_t resultCode);
 private:
     AppRadar() = default;
     ~AppRadar() = default;

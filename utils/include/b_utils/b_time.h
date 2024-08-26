@@ -23,6 +23,7 @@ public:
     static int64_t GetTimeS();
     static int64_t GetTimeMS();
     static int64_t GetTimeUS();
+    static std::string GetCurrentTime();
 };
 } // namespace OHOS::FileManagement::TimeUtils
 #endif // OHOS_FILEMGMT_BACKUP_B_TIME_H

@@ -13,33 +13,17 @@
  * limitations under the License.
  */
 
-#include "b_radar/b_radar.h"
-
 #include <iomanip>
 #include <sstream>
 #include <unistd.h>
 
 #include "b_process/b_multiuser.h"
+#include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
+#include "b_utils/b_time.h"
 #include "hisysevent.h"
 
-namespace {
-constexpr uint8_t INDEX = 3;
-constexpr int32_t MS_1000 = 1000;
-const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
-}
 namespace OHOS::FileManagement::Backup {
-static std::string GetCurrentTime()
-{
-    auto now = std::chrono::system_clock::now();
-    auto time = std::chrono::system_clock::to_time_t(now);
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
-    std::stringstream strTime;
-    strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
-            << (std::setw(INDEX)) << (ms.count() % MS_1000);
-    return strTime.str();
-}
-
 int32_t AppRadar::GetUserId()
 {
     auto multiuser = BMultiuser::ParseUid(getuid());
@@ -49,180 +33,60 @@ int32_t AppRadar::GetUserId()
     return multiuser.userId;
 }
 
-void AppRadar::RecordBackUpFuncResWithBundle(const std::string &func, const std::string &bundleName,
-                                             int32_t userId, enum BizStage bizStage, int32_t resultCode,
-                                             const std::string &resultInfo)
+void AppRadar::RecordDefaultFuncRes(Info &info, const std::string &func, int32_t userId,
+                                    enum BizStageBackup bizStage, int32_t resultCode)
 {
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-        FILE_BACKUP_EVENTS,
+        BConstants::FILE_BACKUP_RESTORE_EVENTS,
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        "BUNDLE_NAME", bundleName,
+        "BUNDLE_NAME", info.bundleName,
         "USER_ID", userId,
         "PID", getpid(),
         "FUNC", func,
-        "TIME", GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BizScene::BACKUP),
+        "TIME", TimeUtils::GetCurrentTime(),
+        "BIZ_SCENE", static_cast<int32_t>(BConstants::ExtensionAction::INVALID),
         "BIZ_STAGE", static_cast<int32_t>(bizStage),
+        "EXEC_STATUS", info.status,
         "RESULT_CODE", resultCode,
-        "RESULT_INFO", resultInfo);
+        "RESULT_INFO", info.resInfo);
 }
 
-void AppRadar::RecordBackUpFuncResWithoutBundle(const std::string &func, int32_t userId, enum BizStage bizStage,
-                                                int32_t resultCode, const std::string &resultInfo)
+void AppRadar::RecordBackupFuncRes(Info &info, const std::string &func, int32_t userId,
+                                   enum BizStageBackup bizStage, int32_t resultCode)
 {
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-        FILE_BACKUP_EVENTS,
+        BConstants::FILE_BACKUP_RESTORE_EVENTS,
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+        "BUNDLE_NAME", info.bundleName,
         "USER_ID", userId,
         "PID", getpid(),
         "FUNC", func,
-        "TIME", GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BizScene::BACKUP),
+        "TIME", TimeUtils::GetCurrentTime(),
+        "BIZ_SCENE", static_cast<int32_t>(BConstants::ExtensionAction::BACKUP),
         "BIZ_STAGE", static_cast<int32_t>(bizStage),
+        "EXEC_STATUS", info.status,
         "RESULT_CODE", resultCode,
-        "RESULT_INFO", resultInfo);
+        "RESULT_INFO", info.resInfo);
 }
 
-void AppRadar::RecordDoBackUpRes(const std::string &func, int32_t userId, int32_t resultCode,
-                                 int32_t exportDuration)
+void AppRadar::RecordRestoreFuncRes(Info &info, const std::string &func, int32_t userId,
+                                    enum BizStageRestore bizStage, int32_t resultCode)
 {
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-        FILE_BACKUP_EVENTS,
+        BConstants::FILE_BACKUP_RESTORE_EVENTS,
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+        "BUNDLE_NAME", info.bundleName,
         "USER_ID", userId,
         "PID", getpid(),
         "FUNC", func,
-        "TIME", GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BizScene::BACKUP),
-        "BIZ_STAGE", static_cast<int32_t>(BizStage::BIZ_STAGE_DO_BACKUP),
-        "EXEC_STATUS", "{\"spend_time\":" + std::to_string(exportDuration) + "ms\"}",
-        "RESULT_CODE", resultCode);
-}
-
-void AppRadar::RecordRestoreFuncRes(int32_t userId, const std::string &func, enum BizStageRestore bizStage,
-                                    int32_t resultCode)
-{
-    HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-        FILE_BACKUP_EVENTS,
-        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        "USER_ID", userId,
-        "PID", getpid(),
-        "FUNC", func,
-        "TIME", GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BizScene::RESTORE),
+        "TIME", TimeUtils::GetCurrentTime(),
+        "BIZ_SCENE", static_cast<int32_t>(BConstants::ExtensionAction::RESTORE),
         "BIZ_STAGE", static_cast<int32_t>(bizStage),
-        "RESULT_CODE", resultCode);
-}
-
-void AppRadar::RecordRestoreFuncResWithBundle(const std::string &bundleName, int32_t userId, const std::string &func,
-                                              enum BizStageRestore bizStage, int32_t resultCode)
-{
-    HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-        FILE_BACKUP_EVENTS,
-        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        "BUNDLE_NAME", bundleName,
-        "USER_ID", userId,
-        "PID", getpid(),
-        "FUNC", func,
-        "TIME", GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BizScene::RESTORE),
-        "BIZ_STAGE", static_cast<int32_t>(bizStage),
-        "RESULT_CODE", resultCode);
-}
-
-void AppRadar::RecordRestoreFuncResWithResult(const std::string &bundleName, int32_t userId, const std::string &func,
-                                              enum BizStageRestore bizStage, int32_t resultCode,
-                                              const std::string &resultInfo)
-{
-    HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-        FILE_BACKUP_EVENTS,
-        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        "BUNDLE_NAME", bundleName,
-        "USER_ID", userId,
-        "PID", getpid(),
-        "FUNC", func,
-        "TIME", GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BizScene::RESTORE),
-        "BIZ_STAGE", static_cast<int32_t>(bizStage),
+        "EXEC_STATUS", info.status,
         "RESULT_CODE", resultCode,
-        "RESULT_INFO", resultInfo);
-}
-
-void AppRadar::RecordRestoreFuncResWithStatus(const std::string &bundleName, int32_t userId, const std::string &func,
-                                              enum BizStageRestore bizStage, const std::string &execStatus,
-                                              int32_t resultCode)
-{
-    HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-        FILE_BACKUP_EVENTS,
-        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        "BUNDLE_NAME", bundleName,
-        "USER_ID", userId,
-        "PID", getpid(),
-        "FUNC", func,
-        "TIME", GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BizScene::RESTORE),
-        "BIZ_STAGE", static_cast<int32_t>(bizStage),
-        "EXEC_STATUS", execStatus,
-        "RESULT_CODE", resultCode);
-}
-
-void AppRadar::RecordGetFileHandleRes(const std::string &bundleName, int32_t userId, int32_t resultCode,
-                                      const std::string &resultInfo)
-{
-    HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-        FILE_BACKUP_EVENTS,
-        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        "BUNDLE_NAME", bundleName,
-        "USER_ID", userId,
-        "PID", getpid(),
-        "FUNC", "GetFileHandle",
-        "TIME", GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BizScene::RESTORE),
-        "BIZ_STAGE", static_cast<int32_t>(BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE),
-        "RESULT_CODE", resultCode,
-        "RESULT_INFO", resultInfo);
-}
-
-void AppRadar::RecordOnRestoreRes(const std::string &bundleName, int32_t userId, const std::string &func,
-                                  const std::string &execStatus, int32_t resultCode)
-{
-    HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-        FILE_BACKUP_EVENTS,
-        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        "BUNDLE_NAME", bundleName,
-        "USER_ID", userId,
-        "PID", getpid(),
-        "FUNC", func,
-        "TIME", GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BizScene::RESTORE),
-        "BIZ_STAGE", static_cast<int32_t>(BizStageRestore::BIZ_STAGE_EXEC_ON_RESTORE),
-        "EXEC_STATUS", execStatus,
-        "RESULT_CODE", resultCode);
-}
-
-void AppRadar::RecordBackupSARes(int32_t userId, const std::string &func, int32_t resultCode,
-                                 const std::string &resultInfo)
-{
-    HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-        FILE_BACKUP_EVENTS,
-        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        "USER_ID", userId,
-        "PID", getpid(),
-        "FUNC", func,
-        "TIME", GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BizScene::RESTORE),
-        "BIZ_STAGE", static_cast<int32_t>(BizStageRestore::BIZ_STAGE_BACKUP_SA),
-        "RESULT_CODE", resultCode,
-        "RESULT_INFO", resultInfo);
+        "RESULT_INFO", info.resInfo);
 }
 } // namespace OHOS::FileManagement::Backup
