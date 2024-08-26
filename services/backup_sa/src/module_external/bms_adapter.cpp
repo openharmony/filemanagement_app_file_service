@@ -465,4 +465,19 @@ bool BundleMgrAdapter::GetCurBundleExtenionInfo(AppExecFwk::BundleInfo &installe
     HILOGI("bundleName:%{public}s, extensionInfos size:%{public}zu", bundleName.c_str(), extensionInfos.size());
     return true;
 }
+
+bool BundleMgrAdapter::IsUser0BundleName(std::string bundleName, int32_t userId)
+{
+    auto bms = GetBundleManager();
+    AppExecFwk::BundleInfo installedBundle;
+    if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
+        throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle infos");
+    }
+    if (installedBundle.applicationInfo.singleton == true) {
+        HILOGI("bundleName:%{public}s is zero user bundle", bundleName.c_str());
+        return true;
+    }
+    HILOGI("bundleName:%{public}s is not zero user bundle", bundleName.c_str());
+    return false;
+}
 } // namespace OHOS::FileManagement::Backup

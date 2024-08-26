@@ -215,6 +215,9 @@ static inline std::string MANIFEST_FD = "manifestFd";
 static inline std::string LAST_INCREMENTAL_TIME = "lastIncrementalTime";
 static inline std::string PARAMETERS = "parameters";
 static inline std::string PRIORITY = "priority";
+
+// unicast
+const std::string UNICAST_TYPE = "unicast";
 } // namespace OHOS::FileManagement::Backup::BConstants
 
 #endif // OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H

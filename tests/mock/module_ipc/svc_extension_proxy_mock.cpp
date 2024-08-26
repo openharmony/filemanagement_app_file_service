@@ -73,6 +73,11 @@ ErrCode SvcExtensionProxy::UpdateFdSendRate(std::string &bundleName, int32_t sen
     return 0;
 }
 
+ErrCode SvcExtensionProxy::User0OnBackup()
+{
+    return 0;
+}
+
 tuple<UniqueFd, UniqueFd> SvcExtensionProxy::GetIncrementalBackupFileHandle()
 {
     return {UniqueFd(-1), UniqueFd(-1)};

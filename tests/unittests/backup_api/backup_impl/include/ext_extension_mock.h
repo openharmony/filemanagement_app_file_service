@@ -139,6 +139,11 @@ public:
         return BError(BError::Codes::OK);
     };
 
+    ErrCode User0OnBackup() override
+    {
+        return BError(BError::Codes::OK);
+    };
+
 private:
     int32_t nHandleBackupNum_ = 0;
 };

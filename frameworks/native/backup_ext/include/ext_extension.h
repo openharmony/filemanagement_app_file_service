@@ -57,6 +57,7 @@ public:
     void AsyncTaskRestoreForUpgrade(void);
     void ExtClear(void);
     void AsyncTaskIncrementalRestoreForUpgrade(void);
+    ErrCode User0OnBackup() override;
 
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
@@ -156,6 +157,14 @@ private:
 
     void AsyncTaskOnBackup();
 
+    bool IfAllowToBackupRestore();
+
+    void AsyncTaskUser0Backup();
+
+    void DoUser0Backup(const BJsonEntityExtensionConfig &usrConfig);
+
+    int User0DoBackup(const BJsonEntityExtensionConfig &usrConfig);
+    
     int DoIncrementalBackup(const std::vector<struct ReportFileInfo> &allFiles,
                             const std::vector<struct ReportFileInfo> &smallFiles,
                             const std::vector<struct ReportFileInfo> &bigFiles);
