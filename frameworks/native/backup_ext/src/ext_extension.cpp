@@ -69,7 +69,7 @@ const string INDEX_FILE_INCREMENTAL_BACKUP = string(BConstants::PATH_BUNDLE_BACK
 using namespace std;
 
 namespace {
-const int64_t DEFAULT_SLICE_SIZE = 100 * 1024 * 1024; // 分片文件大小为100M
+const uint64_t DEFAULT_SLICE_SIZE = 100 * 1024 * 1024; // 分片文件大小为100M
 const uint32_t MAX_FILE_COUNT = 6000;                 // 单个tar包最多包含6000个文件
 const uint32_t MAX_FD_GROUP_USE_TIME = 1000;          // 每组打开最大时间1000ms
 const int FILE_AND_MANIFEST_FD_COUNT = 2;          // 每组文件和简报数量统计
@@ -570,7 +570,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
 {
     HILOGI("DoPacket begin, infos count: %{public}zu", srcFiles.size());
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
-    int64_t totalSize = 0;
+    uint64_t totalSize = 0;
     uint32_t fileCount = 0;
     vector<string> packFiles;
     TarFile::GetInstance().SetPacketMode(true); // 设置下打包模式
@@ -1788,7 +1788,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
 {
     HILOGI("IncrementalPacket begin, infos count: %{public}zu", infos.size());
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
-    int64_t totalSize = 0;
+    uint64_t totalSize = 0;
     uint32_t fileCount = 0;
     vector<string> packFiles;
     vector<struct ReportFileInfo> tarInfos;
