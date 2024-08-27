@@ -26,6 +26,7 @@
 #include "b_file_info.h"
 #include "b_json/b_json_entity_caps.h"
 #include "b_json/b_json_entity_ext_manage.h"
+#include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
 #include "b_utils/b_time.h"
@@ -42,9 +43,17 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
     shared_lock<shared_mutex> lock(lock_);
     if (impl_.scenario != scenario) {
         HILOGE("Inconsistent scenario, impl scenario:%{public}d", impl_.scenario);
+        AppRadar::Info info("", "", "{\"reason\":\"Inconsistent scenario\"}");
+        AppRadar::GetInstance().RecordDefaultFuncRes(info, "SvcSessionManager::VerifyCallerAndScenario", impl_.userId,
+                                                     BizStageBackup::BIZ_STAGE_PERMISSION_CHECK,
+                                                     BError(BError::Codes::SDK_MIXED_SCENARIO).GetCode());
         throw BError(BError::Codes::SDK_MIXED_SCENARIO);
     }
     if (impl_.clientToken != clientToken) {
+        AppRadar::Info info2("", "", "{\"reason\":\"Caller mismatched\"}");
+        AppRadar::GetInstance().RecordDefaultFuncRes(info2, "SvcSessionManager::VerifyCallerAndScenario", impl_.userId,
+                                                     BizStageBackup::BIZ_STAGE_PERMISSION_CHECK,
+                                                     BError(BError::Codes::SDK_MIXED_SCENARIO).GetCode());
         throw BError(BError::Codes::SA_REFUSED_ACT, "Caller mismatched");
     }
     HILOGD("Succeed to verify the caller");
@@ -358,6 +367,11 @@ void SvcSessionManager::InitClient(Impl &newImpl)
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
+        AppRadar::Info info ("", "", "");
+        AppRadar::GetInstance().RecordDefaultFuncRes(info, "SvcSessionManager::InitClient",
+                                                     AppRadar::GetInstance().GetUserId(),
+                                                     BizStageBackup::BIZ_STAGE_CLIENT_STATUS,
+                                                     BError(BError::Codes::SA_BROKEN_IPC).GetCode());
         (void)revPtrStrong->SessionDeactive();
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(callback));
