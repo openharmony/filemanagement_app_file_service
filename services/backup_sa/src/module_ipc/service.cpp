@@ -234,8 +234,8 @@ string Service::VerifyCallerAndGetCallerName()
     } else {
         string str = to_string(tokenCaller);
         HILOGE("tokenID = %{private}s", GetAnonyString(str).c_str());
-        PermissionCheckFailRadar(string("Invalid token type").append(to_string(tokenType)).append(string("\"}")),
-                            "VerifyCallerAndGetCallerName");
+        std::string info = string("Invalid token type").append(to_string(tokenType)).append(string("\"}"));
+        PermissionCheckFailRadar(info, "VerifyCallerAndGetCallerName");
         throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
     }
 }
