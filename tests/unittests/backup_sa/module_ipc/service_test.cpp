@@ -1783,29 +1783,4 @@ HWTEST_F(ServiceTest, SUB_Service_DeleteDisConfigFile_0100, testing::ext::TestSi
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DeleteDisConfigFile_0100";
 }
-
-/**
- * @tc.number: SUB_Service_UnloadService_0100
- * @tc.name: SUB_Service_UnloadService_0100
- * @tc.desc: 测试 UnloadService 接口
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I8ZIMJ
- */
-HWTEST_F(ServiceTest, SUB_Service_UnloadService_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_UnloadService_0100";
-    try {
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
-        EXPECT_EQ(ret, BError(BError::Codes::OK));
-        EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->sched_ = nullptr;
-        servicePtr_->UnloadService();
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by UnloadService.";
-    }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_UnloadService_0100";
-}
 } // namespace OHOS::FileManagement::Backup

@@ -79,6 +79,7 @@ public:
 public:
     template <typename T>
     bool WriteParcelableVector(const std::vector<T> &parcelableVector, Parcel &data);
+    static sptr<IService> GetServiceProxyPointer();
     static sptr<IService> GetInstance();
     static void InvaildInstance();
 

@@ -60,7 +60,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_DecreaseSessionCnt_0100, t
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_DecreaseSessionCnt_0100";
     try {
-        sessionManagerPtr_->DecreaseSessionCnt();
+        sessionManagerPtr_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -82,8 +82,8 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_DecreaseSessionCnt_0101, t
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_DecreaseSessionCnt_0101";
     try {
-        sessionManagerPtr_->IncreaseSessionCnt();
-        sessionManagerPtr_->DecreaseSessionCnt();
+        sessionManagerPtr_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        sessionManagerPtr_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

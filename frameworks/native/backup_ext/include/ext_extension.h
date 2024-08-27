@@ -62,6 +62,9 @@ public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
         const std::string &bundleName) : extension_(extension)
     {
+        if (extension_ != nullptr) {
+            extension_->SetBackupExtExtension(this);
+        }
         bundleName_ = bundleName;
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
     }
@@ -279,7 +282,7 @@ private:
 
     std::thread callJsOnProcessThread_;
     Utils::Timer onProcessTimeoutTimer_ {"onProcessTimeoutTimer_"};
-    uint32_t onProcessTimeoutTimerId_;
+    uint32_t onProcessTimeoutTimerId_ { 0 };
     std::atomic<int> onProcessTimeoutCnt_;
     std::atomic<bool> stopCallJsOnProcess_ {false};
     std::condition_variable execOnProcessCon_;

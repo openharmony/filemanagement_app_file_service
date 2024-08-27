@@ -66,6 +66,8 @@ const string INDEX_FILE_RESTORE = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
                                   append(BConstants::EXT_BACKUP_MANAGE);
 const string INDEX_FILE_INCREMENTAL_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
                                              append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+const string MEDIA_LIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
+const string FILE_MANAGER_BUNDLE_NAME = "com.ohos.filepicker";
 using namespace std;
 
 static string GetIndexFileRestorePath(const string &bundleName)
@@ -1464,6 +1466,19 @@ void BackupExtExtension::DoClear()
             string(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1).append(BConstants::SA_BUNDLE_BACKUP_BACKUP));
         ForceRemoveDirectory(
             string(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+        // delete special directory
+        if (bundleName_.compare(MEDIA_LIBRARY_BUNDLE_NAME) == 0) {
+            ForceRemoveDirectory(
+                string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP));
+            ForceRemoveDirectory(
+                string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+        }
+        if (bundleName_.compare(FILE_MANAGER_BUNDLE_NAME) == 0) {
+            ForceRemoveDirectory(
+                string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP));
+            ForceRemoveDirectory(
+                string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+        }
         unique_lock<shared_mutex> lock(lock_);
     } catch (...) {
         HILOGE("Failed to clear");
@@ -1972,7 +1987,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
     int fdNum = 0;
     string partName = GetIncrmentPartName();
     for (auto small : infos) {
-        totalSize += small.size;
+        totalSize += static_cast<uint64_t>(small.size);
         fileCount += 1;
         packFiles.emplace_back(small.filePath);
         tarInfos.emplace_back(small);
