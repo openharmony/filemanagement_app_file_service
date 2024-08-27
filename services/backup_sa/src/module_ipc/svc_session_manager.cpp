@@ -367,7 +367,7 @@ void SvcSessionManager::InitClient(Impl &newImpl)
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        AppRadar::Info info ("", "", "");
+        AppRadar::Info info ("", "", "client died");
         AppRadar::GetInstance().RecordDefaultFuncRes(info, "SvcSessionManager::InitClient",
                                                      AppRadar::GetInstance().GetUserId(),
                                                      BizStageBackup::BIZ_STAGE_CLIENT_STATUS,

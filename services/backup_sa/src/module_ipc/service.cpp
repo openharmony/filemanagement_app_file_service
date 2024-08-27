@@ -485,9 +485,6 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("Catch exception");
-        AppRadar::Info info ("", "", "");
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "AppendBundlesRestoreSession", GetUserIdDefault(),
-                                                     BizStageRestore::BIZ_STAGE_APPEND_BUNDLES, e.GetCode());
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
@@ -557,9 +554,6 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("Catch exception");
-        AppRadar::Info info ("", "", "");
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "AppendBundlesRestoreSession", GetUserIdDefault(),
-                                                     BizStageRestore::BIZ_STAGE_APPEND_BUNDLES, e.GetCode());
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
@@ -1509,17 +1503,6 @@ void Service::DeleteDisConfigFile()
 void Service::SessionDeactive()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    IServiceReverse::Scenario scenario = session_->GetScenario();
-    AppRadar::Info info ("", "", "");
-    if (scenario == IServiceReverse::Scenario::BACKUP) {
-        AppRadar::GetInstance().RecordBackupFuncRes(info, "SessionDeactive", AppRadar::GetInstance().GetUserId(),
-                                                    BizStageBackup::BIZ_STAGE_CLIENT_STATUS,
-                                                    static_cast<int32_t>(BError::Codes::SA_BROKEN_IPC));
-    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "SessionDeactive", AppRadar::GetInstance().GetUserId(),
-                                                     BizStageRestore::BIZ_STAGE_CLIENT_STATUS,
-                                                     static_cast<int32_t>(BError::Codes::SA_BROKEN_IPC));
-    }
     try {
         HILOGI("Begin");
         //清理处置状态
@@ -1995,11 +1978,12 @@ std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bu
         }
         IServiceReverse::Scenario scenario = sessionPtr->GetScenario();
         int32_t errCode = BError(BError::Codes::EXT_ABILITY_TIMEOUT).GetCode();
-        AppRadar::Info info (bundleName, "", "");
         if (scenario == IServiceReverse::Scenario::BACKUP) {
+            AppRadar::Info info (bundleName, "", "on backup timeout");
             AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
                                                         BizStageBackup::BIZ_STAGE_ON_BACKUP, errCode);
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+            AppRadar::Info info (bundleName, "", "on restore timeout");
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
                                                          BizStageRestore::BIZ_STAGE_EXEC_ON_RESTORE, errCode);
         }
