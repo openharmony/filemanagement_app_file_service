@@ -13,15 +13,16 @@
  * limitations under the License.
  */
 
-#include "service_proxy.h"
-
-#include "iservice_registry.h"
-#include "system_ability_definition.h"
+#include <sstream>
 
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
+#include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
+#include "iservice_registry.h"
+#include "service_proxy.h"
+#include "system_ability_definition.h"
 #include "svc_death_recipient.h"
 #include "hitrace_meter.h"
 
@@ -119,6 +120,9 @@ UniqueFd ServiceProxy::GetLocalCapabilities()
         static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES), data, reply, option);
     if (ret != NO_ERROR) {
         HILOGE("Received error %{public}d when doing IPC", ret);
+        AppRadar::Info resInfo("", "", "");
+        AppRadar::GetInstance().RecordDefaultFuncRes(resInfo, "ServiceProxy::GetLocalCapabilities",
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_GET_LOCAL_CAPABILITIES, ret);
         return UniqueFd(-ret);
     }
     UniqueFd fd(reply.ReadFileDescriptor());
@@ -297,6 +301,13 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<Bund
         option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
+        std::string ss;
+        for (const auto &bundleName : bundleNames) {
+            ss += bundleName + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", str);
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "ServiceProxy::AppendBundlesRestoreSession", userId,
+            BizStageRestore::BIZ_STAGE_APPEND_BUNDLES, ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
     return reply.ReadInt32();
@@ -334,6 +345,13 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
         static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION), data, reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
+        std::string ss;
+        for (const auto &bundleName : bundleNames) {
+            ss += bundleName + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", str);
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "ServiceProxy::AppendBundlesRestoreSession", userId,
+            BizStageRestore::BIZ_STAGE_APPEND_BUNDLES, ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
     return reply.ReadInt32();
@@ -452,6 +470,10 @@ sptr<IService> ServiceProxy::GetInstance()
                                             [loadCallback]() { return loadCallback->isLoadSuccess_.load(); });
     if (!waitStatus) {
         HILOGE("Load backup sa timeout");
+        AppRadar::Info info("", "", "{\"reason\":\"Load backup sa timeout\"}");
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "ServiceProxy::GetInstance",
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_BACKUP_SA,
+            static_cast<int32_t>(BError::Codes::SA_INVAL_ARG));
         return nullptr;
     }
     return serviceProxy_;
@@ -508,6 +530,10 @@ void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t sys
     unique_lock<mutex> lock(proxyMutex_);
     serviceProxy_ = nullptr;
     isLoadSuccess_.store(false);
+    AppRadar::Info info("", "", "{\"reason\":\"Load backup sa fail\"}");
+    AppRadar::GetInstance().RecordBackupFuncRes(info, "ServiceProxyLoadCallback::OnLoadSystemAbilityFail",
+        AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_BACKUP_SA,
+        static_cast<int32_t>(BError::Codes::SA_INVAL_ARG));
     proxyConVar_.notify_one();
 }
 

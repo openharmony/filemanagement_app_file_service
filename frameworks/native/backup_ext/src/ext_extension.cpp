@@ -47,6 +47,7 @@
 #include "b_json/b_json_cached_entity.h"
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_ohos/startup/backup_para.h"
+#include "b_radar/b_radar.h"
 #include "b_tarball/b_tarball_factory.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
@@ -128,10 +129,18 @@ void BackupExtExtension::VerifyCaller()
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
     int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
     if (tokenType != Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        AppRadar::Info info(bundleName_, "", "{\"reason\":\"Calling tokenType error\"}");
+        AppRadar::GetInstance().RecordDefaultFuncRes(
+            info, "BackupExtExtension::VerifyCaller", AppRadar::GetInstance().GetUserId(),
+            BizStageBackup::BIZ_STAGE_PERMISSION_CHECK, BError(BError::Codes::OK).GetCode());
         throw BError(BError::Codes::EXT_BROKEN_IPC,
                      string("Calling tokenType is error, token type is ").append(to_string(tokenType)));
     }
     if (IPCSkeleton::GetCallingUid() != BConstants::BACKUP_UID) {
+        AppRadar::Info info(bundleName_, "", "{\"reason\":\"Calling uid invalid\"}");
+        AppRadar::GetInstance().RecordDefaultFuncRes(
+            info, "BackupExtExtension::VerifyCaller", AppRadar::GetInstance().GetUserId(),
+            BizStageBackup::BIZ_STAGE_PERMISSION_CHECK, BError(BError::Codes::OK).GetCode());
         throw BError(BError::Codes::EXT_BROKEN_IPC,
                      string("Calling uid is invalid, calling uid is ").append(to_string(IPCSkeleton::GetCallingUid())));
     }
@@ -828,7 +837,13 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
             HILOGI("Do backup, start fwk timer end.");
             BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
             auto cache = cachedEntity.Structuralize();
+            auto start = std::chrono::system_clock::now();
             auto ret = ptr->DoBackup(cache);
+            auto end = std::chrono::system_clock::now();
+            auto cost = to_string(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+            AppRadar::Info info(ptr->bundleName_, "", string("{\"spend_time\":").append(cost).append(string("ms\"}")));
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::AsyncTaskBackup",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, static_cast<int32_t>(ret));
             // REM: 处理返回结果 ret
             ptr->AppDone(ret);
             HILOGI("backup app done %{public}d", ret);
@@ -1152,6 +1167,16 @@ void BackupExtExtension::HandleSpecialVersionRestore()
     }
 }
 
+void RecordDoRestoreRes(const std::string &bundleName, const std::string &func, int32_t ms)
+{
+    std::stringstream ss;
+    ss << "\"spend_time\": \"" << ms << "ms\"";
+    int32_t err = static_cast<int32_t>(BError::Codes::OK);
+    AppRadar::Info info (bundleName, "", ss.str());
+    AppRadar::GetInstance().RecordRestoreFuncRes(info, func, AppRadar::GetInstance().GetUserId(),
+                                                 BizStageRestore::BIZ_STAGE_DO_RESTORE, err);
+}
+
 void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
     const std::vector<ExtManageInfo> extManageInfo)
 {
@@ -1166,6 +1191,7 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
                 return;
             }
             // 解压
+            auto startTime = std::chrono::system_clock::now();
             for (auto item : fileSet) { // 处理要解压的tar文件
                 off_t tarFileSize = 0;
                 if (ExtractFileExt(item) == "tar" && !IsUserTar(item, extManageInfo, tarFileSize)) {
@@ -1178,6 +1204,10 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
                 ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpecialVersionForCloneAndCloud();
             ptr->RestoreBigFiles(appendTargetPath);
             ptr->DeleteBackupTars();
+            auto endTime = std::chrono::system_clock::now();
+            auto spendTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count();
+            RecordDoRestoreRes(ptr->bundleName_, "BackupExtExtension::AsyncTaskRestore",
+                static_cast<int32_t>(spendTime));
             if (ret == ERR_OK) {
                 ptr->AsyncTaskRestoreForUpgrade();
             } else {
@@ -1216,6 +1246,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
             if (ptr != nullptr && ptr->isDebug_) {
                 ptr->CheckTmpDirFileInfos();
             }
+            auto startTime = std::chrono::system_clock::now();
             // 解压
             int ret = ptr->DoIncrementalRestore();
             // 恢复用户tar包以及大文件
@@ -1229,6 +1260,10 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
             if (ptr != nullptr && ptr->isDebug_) {
                 ptr->CheckRestoreFileInfos();
             }
+            auto endTime = std::chrono::system_clock::now();
+            auto spendTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count();
+            RecordDoRestoreRes(ptr->bundleName_, "BackupExtExtension::AsyncTaskIncrementalRestore",
+                static_cast<int32_t>(spendTime));
             if (ret == ERR_OK) {
                 HILOGI("after extra, do incremental restore.");
                 ptr->AsyncTaskIncrementalRestoreForUpgrade();
@@ -1319,6 +1354,7 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_RESTORE);
             auto callBackup = ptr->OnRestoreCallback(obj);
             auto callBackupEx = ptr->OnRestoreExCallback(obj);
+            ptr->UpdateOnStartTime();
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx);
             if (err != ERR_OK) {
                 ptr->AppDone(BError::GetCodeByErrno(err));
@@ -1369,6 +1405,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_RESTORE);
             auto callBackup = ptr->IncreOnRestoreCallback(obj);
             auto callBackupEx = ptr->IncreOnRestoreExCallback(obj);
+            ptr->UpdateOnStartTime();
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx);
             if (err != ERR_OK) {
                 HILOGE("OnRestore done, err = %{pubilc}d", err);
@@ -1498,6 +1535,12 @@ void BackupExtExtension::StartFwkTimer(bool &isFwkStart)
     }
 }
 
+void BackupExtExtension::UpdateOnStartTime()
+{
+    std::lock_guard<std::mutex> lock(onStartTimeLock_);
+    g_onStart = std::chrono::system_clock::now();
+}
+
 void BackupExtExtension::AsyncTaskOnBackup()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -1509,6 +1552,7 @@ void BackupExtExtension::AsyncTaskOnBackup()
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_BACKUP);
             auto callBackup = ptr->OnBackupCallback(obj);
             auto callBackupEx = ptr->OnBackupExCallback(obj);
+            ptr->UpdateOnStartTime();
             ErrCode err = ptr->extension_->OnBackup(callBackup, callBackupEx);
             if (err != ERR_OK) {
                 HILOGE("OnBackup done, err = %{pubilc}d", err);
@@ -1894,6 +1938,7 @@ void BackupExtExtension::AsyncTaskOnIncrementalBackup()
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_BACKUP);
             auto callBackup = ptr->IncOnBackupCallback(obj);
             auto callBackupEx = ptr->IncOnBackupExCallback(obj);
+            ptr->UpdateOnStartTime();
             ErrCode err = ptr->extension_->OnBackup(callBackup, callBackupEx);
             if (err != ERR_OK) {
                 HILOGE("OnBackup done, err = %{pubilc}d", err);

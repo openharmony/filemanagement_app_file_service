@@ -15,6 +15,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <string>
 #include <unistd.h>
 
 #include "b_process/b_multiuser.h"
@@ -22,6 +23,7 @@
 #include "b_resources/b_constants.h"
 #include "b_utils/b_time.h"
 #include "hisysevent.h"
+#include "i_service_reverse.h"
 
 namespace OHOS::FileManagement::Backup {
 int32_t AppRadar::GetUserId()
@@ -36,6 +38,8 @@ int32_t AppRadar::GetUserId()
 void AppRadar::RecordDefaultFuncRes(Info &info, const std::string &func, int32_t userId,
                                     enum BizStageBackup bizStage, int32_t resultCode)
 {
+    std::stringstream ss;
+    ss << "\"result_info\": {" << info.resInfo << "}";
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
         BConstants::FILE_BACKUP_RESTORE_EVENTS,
@@ -45,16 +49,18 @@ void AppRadar::RecordDefaultFuncRes(Info &info, const std::string &func, int32_t
         "PID", getpid(),
         "FUNC", func,
         "TIME", TimeUtils::GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BConstants::ExtensionAction::INVALID),
+        "BIZ_SCENE", static_cast<int32_t>(IServiceReverse::Scenario::UNDEFINED),
         "BIZ_STAGE", static_cast<int32_t>(bizStage),
         "EXEC_STATUS", info.status,
         "RESULT_CODE", resultCode,
-        "RESULT_INFO", info.resInfo);
+        "RESULT_INFO", ss.str());
 }
 
 void AppRadar::RecordBackupFuncRes(Info &info, const std::string &func, int32_t userId,
                                    enum BizStageBackup bizStage, int32_t resultCode)
 {
+    std::stringstream ss;
+    ss << "\"result_info\": {" << info.resInfo << "}";
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
         BConstants::FILE_BACKUP_RESTORE_EVENTS,
@@ -64,16 +70,18 @@ void AppRadar::RecordBackupFuncRes(Info &info, const std::string &func, int32_t 
         "PID", getpid(),
         "FUNC", func,
         "TIME", TimeUtils::GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BConstants::ExtensionAction::BACKUP),
+        "BIZ_SCENE", static_cast<int32_t>(IServiceReverse::Scenario::BACKUP),
         "BIZ_STAGE", static_cast<int32_t>(bizStage),
         "EXEC_STATUS", info.status,
         "RESULT_CODE", resultCode,
-        "RESULT_INFO", info.resInfo);
+        "RESULT_INFO", ss.str());
 }
 
 void AppRadar::RecordRestoreFuncRes(Info &info, const std::string &func, int32_t userId,
                                     enum BizStageRestore bizStage, int32_t resultCode)
 {
+    std::stringstream ss;
+    ss << "\"result_info\": {" << info.resInfo << "}";
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
         BConstants::FILE_BACKUP_RESTORE_EVENTS,
@@ -83,10 +91,10 @@ void AppRadar::RecordRestoreFuncRes(Info &info, const std::string &func, int32_t
         "PID", getpid(),
         "FUNC", func,
         "TIME", TimeUtils::GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(BConstants::ExtensionAction::RESTORE),
+        "BIZ_SCENE", static_cast<int32_t>(IServiceReverse::Scenario::RESTORE),
         "BIZ_STAGE", static_cast<int32_t>(bizStage),
         "EXEC_STATUS", info.status,
         "RESULT_CODE", resultCode,
-        "RESULT_INFO", info.resInfo);
+        "RESULT_INFO", ss.str());
 }
 } // namespace OHOS::FileManagement::Backup

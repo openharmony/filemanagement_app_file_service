@@ -259,6 +259,8 @@ private:
     void SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void CloseOnProcessTimeOutTimer();
+    void UpdateOnStartTime();
+    int32_t GetOnStartTimeCost();
 
 private:
     std::shared_mutex lock_;
@@ -286,6 +288,8 @@ private:
     std::condition_variable execOnProcessCon_;
     std::mutex onProcessLock_;
     std::atomic<bool> onProcessTimeout_ {false};
+    std::chrono::time_point<std::chrono::system_clock> g_onStart;
+    std::mutex onStartTimeLock_;
 };
 } // namespace OHOS::FileManagement::Backup
 
