@@ -407,8 +407,9 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
         }
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
-            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId);
+            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId, isClearDataFlags);
         auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNamesOnly);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         HandleExceptionOnAppendBundles(session_, bundleNames, restoreBundleNames);
@@ -418,7 +419,8 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
             return BError(BError::Codes::OK);
         }
         session_->AppendBundles(restoreBundleNames);
-        SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap, restoreType);
+        SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap,
+            isClearDataFlags, restoreType);
         OnStartSched();
         session_->DecreaseSessionCnt();
         HILOGI("End");
@@ -503,7 +505,8 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
     std::vector<std::string> &restoreBundleNames,
-    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap, RestoreTypeEnum restoreType)
+    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
+    std::map<std::string, bool> &isClearDataFlags, RestoreTypeEnum restoreType)
 {
     HILOGI("Start");
     for (auto restoreInfo : restoreBundleInfos) {
@@ -525,6 +528,10 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
         session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
         session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
+        auto iter = isClearDataFlags.find(restoreInfo.name);
+        if (iter != isClearDataFlags.end()) {
+            session_->SetClearDataFlag(restoreInfo.name, iter->second);
+        }
         BJsonUtil::BundleDetailInfo broadCastInfo;
         BJsonUtil::BundleDetailInfo uniCastInfo;
         bool broadCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, restoreInfo.name, BROADCAST_TYPE,
@@ -590,22 +597,26 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
         session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
-            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, session_->GetSessionUserId());
+            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            session_->GetSessionUserId(), isClearDataFlags);
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
         for (auto info : backupInfos) {
             session_->SetBundleDataSize(info.name, info.spaceOccupied);
             session_->SetBackupExtName(info.name, info.extensionName);
+            auto iter = isClearDataFlags.find(info.name);
+            if (iter != isClearDataFlags.end()) {
+                session_->SetClearDataFlag(info.name, iter->second);
+            }
             if (info.allToBackup == false) {
                 session_->GetServiceReverseProxy()->BackupOnBundleStarted(
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
                 session_->RemoveExtInfo(info.name);
             }
             BJsonUtil::BundleDetailInfo uniCastInfo;
-            bool uniCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, info.name, UNICAST_TYPE,
-                uniCastInfo);
-            if (uniCastRet) {
+            if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, info.name, UNICAST_TYPE, uniCastInfo)) {
                 HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
                 session_->SetBackupExtInfo(info.name, uniCastInfo.detail);
             }
@@ -1046,7 +1057,7 @@ void Service::ExtStart(const string &bundleName)
             throw BError(BError::Codes::SA_INVAL_ARG, "ExtStart bundle task error, Extension backup Proxy is empty");
         }
         if (scenario == IServiceReverse::Scenario::BACKUP) {
-            auto ret = proxy->HandleBackup();
+            auto ret = proxy->HandleBackup(session_->GetClearDataFlag(bundleName));
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
             if (ret) {
                 ClearSessionAndSchedInfo(bundleName);
@@ -1057,7 +1068,7 @@ void Service::ExtStart(const string &bundleName)
         if (scenario != IServiceReverse::Scenario::RESTORE) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Failed to scenario");
         }
-        auto ret = proxy->HandleRestore();
+        auto ret = proxy->HandleRestore(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (auto &fileName : fileNameVec) {
@@ -1722,6 +1733,29 @@ void Service::NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerN
     } else if (scenario == IServiceReverse::Scenario::RESTORE) {
         HILOGI("will notify clone data, scenario is Restore");
         session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, callerName);
+    }
+}
+
+ErrCode Service::ReportAppProcessInfo(const std::string processInfo, BackupRestoreScenario sennario)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        string bundleName = VerifyCallerAndGetCallerName();
+        if (sennario == BackupRestoreScenario::FULL_RESTORE) {
+            session_->GetServiceReverseProxy()->RestoreOnProcessInfo(bundleName, processInfo);
+        } else if (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnProcessInfo(bundleName, processInfo);
+        } else if (sennario == BackupRestoreScenario::FULL_BACKUP) {
+            session_->GetServiceReverseProxy()->BackupOnProcessInfo(bundleName, processInfo);
+        } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
+            session_->GetServiceReverseProxy()->IncrementalBackupOnProcessInfo(bundleName, processInfo);
+        }
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        return e.GetCode(); // 任意异常产生，终止监听该任务
+    } catch (const exception &e) {
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
+        return EPERM;
     }
 }
 } // namespace OHOS::FileManagement::Backup

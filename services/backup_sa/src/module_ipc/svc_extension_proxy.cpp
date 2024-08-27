@@ -79,13 +79,15 @@ ErrCode SvcExtensionProxy::HandleClear()
     return reply.ReadInt32();
 }
 
-ErrCode SvcExtensionProxy::HandleBackup()
+ErrCode SvcExtensionProxy::HandleBackup(bool isClearData)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteBool(isClearData)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "build param fail.");
+    }
 
     MessageParcel reply;
     MessageOption option;
@@ -126,13 +128,15 @@ ErrCode SvcExtensionProxy::PublishFile(const string &fileName)
     return reply.ReadInt32();
 }
 
-ErrCode SvcExtensionProxy::HandleRestore()
+ErrCode SvcExtensionProxy::HandleRestore(bool isClearData)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteBool(isClearData)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "build param fail.");
+    }
 
     MessageParcel reply;
     MessageOption option;

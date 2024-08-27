@@ -107,138 +107,6 @@ void BackupExtExtension::SetClearDataFlag(bool isClearData)
     }
 }
 
-std::map<std::string, off_t> BackupExtExtension::GetIdxFileInfos(bool isSpecialVersion)
-{
-    string restoreDir = isSpecialVersion ?
-        "" :
-        string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
-    auto extManageInfo = GetExtManageInfo();
-    std::map<std::string, off_t> idxFileInfos;
-    for (size_t i = 0; i < extManageInfo.size(); ++i) {
-        std::string realPath = restoreDir + extManageInfo[i].hashName;
-        idxFileInfos[realPath] = extManageInfo[i].sta.st_size;
-    }
-    return idxFileInfos;
-}
-
-void BackupExtExtension::CheckTmpDirFileInfos(bool isSpecialVersion)
-{
-    ErrFileInfo errFiles;
-    auto idxFileInfos = GetIdxFileInfos(isSpecialVersion);
-    struct stat attr;
-    for (auto it : idxFileInfos) {
-        if (it.first.size() >= PATH_MAX || stat(it.first.data(), &attr) == -1) {
-            HILOGE("(Debug) Failed to get stat of %{public}s, errno = %{public}d", GetAnonyPath(it.first).c_str(),
-                errno);
-            errFiles[it.first].push_back(errno);
-        } else if (it.second != attr.st_size) {
-            HILOGE("(Debug) RecFile:%{public}s size err, recSize: %{public}" PRId64 ", idxSize: %{public}" PRId64 "",
-                GetAnonyPath(it.first).c_str(), attr.st_size, it.second);
-            errFiles[it.first] = std::vector<int>();
-        }
-    }
-    HILOGE("(Debug) Temp file check result: Total file: %{public}zu, err file: %{public}zu", idxFileInfos.size(),
-        errFiles.size());
-    if (!errFiles.empty()) {
-        HILOGE("(Debug) The received file and idx is not same");
-    } else {
-        HILOGI("(Debug) The received file and idx is same");
-    }
-}
-
-tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
-{
-    vector<string> errFiles;
-    struct stat curFileStat {};
-    for (const auto &it : endFileInfos_) {
-        if (lstat(it.first.c_str(), &curFileStat) != 0) {
-            HILOGE("(Debug) Failed to lstat, err = %{public}d", errno);
-            errFiles.emplace_back(it.first);
-            errFileInfos_[it.first].push_back(errno);
-        } else if (curFileStat.st_size != it.second) {
-            HILOGE("(Debug) File size check error, file: %{public}s", GetAnonyPath(it.first).c_str());
-            errFiles.emplace_back(it.first);
-            errFileInfos_[it.first].push_back(errno);
-        }
-    }
-    for (const auto &it : errFileInfos_) {
-        for (const auto &codeIt : it.second) {
-            HILOGE("(Debug)  errfileInfos file = %{public}s -> %{public}d", GetAnonyPath(it.first).c_str(), codeIt);
-        }
-    }
-    HILOGE("(Debug) End file check result Total file: %{public}zu, err file: %{public}zu", endFileInfos_.size(),
-        errFileInfos_.size());
-    if (errFiles.size()) {
-        return { false, errFiles };
-    }
-    return { true, errFiles };
-}
-
-void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
-{
-    HILOGI("Begin");
-    auto proxy = ServiceProxy::GetInstance();
-    if (proxy == nullptr) {
-        HILOGE("Failed to obtain the ServiceProxy handle");
-        DoClear();
-        return;
-    }
-    auto ret = proxy->AppIncrementalDone(errCode);
-    if (ret != ERR_OK) {
-        HILOGE("Failed to notify the app done. err = %{public}d", ret);
-    }
-}
-
-ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
-{
-    auto obj = wptr<BackupExtExtension>(this);
-    auto ptr = obj.promote();
-    if (ptr == nullptr) {
-        HILOGE("Failed to get ext extension.");
-        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
-    }
-    if (ptr->extension_ == nullptr) {
-        HILOGE("Failed to get extension.");
-        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
-    }
-    auto callBackup = [ptr](ErrCode errCode, const std::string result) {
-        if (ptr == nullptr) {
-            HILOGE("Failed to get ext extension.");
-            return;
-        }
-        HILOGI("GetBackupInfo callBackup start. result = %{public}s", result.c_str());
-        ptr->backupInfo_ = result;
-    };
-    auto ret = ptr->extension_->GetBackupInfo(callBackup);
-    if (ret != ERR_OK) {
-        HILOGE("Failed to get backupInfo. err = %{public}d", ret);
-        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
-    }
-    HILOGD("backupInfo = %s", backupInfo_.c_str());
-    result = backupInfo_;
-    backupInfo_.clear();
-
-    return ERR_OK;
-}
-
-ErrCode BackupExtExtension::UpdateFdSendRate(std::string &bundleName, int32_t sendRate)
-{
-    try {
-        std::lock_guard<std::mutex> lock(updateSendRateLock_);
-        HILOGI("Update SendRate, bundleName:%{public}s, sendRate:%{public}d", bundleName.c_str(), sendRate);
-        VerifyCaller();
-        bundleName_ = bundleName;
-        sendRate_ = sendRate;
-        if (sendRate > 0) {
-            startSendFdRateCon_.notify_one();
-        }
-        return ERR_OK;
-    } catch (...) {
-        HILOGE("Failed to UpdateFdSendRate");
-        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
-    }
-}
-
 std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreCallback(wptr<BackupExtExtension> obj)
 {
     HILOGI("Begin get full restore onRestore callback");
@@ -474,7 +342,7 @@ void BackupExtExtension::StartOnProcessTaskThread(wptr<BackupExtExtension> obj, 
 {
     HILOGI("Begin Create onProcess Task Thread");
     onProcessTimeoutTimer_.Setup();
-    StartOnProcessTimeOutTimer(obj);
+    StartOnProcessTimeOutTimer(obj, scenario);
     SyncCallJsOnProcessTask(obj, scenario);
     callJsOnProcessThread_ = std::thread([obj, scenario]() {
         auto extPtr = obj.promote();
@@ -500,12 +368,12 @@ void BackupExtExtension::ExecCallOnProcessTask(wptr<BackupExtExtension> obj, Bac
         }
         if (onProcessTimeout_.load()) {
             HILOGE("Current extension execute js method onProcess timeout");
-            StartOnProcessTimeOutTimer(obj);
+            StartOnProcessTimeOutTimer(obj, scenario);
             continue;
         }
         HILOGI("Continue call js method onProcess");
         AsyncCallJsOnProcessTask(obj, scenario);
-        StartOnProcessTimeOutTimer(obj);
+        StartOnProcessTimeOutTimer(obj, scenario);
     }
     HILOGI("End");
 }

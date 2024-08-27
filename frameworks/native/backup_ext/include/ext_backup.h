@@ -175,6 +175,8 @@ public:
      */
     bool RestoreDataReady();
 
+    void SetClearDataFlag(bool isClearData);
+
     /**
      * @brief Invoke the extended function of the APP
      */
@@ -200,6 +202,7 @@ private:
     BConstants::ExtensionAction extAction_ {BConstants::ExtensionAction::INVALID};
     ErrCode GetParament(const AAFwk::Want &want);
     static CreatorFunc creator_;
+    bool isClearData_ {true};
 };
 } // namespace OHOS::FileManagement::Backup
 

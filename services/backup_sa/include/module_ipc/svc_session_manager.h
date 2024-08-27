@@ -66,6 +66,7 @@ struct BackupExtInfo {
     int32_t backupPriority;
     std::string extInfo;
     int32_t appendNum {1};
+    bool isClearData {true};
 };
 
 class Service;
@@ -477,6 +478,9 @@ public:
 
     Impl GetImpl();
     int GetSessionCnt();
+
+    void SetClearDataFlag(const std::string &bundleName, bool isClearData);
+    bool GetClearDataFlag(const std::string &bundleName);
 
 private:
     /**

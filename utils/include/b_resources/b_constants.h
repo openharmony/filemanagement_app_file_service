@@ -77,6 +77,10 @@ constexpr int MIN_FD_SEND_RATE = 0; // 允许应用申请的最小FD数量
 constexpr int DEFAULT_FD_SEND_RATE = 60; // 框架默认的FD数量
 constexpr int32_t PARAM_STARING_MAX_MEMORY = 2 * 1024 * 1024;
 
+constexpr int CALL_APP_ON_PROCESS_TIME_INTERVAL = 5; // 框架每隔5s去调用应用的onProcess
+constexpr int APP_ON_PROCESS_MAX_TIMEOUT = 1000; // 应用的onProcess接口最大超时时间为1秒
+constexpr int APP_ON_PROCESS_TIMEOUT_MAX_COUNT = 3; // 应用的onProcess接口超时的上限次数
+
 // backup.para内配置项的名称，该配置项值为true时可在不更新hap包的情况下，可以读取包管理元数据配置文件的内容
 static inline std::string BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_KEY = "backup.debug.overrideExtensionConfig";
 

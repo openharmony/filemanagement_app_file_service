@@ -113,6 +113,23 @@ void ServiceReverseProxy::BackupOnAllBundlesFinished(int32_t errCode)
     }
 }
 
+void ServiceReverseProxy::BackupOnProcessInfo(std::string bundleName, std::string processInfo)
+{
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(processInfo)) {
+        throw BError(BError::Codes::SA_BROKEN_IPC);
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_PROCESS_INFO), data, reply, option);
+        err != ERR_OK) {
+        throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
+    }
+}
+
 void ServiceReverseProxy::RestoreOnBundleStarted(int32_t errCode, string bundleName)
 {
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
@@ -205,6 +222,23 @@ void ServiceReverseProxy::RestoreOnResultReport(string result, std::string bundl
     if (int err = Remote()->SendRequest(
         static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_RESULT_REPORT), data, reply,
         option);
+        err != ERR_OK) {
+        throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
+    }
+}
+
+void ServiceReverseProxy::RestoreOnProcessInfo(std::string bundleName, std::string processInfo)
+{
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(processInfo)) {
+        throw BError(BError::Codes::SA_BROKEN_IPC);
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_PROCESS_INFO), data, reply, option);
         err != ERR_OK) {
         throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
     }

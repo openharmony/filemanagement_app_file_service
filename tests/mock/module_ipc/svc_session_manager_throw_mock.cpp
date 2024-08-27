@@ -280,6 +280,16 @@ int SvcSessionManager::GetSessionCnt()
     return BackupSvcSessionManager::session->GetSessionCnt();
 }
 
+void SvcSessionManager::SetClearDataFlag(const std::string &bundleName, bool isNotClear)
+{
+    BackupSvcSessionManager::session->SetClearDataFlag(bundleName, isNotClear);
+}
+
+bool SvcSessionManager::GetClearDataFlag(const std::string &bundleName)
+{
+    return BackupSvcSessionManager::session->GetClearDataFlag(bundleName);
+}
+
 void SvcSessionManager::SetIncrementalData(const BIncrementalData &incrementalData)
 {
     BackupSvcSessionManager::session->SetIncrementalData(incrementalData);

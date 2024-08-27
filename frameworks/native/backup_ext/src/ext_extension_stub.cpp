@@ -106,7 +106,9 @@ ErrCode ExtExtensionStub::CmdHandleClear(MessageParcel &data, MessageParcel &rep
 
 ErrCode ExtExtensionStub::CmdHandleBackup(MessageParcel &data, MessageParcel &reply)
 {
-    ErrCode res = HandleBackup();
+    bool isClearData = true;
+    isClearData = data.ReadBool();
+    ErrCode res = HandleBackup(isClearData);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;
@@ -133,7 +135,9 @@ ErrCode ExtExtensionStub::CmdPublishFile(MessageParcel &data, MessageParcel &rep
 
 ErrCode ExtExtensionStub::CmdHandleRestore(MessageParcel &data, MessageParcel &reply)
 {
-    ErrCode res = HandleRestore();
+    bool isClearData = true;
+    isClearData = data.ReadBool();
+    ErrCode res = HandleRestore(isClearData);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;
@@ -187,7 +191,9 @@ ErrCode ExtExtensionStub::CmdHandleIncrementalBackup(MessageParcel &data, Messag
 
 ErrCode ExtExtensionStub::CmdIncrementalOnBackup(MessageParcel &data, MessageParcel &reply)
 {
-    ErrCode res = IncrementalOnBackup();
+    bool isClearData = true;
+    isClearData = data.ReadBool();
+    ErrCode res = IncrementalOnBackup(isClearData);
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;
