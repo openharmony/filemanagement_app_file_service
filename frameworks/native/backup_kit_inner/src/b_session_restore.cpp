@@ -16,6 +16,7 @@
 #include "b_session_restore.h"
 
 #include "b_error/b_error.h"
+#include "b_radar/b_radar.h"
 #include "filemgmt_libhilog.h"
 #include "service_proxy.h"
 #include "service_reverse.h"
@@ -54,6 +55,10 @@ unique_ptr<BSessionRestore> BSessionRestore::Init(Callbacks callbacks)
         int32_t res = proxy->InitRestoreSession(new ServiceReverse(callbacks));
         if (res != 0) {
             HILOGE("Failed to Restore because of %{public}d", res);
+            AppRadar::Info info ("", "", "create restore session failed");
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "BSessionRestore::Init",
+                                                         AppRadar::GetInstance().GetUserId(),
+                                                         BizStageRestore::BIZ_STAGE_CREATE_SESSION_RESTORE, res);
             return nullptr;
         }
 
