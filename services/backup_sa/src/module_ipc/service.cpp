@@ -234,9 +234,8 @@ string Service::VerifyCallerAndGetCallerName()
     } else {
         string str = to_string(tokenCaller);
         HILOGE("tokenID = %{private}s", GetAnonyString(str).c_str());
-        PermissionCheckFailRadar(
-                string("Invalid token type").append(to_string(tokenType)).append(string("\"}")),
-                "VerifyCallerAndGetCallerName");
+        PermissionCheckFailRadar(string("Invalid token type").append(to_string(tokenType)).append(string("\"}")),
+                            "VerifyCallerAndGetCallerName");
         throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
     }
 }
@@ -1630,9 +1629,9 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
     backupConnection->DisconnectBackupExtAbility();
     if (ret != ERR_OK) {
         HILOGE("Call Ext GetBackupInfo faild.");
-        AppRadar::Info info(bundleName, "", "");
-        Backup::AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::GetBackupInfoCmdHandle",
-                                                            GetUserIdDefault(), BizStageBackup::BIZ_STAGE_GET_BACKUP_INFO, ret);
+        AppRadar::Info info(bundleName, "", "Call Ext GetBackupInfo faild");
+        Backup::AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::GetBackupInfoCmdHandle", GetUserIdDefault(),
+                                                            BizStageBackup::BIZ_STAGE_GET_BACKUP_INFO, ret);
         return BError(BError::Codes::SA_INVAL_ARG);
     }
 
