@@ -213,7 +213,7 @@ static inline void PermissionCheckFailRadar(const std::string &info, const std::
     AppRadar::Info resInfo("", "", info);
     AppRadar::GetInstance().RecordDefaultFuncRes(resInfo, funcPos.append(func),
                                                  GetUserIdDefault(), BizStageBackup::BIZ_STAGE_PERMISSION_CHECK,
-                                                 static_cast<int32_t>(BError::Codes::SA_REFUSED_ACT));
+                                                 BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 }
 
 string Service::VerifyCallerAndGetCallerName()
@@ -1041,18 +1041,20 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
             auto backUpConnection = session_->GetExtConnection(bundleName);
             if (backUpConnection == nullptr) {
                 HILOGE("GetFileHandle error, backUpConnection is empty");
-                AppRadar::Info info (bundleName, "", "{\"reason\":\"backUpConnection is empty\"}");
-                int32_t err = static_cast<int32_t>(BError::Codes::SA_INVAL_ARG);
-                AppRadar::GetInstance().RecordRestoreFuncRes(info, "GetFileHandle", GetUserIdDefault(),
+                std::string resInfo = "{\"result_info\": {\"reason\": \"backUpConnection is empty\"}" ;
+                AppRadar::Info info (bundleName, "", resInfo);
+                int32_t err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
                                                              BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE, err);
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
                 HILOGE("GetFileHandle error, Extension backup Proxy is empty");
-                AppRadar::Info info (bundleName, "", "{\"reason\":\"Extension Backup Proxy is empty\"}");
-                int32_t err = static_cast<int32_t>(BError::Codes::SA_INVAL_ARG);
-                AppRadar::GetInstance().RecordRestoreFuncRes(info, "GetFileHandle", GetUserIdDefault(),
+                std::string resInfo = "{\"result_info\": {\"reason\": \"Extension backup Proxy is empty\"}" ;
+                AppRadar::Info info (bundleName, "", resInfo);
+                int32_t err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
                                                              BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE, err);
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
@@ -1199,10 +1201,10 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
         IServiceReverse::Scenario scenario = session_->GetScenario();
         AppRadar::Info info (bundleName, "", "");
         if (scenario == IServiceReverse::Scenario::BACKUP) {
-            AppRadar::GetInstance().RecordBackupFuncRes(info, "ExtConnectFailed", GetUserIdDefault(),
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::ExtConnectFailed", GetUserIdDefault(),
                                                         BizStageBackup::BIZ_STAGE_BACKUP_EXTENSION, ret);
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-            AppRadar::GetInstance().RecordRestoreFuncRes(info, "ExtConnectFailed", GetUserIdDefault(),
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::ExtConnectFailed", GetUserIdDefault(),
                                                          BizStageRestore::BIZ_STAGE_CONNECT_BACKUP_EXTENSION, ret);
         }
         if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
