@@ -1077,13 +1077,13 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 void Service::OnBackupExtensionDied(const string &&bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    int32_t errCode = static_cast<int32_t>(BError::Codes::EXT_ABILITY_DIED);
+    int32_t errCode = BError(BError::Codes::EXT_ABILITY_DIED).GetCode();
     AppRadar::Info info (bundleName, "", "");
     if (session_->GetScenario() == IServiceReverse::Scenario::BACKUP) {
-        AppRadar::GetInstance().RecordBackupFuncRes(info, "OnBackupExtensionDied", GetUserIdDefault(),
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::OnBackupExtensionDied", GetUserIdDefault(),
                                                     BizStageBackup::BIZ_STAGE_EXTENSION_STATUS, errCode);
     } else if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "OnBackupExtensionDied", GetUserIdDefault(),
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::OnBackupExtensionDied", GetUserIdDefault(),
                                                      BizStageRestore::BIZ_STAGE_EXTENSION_STATUS, errCode);
     }
     try {
@@ -1200,7 +1200,7 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
         AppRadar::Info info (bundleName, "", "");
         if (scenario == IServiceReverse::Scenario::BACKUP) {
             AppRadar::GetInstance().RecordBackupFuncRes(info, "ExtConnectFailed", GetUserIdDefault(),
-                                                        BizStageBackup::BIZ_STAGE_APPLICATION, ret);
+                                                        BizStageBackup::BIZ_STAGE_BACKUP_EXTENSION, ret);
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "ExtConnectFailed", GetUserIdDefault(),
                                                          BizStageRestore::BIZ_STAGE_CONNECT_BACKUP_EXTENSION, ret);
@@ -1994,13 +1994,13 @@ std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bu
             return;
         }
         IServiceReverse::Scenario scenario = sessionPtr->GetScenario();
-        int32_t errCode = static_cast<int32_t>(BError::Codes::EXT_ABILITY_TIMEOUT);
+        int32_t errCode = BError(BError::Codes::EXT_ABILITY_TIMEOUT).GetCode();
         AppRadar::Info info (bundleName, "", "");
         if (scenario == IServiceReverse::Scenario::BACKUP) {
-            AppRadar::GetInstance().RecordBackupFuncRes(info, "TimeOutCallback", GetUserIdDefault(),
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
                                                         BizStageBackup::BIZ_STAGE_ON_BACKUP, errCode);
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-            AppRadar::GetInstance().RecordRestoreFuncRes(info, "TimeOutCallback", GetUserIdDefault(),
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
                                                          BizStageRestore::BIZ_STAGE_EXEC_ON_RESTORE, errCode);
         }
         try {
