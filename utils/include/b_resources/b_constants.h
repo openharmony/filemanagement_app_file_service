@@ -214,6 +214,11 @@ static inline std::string MANIFEST_FD = "manifestFd";
 static inline std::string LAST_INCREMENTAL_TIME = "lastIncrementalTime";
 static inline std::string PARAMETERS = "parameters";
 static inline std::string PRIORITY = "priority";
+
+// 雷达打点引用到的常量
+constexpr int32_t MS_1000 = 1000;
+constexpr uint8_t INDEX = 3;
+static inline std::string FILE_BACKUP_RESTORE_EVENTS = "FILE_BACKUP_RESTORE_EVENTS";
 } // namespace OHOS::FileManagement::Backup::BConstants
 
 #endif // OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H

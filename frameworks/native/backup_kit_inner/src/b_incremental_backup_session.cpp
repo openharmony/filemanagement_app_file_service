@@ -16,6 +16,7 @@
 #include "b_incremental_backup_session.h"
 
 #include "b_error/b_error.h"
+#include "b_radar/b_radar.h"
 #include "filemgmt_libhilog.h"
 #include "service_proxy.h"
 #include "service_reverse.h"
@@ -55,6 +56,9 @@ unique_ptr<BIncrementalBackupSession> BIncrementalBackupSession::Init(Callbacks 
         int32_t res = proxy->InitIncrementalBackupSession(sptr(new ServiceReverse(callbacks)));
         if (res != 0) {
             HILOGE("Failed to Backup because of %{public}d", res);
+            AppRadar::Info info("", "", "");
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "BIncrementalBackupSession::Init",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_CREATE_SESSION_BACKUP, res);
             return nullptr;
         }
 
@@ -93,7 +97,17 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
-    return proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup);
+    int32_t res = proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup);
+    if (res != 0) {
+        std::string ss;
+        for (const auto &bundle : bundlesToBackup) {
+            ss += bundle.bundleName + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", "");
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "BIncrementalBackupSession::AppendBundles",
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES, res);
+    }
+    return res;
 }
 
 ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundlesToBackup,
@@ -104,7 +118,17 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
-    return proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup, infos);
+    int32_t res = proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup, infos);
+    if (res != 0) {
+        std::string ss;
+        for (const auto &bundle : bundlesToBackup) {
+            ss += bundle.bundleName + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", "AppendBundles with infos");
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "BIncrementalBackupSession::AppendBundles",
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES, res);
+    }
+    return res;
 }
 
 ErrCode BIncrementalBackupSession::Release()
