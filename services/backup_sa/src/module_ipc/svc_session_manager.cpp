@@ -43,14 +43,14 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
     shared_lock<shared_mutex> lock(lock_);
     if (impl_.scenario != scenario) {
         HILOGE("Inconsistent scenario, impl scenario:%{public}d", impl_.scenario);
-        AppRadar::Info info("", "", "{\"reason\":\"Inconsistent scenario\"}");
+        AppRadar::Info info("", "", "Inconsistent scenario");
         AppRadar::GetInstance().RecordDefaultFuncRes(info, "SvcSessionManager::VerifyCallerAndScenario", impl_.userId,
                                                      BizStageBackup::BIZ_STAGE_PERMISSION_CHECK,
                                                      BError(BError::Codes::SDK_MIXED_SCENARIO).GetCode());
         throw BError(BError::Codes::SDK_MIXED_SCENARIO);
     }
     if (impl_.clientToken != clientToken) {
-        AppRadar::Info info2("", "", "{\"reason\":\"Caller mismatched\"}");
+        AppRadar::Info info2("", "", "Caller mismatched");
         AppRadar::GetInstance().RecordDefaultFuncRes(info2, "SvcSessionManager::VerifyCallerAndScenario", impl_.userId,
                                                      BizStageBackup::BIZ_STAGE_PERMISSION_CHECK,
                                                      BError(BError::Codes::SDK_MIXED_SCENARIO).GetCode());

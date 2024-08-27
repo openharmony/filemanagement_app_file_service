@@ -224,7 +224,7 @@ string Service::VerifyCallerAndGetCallerName()
     if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_HAP) {
         Security::AccessToken::HapTokenInfo hapTokenInfo;
         if (Security::AccessToken::AccessTokenKit::GetHapTokenInfo(tokenCaller, hapTokenInfo) != 0) {
-            PermissionCheckFailRadar("{\"reason\":\"Get hap token info failed\"}", "VerifyCallerAndGetCallerName");
+            PermissionCheckFailRadar("Get hap token info failed", "VerifyCallerAndGetCallerName");
             throw BError(BError::Codes::SA_INVAL_ARG, "Get hap token info failed");
         }
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(hapTokenInfo.bundleName,
@@ -235,7 +235,7 @@ string Service::VerifyCallerAndGetCallerName()
         string str = to_string(tokenCaller);
         HILOGE("tokenID = %{private}s", GetAnonyString(str).c_str());
         PermissionCheckFailRadar(
-                string("{\"reason\":\"Invalid token type ").append(to_string(tokenType)).append(string("\"}")),
+                string("Invalid token type").append(to_string(tokenType)).append(string("\"}")),
                 "VerifyCallerAndGetCallerName");
         throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
     }
@@ -250,7 +250,7 @@ void Service::VerifyCaller()
         case Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE: { /* Update Service */
             if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, BACKUP_PERMISSION) !=
                 Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-                std::string info = "{\"reason\":\"Permission denied, token type is " + to_string(tokenType) + "\"}";
+                std::string info = "Permission denied, token type is " + to_string(tokenType);
                 PermissionCheckFailRadar(info, "VerifyCaller");
                 throw BError(BError::Codes::SA_REFUSED_ACT,
                     string("Permission denied, token type is ").append(to_string(tokenType)));
@@ -260,14 +260,14 @@ void Service::VerifyCaller()
         case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP: {
             if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, BACKUP_PERMISSION) !=
                 Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-                std::string info = "{\"reason\":\"Permission denied, token type is " + to_string(tokenType) + "\"}";
+                std::string info = "Permission denied, token type is " + to_string(tokenType);
                 PermissionCheckFailRadar(info, "VerifyCaller");
                 throw BError(BError::Codes::SA_REFUSED_ACT,
                     string("Permission denied, token type is ").append(to_string(tokenType)));
             }
             uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
             if (!Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
-                std::string info = "{\"reason\":\"Permission denied, token type is " + to_string(tokenType) + "\"}";
+                std::string info = "Permission denied, token type is " + to_string(tokenType);
                 PermissionCheckFailRadar(info, "VerifyCaller");
                 throw BError(BError::Codes::SA_REFUSED_ACT,
                     string("Permission denied, token type is ").append(to_string(tokenType)));
@@ -276,13 +276,13 @@ void Service::VerifyCaller()
         }
         case Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL:
             if (IPCSkeleton::GetCallingUid() != BConstants::SYSTEM_UID) {
-                std::string info = "{\"reason\":\"invalid calling uid\"}";
+                std::string info = "invalid calling uid";
                 PermissionCheckFailRadar(info, "VerifyCaller");
                 throw BError(BError::Codes::SA_REFUSED_ACT, "Calling uid is invalid");
             }
             break;
         default:
-            std::string info = "{\"reason\":\"Permission denied, token type is " + to_string(tokenType) + "\"}";
+            std::string info = "Permission denied, token type is " + to_string(tokenType);
             PermissionCheckFailRadar(info, "VerifyCaller");
             throw BError(BError::Codes::SA_REFUSED_ACT, string("Invalid token type ").append(to_string(tokenType)));
             break;
@@ -1041,8 +1041,7 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
             auto backUpConnection = session_->GetExtConnection(bundleName);
             if (backUpConnection == nullptr) {
                 HILOGE("GetFileHandle error, backUpConnection is empty");
-                std::string resInfo = "{\"result_info\": {\"reason\": \"backUpConnection is empty\"}" ;
-                AppRadar::Info info (bundleName, "", resInfo);
+                AppRadar::Info info (bundleName, "", "backUpConnection is empty");
                 int32_t err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
                 AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
                                                              BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE, err);
@@ -1051,8 +1050,7 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
                 HILOGE("GetFileHandle error, Extension backup Proxy is empty");
-                std::string resInfo = "{\"result_info\": {\"reason\": \"Extension backup Proxy is empty\"}" ;
-                AppRadar::Info info (bundleName, "", resInfo);
+                AppRadar::Info info (bundleName, "", "Extension backup Proxy is empty");
                 int32_t err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
                 AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
                                                              BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE, err);
