@@ -67,6 +67,11 @@ constexpr int IPC_MAX_WAIT_TIME = 3000; // IPC通讯最大等待时间(s)
 constexpr int MAX_PARCELABLE_VECTOR_NUM = 10000;
 constexpr char FILE_SEPARATOR_CHAR = '/';
 
+// 分片打包常量
+const uint64_t DEFAULT_SLICE_SIZE = 100 * 1024 * 1024; // 分片文件大小为100M
+const uint32_t MAX_FILE_COUNT = 6000; // 单个tar包最多包含6000个文件
+const int FILE_AND_MANIFEST_FD_COUNT = 2; // 每组文件和简报数量统计
+
 constexpr int DEFAULT_VFS_CACHE_PRESSURE = 100; // 默认内存回收参数
 constexpr int BACKUP_VFS_CACHE_PRESSURE = 10000; // 备份过程修改参数
 
@@ -105,6 +110,8 @@ static inline std::string_view SA_BUNDLE_BACKUP_TMP_DIR = "/tmp/";
 static inline std::string_view BACKUP_TOOL_RECEIVE_DIR = "/data/backup/received/";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/base/.backup";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/base/.backup";
+static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME = "/storage/Users/currentUser/.backup";
+static inline std::string_view PATH_MEDIALDATA_BACKUP_HOME = "/storage/media/local/files/.backup";
 static inline std::string_view BACKUP_TOOL_LINK_DIR = "/data/backup";
 static inline std::string_view BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR = "/data/backup/incrementalreceived/";
 static inline std::string_view BACKUP_TOOL_MANIFEST = "/manifest";
@@ -112,6 +119,13 @@ static inline std::string_view BACKUP_TOOL_INCREMENTAL = "/incremental";
 static inline std::string BACKUP_DIR_PRE = "/data/storage/";
 static inline std::string CONTEXT_ELS[] = {"el1", "el2"};
 static inline std::string BACKUP_DIR_END = "/base/.backup/";
+
+// 文管bundleName
+static inline std::string BUNDLE_FILE_MANAGER = "hmos.filemanager";
+// 文管bundleNameSize
+constexpr size_t FM_LEN = 27;
+// 媒体库数据bundleName
+static inline std::string BUNDLE_MEDIAL_DATA = "com.ohos.medialibrary.medialibrarydata";
 // SA Ext
 constexpr int BACKUP_DEFAULT_SA_ID = -1;
 constexpr int BACKUP_SA_RELOAD_MAX = 2;
