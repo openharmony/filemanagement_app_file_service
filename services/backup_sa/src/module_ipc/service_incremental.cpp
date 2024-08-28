@@ -539,7 +539,7 @@ bool Service::IncrementalBackup(const string &bundleName)
         for (auto &fileName : fileNameVec) {
             ret = proxy->GetIncrementalFileHandle(fileName);
             if (ret) {
-                HILOGE("Failed to extension file handle %{public}s", fileName.c_str());
+                HILOGE("Failed to extension file handle %{public}s", GetAnonyString(fileName).c_str());
             }
         }
         return true;
