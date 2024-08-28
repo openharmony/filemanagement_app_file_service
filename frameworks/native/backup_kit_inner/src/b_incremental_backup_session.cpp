@@ -58,7 +58,7 @@ unique_ptr<BIncrementalBackupSession> BIncrementalBackupSession::Init(Callbacks 
             HILOGE("Failed to Backup because of %{public}d", res);
             AppRadar::Info info("", "", "");
             AppRadar::GetInstance().RecordBackupFuncRes(info, "BIncrementalBackupSession::Init",
-                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_CREATE_SESSION_BACKUP, res);
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_CREATE_BACKUP_SESSION_FAIL, res);
             return nullptr;
         }
 
@@ -105,7 +105,7 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
         }
         AppRadar::Info info(ss.c_str(), "", "");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "BIncrementalBackupSession::AppendBundles",
-            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES, res);
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
     return res;
 }
@@ -126,7 +126,7 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
         }
         AppRadar::Info info(ss.c_str(), "", "AppendBundles with infos");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "BIncrementalBackupSession::AppendBundles",
-            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES, res);
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
     return res;
 }

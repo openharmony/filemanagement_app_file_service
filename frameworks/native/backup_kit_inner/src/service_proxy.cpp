@@ -122,7 +122,7 @@ UniqueFd ServiceProxy::GetLocalCapabilities()
         HILOGE("Received error %{public}d when doing IPC", ret);
         AppRadar::Info resInfo("", "", "");
         AppRadar::GetInstance().RecordDefaultFuncRes(resInfo, "ServiceProxy::GetLocalCapabilities",
-            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_GET_LOCAL_CAPABILITIES, ret);
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_GET_LOCAL_CAPABILITIES_FAIL, ret);
         return UniqueFd(-ret);
     }
     UniqueFd fd(reply.ReadFileDescriptor());
@@ -307,7 +307,7 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<Bund
         }
         AppRadar::Info info(ss.c_str(), "", str);
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "ServiceProxy::AppendBundlesRestoreSession", userId,
-            BizStageRestore::BIZ_STAGE_APPEND_BUNDLES, ret);
+            BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
     return reply.ReadInt32();
@@ -351,7 +351,7 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
         }
         AppRadar::Info info(ss.c_str(), "", str);
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "ServiceProxy::AppendBundlesRestoreSession", userId,
-            BizStageRestore::BIZ_STAGE_APPEND_BUNDLES, ret);
+            BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
     return reply.ReadInt32();
@@ -472,7 +472,7 @@ sptr<IService> ServiceProxy::GetInstance()
         HILOGE("Load backup sa timeout");
         AppRadar::Info info("", "", "{\"reason\":\"Load backup sa timeout\"}");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "ServiceProxy::GetInstance",
-            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_BACKUP_SA,
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_BOOT_BACKUP_SA_FAIL,
             static_cast<int32_t>(BError::Codes::SA_INVAL_ARG));
         return nullptr;
     }
@@ -532,7 +532,7 @@ void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t sys
     isLoadSuccess_.store(false);
     AppRadar::Info info("", "", "{\"reason\":\"Load backup sa fail\"}");
     AppRadar::GetInstance().RecordBackupFuncRes(info, "ServiceProxyLoadCallback::OnLoadSystemAbilityFail",
-        AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_BACKUP_SA,
+        AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_BOOT_BACKUP_SA_FAIL,
         static_cast<int32_t>(BError::Codes::SA_INVAL_ARG));
     proxyConVar_.notify_one();
 }

@@ -146,7 +146,7 @@ void BackupExtExtension::CheckTmpDirFileInfos(bool isSpecialVersion)
         << idxFileInfos.size() - errFiles.size() << "\"" << "\"info\": \"different received file and idx\"";
         AppRadar::Info info (bundleName_, "", ss.str());
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::CheckTmpDirFileInfos",
-            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_DATA_CONSISTENCY,
+            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_CHECK_DATA_FAIL,
             static_cast<int32_t>(BError::BackupErrorCode::E_UKERR));
     } else {
         HILOGI("(Debug) The received file and idx is same");
@@ -181,7 +181,7 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
         << endFileInfos_.size() - errFileInfos_.size() << "\"";
         AppRadar::Info info (bundleName_, "", ss.str());
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::CheckRestoreFileInfos",
-            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_DATA_CONSISTENCY,
+            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_CHECK_DATA_FAIL,
             static_cast<int32_t>(BError::BackupErrorCode::E_UKERR));
         return { false, errFiles };
     }
@@ -269,7 +269,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreCallback(
             ss << "\"spend_time\": \"" << spendTime << "ms\"";
             AppRadar::Info info (extensionPtr->bundleName_, ss.str(), "");
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::OnRestoreCallback",
-                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_EXEC_ON_RESTORE, ERR_OK);
+                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
         }
         extensionPtr->FinishOnProcessTask();
         if (errMsg.empty()) {
@@ -302,7 +302,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreExCallbac
             ss << "\"spend_time\": \"" << spendTime << "ms\"";
             AppRadar::Info info (extensionPtr->bundleName_, ss.str(), "");
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::OnRestoreExCallback",
-                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_EXEC_ON_RESTORE, ERR_OK);
+                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
         }
         extensionPtr->FinishOnProcessTask();
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
@@ -361,7 +361,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
             AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreExCallback",
                 AppRadar::GetInstance().GetUserId(),
-                BizStageRestore::BIZ_STAGE_EXEC_ON_RESTORE, ERR_OK);
+                BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
         }
         extensionPtr->FinishOnProcessTask();
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
@@ -398,7 +398,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreCall
             ss << "\"spend_time\": \"" << spendTime << "ms\"";
             AppRadar::Info info (extensionPtr->bundleName_, ss.str(), "");
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreCallback",
-                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_EXEC_ON_RESTORE, ERR_OK);
+                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
         }
         extensionPtr->FinishOnProcessTask();
         if (errMsg.empty()) {

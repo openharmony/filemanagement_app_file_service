@@ -45,14 +45,14 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
         HILOGE("Inconsistent scenario, impl scenario:%{public}d", impl_.scenario);
         AppRadar::Info info("", "", "Inconsistent scenario");
         AppRadar::GetInstance().RecordDefaultFuncRes(info, "SvcSessionManager::VerifyCallerAndScenario", impl_.userId,
-                                                     BizStageBackup::BIZ_STAGE_PERMISSION_CHECK,
+                                                     BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL,
                                                      BError(BError::Codes::SDK_MIXED_SCENARIO).GetCode());
         throw BError(BError::Codes::SDK_MIXED_SCENARIO);
     }
     if (impl_.clientToken != clientToken) {
         AppRadar::Info info2("", "", "Caller mismatched");
         AppRadar::GetInstance().RecordDefaultFuncRes(info2, "SvcSessionManager::VerifyCallerAndScenario", impl_.userId,
-                                                     BizStageBackup::BIZ_STAGE_PERMISSION_CHECK,
+                                                     BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL,
                                                      BError(BError::Codes::SDK_MIXED_SCENARIO).GetCode());
         throw BError(BError::Codes::SA_REFUSED_ACT, "Caller mismatched");
     }
@@ -370,7 +370,7 @@ void SvcSessionManager::InitClient(Impl &newImpl)
         AppRadar::Info info ("", "", "client died");
         AppRadar::GetInstance().RecordDefaultFuncRes(info, "SvcSessionManager::InitClient",
                                                      AppRadar::GetInstance().GetUserId(),
-                                                     BizStageBackup::BIZ_STAGE_CLIENT_STATUS,
+                                                     BizStageBackup::BIZ_STAGE_CLIENT_ABNORMAL_EXIT,
                                                      BError(BError::Codes::SA_BROKEN_IPC).GetCode());
         (void)revPtrStrong->SessionDeactive();
     };

@@ -212,7 +212,7 @@ static inline void PermissionCheckFailRadar(const std::string &info, const std::
     std::string funcPos = "Service::";
     AppRadar::Info resInfo("", "", info);
     AppRadar::GetInstance().RecordDefaultFuncRes(resInfo, funcPos.append(func),
-                                                 GetUserIdDefault(), BizStageBackup::BIZ_STAGE_PERMISSION_CHECK,
+                                                 GetUserIdDefault(), BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL,
                                                  BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 }
 
@@ -1037,7 +1037,7 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
                 AppRadar::Info info (bundleName, "", "backUpConnection is empty");
                 int32_t err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
                 AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
-                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE, err);
+                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             auto proxy = backUpConnection->GetBackupExtProxy();
@@ -1046,7 +1046,7 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
                 AppRadar::Info info (bundleName, "", "Extension backup Proxy is empty");
                 int32_t err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
                 AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
-                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE, err);
+                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             int32_t errCode = 0;
@@ -1074,10 +1074,10 @@ void Service::OnBackupExtensionDied(const string &&bundleName)
     AppRadar::Info info (bundleName, "", "");
     if (session_->GetScenario() == IServiceReverse::Scenario::BACKUP) {
         AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::OnBackupExtensionDied", GetUserIdDefault(),
-                                                    BizStageBackup::BIZ_STAGE_EXTENSION_STATUS, errCode);
+                                                    BizStageBackup::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, errCode);
     } else if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::OnBackupExtensionDied", GetUserIdDefault(),
-                                                     BizStageRestore::BIZ_STAGE_EXTENSION_STATUS, errCode);
+                                                     BizStageRestore::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, errCode);
     }
     try {
         string callName = move(bundleName);
@@ -1193,10 +1193,10 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
         AppRadar::Info info (bundleName, "", "");
         if (scenario == IServiceReverse::Scenario::BACKUP) {
             AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::ExtConnectFailed", GetUserIdDefault(),
-                                                        BizStageBackup::BIZ_STAGE_BACKUP_EXTENSION, ret);
+                                                        BizStageBackup::BIZ_STAGE_CONNECT_EXTENSION_FAIL, ret);
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::ExtConnectFailed", GetUserIdDefault(),
-                                                         BizStageRestore::BIZ_STAGE_CONNECT_BACKUP_EXTENSION, ret);
+                                                         BizStageRestore::BIZ_STAGE_CONNECT_EXTENSION_FAIL, ret);
         }
         if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
@@ -1631,7 +1631,7 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
         HILOGE("Call Ext GetBackupInfo faild.");
         AppRadar::Info info(bundleName, "", "Call Ext GetBackupInfo faild");
         Backup::AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::GetBackupInfoCmdHandle", GetUserIdDefault(),
-                                                            BizStageBackup::BIZ_STAGE_GET_BACKUP_INFO, ret);
+                                                            BizStageBackup::BIZ_STAGE_GET_BACKUP_INFO_FAIL, ret);
         return BError(BError::Codes::SA_INVAL_ARG);
     }
 
@@ -1984,7 +1984,7 @@ std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bu
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
             AppRadar::Info info (bundleName, "", "on restore timeout");
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
-                                                         BizStageRestore::BIZ_STAGE_EXEC_ON_RESTORE, errCode);
+                                                         BizStageRestore::BIZ_STAGE_ON_RESTORE, errCode);
         }
         try {
             if (SAUtils::IsSABundleName(bundleName)) {

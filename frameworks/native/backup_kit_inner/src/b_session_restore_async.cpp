@@ -67,7 +67,7 @@ shared_ptr<BSessionRestoreAsync> BSessionRestoreAsync::Init(Callbacks callbacks)
             AppRadar::Info info ("", "", "create restore session failed");
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "BSessionRestoreAsync::Init",
                                                          AppRadar::GetInstance().GetUserId(),
-                                                         BizStageRestore::BIZ_STAGE_CREATE_SESSION_RESTORE, res);
+                                                         BizStageRestore::BIZ_STAGE_CREATE_RESTORE_SESSION_FAIL, res);
             return nullptr;
         }
 

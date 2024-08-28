@@ -132,7 +132,7 @@ void BackupExtExtension::VerifyCaller()
         AppRadar::Info info(bundleName_, "", "{\"reason\":\"Calling tokenType error\"}");
         AppRadar::GetInstance().RecordDefaultFuncRes(
             info, "BackupExtExtension::VerifyCaller", AppRadar::GetInstance().GetUserId(),
-            BizStageBackup::BIZ_STAGE_PERMISSION_CHECK, BError(BError::Codes::OK).GetCode());
+            BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL, BError(BError::Codes::OK).GetCode());
         throw BError(BError::Codes::EXT_BROKEN_IPC,
                      string("Calling tokenType is error, token type is ").append(to_string(tokenType)));
     }
@@ -140,7 +140,7 @@ void BackupExtExtension::VerifyCaller()
         AppRadar::Info info(bundleName_, "", "{\"reason\":\"Calling uid invalid\"}");
         AppRadar::GetInstance().RecordDefaultFuncRes(
             info, "BackupExtExtension::VerifyCaller", AppRadar::GetInstance().GetUserId(),
-            BizStageBackup::BIZ_STAGE_PERMISSION_CHECK, BError(BError::Codes::OK).GetCode());
+            BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL, BError(BError::Codes::OK).GetCode());
         throw BError(BError::Codes::EXT_BROKEN_IPC,
                      string("Calling uid is invalid, calling uid is ").append(to_string(IPCSkeleton::GetCallingUid())));
     }
