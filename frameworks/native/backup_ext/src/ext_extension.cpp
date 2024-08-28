@@ -47,7 +47,6 @@
 #include "b_json/b_json_cached_entity.h"
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_ohos/startup/backup_para.h"
-#include "b_radar/b_radar.h"
 #include "b_tarball/b_tarball_factory.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
@@ -69,6 +68,25 @@ const string INDEX_FILE_INCREMENTAL_BACKUP = string(BConstants::PATH_BUNDLE_BACK
 const string MEDIA_LIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
 const string FILE_MANAGER_BUNDLE_NAME = "com.ohos.filepicker";
 using namespace std;
+
+static void RecordDoRestoreRes(const std::string &bundleName, const std::string &func,
+    AppRadar::DoRestoreInfo &restoreInfo)
+{
+    std::stringstream ss;
+    ss << "\"bigFileNums\": " << restoreInfo.bigFileNum << ", ";
+    ss << "\"bigFileSize\": " << restoreInfo.bigFileSize << ", ";
+    ss << "\"RestoreBigFileTime\": " << restoreInfo.bigFileSpendTime << ", ";
+    ss << "\"unTarFileNums\": " << restoreInfo.tarFileNum << ", ";
+    ss << "\"unTarFileSize\": " << restoreInfo.tarFileSize << ", ";
+    ss << "\"unTarTime\": " << restoreInfo.tarFileSpendTime << ", ";
+    ss << "\"totalFileNum\": " << restoreInfo.bigFileNum + restoreInfo.tarFileNum << ", ";
+    ss << "\"totalFileSize\": " << restoreInfo.bigFileSize + restoreInfo.tarFileSize << ", ";
+    ss << "\"restoreAllFileTime\": " << restoreInfo.totalFileSpendTime;
+    int32_t err = static_cast<int32_t>(BError::Codes::OK);
+    AppRadar::Info info (bundleName, "", ss.str());
+    AppRadar::GetInstance().RecordRestoreFuncRes(info, func, AppRadar::GetInstance().GetUserId(),
+        BizStageRestore::BIZ_STAGE_DO_RESTORE, err);
+}
 
 static string GetIndexFileRestorePath(const string &bundleName)
 {
@@ -132,17 +150,17 @@ void BackupExtExtension::VerifyCaller()
         AppRadar::Info info(bundleName_, "", "{\"reason\":\"Calling tokenType error\"}");
         AppRadar::GetInstance().RecordDefaultFuncRes(
             info, "BackupExtExtension::VerifyCaller", AppRadar::GetInstance().GetUserId(),
-            BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL, BError(BError::Codes::OK).GetCode());
+            BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL, BError(BError::Codes::EXT_BROKEN_IPC).GetCode());
         throw BError(BError::Codes::EXT_BROKEN_IPC,
-                     string("Calling tokenType is error, token type is ").append(to_string(tokenType)));
+            string("Calling tokenType is error, token type is ").append(to_string(tokenType)));
     }
     if (IPCSkeleton::GetCallingUid() != BConstants::BACKUP_UID) {
         AppRadar::Info info(bundleName_, "", "{\"reason\":\"Calling uid invalid\"}");
         AppRadar::GetInstance().RecordDefaultFuncRes(
             info, "BackupExtExtension::VerifyCaller", AppRadar::GetInstance().GetUserId(),
-            BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL, BError(BError::Codes::OK).GetCode());
+            BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL, BError(BError::Codes::EXT_BROKEN_IPC).GetCode());
         throw BError(BError::Codes::EXT_BROKEN_IPC,
-                     string("Calling uid is invalid, calling uid is ").append(to_string(IPCSkeleton::GetCallingUid())));
+            string("Calling uid is invalid, calling uid is ").append(to_string(IPCSkeleton::GetCallingUid())));
     }
 }
 
@@ -246,7 +264,6 @@ static string GetReportFileName(const string &fileName)
 
 static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
 {
-    HILOGI("extension:GetIncreFileHandleForSpecialVersion, filename:%{public}s", fileName.c_str());
     ErrCode errCode = ERR_OK;
     UniqueFd fd = GetFileHandleForSpecialCloneCloud(fileName);
     if (fd < 0) {
@@ -792,12 +809,15 @@ int BackupExtExtension::DoIncrementalRestore()
     auto extManageInfo = GetExtManageInfo();
     std::tuple<int, EndFileInfo, ErrFileInfo> unPacketRes;
     ErrCode err = ERR_OK;
+    auto startTime = std::chrono::system_clock::now();
     for (auto item : fileSet) { // 处理要解压的tar文件
         off_t tarFileSize = 0;
         if (ExtractFileExt(item) == "tar" && !IsUserTar(item, extManageInfo, tarFileSize)) {
             if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
                 return EPERM;
             }
+            radarRestoreInfo_.tarFileNum++;
+            radarRestoreInfo_.tarFileSize += static_cast<uint64_t>(tarFileSize);
             // REM: 给定version
             // REM: 解压启动Extension时即挂载好的备份目录中的数据
             string path = GetRestoreTempPath(bundleName_);
@@ -817,6 +837,9 @@ int BackupExtExtension::DoIncrementalRestore()
             HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
         }
     }
+    auto endTime = std::chrono::system_clock::now();
+    radarRestoreInfo_.tarFileSpendTime =
+        std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
     return err;
 }
 
@@ -841,7 +864,7 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
             auto ret = ptr->DoBackup(cache);
             auto end = std::chrono::system_clock::now();
             auto cost = to_string(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
-            AppRadar::Info info(ptr->bundleName_, "", string("{\"spend_time\":").append(cost).append(string("ms\"}")));
+            AppRadar::Info info(ptr->bundleName_, "", string("\"spend_time\":").append(cost).append(string("ms\"")));
             AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::AsyncTaskBackup",
                 AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, static_cast<int32_t>(ret));
             // REM: 处理返回结果 ret
@@ -911,6 +934,8 @@ ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &
     if (untarPath.back() != BConstants::FILE_SEPARATOR_CHAR) {
         untarPath += BConstants::FILE_SEPARATOR_CHAR;
     }
+    HILOGI("Start to untar file = %{public}s, untarPath = %{public}s", GetAnonyPath(item.hashName).c_str(),
+        GetAnonyPath(untarPath).c_str());
     auto [err, fileInfos, errInfos] = UntarFile::GetInstance().UnPacket(tarName, untarPath);
     if (isDebug_) {
         endFileInfos_.merge(fileInfos);
@@ -939,6 +964,7 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManageInfo();
     HILOGI("Start do restore for SpecialCloneCloud.");
+    auto startTime = std::chrono::system_clock::now();
     for (auto &item : info) {
         if (item.hashName.empty()) {
             HILOGE("Hash name empty");
@@ -946,9 +972,13 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
         }
         if (item.isUserTar || item.isBigFile) {
             // 大文件处理
+            radarRestoreInfo_.bigFileNum++;
+            radarRestoreInfo_.bigFileSize += static_cast<uint64_t>(item.sta.st_size);
             RestoreBigFilesForSpecialCloneCloud(item);
         } else {
             // 待解压tar文件处理
+            radarRestoreInfo_.tarFileNum++;
+            radarRestoreInfo_.tarFileSize += static_cast<uint64_t>(item.sta.st_size);
             int ret = RestoreTarForSpecialCloneCloud(item);
             if (isDebug_ && ret != ERR_OK) {
                 errFileInfos_[item.hashName].push_back(ret);
@@ -963,6 +993,10 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
     if (!RemoveFile(INDEX_FILE_RESTORE)) {
         HILOGE("Failed to delete the backup index %{public}s", INDEX_FILE_RESTORE.c_str());
     }
+    auto endTime = std::chrono::system_clock::now();
+    radarRestoreInfo_.totalFileSpendTime =
+        std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    RecordDoRestoreRes(bundleName_, "BackupExtExtension::RestoreFilesForSpecialCloneCloud", radarRestoreInfo_);
     HILOGI("End do restore for SpecialCloneCloud.");
     return ERR_OK;
 }
@@ -1023,11 +1057,13 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManageInfo();
     HILOGI("Start Restore Big Files");
+    auto start = std::chrono::system_clock::now();
     for (auto &item : info) {
         if (item.hashName.empty() || (!item.isUserTar && !item.isBigFile)) {
             continue;
         }
-
+        radarRestoreInfo_.bigFileNum++;
+        radarRestoreInfo_.bigFileSize += static_cast<uint64_t>(item.sta.st_size);
         string itemHashName = item.hashName;
         string itemFileName = item.fileName;
         // check if item.hasName and fileName need decode by report item attribute
@@ -1059,6 +1095,8 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
 
         RestoreBigFileAfter(filePath, item.sta);
     }
+    auto end = std::chrono::system_clock::now();
+    radarRestoreInfo_.bigFileSpendTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     HILOGI("End Restore Big Files");
 }
 
@@ -1167,16 +1205,6 @@ void BackupExtExtension::HandleSpecialVersionRestore()
     }
 }
 
-void RecordDoRestoreRes(const std::string &bundleName, const std::string &func, int32_t ms)
-{
-    std::stringstream ss;
-    ss << "\"spend_time\": \"" << ms << "ms\"";
-    int32_t err = static_cast<int32_t>(BError::Codes::OK);
-    AppRadar::Info info (bundleName, "", ss.str());
-    AppRadar::GetInstance().RecordRestoreFuncRes(info, func, AppRadar::GetInstance().GetUserId(),
-                                                 BizStageRestore::BIZ_STAGE_DO_RESTORE, err);
-}
-
 void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
     const std::vector<ExtManageInfo> extManageInfo)
 {
@@ -1191,7 +1219,6 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
                 return;
             }
             // 解压
-            auto startTime = std::chrono::system_clock::now();
             for (auto item : fileSet) { // 处理要解压的tar文件
                 off_t tarFileSize = 0;
                 if (ExtractFileExt(item) == "tar" && !IsUserTar(item, extManageInfo, tarFileSize)) {
@@ -1204,10 +1231,6 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
                 ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpecialVersionForCloneAndCloud();
             ptr->RestoreBigFiles(appendTargetPath);
             ptr->DeleteBackupTars();
-            auto endTime = std::chrono::system_clock::now();
-            auto spendTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count();
-            RecordDoRestoreRes(ptr->bundleName_, "BackupExtExtension::AsyncTaskRestore",
-                static_cast<int32_t>(spendTime));
             if (ret == ERR_OK) {
                 ptr->AsyncTaskRestoreForUpgrade();
             } else {
@@ -1254,16 +1277,16 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
             bool appendTargetPath =
                 ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpecialVersionForCloneAndCloud();
             ptr->RestoreBigFiles(appendTargetPath);
-
             // delete 1.tar/manage.json
             ptr->DeleteBackupIncrementalTars();
             if (ptr != nullptr && ptr->isDebug_) {
                 ptr->CheckRestoreFileInfos();
             }
             auto endTime = std::chrono::system_clock::now();
-            auto spendTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count();
+            ptr->radarRestoreInfo_.totalFileSpendTime =
+                std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
             RecordDoRestoreRes(ptr->bundleName_, "BackupExtExtension::AsyncTaskIncrementalRestore",
-                static_cast<int32_t>(spendTime));
+                ptr->radarRestoreInfo_);
             if (ret == ERR_OK) {
                 HILOGI("after extra, do incremental restore.");
                 ptr->AsyncTaskIncrementalRestoreForUpgrade();
@@ -1875,6 +1898,22 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
     return ret;
 }
 
+int BackupExtExtension::DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd manifestFd)
+{
+    auto start = std::chrono::system_clock::now();
+    vector<struct ReportFileInfo> allFiles;
+    vector<struct ReportFileInfo> smallFiles;
+    vector<struct ReportFileInfo> bigFiles;
+    CompareFiles(move(incrementalFd), move(manifestFd), allFiles, smallFiles, bigFiles);
+    auto ret = DoIncrementalBackup(allFiles, smallFiles, bigFiles);
+    auto end = std::chrono::system_clock::now();
+    auto cost = to_string(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    AppRadar::Info info(bundleName_, "", string("\"spend_time\":").append(cost).append(string("ms\"")));
+    AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::AsyncTaskDoIncrementalBackup",
+        AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, static_cast<int32_t>(ret));
+    return ret;
+}
+
 void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
 {
     HILOGI("Do IncrementalBackup, start fwk timer begin.");
@@ -1901,11 +1940,7 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
             }
             close(incrementalFdDup);
             close(manifestFdDup);
-            vector<struct ReportFileInfo> allFiles;
-            vector<struct ReportFileInfo> smallFiles;
-            vector<struct ReportFileInfo> bigFiles;
-            ptr->CompareFiles(move(incrementalDupFd), move(manifestDupFd), allFiles, smallFiles, bigFiles);
-            auto ret = ptr->DoIncrementalBackup(allFiles, smallFiles, bigFiles);
+            auto ret = ptr->DoIncrementalBackupTask(move(incrementalDupFd), move(manifestDupFd));
             ptr->AppIncrementalDone(ret);
             HILOGI("Incremental backup app done %{public}d", ret);
         } catch (const BError &e) {
