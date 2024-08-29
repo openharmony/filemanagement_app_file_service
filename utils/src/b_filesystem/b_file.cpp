@@ -186,10 +186,19 @@ bool BFile::MoveFile(const string &from, const string &to)
             throw BError(errno);
         }
         newPath.append("/").append(basename(name.get()));
-        if (rename(oldPath.c_str(), newPath.c_str())) {
-            HILOGE("failed to rename path, oldPath: %{public}s, newPath: %{public}s, errno: %{public}d",
-                GetAnonyPath(oldPath).c_str(), GetAnonyPath(newPath).c_str(), errno);
-            throw BError(errno);
+        if (rename(oldPath.c_str(), newPath.c_str()) != 0) {
+            HILOGI("rename err,try copy errno: %{public}d", errno);
+            UniqueFd fdFrom(open(oldPath.data(), O_RDONLY));
+            if (fdFrom == -1) { // -1: fd error code
+                HILOGE("failed to open the file %{public}s", GetAnonyPath(from).c_str());
+                throw BError(errno);
+            }
+            UniqueFd fdTo(open(newPath.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+            if (fdTo == -1) { // -1: fd error code
+                HILOGE("failed to open the file %{public}s", GetAnonyPath(to).c_str());
+                throw BError(errno);
+            }
+            SendFile(fdTo, fdFrom);
         }
         return true;
     } catch (const BError &e) {

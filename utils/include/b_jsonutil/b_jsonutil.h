@@ -34,7 +34,6 @@ public:
      * @brief 带有拼接字符的bundleName按照拼接字符进行分割
      *
      * @param bundleNameStr bundleName拼接index的字符串
-     * @param patternInfo 拼接字符串
      *
      * @return 分割好的结果赋值给结构体
      */
@@ -95,6 +94,17 @@ public:
      *
      */
     static bool BuildRestoreErrInfo(std::string &jsonStr, int errCode, std::string errMsg);
+
+    /**
+     * @brief 组建App进度返回的信息
+     *
+     * @param jsonStr 组建结果
+     * @param onProcessRet onProcess接口返回值
+     *
+     * @return 是否组建成功
+     *
+     */
+    static bool BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet);
 };
 } // namespace OHOS::FileManagement::Backup
 

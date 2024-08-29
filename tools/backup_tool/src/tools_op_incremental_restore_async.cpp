@@ -246,6 +246,11 @@ static void OnResultReport(shared_ptr<InrementalSessionAsync> ctx, const std::st
     printf("OnResultReport bundleName = %s, resultInfo = %s\n", bundleName.c_str(), resultInfo.c_str());
 }
 
+static void OnProcess(shared_ptr<Session> ctx, const std::string bundleName, const std::string processInfo)
+{
+    printf("OnProcess bundleName = %s, processInfo = %s\n", bundleName.c_str(), processInfo.c_str());
+}
+
 static void RestoreApp(shared_ptr<InrementalSessionAsync> restore, vector<BundleName> &bundleNames)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "RestoreApp");
@@ -402,7 +407,8 @@ static int32_t InitArg(const string &pathCapFile,
         .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
         .onResultReport = bind(OnResultReport, ctx, placeholders::_1, placeholders::_2),
-        .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
+        .onBackupServiceDied = bind(OnBackupServiceDied, ctx),
+        .onProcess = bind(OnProcess, ctx, placeholders::_1, placeholders::_2)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init restore\n");
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);
