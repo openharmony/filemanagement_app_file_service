@@ -39,24 +39,29 @@ private:
     int32_t CmdBackupOnResultReport(MessageParcel &data, MessageParcel &reply);
     int32_t CmdBackupOnBundleFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdBackupOnAllBundlesFinished(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdBackupOnProcessInfo(MessageParcel &data, MessageParcel &reply);
 
     int32_t CmdRestoreOnBundleStarted(MessageParcel &data, MessageParcel &reply);
     int32_t CmdRestoreOnBundleFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdRestoreOnAllBundlesFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdRestoreOnFileReady(MessageParcel &data, MessageParcel &reply);
     int32_t CmdRestoreOnResultReport(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdRestoreOnProcessInfo(MessageParcel &data, MessageParcel &reply);
 
     int32_t CmdIncrementalBackupOnFileReady(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalBackupOnBundleStarted(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalBackupOnResultReport(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalBackupOnBundleFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalBackupOnAllBundlesFinished(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdIncrementalBackupOnProcessInfo(MessageParcel &data, MessageParcel &reply);
 
     int32_t CmdIncrementalRestoreOnBundleStarted(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalRestoreOnBundleFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalRestoreOnAllBundlesFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalRestoreOnFileReady(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalRestoreOnResultReport(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdIncrementalRestoreOnProcessInfo(MessageParcel &data, MessageParcel &reply);
+    void ServiceReverseStubSupplement();
 };
 } // namespace OHOS::FileManagement::Backup
 

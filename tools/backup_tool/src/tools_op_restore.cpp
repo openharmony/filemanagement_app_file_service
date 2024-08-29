@@ -197,6 +197,11 @@ static void OnBackupServiceDied(shared_ptr<Session> ctx)
     ctx->TryNotify(true);
 }
 
+static void OnProcess(shared_ptr<Session> ctx, const std::string bundleName, const std::string processInfo)
+{
+    printf("OnProcess bundleName = %s, processInfo = %s\n", bundleName.c_str(), processInfo.c_str());
+}
+
 static void RestoreApp(shared_ptr<Session> restore, vector<BundleName> &bundleNames, bool updateSendFiles)
 {
     StartTrace(HITRACE_TAG_FILEMANAGEMENT, "RestoreApp");
@@ -257,7 +262,8 @@ static int32_t InitRestoreSession(shared_ptr<Session> ctx)
         .onBundleFinished = bind(OnBundleFinished, ctx, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(OnAllBundlesFinished, ctx, placeholders::_1),
         .onResultReport = bind(OnResultReport, ctx, placeholders::_1, placeholders::_2),
-        .onBackupServiceDied = bind(OnBackupServiceDied, ctx)});
+        .onBackupServiceDied = bind(OnBackupServiceDied, ctx),
+        .onProcess = bind(OnProcess, ctx, placeholders::_1, placeholders::_2)});
     if (ctx->session_ == nullptr) {
         printf("Failed to init restore\n");
         FinishTrace(HITRACE_TAG_FILEMANAGEMENT);

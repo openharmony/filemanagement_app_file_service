@@ -45,23 +45,27 @@ public:
     MOCK_METHOD2(BackupOnResultReport, void(string result, std::string bundleName));
     MOCK_METHOD2(BackupOnBundleFinished, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(BackupOnAllBundlesFinished, void(int32_t errCode));
+    MOCK_METHOD2(BackupOnProcessInfo, void(std::string bundleName, std::string processInfo));
     MOCK_METHOD2(RestoreOnBundleStarted, void(int32_t errCode, std::string bundleName));
     MOCK_METHOD2(RestoreOnBundleFinished, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(RestoreOnAllBundlesFinished, void(int32_t errCode));
     MOCK_METHOD4(RestoreOnFileReady, void(string bundleName, string fileName, int fd, int32_t errCode));
     MOCK_METHOD3(RestoreOnResultReport, void(string result, string bundleName, ErrCode errCode));
+    MOCK_METHOD2(RestoreOnProcessInfo, void(std::string bundleName, std::string processInfo));
     MOCK_METHOD5(IncrementalBackupOnFileReady,
         void(string bundleName, string fileName, int fd, int manifestFd, int32_t errCode));
     MOCK_METHOD2(IncrementalBackupOnBundleStarted, void(int32_t errCode, string bundleName));
     MOCK_METHOD2(IncrementalBackupOnResultReport, void(string result, std::string bundleName));
     MOCK_METHOD2(IncrementalBackupOnBundleFinished, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(IncrementalBackupOnAllBundlesFinished, void(int32_t errCode));
+    MOCK_METHOD2(IncrementalBackupOnProcessInfo, void(std::string bundleName, std::string processInfo));
     MOCK_METHOD2(IncrementalRestoreOnBundleStarted, void(int32_t errCode, std::string bundleName));
     MOCK_METHOD2(IncrementalRestoreOnBundleFinished, void(int32_t errCode, string bundleName));
     MOCK_METHOD1(IncrementalRestoreOnAllBundlesFinished, void(int32_t errCode));
     MOCK_METHOD5(IncrementalRestoreOnFileReady,
         void(string bundleName, string fileName, int fd, int manifestFd, int32_t errCode));
     MOCK_METHOD3(IncrementalRestoreOnResultReport, void(string result, string bundleName, ErrCode errCode));
+    MOCK_METHOD2(IncrementalRestoreOnProcessInfo, void(std::string bundleName, std::string processInfo));
 };
 
 class ServiceReverseStubTest : public testing::Test {

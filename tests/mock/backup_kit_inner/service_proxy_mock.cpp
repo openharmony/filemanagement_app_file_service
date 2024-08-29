@@ -187,6 +187,11 @@ ErrCode ServiceProxy::UpdateSendRate(std::string &bundleName, int32_t sendRate, 
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario)
+{
+    return BError(BError::Codes::OK);
+}
+
 sptr<IService> ServiceProxy::GetInstance()
 {
     if (!GetMockGetInstance()) {
