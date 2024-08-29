@@ -414,12 +414,12 @@ int32_t ServiceStub::CmdUpdateTimer(MessageParcel &data, MessageParcel &reply)
     if (!data.ReadString(bundleName)) {
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive bundleName"));
     }
-    uint32_t timeOut;
-    if (!data.ReadUint32(timeOut)) {
-        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive timeOut"));
+    uint32_t timeout;
+    if (!data.ReadUint32(timeout)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive timeout"));
     }
     bool result;
-    ret = UpdateTimer(bundleName, timeOut, result);
+    ret = UpdateTimer(bundleName, timeout, result);
     if (ret != ERR_OK) {
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to call UpdateTimer"));
     }

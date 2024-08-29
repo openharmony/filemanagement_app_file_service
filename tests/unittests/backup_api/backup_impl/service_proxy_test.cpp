@@ -1030,8 +1030,8 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_UpdateTimer_0100, testing::ext::Tes
         .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
     bool result;
     std::string bundleName = "com.example.app2backup";
-    uint32_t timeOut = 30000;
-    int32_t ret = proxy_->UpdateTimer(bundleName, timeOut, result);
+    uint32_t timeout = 30000;
+    int32_t ret = proxy_->UpdateTimer(bundleName, timeout, result);
     EXPECT_EQ(ret, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_UpdateTimer_0100";
 }

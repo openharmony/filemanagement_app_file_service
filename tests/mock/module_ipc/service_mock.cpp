@@ -226,7 +226,7 @@ ErrCode Service::StartFwkTimer(bool &isFwkStart)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result)
 {
     return BError(BError::Codes::OK);
 }
