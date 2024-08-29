@@ -273,7 +273,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
     auto extBackup = std::make_shared<OHOS::FileManagement::Backup::ExtBackup>();
-    auto extension = std::make_shared<OHOS::FileManagement::Backup::BackupExtExtension>(extBackup);
+    auto extension = std::make_shared<OHOS::FileManagement::Backup::BackupExtExtension>(extBackup, "");
 
     OHOS::OnRemoteRequestFuzzTest(extension, data, size);
     OHOS::InitFuzzTest(extBackup, data, size);
