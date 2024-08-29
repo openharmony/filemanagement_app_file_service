@@ -106,8 +106,9 @@ public:
      * @brief 激活会话
      *
      * @param impl 客户端信息
+     * @param isOccupyingSession 框架是否自占用session
      */
-    ErrCode Active(Impl newImpl, bool force = false);
+    ErrCode Active(Impl newImpl, bool isOccupyingSession = false);
 
     /**
      * @brief 关闭会话

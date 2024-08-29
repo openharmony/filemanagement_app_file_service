@@ -67,6 +67,7 @@ public:
         }
         bundleName_ = bundleName;
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        SetStagingPathProperties();
     }
     ~BackupExtExtension()
     {
@@ -261,6 +262,7 @@ private:
     void CloseOnProcessTimeOutTimer();
     void UpdateOnStartTime();
     int32_t GetOnStartTimeCost();
+    bool SetStagingPathProperties();
 
 private:
     std::shared_mutex lock_;

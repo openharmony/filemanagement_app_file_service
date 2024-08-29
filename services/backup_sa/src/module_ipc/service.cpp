@@ -76,7 +76,6 @@ namespace {
 constexpr int32_t DEBUG_ID = 100;
 constexpr int32_t INDEX = 3;
 constexpr int32_t MS_1000 = 1000;
-constexpr int DEFAULT_FD_SEND_RATE = 60;
 const static string BROADCAST_TYPE = "broadcast";
 const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 const static string UNICAST_TYPE = "unicast";
@@ -115,6 +114,7 @@ void Service::OnStart()
         residualBundleNameList = clearRecorder_->GetAllClearBundleRecords();
     }
     if (!bundleNameList.empty() || !residualBundleNameList.empty()) {
+        SetOccupySession(true);
         session_->Active(
             {
                 .clientToken = IPCSkeleton::GetCallingTokenID(),
@@ -122,8 +122,7 @@ void Service::OnStart()
                 .clientProxy = nullptr,
                 .userId = GetUserIdDefault(),
             },
-            true);
-        isCleanService_.store(true);
+            isOccupyingSession_.load());
         HILOGI("SA OnStart, cleaning up backup data");
     }
     bool res = SystemAbility::Publish(sptr(this));
@@ -131,11 +130,16 @@ void Service::OnStart()
     sched_->StartTimer();
     ClearDisposalOnSaStart();
     auto ret = AppendBundlesClearSession(residualBundleNameList);
-    if (isCleanService_.load() && ret) {
-        isCleanService_.store(false);
+    if (isOccupyingSession_.load() && ret) {
+        SetOccupySession(false);
         StopAll(nullptr, true);
     }
     HILOGI("SA OnStart End, res = %{public}d", res);
+}
+
+void Service::SetOccupySession(bool isOccupyingSession)
+{
+    isOccupyingSession_.store(isOccupyingSession);
 }
 
 void Service::OnStop()
@@ -159,7 +163,7 @@ UniqueFd Service::GetLocalCapabilities()
            so there must be set init userId.
         */
         HILOGI("Begin");
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("GetLocalCapabilities error, session is empty.");
             return UniqueFd(-EPERM);
         }
@@ -454,7 +458,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -529,7 +533,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -635,7 +639,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -678,7 +682,7 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -848,9 +852,9 @@ ErrCode Service::AppDone(ErrCode errCode)
             proxy->HandleClear();
             session_->StopFwkTimer(callerName);
             session_->StopExtTimer(callerName);
-            NotifyCallerCurAppDone(errCode, callerName);
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
+            NotifyCallerCurAppDone(errCode, callerName);
         }
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
@@ -1142,8 +1146,6 @@ void Service::ExtStart(const string &bundleName)
         if (!proxy) {
             throw BError(BError::Codes::SA_INVAL_ARG, "ExtStart bundle task error, Extension backup Proxy is empty");
         }
-        std::string name = bundleName;
-        proxy->UpdateFdSendRate(name, DEFAULT_FD_SEND_RATE);
         if (scenario == IServiceReverse::Scenario::BACKUP) {
             auto ret = proxy->HandleBackup(session_->GetClearDataFlag(bundleName));
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
@@ -1580,8 +1582,8 @@ void Service::ClearResidualBundleData(const std::string &bundleName)
         backUpConnection->DisconnectBackupExtAbility();
     }
     ClearSessionAndSchedInfo(bundleName);
-    if (isCleanService_.load() && session_->IsOnAllBundlesFinished()) {
-        isCleanService_.store(false);
+    if (isOccupyingSession_.load() && session_->IsOnAllBundlesFinished()) {
+        SetOccupySession(false);
         StopAll(nullptr, true);
         return ;
     }
@@ -1642,7 +1644,7 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
 {
     try {
         HILOGI("Service::GetBackupInfo begin.");
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Get BackupInfo error, session is empty.");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -1773,7 +1775,7 @@ ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &res
     };
     try {
         HILOGI("Service::UpdateTimer begin.");
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Update Timer error, session is empty.");
             result = false;
             return BError(BError::Codes::SA_INVAL_ARG);
@@ -1795,7 +1797,7 @@ ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool 
 {
     try {
         HILOGI("Begin, bundle name:%{public}s, sendRate is:%{public}d", bundleName.c_str(), sendRate);
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Update Send Rate error, session is empty.");
             result = false;
             return BError(BError::Codes::SA_INVAL_ARG);

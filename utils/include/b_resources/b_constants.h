@@ -126,6 +126,7 @@ static inline std::string_view BACKUP_TOOL_INCREMENTAL = "/incremental";
 static inline std::string BACKUP_DIR_PRE = "/data/storage/";
 static inline std::string CONTEXT_ELS[] = {"el1", "el2"};
 static inline std::string BACKUP_DIR_END = "/base/.backup/";
+static inline std::string BUNDLE_BASE_DIR = "/data/storage/el2/base";
 
 // 文管bundleName
 static inline std::string BUNDLE_FILE_MANAGER = "hmos.filemanager";
