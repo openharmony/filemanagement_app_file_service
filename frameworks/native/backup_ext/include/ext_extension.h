@@ -220,6 +220,8 @@ private:
     void SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void CloseOnProcessTimeOutTimer();
+    void UpdateOnStartTime();
+    int32_t GetOnStartTimeCost();
 
     void HandleSpecialVersionRestore(wptr<BackupExtExtension> obj);
     void DeleteBackupIncrementalTars();
@@ -247,6 +249,8 @@ private:
     std::condition_variable execOnProcessCon_;
     std::mutex onProcessLock_;
     std::atomic<bool> onProcessTimeout_ {false};
+    std::chrono::time_point<std::chrono::system_clock> g_onStart;
+    std::mutex onStartTimeLock_;
     bool isClearData_ {true};
 };
 } // namespace OHOS::FileManagement::Backup

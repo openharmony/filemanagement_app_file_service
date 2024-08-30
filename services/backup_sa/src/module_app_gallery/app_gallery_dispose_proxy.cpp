@@ -13,15 +13,16 @@
  * limitations under the License.
  */
 
-#include "module_app_gallery/app_gallery_dispose_proxy.h"
-
 #include <string>
 
-#include "message_parcel.h"
-#include "want.h"
-
-#include "module_app_gallery/app_gallery_service_connection.h"
+#include "b_radar/b_radar.h"
+#include "b_sa/b_sa_utils.h"
 #include "filemgmt_libhilog.h"
+#include "message_parcel.h"
+
+#include "module_app_gallery/app_gallery_dispose_proxy.h"
+#include "module_app_gallery/app_gallery_service_connection.h"
+#include "want.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -85,6 +86,32 @@ DisposeErr AppGalleryDisposeProxy::EndRestore(const std::string &bundleName)
     return DoDispose(bundleName, DisposeOperation::END_RESTORE);
 }
 
+void RecordDoDisposeRes(const std::string &bundleName,
+                        AppGalleryDisposeProxy::DisposeOperation disposeOperation, int32_t err)
+{
+    AppRadar::Info info (bundleName, "", "");
+    switch (disposeOperation) {
+        case AppGalleryDisposeProxy::DisposeOperation::START_BACKUP:
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "StartBackup", AppRadar::GetInstance().GetUserId(),
+                                                        BizStageBackup::BIZ_STAGE_START_DISPOSE_FAIL, err);
+            break;
+        case AppGalleryDisposeProxy::DisposeOperation::END_BACKUP:
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "EndBackup", AppRadar::GetInstance().GetUserId(),
+                                                        BizStageBackup::BIZ_STAGE_END_DISPOSE_FAIL, err);
+            break;
+        case AppGalleryDisposeProxy::DisposeOperation::START_RESTORE:
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "StartRestore", AppRadar::GetInstance().GetUserId(),
+                                                         BizStageRestore::BIZ_STAGE_START_DISPOSE_FAIL, err);
+            break;
+        case AppGalleryDisposeProxy::DisposeOperation::END_RESTORE:
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "EndRestore", AppRadar::GetInstance().GetUserId(),
+                                                         BizStageRestore::BIZ_STAGE_END_DISPOSE_FAIL, err);
+            break;
+        default:
+            break;
+    }
+}
+
 DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, DisposeOperation disposeOperation)
 {
     HILOGI("DoDispose, app %{public}s, operation %{public}d", bundleName.c_str(), disposeOperation);
@@ -114,6 +141,7 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
     int32_t ret = appRemoteObj_->SendRequest(static_cast<int>(disposeOperation), data, reply, option);
     if (ret != ERR_NONE) {
         HILOGI("SendRequest error, code=%{public}d, bundleName=%{public}s", ret, bundleName.c_str());
+        RecordDoDisposeRes(bundleName, disposeOperation, ret);
         return DisposeErr::REQUEST_FAIL;
     }
 

@@ -47,6 +47,7 @@
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_ohos/startup/backup_para.h"
 #include "b_process/b_multiuser.h"
+#include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
 #include "bundle_mgr_client.h"
@@ -192,6 +193,15 @@ void Service::StopAll(const wptr<IRemoteObject> &obj, bool force)
     session_->Deactive(obj, force);
 }
 
+static inline void PermissionCheckFailRadar(const std::string &info, const std::string &func)
+{
+    std::string funcPos = "Service::";
+    AppRadar::Info resInfo("", "", info);
+    AppRadar::GetInstance().RecordDefaultFuncRes(resInfo, funcPos.append(func),
+                                                 GetUserIdDefault(), BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL,
+                                                 BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+}
+
 string Service::VerifyCallerAndGetCallerName()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -200,6 +210,7 @@ string Service::VerifyCallerAndGetCallerName()
     if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_HAP) {
         Security::AccessToken::HapTokenInfo hapTokenInfo;
         if (Security::AccessToken::AccessTokenKit::GetHapTokenInfo(tokenCaller, hapTokenInfo) != 0) {
+            PermissionCheckFailRadar("Get hap token info failed", "VerifyCallerAndGetCallerName");
             throw BError(BError::Codes::SA_INVAL_ARG, "Get hap token info failed");
         }
         session_->VerifyBundleName(hapTokenInfo.bundleName);
@@ -207,6 +218,8 @@ string Service::VerifyCallerAndGetCallerName()
     } else {
         string str = to_string(tokenCaller);
         HILOGE("tokenID = %{private}s", GetAnonyString(str).c_str());
+        std::string info = string("Invalid token type").append(to_string(tokenType)).append(string("\"}"));
+        PermissionCheckFailRadar(info, "VerifyCallerAndGetCallerName");
         throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
     }
 }
@@ -222,6 +235,8 @@ void Service::VerifyCaller()
             const string permission = "ohos.permission.BACKUP";
             if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
                 Security::AccessToken::TypePermissionState::PERMISSION_DENIED) {
+                std::string info = "Permission denied, token type is " + to_string(tokenType);
+                PermissionCheckFailRadar(info, "VerifyCaller");
                 throw BError(BError::Codes::SA_INVAL_ARG,
                              string("Permission denied, token type is ").append(to_string(tokenType)));
             }
@@ -229,10 +244,14 @@ void Service::VerifyCaller()
         }
         case Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL:
             if (IPCSkeleton::GetCallingUid() != BConstants::SYSTEM_UID) {
+                std::string info = "invalid calling uid";
+                PermissionCheckFailRadar(info, "VerifyCaller");
                 throw BError(BError::Codes::SA_INVAL_ARG, "Calling uid is invalid");
             }
             break;
         default:
+            std::string info = "Permission denied, token type is " + to_string(tokenType);
+            PermissionCheckFailRadar(info, "VerifyCaller");
             throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
             break;
     }
@@ -942,11 +961,19 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
             auto backUpConnection = session_->GetExtConnection(bundleName);
             if (backUpConnection == nullptr) {
                 HILOGE("GetFileHandle error, backUpConnection is empty");
+                AppRadar::Info info (bundleName, "", "backUpConnection is empty");
+                int32_t err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
+                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
                 HILOGE("GetFileHandle error, Extension backup Proxy is empty");
+                AppRadar::Info info (bundleName, "", "Extension backup Proxy is empty");
+                int32_t err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
+                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             int32_t errCode = 0;
@@ -970,6 +997,15 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 void Service::OnBackupExtensionDied(const string &&bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    int32_t errCode = BError(BError::Codes::EXT_ABILITY_DIED).GetCode();
+    AppRadar::Info info (bundleName, "", "");
+    if (session_->GetScenario() == IServiceReverse::Scenario::BACKUP) {
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::OnBackupExtensionDied", GetUserIdDefault(),
+                                                    BizStageBackup::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, errCode);
+    } else if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::OnBackupExtensionDied", GetUserIdDefault(),
+                                                     BizStageRestore::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, errCode);
+    }
     try {
         string callName = move(bundleName);
         HILOGE("Backup <%{public}s> Extension Process Died", callName.c_str());
@@ -1102,6 +1138,14 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
     try {
         HILOGE("begin %{public}s", bundleName.data());
         IServiceReverse::Scenario scenario = session_->GetScenario();
+        AppRadar::Info info (bundleName, "", "");
+        if (scenario == IServiceReverse::Scenario::BACKUP) {
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::ExtConnectFailed", GetUserIdDefault(),
+                                                        BizStageBackup::BIZ_STAGE_CONNECT_EXTENSION_FAIL, ret);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::ExtConnectFailed", GetUserIdDefault(),
+                                                         BizStageRestore::BIZ_STAGE_CONNECT_EXTENSION_FAIL, ret);
+        }
         if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
         } else if (scenario == IServiceReverse::Scenario::RESTORE &&
@@ -1515,6 +1559,9 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
     backupConnection->DisconnectBackupExtAbility();
     if (ret != ERR_OK) {
         HILOGE("Call Ext GetBackupInfo faild.");
+        AppRadar::Info info(bundleName, "", "Call Ext GetBackupInfo faild");
+        Backup::AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::GetBackupInfoCmdHandle", GetUserIdDefault(),
+                                                            BizStageBackup::BIZ_STAGE_GET_BACKUP_INFO_FAIL, ret);
         return BError(BError::Codes::SA_INVAL_ARG);
     }
 

@@ -47,6 +47,7 @@
 #include "b_json/b_json_cached_entity.h"
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_ohos/startup/backup_para.h"
+#include "b_radar/b_radar.h"
 #include "b_tarball/b_tarball_factory.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
@@ -117,6 +118,14 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreCallback(
             return;
         }
         HILOGI("Current bundle will execute app done");
+        if (errCode == ERR_OK) {
+            auto spendTime = extensionPtr->GetOnStartTimeCost();
+            std::stringstream ss;
+            ss << "\"spend_time\": \"" << spendTime << "ms\"";
+            AppRadar::Info info (extensionPtr->bundleName_, ss.str(), "");
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::OnRestoreCallback",
+                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+        }
         extensionPtr->FinishOnProcessTask();
         if (errMsg.empty()) {
             extensionPtr->AppDone(errCode);
@@ -141,6 +150,14 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreExCallbac
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
             return;
+        }
+        if (errCode == ERR_OK && !restoreRetInfo.empty()) {
+            auto spendTime = extensionPtr->GetOnStartTimeCost();
+            std::stringstream ss;
+            ss << "\"spend_time\": \"" << spendTime << "ms\"";
+            AppRadar::Info info (extensionPtr->bundleName_, ss.str(), "");
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::OnRestoreExCallback",
+                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
         }
         extensionPtr->FinishOnProcessTask();
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
@@ -192,6 +209,15 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
             HILOGE("Extension handle have been released");
             return;
         }
+        if (errCode == ERR_OK && !restoreRetInfo.empty()) {
+            auto spendTime = extensionPtr->GetOnStartTimeCost();
+            std::stringstream ss;
+            ss << "\"spend_time\": \"" << spendTime << "ms\"";
+            AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreExCallback",
+                                                         AppRadar::GetInstance().GetUserId(),
+                                                         BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+        }
         extensionPtr->FinishOnProcessTask();
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
         if (errCode == ERR_OK) {
@@ -221,6 +247,14 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreCall
             return;
         }
         HILOGI("Current bundle will execute app done");
+        if (errCode == ERR_OK) {
+            auto spendTime = extensionPtr->GetOnStartTimeCost();
+            std::stringstream ss;
+            ss << "\"spend_time\": \"" << spendTime << "ms\"";
+            AppRadar::Info info (extensionPtr->bundleName_, ss.str(), "");
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreCallback",
+                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+        }
         extensionPtr->FinishOnProcessTask();
         if (errMsg.empty()) {
             extensionPtr->AppIncrementalDone(errCode);
@@ -231,6 +265,14 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreCall
         }
         extensionPtr->DoClear();
     };
+}
+
+int32_t BackupExtExtension::GetOnStartTimeCost()
+{
+    auto onBackupRestoreEnd = std::chrono::system_clock::now();
+    std::lock_guard<std::mutex> lock(onStartTimeLock_);
+    auto spendTime = std::chrono::duration_cast<std::chrono::milliseconds>(onBackupRestoreEnd - g_onStart).count();
+    return spendTime;
 }
 
 std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupCallback(wptr<BackupExtExtension> obj)
@@ -246,6 +288,14 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupCall
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
             return;
+        }
+        if (errCode == ERR_OK) {
+            auto spendTime = extensionPtr->GetOnStartTimeCost();
+            AppRadar::Info info(extensionPtr->bundleName_, "", string("{\"spend_time\":\" ").
+                append(to_string(spendTime)).append(string("ms\"}")));
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::OnBackupCallback",
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
+            static_cast<int32_t>(ERR_OK));
         }
         extensionPtr->FinishOnProcessTask();
         extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
@@ -265,6 +315,14 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
             return;
+        }
+        if (errCode == ERR_OK && !backupExRetInfo.empty()) {
+            auto spendTime = extensionPtr->GetOnStartTimeCost();
+            AppRadar::Info info(extensionPtr->bundleName_, "", string("{\"spend_time\":\" ").
+                append(to_string(spendTime)).append(string("ms\"}")));
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::OnBackupExCallback",
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
+            static_cast<int32_t>(ERR_OK));
         }
         extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
         if (backupExRetInfo.size()) {
@@ -291,6 +349,14 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupC
             return;
         }
         HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
+        if (errCode == ERR_OK) {
+            auto spendTime = extPtr->GetOnStartTimeCost();
+            AppRadar::Info info(extPtr->bundleName_, "", string("{\"spend_time\":\" ").
+                append(to_string(spendTime)).append(string("ms\"}")));
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::IncOnBackupCallback",
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
+            static_cast<int32_t>(ERR_OK));
+        }
         extPtr->FinishOnProcessTask();
         proxy->GetAppLocalListAndDoIncrementalBackup();
     };
@@ -312,6 +378,14 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupE
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
             return;
+        }
+        if (errCode == ERR_OK && !backupExRetInfo.empty()) {
+            auto spendTime = extensionPtr->GetOnStartTimeCost();
+            AppRadar::Info info(extensionPtr->bundleName_, "", string("{\"spend_time\":\" ").
+                append(to_string(spendTime)).append(string("ms\"}")));
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::IncOnBackupExCallback",
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
+            static_cast<int32_t>(ERR_OK));
         }
         extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
         if (backupExRetInfo.size()) {

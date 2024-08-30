@@ -74,6 +74,7 @@ ohos_shared_library("backup_utils") {
     "src/b_process/b_guard_cwd.cpp",
     "src/b_process/b_guard_signal.cpp",
     "src/b_process/b_process.cpp",
+    "src/b_radar/b_radar.cpp",
     "src/b_sa/b_sa_utils.cpp",
     "src/b_tarball/b_tarball_cmdline.cpp",
     "src/b_tarball/b_tarball_factory.cpp",
@@ -88,6 +89,7 @@ ohos_shared_library("backup_utils") {
     "c_utils:utils",
     "faultloggerd:libdfx_dumpcatcher",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
   ]
@@ -95,6 +97,7 @@ ohos_shared_library("backup_utils") {
   include_dirs = [
     "${path_init}/interfaces/innerkits/include/syspara",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/utils/include",
   ]
 
   deps = [
