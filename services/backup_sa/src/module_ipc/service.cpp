@@ -233,14 +233,7 @@ void Service::VerifyCaller()
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
     int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
     switch (tokenType) {
-        case Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE: { /* Update Service */
-            if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, BACKUP_PERMISSION) !=
-                Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-                throw BError(BError::Codes::SA_REFUSED_ACT,
-                    string("Permission denied, token type is ").append(to_string(tokenType)));
-            }
-            break;
-        }
+        case Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE: /* Update Service */
         case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP: {
             const string permission = "ohos.permission.BACKUP";
             if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
@@ -249,18 +242,8 @@ void Service::VerifyCaller()
                 PermissionCheckFailRadar(info, "VerifyCaller");
                 throw BError(BError::Codes::SA_INVAL_ARG,
                              string("Permission denied, token type is ").append(to_string(tokenType)));
-            if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, BACKUP_PERMISSION) !=
-                Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-                throw BError(BError::Codes::SA_REFUSED_ACT,
-                    string("Permission denied, token type is ").append(to_string(tokenType)));
+                break;
             }
-            uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
-            if (!Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
-                throw BError(BError::Codes::SA_REFUSED_ACT,
-                    string("Permission denied, token type is ").append(to_string(tokenType)));
-            }
-            break;
-        }
         case Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL:
             if (IPCSkeleton::GetCallingUid() != BConstants::SYSTEM_UID) {
                 std::string info = "invalid calling uid";
@@ -271,11 +254,6 @@ void Service::VerifyCaller()
         default:
             std::string info = "Permission denied, token type is " + to_string(tokenType);
             PermissionCheckFailRadar(info, "VerifyCaller");
-            throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
-                throw BError(BError::Codes::SA_REFUSED_ACT, "Calling uid is invalid");
-            }
-            break;
-        default:
             throw BError(BError::Codes::SA_REFUSED_ACT, string("Invalid token type ").append(to_string(tokenType)));
             break;
     }
