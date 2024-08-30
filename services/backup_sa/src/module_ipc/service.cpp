@@ -264,7 +264,7 @@ void Service::VerifyCaller()
             if (IPCSkeleton::GetCallingUid() != BConstants::SYSTEM_UID) {
                 std::string info = "invalid calling uid";
                 PermissionCheckFailRadar(info, "VerifyCaller");
-                throw BError(BError::Codes::SA_INVAL_ARG, "Calling uid is invalid");
+                throw BError(BError::Codes::SA_REFUSED_ACT, "Calling uid is invalid");
             }
             break;
         default:
