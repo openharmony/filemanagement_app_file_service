@@ -244,15 +244,17 @@ void Service::VerifyCaller()
             break;
         }
         case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP: {
-            const string permission = "ohos.permission.BACKUP";
-            if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
-                Security::AccessToken::TypePermissionState::PERMISSION_DENIED) {
-                std::string info = "Permission denied, token type is " + to_string(tokenType);
-                PermissionCheckFailRadar(info, "VerifyCaller");
-                throw BError(BError::Codes::SA_INVAL_ARG,
-                             string("Permission denied, token type is ").append(to_string(tokenType)));
-                break;
+            if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, BACKUP_PERMISSION) !=
+                Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+                throw BError(BError::Codes::SA_REFUSED_ACT,
+                    string("Permission denied, token type is ").append(to_string(tokenType)));
             }
+            uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
+            if (!Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+                throw BError(BError::Codes::SA_REFUSED_ACT,
+                    string("Permission denied, token type is ").append(to_string(tokenType)));
+            break;
+        }
         case Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL:
             if (IPCSkeleton::GetCallingUid() != BConstants::SYSTEM_UID) {
                 std::string info = "invalid calling uid";
