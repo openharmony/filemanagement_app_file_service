@@ -1791,7 +1791,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
     int fdNum = 0;
     string partName = GetIncrmentPartName();
     for (auto small : infos) {
-        totalSize += small.size;
+        totalSize += static_cast<uint64_t>(small.size);
         fileCount += 1;
         packFiles.emplace_back(small.filePath);
         tarInfos.emplace_back(small);
