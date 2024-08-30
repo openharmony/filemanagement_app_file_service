@@ -14,6 +14,7 @@
  */
 
 #include "accesstoken_kit.h"
+#include "tokenid_kit.h"
 
 namespace OHOS::Security::AccessToken {
 ATokenTypeEnum AccessTokenKit::GetTokenType(AccessTokenID tokenID)
@@ -30,5 +31,10 @@ int AccessTokenKit::GetHapTokenInfo(AccessTokenID callerToken, HapTokenInfo &hap
 int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string &permissionName)
 {
     return 0;
+}
+
+bool TokenIdKit::IsSystemAppByFullTokenID(uint64_t tokenId)
+{
+    return true;
 }
 } // namespace OHOS::Security::AccessToken
