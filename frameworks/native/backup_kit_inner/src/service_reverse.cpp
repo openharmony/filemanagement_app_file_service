@@ -24,7 +24,7 @@ using namespace std;
 void ServiceReverse::BackupOnFileReady(string bundleName, string fileName, int fd, int32_t errCode)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onFileReady) {
-        HILOGI("Error scenario or callback is nullptr");
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return;
     }
     BFileInfo bFileInfo(bundleName, fileName, 0);
@@ -34,7 +34,7 @@ void ServiceReverse::BackupOnFileReady(string bundleName, string fileName, int f
 void ServiceReverse::BackupOnBundleStarted(int32_t errCode, string bundleName)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onBundleStarted) {
-        HILOGI("Error scenario or callback is nullptr");
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return;
     }
     callbacksBackup_.onBundleStarted(errCode, bundleName);
@@ -43,7 +43,7 @@ void ServiceReverse::BackupOnBundleStarted(int32_t errCode, string bundleName)
 void ServiceReverse::BackupOnResultReport(std::string result, std::string bundleName)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onResultReport) {
-        HILOGI("Error scenario or callback is nullptr");
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return;
     }
     callbacksBackup_.onResultReport(bundleName, result);
@@ -52,7 +52,7 @@ void ServiceReverse::BackupOnResultReport(std::string result, std::string bundle
 void ServiceReverse::BackupOnBundleFinished(int32_t errCode, string bundleName)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onBundleFinished) {
-        HILOGI("Error scenario or callback is nullptr");
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return;
     }
     HILOGI("errCode = %{public}d, bundleName = %{public}s", errCode, bundleName.c_str());
@@ -63,7 +63,7 @@ void ServiceReverse::BackupOnAllBundlesFinished(int32_t errCode)
 {
     HILOGI("errCode = %{public}d", errCode);
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onAllBundlesFinished) {
-        HILOGI("Error scenario or callback is nullptr");
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return;
     }
     callbacksBackup_.onAllBundlesFinished(errCode);
@@ -82,7 +82,7 @@ void ServiceReverse::BackupOnProcessInfo(std::string bundleName, std::string pro
 void ServiceReverse::RestoreOnBundleStarted(int32_t errCode, string bundleName)
 {
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onBundleStarted) {
-        HILOGI("Error scenario or callback is nullptr");
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return;
     }
     callbacksRestore_.onBundleStarted(errCode, bundleName);
@@ -91,7 +91,7 @@ void ServiceReverse::RestoreOnBundleStarted(int32_t errCode, string bundleName)
 void ServiceReverse::RestoreOnBundleFinished(int32_t errCode, string bundleName)
 {
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onBundleFinished) {
-        HILOGI("Error scenario or callback is nullptr");
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return;
     }
     HILOGI("errCode = %{public}d, bundleName = %{public}s", errCode, bundleName.c_str());
@@ -102,7 +102,7 @@ void ServiceReverse::RestoreOnAllBundlesFinished(int32_t errCode)
 {
     HILOGI("errCode = %{public}d", errCode);
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onAllBundlesFinished) {
-        HILOGI("Error scenario or callback is nullptr");
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return;
     }
     callbacksRestore_.onAllBundlesFinished(errCode);
@@ -112,7 +112,7 @@ void ServiceReverse::RestoreOnFileReady(string bundleName, string fileName, int 
 {
     HILOGD("begin, bundleName is:%{public}s", bundleName.c_str());
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onFileReady) {
-        HILOGI("Error scenario or callback is nullptr");
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return;
     }
     BFileInfo bFileInfo(bundleName, fileName, 0);
@@ -124,7 +124,7 @@ void ServiceReverse::RestoreOnResultReport(string result, std::string bundleName
     HILOGI("ServiceReverse RestoreOnResultReport bundle %{public}s begin with result: %{public}s", bundleName.c_str(),
         result.c_str());
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onResultReport) {
-        HILOGI("Error scenario or callback is nullptr");
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return;
     }
     callbacksRestore_.onResultReport(bundleName, result);
