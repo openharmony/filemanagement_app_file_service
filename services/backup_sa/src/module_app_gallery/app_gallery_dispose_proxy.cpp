@@ -17,6 +17,7 @@
 
 #include "b_radar/b_radar.h"
 #include "b_sa/b_sa_utils.h"
+#include "b_hiaudit/hi_audit.h"
 #include "filemgmt_libhilog.h"
 #include "message_parcel.h"
 

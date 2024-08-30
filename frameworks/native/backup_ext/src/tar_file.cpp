@@ -25,6 +25,7 @@
 
 #include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
+#include "b_hiaudit/hi_audit.h"
 #include "b_resources/b_constants.h"
 #include "directory_ex.h"
 #include "filemgmt_libhilog.h"
@@ -98,6 +99,9 @@ bool TarFile::TraversalFile(string &filePath)
 {
     if (access(filePath.c_str(), F_OK) != 0) {
         HILOGE("File path does not exists, err = %{public}d", errno);
+        AuditLog auditLog = {false, "access file failed", "ADD", "DataClone", 1, "FAILED", "TraversalFile",
+            "Packet File", GetAnonyPath(fllePath)};
+        HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
 
@@ -109,10 +113,16 @@ bool TarFile::TraversalFile(string &filePath)
     }
     if (lstat(filePath.c_str(), &curFileStat) != 0) {
         HILOGE("Failed to lstat, err = %{public}d", errno);
+        AuditLog auditLog = {false, "lstat file failed", "ADD", "DataClone", 1, "FAILED", "TraversalFile",
+            "Packet File", GetAnonyPath(fllePath)};
+        HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
     if (!AddFile(filePath, curFileStat)) {
         HILOGE("Failed to add file to tar package, file path is:%{public}s", GetAnonyPath(filePath).c_str());
+        AuditLog auditLog = {false, "AddFile failed", "ADD", "DataClone", 1, "FAILED", "TraversalFile",
+            "Packet File", GetAnonyPath(fllePath)};
+        HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
 
@@ -299,6 +309,9 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size)
     int fd = open(fileName.c_str(), O_RDONLY | O_CLOEXEC);
     if (fd < 0) {
         HILOGE("Failed to open file %{public}s, err = %{public}d", fileName.data(), errno);
+        AuditLog auditLog = {false, "open fd failed", "ADD", "DataClone", 1, "FAILED", "WriteFileContent",
+            "Packet File", GetAnonyPath(fileName)};
+        HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
 

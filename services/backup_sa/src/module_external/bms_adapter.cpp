@@ -22,6 +22,7 @@
 
 #include "b_error/b_error.h"
 #include "b_file_info.h"
+#include "b_hiaudit/hi_audit.h"
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_resources/b_constants.h"
@@ -75,6 +76,7 @@ static tuple<bool, bool, string, string, string, Json::Value> GetAllowAndExtName
         }
         vector<string> out;
         AppExecFwk::BundleMgrClient client;
+        AuditLog auditLog = {};
         if (!client.GetResConfigFile(ext, "ohos.extension.backup", out) || out.size() == 0) {
             HILOGE("Failed to get resconfigfile of bundle, bundle name is:%{public}s", ext.bundleName.c_str());
             continue;

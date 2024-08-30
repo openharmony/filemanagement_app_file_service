@@ -49,6 +49,7 @@
 #include "b_ohos/startup/backup_para.h"
 #include "b_radar/b_radar.h"
 #include "b_tarball/b_tarball_factory.h"
+#include "b_hiaudit/hi_audit.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
 #include "i_service.h"
@@ -173,6 +174,9 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
     size_t filePathPrefix = filePath.find_last_of(BConstants::FILE_SEPARATOR_CHAR);
     if (filePathPrefix == string::npos) {
         HILOGE("GetFileHandleForSpecialCloneCloud: Invalid fileName");
+        AuditLog auditLog = {false, "Open fd failed", "ADD", "DataClone in special scenario", 1, "FAILED",
+            "GetFileHandleForSpecialCloneCloud", "CommonFile", GetAnonyPath(fllePath)};
+        HiAudit::GetInstance(false).Write(auditLog);
         return UniqueFd(-1);
     }
     string path = filePath.substr(0, filePathPrefix);
@@ -180,12 +184,18 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
         bool created = ForceCreateDirectory(path.data());
         if (!created) {
             HILOGE("Failed to create restore folder.");
+            AuditLog auditLog = {false, "ForceCreateDirectory failed", "ADD", "DataClone in special scenario", 1,
+                "FAILED", "GetFileHandleForSpecialCloneCloud", "CommonFile", GetAnonyPath(path)};
+            HiAudit::GetInstance(false).Write(auditLog);
             return UniqueFd(-1);
         }
     }
     UniqueFd fd(open(fileName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
     if (fd < 0) {
         HILOGE("Open file failed, file name is %{private}s, err = %{public}d", fileName.data(), errno);
+        AuditLog auditLog = {false, "open fd failed", "ADD", "DataClone in special scenario", 1, "FAILED",
+            "GetFileHandleForSpecialCloneCloud", "CommonFile", GetAnonyPath(fileName)};
+        HiAudit::GetInstance(false).Write(auditLog);
         return UniqueFd(-1);
     }
     return fd;
@@ -251,6 +261,9 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
     UniqueFd fd = GetFileHandleForSpecialCloneCloud(fileName);
     if (fd < 0) {
         HILOGE("Failed to open file = %{private}s, err = %{public}d", fileName.c_str(), errno);
+        AuditLog auditLog = {false, "Open fd failed", "ADD", "DataClone in special scenario", 1, "FAILED",
+            "GetIncreFileHandleForSpecialVersion", "CommonFile", GetAnonyPath(fileName)};
+        HiAudit::GetInstance(false).Write(auditLog);
         errCode = errno;
     }
 
@@ -258,6 +271,9 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
     if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
         HILOGE("Failed to create restore folder : %{private}s, err = %{public}d", path.c_str(), errno);
         errCode = errno;
+        AuditLog auditLog = {false, "mkdir failed", "ADD", "DataClone in special scenario", 1, "FAILED",
+            "GetIncreFileHandleForSpecialVersion", "CommonFile", GetAnonyPath(path)};
+        HiAudit::GetInstance(false).Write(auditLog);
     }
     string reportName = path + BConstants::BLANK_REPORT_NAME;
     UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
@@ -417,8 +433,10 @@ ErrCode BackupExtExtension::BigFileReady(const TarMap &bigFileInfo, sptr<IServic
         if (fd < 0) {
             HILOGE("open file failed, file name is %{public}s, err = %{public}d", fllePath.c_str(), errno);
             errCode = errno;
+            AuditLog auditLog = {false, "Open fd failed", "ADD", "DataClone", 1, "FAILED", "Backup File",
+                "BigFile", GetAnonyPath(fllePath)};
+            HiAudit::GetInstance(false).Write(auditLog);
         }
-
         ret = proxy->AppFileReady(item.first, std::move(fd), errCode);
         if (SUCCEEDED(ret)) {
             HILOGI("The application is packaged successfully, package name is %{public}s", item.first.c_str());
@@ -428,6 +446,8 @@ ErrCode BackupExtExtension::BigFileReady(const TarMap &bigFileInfo, sptr<IServic
         fdNum++;
         RefreshTimeInfo(startTime, fdNum);
     }
+    AuditLog auditLog = {false, "Send Big File Fd", "ADD", "DataClone", bigFileInfo.size(), "SUCCESS", "Backup Files",
+                "BigFile", ""};
     HILOGI("BigFileReady End");
     return ret;
 }
