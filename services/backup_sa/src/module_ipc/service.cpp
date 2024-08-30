@@ -55,6 +55,8 @@
 #include "hisysevent.h"
 #include "hitrace_meter.h"
 #include "ipc_skeleton.h"
+#include "access_token.h"
+#include "tokenid_kit.h"
 #include "module_app_gallery/app_gallery_dispose_proxy.h"
 #include "module_external/bms_adapter.h"
 #include "module_external/sms_adapter.h"
@@ -81,6 +83,7 @@ const int32_t CONNECT_WAIT_TIME_S = 15;
 const std::string BACKUPSERVICE_WORK_STATUS_KEY = "persist.backupservice.workstatus";
 const std::string BACKUPSERVICE_WORK_STATUS_ON = "true";
 const std::string BACKUPSERVICE_WORK_STATUS_OFF = "false";
+const std::string BACKUP_PERMISSION = "ohos.permission.BACKUP";
 } // namespace
 
 /* Shell/Xts user id equal to 0/1, we need set default 100 */
@@ -230,7 +233,14 @@ void Service::VerifyCaller()
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
     int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
     switch (tokenType) {
-        case Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE: /* Update Service */
+        case Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE: { /* Update Service */
+            if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, BACKUP_PERMISSION) !=
+                Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+                throw BError(BError::Codes::SA_REFUSED_ACT,
+                    string("Permission denied, token type is ").append(to_string(tokenType)));
+            }
+            break;
+        }
         case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP: {
             const string permission = "ohos.permission.BACKUP";
             if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
@@ -239,6 +249,15 @@ void Service::VerifyCaller()
                 PermissionCheckFailRadar(info, "VerifyCaller");
                 throw BError(BError::Codes::SA_INVAL_ARG,
                              string("Permission denied, token type is ").append(to_string(tokenType)));
+            if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, BACKUP_PERMISSION) !=
+                Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+                throw BError(BError::Codes::SA_REFUSED_ACT,
+                    string("Permission denied, token type is ").append(to_string(tokenType)));
+            }
+            uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
+            if (!Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+                throw BError(BError::Codes::SA_REFUSED_ACT,
+                    string("Permission denied, token type is ").append(to_string(tokenType)));
             }
             break;
         }
@@ -253,6 +272,11 @@ void Service::VerifyCaller()
             std::string info = "Permission denied, token type is " + to_string(tokenType);
             PermissionCheckFailRadar(info, "VerifyCaller");
             throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
+                throw BError(BError::Codes::SA_REFUSED_ACT, "Calling uid is invalid");
+            }
+            break;
+        default:
+            throw BError(BError::Codes::SA_REFUSED_ACT, string("Invalid token type ").append(to_string(tokenType)));
             break;
     }
 }
@@ -914,7 +938,11 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         ErrCode ret = backUpConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
-        return ret;
+        if (ret) {
+            HILOGE("ConnectBackupExtAbility faild, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
+            return BError(BError::Codes::SA_BOOT_EXT_FAIL);
+        }
+        return BError(BError::Codes::OK);
     } catch (const BError &e) {
         return e.GetCode();
     } catch (const exception &e) {
@@ -1540,8 +1568,8 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
     AAFwk::Want want = CreateConnectWant(bundleName);
     auto ret = backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
     if (ret) {
-        HILOGE("ConnectBackupExtAbility faild, please check bundleName: %{public}s", bundleName.c_str());
-        return BError(BError::Codes::EXT_ABILITY_DIED);
+        HILOGE("ConnectBackupExtAbility faild, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
+        return BError(BError::Codes::SA_BOOT_EXT_FAIL);
     }
     std::unique_lock<std::mutex> lock(getBackupInfoMutx_);
     getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
