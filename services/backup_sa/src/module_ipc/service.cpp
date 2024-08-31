@@ -1019,14 +1019,13 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 void Service::OnBackupExtensionDied(const string &&bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    int32_t errCode = BError(BError::Codes::EXT_ABILITY_DIED).GetCode();
     AppRadar::Info info (bundleName, "", "");
     if (session_->GetScenario() == IServiceReverse::Scenario::BACKUP) {
         AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::OnBackupExtensionDied", GetUserIdDefault(),
-                                                    BizStageBackup::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, errCode);
+            BizStageBackup::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, BError(BError::Codes::EXT_ABILITY_DIED).GetCode());
     } else if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::OnBackupExtensionDied", GetUserIdDefault(),
-                                                     BizStageRestore::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, errCode);
+            BizStageRestore::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, BError(BError::Codes::EXT_ABILITY_DIED).GetCode());
     }
     try {
         string callName = move(bundleName);
