@@ -129,8 +129,8 @@ void BackupExtExtension::VerifyCaller()
     if (tokenType != Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
         AppRadar::Info info(bundleName_, "", "{\"reason\":\"Calling tokenType error\"}");
         AppRadar::GetInstance().RecordDefaultFuncRes(
-                info, "BackupExtExtension::VerifyCaller", AppRadar::GetInstance().GetUserId(),
-                BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL, BError(BError::Codes::OK).GetCode());
+            info, "BackupExtExtension::VerifyCaller", AppRadar::GetInstance().GetUserId(),
+            BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL, BError(BError::Codes::OK).GetCode());
         throw BError(BError::Codes::EXT_BROKEN_IPC,
                      string("Calling tokenType is error, token type is ").append(to_string(tokenType)));
     }
