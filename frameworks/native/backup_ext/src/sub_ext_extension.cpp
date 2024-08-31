@@ -384,8 +384,8 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupE
             AppRadar::Info info(extensionPtr->bundleName_, "", string("{\"spend_time\":\" ").
                 append(to_string(spendTime)).append(string("ms\"}")));
             AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::IncOnBackupExCallback",
-            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
-            static_cast<int32_t>(ERR_OK));
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
+                static_cast<int32_t>(ERR_OK));
         }
         extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
         if (backupExRetInfo.size()) {
