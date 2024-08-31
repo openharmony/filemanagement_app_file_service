@@ -294,8 +294,8 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupCall
             AppRadar::Info info(extensionPtr->bundleName_, "", string("{\"spend_time\":\" ").
                 append(to_string(spendTime)).append(string("ms\"}")));
             AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::OnBackupCallback",
-            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
-            static_cast<int32_t>(ERR_OK));
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
+                static_cast<int32_t>(ERR_OK));
         }
         extensionPtr->FinishOnProcessTask();
         extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
@@ -321,8 +321,8 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
             AppRadar::Info info(extensionPtr->bundleName_, "", string("{\"spend_time\":\" ").
                 append(to_string(spendTime)).append(string("ms\"}")));
             AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::OnBackupExCallback",
-            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
-            static_cast<int32_t>(ERR_OK));
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
+                static_cast<int32_t>(ERR_OK));
         }
         extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
         if (backupExRetInfo.size()) {
