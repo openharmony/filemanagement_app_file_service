@@ -69,7 +69,7 @@ int SvcSessionManager::GetSessionCnt()
     return sessionCnt_.load();
 }
 
-ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
+ErrCode SvcSessionManager::Active(Impl newImpl, bool isOccupyingSession)
 {
     unique_lock<shared_mutex> lock(lock_);
     const Impl &oldImpl = impl_;
@@ -78,14 +78,14 @@ ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
         return BError(BError::Codes::SA_REFUSED_ACT);
     }
 
-    if (!force && !newImpl.clientToken) {
+    if (!isOccupyingSession && !newImpl.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-    if (!force && newImpl.scenario == IServiceReverse::Scenario::UNDEFINED) {
+    if (!isOccupyingSession && newImpl.scenario == IServiceReverse::Scenario::UNDEFINED) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No scenario was specified");
     }
 
-    if (!force) {
+    if (!isOccupyingSession) {
         InitClient(newImpl);
     }
     impl_ = newImpl;

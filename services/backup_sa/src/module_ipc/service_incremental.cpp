@@ -93,7 +93,7 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
            so there must be set init userId.
         */
         HILOGI("Begin");
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Get LocalCapabilities Incremental Error, session is empty or cleaning up the service");
             return UniqueFd(-ENOENT);
         }
@@ -181,7 +181,7 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("session is nullptr");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -243,7 +243,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session  error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -286,7 +286,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -459,9 +459,9 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
             proxy->HandleClear();
             session_->StopFwkTimer(callerName);
             session_->StopExtTimer(callerName);
-            NotifyCallerCurAppIncrementDone(errCode, callerName);
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
+            NotifyCallerCurAppIncrementDone(errCode, callerName);
         }
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);

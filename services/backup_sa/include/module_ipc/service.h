@@ -431,6 +431,14 @@ private:
      *
      */
     ErrCode AppendBundlesClearSession(const std::vector<BundleName> &bundleNames);
+
+    /**
+     * @brief 设置是否自占用Session
+     *
+     * @param isOccupyingSession 框架是否自占用session
+     *
+     */
+    void SetOccupySession(bool isOccupyingSession);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -438,7 +446,7 @@ private:
     std::condition_variable getBackupInfoCondition_;
     static inline std::atomic<uint32_t> seed {1};
     std::atomic<bool> isConnectDied_ {false};
-    std::atomic<bool> isCleanService_ {false};
+    std::atomic<bool> isOccupyingSession_ {false};
 
     sptr<SvcSessionManager> session_;
     sptr<SchedScheduler> sched_;
