@@ -137,8 +137,8 @@ void BackupExtExtension::VerifyCaller()
     if (IPCSkeleton::GetCallingUid() != BConstants::BACKUP_UID) {
         AppRadar::Info info(bundleName_, "", "{\"reason\":\"Calling uid invalid\"}");
         AppRadar::GetInstance().RecordDefaultFuncRes(
-                info, "BackupExtExtension::VerifyCaller", AppRadar::GetInstance().GetUserId(),
-                BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL, BError(BError::Codes::OK).GetCode());
+            info, "BackupExtExtension::VerifyCaller", AppRadar::GetInstance().GetUserId(),
+            BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL, BError(BError::Codes::OK).GetCode());
         throw BError(BError::Codes::EXT_BROKEN_IPC,
                      string("Calling uid is invalid, calling uid is ").append(to_string(IPCSkeleton::GetCallingUid())));
     }
@@ -799,7 +799,7 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
             auto cost = to_string(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
             AppRadar::Info info(ptr->bundleName_, "", string("{\"spend_time\":").append(cost).append(string("ms\"}")));
             AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::AsyncTaskBackup",
-                                                        AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, static_cast<int32_t>(ret));
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, static_cast<int32_t>(ret));
             // REM: 处理返回结果 ret
             ptr->AppDone(ret);
             HILOGI("backup app done %{public}d", ret);
