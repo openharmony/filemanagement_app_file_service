@@ -19,7 +19,6 @@
 #include "b_sa/b_sa_utils.h"
 #include "filemgmt_libhilog.h"
 #include "message_parcel.h"
-
 #include "module_app_gallery/app_gallery_dispose_proxy.h"
 #include "module_app_gallery/app_gallery_service_connection.h"
 #include "want.h"
