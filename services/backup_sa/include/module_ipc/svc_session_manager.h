@@ -70,6 +70,7 @@ struct BackupExtInfo {
     std::string extInfo;
     int32_t appendNum {1};
     bool isClearData {true};
+    bool isInPublishFile {false};
 };
 
 class Service;
@@ -504,6 +505,10 @@ public:
 
     void SetClearDataFlag(const std::string &bundleName, bool isClearData);
     bool GetClearDataFlag(const std::string &bundleName);
+
+    bool CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList);
+
+    void SetPublishFlag(const std::string &bundleName);
 
 private:
     /**

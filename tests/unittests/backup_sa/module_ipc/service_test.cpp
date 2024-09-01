@@ -1516,7 +1516,7 @@ HWTEST_F(ServiceTest, SUB_Service_NotifyCloneBundleFinish_0100, testing::ext::Te
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
         impl_.scenario = IServiceReverse::Scenario::RESTORE;
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->NotifyCloneBundleFinish(BUNDLE_NAME);
+        servicePtr_->NotifyCloneBundleFinish(BUNDLE_NAME, BackupRestoreScenario::FULL_RESTORE);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by NotifyCloneBundleFinish.";

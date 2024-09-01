@@ -956,4 +956,66 @@ bool SvcSessionManager::ValidRestoreDataType(RestoreTypeEnum restoreDataType)
 {
     return impl_.restoreDataType == restoreDataType;
 }
+
+bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    for (auto it = impl_.backupExtNameMap.begin(); it != impl_.backupExtNameMap.end();) {
+        if (it->second.schedAction == BConstants::ServiceSchedAction::WAIT) {
+            it = impl_.backupExtNameMap.erase(it);
+        } else if (it->second.schedAction == BConstants::ServiceSchedAction::START ||
+            (it->second.schedAction == BConstants::ServiceSchedAction::RUNNING && !it->second.isInPublishFile)) {
+            if (it->second.fwkTimerStatus == true || it->second.extTimerStatus == true) {
+                it->second.fwkTimerStatus = false;
+                it->second.extTimerStatus = false;
+                timer_.Unregister(it->second.timerId);
+            }
+            auto backUpConnection = it->second.backUpConnection;
+            if (backUpConnection == nullptr) {
+                HILOGE("Clear session error, backUpConnection is empty");
+                it = impl_.backupExtNameMap.erase(it);
+                continue;
+            }
+            auto proxy = backUpConnection->GetBackupExtProxy();
+            // start action
+            if (proxy == nullptr) {
+                HILOGE("Clear session error, backUpConnection is empty");
+                backUpConnection->DisconnectBackupExtAbility();
+                it = impl_.backupExtNameMap.erase(it);
+                continue;
+            }
+            // running action
+            ErrCode retTmp = ERR_OK;
+            if (impl_.restoreDataType != RestoreTypeEnum::RESTORE_DATA_READDY) {
+                retTmp = proxy->HandleClear();
+            }
+            if (retTmp == ERR_OK) {
+                bundleNameList.push_back(it->first);
+            } else {
+                ret = retTmp;
+            }
+            backUpConnection->DisconnectBackupExtAbility();
+            it = impl_.backupExtNameMap.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    if (impl_.backupExtNameMap.empty()) {
+        HILOGI("Release normally, no need wait");
+        return false;
+    }
+    HILOGI("Release abnormally, need wait for restore");
+    return true;
+}
+
+void SvcSessionManager::SetPublishFlag(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    auto it = GetBackupExtNameMap(bundleName);
+    it->second.isInPublishFile = true;
+    HILOGE("Set PublishFile success, bundleName = %{public}s", bundleName.c_str());
+}
 } // namespace OHOS::FileManagement::Backup
