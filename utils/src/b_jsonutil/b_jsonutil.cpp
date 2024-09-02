@@ -32,11 +32,10 @@ namespace {
     const static std::string BUNDLE_INDEX_SPLICE = ":";
 }
 
-BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string &bundleNameStr,
-    const std::string &patternInfo)
+BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string &bundleNameStr)
 {
     HILOGI("Start parse bundle name and index");
-    size_t hasPos = bundleNameStr.find(patternInfo);
+    size_t hasPos = bundleNameStr.find(BUNDLE_INDEX_SPLICE);
     BundleDetailInfo bundleDetailInfo;
     if (hasPos == std::string::npos) {
         bundleDetailInfo.bundleName = bundleNameStr;
@@ -92,8 +91,8 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
         bundleDetailInfo.bundleIndex = bundleIndex;
         bundleDetailInfo.userId = userId;
         ParseBundleInfoJson(bundleInfo, bundleDetailInfos, bundleDetailInfo, isClearData);
-        isClearDataFlags[bundleNameOnly] = isClearData;
-        bundleNameDetailMap[bundleNameOnly] = bundleDetailInfos;
+        isClearDataFlags[bundleName] = isClearData;
+        bundleNameDetailMap[bundleName] = bundleDetailInfos;
     }
     HILOGI("End BuildBundleInfos");
     return bundleNameDetailMap;
@@ -196,6 +195,55 @@ bool BJsonUtil::BuildRestoreErrInfo(std::string &jsonStr, int errCode, std::stri
     return true;
 }
 
+std::string BJsonUtil::BuildBundleNameIndexInfo(const std::string &bundleName, int appIndex)
+{
+    std::string result = bundleName;
+    if (appIndex == BUNDLE_INDEX_DEFAULT_VAL) {
+        return result;
+    }
+    result += BUNDLE_INDEX_SPLICE;
+    result += std::to_string(appIndex);
+    return result;
+}
+
+bool BJsonUtil::BuildRestoreErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo)
+{
+    cJSON *errJson = cJSON_CreateObject();
+    if (errJson == nullptr) {
+        HILOGE("Creat json failed");
+        return false;
+    }
+    cJSON *arrJson = cJSON_CreateArray();
+    if (arrJson == nullptr) {
+        cJSON_Delete(errJson);
+        return false;
+    }
+    for (const auto &it : errFileInfo) {
+        for (const auto &codeIt : it.second) {
+            cJSON *eleJson = cJSON_CreateObject();
+            if (eleJson == nullptr) {
+                HILOGE("Creat eleJson failed");
+                continue;
+            }
+            cJSON_AddStringToObject(eleJson, "type", "ErrorInfo");
+            cJSON_AddStringToObject(eleJson, "errorInfo", it.first.c_str());
+            cJSON_AddNumberToObject(eleJson, "errorCode", codeIt);
+            cJSON_AddItemToArray(arrJson, eleJson);
+        }
+    }
+    cJSON_AddItemToObject(errJson, "resultInfo", arrJson);
+    char *data = cJSON_Print(errJson);
+    if (data == nullptr) {
+        cJSON_Delete(errJson);
+        return false;
+    }
+    jsonStr = std::string(data);
+    cJSON_Delete(errJson);
+    cJSON_free(data);
+    return true;
+}
+}
+
 bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet)
 {
     cJSON *info = cJSON_CreateObject();
@@ -220,5 +268,4 @@ bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessRetInfo(std::string 
     cJSON_Delete(info);
     cJSON_free(data);
     return true;
-}
 }
