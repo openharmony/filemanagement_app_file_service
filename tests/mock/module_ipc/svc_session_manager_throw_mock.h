@@ -86,6 +86,8 @@ public:
     virtual void SetIncrementalData(const BIncrementalData &) = 0;
     virtual int32_t GetIncrementalManifestFd(const std::string &) = 0;
     virtual int64_t GetLastIncrementalTime(const std::string &) = 0;
+    virtual bool CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList) = 0;
+    virtual void SetPublishFlag(const std::string &bundleName) = 0;
 public:
     static inline std::shared_ptr<BackupSvcSessionManager> session = nullptr;
 };
@@ -151,6 +153,8 @@ public:
     MOCK_METHOD(void, SetIncrementalData, (const BIncrementalData &));
     MOCK_METHOD(int32_t, GetIncrementalManifestFd, (const std::string &));
     MOCK_METHOD(int64_t, GetLastIncrementalTime, (const std::string &));
+    MOCK_METHOD(bool, CleanAndCheckIfNeedWait, (ErrCode &, std::vector<std::string> &));
+    MOCK_METHOD(void, SetPublishFlag, (const std::string &));
 };
 
 } // namespace OHOS::FileManagement::Backup
