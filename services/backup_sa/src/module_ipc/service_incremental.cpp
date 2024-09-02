@@ -98,9 +98,8 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
             return UniqueFd(-ENOENT);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-        session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
-        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
+        string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
         BExcepUltils::VerifyPath(path, false);
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
@@ -113,7 +112,7 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
 
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
-        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(session_->GetSessionUserId(), bundleNames);
+        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(GetUserIdDefault(), bundleNames);
         cache.SetBundleInfos(bundleInfos, true);
         cachedEntity.Persist();
         HILOGI("Service GetLocalCapabilitiesIncremental persist");
