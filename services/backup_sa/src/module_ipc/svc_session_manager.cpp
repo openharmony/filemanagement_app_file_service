@@ -22,6 +22,7 @@
 #include <sstream>
 #include <string>
 
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_file_info.h"
 #include "b_json/b_json_entity_caps.h"
@@ -208,7 +209,7 @@ UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, Uniq
     auto info = cache.GetExtManage();
 
     for (auto &fileName : info) {
-        HILOGE("fileName %{public}s", fileName.data());
+        HILOGE("fileName %{public}s", GetAnonyString(fileName).data());
         OnBundleFileReady(bundleName, fileName);
     }
 

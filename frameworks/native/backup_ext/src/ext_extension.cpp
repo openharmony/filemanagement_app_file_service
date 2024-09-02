@@ -39,6 +39,7 @@
 #include "errors.h"
 #include "ipc_skeleton.h"
 
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "b_filesystem/b_dir.h"
@@ -55,7 +56,6 @@
 #include "sandbox_helper.h"
 #include "service_proxy.h"
 #include "tar_file.h"
-#include "b_anony/b_anony.h"
 
 namespace OHOS::FileManagement::Backup {
 const string INDEX_FILE_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
@@ -246,7 +246,7 @@ static string GetReportFileName(const string &fileName)
 
 static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
 {
-    HILOGI("extension:GetIncreFileHandleForSpecialVersion, filename:%{public}s", fileName.c_str());
+    HILOGI("extension:GetIncreFileHandleForSpecialVersion, filename:%{public}s", GetAnonyString(fileName).c_str());
     ErrCode errCode = ERR_OK;
     UniqueFd fd = GetFileHandleForSpecialCloneCloud(fileName);
     if (fd < 0) {
@@ -415,7 +415,8 @@ ErrCode BackupExtExtension::BigFileReady(const TarMap &bigFileInfo, sptr<IServic
         string fllePath = std::get<0>(item.second);
         UniqueFd fd(open(fllePath.data(), O_RDONLY));
         if (fd < 0) {
-            HILOGE("open file failed, file name is %{public}s, err = %{public}d", fllePath.c_str(), errno);
+            HILOGE("open file failed, file name is %{public}s, err = %{public}d", GetAnonyString(fllePath).c_str(),
+                errno);
             errCode = errno;
         }
 
@@ -970,7 +971,7 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
 static bool RestoreBigFilePrecheck(string &fileName, const string &path, const string &hashName, const string &filePath)
 {
     if (filePath.empty()) {
-        HILOGE("file path is empty. %{public}s", filePath.c_str());
+        HILOGE("file path is empty. %{public}s", GetAnonyString(filePath).c_str());
         return false;
     }
 
@@ -982,7 +983,7 @@ static bool RestoreBigFilePrecheck(string &fileName, const string &path, const s
 
     // 目录不存在且只有大文件时，不能通过untar创建，需要检查并创建
     if (!CheckAndCreateDirectory(filePath)) {
-        HILOGE("failed to create directory %{public}s", filePath.c_str());
+        HILOGE("failed to create directory %{public}s", GetAnonyString(filePath).c_str());
         return false;
     }
     return true;
@@ -1847,8 +1848,8 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
         WaitToSendFd(startTime, fdNum);
         UniqueFd fd(open(path.data(), O_RDONLY));
         if (fd < 0) {
-            HILOGE("IncrementalBigFileReady open file failed, file name is %{public}s, err = %{public}d", path.c_str(),
-                   errno);
+            HILOGE("IncrementalBigFileReady open file failed, file name is %{public}s, err = %{public}d",
+                GetAnonyString(path).c_str(), errno);
             errCode = errno;
         }
         vector<struct ReportFileInfo> bigInfo;
