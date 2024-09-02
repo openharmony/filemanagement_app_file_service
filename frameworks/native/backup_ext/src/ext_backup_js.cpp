@@ -771,8 +771,9 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
                 }
             } while (false);
             HILOGI("will notify current thread info");
+            std::unique_lock<std::mutex> lock(param->backupOperateMutex);
             param->isReady.store(true);
-            param->backupOperateCondition.notify_one();
+            param->backupOperateCondition.notify_all();
         });
     if (ret != 0) {
         HILOGE("failed to exec uv_queue_work.");
