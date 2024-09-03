@@ -15,6 +15,7 @@
 
 #include "common_func.h"
 
+#include <mutex>
 #include <vector>
 
 #include "bundle_mgr_proxy.h"
@@ -35,6 +36,8 @@ namespace {
     const char BACKFLASH = '/';
     const std::string FILE_MANAGER_URI_HEAD = "/storage/";
     const std::string FILE_MANAGER_AUTHORITY = "docs";
+    std::string g_bundleName = "";
+    std::mutex g_globalMutex;
 }
 static sptr<BundleMgrProxy> GetBundleMgrProxy()
 {
@@ -88,7 +91,13 @@ string CommonFunc::GetUriFromPath(const string &path)
     string realPath = path;
     NormalizePath(realPath);
 
-    string packageName = (path.find(FILE_MANAGER_URI_HEAD) == 0) ? FILE_MANAGER_AUTHORITY : GetSelfBundleName();
+    {
+        std::lock_guard<std::mutex> lock(g_globalMutex);
+        if (g_bundleName == "") {
+            g_bundleName = GetSelfBundleName();
+        }
+    }
+    string packageName = (path.find(FILE_MANAGER_URI_HEAD) == 0) ? FILE_MANAGER_AUTHORITY : g_bundleName;
     realPath = FILE_SCHEME_PREFIX + packageName + SandboxHelper::Encode(realPath);
     return realPath;
 }
