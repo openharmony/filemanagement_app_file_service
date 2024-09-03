@@ -83,7 +83,7 @@ public:
     virtual ErrCode AppIncrementalDone(ErrCode errCode) = 0;
     virtual ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) = 0;
     virtual ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) = 0;
-    virtual ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) = 0;
+    virtual ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result) = 0;
     virtual ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) = 0;
     virtual ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario) = 0;
     virtual ErrCode StartExtTimer(bool &isExtStart) = 0;

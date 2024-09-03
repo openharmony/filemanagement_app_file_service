@@ -76,7 +76,7 @@ public:
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;
-    ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) override;
+    ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result) override;
     ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) override;
     ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario) override;
     ErrCode StartExtTimer(bool &isExtStart) override;
@@ -232,6 +232,14 @@ public:
      * @param bundleName 应用名称
      */
     std::function<void()> TimeOutCallback(wptr<Service> ptr, std::string bundleName);
+
+    /**
+     * @brief do timeout
+     *
+     * @param ptr 当前对象
+     * @param bundleName 应用名称
+     */
+    void DoTimeout(wptr<Service> ptr, std::string bundleName);
 
     /**
      * @brief 清理残留数据
