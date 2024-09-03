@@ -68,12 +68,17 @@ public:
         }
         bundleName_ = bundleName;
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        onProcessTaskPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         SetStagingPathProperties();
     }
     ~BackupExtExtension()
     {
         onProcessTimeoutTimer_.Shutdown();
         threadPool_.Stop();
+        onProcessTaskPool_.Stop();
+        if (callJsOnProcessThread_.joinable()) {
+            callJsOnProcessThread_.join();
+        }
     }
 
 private:
@@ -294,6 +299,7 @@ private:
     std::atomic<bool> onProcessTimeout_ {false};
     std::chrono::time_point<std::chrono::system_clock> g_onStart;
     std::mutex onStartTimeLock_;
+    OHOS::ThreadPool onProcessTaskPool_;
     AppRadar::DoRestoreInfo radarRestoreInfo_ { 0 };
 };
 } // namespace OHOS::FileManagement::Backup
