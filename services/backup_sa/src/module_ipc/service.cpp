@@ -168,9 +168,8 @@ UniqueFd Service::GetLocalCapabilities()
             return UniqueFd(-EPERM);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-        session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
-        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
+        string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
         BExcepUltils::VerifyPath(path, false);
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
@@ -184,7 +183,7 @@ UniqueFd Service::GetLocalCapabilities()
 
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
-        auto bundleInfos = BundleMgrAdapter::GetFullBundleInfos(session_->GetSessionUserId());
+        auto bundleInfos = BundleMgrAdapter::GetFullBundleInfos(GetUserIdDefault());
         cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -1654,7 +1653,6 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
         HILOGE("Get BackupInfo error, session is empty.");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    session_->SetSessionUserId(GetUserIdDefault());
     auto backupConnection = session_->CreateBackupConnection(bundleName);
     if (backupConnection == nullptr) {
         HILOGE("backupConnection is null. bundleName: %{public}s", bundleName.c_str());
@@ -1665,7 +1663,7 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
     backupConnection->SetCallback(callConnected);
     backupConnection->SetCallDied(callDied);
     AAFwk::Want want = CreateConnectWant(bundleName);
-    auto ret = backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
+    auto ret = backupConnection->ConnectBackupExtAbility(want, GetUserIdDefault());
     if (ret) {
         HILOGE("ConnectBackupExtAbility faild, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
         return BError(BError::Codes::SA_BOOT_EXT_FAIL);
