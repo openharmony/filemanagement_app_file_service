@@ -38,6 +38,7 @@
 #include "b_json/b_json_entity_caps.h"
 #include "b_ohos/startup/backup_para.h"
 #include "b_process/b_multiuser.h"
+#include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
 #include "filemgmt_libhilog.h"
@@ -498,6 +499,9 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
             int res = proxy->GetIncrementalFileHandle(fileName);
             if (res) {
                 HILOGE("Failed to extension file handle");
+                AppRadar::Info info (bundleName, "", "");
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandle",
+                    GetUserIdDefault(), BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, res);
             }
         } else {
             SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);

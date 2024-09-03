@@ -545,23 +545,23 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_FindBundleInfoByName_0300, testing::ext::Test
 }
 
 /**
- * @tc.number: b_jsonutil_BuildRestoreErrInfo_0100
- * @tc.name: b_jsonutil_BuildRestoreErrInfo_0100
- * @tc.desc: Test function of BuildRestoreErrInfo interface for SUCCESS.
+ * @tc.number: b_jsonutil_BuildExtensionErrInfo_0100
+ * @tc.name: b_jsonutil_BuildExtensionErrInfo_0100
+ * @tc.desc: Test function of BuildExtensionErrInfo interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildRestoreErrInfo_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0100, testing::ext::TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildRestoreErrInfo_0100";
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildExtensionErrInfo_0100";
     try {
         std::string jsonStr;
         int errCode = 1;
         std::string errMsg = "error";
 
-        bool result = BJsonUtil::BuildRestoreErrInfo(jsonStr, errCode, errMsg);
+        bool result = BJsonUtil::BuildExtensionErrInfo(jsonStr, errCode, errMsg);
         EXPECT_EQ(true, result);
         EXPECT_NE(jsonStr.find("errorCode"), std::string::npos);
         EXPECT_NE(jsonStr.find("errorInfo"), std::string::npos);
@@ -570,6 +570,6 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildRestoreErrInfo_0100, testing::ext::TestS
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
     }
-    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildRestoreErrInfo_0100";
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildExtensionErrInfo_0100";
 }
 } // namespace OHOS::FileManagement::Backup

@@ -68,13 +68,20 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
         };
         if (std::get<0>(errInfo) != 0) {
             obj = NVal {env, NError(errorParam).GetNapiErr(env)};
+            napi_status status = napi_set_named_property(env, obj.val_, FILEIO_TAG_ERR_DATA.c_str(),
+                NVal::CreateUTF8String(env, bundleName).val_);
+            if (status != napi_ok) {
+                HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s",
+                    status, bundleName.c_str());
+            }
         } else {
             obj = NVal::CreateObject(env);
+            obj.AddProp({
+                NVal::DeclareNapiProperty(BConstants::BUNDLE_NAME.c_str(),
+                    NVal::CreateUTF8String(env, bundleName).val_),
+                NVal::DeclareNapiProperty(BConstants::URI.c_str(), NVal::CreateUTF8String(env, fileName).val_),
+                NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
         }
-        obj.AddProp({
-            NVal::DeclareNapiProperty(BConstants::BUNDLE_NAME.c_str(), NVal::CreateUTF8String(env, bundleName).val_),
-            NVal::DeclareNapiProperty(BConstants::URI.c_str(), NVal::CreateUTF8String(env, fileName).val_),
-            NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
         return {obj};
     };
 
@@ -83,7 +90,7 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
 
 static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, const BundleName name)
 {
-    HILOGI("Callback onBundleBegin, bundleName=%{public}s", name.c_str());
+    HILOGI("Callback onBundleBegin, bundleName=%{public}s, errCode=%{public}d", name.c_str(), err);
     if (pCallbacks.expired()) {
         HILOGI("callbacks is unbound");
         return;
@@ -98,17 +105,23 @@ static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, co
         return;
     }
 
-    auto cbCompl = [name {name}, errCode {err}](napi_env env, NError err) -> NVal {
+    ErrCode errCode = BError::GetBackupCodeByErrno(err);
+    std::string errMsg = BError::GetBackupMsgByErrno(errCode) + ", origin errno: " + to_string(err);
+    std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, errMsg);
+
+    auto cbCompl = [name {name}, errCode {err}, errInfo](napi_env env, NError err) -> NVal {
         NVal bundleName = NVal::CreateUTF8String(env, name);
         if (!err && errCode == 0) {
             return bundleName;
         }
-
+        ErrParam errorParam = [ errInfo ]() {
+            return errInfo;
+        };
         NVal res;
         if (err) {
             res = NVal {env, err.GetNapiErr(env)};
         } else {
-            res = NVal {env, NError(errCode).GetNapiErr(env)};
+            res = NVal {env, NError(errorParam).GetNapiErr(env)};
         }
         napi_status status = napi_set_named_property(env, res.val_, FILEIO_TAG_ERR_DATA.c_str(), bundleName.val_);
         if (status != napi_ok) {
@@ -123,7 +136,7 @@ static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, co
 
 static void onBundleEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, const BundleName name)
 {
-    HILOGI("Callback onBundleEnd, bundleName=%{public}s", name.c_str());
+    HILOGI("Callback onBundleEnd, bundleName=%{public}s, errCode=%{public}d", name.c_str(), err);
     if (pCallbacks.expired()) {
         HILOGI("callbacks is unbound");
         return;
@@ -138,17 +151,23 @@ static void onBundleEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, cons
         return;
     }
 
-    auto cbCompl = [name {name}, errCode {err}](napi_env env, NError err) -> NVal {
+    ErrCode errCode = BError::GetBackupCodeByErrno(err);
+    std::string errMsg = BError::GetBackupMsgByErrno(errCode) + ", origin errno: " + to_string(err);
+    std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, errMsg);
+
+    auto cbCompl = [name {name}, errCode {err}, errInfo](napi_env env, NError err) -> NVal {
         NVal bundleName = NVal::CreateUTF8String(env, name);
         if (!err && errCode == 0) {
             return bundleName;
         }
-
+        ErrParam errorParam = [ errInfo ]() {
+            return errInfo;
+        };
         NVal res;
         if (err) {
             res = NVal {env, err.GetNapiErr(env)};
         } else {
-            res = NVal {env, NError(errCode).GetNapiErr(env)};
+            res = NVal {env, NError(errorParam).GetNapiErr(env)};
         }
         napi_status status = napi_set_named_property(env, res.val_, FILEIO_TAG_ERR_DATA.c_str(), bundleName.val_);
         if (status != napi_ok) {
@@ -177,16 +196,22 @@ static void onAllBundlesEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err)
         return;
     }
 
-    auto cbCompl = [errCode {err}](napi_env env, NError err) -> NVal {
+    ErrCode errCode = BError::GetBackupCodeByErrno(err);
+    std::string errMsg = BError::GetBackupMsgByErrno(errCode) + ", origin errno: " + to_string(err);
+    std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, errMsg);
+
+    auto cbCompl = [errCode {err}, errInfo](napi_env env, NError err) -> NVal {
         if (!err && errCode == 0) {
             return NVal::CreateUndefined(env);
         }
-
+        ErrParam errorParam = [ errInfo ]() {
+            return errInfo;
+        };
         NVal res;
         if (err) {
             res = NVal {env, err.GetNapiErr(env)};
         } else {
-            res = NVal {env, NError(errCode).GetNapiErr(env)};
+            res = NVal {env, NError(errorParam).GetNapiErr(env)};
         }
 
         return res;
