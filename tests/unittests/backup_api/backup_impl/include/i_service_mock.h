@@ -138,7 +138,7 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) override
+    ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result) override
     {
         return BError(BError::Codes::OK);
     }

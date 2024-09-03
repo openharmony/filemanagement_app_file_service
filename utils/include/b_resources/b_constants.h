@@ -84,6 +84,9 @@ constexpr int MIN_FD_SEND_RATE = 0; // 允许应用申请的最小FD数量
 constexpr int DEFAULT_FD_SEND_RATE = 60; // 框架默认的FD数量
 constexpr int32_t PARAM_STARING_MAX_MEMORY = 2 * 1024 * 1024;
 constexpr uint32_t H2MS = 60 * 60 * 1000;
+constexpr uint32_t MAX_UPDATE_TIMER = 4 * H2MS;
+constexpr uint32_t DEFAULT_TIMEOUT = 15 * 60 * 1000;
+constexpr uint32_t TIMEOUT_NOW = 0;
 
 constexpr int CALL_APP_ON_PROCESS_TIME_INTERVAL = 5; // 框架每隔5s去调用应用的onProcess
 constexpr int APP_ON_PROCESS_MAX_TIMEOUT = 1000; // 应用的onProcess接口最大超时时间为1秒
@@ -126,6 +129,7 @@ static inline std::string_view BACKUP_TOOL_INCREMENTAL = "/incremental";
 static inline std::string BACKUP_DIR_PRE = "/data/storage/";
 static inline std::string CONTEXT_ELS[] = {"el1", "el2"};
 static inline std::string BACKUP_DIR_END = "/base/.backup/";
+static inline std::string BUNDLE_BASE_DIR = "/data/storage/el2/base";
 
 // 文管bundleName
 static inline std::string BUNDLE_FILE_MANAGER = "hmos.filemanager";

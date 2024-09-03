@@ -39,7 +39,7 @@ void AppRadar::RecordDefaultFuncRes(Info &info, const std::string &func, int32_t
                                     enum BizStageBackup bizStage, int32_t resultCode)
 {
     std::stringstream ss;
-    ss << "\"result_info\": {" << info.resInfo << "}";
+    ss << "{\"result_info\": {" << info.resInfo << "}}";
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
         BConstants::FILE_BACKUP_RESTORE_EVENTS,
@@ -60,7 +60,7 @@ void AppRadar::RecordBackupFuncRes(Info &info, const std::string &func, int32_t 
                                    enum BizStageBackup bizStage, int32_t resultCode)
 {
     std::stringstream ss;
-    ss << "\"result_info\": {" << info.resInfo << "}";
+    ss << "{\"result_info\": {" << info.resInfo << "}}";
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
         BConstants::FILE_BACKUP_RESTORE_EVENTS,
@@ -81,7 +81,7 @@ void AppRadar::RecordRestoreFuncRes(Info &info, const std::string &func, int32_t
                                     enum BizStageRestore bizStage, int32_t resultCode)
 {
     std::stringstream ss;
-    ss << "\"result_info\": {" << info.resInfo << "}";
+    ss << "{\"result_info\": {" << info.resInfo << "}}";
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
         BConstants::FILE_BACKUP_RESTORE_EVENTS,

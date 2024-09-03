@@ -35,6 +35,14 @@ private:
     LibN::NAsyncContextCallback *ctx_ = nullptr;
 };
 
+struct WorkArgs {
+    std::mutex callbackMutex;
+    std::condition_variable callbackCondition;
+    std::atomic<bool> isReady {false};
+    BackupRestoreCallback *ptr = nullptr;
+    InputArgsParser argParser;
+};
+
 class GeneralCallbacks {
 public:
     GeneralCallbacks(const napi_env &env, const LibN::NVal &thisPtr, const LibN::NVal &jsCallbacks)

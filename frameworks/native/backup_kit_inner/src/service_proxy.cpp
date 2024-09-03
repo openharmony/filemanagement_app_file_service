@@ -470,7 +470,7 @@ sptr<IService> ServiceProxy::GetInstance()
                                             [loadCallback]() { return loadCallback->isLoadSuccess_.load(); });
     if (!waitStatus) {
         HILOGE("Load backup sa timeout");
-        AppRadar::Info info("", "", "{\"reason\":\"Load backup sa timeout\"}");
+        AppRadar::Info info("", "", "\"reason\":\"Load backup sa timeout\"");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "ServiceProxy::GetInstance",
             AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_BOOT_BACKUP_SA_FAIL,
             static_cast<int32_t>(BError::Codes::SA_INVAL_ARG));
@@ -530,7 +530,7 @@ void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t sys
     unique_lock<mutex> lock(proxyMutex_);
     serviceProxy_ = nullptr;
     isLoadSuccess_.store(false);
-    AppRadar::Info info("", "", "{\"reason\":\"Load backup sa fail\"}");
+    AppRadar::Info info("", "", "\"reason\":\"Load backup sa fail\"");
     AppRadar::GetInstance().RecordBackupFuncRes(info, "ServiceProxyLoadCallback::OnLoadSystemAbilityFail",
         AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_BOOT_BACKUP_SA_FAIL,
         static_cast<int32_t>(BError::Codes::SA_INVAL_ARG));
@@ -562,7 +562,7 @@ ErrCode ServiceProxy::GetBackupInfo(BundleName &bundleName, std::string &result)
     return BError(BError::Codes::OK, "success");
 }
 
-ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result)
 {
     HILOGI("ServiceProxy UpdateTimer Begin.");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
@@ -573,8 +573,8 @@ ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool
     if (!data.WriteString(bundleName)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleName").GetCode();
     }
-    if (!data.WriteUint32(timeOut)) {
-        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send timeOut").GetCode();
+    if (!data.WriteUint32(timeout)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send timeout").GetCode();
     }
     MessageParcel reply;
     MessageOption option;

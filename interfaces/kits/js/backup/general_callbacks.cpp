@@ -114,11 +114,7 @@ void BackupRestoreCallback::CallJsMethod(InputArgsParser argParser)
         HILOGE("failed to get uv event loop.");
         return;
     }
-    struct WorkArgs {
-        BackupRestoreCallback *ptr = nullptr;
-        InputArgsParser argParser;
-    };
-    auto workArgs = make_unique<WorkArgs>();
+    auto workArgs = make_shared<WorkArgs>();
     auto work = make_unique<uv_work_t>();
     if (workArgs == nullptr || work == nullptr) {
         HILOGE("failed to new workArgs or uv_work_t.");
@@ -134,21 +130,25 @@ void BackupRestoreCallback::CallJsMethod(InputArgsParser argParser)
             auto workArgs = reinterpret_cast<WorkArgs *>(work->data);
             do {
                 if (workArgs == nullptr) {
-                    HILOGE("failed to get CallJsParam.");
+                    HILOGE("failed to get workArgs.");
                     break;
                 }
                 DoCallJsMethod(workArgs->ptr->env_, workArgs->ptr->ctx_, workArgs->argParser);
             } while (false);
-            delete workArgs;
+            HILOGI("will notify current thread info");
+            std::unique_lock<std::mutex> lock(workArgs->callbackMutex);
+            workArgs->isReady.store(true);
+            workArgs->callbackCondition.notify_all();
             delete work;
         });
     if (ret != 0) {
         HILOGE("failed to exec uv_queue_work.");
-        workArgs.reset();
         work.reset();
         return;
     }
-    workArgs.release();
+    std::unique_lock<std::mutex> lock(workArgs->callbackMutex);
+    HILOGI("Wait execute callback method end");
+    workArgs->callbackCondition.wait(lock, [workArgs]() { return workArgs->isReady.load(); });
     work.release();
     HILOGI("call BackupRestoreCallback CallJsMethod end.");
 }

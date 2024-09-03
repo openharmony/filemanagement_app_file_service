@@ -1383,11 +1383,13 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_GetBackupInfo_0100, testing::ext::Te
     GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_GetBackupInfo_0100";
     try {
         extBackupJs->jsObj_ = make_unique<NativeReferenceMock>();
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_invalid_arg));
         auto ret = extBackupJs->GetBackupInfo([](ErrCode, std::string){});
         EXPECT_EQ(ret, EINVAL);
 
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
@@ -1398,7 +1400,28 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_GetBackupInfo_0100, testing::ext::Te
         })));
         ret = extBackupJs->GetBackupInfo([](ErrCode, std::string){});
         EXPECT_EQ(ret, EINVAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by GetBackupInfo.";
+    }
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_GetBackupInfo_0100";
+}
 
+/**
+ * @tc.number: SUB_backup_ext_js_GetBackupInfo_0200
+ * @tc.name: SUB_backup_ext_js_GetBackupInfo_0200
+ * @tc.desc: 测试 GetBackupInfo 各个分支成功与失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAFBOS
+ */
+HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_GetBackupInfo_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_GetBackupInfo_0200";
+    try {
+        extBackupJs->jsObj_ = make_unique<NativeReferenceMock>();
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_ok))
@@ -1408,9 +1431,10 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_GetBackupInfo_0100, testing::ext::Te
             param->retParser(nullptr, nullptr);
             return -1;
         })));
-        ret = extBackupJs->GetBackupInfo([](ErrCode, std::string){});
+        auto ret = extBackupJs->GetBackupInfo([](ErrCode, std::string){});
         EXPECT_EQ(ret, EINVAL);
 
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_promise(_, _, _))

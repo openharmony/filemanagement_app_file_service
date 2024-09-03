@@ -140,11 +140,6 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
         return DisposeErr::IPC_FAIL;
     }
 
-    if (!data.WriteRemoteObject(this)) {
-        HILOGI("write RemoteObject failed");
-        return DisposeErr::IPC_FAIL;
-    }
-
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     int32_t ret = appRemoteObj_->SendRequest(static_cast<int>(disposeOperation), data, reply, option);

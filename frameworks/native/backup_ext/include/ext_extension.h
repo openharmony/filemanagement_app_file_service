@@ -27,6 +27,7 @@
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_json/b_report_entity.h"
+#include "b_radar/b_radar.h"
 #include "ext_backup_js.h"
 #include "ext_extension_stub.h"
 #include "i_service.h"
@@ -67,6 +68,7 @@ public:
         }
         bundleName_ = bundleName;
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        SetStagingPathProperties();
     }
     ~BackupExtExtension()
     {
@@ -168,6 +170,7 @@ private:
 
     void AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     void AsyncTaskOnIncrementalBackup();
+    int DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd manifestFd);
     ErrCode IncrementalBigFileReady(const TarMap &pkgInfo, const vector<struct ReportFileInfo> &bigInfos,
         sptr<IService> proxy);
     ErrCode BigFileReady(const TarMap &bigFileInfo, sptr<IService> proxy);
@@ -261,6 +264,7 @@ private:
     void CloseOnProcessTimeOutTimer();
     void UpdateOnStartTime();
     int32_t GetOnStartTimeCost();
+    bool SetStagingPathProperties();
 
 private:
     std::shared_mutex lock_;
@@ -290,6 +294,7 @@ private:
     std::atomic<bool> onProcessTimeout_ {false};
     std::chrono::time_point<std::chrono::system_clock> g_onStart;
     std::mutex onStartTimeLock_;
+    AppRadar::DoRestoreInfo radarRestoreInfo_ { 0 };
 };
 } // namespace OHOS::FileManagement::Backup
 

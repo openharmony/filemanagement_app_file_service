@@ -38,6 +38,7 @@
 #include "b_json/b_json_entity_caps.h"
 #include "b_ohos/startup/backup_para.h"
 #include "b_process/b_multiuser.h"
+#include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
 #include "filemgmt_libhilog.h"
@@ -93,14 +94,13 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
            so there must be set init userId.
         */
         HILOGI("Begin");
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Get LocalCapabilities Incremental Error, session is empty or cleaning up the service");
             return UniqueFd(-ENOENT);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-        session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
-        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
+        string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
         BExcepUltils::VerifyPath(path, false);
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
@@ -113,7 +113,7 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
 
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
-        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(session_->GetSessionUserId(), bundleNames);
+        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(GetUserIdDefault(), bundleNames);
         cache.SetBundleInfos(bundleInfos, true);
         cachedEntity.Persist();
         HILOGI("Service GetLocalCapabilitiesIncremental persist");
@@ -181,7 +181,7 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("session is nullptr");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -243,7 +243,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session  error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -286,7 +286,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -342,6 +342,9 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
         if (!fileInfo.fileName.empty()) {
             HILOGE("Forbit to use PublishIncrementalFile with fileName for App");
             return EPERM;
+        }
+        if (session_ != nullptr) {
+            session_->SetPublishFlag(fileInfo.owner);
         }
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
         if (backUpConnection == nullptr) {
@@ -459,16 +462,18 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
             proxy->HandleClear();
             session_->StopFwkTimer(callerName);
             session_->StopExtTimer(callerName);
-            NotifyCallerCurAppIncrementDone(errCode, callerName);
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
+            NotifyCallerCurAppIncrementDone(errCode, callerName);
         }
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        ReleaseOnException();
         HILOGE("AppIncrementalDone error, err code is:%{public}d", e.GetCode());
         return e.GetCode(); // 任意异常产生，终止监听该任务
     } catch (...) {
+        ReleaseOnException();
         HILOGI("Unexpected exception");
         return EPERM;
     }
@@ -494,6 +499,9 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
             int res = proxy->GetIncrementalFileHandle(fileName);
             if (res) {
                 HILOGE("Failed to extension file handle");
+                AppRadar::Info info (bundleName, "", "");
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandle",
+                    GetUserIdDefault(), BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, res);
             }
         } else {
             SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);
@@ -539,7 +547,7 @@ bool Service::IncrementalBackup(const string &bundleName)
         for (auto &fileName : fileNameVec) {
             ret = proxy->GetIncrementalFileHandle(fileName);
             if (ret) {
-                HILOGE("Failed to extension file handle %{public}s", fileName.c_str());
+                HILOGE("Failed to extension file handle %{public}s", GetAnonyString(fileName).c_str());
             }
         }
         return true;

@@ -57,7 +57,7 @@ public:
     MOCK_METHOD1(AppIncrementalDone, ErrCode(ErrCode errCode));
     MOCK_METHOD2(GetIncrementalFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
     MOCK_METHOD2(GetBackupInfo, ErrCode(BundleName &bundleName, std::string &result));
-    MOCK_METHOD3(UpdateTimer, ErrCode(BundleName &bundleName, uint32_t timeOut, bool &result));
+    MOCK_METHOD3(UpdateTimer, ErrCode(BundleName &bundleName, uint32_t timeout, bool &result));
     MOCK_METHOD0(GetAppLocalListAndDoIncrementalBackup, ErrCode());
 };
 } // End of namespace OHOS::FileManagement::Backup
