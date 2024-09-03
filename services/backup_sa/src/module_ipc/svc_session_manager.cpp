@@ -290,7 +290,7 @@ sptr<SvcBackupConnection> SvcSessionManager::GetBackupAbilityExt(const string &b
         revPtrStrong->ExtConnectDone(move(bundleName));
     };
 
-    return sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnected));
+    return sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnected, bundleName));
 }
 
 std::shared_ptr<SABackupConnection> SvcSessionManager::GetBackupSAExt(const std::string &bundleName)

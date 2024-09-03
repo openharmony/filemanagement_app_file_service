@@ -63,7 +63,12 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
         "PID", getpid(),
         "TIME", strTime.str()
     );
-    callConnected_(move(bundleName));
+    if (bundleNameIndexInfo_.find(bundleName) == string::npos) {
+        HILOGE("Current bundle name is wrong, bundleNameIndexInfo:%{public}s, bundleName:%{public}s",
+            bundleNameIndexInfo_.c_str(), bundleName.c_str());
+        return;
+    }
+    callConnected_(move(bundleNameIndexInfo_));
     HILOGI("called end");
 }
 

@@ -32,7 +32,8 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     bundleInfos.emplace_back(
-        BJsonEntityCaps::BundleInfo {"com.example.app2backup", {}, {}, 0, 0, true, false, "com.example.app2backup"});
+        BJsonEntityCaps::BundleInfo {"com.example.app2backup", 0, {}, {}, 0, 0, true, false,
+            "com.example.app2backup"});
     return bundleInfos;
 }
 
@@ -46,7 +47,8 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     bundleInfos.emplace_back(
-        BJsonEntityCaps::BundleInfo {"com.example.app2backup", {}, {}, 0, 0, true, false, "com.example.app2backup"});
+        BJsonEntityCaps::BundleInfo {"com.example.app2backup", 0, {}, {}, 0, 0, true, false,
+            "com.example.app2backup"});
     return bundleInfos;
 }
 
@@ -55,7 +57,8 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     bundleInfos.emplace_back(
-        BJsonEntityCaps::BundleInfo {"com.example.app2backup", {}, {}, 0, 0, true, false, "com.example.app2backup"});
+        BJsonEntityCaps::BundleInfo {"com.example.app2backup", 0, {}, {}, 0, 0, true, false,
+            "com.example.app2backup"});
     return bundleInfos;
 }
 

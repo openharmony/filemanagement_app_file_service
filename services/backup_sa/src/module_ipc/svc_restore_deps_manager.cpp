@@ -15,6 +15,7 @@
 
 #include "module_ipc/svc_restore_deps_manager.h"
 
+#include "b_jsonutil/b_jsonutil.h"
 #include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -28,11 +29,12 @@ vector<string> SvcRestoreDepsManager::GetRestoreBundleNames(const vector<BJsonEn
     BuildDepsMap(bundleInfos);            // 构建依赖Map
 
     for (auto &bundleInfo : bundleInfos) {
-        restoreBundleNames.emplace_back(bundleInfo.name);
+        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(bundleInfo.name, bundleInfo.appIndex);
+        restoreBundleNames.emplace_back(bundleNameIndexInfo);
         string restoreDeps = bundleInfo.restoreDeps;
         if (!restoreDeps.empty()) {
-            HILOGI("RestoreDeps is not empty, bundleName=%{public}s", bundleInfo.name.c_str());
-            if (IsAllDepsRestored(bundleInfo.name)) {
+            HILOGI("RestoreDeps is not empty, bundleName=%{public}s", bundleNameIndexInfo.c_str());
+            if (IsAllDepsRestored(bundleNameIndexInfo)) {
                 HILOGI("RestoreDeps is all restored, bundleName=%{public}s", bundleInfo.name.c_str());
             }
         }
@@ -77,7 +79,8 @@ bool SvcRestoreDepsManager::IsAllDepsRestored(const string &bundle)
 void SvcRestoreDepsManager::BuildDepsMap(const vector<BJsonEntityCaps::BundleInfo> &bundleInfos)
 {
     for (auto &bundleInfo : bundleInfos) {
-        if (depsMap_.find(bundleInfo.name) != depsMap_.end()) {
+        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(bundleInfo.name, bundleInfo.appIndex);
+        if (depsMap_.find(bundleNameIndexInfo) != depsMap_.end()) {
             continue;
         }
         allBundles_.emplace_back(bundleInfo);
@@ -92,7 +95,7 @@ void SvcRestoreDepsManager::BuildDepsMap(const vector<BJsonEntityCaps::BundleInf
             }
         }
 
-        depsMap_.insert(make_pair(bundleInfo.name, depsList));
+        depsMap_.insert(make_pair(bundleNameIndexInfo, depsList));
     }
 }
 
