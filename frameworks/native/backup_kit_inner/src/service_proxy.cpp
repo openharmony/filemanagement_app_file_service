@@ -562,7 +562,7 @@ ErrCode ServiceProxy::GetBackupInfo(BundleName &bundleName, std::string &result)
     return BError(BError::Codes::OK, "success");
 }
 
-ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result)
 {
     HILOGI("ServiceProxy UpdateTimer Begin.");
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
@@ -573,8 +573,8 @@ ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool
     if (!data.WriteString(bundleName)) {
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send bundleName").GetCode();
     }
-    if (!data.WriteUint32(timeOut)) {
-        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send timeOut").GetCode();
+    if (!data.WriteUint32(timeout)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send timeout").GetCode();
     }
     MessageParcel reply;
     MessageOption option;

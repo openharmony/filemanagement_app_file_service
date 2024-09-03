@@ -258,7 +258,7 @@ static int32_t GetBucketNum(const std::string &fileName)
 {
     int32_t fileId = GetFileIdFromFileName(fileName);
     if (fileId < 0) {
-        LOGE("GetFileIdFromFileName failed with %{public}s", fileName.c_str());
+        LOGE("GetFileIdFromFileName failed with %{private}s", fileName.c_str());
         return fileId;
     }
     return CalAssetBucket(fileId);

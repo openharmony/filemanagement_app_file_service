@@ -752,4 +752,24 @@ void BackupExtExtension::CloseOnProcessTimeOutTimer()
     onProcessTimeoutTimer_.Unregister(onProcessTimeoutTimerId_);
     HILOGI("End");
 }
+
+bool BackupExtExtension::SetStagingPathProperties()
+{
+    struct stat curBundleStat {};
+    if (lstat(BConstants::BUNDLE_BASE_DIR.c_str(), &curBundleStat) != 0) {
+        HILOGE("Failed to lstat, err = %{public}d", errno);
+        return false;
+    }
+    if (lchown(string(BConstants::PATH_BUNDLE_BACKUP_HOME).c_str(),
+        curBundleStat.st_uid, curBundleStat.st_gid) != 0) {
+        HILOGE("Failed to lchown, err = %{public}d", errno);
+        return false;
+    }
+    if (lchown(string(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1).c_str(),
+        curBundleStat.st_uid, curBundleStat.st_gid) != 0) {
+        HILOGE("Failed to lchown, err = %{public}d", errno);
+        return false;
+    }
+    return true;
+}
 } // namespace OHOS::FileManagement::Backup

@@ -78,20 +78,26 @@ BJsonClearDataConfig::BJsonClearDataConfig()
     HILOGI("Creat filePath ok :%{public}s", filePath.c_str());
 }
 
-bool BJsonClearDataConfig::HasClearBundleRecord()
+static cJSON* ReadClearConfigToCjson()
 {
-    lock_guard<mutex> autoLock(fileMutex_);
     string filePath = PATH_BUNDLE_BACKUP_HOME + CONFIG_NAME;
     ifstream inFile(filePath);
     if (!inFile.is_open()) {
         HILOGE("open json failed");
-        return false;
+        return nullptr;
     }
 
     string jsonString((istreambuf_iterator<char>(inFile)), istreambuf_iterator<char>());
     inFile.close();
 
-    cJSON *jsonObjectDis = cJSON_Parse(jsonString.c_str());
+    return cJSON_Parse(jsonString.c_str());
+}
+
+bool BJsonClearDataConfig::HasClearBundleRecord()
+{
+    lock_guard<mutex> autoLock(fileMutex_);
+
+    cJSON *jsonObjectDis = ReadClearConfigToCjson();
     if (jsonObjectDis == nullptr) {
         HILOGE("parse json failed");
         return false;
@@ -112,17 +118,7 @@ bool BJsonClearDataConfig::HasClearBundleRecord()
 bool BJsonClearDataConfig::FindClearBundleRecord(const string& bundleName)
 {
     lock_guard<mutex> autoLock(fileMutex_);
-    string filePath = PATH_BUNDLE_BACKUP_HOME + CONFIG_NAME;
-    ifstream inFile(filePath);
-    if (!inFile.is_open()) {
-        HILOGE("open json failed");
-        return false;
-    }
-
-    string jsonString((istreambuf_iterator<char>(inFile)), istreambuf_iterator<char>());
-    inFile.close();
-
-    cJSON *jsonObjectDis = cJSON_Parse(jsonString.c_str());
+    cJSON *jsonObjectDis = ReadClearConfigToCjson();
     if (jsonObjectDis == nullptr) {
         HILOGE("parse json failed");
         return false;
@@ -151,17 +147,7 @@ bool BJsonClearDataConfig::FindClearBundleRecord(const string& bundleName)
 bool BJsonClearDataConfig::InsertClearBundleRecord(const string& bundleName)
 {
     lock_guard<mutex> autoLock(fileMutex_);
-    string filePath = PATH_BUNDLE_BACKUP_HOME + CONFIG_NAME;
-    ifstream inFile(filePath);
-    if (!inFile.is_open()) {
-        HILOGE("open json failed");
-        return false;
-    }
-
-    string jsonString((istreambuf_iterator<char>(inFile)), istreambuf_iterator<char>());
-    inFile.close();
-
-    cJSON *jsonObjectDis = cJSON_Parse(jsonString.c_str());
+    cJSON *jsonObjectDis = ReadClearConfigToCjson();
     if (jsonObjectDis == nullptr) {
         HILOGE("parse json failed");
         return false;
@@ -199,17 +185,7 @@ bool BJsonClearDataConfig::InsertClearBundleRecord(const string& bundleName)
 bool BJsonClearDataConfig::DeleteClearBundleRecord(const string& bundleName)
 {
     lock_guard<mutex> autoLock(fileMutex_);
-    string filePath = PATH_BUNDLE_BACKUP_HOME + CONFIG_NAME;
-    ifstream input(filePath);
-    if (!input.is_open()) {
-        HILOGE("open json failed");
-        return false;
-    }
-
-    string jsonString((istreambuf_iterator<char>(input)), istreambuf_iterator<char>());
-    input.close();
-
-    cJSON *jsonObjectDis = cJSON_Parse(jsonString.c_str());
+    cJSON *jsonObjectDis = ReadClearConfigToCjson();
     if (jsonObjectDis == nullptr) {
         HILOGE("parse json failed");
         return false;
@@ -235,6 +211,7 @@ bool BJsonClearDataConfig::DeleteClearBundleRecord(const string& bundleName)
         cJSON_Delete(jsonObjectDis);
         return false;
     }
+    string filePath = PATH_BUNDLE_BACKUP_HOME + CONFIG_NAME;
     ofstream output(filePath);
     if (!output.is_open()) {
         HILOGE("open json failed");
@@ -253,17 +230,7 @@ bool BJsonClearDataConfig::DeleteClearBundleRecord(const string& bundleName)
 vector<string> BJsonClearDataConfig::GetAllClearBundleRecords()
 {
     lock_guard<mutex> autoLock(fileMutex_);
-    string filePath = PATH_BUNDLE_BACKUP_HOME + CONFIG_NAME;
-    vector<string> bundleNameList;
-    ifstream inFile(filePath);
-    if (!inFile.is_open()) {
-        HILOGE("open json failed");
-        return {};
-    }
-    string jsonString((istreambuf_iterator<char>(inFile)), istreambuf_iterator<char>());
-    inFile.close();
-    
-    cJSON *jsonObjectDis = cJSON_Parse(jsonString.c_str());
+    cJSON *jsonObjectDis = ReadClearConfigToCjson();
     if (jsonObjectDis == nullptr) {
         HILOGE("parse json failed");
         return {};
@@ -275,6 +242,7 @@ vector<string> BJsonClearDataConfig::GetAllClearBundleRecords()
         cJSON_Delete(jsonObjectDis);
         return {};
     }
+    vector<string> bundleNameList;
     for (int i = 0; i < cJSON_GetArraySize(configArray); ++i) {
         cJSON *item = cJSON_GetArrayItem(configArray, i);
         if (item != nullptr && cJSON_GetObjectItem(item, "bundleName") != nullptr &&
@@ -303,16 +271,7 @@ bool BJsonClearDataConfig::DeleteConfigFile()
 
 bool BJsonClearDataConfig::WriteClearBundleRecord(const string& bundleName)
 {
-    string filePath = PATH_BUNDLE_BACKUP_HOME + CONFIG_NAME;
-    ifstream inFile(filePath);
-    if (!inFile.is_open()) {
-        HILOGE("open json failed");
-        return false;
-    }
-    string jsonString((istreambuf_iterator<char>(inFile)), istreambuf_iterator<char>());
-    inFile.close();
-
-    cJSON *jsonObjectDis = cJSON_Parse(jsonString.c_str());
+    cJSON *jsonObjectDis = ReadClearConfigToCjson();
     if (jsonObjectDis == nullptr) {
         HILOGE("parse json failed");
         return false;
@@ -339,6 +298,7 @@ bool BJsonClearDataConfig::WriteClearBundleRecord(const string& bundleName)
         cJSON_Delete(jsonObjectDis);
         return false;
     }
+    string filePath = PATH_BUNDLE_BACKUP_HOME + CONFIG_NAME;
     ofstream outFile(filePath);
     if (!outFile.is_open()) {
         HILOGE("open json failed");
