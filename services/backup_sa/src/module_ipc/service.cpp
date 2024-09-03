@@ -168,9 +168,8 @@ UniqueFd Service::GetLocalCapabilities()
             return UniqueFd(-EPERM);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-        session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
-        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
+        string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
         BExcepUltils::VerifyPath(path, false);
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
@@ -184,7 +183,7 @@ UniqueFd Service::GetLocalCapabilities()
 
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
-        auto bundleInfos = BundleMgrAdapter::GetFullBundleInfos(session_->GetSessionUserId());
+        auto bundleInfos = BundleMgrAdapter::GetFullBundleInfos(GetUserIdDefault());
         cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -1053,23 +1052,20 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
             auto backUpConnection = session_->GetExtConnection(bundleName);
             if (backUpConnection == nullptr) {
                 HILOGE("GetFileHandle error, backUpConnection is empty");
-                AppRadar::Info info (bundleName, "", "backUpConnection is empty");
-                int32_t err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
-                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
-                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
                 HILOGE("GetFileHandle error, Extension backup Proxy is empty");
-                AppRadar::Info info (bundleName, "", "Extension backup Proxy is empty");
-                int32_t err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
-                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
-                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             int32_t errCode = 0;
             UniqueFd fd = proxy->GetFileHandle(fileName, errCode);
+            if (errCode != ERR_OK) {
+                AppRadar::Info info (bundleName, "", "");
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
+                    BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, errCode);
+            }
             session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd), errCode);
         } else {
             session_->SetExtFileNameRequest(bundleName, fileName);
@@ -1486,7 +1482,7 @@ void Service::SendErrAppGalleryNotify()
         HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
             bundleName.c_str());
         if (disposeErr != DisposeErr::OK) {
-            HILOGE("Error,disposal will be clear in the end");
+            HILOGE("Error, disposal will be clear in the end");
             return ;
         }
         if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
@@ -1654,7 +1650,6 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
         HILOGE("Get BackupInfo error, session is empty.");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    session_->SetSessionUserId(GetUserIdDefault());
     auto backupConnection = session_->CreateBackupConnection(bundleName);
     if (backupConnection == nullptr) {
         HILOGE("backupConnection is null. bundleName: %{public}s", bundleName.c_str());
@@ -1665,7 +1660,7 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
     backupConnection->SetCallback(callConnected);
     backupConnection->SetCallDied(callDied);
     AAFwk::Want want = CreateConnectWant(bundleName);
-    auto ret = backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
+    auto ret = backupConnection->ConnectBackupExtAbility(want, GetUserIdDefault());
     if (ret) {
         HILOGE("ConnectBackupExtAbility faild, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
         return BError(BError::Codes::SA_BOOT_EXT_FAIL);

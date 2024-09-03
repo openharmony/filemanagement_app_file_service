@@ -73,6 +73,16 @@ public:
             : bundleName(bundleName), status(status), resInfo(resInfo) {}
     };
 
+    struct DoRestoreInfo {
+        uint32_t bigFileNum;
+        uint64_t bigFileSize;
+        uint32_t bigFileSpendTime;
+        uint32_t tarFileNum;
+        uint64_t tarFileSize;
+        uint32_t tarFileSpendTime;
+        uint32_t totalFileSpendTime;
+    };
+
 public:
     int32_t GetUserId();
     void RecordDefaultFuncRes(Info &info, const std::string &func, int32_t userId,
