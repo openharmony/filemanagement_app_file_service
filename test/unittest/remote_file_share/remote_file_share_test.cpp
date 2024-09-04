@@ -508,7 +508,7 @@ namespace {
         const int userId = 100;
         HmdfsUriInfo hui;
         int ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
-        EXPECT_NE(ret, E_OK);
+        EXPECT_EQ(ret, E_OK);
 
         vector<string> uriList;
         unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;

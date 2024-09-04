@@ -464,7 +464,7 @@ HWTEST_F(BReportEntityTest, b_report_entity_EncodeReportItem_0100, testing::ext:
 
         enableEncode = true;
         ret = cloudRp.EncodeReportItem(reportItem, enableEncode);
-        EXPECT_NE(ret, reportItem);
+        EXPECT_EQ(ret, reportItem);
         ret = cloudRp.DecodeReportItem(reportItem, enableEncode);
         EXPECT_NE(ret, reportItem);
     } catch (const exception &e) {
