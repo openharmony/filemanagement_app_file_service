@@ -17,6 +17,7 @@
 
 #include "b_radar/b_radar.h"
 #include "b_sa/b_sa_utils.h"
+#include "b_jsonutil/b_jsonutil.h"
 #include "filemgmt_libhilog.h"
 #include "message_parcel.h"
 #include "module_app_gallery/app_gallery_dispose_proxy.h"
@@ -127,14 +128,19 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
         return DisposeErr::CONN_FAIL;
     }
 
+    BJsonUtil::BundleDetailInfo bundleDetailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
     MessageParcel data;
     const auto interfaceToken = APP_FOUNDATION_SERVICE;
     if (!data.WriteInterfaceToken(interfaceToken)) {
         HILOGI("write WriteInterfaceToken failed");
         return DisposeErr::IPC_FAIL;
     }
-    if (!data.WriteString16(Str8ToStr16(bundleName))) {
-        HILOGI("write ownerInfo and bundleName failed");
+    if (!data.WriteString16(Str8ToStr16(bundleDetailInfo.bundleName))) {
+        HILOGI("write bundleName failed");
+        return DisposeErr::IPC_FAIL;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(bundleDetailInfo.bundleIndex))) {
+        HILOGI("write bundleIndex failed");
         return DisposeErr::IPC_FAIL;
     }
 
@@ -147,12 +153,14 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
     MessageOption option(MessageOption::TF_ASYNC);
     int32_t ret = appRemoteObj_->SendRequest(static_cast<int>(disposeOperation), data, reply, option);
     if (ret != ERR_NONE) {
-        HILOGI("SendRequest error, code=%{public}d, bundleName=%{public}s", ret, bundleName.c_str());
+        HILOGI("SendRequest error, code=%{public}d, bundleName=%{public}s , appindex =%{public}d",
+            ret, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
         RecordDoDisposeRes(bundleName, disposeOperation, ret);
         return DisposeErr::REQUEST_FAIL;
     }
 
-    HILOGI("SendRequest success, dispose=%{public}d, bundleName=%{public}s", disposeOperation, bundleName.c_str());
+    HILOGI("SendRequest success, dispose=%{public}d, bundleName=%{public}s, appindex =%{public}d",
+        disposeOperation, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
     return DisposeErr::OK;
 }
 
