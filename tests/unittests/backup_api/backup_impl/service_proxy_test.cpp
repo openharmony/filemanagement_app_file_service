@@ -1089,4 +1089,134 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetAppLocalListAndDoIncrementalBack
     EXPECT_NE(ret, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_GetAppLocalListAndDoIncrementalBackup_0100";
 }
+
+/**
+ * @tc.number: SUB_Service_proxy_ReportAppProcessInfo_0100
+ * @tc.name: SUB_Service_proxy_ReportAppProcessInfo_0100
+ * @tc.desc: 测试 ReportAppProcessInfo 接口成功
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_ReportAppProcessInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_ReportAppProcessInfo_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_ReportAppProcessInfo_0100 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(4)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest));
+    std::string processInfo = "{\"timeInfo\": \"\", \"resultInfo\": \"\"}";
+    int32_t result = proxy_->ReportAppProcessInfo(processInfo, BackupRestoreScenario::FULL_RESTORE);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->ReportAppProcessInfo(processInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->ReportAppProcessInfo(processInfo, BackupRestoreScenario::FULL_BACKUP);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->ReportAppProcessInfo(processInfo, BackupRestoreScenario::INCREMENTAL_BACKUP);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_ReportAppProcessInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_ReportAppProcessInfo_0101
+ * @tc.name: SUB_Service_proxy_ReportAppProcessInfo_0101
+ * @tc.desc: 测试 ReportAppProcessInfo 接口失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_ReportAppProcessInfo_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_ReportAppProcessInfo_0101";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_ReportAppProcessInfo_0101 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(4)
+        .WillOnce(Return(EPERM))
+        .WillOnce(Return(EPERM))
+        .WillOnce(Return(EPERM))
+        .WillOnce(Return(EPERM));
+    std::string processInfo = "{\"timeInfo\": \"\", \"resultInfo\": \"\"}";
+    int32_t result = proxy_->ReportAppProcessInfo(processInfo, BackupRestoreScenario::FULL_RESTORE);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+
+    result = proxy_->ReportAppProcessInfo(processInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+
+    result = proxy_->ReportAppProcessInfo(processInfo, BackupRestoreScenario::FULL_BACKUP);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+
+    result = proxy_->ReportAppProcessInfo(processInfo, BackupRestoreScenario::INCREMENTAL_BACKUP);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_ReportAppProcessInfo_0101";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_StartExtTimer_0100
+ * @tc.name: SUB_Service_proxy_StartExtTimer_0100
+ * @tc.desc: 测试 StartExtTimer 执行DoBackup的接口成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_StartExtTimer_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_StartExtTimer_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_StartExtTimer_0100 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+    bool isExtStart;
+    int32_t ret = proxy_->StartExtTimer(isExtStart);
+    EXPECT_EQ(ret, BError(BError::Codes::OK));
+    ret = proxy_->StartExtTimer(isExtStart);
+    EXPECT_NE(ret, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_StartExtTimer_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_StartFwkTimer_0100
+ * @tc.name: SUB_Service_proxy_StartFwkTimer_0100
+ * @tc.desc: 测试 StartFwkTimer 执行DoBackup的接口成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_StartFwkTimer_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_StartFwkTimer_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_StartFwkTimer_0100 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+    bool isFwkStart;
+    int32_t ret = proxy_->StartFwkTimer(isFwkStart);
+    EXPECT_EQ(ret, BError(BError::Codes::OK));
+    ret = proxy_->StartFwkTimer(isFwkStart);
+    EXPECT_NE(ret, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_StartFwkTimer_0100";
+}
 } // namespace OHOS::FileManagement::Backup

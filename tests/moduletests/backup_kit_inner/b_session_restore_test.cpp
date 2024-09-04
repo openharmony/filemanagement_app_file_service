@@ -78,7 +78,7 @@ void BSessionRestoreTest::SetUp()
     SetMockInitBackupOrRestoreSession(true);
     SetMockGetInstance(true);
     SetMockLoadSystemAbility(true);
-    restorePtr_ = unique_ptr<BSessionRestore>();
+    restorePtr_ = make_unique<BSessionRestore>();
 }
 
 void BSessionRestoreTest::TearDown()
@@ -451,5 +451,38 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0900, testing::ext::T
         GTEST_LOG_(INFO) << "BSessionRestoreTest-an exception occurred by ~BSessionRestore.";
     }
     GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_0900";
+}
+
+/**
+ * @tc.number: SUB_backup_b_session_restore_1000
+ * @tc.name: SUB_backup_b_session_restore_1000
+ * @tc.desc: 测试Release接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_1000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_1000";
+    try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_1000 restorePtr_ == nullptr";
+        return;
+        }
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        SetMockGetInstance(false);
+        auto ret = restorePtr_->Release();
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
+
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        SetMockGetInstance(true);
+        ret = restorePtr_->Release();
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionRestoreTest-an exception occurred by Finish.";
+    }
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_1000";
 }
 } // namespace OHOS::FileManagement::Backup
