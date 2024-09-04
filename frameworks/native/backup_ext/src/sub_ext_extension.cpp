@@ -107,11 +107,19 @@ void BackupExtExtension::SetClearDataFlag(bool isClearData)
     }
 }
 
+string BackupExtExtension::GetBundlePath()
+{
+    if (bundleName_ == BConstants::BUNDLE_FILE_MANAGER) {
+        return string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    } else if (bundleName_ == BConstants::BUNDLE_MEDIAL_DATA) {
+        return string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    }
+    return string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+}
+
 std::map<std::string, off_t> BackupExtExtension::GetIdxFileInfos(bool isSpecialVersion)
 {
-    string restoreDir = isSpecialVersion ?
-        "" :
-        string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    string restoreDir = isSpecialVersion ? "" : GetBundlePath();
     auto extManageInfo = GetExtManageInfo();
     std::map<std::string, off_t> idxFileInfos;
     for (size_t i = 0; i < extManageInfo.size(); ++i) {
