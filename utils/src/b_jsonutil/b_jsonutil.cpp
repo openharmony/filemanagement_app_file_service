@@ -43,10 +43,15 @@ BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string
         return bundleDetailInfo;
     }
     std::string bundleName = bundleNameStr.substr(0, hasPos);
-    std::string indexStr = bundleNameStr.substr(hasPos + 1);
-    int index = std::stoi(indexStr);
+    std::string indexStr = "";
+    if (to_string(bundleNameStr.back()) != BUNDLE_INDEX_SPLICE) {
+        indexStr = bundleNameStr.substr(hasPos + 1);
+        int index = std::stoi(indexStr);
+        bundleDetailInfo.bundleIndex = index;
+    } else {
+        bundleDetailInfo.bundleIndex =  BUNDLE_INDEX_DEFAULT_VAL;
+    }
     bundleDetailInfo.bundleName = bundleName;
-    bundleDetailInfo.bundleIndex = index;
     HILOGI("End parse bundle name and index");
     return bundleDetailInfo;
 }
@@ -78,10 +83,15 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
             bundleNamesOnly.emplace_back(bundleName);
         } else {
             std::string bundleNameSplit = bundleName.substr(0, pos);
-            std::string indexSplit = bundleName.substr(pos + 1);
-            int index = std::stoi(indexSplit);
+            std::string indexSplit = "";
+            if (to_string(bundleName.back()) != BUNDLE_INDEX_SPLICE) {
+                indexSplit = bundleName.substr(pos + 1);
+                int index = std::stoi(indexSplit);
+                bundleIndex = index;
+            } else {
+                bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
+            }
             bundleNameOnly = bundleNameSplit;
-            bundleIndex = index;
             bundleNamesOnly.emplace_back(bundleNameSplit);
         }
         std::string bundleInfo = bundleInfos[i];
