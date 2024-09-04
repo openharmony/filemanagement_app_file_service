@@ -443,7 +443,7 @@ namespace {
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0013";
     }
 
-        /**
+    /**
      * @tc.name: Remote_file_share_GetDfsUriFromLocal_0014
      * @tc.desc: Test function of GetDfsUriFromLocal() interface for SUCCESS.
      *           the file name is chinese which has been encoded
@@ -463,6 +463,62 @@ namespace {
         EXPECT_EQ(ret, E_OK);
         EXPECT_EQ(hui.fileSize, 0);
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0014";
+    }
+
+    /**
+     * @tc.name: remote_file_share_GetDfsUriFromLocal_0015
+     * @tc.desc: Test function of GetDfsUrisFromLocal() interface.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7KDF7
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetDfsUriFromLocal_0015, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_GetDfsUriFromLocal_0015";
+        const string uriStr = "file://media/Photo/12/IMG_12345_0011/test.jpg";
+        const int userId = 100;
+        HmdfsUriInfo hui;
+        int ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
+        EXPECT_NE(ret, E_OK);
+
+        vector<string> uriList;
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+        uriList.push_back(uriStr);
+        ret = RemoteFileShare::GetDfsUrisFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_NE(ret, E_OK);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest uri is " << hui.uriStr;
+        GTEST_LOG_(INFO) << "RemoteFileShareTest file size is " << hui.fileSize;
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0015";
+    }
+
+    /**
+     * @tc.name: remote_file_share_GetDfsUriFromLocal_0016
+     * @tc.desc: Test function of GetDfsUrisFromLocal() interface.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7KDF7
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetDfsUriFromLocal_0016, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_GetDfsUriFromLocal_0016";
+        const string uriStr = "file://docs/storage/Users/currentUser/Documents/1.txt";
+        const int userId = 100;
+        HmdfsUriInfo hui;
+        int ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
+        EXPECT_NE(ret, E_OK);
+
+        vector<string> uriList;
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+        uriList.push_back(uriStr);
+        ret = RemoteFileShare::GetDfsUrisFromLocal(uriList, userId, uriToDfsUriMaps);
+        EXPECT_NE(ret, E_OK);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest uri is " << hui.uriStr;
+        GTEST_LOG_(INFO) << "RemoteFileShareTest file size is " << hui.fileSize;
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUriFromLocal_0016";
     }
 
     /**

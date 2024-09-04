@@ -347,4 +347,130 @@ HWTEST_F(BReportEntityTest, b_report_entity_StorageDealLine_0103, testing::ext::
     }
     GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_StorageDealLine_0103";
 }
+
+/**
+ * @tc.number: SUB_backup_b_report_entity_GetStorageReportInfos_0100
+ * @tc.name: b_report_entity_GetStorageReportInfos_0100
+ * @tc.desc: Test function of GetStorageReportInfos interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_GetStorageReportInfos_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_GetStorageReportInfos_0100";
+    try {
+        string fileName = "/a.txt";
+        string mode = "0644";
+        string isDir = "0";
+        string size = "1";
+        string mtime = "1501927260";
+        string hash = "ASDasadSDASDA";
+
+        string content = "version=1.0&attrNum=6\r\npath;mode;dir;size;mtime;hash\r\n";
+        content += fileName + ";" + mode + ";" + isDir + ";" + size + ";" + mtime + ";" + hash;
+        TestManager tm(__func__);
+        const auto [filePath, res] = GetTestFile(tm, content);
+        BReportEntity cloudRp(UniqueFd(open(filePath.data(), O_RDONLY, 0)));
+
+        struct ReportFileInfo fileStat = {};
+        vector<string> splits = {"/test", "0", "0", "0", "0", "0", "0"};
+        unordered_map<string, int> keys;
+        keys.emplace(INFO_MODE, 0);
+        keys.emplace(INFO_DIR, 1);
+        keys.emplace(INFO_SIZE, 2);
+        keys.emplace(INFO_MTIME, 3);
+        keys.emplace(INFO_HASH, 4);
+        keys.emplace(INFO_IS_INCREMENTAL, 5);
+        auto err = ParseReportInfo(fileStat, splits, keys);
+        EXPECT_EQ(err, ERR_OK);
+        bool ret = cloudRp.GetStorageReportInfos(fileStat);
+        EXPECT_TRUE(ret);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by GetStorageReportInfos.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_GetStorageReportInfos_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_report_entity_CheckAndUpdateIfReportLineEncoded_0100
+ * @tc.name: b_report_entity_CheckAndUpdateIfReportLineEncoded_0100
+ * @tc.desc: Test function of CheckAndUpdateIfReportLineEncoded interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_CheckAndUpdateIfReportLineEncoded_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_CheckAndUpdateIfReportLineEncoded_0100";
+    try {
+        string fileName = "/a.txt";
+        string mode = "0644";
+        string isDir = "0";
+        string size = "1";
+        string mtime = "1501927260";
+        string hash = "ASDasadSDASDA";
+
+        string content = "version=1.0&attrNum=6\r\npath;mode;dir;size;mtime;hash\r\n";
+        content += fileName + ";" + mode + ";" + isDir + ";" + size + ";" + mtime + ";" + hash;
+        TestManager tm(__func__);
+        const auto [filePath, res] = GetTestFile(tm, content);
+        BReportEntity cloudRp(UniqueFd(open(filePath.data(), O_RDONLY, 0)));
+
+        std::string path;
+        cloudRp.CheckAndUpdateIfReportLineEncoded(path);
+        path = filePath;
+        cloudRp.CheckAndUpdateIfReportLineEncoded(path);
+        EXPECT_TRUE(true);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by CheckAndUpdateIfReportLineEncoded.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_CheckAndUpdateIfReportLineEncoded_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_report_entity_EncodeReportItem_0100
+ * @tc.name: b_report_entity_EncodeReportItem_0100
+ * @tc.desc: Test function of EncodeReportItem interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_EncodeReportItem_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_EncodeReportItem_0100";
+    try {
+        string fileName = "/a.txt";
+        string mode = "0644";
+        string isDir = "0";
+        string size = "1";
+        string mtime = "1501927260";
+        string hash = "ASDasadSDASDA";
+
+        string content = "version=1.0&attrNum=6\r\npath;mode;dir;size;mtime;hash\r\n";
+        content += fileName + ";" + mode + ";" + isDir + ";" + size + ";" + mtime + ";" + hash;
+        TestManager tm(__func__);
+        const auto [filePath, res] = GetTestFile(tm, content);
+        BReportEntity cloudRp(UniqueFd(open(filePath.data(), O_RDONLY, 0)));
+
+        const std::string reportItem = "test";
+        bool enableEncode = false;
+        std::string ret = cloudRp.EncodeReportItem(reportItem, enableEncode);
+        EXPECT_EQ(ret, reportItem);
+        ret = cloudRp.DecodeReportItem(reportItem, enableEncode);
+        EXPECT_EQ(ret, reportItem);
+
+        enableEncode = true;
+        ret = cloudRp.EncodeReportItem(reportItem, enableEncode);
+        EXPECT_NE(ret, reportItem);
+        ret = cloudRp.DecodeReportItem(reportItem, enableEncode);
+        EXPECT_NE(ret, reportItem);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by EncodeReportItem. " << e.what();
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_EncodeReportItem_0100";
+}
 } // namespace OHOS::FileManagement::Backup
