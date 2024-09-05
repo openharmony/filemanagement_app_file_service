@@ -514,7 +514,7 @@ namespace {
         unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
         uriList.push_back(uriStr);
         ret = RemoteFileShare::GetDfsUrisFromLocal(uriList, userId, uriToDfsUriMaps);
-        EXPECT_NE(ret, E_OK);
+        EXPECT_EQ(ret, E_OK);
 
         GTEST_LOG_(INFO) << "RemoteFileShareTest uri is " << hui.uriStr;
         GTEST_LOG_(INFO) << "RemoteFileShareTest file size is " << hui.fileSize;
