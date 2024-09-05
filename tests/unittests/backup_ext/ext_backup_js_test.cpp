@@ -1499,15 +1499,16 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_OnProcess_0100, testing::ext::TestSi
     GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_OnProcess_0100";
     try {
         extBackupJs->jsObj_ = make_unique<NativeReferenceMock>();
-        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         auto ret = extBackupJs->OnProcess([](ErrCode, std::string){});
         EXPECT_EQ(ret, EINVAL);
 
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
         EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
             CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
@@ -1538,6 +1539,7 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_OnProcess_0200, testing::ext::TestSi
     try {
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_ok))
         .WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
@@ -1550,6 +1552,7 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_OnProcess_0200, testing::ext::TestSi
 
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_promise(_, _, _))
         .WillOnce(DoAll(SetArgPointee<ARG_INDEX_SECOND>(true), Return(napi_ok)));
         EXPECT_CALL(*napiMock, napi_open_handle_scope(_, _)).WillOnce(Return(napi_ok));
