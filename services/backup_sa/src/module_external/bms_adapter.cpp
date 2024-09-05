@@ -360,6 +360,42 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     return bundleInfos;
 }
 
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetFullBundleInfos(int32_t userId)
+{
+    vector<AppExecFwk::BundleInfo> installedBundles;
+    HILOGI("Begin GetFullBundleInfos");
+    auto bms = GetBundleManager();
+    if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles, userId)) {
+        throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle infos");
+    }
+    vector<string> bundleNames;
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    for (auto const &installedBundle : installedBundles) {
+        HILOGI("Begin get bundle infos, bundleName = %{public}s", installedBundle.name.data());
+        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+            installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
+            HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
+            continue;
+        }
+        auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo] =
+            GetAllowAndExtName(installedBundle.extensionInfos);
+        if (!allToBackup) {
+            HILOGI("Not allToBackup, bundleName = %{public}s", installedBundle.name.data());
+            bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.appIndex,
+                installedBundle.versionCode, installedBundle.versionName, 0, 0, allToBackup, fullBackupOnly, extName,
+                restoreDeps, supportScene, extraInfo});
+            continue;
+        }
+        bundleNames.emplace_back(installedBundle.name);
+    }
+    auto bundleInfosNew = BundleMgrAdapter::GetBundleInfos(bundleNames, userId);
+    auto bundleInfosSA = BundleMgrAdapter::GetBundleInfosForSA();
+    copy(bundleInfosNew.begin(), bundleInfosNew.end(), back_inserter(bundleInfos));
+    copy(bundleInfosSA.begin(), bundleInfosSA.end(), back_inserter(bundleInfos));
+    HILOGI("End GetFullBundleInfos, bundleInfos size: %{public}zu", bundleInfos.size());
+    return bundleInfos;
+}
+
 string BundleMgrAdapter::GetExtName(string bundleName, int32_t userId)
 {
     vector<AppExecFwk::BundleInfo> installedBundles;
