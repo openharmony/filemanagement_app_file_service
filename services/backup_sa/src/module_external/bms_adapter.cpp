@@ -386,9 +386,9 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetFullBundleInfos(int32_t
             GetAllowAndExtName(installedBundle.extensionInfos);
         if (!allToBackup) {
             HILOGI("Not allToBackup, bundleName = %{public}s", installedBundle.name.data());
-            bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.versionCode,
-                installedBundle.versionName, 0, 0, allToBackup, fullBackupOnly, extName, restoreDeps, supportScene,
-                extraInfo});
+            bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.appIndex,
+                installedBundle.versionCode, installedBundle.versionName, 0, 0, allToBackup, fullBackupOnly, extName,
+                restoreDeps, supportScene, extraInfo});
             continue;
         }
         bundleNames.emplace_back(installedBundle.name);
