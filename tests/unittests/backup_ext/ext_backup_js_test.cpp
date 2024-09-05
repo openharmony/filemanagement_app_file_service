@@ -1545,7 +1545,7 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_OnProcess_0200, testing::ext::TestSi
             param->retParser(nullptr, nullptr);
             return -1;
         })));
-        ret = extBackupJs->OnProcess([](ErrCode, std::string){});
+        auto ret = extBackupJs->OnProcess([](ErrCode, std::string){});
         EXPECT_EQ(ret, EINVAL);
 
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
