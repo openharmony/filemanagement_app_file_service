@@ -165,7 +165,7 @@ UniqueFd Service::GetLocalCapabilities()
 
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
-        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(session_->GetSessionUserId());
+        auto bundleInfos = BundleMgrAdapter::GetFullBundleInfos(session_->GetSessionUserId());
         cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
         session_->DecreaseSessionCnt();
