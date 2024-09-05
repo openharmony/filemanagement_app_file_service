@@ -526,6 +526,12 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_OnBackupExtensionDied_0100, testing
     try {
         EXPECT_NE(service, nullptr);
         string bundleName;
+        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Invoke([]() {
+            throw "未知错误";
+            return IServiceReverse::Scenario::UNDEFINED;
+        }));
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
@@ -535,10 +541,6 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_OnBackupExtensionDied_0100, testing
         }));
         EXPECT_CALL(*sessionMock, RemoveExtInfo(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
-        }));
-        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
-            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
-            return IServiceReverse::Scenario::UNDEFINED;
         }));
         service->OnBackupExtensionDied("bundleName");
         EXPECT_TRUE(true);
@@ -722,8 +724,9 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_GetBackupInfo_0100, testing::ext::T
         EXPECT_NE(service, nullptr);
         BundleName bundleName;
         string result;
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, GetImpl()).WillOnce(Invoke([]() {
             throw "未知错误";
+            return SvcSessionManager::Impl();
         }));
         EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->GetBackupInfo(bundleName, result);
