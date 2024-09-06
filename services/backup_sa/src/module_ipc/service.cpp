@@ -768,7 +768,8 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
             // 通知extension清空缓存
             proxy->HandleClear();
             // 清除Timer
-            session_->BundleExtTimerStop(callerName);
+            session_->StopFwkTimer(callerName);
+            session_->StopExtTimer(callerName);
             // 通知TOOL 备份完成
             session_->GetServiceReverseProxy()->BackupOnBundleFinished(BError(BError::Codes::OK), callerName);
             // 断开extension
@@ -809,7 +810,8 @@ ErrCode Service::AppDone(ErrCode errCode)
                 throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
             }
             proxy->HandleClear();
-            session_->BundleExtTimerStop(callerName);
+            session_->StopFwkTimer(callerName);
+            session_->StopExtTimer(callerName);
             NotifyCallerCurAppDone(errCode, callerName);
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
@@ -886,7 +888,8 @@ void Service::NotifyCloneBundleFinish(std::string bundleName)
             throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
         }
         proxy->HandleClear();
-        session_->BundleExtTimerStop(bundleName);
+        session_->StopFwkTimer(bundleName);
+        session_->StopExtTimer(bundleName);
         backUpConnection->DisconnectBackupExtAbility();
         ClearSessionAndSchedInfo(bundleName);
     }
@@ -1087,7 +1090,8 @@ void Service::ExtConnectDied(const string &callName)
     try {
         HILOGI("Begin, bundleName: %{public}s", callName.c_str());
         /* Clear Timer */
-        session_->BundleExtTimerStop(callName);
+        session_->StopFwkTimer(callName);
+        session_->StopExtTimer(callName);
         auto backUpConnection = session_->GetExtConnection(callName);
         if (backUpConnection != nullptr && backUpConnection->IsExtAbilityConnected()) {
             backUpConnection->DisconnectBackupExtAbility();
@@ -1240,44 +1244,15 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
 void Service::ExtConnectDone(string bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    auto timeoutCallback = [ptr {wptr(this)}, bundleName]() {
-        HILOGI("begin timeoutCallback bundleName = %{public}s", bundleName.c_str());
-        auto thisPtr = ptr.promote();
-        if (!thisPtr) {
-            HILOGE("ServicePtr is nullptr.");
-            return;
-        }
-        auto sessionPtr = ptr->session_;
-        if (sessionPtr == nullptr) {
-            HILOGE("SessionPtr is nullptr.");
-            return;
-        }
-        try {
-            if (SAUtils::IsSABundleName(bundleName)) {
-                auto sessionConnection = sessionPtr->GetSAExtConnection(bundleName);
-                shared_ptr<SABackupConnection> saConnection = sessionConnection.lock();
-                if (saConnection == nullptr) {
-                    HILOGE("lock sa connection ptr is nullptr");
-                    return;
-                }
-                sessionPtr->BundleExtTimerStop(bundleName);
-                saConnection->DisconnectBackupSAExt();
-            } else {
-                auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
-                sessionPtr->BundleExtTimerStop(bundleName);
-                sessionConnection->DisconnectBackupExtAbility();
-            }
-            thisPtr->ClearSessionAndSchedInfo(bundleName);
-            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
-        } catch (...) {
-            HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
-            thisPtr->ClearSessionAndSchedInfo(bundleName);
-            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
-        }
-    };
     try {
         HILOGE("begin %{public}s", bundleName.data());
-        session_->BundleExtTimerStart(bundleName, timeoutCallback);
+        auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
+        auto scenario = session_->GetScenario();
+        if (scenario == IServiceReverse::Scenario::BACKUP) {
+            session_->StartExtTimer(bundleName, timeoutCallback);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+            session_->StartFwkTimer(bundleName, timeoutCallback);
+        }
         session_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::RUNNING);
         sched_->Sched(bundleName);
     } catch (...) {
@@ -1624,6 +1599,54 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
     }
 }
 
+ErrCode Service::StartExtTimer(bool &isExtStart)
+{
+    try {
+        HILOGI("Service::StartExtTimer begin.");
+        string bundleName = VerifyCallerAndGetCallerName();
+        if (session_ == nullptr) {
+            HILOGE("StartExtTimer error, session_ is nullptr.");
+            isExtStart = false;
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        session_->IncreaseSessionCnt();
+        auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
+        session_->StopFwkTimer(bundleName);
+        isExtStart = session_->StartExtTimer(bundleName, timeoutCallback);
+        session_->DecreaseSessionCnt();
+        return BError(BError::Codes::OK);
+    } catch (...) {
+        isExtStart = false;
+        session_->DecreaseSessionCnt();
+        HILOGI("Unexpected exception");
+        return EPERM;
+    }
+}
+
+ErrCode Service::StartFwkTimer(bool &isFwkStart)
+{
+    try {
+        HILOGI("Service::StartFwkTimer begin.");
+        string bundleName = VerifyCallerAndGetCallerName();
+        if (session_ == nullptr) {
+            HILOGE("StartFwkTimer error, session_ is nullptr.");
+            isFwkStart = false;
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        session_->IncreaseSessionCnt();
+        auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
+        session_->StopExtTimer(bundleName);
+        isFwkStart = session_->StartFwkTimer(bundleName, timeoutCallback);
+        session_->DecreaseSessionCnt();
+        return BError(BError::Codes::OK);
+    } catch (...) {
+        isFwkStart = false;
+        session_->DecreaseSessionCnt();
+        HILOGI("Unexpected exception");
+        return EPERM;
+    }
+}
+
 ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
 {
     auto timeoutCallback = [ptr {wptr(this)}, bundleName]() {
@@ -1640,7 +1663,8 @@ ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &res
         }
         try {
             auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
-            sessionPtr->BundleExtTimerStop(bundleName);
+            sessionPtr->StopFwkTimer(bundleName);
+            sessionPtr->StopExtTimer(bundleName);
             sessionConnection->DisconnectBackupExtAbility();
             thisPtr->ClearSessionAndSchedInfo(bundleName);
             thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
@@ -1772,7 +1796,8 @@ ErrCode Service::SADone(ErrCode errCode, std::string bundleName)
                 HILOGE("lock sa connection ptr is nullptr");
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
-            session_->BundleExtTimerStop(bundleName);
+            session_->StopFwkTimer(bundleName);
+            session_->StopExtTimer(bundleName);
             saConnection->DisconnectBackupSAExt();
             ClearSessionAndSchedInfo(bundleName);
         }
@@ -1837,5 +1862,44 @@ ErrCode Service::ReportAppProcessInfo(const std::string processInfo, BackupResto
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     }
+}
+
+std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bundleName)
+{
+    return [ptr, bundleName]() {
+        HILOGI("begin timeoutCallback bundleName = %{public}s", bundleName.c_str());
+        auto thisPtr = ptr.promote();
+        if (!thisPtr) {
+            HILOGE("ServicePtr is nullptr.");
+            return;
+        }
+        auto sessionPtr = thisPtr->session_;
+        if (sessionPtr == nullptr) {
+            HILOGE("SessionPtr is nullptr.");
+            return;
+        }
+        try {
+            if (SAUtils::IsSABundleName(bundleName)) {
+                auto sessionConnection = sessionPtr->GetSAExtConnection(bundleName);
+                shared_ptr<SABackupConnection> saConnection = sessionConnection.lock();
+                if (saConnection == nullptr) {
+                    HILOGE("lock sa connection ptr is nullptr");
+                    return;
+                }
+                saConnection->DisconnectBackupSAExt();
+            } else {
+                auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
+                sessionConnection->DisconnectBackupExtAbility();
+            }
+            sessionPtr->StopFwkTimer(bundleName);
+            sessionPtr->StopExtTimer(bundleName);
+            thisPtr->ClearSessionAndSchedInfo(bundleName);
+            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+        } catch (...) {
+            HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+            thisPtr->ClearSessionAndSchedInfo(bundleName);
+            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+        }
+    };
 }
 } // namespace OHOS::FileManagement::Backup

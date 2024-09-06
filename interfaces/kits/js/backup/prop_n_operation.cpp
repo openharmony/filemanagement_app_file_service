@@ -31,8 +31,6 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace LibN;
 
-const int32_t H_TO_MS = 3600 * 1000;
-
 static napi_value AsyncCallback(napi_env env, const NFuncArg& funcArg)
 {
     HILOGD("called LocalCapabilities::AsyncCallback begin");
@@ -311,7 +309,7 @@ napi_value PropNOperation::DoUpdateTimer(napi_env env, napi_callback_info info)
     }
     NVal jsBundleInt(env, funcArg[NARG_POS::SECOND]);
     auto [succInt, time] = jsBundleInt.ToInt32();
-    if (!succInt || time <= 0 || time > H_TO_MS) {
+    if (!succInt || time <= 0 || time > static_cast<int32_t>(BConstants::H2MS)) {
         HILOGE("Second argument is not number.");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;

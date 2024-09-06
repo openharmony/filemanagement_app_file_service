@@ -25,5 +25,5 @@ public:
     static bool CheckPermission(const std::string &permission);
     static bool IsSystemApp();
 };
-} // namespace OHOS::FileManagement::Backup::BEncryption
+} // namespace OHOS::FileManagement::Backup::SAUtils
 #endif // OHOS_FILEMGMT_BACKUP_B_SA_H

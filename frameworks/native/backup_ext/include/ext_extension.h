@@ -174,7 +174,21 @@ private:
      */
     void AppIncrementalDone(ErrCode errCode);
 
-    /* *
+    /**
+     * @brief start extension timer by ipc
+     *
+     * @param result
+     */
+    void StartExtTimer(bool &isExtStart);
+
+    /**
+     * @brief start fwk timer by ipc
+     *
+     * @param errCode
+     */
+    void StartFwkTimer(bool &isFwkStart);
+
+    /**
      * @brief get increCallbackEx for execute onRestore with string param
      *
      * @param obj
