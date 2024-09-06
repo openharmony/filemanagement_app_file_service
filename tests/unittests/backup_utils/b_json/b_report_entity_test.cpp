@@ -31,6 +31,13 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+const int MODE_KEY = 0;
+const int DIR_KEY = 1;
+const int SIZE_KEY = 2;
+const int MTIME_KEY = 3;
+const int HASH_KEY = 4;
+const int IS_INCREMENTAL_KEY = 5;
+
 class BReportEntityTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
@@ -376,12 +383,12 @@ HWTEST_F(BReportEntityTest, b_report_entity_GetStorageReportInfos_0100, testing:
         struct ReportFileInfo fileStat = {};
         vector<string> splits = {"/test", "0", "0", "0", "0", "0", "0"};
         unordered_map<string, int> keys;
-        keys.emplace(INFO_MODE, 0);
-        keys.emplace(INFO_DIR, 1);
-        keys.emplace(INFO_SIZE, 2);
-        keys.emplace(INFO_MTIME, 3);
-        keys.emplace(INFO_HASH, 4);
-        keys.emplace(INFO_IS_INCREMENTAL, 5);
+        keys.emplace(INFO_MODE, MODE_KEY);
+        keys.emplace(INFO_DIR, DIR_KEY);
+        keys.emplace(INFO_SIZE, SIZE_KEY);
+        keys.emplace(INFO_MTIME, MTIME_KEY);
+        keys.emplace(INFO_HASH, HASH_KEY);
+        keys.emplace(INFO_IS_INCREMENTAL, IS_INCREMENTAL_KEY);
         auto err = ParseReportInfo(fileStat, splits, keys);
         EXPECT_EQ(err, ERR_OK);
         bool ret = cloudRp.GetStorageReportInfos(fileStat);

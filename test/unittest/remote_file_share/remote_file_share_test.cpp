@@ -32,6 +32,7 @@ namespace {
 
     const int E_INVALID_ARGUMENT = 22;
     const int E_OK = 0;
+    const int USER_ID = 100;
 
     class RemoteFileShareTest : public testing::Test {
     public:
@@ -477,7 +478,7 @@ namespace {
     {
         GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_GetDfsUriFromLocal_0015";
         const string uriStr = "file://media/Photo/12/IMG_12345_0011/test.jpg";
-        const int userId = 100;
+        const int userId = USER_ID;
         HmdfsUriInfo hui;
         int ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
         EXPECT_NE(ret, E_OK);
@@ -505,7 +506,7 @@ namespace {
     {
         GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_GetDfsUriFromLocal_0016";
         const string uriStr = "file://docs/storage/Users/currentUser/Documents/1.txt";
-        const int userId = 100;
+        const int userId = USER_ID;
         HmdfsUriInfo hui;
         int ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
         EXPECT_EQ(ret, E_OK);
