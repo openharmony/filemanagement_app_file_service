@@ -791,6 +791,14 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         try {
+            HILOGI("Do backup, start fwk timer begin.");
+            bool isFwkStart;
+            ptr->StartFwkTimer(isFwkStart);
+            if (!isFwkStart) {
+                HILOGE("Do backup, start fwk timer fail.");
+                return;
+            }
+            HILOGI("Do backup, start fwk timer end.");
             BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
             auto cache = cachedEntity.Structuralize();
             auto start = std::chrono::system_clock::now();
@@ -1247,6 +1255,13 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
             HILOGI("On restore, start ext timer begin.");
+            bool isExtStart;
+            ptr->StartExtTimer(isExtStart);
+            if (!isExtStart) {
+                HILOGE("On restore, start ext timer fail.");
+                return;
+            }
+            HILOGI("On restore, start ext timer end.");
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_RESTORE);
             auto callBackup = ptr->OnRestoreCallback(obj);
             auto callBackupEx = ptr->OnRestoreExCallback(obj);
@@ -1292,6 +1307,13 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
             HILOGI("On incrementalRestore, start ext timer begin.");
+            bool isExtStart;
+            ptr->StartExtTimer(isExtStart);
+            if (!isExtStart) {
+                HILOGE("On incrementalRestore, start ext timer fail.");
+                return;
+            }
+            HILOGI("On incrementalRestore, start ext timer end.");
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_RESTORE);
             auto callBackup = ptr->IncreOnRestoreCallback(obj);
             auto callBackupEx = ptr->IncreOnRestoreExCallback(obj);
@@ -1387,6 +1409,28 @@ void BackupExtExtension::AppResultReport(const std::string restoreRetInfo,
     auto ret = proxy->ServiceResultReport(restoreRetInfo, scenario, errCode);
     if (ret != ERR_OK) {
         HILOGE("Failed notify app restoreResultReport, errCode: %{public}d", ret);
+    }
+}
+
+void BackupExtExtension::StartExtTimer(bool &isExtStart)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+    HILOGI("Start ext timer by ipc.");
+    auto ret = proxy->StartExtTimer(isExtStart);
+    if (ret != ERR_OK) {
+        HILOGE("Start ext timer failed, errCode: %{public}d", ret);
+    }
+}
+
+void BackupExtExtension::StartFwkTimer(bool &isFwkStart)
+{
+    auto proxy = ServiceProxy::GetInstance();
+    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+    HILOGI("Start fwk timer by ipc.");
+    auto ret = proxy->StartFwkTimer(isFwkStart);
+    if (ret != ERR_OK) {
+        HILOGE("Start fwk timer failed, errCode: %{public}d", ret);
     }
 }
 
@@ -1732,7 +1776,14 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
 
 void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
 {
-    HILOGI("Start AsyncTaskDoIncrementalBackup");
+    HILOGI("Do IncrementalBackup, start fwk timer begin.");
+    bool isFwkStart;
+    StartFwkTimer(isFwkStart);
+    if (!isFwkStart) {
+        HILOGE("Do IncrementalBackup, start fwk timer fail.");
+        return;
+    }
+    HILOGI("Do IncrementalBackup, start fwk timer end.");
     int incrementalFdDup = dup(incrementalFd);
     int manifestFdDup = dup(manifestFd);
     if (incrementalFdDup < 0) {
@@ -1941,70 +1992,5 @@ int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> 
     HILOGI("End, bigFiles num:%{public}zu, smallFiles num:%{public}zu, allFiles num:%{public}zu", bigFiles.size(),
         smallFiles.size(), allFiles.size());
     return err;
-}
-
-void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
-{
-    HILOGI("Begin");
-    auto proxy = ServiceProxy::GetInstance();
-        if (proxy == nullptr) {
-        HILOGE("Failed to obtain the ServiceProxy handle");
-        DoClear();
-        return;
-    }
-    auto ret = proxy->AppIncrementalDone(errCode);
-    if (ret != ERR_OK) {
-        HILOGE("Failed to notify the app done. err = %{public}d", ret);
-    }
-}
-
-ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
-{
-    auto obj = wptr<BackupExtExtension>(this);
-    auto ptr = obj.promote();
-    if (ptr == nullptr) {
-        HILOGE("Failed to get ext extension.");
-        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
-    }
-    if (ptr->extension_ == nullptr) {
-        HILOGE("Failed to get extension.");
-        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
-    }
-    auto callBackup = [ptr](ErrCode errCode, const std::string result) {
-        if (ptr == nullptr) {
-            HILOGE("Failed to get ext extension.");
-            return;
-        }
-        HILOGI("GetBackupInfo callBackup start. result = %{public}s", result.c_str());
-        ptr->backupInfo_ = result;
-    };
-    auto ret = ptr->extension_->GetBackupInfo(callBackup);
-    if (ret != ERR_OK) {
-        HILOGE("Failed to get backupInfo. err = %{public}d", ret);
-        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
-    }
-    HILOGD("backupInfo = %s", backupInfo_.c_str());
-    result = backupInfo_;
-    backupInfo_.clear();
-
-    return ERR_OK;
-}
-
-ErrCode BackupExtExtension::UpdateFdSendRate(std::string &bundleName, int32_t sendRate)
-{
-    try {
-        std::lock_guard<std::mutex> lock(updateSendRateLock_);
-        HILOGI("Update SendRate, bundleName:%{public}s, sendRate:%{public}d", bundleName.c_str(), sendRate);
-        VerifyCaller();
-        bundleName_ = bundleName;
-        sendRate_ = sendRate;
-        if (sendRate > 0) {
-            startSendFdRateCon_.notify_one();
-        }
-        return ERR_OK;
-    } catch (...) {
-        HILOGE("Failed to UpdateFdSendRate");
-        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
-    }
 }
 } // namespace OHOS::FileManagement::Backup

@@ -56,9 +56,12 @@ struct BackupExtInfo {
     /* Clone App: old device app versionCode */
     std::string versionName;
     /* Ext Ability APP process time */
-    uint32_t extTimerId;
+    uint32_t timerId;
     /* Timer Status: true is start & false is stop */
-    bool timerStatus {false};
+    bool extTimerStatus {false};
+    bool fwkTimerStatus {false};
+    uint32_t timeCount;
+    uint32_t startTime;
     int64_t dataSize;
     int64_t lastIncrementalTime;
     int32_t manifestFd;
@@ -384,12 +387,39 @@ public:
     void SetBundleDataSize(const std::string &bundleName, int64_t dataSize);
 
     /**
-     * @brief 启动应用扩展能力定时器
+     * @brief 启动框架定时器
      *
      * @param bundleName 应用名称
-     * @return
+     * @param callback 超时回调
+     * @return bool
      */
-    void BundleExtTimerStart(const std::string &bundleName, const Utils::Timer::TimerCallback &callback);
+    bool StartFwkTimer(const std::string &bundleName, const Utils::Timer::TimerCallback &callback);
+
+    /**
+     * @brief 停止框架定时器
+     *
+     * @param bundleName 应用名称
+     * @param callback 超时回调
+     * @return bool
+     */
+    bool StopFwkTimer(const std::string &bundleName);
+
+    /**
+     * @brief 启动extension定时器
+     *
+     * @param bundleName 应用名称
+     * @param callback 超时回调
+     * @return bool
+     */
+    bool StartExtTimer(const std::string &bundleName, const Utils::Timer::TimerCallback &callback);
+
+    /**
+     * @brief 停止extension定时器
+     *
+     * @param bundleName 应用名称
+     * @return bool
+     */
+    bool StopExtTimer(const std::string &bundleName);
 
     /**
      * @brief 重新设置定时器
@@ -401,14 +431,6 @@ public:
      */
     bool UpdateTimer(const std::string &bundleName, uint32_t timeOut,
         const Utils::Timer::TimerCallback &callback);
-
-    /**
-     * @brief 取消/暂停应用扩展能力定时器
-     *
-     * @param bundleName 应用名称
-     * @return
-     */
-    void BundleExtTimerStop(const std::string &bundleName);
 
     /**
      * @brief sessionCnt加计数
@@ -532,11 +554,11 @@ public:
      */
     explicit SvcSessionManager(wptr<Service> reversePtr) : reversePtr_(reversePtr)
     {
-        extBundleTimer.Setup();
+        timer_.Setup();
     }
     ~SvcSessionManager() override
     {
-        extBundleTimer.Shutdown();
+        timer_.Shutdown();
     }
 
 private:
@@ -545,7 +567,7 @@ private:
     sptr<SvcDeathRecipient> deathRecipient_;
     Impl impl_;
     uint32_t extConnectNum_ {0};
-    Utils::Timer extBundleTimer {"backupBundleExtTimer"};
+    Utils::Timer timer_ {"backupTimer"};
     std::atomic<int> sessionCnt_ {0};
     bool unloadSAFlag_ {false};
     int32_t memoryParaCurSize_ {BConstants::DEFAULT_VFS_CACHE_PRESSURE};

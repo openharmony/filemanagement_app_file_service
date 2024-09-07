@@ -1618,47 +1618,47 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleDataSize_0100, te
 }
 
 /**
- * @tc.number: SUB_backup_sa_session_BundleExtTimerStart_0100
- * @tc.name: SUB_backup_sa_session_BundleExtTimerStart_0100
- * @tc.desc: 测试 BundleExtTimerStart
+ * @tc.number: SUB_backup_sa_session_StartFwkTimer_0100
+ * @tc.name: SUB_backup_sa_session_StartFwkTimer_0100
+ * @tc.desc: 测试 StartFwkTimer
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_BundleExtTimerStart_0100, testing::ext::TestSize.Level1)
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_StartFwkTimer_0100, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_BundleExtTimerStart_0100";
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_StartFwkTimer_0100";
     try {
         auto callback = []() -> void {};
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->BundleExtTimerStart(BUNDLE_NAME, callback);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        auto ret = sessionManagerPtr_->StartFwkTimer(BUNDLE_NAME, callback);
+        EXPECT_FALSE(ret);
 
         BackupExtInfo info;
-        info.timerStatus = false;
+        info.fwkTimerStatus = false;
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
-        sessionManagerPtr_->BundleExtTimerStart(BUNDLE_NAME, callback);
-        EXPECT_TRUE(true);
+        ret = sessionManagerPtr_->StartFwkTimer(BUNDLE_NAME, callback);
+        EXPECT_TRUE(ret);
+        ret = sessionManagerPtr_->StopFwkTimer(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
 
-        info.timerStatus = true;
+        info.fwkTimerStatus = true;
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
-        sessionManagerPtr_->BundleExtTimerStart(BUNDLE_NAME, callback);
-        EXPECT_TRUE(true);
+        ret = sessionManagerPtr_->StartFwkTimer(BUNDLE_NAME, callback);
+        EXPECT_FALSE(ret);
+        ret = sessionManagerPtr_->StopFwkTimer(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by BundleExtTimerStart.";
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by StartFwkTimer.";
     }
-    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_BundleExtTimerStart_0100";
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_StartFwkTimer_0100";
 }
 
 /**
@@ -1675,29 +1675,35 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_UpdateTimer_0100, testing:
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_UpdateTimer_0100";
     try {
         auto callback = []() -> void {};
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, 30, callback);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
-
-        BackupExtInfo info;
-        info.timerStatus = false;
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
         auto ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, 30, callback);
         EXPECT_FALSE(ret);
 
-        info.timerStatus = true;
+        BackupExtInfo info;
+        info.extTimerStatus = false;
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
         ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, 30, callback);
         EXPECT_TRUE(ret);
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
+        ret = sessionManagerPtr_->StartExtTimer(BUNDLE_NAME, callback);
+        EXPECT_TRUE(ret);
+        ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, 30, callback);
+        EXPECT_TRUE(ret);
+        ret = sessionManagerPtr_->StopExtTimer(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+
+        info.extTimerStatus = true;
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
+        ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, 30, callback);
+        EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by UpdateTimer.";
@@ -1706,46 +1712,42 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_UpdateTimer_0100, testing:
 }
 
 /**
- * @tc.number: SUB_backup_sa_session_BundleExtTimerStop_0100
- * @tc.name: SUB_backup_sa_session_BundleExtTimerStop_0100
- * @tc.desc: 测试 BundleExtTimerStop
+ * @tc.number: SUB_backup_sa_session_StopFwkTimer_0100
+ * @tc.name: SUB_backup_sa_session_StopFwkTimer_0100
+ * @tc.desc: 测试 StopFwkTimer
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_BundleExtTimerStop_0100, testing::ext::TestSize.Level1)
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_StopFwkTimer_0100, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_BundleExtTimerStop_0100";
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_StopFwkTimer_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->BundleExtTimerStop(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        auto ret = sessionManagerPtr_->StopFwkTimer(BUNDLE_NAME);
+        EXPECT_FALSE(ret);
 
         BackupExtInfo info;
-        info.timerStatus = false;
+        info.fwkTimerStatus = false;
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
-        sessionManagerPtr_->BundleExtTimerStop(BUNDLE_NAME);
-        EXPECT_TRUE(true);
+        ret = sessionManagerPtr_->StopFwkTimer(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
 
-        info.timerStatus = true;
+        info.fwkTimerStatus = true;
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
-        sessionManagerPtr_->BundleExtTimerStop(BUNDLE_NAME);
-        EXPECT_TRUE(true);
+        ret = sessionManagerPtr_->StopFwkTimer(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by BundleExtTimerStop.";
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by StopFwkTimer.";
     }
-    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_BundleExtTimerStop_0100";
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_StopFwkTimer_0100";
 }
 
 /**
@@ -1762,7 +1764,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_ClearSessionData_0100, tes
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_ClearSessionData_0100";
     try {
         BackupExtInfo info;
-        info.timerStatus = true;
+        info.fwkTimerStatus = true;
         info.schedAction = BConstants::ServiceSchedAction::RUNNING;
         info.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr, BUNDLE_NAME));
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
@@ -1771,7 +1773,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_ClearSessionData_0100, tes
         sessionManagerPtr_->ClearSessionData();
         EXPECT_TRUE(true);
 
-        info.timerStatus = false;
+        info.fwkTimerStatus = false;
         info.schedAction = BConstants::ServiceSchedAction::WAIT;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;

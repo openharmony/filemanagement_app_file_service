@@ -108,6 +108,71 @@ void BackupExtExtension::SetClearDataFlag(bool isClearData)
     }
 }
 
+void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
+{
+    HILOGI("Begin");
+    auto proxy = ServiceProxy::GetInstance();
+        if (proxy == nullptr) {
+        HILOGE("Failed to obtain the ServiceProxy handle");
+        DoClear();
+        return;
+    }
+    auto ret = proxy->AppIncrementalDone(errCode);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to notify the app done. err = %{public}d", ret);
+    }
+}
+
+ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
+{
+    auto obj = wptr<BackupExtExtension>(this);
+    auto ptr = obj.promote();
+    if (ptr == nullptr) {
+        HILOGE("Failed to get ext extension.");
+        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
+    }
+    if (ptr->extension_ == nullptr) {
+        HILOGE("Failed to get extension.");
+        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
+    }
+    auto callBackup = [ptr](ErrCode errCode, const std::string result) {
+        if (ptr == nullptr) {
+            HILOGE("Failed to get ext extension.");
+            return;
+        }
+        HILOGI("GetBackupInfo callBackup start. result = %{public}s", result.c_str());
+        ptr->backupInfo_ = result;
+    };
+    auto ret = ptr->extension_->GetBackupInfo(callBackup);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to get backupInfo. err = %{public}d", ret);
+        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
+    }
+    HILOGD("backupInfo = %s", backupInfo_.c_str());
+    result = backupInfo_;
+    backupInfo_.clear();
+
+    return ERR_OK;
+}
+
+ErrCode BackupExtExtension::UpdateFdSendRate(std::string &bundleName, int32_t sendRate)
+{
+    try {
+        std::lock_guard<std::mutex> lock(updateSendRateLock_);
+        HILOGI("Update SendRate, bundleName:%{public}s, sendRate:%{public}d", bundleName.c_str(), sendRate);
+        VerifyCaller();
+        bundleName_ = bundleName;
+        sendRate_ = sendRate;
+        if (sendRate > 0) {
+            startSendFdRateCon_.notify_one();
+        }
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to UpdateFdSendRate");
+        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
+    }
+}
+
 std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreCallback(wptr<BackupExtExtension> obj)
 {
     HILOGI("Begin get full restore onRestore callback");
