@@ -75,12 +75,20 @@ DisposeErr AppGalleryDisposeProxy::EndBackup(const std::string &bundleName)
 
 DisposeErr AppGalleryDisposeProxy::StartRestore(const std::string &bundleName)
 {
+    if (SAUtils::IsSABundleName(bundleName)) {
+        HILOGI("SA does not need to StartRestore");
+        return DisposeErr::OK;
+    }
     HILOGI("StartRestore, app %{public}s", bundleName.c_str());
     return DoDispose(bundleName, DisposeOperation::START_RESTORE);
 }
 
 DisposeErr AppGalleryDisposeProxy::EndRestore(const std::string &bundleName)
 {
+    if (SAUtils::IsSABundleName(bundleName)) {
+        HILOGI("SA does not need to EndRestore");
+        return DisposeErr::OK;
+    }
     HILOGI("EndRestore, app %{public}s", bundleName.c_str());
     return DoDispose(bundleName, DisposeOperation::END_RESTORE);
 }

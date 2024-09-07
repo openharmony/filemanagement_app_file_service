@@ -69,7 +69,7 @@ int SvcSessionManager::GetSessionCnt()
     return sessionCnt_.load();
 }
 
-ErrCode SvcSessionManager::Active(Impl newImpl)
+ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
 {
     unique_lock<shared_mutex> lock(lock_);
     const Impl &oldImpl = impl_;
@@ -78,39 +78,40 @@ ErrCode SvcSessionManager::Active(Impl newImpl)
         return BError(BError::Codes::SA_REFUSED_ACT);
     }
 
-    if (!newImpl.clientToken) {
+    if (!force && !newImpl.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-    if (newImpl.scenario == IServiceReverse::Scenario::UNDEFINED) {
+    if (!force && newImpl.scenario == IServiceReverse::Scenario::UNDEFINED) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No scenario was specified");
     }
 
-    InitClient(newImpl);
+    if (!force) {
+        InitClient(newImpl);
+    }
     impl_ = newImpl;
-    unloadSAFlag_ = false;
+    IncreaseSessionCnt(__PRETTY_FUNCTION__);
     return BError(BError::Codes::OK);
 }
 
 void SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool force)
 {
     unique_lock<shared_mutex> lock(lock_);
-    if (!impl_.clientToken || !impl_.clientProxy) {
+    if (!impl_.clientToken) {
         HILOGI("Empty session");
         return;
     }
     if (!force && (!impl_.clientToken || !impl_.clientProxy)) {
-        throw BError(BError::Codes::SA_REFUSED_ACT, "Try to deactive an empty session");
+        return;
     }
-    auto remoteHeldByProxy = impl_.clientProxy->AsObject();
-    if (!force && (remoteInAction != remoteHeldByProxy)) {
+    if (!force && (remoteInAction != impl_.clientProxy->AsObject())) {
         throw BError(BError::Codes::SA_INVAL_ARG, "Only the client actived the session can deactive it");
     }
 
     deathRecipient_ = nullptr;
     HILOGI("Succeed to deactive a session");
     impl_ = {};
-    unloadSAFlag_ = true;
     extConnectNum_ = 0;
+    DecreaseSessionCnt(__PRETTY_FUNCTION__);
 }
 
 void SvcSessionManager::VerifyBundleName(string &bundleName)
@@ -826,33 +827,26 @@ bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t time
     return true;
 }
 
-void SvcSessionManager::IncreaseSessionCnt()
+void SvcSessionManager::IncreaseSessionCnt(const std::string funcName)
 {
     sessionCnt_++;
+    HILOGI("func name:%{public}s, %{public}d.", funcName.c_str(), sessionCnt_.load());
 }
 
-void SvcSessionManager::DecreaseSessionCnt()
+void SvcSessionManager::DecreaseSessionCnt(const std::string funcName)
 {
-    unique_lock<shared_mutex> lock(lock_);
     if (sessionCnt_.load() > 0) {
         sessionCnt_--;
     } else {
         HILOGE("Invalid sessionCount.");
-        return;
     }
-    if (reversePtr_ == nullptr) {
-        HILOGE("Service reverse pointer is empty.");
-        return;
-    }
-    if (sessionCnt_.load() <= 0 && unloadSAFlag_ == true) {
-        HILOGI("do unload Service.");
-        reversePtr_->UnloadService();
-    }
+    HILOGI("func name:%{public}s, %{public}d.", funcName.c_str(), sessionCnt_.load());
 }
 
-void SvcSessionManager::ClearSessionData()
+ErrCode SvcSessionManager::ClearSessionData()
 {
     unique_lock<shared_mutex> lock(lock_);
+    ErrCode ret = BError(BError::Codes::OK);
     for (auto &&it : impl_.backupExtNameMap) {
         // clear timer
         if (it.second.fwkTimerStatus == true || it.second.extTimerStatus == true) {
@@ -865,22 +859,26 @@ void SvcSessionManager::ClearSessionData()
             auto backUpConnection = it.second.backUpConnection;
             if (backUpConnection == nullptr) {
                 HILOGE("Clear session error, backUpConnection is empty");
-                return;
+                return BError(BError::Codes::SA_INVAL_ARG);
             }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (proxy == nullptr) {
                 HILOGE("Clear session error, proxy is empty");
-                return;
+                return BError(BError::Codes::EXT_INVAL_ARG);
             }
             if (impl_.restoreDataType != RestoreTypeEnum::RESTORE_DATA_READDY) {
-                proxy->HandleClear();
+                ret = proxy->HandleClear();
             }
             backUpConnection->DisconnectBackupExtAbility();
+        }
+        if (ret != BError(BError::Codes::OK)) {
+            return ret;
         }
         // clear data
         it.second.schedAction = BConstants::ServiceSchedAction::FINISH;
     }
     impl_.backupExtNameMap.clear();
+    return BError(BError::Codes::OK);
 }
 
 bool SvcSessionManager::GetIsIncrementalBackup()

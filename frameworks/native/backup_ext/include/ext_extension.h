@@ -61,6 +61,9 @@ public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
         const std::string &bundleName) : extension_(extension)
     {
+        if (extension_ != nullptr) {
+            extension_->SetBackupExtExtension(this);
+        }
         bundleName_ = bundleName;
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
     }

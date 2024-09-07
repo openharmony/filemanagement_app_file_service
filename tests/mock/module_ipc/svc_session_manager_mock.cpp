@@ -41,7 +41,7 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
     GTEST_LOG_(INFO) << "VerifyCallerAndScenario";
 }
 
-ErrCode SvcSessionManager::Active(Impl newImpl)
+ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
 {
     GTEST_LOG_(INFO) << "Active";
     extConnectNum_ = 0;
@@ -380,9 +380,9 @@ bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t time
     return true;
 }
 
-void SvcSessionManager::IncreaseSessionCnt() {}
+void SvcSessionManager::IncreaseSessionCnt(const std::string funcName) {}
 
-void SvcSessionManager::DecreaseSessionCnt() {}
+void SvcSessionManager::DecreaseSessionCnt(const std::string funcName) {}
 
 int32_t SvcSessionManager::GetMemParaCurSize()
 {
@@ -391,7 +391,10 @@ int32_t SvcSessionManager::GetMemParaCurSize()
 
 void SvcSessionManager::SetMemParaCurSize(int32_t size) {}
 
-void SvcSessionManager::ClearSessionData() {}
+ErrCode SvcSessionManager::ClearSessionData()
+{
+    return 0;
+}
 
 bool SvcSessionManager::GetIsIncrementalBackup()
 {

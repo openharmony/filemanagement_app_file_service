@@ -93,11 +93,11 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
            so there must be set init userId.
         */
         HILOGI("Begin");
-        if (session_ == nullptr) {
-            HILOGE("Get LocalCapabilities Incremental Error, session is empty");
+        if (session_ == nullptr || isCleanService_.load()) {
+            HILOGE("Get LocalCapabilities Incremental Error, session is empty or cleaning up the service");
             return UniqueFd(-ENOENT);
         }
-        session_->IncreaseSessionCnt();
+        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
         string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
@@ -105,7 +105,7 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("GetLocalCapabilitiesIncremental: open file failed, err = %{public}d", errno);
-            session_->DecreaseSessionCnt();
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return UniqueFd(-ENOENT);
         }
         BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
@@ -117,19 +117,19 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
         cache.SetBundleInfos(bundleInfos, true);
         cachedEntity.Persist();
         HILOGI("Service GetLocalCapabilitiesIncremental persist");
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("End, bundleInfos size:%{public}zu", bundleInfos.size());
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGE("GetLocalCapabilitiesIncremental failed, errCode = %{public}d", e.GetCode());
         return UniqueFd(-e.GetCode());
     } catch (const exception &e) {
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return UniqueFd(-EPERM);
     } catch (...) {
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("Unexpected exception");
         return UniqueFd(-EPERM);
     }
@@ -181,11 +181,11 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr) {
+        if (session_ == nullptr || isCleanService_.load()) {
             HILOGE("session is nullptr");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        session_->IncreaseSessionCnt();
+        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         session_->SetSessionUserId(GetUserIdDefault());
         std::string bundleName = VerifyCallerAndGetCallerName();
         auto task = [this, bundleName]() {
@@ -202,18 +202,18 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
                 HILOGI("Unexpected exception");
             }
         });
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGE("GetAppLocalListAndDoIncrementalBackup failed, errCode = %{public}d", e.GetCode());
         return e.GetCode();
     } catch (const exception &e) {
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("Unexpected exception");
         return EPERM;
     }
@@ -243,11 +243,11 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr) {
+        if (session_ == nullptr || isCleanService_.load()) {
             HILOGE("Init Incremental backup session  error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
+        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         vector<string> bundleNames {};
         for (auto &bundle : bundlesToBackup) {
@@ -268,14 +268,14 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
             session_->SetIncrementalData(bundleInfo);
         }
         OnStartSched();
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGE("Failed, errCode = %{public}d", e.GetCode());
         return e.GetCode();
     } catch (...) {
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("Unexpected exception");
         return EPERM;
     }
@@ -286,7 +286,11 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        session_->IncreaseSessionCnt(); // BundleMgrAdapter::GetBundleInfos可能耗时
+        if (session_ == nullptr || isCleanService_.load()) {
+            HILOGE("Init Incremental backup session error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         vector<string> bundleNames {};
         for (auto &bundle : bundlesToBackup) {
@@ -300,12 +304,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
         for (auto info : backupInfos) {
-            session_->SetBundleDataSize(info.name, info.spaceOccupied);
-            session_->SetBackupExtName(info.name, info.extensionName);
-            auto iter = isClearDataFlags.find(info.name);
-            if (iter != isClearDataFlags.end()) {
-                session_->SetClearDataFlag(info.name, iter->second);
-            }
+            SetCurrentSessProperties(info, isClearDataFlags);
             if (info.allToBackup == false) {
                 session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
@@ -321,14 +320,14 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
             session_->SetIncrementalData(bundleInfo);
         }
         OnStartSched();
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGE("Failed, errCode = %{public}d", e.GetCode());
         return e.GetCode();
     } catch (...) {
-        session_->DecreaseSessionCnt();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("Unexpected exception");
         return EPERM;
     }
@@ -460,9 +459,9 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
             proxy->HandleClear();
             session_->StopFwkTimer(callerName);
             session_->StopExtTimer(callerName);
-            NotifyCallerCurAppIncrementDone(errCode, callerName);
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
+            NotifyCallerCurAppIncrementDone(errCode, callerName);
         }
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);

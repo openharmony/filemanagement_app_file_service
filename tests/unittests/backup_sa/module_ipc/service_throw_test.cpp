@@ -67,24 +67,24 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_GetLocalCapabilities_0100, testing:
     GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_GetLocalCapabilities_0100";
     try {
         EXPECT_NE(service, nullptr);
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->GetLocalCapabilities();
         EXPECT_EQ(-ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw runtime_error("运行时错误");
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->GetLocalCapabilities();
         EXPECT_EQ(-ret, EPERM);
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->GetLocalCapabilities();
         EXPECT_EQ(-ret, EPERM);
     } catch (...) {
@@ -177,17 +177,17 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesRestoreSession_0100, t
     GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_AppendBundlesRestoreSession_0100";
     try {
         EXPECT_NE(service, nullptr);
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->AppendBundlesRestoreSession(UniqueFd(-1), {}, {}, RESTORE_DATA_WAIT_SEND, 0);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->AppendBundlesRestoreSession(UniqueFd(-1), {}, {}, RESTORE_DATA_WAIT_SEND, 0);
         EXPECT_EQ(ret, EPERM);
     } catch (...) {
@@ -211,17 +211,17 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesRestoreSession_0200, t
     GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_AppendBundlesRestoreSession_0200";
     try {
         EXPECT_NE(service, nullptr);
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->AppendBundlesRestoreSession(UniqueFd(-1), {}, RESTORE_DATA_WAIT_SEND, 0);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->AppendBundlesRestoreSession(UniqueFd(-1), {}, RESTORE_DATA_WAIT_SEND, 0);
         EXPECT_EQ(ret, EPERM);
     } catch (...) {
@@ -245,24 +245,24 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesBackupSession_0100, te
     GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_AppendBundlesBackupSession_0100";
     try {
         EXPECT_NE(service, nullptr);
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->AppendBundlesBackupSession({});
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw runtime_error("运行时错误");
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->AppendBundlesBackupSession({});
         EXPECT_EQ(ret, EPERM);
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->AppendBundlesBackupSession({});
         EXPECT_EQ(ret, EPERM);
     } catch (...) {
@@ -286,24 +286,24 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesDetailsBackupSession_0
     GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_AppendBundlesDetailsBackupSession_0100";
     try {
         EXPECT_NE(service, nullptr);
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->AppendBundlesDetailsBackupSession({}, {});
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw runtime_error("运行时错误");
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->AppendBundlesDetailsBackupSession({}, {});
         EXPECT_EQ(ret, EPERM);
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->AppendBundlesDetailsBackupSession({}, {});
         EXPECT_EQ(ret, EPERM);
     } catch (...) {
@@ -715,7 +715,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_GetBackupInfo_0100, testing::ext::T
             throw "未知错误";
             return SvcSessionManager::Impl();
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->GetBackupInfo(bundleName, result);
         EXPECT_EQ(ret, EPERM);
     } catch (...) {
@@ -741,10 +741,10 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_UpdateTimer_0100, testing::ext::Tes
         EXPECT_NE(service, nullptr);
         BundleName bundleName;
         bool result = false;
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->UpdateTimer(bundleName, 0, result);
         EXPECT_EQ(ret, EPERM);
     } catch (...) {
@@ -812,24 +812,24 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_GetLocalCapabilitiesIncremental_010
     try {
         EXPECT_NE(service, nullptr);
         vector<BIncrementalData> bundleNames;
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->GetLocalCapabilitiesIncremental(bundleNames);
         EXPECT_EQ(-ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw runtime_error("运行时错误");
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->GetLocalCapabilitiesIncremental(bundleNames);
         EXPECT_EQ(-ret, EPERM);
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->GetLocalCapabilitiesIncremental(bundleNames);
         EXPECT_EQ(-ret, EPERM);
     } catch (...) {
@@ -853,24 +853,24 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_GetAppLocalListAndDoIncrementalBack
     GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_GetAppLocalListAndDoIncrementalBackup_0100";
     try {
         EXPECT_NE(service, nullptr);
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->GetAppLocalListAndDoIncrementalBackup();
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw runtime_error("运行时错误");
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->GetAppLocalListAndDoIncrementalBackup();
         EXPECT_EQ(ret, EPERM);
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->GetAppLocalListAndDoIncrementalBackup();
         EXPECT_EQ(ret, EPERM);
     } catch (...) {
@@ -923,17 +923,17 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesIncrementalBackupSessi
     try {
         EXPECT_NE(service, nullptr);
         vector<BIncrementalData> bundlesToBackup;
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->AppendBundlesIncrementalBackupSession(bundlesToBackup);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->AppendBundlesIncrementalBackupSession(bundlesToBackup);
         EXPECT_EQ(ret, EPERM);
     } catch (...) {
@@ -959,17 +959,17 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesIncrementalBackupSessi
         EXPECT_NE(service, nullptr);
         vector<BIncrementalData> bundlesToBackup;
         vector<std::string> infos;
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->AppendBundlesIncrementalBackupSession(bundlesToBackup, infos);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt()).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt()).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->AppendBundlesIncrementalBackupSession(bundlesToBackup, infos);
         EXPECT_EQ(ret, EPERM);
     } catch (...) {

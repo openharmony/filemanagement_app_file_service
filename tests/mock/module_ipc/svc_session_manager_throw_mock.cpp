@@ -24,7 +24,7 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
     BackupSvcSessionManager::session->VerifyCallerAndScenario(clientToken, scenario);
 }
 
-ErrCode SvcSessionManager::Active(Impl newImpl)
+ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
 {
     return BackupSvcSessionManager::session->Active(newImpl);
 }
@@ -245,14 +245,14 @@ bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t time
     return BackupSvcSessionManager::session->UpdateTimer(bundleName, timeOut, callback);
 }
 
-void SvcSessionManager::IncreaseSessionCnt()
+void SvcSessionManager::IncreaseSessionCnt(const std::string funcName)
 {
-    BackupSvcSessionManager::session->IncreaseSessionCnt();
+    BackupSvcSessionManager::session->IncreaseSessionCnt(funcName);
 }
 
-void SvcSessionManager::DecreaseSessionCnt()
+void SvcSessionManager::DecreaseSessionCnt(const std::string funcName)
 {
-    BackupSvcSessionManager::session->DecreaseSessionCnt();
+    BackupSvcSessionManager::session->DecreaseSessionCnt(funcName);
 }
 
 int32_t SvcSessionManager::GetMemParaCurSize()
@@ -265,9 +265,9 @@ void SvcSessionManager::SetMemParaCurSize(int32_t size)
     BackupSvcSessionManager::session->SetMemParaCurSize(size);
 }
 
-void SvcSessionManager::ClearSessionData()
+ErrCode SvcSessionManager::ClearSessionData()
 {
-    BackupSvcSessionManager::session->ClearSessionData();
+    return BackupSvcSessionManager::session->ClearSessionData();
 }
 
 bool SvcSessionManager::GetIsIncrementalBackup()
