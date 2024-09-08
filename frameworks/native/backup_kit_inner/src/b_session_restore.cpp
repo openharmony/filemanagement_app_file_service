@@ -30,7 +30,7 @@ BSessionRestore::~BSessionRestore()
         HILOGI("Death Recipient is nullptr");
         return;
     }
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceProxy::GetServiceProxyPointer();
     if (proxy == nullptr) {
         return;
     }

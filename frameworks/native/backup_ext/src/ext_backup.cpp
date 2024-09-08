@@ -45,6 +45,11 @@ void ExtBackup::SetCreator(const CreatorFunc &creator)
     creator_ = creator;
 }
 
+void ExtBackup::SetBackupExtExtension(const wptr<BackupExtExtension> &extExtension)
+{
+    bakExtExtension_ = extExtension;
+}
+
 void ExtBackup::Init(const shared_ptr<AbilityRuntime::AbilityLocalRecord> &record,
                      const shared_ptr<AbilityRuntime::OHOSApplication> &application,
                      shared_ptr<AbilityRuntime::AbilityHandler> &handler,
@@ -206,10 +211,9 @@ void ExtBackup::OnDisconnect(const AAFwk::Want &want)
 {
     try {
         HILOGI("begin disconnect");
-        if (isClearData_) {
-            auto remoteObject = sptr<BackupExtExtension>(
-                new BackupExtExtension(std::static_pointer_cast<ExtBackup>(shared_from_this()), want.GetBundle()));
-            remoteObject->ExtClear();
+        sptr<BackupExtExtension> extExtension = bakExtExtension_.promote();
+        if (extExtension != nullptr) {
+            extExtension->ExtClear();
         }
         Extension::OnDisconnect(want);
         extAction_ = BConstants::ExtensionAction::INVALID;
@@ -251,11 +255,6 @@ bool ExtBackup::SpecialVersionForCloneAndCloud(void)
 bool ExtBackup::RestoreDataReady()
 {
     return restoreType_ == RestoreTypeEnum::RESTORE_DATA_READDY;
-}
-
-void ExtBackup::SetClearDataFlag(bool isClearData)
-{
-    isClearData_ = isClearData;
 }
 
 ErrCode ExtBackup::OnBackup(function<void(ErrCode, std::string)> callback)

@@ -182,6 +182,11 @@ ErrCode ServiceProxy::ReportAppProcessInfo(const std::string processInfo, const 
     return BError(BError::Codes::OK);
 }
 
+sptr<IService> ServiceProxy::GetServiceProxyPointer()
+{
+    return serviceProxy_;
+}
+
 sptr<IService> ServiceProxy::GetInstance()
 {
     return serviceProxy_;
