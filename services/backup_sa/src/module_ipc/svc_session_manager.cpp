@@ -761,7 +761,7 @@ bool SvcSessionManager::StartExtTimer(const std::string &bundleName, const Utils
         return false;
     }
     uint32_t timeout = it->second.timeout;
-    timeout = (timeout != 0) ? timeout : BConstants::DEFAULT_TIMEOUT;
+    timeout = (timeout != BConstants::TIMEOUT_INVALID) ? timeout : BConstants::DEFAULT_TIMEOUT;
     it->second.extTimerStatus = true;
     it->second.timerId = timer_.Register(callback, timeout, true);
     HILOGI("StartExtTimer end, timeout %{public}u(ms), bundleName %{public}s", timeout, bundleName.c_str());
@@ -783,7 +783,7 @@ bool SvcSessionManager::StopExtTimer(const std::string &bundleName)
     }
 
     it->second.extTimerStatus = false;
-    it->second.timeout = 0;
+    it->second.timeout = BConstants::TIMEOUT_INVALID;
     timer_.Unregister(it->second.timerId);
     HILOGI("StopExtTimer end bundleName %{public}s", bundleName.c_str());
     return true;
@@ -797,15 +797,6 @@ bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t time
     if (!impl_.clientToken) {
         HILOGE("No caller token was specified");
         return false;
-    }
-    if (timeout == BConstants::TIMEOUT_NOW) {
-        auto revPtrStrong = reversePtr_.promote();
-        if (!revPtrStrong) {
-            HILOGW("Backup sa died, update timeout zero failed.");
-            return false;
-        }
-        revPtrStrong->DoTimeout(revPtrStrong, bundleName);
-        return true;
     }
     auto it = GetBackupExtNameMap(bundleName);
     it->second.timeout = timeout;
