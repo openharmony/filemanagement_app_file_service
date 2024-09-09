@@ -936,9 +936,9 @@ HWTEST_F(ServiceTest, SUB_Service_UpdateTimer_0100, testing::ext::TestSize.Level
     try {
         std::string bundleName = "com.example.app2backup";
         bool result = true;
-        uint32_t timeOut = 30000;
+        uint32_t timeout = 30000;
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->UpdateTimer(bundleName, timeOut, result);
+        servicePtr_->UpdateTimer(bundleName, timeout, result);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by UpdateTimer.";

@@ -60,7 +60,7 @@ struct BackupExtInfo {
     /* Timer Status: true is start & false is stop */
     bool extTimerStatus {false};
     bool fwkTimerStatus {false};
-    uint32_t timeCount;
+    uint32_t timeout;
     uint32_t startTime;
     int64_t dataSize;
     int64_t lastIncrementalTime;
@@ -425,11 +425,11 @@ public:
      * @brief 重新设置定时器
      *
      * @param bundleName 应用名称
-     * @param timeOut 超时时间
+     * @param timeout 超时时间
      * @return true
      * @return false
      */
-    bool UpdateTimer(const std::string &bundleName, uint32_t timeOut,
+    bool UpdateTimer(const std::string &bundleName, uint32_t timeout,
         const Utils::Timer::TimerCallback &callback);
 
     /**

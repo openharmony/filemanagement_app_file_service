@@ -247,7 +247,7 @@ napi_value PropNOperation::DoGetBackupInfo(napi_env env, napi_callback_info info
     return nResult;
 }
 
-bool PropNOperation::UpdateTimer(std::string &bundleName, uint32_t timeOut)
+bool PropNOperation::UpdateTimer(std::string &bundleName, uint32_t timeout)
 {
     bool result = false;
     ServiceProxy::InvaildInstance();
@@ -256,7 +256,7 @@ bool PropNOperation::UpdateTimer(std::string &bundleName, uint32_t timeOut)
         HILOGE("called DoUpdateTimer,failed to get proxy");
         return result;
     }
-    ErrCode errcode = proxy->UpdateTimer(bundleName, timeOut, result);
+    ErrCode errcode = proxy->UpdateTimer(bundleName, timeout, result);
     if (errcode != 0) {
         HILOGE("proxy->UpdateTimer faild.");
         return result;
@@ -309,15 +309,15 @@ napi_value PropNOperation::DoUpdateTimer(napi_env env, napi_callback_info info)
     }
     NVal jsBundleInt(env, funcArg[NARG_POS::SECOND]);
     auto [succInt, time] = jsBundleInt.ToInt32();
-    if (!succInt || time <= 0 || time > static_cast<int32_t>(BConstants::H2MS)) {
+    if (!succInt || time <= 0 || time > static_cast<int32_t>(BConstants::MAX_UPDATE_TIMER)) {
         HILOGE("Second argument is not number.");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
     std::string bundleName = bundle.get();
-    uint32_t timeOut = static_cast<uint32_t>(time);
-    bool result = UpdateTimer(bundleName, timeOut);
+    uint32_t timeout = static_cast<uint32_t>(time);
+    bool result = UpdateTimer(bundleName, timeout);
 
     napi_value nResult;
     napi_status status = napi_get_boolean(env, result, &nResult);

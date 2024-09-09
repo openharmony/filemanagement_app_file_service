@@ -574,9 +574,9 @@ bool CmdUpdateTimerFuzzTest(sptr<Service> service, const uint8_t *data, size_t s
 
     try {
         int pos = 0;
-        int32_t timeOut = TypeCast<int32_t>(data, &pos);
+        int32_t timeout = TypeCast<int32_t>(data, &pos);
         msg.WriteString(string(reinterpret_cast<const char*>(data + pos), size - pos));
-        msg.WriteInt32(timeOut);
+        msg.WriteInt32(timeout);
         service->CmdUpdateTimer(msg, reply);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
