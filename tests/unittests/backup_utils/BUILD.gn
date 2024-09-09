@@ -16,6 +16,12 @@ import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ohos_unittest("b_error_test") {
   branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
 
   module_out_path = path_module_out_tests
 
@@ -28,16 +34,7 @@ ohos_unittest("b_error_test") {
 
   external_deps = [ "hilog:libhilog" ]
 
-  defines = [
-    "private = public",
-  ]
-
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
+  defines = [ "private = public" ]
 
   use_exceptions = true
 }

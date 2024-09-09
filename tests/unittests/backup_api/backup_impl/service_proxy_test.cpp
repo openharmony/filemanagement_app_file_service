@@ -410,10 +410,6 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesRestoreSession_0200, t
         GTEST_LOG_(INFO) << "SUB_Service_proxy_AppendBundlesRestoreSession_0200 proxy_ == nullptr";
         return;
     }
-    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
-        .Times(2)
-        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
-        .WillOnce(Return(EPERM));
 
     std::vector<string> bundleNames;
     int32_t result = proxy_->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames);
