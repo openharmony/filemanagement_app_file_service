@@ -575,6 +575,10 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_ExtStart_0100, testing::ext::TestSi
         }));
         EXPECT_CALL(*sessionMock, RemoveExtInfo(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        })).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+        })).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
         service->ExtStart(bundleName);
         EXPECT_TRUE(true);
@@ -603,6 +607,9 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_ExtConnectFailed_0100, testing::ext
         EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
             return IServiceReverse::Scenario::UNDEFINED;
+        })).WillOnce(Invoke([]() {
+            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
+            return IServiceReverse::Scenario::UNDEFINED;
         }));
         service->ExtConnectFailed(bundleName, 0);
         EXPECT_TRUE(true);
@@ -610,11 +617,17 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_ExtConnectFailed_0100, testing::ext
         EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
             throw runtime_error("运行时错误");
             return IServiceReverse::Scenario::UNDEFINED;
+        })).WillOnce(Invoke([]() {
+            throw runtime_error("运行时错误");
+            return IServiceReverse::Scenario::UNDEFINED;
         }));
         service->ExtConnectFailed(bundleName, 0);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
+            throw "未知错误";
+            return IServiceReverse::Scenario::UNDEFINED;
+        })).WillOnce(Invoke([]() {
             throw "未知错误";
             return IServiceReverse::Scenario::UNDEFINED;
         }));

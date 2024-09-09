@@ -343,6 +343,9 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
             HILOGE("Forbit to use PublishIncrementalFile with fileName for App");
             return EPERM;
         }
+        if (session_ != nullptr) {
+            session_->SetPublishFlag(fileInfo.owner);
+        }
         auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
         if (backUpConnection == nullptr) {
             HILOGE("PublishIncrementalFile error, backUpConnection is empty");
@@ -466,9 +469,11 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        ReleaseOnException();
         HILOGE("AppIncrementalDone error, err code is:%{public}d", e.GetCode());
         return e.GetCode(); // 任意异常产生，终止监听该任务
     } catch (...) {
+        ReleaseOnException();
         HILOGI("Unexpected exception");
         return EPERM;
     }

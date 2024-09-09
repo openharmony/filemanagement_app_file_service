@@ -237,13 +237,14 @@ private:
     void SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void CloseOnProcessTimeOutTimer();
-    void UpdateOnStartTime();
-    int32_t GetOnStartTimeCost();
 
     void HandleSpecialVersionRestore(wptr<BackupExtExtension> obj);
     void DeleteBackupIncrementalTars();
     void DeleteBackupTars();
     void SetClearDataFlag(bool isClearData);
+    void UpdateOnStartTime();
+    int32_t GetOnStartTimeCost();
+    bool SetStagingPathProperties();
 
 private:
     std::shared_mutex lock_;
