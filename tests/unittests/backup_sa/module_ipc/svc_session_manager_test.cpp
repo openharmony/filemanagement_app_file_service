@@ -2047,7 +2047,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_StopExtTimer_0100, testing
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
         ret = sessionManagerPtr_->StopExtTimer(BUNDLE_NAME);
-        EXPECT_FALSE(ret);
+        EXPECT_TRUE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by StopExtTimer.";

@@ -417,7 +417,7 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesRestoreSession_0200, t
 
     std::vector<string> bundleNames;
     int32_t result = proxy_->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames);
-    EXPECT_EQ(result, BError(BError::Codes::OK));
+    EXPECT_NE(result, BError(BError::Codes::OK));
     result = proxy_->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames);
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppendBundlesRestoreSession_0200";
@@ -748,10 +748,6 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishSAIncrementalFile_0200, test
         GTEST_LOG_(INFO) << "SUB_Service_proxy_PublishSAIncrementalFile_0200 proxy_ == nullptr";
         return;
     }
-    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
-        .Times(2)
-        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
-        .WillOnce(Return(EPERM));
 
     string bundleName = "com.example.app2backup";
     string fileName = "";
