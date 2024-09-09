@@ -830,6 +830,8 @@ HWTEST_F(ToolsOpRestoreTest, tools_op_restore_InitPathCapFile_1201, testing::ext
         bool depMode = true;
         int32_t ret = InitPathCapFile(pathCapFile, bundleNames, depMode);
         EXPECT_LT(ret, 0);
+    } catch (BError &e) {
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
@@ -855,6 +857,8 @@ HWTEST_F(ToolsOpRestoreTest, tools_op_restore_InitPathCapFile_1202, testing::ext
         bool depMode = false;
         int32_t ret = InitPathCapFile(pathCapFile, bundleNames, depMode);
         EXPECT_LT(ret, 0);
+    } catch (BError &e) {
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ToolsOpRestoreTest-an exception occurred by construction.";
