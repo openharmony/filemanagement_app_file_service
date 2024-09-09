@@ -374,7 +374,7 @@ bool SvcSessionManager::StopExtTimer(const std::string &bundleName)
     return true;
 }
 
-bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeOut,
+bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeout,
     const Utils::Timer::TimerCallback &callback)
 {
     return true;

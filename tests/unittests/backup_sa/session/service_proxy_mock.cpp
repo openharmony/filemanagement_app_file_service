@@ -157,7 +157,7 @@ ErrCode ServiceProxy::GetBackupInfo(std::string &bundleName, std::string &result
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result)
 {
     return BError(BError::Codes::OK);
 }

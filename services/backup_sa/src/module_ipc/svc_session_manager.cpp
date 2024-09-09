@@ -759,11 +759,9 @@ bool SvcSessionManager::StartExtTimer(const std::string &bundleName, const Utils
         HILOGE("ExtTimer is registered, unregister first.");
         return false;
     }
-    uint32_t timeout = it->second.timeCount;
-    timeout = (timeout != 0) ? timeout : CalAppProcessTime(bundleName);
+    uint32_t timeout = it->second.timeout;
+    timeout = (timeout != BConstants::TIMEOUT_INVALID) ? timeout : BConstants::DEFAULT_TIMEOUT;
     it->second.extTimerStatus = true;
-    it->second.startTime = static_cast<uint32_t>(TimeUtils::GetTimeMS());
-    it->second.timeCount = timeout;
     it->second.timerId = timer_.Register(callback, timeout, true);
     HILOGI("StartExtTimer end, timeout %{public}u(ms), bundleName %{public}s", timeout, bundleName.c_str());
     return true;
@@ -784,14 +782,13 @@ bool SvcSessionManager::StopExtTimer(const std::string &bundleName)
     }
 
     it->second.extTimerStatus = false;
-    it->second.startTime = 0;
-    it->second.timeCount = 0;
+    it->second.timeout = BConstants::TIMEOUT_INVALID;
     timer_.Unregister(it->second.timerId);
     HILOGI("StopExtTimer end bundleName %{public}s", bundleName.c_str());
     return true;
 }
 
-bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeOut,
+bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeout,
     const Utils::Timer::TimerCallback &callback)
 {
     unique_lock<shared_mutex> lock(lock_);
@@ -800,28 +797,16 @@ bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t time
         HILOGE("No caller token was specified");
         return false;
     }
-
     auto it = GetBackupExtNameMap(bundleName);
+    it->second.timeout = timeout;
     if (it->second.extTimerStatus == false) {
-        HILOGI("ExtTimer is unregistered, just count. timeout %{public}u(ms), timeCount %{public}u(ms)",
-            timeOut, it->second.timeCount);
+        HILOGI("ExtTimer is unregistered, just store timeout %{public}u(ms)", timeout);
         return true;
     }
 
-    if (it->second.startTime == 0) {
-        HILOGE("ExtTimer is registered, but start time is zero.");
-        return false;
-    }
-
-    it->second.timeCount += timeOut;
-    uint32_t updateTime = static_cast<uint32_t>(TimeUtils::GetTimeMS());
-    uint32_t elapseTime = updateTime - it->second.startTime;
-    uint32_t realTimeout = it->second.timeCount - elapseTime;
     timer_.Unregister(it->second.timerId);
-    HILOGI("UpdateTimer timeout %{public}u(ms), timeCount %{public}u(ms), elapseTime %{public}u(ms),"
-        "realTimeout %{public}u(ms), bundleName %{public}s ",
-        timeOut, it->second.timeCount, elapseTime, realTimeout, bundleName.c_str());
-    it->second.timerId = timer_.Register(callback, realTimeout, true);
+    HILOGI("UpdateTimer timeout %{public}u(ms), bundleName %{public}s ", timeout, bundleName.c_str());
+    it->second.timerId = timer_.Register(callback, timeout, true);
     it->second.extTimerStatus = true;
     HILOGI("UpdateTimer end bundleName %{public}s", bundleName.c_str());
     return true;

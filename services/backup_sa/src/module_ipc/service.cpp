@@ -1743,7 +1743,7 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
     }
 }
 
-ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result)
 {
     auto timeoutCallback = [ptr {wptr(this)}, bundleName]() {
         HILOGE("Backup <%{public}s> Extension Process Timeout", bundleName.c_str());
@@ -1779,7 +1779,7 @@ ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &res
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         VerifyCaller();
-        result = session_->UpdateTimer(bundleName, timeOut, timeoutCallback);
+        result = session_->UpdateTimer(bundleName, timeout, timeoutCallback);
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (...) {
@@ -1962,41 +1962,68 @@ ErrCode Service::ReportAppProcessInfo(const std::string processInfo, BackupResto
 
 std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bundleName)
 {
-    return [ptr, bundleName]() {
+    return [ptr, bundleName, this]() {
         HILOGI("begin timeoutCallback bundleName = %{public}s", bundleName.c_str());
         auto thisPtr = ptr.promote();
         if (!thisPtr) {
             HILOGE("ServicePtr is nullptr.");
             return;
         }
-        auto sessionPtr = thisPtr->session_;
-        if (sessionPtr == nullptr) {
-            HILOGE("SessionPtr is nullptr.");
-            return;
-        }
         try {
-            if (SAUtils::IsSABundleName(bundleName)) {
-                auto sessionConnection = sessionPtr->GetSAExtConnection(bundleName);
-                shared_ptr<SABackupConnection> saConnection = sessionConnection.lock();
-                if (saConnection == nullptr) {
-                    HILOGE("lock sa connection ptr is nullptr");
-                    return;
-                }
-                saConnection->DisconnectBackupSAExt();
-            } else {
-                auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
-                sessionConnection->DisconnectBackupExtAbility();
-            }
-            sessionPtr->StopFwkTimer(bundleName);
-            sessionPtr->StopExtTimer(bundleName);
-            thisPtr->ClearSessionAndSchedInfo(bundleName);
-            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+            DoTimeout(thisPtr, bundleName);
         } catch (...) {
             HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
             thisPtr->ClearSessionAndSchedInfo(bundleName);
             thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
         }
     };
+}
+
+void Service::DoTimeout(wptr<Service> ptr, std::string bundleName)
+{
+    auto thisPtr = ptr.promote();
+    if (!thisPtr) {
+        HILOGE("ServicePtr is nullptr.");
+        return;
+    }
+    auto sessionPtr = thisPtr->session_;
+    if (sessionPtr == nullptr) {
+        HILOGE("SessionPtr is nullptr.");
+        return;
+    }
+    IServiceReverse::Scenario scenario = sessionPtr->GetScenario();
+    int32_t errCode = BError(BError::Codes::EXT_ABILITY_TIMEOUT).GetCode();
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        AppRadar::Info info(bundleName, "", "on backup timeout");
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
+                                                    BizStageBackup::BIZ_STAGE_ON_BACKUP, errCode);
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        AppRadar::Info info(bundleName, "", "on restore timeout");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
+                                                     BizStageRestore::BIZ_STAGE_ON_RESTORE, errCode);
+    }
+    try {
+        if (SAUtils::IsSABundleName(bundleName)) {
+            auto sessionConnection = sessionPtr->GetSAExtConnection(bundleName);
+            shared_ptr<SABackupConnection> saConnection = sessionConnection.lock();
+            if (saConnection == nullptr) {
+                HILOGE("lock sa connection ptr is nullptr");
+                return;
+            }
+            saConnection->DisconnectBackupSAExt();
+        } else {
+            auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
+            sessionConnection->DisconnectBackupExtAbility();
+        }
+        sessionPtr->StopFwkTimer(bundleName);
+        sessionPtr->StopExtTimer(bundleName);
+        thisPtr->ClearSessionAndSchedInfo(bundleName);
+        thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+    } catch (...) {
+        HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+        thisPtr->ClearSessionAndSchedInfo(bundleName);
+        thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+    }
 }
 
 void Service::AddClearBundleRecord(const std::string &bundleName)
