@@ -263,7 +263,7 @@ public:
      * @param bundleName 应用名称
      *
      */
-    void DelClearBundleRecord(const std::string &bundleName);
+    void DelClearBundleRecord(const std::vector<std::string> &bundleNames);
 
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
@@ -383,7 +383,7 @@ private:
      * @param bundleName 包名称
      *
     */
-    void NotifyCloneBundleFinish(std::string bundleName);
+    void NotifyCloneBundleFinish(std::string bundleName, const BackupRestoreScenario sennario);
 
     /**
      * @brief SA 备份恢复结束
@@ -438,6 +438,11 @@ private:
      *
      */
     ErrCode AppendBundlesClearSession(const std::vector<BundleName> &bundleNames);
+
+    void ReportOnExtConnectFailed(const IServiceReverse::Scenario scenario,
+        const std::string &bundleName, const ErrCode ret);
+
+    void ReleaseOnException();
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -451,7 +456,8 @@ private:
     sptr<SchedScheduler> sched_;
     std::shared_ptr<BJsonDisposalConfig> disposal_;
     std::shared_ptr<BJsonClearDataConfig> clearRecorder_;
-
+    std::atomic<bool> isInRelease_ {false};
+    std::atomic<bool> isRmConfigFile_ {true};
     friend class ServiceTest;
 
     OHOS::ThreadPool threadPool_;
