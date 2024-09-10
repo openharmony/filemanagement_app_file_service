@@ -94,7 +94,7 @@ public:
      * @return 是否组建成功
      *
      */
-    static bool BuildRestoreErrInfo(std::string &jsonStr, int errCode, std::string errMsg);
+    static bool BuildExtensionErrInfo(std::string &jsonStr, int errCode, std::string errMsg);
 
     /**
      * @brief 拼接包名和分身对应的索引
@@ -115,7 +115,7 @@ public:
      * @return 是否组建成功
      *
      */
-    static bool BuildRestoreErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo);
+    static bool BuildExtensionErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo);
 
     /**
      * @brief 组建App进度返回的信息

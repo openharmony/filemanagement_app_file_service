@@ -374,7 +374,7 @@ bool SvcSessionManager::StopExtTimer(const std::string &bundleName)
     return true;
 }
 
-bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeOut,
+bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeout,
     const Utils::Timer::TimerCallback &callback)
 {
     return true;
@@ -434,4 +434,11 @@ int64_t SvcSessionManager::GetLastIncrementalTime(const string &bundleName)
 {
     return 0;
 }
+
+bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList)
+{
+    return false;
+}
+
+void SvcSessionManager::SetPublishFlag(const std::string &bundleName) {}
 } // namespace OHOS::FileManagement::Backup

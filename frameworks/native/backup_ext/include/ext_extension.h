@@ -27,6 +27,7 @@
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_json/b_report_entity.h"
+#include "b_radar/b_radar.h"
 #include "ext_backup_js.h"
 #include "ext_extension_stub.h"
 #include "i_service.h"
@@ -68,11 +69,17 @@ public:
         }
         bundleName_ = bundleName;
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        onProcessTaskPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        SetStagingPathProperties();
     }
     ~BackupExtExtension()
     {
         onProcessTimeoutTimer_.Shutdown();
         threadPool_.Stop();
+        onProcessTaskPool_.Stop();
+        if (callJsOnProcessThread_.joinable()) {
+            callJsOnProcessThread_.join();
+        }
     }
 
 private:
@@ -177,6 +184,7 @@ private:
 
     void AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     void AsyncTaskOnIncrementalBackup();
+    int DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd manifestFd);
     ErrCode IncrementalBigFileReady(const TarMap &pkgInfo, const vector<struct ReportFileInfo> &bigInfos,
         sptr<IService> proxy);
     ErrCode BigFileReady(const TarMap &bigFileInfo, sptr<IService> proxy);
@@ -251,6 +259,7 @@ private:
     void DeleteBackupIncrementalTars();
     void DeleteBackupTars();
     void SetClearDataFlag(bool isClearData);
+    std::string GetBundlePath();
     std::vector<ExtManageInfo> GetExtManageInfo();
     ErrCode RestoreFilesForSpecialCloneCloud();
     void RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo &item);
@@ -268,6 +277,9 @@ private:
     void SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void CloseOnProcessTimeOutTimer();
+    void UpdateOnStartTime();
+    int32_t GetOnStartTimeCost();
+    bool SetStagingPathProperties();
 
 private:
     std::shared_mutex lock_;
@@ -282,7 +294,7 @@ private:
     std::string bundleName_;
     int32_t sendRate_ = BConstants::DEFAULT_FD_SEND_RATE;
     bool isClearData_ {true};
-    bool isDebug_ {false};
+    bool isDebug_ {true};
     std::map<std::string, off_t> endFileInfos_;
     std::map<std::string, std::vector<ErrCode>> errFileInfos_;
     bool isRpValid_ {false};
@@ -295,6 +307,10 @@ private:
     std::condition_variable execOnProcessCon_;
     std::mutex onProcessLock_;
     std::atomic<bool> onProcessTimeout_ {false};
+    std::chrono::time_point<std::chrono::system_clock> g_onStart;
+    std::mutex onStartTimeLock_;
+    OHOS::ThreadPool onProcessTaskPool_;
+    AppRadar::DoRestoreInfo radarRestoreInfo_ { 0 };
 };
 } // namespace OHOS::FileManagement::Backup
 

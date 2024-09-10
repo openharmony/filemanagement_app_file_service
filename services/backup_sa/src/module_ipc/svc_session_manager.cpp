@@ -22,10 +22,12 @@
 #include <sstream>
 #include <string>
 
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_file_info.h"
 #include "b_json/b_json_entity_caps.h"
 #include "b_json/b_json_entity_ext_manage.h"
+#include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
 #include "b_utils/b_time.h"
@@ -42,9 +44,17 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
     shared_lock<shared_mutex> lock(lock_);
     if (impl_.scenario != scenario) {
         HILOGE("Inconsistent scenario, impl scenario:%{public}d", impl_.scenario);
+        AppRadar::Info info("", "", "Inconsistent scenario");
+        AppRadar::GetInstance().RecordDefaultFuncRes(info, "SvcSessionManager::VerifyCallerAndScenario", impl_.userId,
+                                                     BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL,
+                                                     BError(BError::Codes::SDK_MIXED_SCENARIO).GetCode());
         throw BError(BError::Codes::SDK_MIXED_SCENARIO);
     }
     if (impl_.clientToken != clientToken) {
+        AppRadar::Info info2("", "", "Caller mismatched");
+        AppRadar::GetInstance().RecordDefaultFuncRes(info2, "SvcSessionManager::VerifyCallerAndScenario", impl_.userId,
+                                                     BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL,
+                                                     BError(BError::Codes::SDK_MIXED_SCENARIO).GetCode());
         throw BError(BError::Codes::SA_REFUSED_ACT, "Caller mismatched");
     }
     HILOGD("Succeed to verify the caller");
@@ -60,7 +70,7 @@ int SvcSessionManager::GetSessionCnt()
     return sessionCnt_.load();
 }
 
-ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
+ErrCode SvcSessionManager::Active(Impl newImpl, bool isOccupyingSession)
 {
     unique_lock<shared_mutex> lock(lock_);
     const Impl &oldImpl = impl_;
@@ -69,14 +79,14 @@ ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
         return BError(BError::Codes::SA_REFUSED_ACT);
     }
 
-    if (!force && !newImpl.clientToken) {
+    if (!isOccupyingSession && !newImpl.clientToken) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-    if (!force && newImpl.scenario == IServiceReverse::Scenario::UNDEFINED) {
+    if (!isOccupyingSession && newImpl.scenario == IServiceReverse::Scenario::UNDEFINED) {
         throw BError(BError::Codes::SA_INVAL_ARG, "No scenario was specified");
     }
 
-    if (!force) {
+    if (!isOccupyingSession) {
         InitClient(newImpl);
     }
     impl_ = newImpl;
@@ -199,7 +209,7 @@ UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, Uniq
     auto info = cache.GetExtManage();
 
     for (auto &fileName : info) {
-        HILOGE("fileName %{public}s", fileName.data());
+        HILOGE("fileName %{public}s", GetAnonyString(fileName).data());
         OnBundleFileReady(bundleName, fileName);
     }
 
@@ -358,6 +368,11 @@ void SvcSessionManager::InitClient(Impl &newImpl)
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
+        AppRadar::Info info ("", "", "client died");
+        AppRadar::GetInstance().RecordDefaultFuncRes(info, "SvcSessionManager::InitClient",
+                                                     AppRadar::GetInstance().GetUserId(),
+                                                     BizStageBackup::BIZ_STAGE_CLIENT_ABNORMAL_EXIT,
+                                                     BError(BError::Codes::SA_BROKEN_IPC).GetCode());
         (void)revPtrStrong->SessionDeactive();
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(callback));
@@ -745,11 +760,9 @@ bool SvcSessionManager::StartExtTimer(const std::string &bundleName, const Utils
         HILOGE("ExtTimer is registered, unregister first.");
         return false;
     }
-    uint32_t timeout = it->second.timeCount;
-    timeout = (timeout != 0) ? timeout : CalAppProcessTime(bundleName);
+    uint32_t timeout = it->second.timeout;
+    timeout = (timeout != BConstants::TIMEOUT_INVALID) ? timeout : BConstants::DEFAULT_TIMEOUT;
     it->second.extTimerStatus = true;
-    it->second.startTime = static_cast<uint32_t>(TimeUtils::GetTimeMS());
-    it->second.timeCount = timeout;
     it->second.timerId = timer_.Register(callback, timeout, true);
     HILOGI("StartExtTimer end, timeout %{public}u(ms), bundleName %{public}s", timeout, bundleName.c_str());
     return true;
@@ -770,14 +783,13 @@ bool SvcSessionManager::StopExtTimer(const std::string &bundleName)
     }
 
     it->second.extTimerStatus = false;
-    it->second.startTime = 0;
-    it->second.timeCount = 0;
+    it->second.timeout = BConstants::TIMEOUT_INVALID;
     timer_.Unregister(it->second.timerId);
     HILOGI("StopExtTimer end bundleName %{public}s", bundleName.c_str());
     return true;
 }
 
-bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeOut,
+bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeout,
     const Utils::Timer::TimerCallback &callback)
 {
     unique_lock<shared_mutex> lock(lock_);
@@ -786,27 +798,16 @@ bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t time
         HILOGE("No caller token was specified");
         return false;
     }
-
     auto it = GetBackupExtNameMap(bundleName);
-    it->second.timeCount += timeOut;
+    it->second.timeout = timeout;
     if (it->second.extTimerStatus == false) {
-        HILOGI("ExtTimer is unregistered, just count. timeout %{public}u(ms), timeCount %{public}u(ms)",
-            timeOut, it->second.timeCount);
+        HILOGI("ExtTimer is unregistered, just store timeout %{public}u(ms)", timeout);
         return true;
     }
 
-    if (it->second.startTime == 0) {
-        HILOGE("ExtTimer is registered, but start time is zero.");
-        return false;
-    }
-    uint32_t updateTime = static_cast<uint32_t>(TimeUtils::GetTimeMS());
-    uint32_t elapseTime = updateTime - it->second.startTime;
-    uint32_t realTimeout = it->second.timeCount - elapseTime;
     timer_.Unregister(it->second.timerId);
-    HILOGI("UpdateTimer timeout %{public}u(ms), timeCount %{public}u(ms), elapseTime %{public}u(ms),"
-        "realTimeout %{public}u(ms), bundleName %{public}s ",
-        timeOut, it->second.timeCount, elapseTime, realTimeout, bundleName.c_str());
-    it->second.timerId = timer_.Register(callback, realTimeout, true);
+    HILOGI("UpdateTimer timeout %{public}u(ms), bundleName %{public}s ", timeout, bundleName.c_str());
+    it->second.timerId = timer_.Register(callback, timeout, true);
     it->second.extTimerStatus = true;
     HILOGI("UpdateTimer end bundleName %{public}s", bundleName.c_str());
     return true;
@@ -941,5 +942,67 @@ bool SvcSessionManager::GetClearDataFlag(const std::string &bundleName)
 bool SvcSessionManager::ValidRestoreDataType(RestoreTypeEnum restoreDataType)
 {
     return impl_.restoreDataType == restoreDataType;
+}
+
+bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    for (auto it = impl_.backupExtNameMap.begin(); it != impl_.backupExtNameMap.end();) {
+        if (it->second.schedAction == BConstants::ServiceSchedAction::WAIT) {
+            it = impl_.backupExtNameMap.erase(it);
+        } else if (it->second.schedAction == BConstants::ServiceSchedAction::START ||
+            (it->second.schedAction == BConstants::ServiceSchedAction::RUNNING && !it->second.isInPublishFile)) {
+            if (it->second.fwkTimerStatus == true || it->second.extTimerStatus == true) {
+                it->second.fwkTimerStatus = false;
+                it->second.extTimerStatus = false;
+                timer_.Unregister(it->second.timerId);
+            }
+            auto backUpConnection = it->second.backUpConnection;
+            if (backUpConnection == nullptr) {
+                HILOGE("Clear session error, backUpConnection is empty");
+                it = impl_.backupExtNameMap.erase(it);
+                continue;
+            }
+            auto proxy = backUpConnection->GetBackupExtProxy();
+            // start action
+            if (proxy == nullptr) {
+                HILOGE("Clear session error, backUpConnection is empty");
+                backUpConnection->DisconnectBackupExtAbility();
+                it = impl_.backupExtNameMap.erase(it);
+                continue;
+            }
+            // running action
+            ErrCode retTmp = ERR_OK;
+            if (impl_.restoreDataType != RestoreTypeEnum::RESTORE_DATA_READDY) {
+                retTmp = proxy->HandleClear();
+            }
+            if (retTmp == ERR_OK) {
+                bundleNameList.push_back(it->first);
+            } else {
+                ret = retTmp;
+            }
+            backUpConnection->DisconnectBackupExtAbility();
+            it = impl_.backupExtNameMap.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    if (impl_.backupExtNameMap.empty()) {
+        HILOGI("Release normally, no need wait");
+        return false;
+    }
+    HILOGI("Release abnormally, need wait for restore");
+    return true;
+}
+
+void SvcSessionManager::SetPublishFlag(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    auto it = GetBackupExtNameMap(bundleName);
+    it->second.isInPublishFile = true;
+    HILOGE("Set PublishFile success, bundleName = %{public}s", bundleName.c_str());
 }
 } // namespace OHOS::FileManagement::Backup

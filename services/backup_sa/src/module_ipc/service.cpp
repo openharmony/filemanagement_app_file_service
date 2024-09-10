@@ -47,6 +47,7 @@
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_ohos/startup/backup_para.h"
 #include "b_process/b_multiuser.h"
+#include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
 #include "bundle_mgr_client.h"
@@ -75,7 +76,6 @@ namespace {
 constexpr int32_t DEBUG_ID = 100;
 constexpr int32_t INDEX = 3;
 constexpr int32_t MS_1000 = 1000;
-constexpr int DEFAULT_FD_SEND_RATE = 60;
 const static string BROADCAST_TYPE = "broadcast";
 const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 const static string UNICAST_TYPE = "unicast";
@@ -114,6 +114,7 @@ void Service::OnStart()
         residualBundleNameList = clearRecorder_->GetAllClearBundleRecords();
     }
     if (!bundleNameList.empty() || !residualBundleNameList.empty()) {
+        SetOccupySession(true);
         session_->Active(
             {
                 .clientToken = IPCSkeleton::GetCallingTokenID(),
@@ -121,8 +122,7 @@ void Service::OnStart()
                 .clientProxy = nullptr,
                 .userId = GetUserIdDefault(),
             },
-            true);
-        isCleanService_.store(true);
+            isOccupyingSession_.load());
         HILOGI("SA OnStart, cleaning up backup data");
     }
     bool res = SystemAbility::Publish(sptr(this));
@@ -130,11 +130,16 @@ void Service::OnStart()
     sched_->StartTimer();
     ClearDisposalOnSaStart();
     auto ret = AppendBundlesClearSession(residualBundleNameList);
-    if (isCleanService_.load() && ret) {
-        isCleanService_.store(false);
+    if (isOccupyingSession_.load() && ret) {
+        SetOccupySession(false);
         StopAll(nullptr, true);
     }
     HILOGI("SA OnStart End, res = %{public}d", res);
+}
+
+void Service::SetOccupySession(bool isOccupyingSession)
+{
+    isOccupyingSession_.store(isOccupyingSession);
 }
 
 void Service::OnStop()
@@ -158,14 +163,13 @@ UniqueFd Service::GetLocalCapabilities()
            so there must be set init userId.
         */
         HILOGI("Begin");
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("GetLocalCapabilities error, session is empty.");
             return UniqueFd(-EPERM);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-        session_->SetSessionUserId(GetUserIdDefault());
         VerifyCaller();
-        string path = BConstants::GetSaBundleBackupRootDir(session_->GetSessionUserId());
+        string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
         BExcepUltils::VerifyPath(path, false);
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
@@ -179,7 +183,7 @@ UniqueFd Service::GetLocalCapabilities()
 
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
-        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(session_->GetSessionUserId());
+        auto bundleInfos = BundleMgrAdapter::GetFullBundleInfos(GetUserIdDefault());
         cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -206,6 +210,15 @@ void Service::StopAll(const wptr<IRemoteObject> &obj, bool force)
     session_->Deactive(obj, force);
 }
 
+static inline void PermissionCheckFailRadar(const std::string &info, const std::string &func)
+{
+    std::string funcPos = "Service::";
+    AppRadar::Info resInfo("", "", info);
+    AppRadar::GetInstance().RecordDefaultFuncRes(resInfo, funcPos.append(func),
+                                                 GetUserIdDefault(), BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL,
+                                                 BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+}
+
 string Service::VerifyCallerAndGetCallerName()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -214,6 +227,7 @@ string Service::VerifyCallerAndGetCallerName()
     if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_HAP) {
         Security::AccessToken::HapTokenInfo hapTokenInfo;
         if (Security::AccessToken::AccessTokenKit::GetHapTokenInfo(tokenCaller, hapTokenInfo) != 0) {
+            PermissionCheckFailRadar("Get hap token info failed", "VerifyCallerAndGetCallerName");
             throw BError(BError::Codes::SA_INVAL_ARG, "Get hap token info failed");
         }
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(hapTokenInfo.bundleName,
@@ -223,6 +237,8 @@ string Service::VerifyCallerAndGetCallerName()
     } else {
         string str = to_string(tokenCaller);
         HILOGE("tokenID = %{private}s", GetAnonyString(str).c_str());
+        std::string info = string("Invalid token type").append(to_string(tokenType)).append(string("\"}"));
+        PermissionCheckFailRadar(info, "VerifyCallerAndGetCallerName");
         throw BError(BError::Codes::SA_INVAL_ARG, string("Invalid token type ").append(to_string(tokenType)));
     }
 }
@@ -236,6 +252,8 @@ void Service::VerifyCaller()
         case Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE: { /* Update Service */
             if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, BACKUP_PERMISSION) !=
                 Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+                std::string info = "Permission denied, token type is " + to_string(tokenType);
+                PermissionCheckFailRadar(info, "VerifyCaller");
                 throw BError(BError::Codes::SA_REFUSED_ACT,
                     string("Permission denied, token type is ").append(to_string(tokenType)));
             }
@@ -244,11 +262,15 @@ void Service::VerifyCaller()
         case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP: {
             if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, BACKUP_PERMISSION) !=
                 Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+                std::string info = "Permission denied, token type is " + to_string(tokenType);
+                PermissionCheckFailRadar(info, "VerifyCaller");
                 throw BError(BError::Codes::SA_REFUSED_ACT,
                     string("Permission denied, token type is ").append(to_string(tokenType)));
             }
             uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
             if (!Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+                std::string info = "Permission denied, token type is " + to_string(tokenType);
+                PermissionCheckFailRadar(info, "VerifyCaller");
                 throw BError(BError::Codes::SA_REFUSED_ACT,
                     string("Permission denied, token type is ").append(to_string(tokenType)));
             }
@@ -256,10 +278,14 @@ void Service::VerifyCaller()
         }
         case Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL:
             if (IPCSkeleton::GetCallingUid() != BConstants::SYSTEM_UID) {
+                std::string info = "invalid calling uid";
+                PermissionCheckFailRadar(info, "VerifyCaller");
                 throw BError(BError::Codes::SA_REFUSED_ACT, "Calling uid is invalid");
             }
             break;
         default:
+            std::string info = "Permission denied, token type is " + to_string(tokenType);
+            PermissionCheckFailRadar(info, "VerifyCaller");
             throw BError(BError::Codes::SA_REFUSED_ACT, string("Invalid token type ").append(to_string(tokenType)));
             break;
     }
@@ -431,7 +457,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin");
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -512,7 +538,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -620,7 +646,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -664,7 +690,7 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -720,6 +746,7 @@ ErrCode Service::Finish()
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        ReleaseOnException();
         HILOGE("Failde to Finish");
         return e.GetCode();
     }
@@ -834,16 +861,18 @@ ErrCode Service::AppDone(ErrCode errCode)
             proxy->HandleClear();
             session_->StopFwkTimer(callerName);
             session_->StopExtTimer(callerName);
-            NotifyCallerCurAppDone(errCode, callerName);
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
+            NotifyCallerCurAppDone(errCode, callerName);
         }
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        ReleaseOnException();
         HILOGE("AppDone error, err code is: %{public}d", e.GetCode());
         return e.GetCode(); // 任意异常产生，终止监听该任务
     } catch (const exception &e) {
+        ReleaseOnException();
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
@@ -855,28 +884,31 @@ ErrCode Service::AppDone(ErrCode errCode)
 ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
     BackupRestoreScenario sennario, ErrCode errCode)
 {
+    string callerName = "";
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        string callerName = VerifyCallerAndGetCallerName();
+        callerName = VerifyCallerAndGetCallerName();
         if (sennario == BackupRestoreScenario::FULL_RESTORE) {
             session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, callerName, errCode);
-            NotifyCloneBundleFinish(callerName);
+            NotifyCloneBundleFinish(callerName, sennario);
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, callerName, errCode);
-            NotifyCloneBundleFinish(callerName);
+            NotifyCloneBundleFinish(callerName, sennario);
         } else if (sennario == BackupRestoreScenario::FULL_BACKUP) {
             session_->GetServiceReverseProxy()->BackupOnResultReport(restoreRetInfo, callerName);
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnResultReport(restoreRetInfo, callerName);
         }
-
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        NotifyCloneBundleFinish(callerName, sennario);
         return e.GetCode(); // 任意异常产生，终止监听该任务
     } catch (const exception &e) {
+        NotifyCloneBundleFinish(callerName, sennario);
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
+        NotifyCloneBundleFinish(callerName, sennario);
         HILOGI("Unexpected exception");
         return EPERM;
     }
@@ -898,25 +930,34 @@ ErrCode Service::SAResultReport(const std::string bundleName, const std::string 
     return SADone(errCode, bundleName);
 }
 
-void Service::NotifyCloneBundleFinish(std::string bundleName)
+void Service::NotifyCloneBundleFinish(std::string bundleName, const BackupRestoreScenario sennario)
 {
-    if (session_->OnBundleFileReady(bundleName)) {
-        auto backUpConnection = session_->GetExtConnection(bundleName);
-        if (backUpConnection == nullptr) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "backUpConnection is empty");
+    try {
+        if (sennario != BackupRestoreScenario::FULL_RESTORE &&
+            sennario != BackupRestoreScenario::INCREMENTAL_RESTORE) {
+            return;
         }
-        auto proxy = backUpConnection->GetBackupExtProxy();
-        if (!proxy) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+        if (session_->OnBundleFileReady(bundleName)) {
+            auto backUpConnection = session_->GetExtConnection(bundleName);
+            if (backUpConnection == nullptr) {
+                throw BError(BError::Codes::SA_INVAL_ARG, "backUpConnection is empty");
+            }
+            auto proxy = backUpConnection->GetBackupExtProxy();
+            if (!proxy) {
+                throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+            }
+            proxy->HandleClear();
+            session_->StopFwkTimer(bundleName);
+            session_->StopExtTimer(bundleName);
+            backUpConnection->DisconnectBackupExtAbility();
+            ClearSessionAndSchedInfo(bundleName);
         }
-        proxy->HandleClear();
-        session_->StopFwkTimer(bundleName);
-        session_->StopExtTimer(bundleName);
-        backUpConnection->DisconnectBackupExtAbility();
-        ClearSessionAndSchedInfo(bundleName);
+        SendEndAppGalleryNotify(bundleName);
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+    } catch (...) {
+        HILOGI("Unexpected exception");
+        ReleaseOnException();
     }
-    SendEndAppGalleryNotify(bundleName);
-    OnAllBundlesFinished(BError(BError::Codes::OK));
 }
 
 void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BConstants::ExtensionAction &action)
@@ -1029,6 +1070,11 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
             }
             int32_t errCode = 0;
             UniqueFd fd = proxy->GetFileHandle(fileName, errCode);
+            if (errCode != ERR_OK) {
+                AppRadar::Info info (bundleName, "", "");
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
+                    BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, errCode);
+            }
             session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd), errCode);
         } else {
             session_->SetExtFileNameRequest(bundleName, fileName);
@@ -1048,6 +1094,15 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 void Service::OnBackupExtensionDied(const string &&bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    int32_t errCode = BError(BError::Codes::EXT_ABILITY_DIED).GetCode();
+    AppRadar::Info info (bundleName, "", "");
+    if (session_->GetScenario() == IServiceReverse::Scenario::BACKUP) {
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::OnBackupExtensionDied", GetUserIdDefault(),
+                                                    BizStageBackup::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, errCode);
+    } else if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::OnBackupExtensionDied", GetUserIdDefault(),
+                                                     BizStageRestore::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, errCode);
+    }
     try {
         string callName = move(bundleName);
         HILOGE("Backup <%{public}s> Extension Process Died", callName.c_str());
@@ -1111,8 +1166,6 @@ void Service::ExtStart(const string &bundleName)
         if (!proxy) {
             throw BError(BError::Codes::SA_INVAL_ARG, "ExtStart bundle task error, Extension backup Proxy is empty");
         }
-        std::string name = bundleName;
-        proxy->UpdateFdSendRate(name, DEFAULT_FD_SEND_RATE);
         if (scenario == IServiceReverse::Scenario::BACKUP) {
             auto ret = proxy->HandleBackup(session_->GetClearDataFlag(bundleName));
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
@@ -1153,12 +1206,14 @@ int Service::Dump(int fd, const vector<u16string> &args)
     return 0;
 }
 
-void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
+void Service::ReportOnExtConnectFailed(const IServiceReverse::Scenario scenario,
+    const std::string &bundleName, const ErrCode ret)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGE("begin %{public}s", bundleName.data());
-        IServiceReverse::Scenario scenario = session_->GetScenario();
+        if (session_ == nullptr) {
+            HILOGE("Report extConnectfailed error, session info is empty");
+            return;
+        }
         if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
         } else if (scenario == IServiceReverse::Scenario::RESTORE &&
@@ -1173,11 +1228,31 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
-
             DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
             HILOGI("ExtConnectFailed EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
                    bundleName.c_str());
         }
+    } catch (...) {
+        HILOGE("Report extConnectfailed error");
+    }
+}
+
+void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    IServiceReverse::Scenario scenario = IServiceReverse::Scenario::UNDEFINED;
+    try {
+        HILOGE("begin %{public}s", bundleName.data());
+        scenario = session_->GetScenario();
+        AppRadar::Info info (bundleName, "", "");
+        if (scenario == IServiceReverse::Scenario::BACKUP) {
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::ExtConnectFailed", GetUserIdDefault(),
+                                                        BizStageBackup::BIZ_STAGE_CONNECT_EXTENSION_FAIL, ret);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::ExtConnectFailed", GetUserIdDefault(),
+                                                         BizStageRestore::BIZ_STAGE_CONNECT_EXTENSION_FAIL, ret);
+        }
+        ReportOnExtConnectFailed(scenario, bundleName, ret);
         ClearSessionAndSchedInfo(bundleName);
         NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         return;
@@ -1211,7 +1286,10 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
         };
         /* If all bundle ext process finish, notice client. */
         OnAllBundlesFinished(BError(BError::Codes::OK));
+    } catch(const BError &e) {
+        ReleaseOnException();
     } catch (...) {
+        ReleaseOnException();
         HILOGI("Unexpected exception");
         return;
     }
@@ -1259,7 +1337,7 @@ void Service::ClearSessionAndSchedInfo(const string &bundleName)
         session_->RemoveExtInfo(bundleName);
         sched_->RemoveExtConn(bundleName);
         HandleRestoreDepsBundle(bundleName);
-        DelClearBundleRecord(bundleName);
+        DelClearBundleRecord({bundleName});
         sched_->Sched();
     } catch (const BError &e) {
         return;
@@ -1318,6 +1396,9 @@ void Service::OnAllBundlesFinished(ErrCode errCode)
     HILOGI("called begin.");
     if (session_->IsOnAllBundlesFinished()) {
         IServiceReverse::Scenario scenario = session_->GetScenario();
+        if (isInRelease_.load() && (scenario == IServiceReverse::Scenario::RESTORE)) {
+            SessionDeactive();
+        }
         if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnAllBundlesFinished(errCode);
         } else if (scenario == IServiceReverse::Scenario::RESTORE &&
@@ -1410,7 +1491,7 @@ void Service::SendErrAppGalleryNotify()
         HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
             bundleName.c_str());
         if (disposeErr != DisposeErr::OK) {
-            HILOGE("Error,disposal will be clear in the end");
+            HILOGE("Error, disposal will be clear in the end");
             return ;
         }
         if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
@@ -1465,7 +1546,27 @@ void Service::SessionDeactive()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
+        isInRelease_.store(true);
         //清理处置状态
+        if (session_ == nullptr) {
+            HILOGE("Session deactive error, session is empty");
+            return;
+        }
+        ErrCode ret = BError(BError::Codes::OK);
+        std::vector<std::string> bundleNameList;
+        if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE &&
+            session_->CleanAndCheckIfNeedWait(ret, bundleNameList)) {
+            if (ret != ERR_OK) {
+                isRmConfigFile_.store(false);
+            }
+            if (!bundleNameList.empty()) {
+                DelClearBundleRecord(bundleNameList);
+            }
+            return;
+        }
+        if (!bundleNameList.empty()) {
+            DelClearBundleRecord(bundleNameList);
+        }
         SendErrAppGalleryNotify();
         DeleteDisConfigFile();
         // 结束定时器
@@ -1479,8 +1580,8 @@ void Service::SessionDeactive()
             HILOGE("Session deactive error, session is empty");
             return;
         }
-        auto ret = session_->ClearSessionData();
-        if (clearRecorder_ != nullptr && !ret) {
+        ret = session_->ClearSessionData();
+        if (clearRecorder_ != nullptr && !ret && isRmConfigFile_.load()) {
             clearRecorder_->DeleteConfigFile();
         }
         // close session
@@ -1541,8 +1642,8 @@ void Service::ClearResidualBundleData(const std::string &bundleName)
         backUpConnection->DisconnectBackupExtAbility();
     }
     ClearSessionAndSchedInfo(bundleName);
-    if (isCleanService_.load() && session_->IsOnAllBundlesFinished()) {
-        isCleanService_.store(false);
+    if (isOccupyingSession_.load() && session_->IsOnAllBundlesFinished()) {
+        SetOccupySession(false);
         StopAll(nullptr, true);
         return ;
     }
@@ -1558,7 +1659,6 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
         HILOGE("Get BackupInfo error, session is empty.");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    session_->SetSessionUserId(GetUserIdDefault());
     auto backupConnection = session_->CreateBackupConnection(bundleName);
     if (backupConnection == nullptr) {
         HILOGE("backupConnection is null. bundleName: %{public}s", bundleName.c_str());
@@ -1569,7 +1669,7 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
     backupConnection->SetCallback(callConnected);
     backupConnection->SetCallDied(callDied);
     AAFwk::Want want = CreateConnectWant(bundleName);
-    auto ret = backupConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
+    auto ret = backupConnection->ConnectBackupExtAbility(want, GetUserIdDefault());
     if (ret) {
         HILOGE("ConnectBackupExtAbility faild, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
         return BError(BError::Codes::SA_BOOT_EXT_FAIL);
@@ -1590,6 +1690,9 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
     backupConnection->DisconnectBackupExtAbility();
     if (ret != ERR_OK) {
         HILOGE("Call Ext GetBackupInfo faild.");
+        AppRadar::Info info(bundleName, "", "Call Ext GetBackupInfo faild");
+        Backup::AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::GetBackupInfoCmdHandle", GetUserIdDefault(),
+                                                            BizStageBackup::BIZ_STAGE_GET_BACKUP_INFO_FAIL, ret);
         return BError(BError::Codes::SA_INVAL_ARG);
     }
 
@@ -1600,7 +1703,7 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
 {
     try {
         HILOGI("Service::GetBackupInfo begin.");
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Get BackupInfo error, session is empty.");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
@@ -1702,7 +1805,7 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
     }
 }
 
-ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result)
 {
     auto timeoutCallback = [ptr {wptr(this)}, bundleName]() {
         HILOGE("Backup <%{public}s> Extension Process Timeout", bundleName.c_str());
@@ -1731,14 +1834,14 @@ ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &res
     };
     try {
         HILOGI("Service::UpdateTimer begin.");
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Update Timer error, session is empty.");
             result = false;
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         VerifyCaller();
-        result = session_->UpdateTimer(bundleName, timeOut, timeoutCallback);
+        result = session_->UpdateTimer(bundleName, timeout, timeoutCallback);
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (...) {
@@ -1753,7 +1856,7 @@ ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool 
 {
     try {
         HILOGI("Begin, bundle name:%{public}s, sendRate is:%{public}d", bundleName.c_str(), sendRate);
-        if (session_ == nullptr || isCleanService_.load()) {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Update Send Rate error, session is empty.");
             result = false;
             return BError(BError::Codes::SA_INVAL_ARG);
@@ -1859,11 +1962,14 @@ ErrCode Service::SADone(ErrCode errCode, std::string bundleName)
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        ReleaseOnException();
         return e.GetCode(); // 任意异常产生，终止监听该任务
     } catch (const exception &e) {
+        ReleaseOnException();
         HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch(...) {
+        ReleaseOnException();
         HILOGE("Unexpected exception");
         return EPERM;
     }
@@ -1921,41 +2027,68 @@ ErrCode Service::ReportAppProcessInfo(const std::string processInfo, BackupResto
 
 std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bundleName)
 {
-    return [ptr, bundleName]() {
+    return [ptr, bundleName, this]() {
         HILOGI("begin timeoutCallback bundleName = %{public}s", bundleName.c_str());
         auto thisPtr = ptr.promote();
         if (!thisPtr) {
             HILOGE("ServicePtr is nullptr.");
             return;
         }
-        auto sessionPtr = thisPtr->session_;
-        if (sessionPtr == nullptr) {
-            HILOGE("SessionPtr is nullptr.");
-            return;
-        }
         try {
-            if (SAUtils::IsSABundleName(bundleName)) {
-                auto sessionConnection = sessionPtr->GetSAExtConnection(bundleName);
-                shared_ptr<SABackupConnection> saConnection = sessionConnection.lock();
-                if (saConnection == nullptr) {
-                    HILOGE("lock sa connection ptr is nullptr");
-                    return;
-                }
-                saConnection->DisconnectBackupSAExt();
-            } else {
-                auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
-                sessionConnection->DisconnectBackupExtAbility();
-            }
-            sessionPtr->StopFwkTimer(bundleName);
-            sessionPtr->StopExtTimer(bundleName);
-            thisPtr->ClearSessionAndSchedInfo(bundleName);
-            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+            DoTimeout(thisPtr, bundleName);
         } catch (...) {
             HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
             thisPtr->ClearSessionAndSchedInfo(bundleName);
             thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
         }
     };
+}
+
+void Service::DoTimeout(wptr<Service> ptr, std::string bundleName)
+{
+    auto thisPtr = ptr.promote();
+    if (!thisPtr) {
+        HILOGE("ServicePtr is nullptr.");
+        return;
+    }
+    auto sessionPtr = thisPtr->session_;
+    if (sessionPtr == nullptr) {
+        HILOGE("SessionPtr is nullptr.");
+        return;
+    }
+    IServiceReverse::Scenario scenario = sessionPtr->GetScenario();
+    int32_t errCode = BError(BError::Codes::EXT_ABILITY_TIMEOUT).GetCode();
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        AppRadar::Info info(bundleName, "", "on backup timeout");
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
+                                                    BizStageBackup::BIZ_STAGE_ON_BACKUP, errCode);
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        AppRadar::Info info(bundleName, "", "on restore timeout");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
+                                                     BizStageRestore::BIZ_STAGE_ON_RESTORE, errCode);
+    }
+    try {
+        if (SAUtils::IsSABundleName(bundleName)) {
+            auto sessionConnection = sessionPtr->GetSAExtConnection(bundleName);
+            shared_ptr<SABackupConnection> saConnection = sessionConnection.lock();
+            if (saConnection == nullptr) {
+                HILOGE("lock sa connection ptr is nullptr");
+                return;
+            }
+            saConnection->DisconnectBackupSAExt();
+        } else {
+            auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
+            sessionConnection->DisconnectBackupExtAbility();
+        }
+        sessionPtr->StopFwkTimer(bundleName);
+        sessionPtr->StopExtTimer(bundleName);
+        thisPtr->ClearSessionAndSchedInfo(bundleName);
+        thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+    } catch (...) {
+        HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+        thisPtr->ClearSessionAndSchedInfo(bundleName);
+        thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
+    }
 }
 
 void Service::AddClearBundleRecord(const std::string &bundleName)
@@ -1968,13 +2101,29 @@ void Service::AddClearBundleRecord(const std::string &bundleName)
     HILOGI("Add clear bundle record OK, bundleName=%{public}s", bundleName.c_str());
 }
 
-void Service::DelClearBundleRecord(const std::string &bundleName)
+void Service::DelClearBundleRecord(const std::vector<std::string> &bundleNames)
 {
     // 删除清理记录
-    if (!clearRecorder_->DeleteClearBundleRecord(bundleName)) {
-        HILOGE("Failed to delete clear bundle record, bundleName=%{public}s", bundleName.c_str());
-        return;
+    for (const auto &it : bundleNames) {
+        if (!clearRecorder_->DeleteClearBundleRecord(it)) {
+            HILOGE("Failed to delete clear bundle record, bundleName=%{public}s", it.c_str());
+            continue;
+        }
+        HILOGI("Delete clear bundle record OK, bundleName=%{public}s", it.c_str());
     }
-    HILOGI("Delete clear bundle record OK, bundleName=%{public}s", bundleName.c_str());
+}
+
+void Service::ReleaseOnException()
+{
+    try {
+        if (session_->IsOnAllBundlesFinished()) {
+            IServiceReverse::Scenario scenario = session_->GetScenario();
+            if (isInRelease_.load() && (scenario == IServiceReverse::Scenario::RESTORE)) {
+                SessionDeactive();
+            }
+        }
+    } catch (...) {
+        HILOGE("Unexpected exception");
+    }
 }
 } // namespace OHOS::FileManagement::Backup

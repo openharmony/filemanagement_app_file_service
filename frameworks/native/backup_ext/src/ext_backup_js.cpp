@@ -662,6 +662,16 @@ ErrCode ExtBackupJs::GetBackupInfo(std::function<void(ErrCode, const std::string
     auto retParser = [jsRuntime {&jsRuntime_}, callBackInfo {callbackInfoBackup_}](napi_env env,
         napi_value result) -> bool {
         if (!CheckPromise(env, result)) {
+            bool isExceptionPending;
+            napi_is_exception_pending(env, &isExceptionPending);
+            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (isExceptionPending) {
+                string str;
+                napi_value exception;
+                DealNapiException(env, exception, str);
+                callBackInfo->callbackParam(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
+                return false;
+            }
             size_t strLen = 0;
             napi_status status = napi_get_value_string_utf8(env, result, nullptr, -1, &strLen);
             if (status != napi_ok) {
@@ -771,8 +781,9 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
                 }
             } while (false);
             HILOGI("will notify current thread info");
+            std::unique_lock<std::mutex> lock(param->backupOperateMutex);
             param->isReady.store(true);
-            param->backupOperateCondition.notify_one();
+            param->backupOperateCondition.notify_all();
         });
     if (ret != 0) {
         HILOGE("failed to exec uv_queue_work.");
@@ -866,8 +877,17 @@ ErrCode ExtBackupJs::OnProcess(std::function<void(ErrCode, const std::string)> c
     auto retParser = [jsRuntime {&jsRuntime_}, callBackInfo {onProcessCallback_}](napi_env env,
         napi_value result) -> bool {
             string processStr;
-            DealNapiStrValue(env, result, processStr);
-            callBackInfo->onProcessCallback(BError(BError::Codes::OK), processStr);
+            bool isExceptionPending;
+            napi_is_exception_pending(env, &isExceptionPending);
+            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (isExceptionPending) {
+                napi_value exception;
+                napi_get_and_clear_last_exception(env, &exception);
+                callBackInfo->onProcessCallback(BError(BError::Codes::EXT_THROW_EXCEPTION), processStr);
+            } else {
+                DealNapiStrValue(env, result, processStr);
+                callBackInfo->onProcessCallback(BError(BError::Codes::OK), processStr);
+            }
             return true;
     };
     auto errCode = CallJsMethod("onProcess", jsRuntime_, jsObj_.get(), {}, retParser);

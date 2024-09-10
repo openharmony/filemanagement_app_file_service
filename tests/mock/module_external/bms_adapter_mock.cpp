@@ -62,6 +62,16 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     return bundleInfos;
 }
 
+
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetFullBundleInfos(int32_t userId)
+{
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    bundleInfos.emplace_back(
+        BJsonEntityCaps::BundleInfo {"com.example.app2backup", 0, {}, {}, 0, 0, true, false,
+            "com.example.app2backup"});
+    return bundleInfos;
+}
+
 string BundleMgrAdapter::GetExtName(string bundleName, int32_t userId)
 {
     return "BackupExtensionAbility";

@@ -13,16 +13,17 @@
  * limitations under the License.
  */
 
-#include "module_app_gallery/app_gallery_dispose_proxy.h"
-
 #include <string>
 
-#include "message_parcel.h"
-#include "want.h"
-
-#include "module_app_gallery/app_gallery_service_connection.h"
-#include "filemgmt_libhilog.h"
+#include "b_radar/b_radar.h"
 #include "b_sa/b_sa_utils.h"
+#include "b_jsonutil/b_jsonutil.h"
+#include "filemgmt_libhilog.h"
+#include "message_parcel.h"
+
+#include "module_app_gallery/app_gallery_dispose_proxy.h"
+#include "module_app_gallery/app_gallery_service_connection.h"
+#include "want.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -94,6 +95,32 @@ DisposeErr AppGalleryDisposeProxy::EndRestore(const std::string &bundleName)
     return DoDispose(bundleName, DisposeOperation::END_RESTORE);
 }
 
+void RecordDoDisposeRes(const std::string &bundleName,
+                        AppGalleryDisposeProxy::DisposeOperation disposeOperation, int32_t err)
+{
+    AppRadar::Info info (bundleName, "", "");
+    switch (disposeOperation) {
+        case AppGalleryDisposeProxy::DisposeOperation::START_BACKUP:
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "StartBackup", AppRadar::GetInstance().GetUserId(),
+                                                        BizStageBackup::BIZ_STAGE_START_DISPOSE_FAIL, err);
+            break;
+        case AppGalleryDisposeProxy::DisposeOperation::END_BACKUP:
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "EndBackup", AppRadar::GetInstance().GetUserId(),
+                                                        BizStageBackup::BIZ_STAGE_END_DISPOSE_FAIL, err);
+            break;
+        case AppGalleryDisposeProxy::DisposeOperation::START_RESTORE:
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "StartRestore", AppRadar::GetInstance().GetUserId(),
+                                                         BizStageRestore::BIZ_STAGE_START_DISPOSE_FAIL, err);
+            break;
+        case AppGalleryDisposeProxy::DisposeOperation::END_RESTORE:
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "EndRestore", AppRadar::GetInstance().GetUserId(),
+                                                         BizStageRestore::BIZ_STAGE_END_DISPOSE_FAIL, err);
+            break;
+        default:
+            break;
+    }
+}
+
 DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, DisposeOperation disposeOperation)
 {
     HILOGI("DoDispose, app %{public}s, operation %{public}d", bundleName.c_str(), disposeOperation);
@@ -102,19 +129,19 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
         return DisposeErr::CONN_FAIL;
     }
 
+    BJsonUtil::BundleDetailInfo bundleDetailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
     MessageParcel data;
     const auto interfaceToken = APP_FOUNDATION_SERVICE;
     if (!data.WriteInterfaceToken(interfaceToken)) {
         HILOGI("write WriteInterfaceToken failed");
         return DisposeErr::IPC_FAIL;
     }
-    if (!data.WriteString16(Str8ToStr16(bundleName))) {
-        HILOGI("write ownerInfo and bundleName failed");
+    if (!data.WriteString16(Str8ToStr16(bundleDetailInfo.bundleName))) {
+        HILOGI("write bundleName failed");
         return DisposeErr::IPC_FAIL;
     }
-
-    if (!data.WriteRemoteObject(this)) {
-        HILOGI("write RemoteObject failed");
+    if (!data.WriteInt32(static_cast<int32_t>(bundleDetailInfo.bundleIndex))) {
+        HILOGI("write bundleIndex failed");
         return DisposeErr::IPC_FAIL;
     }
 
@@ -122,11 +149,14 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
     MessageOption option(MessageOption::TF_ASYNC);
     int32_t ret = appRemoteObj_->SendRequest(static_cast<int>(disposeOperation), data, reply, option);
     if (ret != ERR_NONE) {
-        HILOGI("SendRequest error, code=%{public}d, bundleName=%{public}s", ret, bundleName.c_str());
+        HILOGI("SendRequest error, code=%{public}d, bundleName=%{public}s , appindex =%{public}d",
+            ret, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
+        RecordDoDisposeRes(bundleName, disposeOperation, ret);
         return DisposeErr::REQUEST_FAIL;
     }
 
-    HILOGI("SendRequest success, dispose=%{public}d, bundleName=%{public}s", disposeOperation, bundleName.c_str());
+    HILOGI("SendRequest success, dispose=%{public}d, bundleName=%{public}s, appindex =%{public}d",
+        disposeOperation, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
     return DisposeErr::OK;
 }
 

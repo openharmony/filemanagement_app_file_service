@@ -74,4 +74,23 @@ int BError::GetCodeByErrno(int32_t errnoSys)
     }
     return BackupErrorCode::E_UKERR;
 }
+
+ErrCode BError::GetBackupCodeByErrno(ErrCode err)
+{
+    if (err == 0) {
+        return 0;
+    }
+    if (errCodeTable_.find(err) != errCodeTable_.end()) {
+        return errCodeTable_.at(err);
+    }
+    return BackupErrorCode::E_UKERR;
+}
+
+string BError::GetBackupMsgByErrno(ErrCode err)
+{
+    if (backupErrorMsgTable_.find(err) != backupErrorMsgTable_.end()) {
+        return backupErrorMsgTable_.at(err);
+    }
+    return backupErrorMsgTable_.at(BackupErrorCode::E_UKERR);
+}
 } // namespace OHOS::FileManagement::Backup

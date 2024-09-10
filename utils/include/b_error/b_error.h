@@ -153,6 +153,19 @@ public:
         return msg_.c_str();
     }
 
+    /**
+     * @brief 归一返回备份恢复错误码
+     *
+     * @return ErrCode 备份恢复错误码
+     */
+    static ErrCode GetBackupCodeByErrno(ErrCode err);
+
+    /**
+     * @brief 归一返回备份恢复错误信息
+     *
+     * @return string 备份恢复错误信息
+     */
+    static std::string GetBackupMsgByErrno(ErrCode err);
 public:
     /**
      * @brief 重载bool操作符，判断当前错误是否是错误
@@ -245,8 +258,12 @@ private:
         {Codes::EXT_ABILITY_DIED, "Extension process died"},
         {Codes::EXT_FORBID_BACKUP_RESTORE, "forbid backup or restore"},
         {Codes::EXT_BACKUP_PACKET_ERROR, "Backup packet error"},
+        {Codes::EXT_METHOD_NOT_EXIST, "Extension method not exist"},
         {Codes::EXT_THROW_EXCEPTION, "Extension throw exception"},
         {Codes::EXT_BACKUP_UNPACKET_ERROR, "Backup unpacket error"},
+        {Codes::SA_EXT_ERR_CALL, "SA Extension received invalid arguments"},
+        {Codes::SA_EXT_ERR_SAMGR, "SA Extension get samgr failed"},
+        {Codes::SA_EXT_RELOAD_FAIL, "SA Extension reload failed"},
     };
 
     static inline const std::map<int, int> errCodeTable_ {
@@ -276,8 +293,12 @@ private:
         {static_cast<int>(Codes::EXT_ABILITY_TIMEOUT), BackupErrorCode::E_ETO},
         {static_cast<int>(Codes::EXT_FORBID_BACKUP_RESTORE), BackupErrorCode::E_FORBID},
         {static_cast<int>(Codes::EXT_BACKUP_PACKET_ERROR), BackupErrorCode::E_PACKET},
+        {static_cast<int>(Codes::EXT_METHOD_NOT_EXIST), BackupErrorCode::E_INVAL},
         {static_cast<int>(Codes::EXT_THROW_EXCEPTION), BackupErrorCode::E_EXCEPTION},
         {static_cast<int>(Codes::EXT_BACKUP_UNPACKET_ERROR), BackupErrorCode::E_UNPACKET},
+        {static_cast<int>(Codes::SA_EXT_ERR_CALL), BackupErrorCode::E_INVAL},
+        {static_cast<int>(Codes::SA_EXT_ERR_SAMGR), BackupErrorCode::E_IPCSS},
+        {static_cast<int>(Codes::SA_EXT_RELOAD_FAIL), BackupErrorCode::E_BEF},
         {BackupErrorCode::E_IPCSS, BackupErrorCode::E_IPCSS},
         {BackupErrorCode::E_INVAL, BackupErrorCode::E_INVAL},
         {BackupErrorCode::E_NOTEXIST, BackupErrorCode::E_NOTEXIST},
@@ -310,6 +331,26 @@ private:
         {EISDIR, BackupErrorCode::E_INVAL},
         {ENAMETOOLONG, BackupErrorCode::E_INVAL},
         {ENOSPC, BackupErrorCode::E_NOSPC},
+    };
+
+    static inline const std::map<int, std::string> backupErrorMsgTable_ {
+        {BackupErrorCode::E_IPCSS, "IPC error"},
+        {BackupErrorCode::E_INVAL, "Invalid argument"},
+        {BackupErrorCode::E_NOTEXIST, "Method not exist"},
+        {BackupErrorCode::E_UKERR, "Unknown error"},
+        {BackupErrorCode::E_PERM, "Operation not permitted"},
+        {BackupErrorCode::E_NOMEM, "Out of memory"},
+        {BackupErrorCode::E_NOSPC, "No space left on device"},
+        {BackupErrorCode::E_IO, "I/O error"},
+        {BackupErrorCode::E_FORBID, "Not support backup/restore"},
+        {BackupErrorCode::E_BTO, "SA boot extension timeout"},
+        {BackupErrorCode::E_ETO, "Extension process timeout"},
+        {BackupErrorCode::E_DIED, "Extension process died"},
+        {BackupErrorCode::E_EMPTY, "SA the bundle info for backup/restore is empty"},
+        {BackupErrorCode::E_PACKET, "Tar failed"},
+        {BackupErrorCode::E_EXCEPTION, "Extension throw exception"},
+        {BackupErrorCode::E_UNPACKET, "Untar failed"},
+        {BackupErrorCode::E_BEF, "SA failed to boot application extension"},
     };
 
 private:

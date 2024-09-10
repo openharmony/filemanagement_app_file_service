@@ -411,4 +411,92 @@ HWTEST_F(NDKFileUriTest, is_valid_uri_test_003, TestSize.Level1)
     EXPECT_EQ(flags, false);
     GTEST_LOG_(INFO) << "is_valid_uri_test_003";
 }
+
+/**
+ * @tc.number: get_filename_test_001
+ * @tc.name: Test function of OH_FileUri_GetFileName() interface for unknown path
+ * @tc.desc: Set uri and get filename
+ * @tc.type: FUNC
+ */
+HWTEST_F(NDKFileUriTest, get_fileUri_filename_test_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "get_fileUri_filename_test_001 start";
+    const char fileUri[] = "file://docs/storage/Users/currentUser/Documents/GetFullDirectoryUri001.txt";
+    const char resultUri[] = "GetFullDirectoryUri001.txt";
+    char *result = nullptr;
+    unsigned int length = strlen(fileUri);
+    FileManagement_ErrCode ret = OH_FileUri_GetFileName(fileUri, length, &result);
+    EXPECT_EQ(ret, ERR_OK);
+    if (result != nullptr) {
+        GTEST_LOG_(INFO) << result;
+        EXPECT_EQ(strcmp(result, resultUri), 0);
+    }
+    FreeResult(&result);
+    GTEST_LOG_(INFO) << "get_fileUri_filename_test_001 end";
+}
+
+/**
+ * @tc.number: get_filename_test_002
+ * @tc.name: Test function of OH_FileUri_GetFileName() interface for unknown path
+ * @tc.desc: Set uri and get filename
+ * @tc.type: FUNC
+ */
+HWTEST_F(NDKFileUriTest, get_fileUri_filename_test_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "get_fileUri_filename_test_002 start";
+    const char fileUri[] = "file://docs/storage/Users/currentUser/Documents/dirName";
+    const char resultUri[] = "dirName";
+    char *result = nullptr;
+    unsigned int length = strlen(fileUri);
+    FileManagement_ErrCode ret = OH_FileUri_GetFileName(fileUri, length, &result);
+    EXPECT_EQ(ret, ERR_OK);
+    if (result != nullptr) {
+        GTEST_LOG_(INFO) << result;
+        EXPECT_EQ(strcmp(result, resultUri), 0);
+    }
+    FreeResult(&result);
+    GTEST_LOG_(INFO) << "get_fileUri_filename_test_002 end";
+}
+
+/**
+ * @tc.number: get_filename_test_003
+ * @tc.name: Test function of OH_FileUri_GetFileName() interface for unknown path
+ * @tc.desc: Set uri and get filename
+ * @tc.type: FUNC
+ */
+HWTEST_F(NDKFileUriTest, get_fileUri_filename_test_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "get_fileUri_filename_test_003 start";
+    const char fileUri[] = "file://com.example.filesharea/data/test/file_uri_test.txt";
+    char *result = nullptr;
+    unsigned int length = strlen(fileUri);
+    FileManagement_ErrCode ret = OH_FileUri_GetFileName(nullptr, length, &result);
+    EXPECT_EQ(ret, ERR_PARAMS);
+
+    ret = OH_FileUri_GetFileName(fileUri, length - 1, &result);
+    EXPECT_EQ(ret, ERR_PARAMS);
+
+    ret = OH_FileUri_GetFileName(fileUri, length, nullptr);
+    EXPECT_EQ(ret, ERR_PARAMS);
+    FreeResult(&result);
+    GTEST_LOG_(INFO) << "get_fileUri_filename_test_003 end";
+}
+
+/**
+ * @tc.number: get_filename_test_004
+ * @tc.name: Test function of OH_FileUri_GetFileName() interface for unknown path
+ * @tc.desc: Set uri and get filename
+ * @tc.type: FUNC
+ */
+HWTEST_F(NDKFileUriTest, get_fileUri_filename_test_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "get_fileUri_filename_test_004 start";
+    const char fileUri[] = "file://docs/storage/Users/currentUser/Documents/dirName/";
+    char *result = nullptr;
+    unsigned int length = strlen(fileUri);
+    FileManagement_ErrCode ret = OH_FileUri_GetFileName(fileUri, length, &result);
+    EXPECT_EQ(ret, ERR_PARAMS);
+    GTEST_LOG_(INFO) << "get_fileUri_filename_test_004 end";
+}
+
 } // namespace OHOS::AppFileService::ModuleFileUri

@@ -76,7 +76,7 @@ public:
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;
-    ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) override;
+    ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result) override;
     ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) override;
     ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario) override;
     ErrCode StartExtTimer(bool &isExtStart) override;
@@ -234,6 +234,14 @@ public:
     std::function<void()> TimeOutCallback(wptr<Service> ptr, std::string bundleName);
 
     /**
+     * @brief do timeout
+     *
+     * @param ptr 当前对象
+     * @param bundleName 应用名称
+     */
+    void DoTimeout(wptr<Service> ptr, std::string bundleName);
+
+    /**
      * @brief 清理残留数据
      *
      * @param bundleName 应用名称
@@ -255,7 +263,7 @@ public:
      * @param bundleName 应用名称
      *
      */
-    void DelClearBundleRecord(const std::string &bundleName);
+    void DelClearBundleRecord(const std::vector<std::string> &bundleNames);
 
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
@@ -393,7 +401,7 @@ private:
      * @param bundleName 包名称
      *
     */
-    void NotifyCloneBundleFinish(std::string bundleName);
+    void NotifyCloneBundleFinish(std::string bundleName, const BackupRestoreScenario sennario);
 
     /**
      * @brief SA 备份恢复结束
@@ -449,6 +457,19 @@ private:
      *
      */
     ErrCode AppendBundlesClearSession(const std::vector<BundleName> &bundleNames);
+
+    /**
+     * @brief 设置是否自占用Session
+     *
+     * @param isOccupyingSession 框架是否自占用session
+     *
+     */
+    void SetOccupySession(bool isOccupyingSession);
+
+    void ReportOnExtConnectFailed(const IServiceReverse::Scenario scenario,
+        const std::string &bundleName, const ErrCode ret);
+
+    void ReleaseOnException();
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -456,13 +477,14 @@ private:
     std::condition_variable getBackupInfoCondition_;
     static inline std::atomic<uint32_t> seed {1};
     std::atomic<bool> isConnectDied_ {false};
-    std::atomic<bool> isCleanService_ {false};
+    std::atomic<bool> isOccupyingSession_ {false};
 
     sptr<SvcSessionManager> session_;
     sptr<SchedScheduler> sched_;
     std::shared_ptr<BJsonDisposalConfig> disposal_;
     std::shared_ptr<BJsonClearDataConfig> clearRecorder_;
-
+    std::atomic<bool> isInRelease_ {false};
+    std::atomic<bool> isRmConfigFile_ {true};
     friend class ServiceTest;
 
     OHOS::ThreadPool threadPool_;
