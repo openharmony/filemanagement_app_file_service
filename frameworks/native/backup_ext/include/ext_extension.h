@@ -27,6 +27,7 @@
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_json/b_report_entity.h"
+#include "b_radar/b_radar.h"
 #include "ext_backup_js.h"
 #include "ext_extension_stub.h"
 #include "i_service.h"
@@ -66,11 +67,17 @@ public:
         }
         bundleName_ = bundleName;
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        onProcessTaskPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        SetStagingPathProperties();
     }
     ~BackupExtExtension()
     {
         onProcessTimeoutTimer_.Shutdown();
         threadPool_.Stop();
+        onProcessTaskPool_.Stop();
+        if (callJsOnProcessThread_.joinable()) {
+            callJsOnProcessThread_.join();
+        }
     }
 
 private:
@@ -162,6 +169,7 @@ private:
 
     void AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     void AsyncTaskOnIncrementalBackup();
+    int DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd manifestFd);
     ErrCode IncrementalBigFileReady(const TarMap &pkgInfo, const vector<struct ReportFileInfo> &bigInfos,
         sptr<IService> proxy);
     ErrCode BigFileReady(const TarMap &bigFileInfo, sptr<IService> proxy);
@@ -230,6 +238,9 @@ private:
     std::function<void(ErrCode, const std::string)> OnBackupExCallback(wptr<BackupExtExtension> obj);
     std::function<void(ErrCode, const std::string)> OnBackupCallback(wptr<BackupExtExtension> obj);
 
+    ErrCode RestoreFilesForSpecialCloneCloud();
+    void RestoreBigFiles(bool appendTargetPath);
+
     void StartOnProcessTaskThread(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void FinishOnProcessTask();
     void ExecCallOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
@@ -261,7 +272,7 @@ private:
 
     std::thread callJsOnProcessThread_;
     Utils::Timer onProcessTimeoutTimer_ {"onProcessTimeoutTimer_"};
-    uint32_t onProcessTimeoutTimerId_;
+    uint32_t onProcessTimeoutTimerId_ { 0 };
     std::atomic<int> onProcessTimeoutCnt_;
     std::atomic<bool> stopCallJsOnProcess_ {false};
     std::condition_variable execOnProcessCon_;
@@ -270,6 +281,8 @@ private:
     std::chrono::time_point<std::chrono::system_clock> g_onStart;
     std::mutex onStartTimeLock_;
     bool isClearData_ {true};
+    AppRadar::DoRestoreInfo radarRestoreInfo_ { 0 };
+    OHOS::ThreadPool onProcessTaskPool_;
 };
 } // namespace OHOS::FileManagement::Backup
 

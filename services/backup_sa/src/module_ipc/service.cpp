@@ -1049,23 +1049,20 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
             auto backUpConnection = session_->GetExtConnection(bundleName);
             if (backUpConnection == nullptr) {
                 HILOGE("GetFileHandle error, backUpConnection is empty");
-                AppRadar::Info info (bundleName, "", "backUpConnection is empty");
-                int32_t err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
-                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
-                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
                 HILOGE("GetFileHandle error, Extension backup Proxy is empty");
-                AppRadar::Info info (bundleName, "", "Extension backup Proxy is empty");
-                int32_t err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
-                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
-                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             int32_t errCode = 0;
             UniqueFd fd = proxy->GetFileHandle(fileName, errCode);
+            if (errCode != ERR_OK) {
+                AppRadar::Info info (bundleName, "", "");
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
+                    BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, errCode);
+            }
             session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd), errCode);
         } else {
             session_->SetExtFileNameRequest(bundleName, fileName);
@@ -1483,7 +1480,7 @@ void Service::SendErrAppGalleryNotify()
         HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
             bundleName.c_str());
         if (disposeErr != DisposeErr::OK) {
-            HILOGE("Error,disposal will be clear in the end");
+            HILOGE("Error, disposal will be clear in the end");
             return ;
         }
         if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
