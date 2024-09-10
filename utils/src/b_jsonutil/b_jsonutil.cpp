@@ -166,7 +166,7 @@ bool BJsonUtil::FindBundleInfoByName(std::map<std::string, std::vector<BundleDet
     return false;
 }
 
-bool BJsonUtil::BuildRestoreErrInfo(std::string &jsonStr, int errCode, std::string errMsg)
+bool BJsonUtil::BuildExtensionErrInfo(std::string &jsonStr, int errCode, std::string errMsg)
 {
     cJSON *info = cJSON_CreateObject();
     if (info == nullptr) {
@@ -206,7 +206,7 @@ std::string BJsonUtil::BuildBundleNameIndexInfo(const std::string &bundleName, i
     return result;
 }
 
-bool BJsonUtil::BuildRestoreErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo)
+bool BJsonUtil::BuildExtensionErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo)
 {
     cJSON *errJson = cJSON_CreateObject();
     if (errJson == nullptr) {

@@ -470,7 +470,7 @@ sptr<IService> ServiceProxy::GetInstance()
                                             [loadCallback]() { return loadCallback->isLoadSuccess_.load(); });
     if (!waitStatus) {
         HILOGE("Load backup sa timeout");
-        AppRadar::Info info("", "", "{\"reason\":\"Load backup sa timeout\"}");
+        AppRadar::Info info("", "", "\"reason\":\"Load backup sa timeout\"");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "ServiceProxy::GetInstance",
             AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_BOOT_BACKUP_SA_FAIL,
             static_cast<int32_t>(BError::Codes::SA_INVAL_ARG));
@@ -530,7 +530,7 @@ void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t sys
     unique_lock<mutex> lock(proxyMutex_);
     serviceProxy_ = nullptr;
     isLoadSuccess_.store(false);
-    AppRadar::Info info("", "", "{\"reason\":\"Load backup sa fail\"}");
+    AppRadar::Info info("", "", "\"reason\":\"Load backup sa fail\"");
     AppRadar::GetInstance().RecordBackupFuncRes(info, "ServiceProxyLoadCallback::OnLoadSystemAbilityFail",
         AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_BOOT_BACKUP_SA_FAIL,
         static_cast<int32_t>(BError::Codes::SA_INVAL_ARG));
