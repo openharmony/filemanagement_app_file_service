@@ -154,6 +154,15 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
     if (!proxy) {
         throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
     }
+    // distinguish whether it is 0 user
+    if (BundleMgrAdapter::IsUser0BundleName(bundleName, session_->GetSessionUserId())) {
+        auto ret = proxy->User0OnBackup();
+        if (ret) {
+            thisPtr->ClearSessionAndSchedInfo(bundleName);
+            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
+        }
+        return;
+    }
     int64_t lastTime = session->GetLastIncrementalTime(bundleName);
     std::vector<BIncrementalData> bundleNames;
     bundleNames.emplace_back(BIncrementalData {bundleName, lastTime});
@@ -255,6 +264,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         }
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
+        SetCurrentBackupSessProperties(bundleNames, session_->GetSessionUserId());
         for (auto info : backupInfos) {
             session_->SetBundleDataSize(info.name, info.spaceOccupied);
             session_->SetBackupExtName(info.name, info.extensionName);
@@ -579,5 +589,36 @@ void Service::NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string
         SendEndAppGalleryNotify(callerName);
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, callerName);
     }
+}
+
+void Service::SendUserIdToApp(string &bundleName, int32_t userId)
+{
+    if (session_ == nullptr) {
+        HILOGI("session_ is nullptr");
+        return;
+    }
+    HILOGI("SetCurrentBackupSessProperties bundleName : %{public}s", bundleName.c_str());
+    string detailInfo;
+    if (!BJsonUtil::BuildBundleInfoJson(userId, detailInfo)) {
+        HILOGI("BuildBundleInfoJson failed, bundleName : %{public}s", bundleName.c_str());
+        return;
+    }
+    HILOGI("current bundle, unicast info: %{public}s", detailInfo.c_str());
+    session_->SetBackupExtInfo(bundleName, detailInfo);
+}
+
+void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, int32_t userId)
+{
+    HILOGI("start SetCurrentBackupSessProperties");
+    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
+    std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
+    for (auto item : bundleNames) {
+        std::string bundleName = item;
+        if (!BundleMgrAdapter::IsUser0BundleName(bundleName, userId)) {
+            continue;
+        }
+        SendUserIdToApp(bundleName, userId);
+    }
+    HILOGI("end SetCurrentBackupSessProperties");
 }
 } // namespace OHOS::FileManagement::Backup

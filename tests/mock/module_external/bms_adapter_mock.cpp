@@ -76,4 +76,9 @@ string BundleMgrAdapter::GetExtName(string bundleName, int32_t userId)
 {
     return "BackupExtensionAbility";
 }
+
+bool BundleMgrAdapter::IsUser0BundleName(std::string bundleName, int32_t userId)
+{
+    return true;
+}
 } // namespace OHOS::FileManagement::Backup

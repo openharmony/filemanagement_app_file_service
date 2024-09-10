@@ -464,12 +464,15 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
             session_->SetSessionUserId(userId);
+        } else {
+            session_->SetSessionUserId(GetUserIdDefault());
         }
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         std::vector<std::string> bundleNamesOnly;
         std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
-            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId, isClearDataFlags);
+            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+                                        session_->GetSessionUserId(), isClearDataFlags);
         auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         HandleExceptionOnAppendBundles(session_, bundleNames, restoreBundleNames);
@@ -521,6 +524,9 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         session_->SetBundleVersionName(restoreInfo.name, restoreInfo.versionName);
         session_->SetBundleDataSize(restoreInfo.name, restoreInfo.spaceOccupied);
         session_->SetBackupExtName(restoreInfo.name, restoreInfo.extensionName);
+        if (BundleMgrAdapter::IsUser0BundleName(restoreInfo.name, session_->GetSessionUserId())) {
+            SendUserIdToApp(restoreInfo.name, session_->GetSessionUserId());
+        }
     }
     HILOGI("End");
 }
@@ -539,6 +545,8 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
             session_->SetSessionUserId(userId);
+        } else {
+            session_->SetSessionUserId(GetUserIdDefault());
         }
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
@@ -646,6 +654,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
+        SetCurrentBackupSessProperties(bundleNames, session_->GetSessionUserId());
         for (auto info : backupInfos) {
             session_->SetBundleDataSize(info.name, info.spaceOccupied);
             session_->SetBackupExtName(info.name, info.extensionName);
