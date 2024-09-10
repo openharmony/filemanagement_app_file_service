@@ -1972,5 +1972,196 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetIncrementalManifestFd_0
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetIncrementalManifestFd_0100";
 }
 
+/**
+ * @tc.number: SUB_backup_sa_session_StartExtTimer_0100
+ * @tc.name: SUB_backup_sa_session_StartExtTimer_0100
+ * @tc.desc: 测试 StartExtTimer 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_StartExtTimer_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_StartExtTimer_0100";
+    try {
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        auto callback = []() -> void {};
+        sessionManagerPtr_->impl_.clientToken = 0;
+        bool ret = sessionManagerPtr_->StartExtTimer(BUNDLE_NAME, callback);
+        EXPECT_FALSE(ret);
+
+        BackupExtInfo info;
+        info.extTimerStatus = false;
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
+        ret = sessionManagerPtr_->StartExtTimer(BUNDLE_NAME, callback);
+        EXPECT_TRUE(ret);
+        ret = sessionManagerPtr_->StopExtTimer(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+
+        info.extTimerStatus = true;
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
+        ret = sessionManagerPtr_->StartExtTimer(BUNDLE_NAME, callback);
+        EXPECT_FALSE(ret);
+        ret = sessionManagerPtr_->StopExtTimer(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by StartExtTimer.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_StartExtTimer_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_StopExtTimer_0100
+ * @tc.name: SUB_backup_sa_session_StopExtTimer_0100
+ * @tc.desc: 测试 StopExtTimer 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_StopExtTimer_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_StopExtTimer_0100";
+    try {
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        bool ret = sessionManagerPtr_->StopExtTimer(BUNDLE_NAME);
+        EXPECT_FALSE(ret);
+
+        BackupExtInfo info;
+        info.extTimerStatus = false;
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
+        ret = sessionManagerPtr_->StopExtTimer(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+
+        info.extTimerStatus = true;
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
+        ret = sessionManagerPtr_->StopExtTimer(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by StopExtTimer.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_StopExtTimer_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_SetClearDataFlag_0100
+ * @tc.name: SUB_backup_sa_session_SetClearDataFlag_0100
+ * @tc.desc: 测试 SetClearDataFlag
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetClearDataFlag_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetClearDataFlag_0100";
+    try {
+        try {
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+            sessionManagerPtr_->impl_.clientToken = 0;
+            sessionManagerPtr_->SetClearDataFlag(BUNDLE_NAME, false);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+        sessionManagerPtr_->SetClearDataFlag(BUNDLE_NAME, false);
+        EXPECT_EQ(sessionManagerPtr_->GetClearDataFlag(BUNDLE_NAME), false);
+
+        sessionManagerPtr_->SetClearDataFlag(BUNDLE_NAME, true);
+        EXPECT_EQ(sessionManagerPtr_->GetClearDataFlag(BUNDLE_NAME), true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetClearDataFlag.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetClearDataFlag_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetClearDataFlag_0100
+ * @tc.name: SUB_backup_sa_session_GetClearDataFlag_0100
+ * @tc.desc: 测试 GetClearDataFlag
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetClearDataFlag_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetClearDataFlag_0100";
+    try {
+        try {
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+            sessionManagerPtr_->impl_.clientToken = 0;
+            sessionManagerPtr_->GetClearDataFlag(BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+        sessionManagerPtr_->SetClearDataFlag(BUNDLE_NAME, false);
+        EXPECT_EQ(sessionManagerPtr_->GetClearDataFlag(BUNDLE_NAME), false);
+
+        sessionManagerPtr_->SetClearDataFlag(BUNDLE_NAME, true);
+        EXPECT_EQ(sessionManagerPtr_->GetClearDataFlag(BUNDLE_NAME), true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetClearDataFlag.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetClearDataFlag_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_SetPublishFlag_0100
+ * @tc.name: SUB_backup_sa_session_SetPublishFlag_0100
+ * @tc.desc: 测试 SetPublishFlag
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetPublishFlag_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetPublishFlag_0100";
+    try {
+        try {
+            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+            sessionManagerPtr_->impl_.clientToken = 0;
+            sessionManagerPtr_->SetPublishFlag(BUNDLE_NAME);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
+        }
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+        sessionManagerPtr_->SetPublishFlag(BUNDLE_NAME);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetPublishFlag.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetPublishFlag_0100";
+}
+
 #include "svc_session_manager_ex_test.cpp"
 } // namespace OHOS::FileManagement::Backup

@@ -506,4 +506,100 @@ HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0300, testing::ext::TestSize.Level0)
     EXPECT_EQ(result, BError::BackupErrorCode::E_UKERR);
     GTEST_LOG_(INFO) << "BErrorTest-end b_error_GetCodeByErrno_0300";
 }
+
+/**
+ * @tc.number: SUB_backup_b_error_GetBackupCodeByErrno_0100
+ * @tc.name: b_error_GetBackupCodeByErrno_0100
+ * @tc.desc: Test function of int interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BErrorTest, b_error_GetBackupCodeByErrno_0100, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetBackupCodeByErrno_0100";
+    int err = ERR_OK;
+    int result = BError::GetBackupCodeByErrno(err);
+    EXPECT_EQ(result, 0);
+    GTEST_LOG_(INFO) << "BErrorTest-end b_error_GetBackupCodeByErrno_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_error_GetBackupCodeByErrno_0200
+ * @tc.name: b_error_GetBackupCodeByErrno_0200
+ * @tc.desc: Test function of int interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BErrorTest, b_error_GetBackupCodeByErrno_0200, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetBackupCodeByErrno_0200";
+    int err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
+    int result = BError::GetBackupCodeByErrno(err);
+    EXPECT_EQ(result, BError::BackupErrorCode::E_INVAL);
+    err = BError(BError::Codes::SA_BROKEN_IPC).GetCode();
+    result = BError::GetBackupCodeByErrno(err);
+    EXPECT_EQ(result, BError::BackupErrorCode::E_IPCSS);
+    GTEST_LOG_(INFO) << "BErrorTest-end b_error_GetBackupCodeByErrno_0200";
+}
+
+/**
+ * @tc.number: SUB_backup_b_error_GetBackupCodeByErrno_0300
+ * @tc.name: b_error_GetBackupCodeByErrno_0300
+ * @tc.desc: Test function of int interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BErrorTest, b_error_GetBackupCodeByErrno_0300, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetBackupCodeByErrno_0300";
+    int err = -EPERM;
+    int result = BError::GetBackupCodeByErrno(err);
+    EXPECT_EQ(result, BError::BackupErrorCode::E_UKERR);
+    GTEST_LOG_(INFO) << "BErrorTest-end b_error_GetBackupCodeByErrno_0300";
+}
+
+/**
+ * @tc.number: SUB_backup_b_error_GetBackupMsgByErrno_0100
+ * @tc.name: b_error_GetBackupMsgByErrno_0100
+ * @tc.desc: Test function of int interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BErrorTest, b_error_GetBackupMsgByErrno_0100, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetBackupMsgByErrno_0100";
+    int err = BError(BError::BackupErrorCode::E_PERM).GetCode();
+    std::string result = BError::GetBackupMsgByErrno(err);
+    EXPECT_EQ(result, BError::backupErrorMsgTable_.at(err));
+    err = BError(BError::BackupErrorCode::E_NOMEM).GetCode();
+    result = BError::GetBackupMsgByErrno(err);
+    EXPECT_EQ(result, BError::backupErrorMsgTable_.at(err));
+    GTEST_LOG_(INFO) << "BErrorTest-end b_error_GetBackupMsgByErrno_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_error_GetBackupMsgByErrno_0200
+ * @tc.name: b_error_GetBackupMsgByErrno_0200
+ * @tc.desc: Test function of int interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BErrorTest, b_error_GetBackupMsgByErrno_0200, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetBackupMsgByErrno_0200";
+    int err = -EPERM;
+    std::string result = BError::GetBackupMsgByErrno(err);
+    EXPECT_EQ(result, BError::backupErrorMsgTable_.at(BError::BackupErrorCode::E_UKERR));
+    GTEST_LOG_(INFO) << "BErrorTest-end b_error_GetBackupMsgByErrno_0200";
+}
 } // namespace OHOS::FileManagement::Backup
