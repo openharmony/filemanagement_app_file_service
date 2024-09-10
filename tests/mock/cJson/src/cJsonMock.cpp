@@ -67,3 +67,8 @@ CJSON_PUBLIC(cJSON*) cJSON_AddStringToObject(cJSON * const object, const char * 
 {
     return CJson::cJsonPtr->cJSON_AddStringToObject(object, name, string);
 }
+
+CJSON_PUBLIC(cJSON_bool) cJSON_IsArray(const cJSON * const item)
+{
+    return CJson::cJsonPtr->cJSON_IsArray(item);
+}

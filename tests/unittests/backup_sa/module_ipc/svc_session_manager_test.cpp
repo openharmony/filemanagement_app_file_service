@@ -1767,14 +1767,8 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_UpdateTimer_0100, testing:
         EXPECT_FALSE(ret);
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->reversePtr_ = nullptr;
-        ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, BConstants::TIMEOUT_INVALID, callback);
-        EXPECT_FALSE(ret);
-
-        servicePtr_->session_ = nullptr;
-        sessionManagerPtr_->reversePtr_ = servicePtr_;
-        ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, BConstants::TIMEOUT_INVALID, callback);
-        EXPECT_TRUE(ret);
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        EXPECT_THROW(sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, BConstants::TIMEOUT_INVALID, callback), BError);
 
         BackupExtInfo info;
         info.extTimerStatus = false;
