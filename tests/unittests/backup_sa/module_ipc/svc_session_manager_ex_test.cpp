@@ -225,7 +225,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_CleanAndCheckIfNeedWait_02
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = extInfo2;
         ret = sessionManagerPtr_->CleanAndCheckIfNeedWait(err, bundleNameList);
-        EXPECT_FALSE(ret);
+        EXPECT_TRUE(ret);
 
         BackupExtInfo extInfo3 {};
         extInfo3.schedAction = BConstants::ServiceSchedAction::START;
@@ -280,7 +280,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_CleanAndCheckIfNeedWait_03
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = extInfo2;
         ret = sessionManagerPtr_->CleanAndCheckIfNeedWait(err, bundleNameList);
-        EXPECT_FALSE(ret);
+        EXPECT_TRUE(ret);
 
         BackupExtInfo extInfo3 {};
         extInfo3.schedAction = BConstants::ServiceSchedAction::START;

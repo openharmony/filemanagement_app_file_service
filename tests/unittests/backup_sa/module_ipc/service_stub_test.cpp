@@ -1584,12 +1584,12 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdReportAppProcessInfo_0100
         EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(false));
         err = service->CmdReportAppProcessInfo(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*service, ReportAppProcessInfo(_, _)).WillOnce(Return(0));
         err = service->CmdReportAppProcessInfo(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::OK));
