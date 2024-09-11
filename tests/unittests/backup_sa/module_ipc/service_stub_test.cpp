@@ -1490,4 +1490,113 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdGetAppLocalListAndDoIncre
     }
     GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_CmdGetAppLocalListAndDoIncrementalBackup_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_CmdStartExtTimer_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_CmdStartExtTimer_0100
+ * @tc.desc: Test function of CmdStartExtTimer interface for SUCCESS and FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdStartExtTimer_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_CmdStartExtTimer_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        EXPECT_TRUE(service != nullptr);
+        EXPECT_CALL(*service, StartExtTimer(_)).WillOnce(Return(-1));
+        auto err = service->CmdStartExtTimer(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+
+        EXPECT_CALL(*service, StartExtTimer(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteBool(_)).WillOnce(Return(false));
+        err = service->CmdStartExtTimer(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+
+        EXPECT_CALL(*service, StartExtTimer(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteBool(_)).WillOnce(Return(true));
+        err = service->CmdStartExtTimer(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by CmdStartExtTimer.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_CmdStartExtTimer_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_CmdStartFwkTimer_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_CmdStartFwkTimer_0100
+ * @tc.desc: Test function of CmdStartFwkTimer interface for SUCCESS and FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdStartFwkTimer_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_CmdStartFwkTimer_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        EXPECT_TRUE(service != nullptr);
+        EXPECT_CALL(*service, StartFwkTimer(_)).WillOnce(Return(-1));
+        auto err = service->CmdStartFwkTimer(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+
+        EXPECT_CALL(*service, StartFwkTimer(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteBool(_)).WillOnce(Return(false));
+        err = service->CmdStartFwkTimer(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+
+        EXPECT_CALL(*service, StartFwkTimer(_)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteBool(_)).WillOnce(Return(true));
+        err = service->CmdStartFwkTimer(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by CmdStartFwkTimer.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_CmdStartFwkTimer_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_ServiceStub_CmdReportAppProcessInfo_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_CmdReportAppProcessInfo_0100
+ * @tc.desc: Test function of CmdReportAppProcessInfo interface for SUCCESS and FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdReportAppProcessInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_CmdReportAppProcessInfo_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        EXPECT_TRUE(service != nullptr);
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        auto err = service->CmdReportAppProcessInfo(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        err = service->CmdReportAppProcessInfo(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, ReportAppProcessInfo(_, _)).WillOnce(Return(0));
+        err = service->CmdReportAppProcessInfo(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by CmdReportAppProcessInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_CmdReportAppProcessInfo_0100";
+}
 } // namespace OHOS::FileManagement::Backup

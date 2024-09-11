@@ -147,3 +147,154 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceSchedAction_0105
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetServiceSchedAction_0105";
 }
+
+/**
+ * @tc.number: SUB_backup_sa_session_CleanAndCheckIfNeedWait_0100
+ * @tc.name: SUB_backup_sa_session_CleanAndCheckIfNeedWait_0100
+ * @tc.desc: 测试 CleanAndCheckIfNeedWait
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_CleanAndCheckIfNeedWait_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_CleanAndCheckIfNeedWait_0100";
+    try {
+        ErrCode err;
+        std::vector<std::string> bundleNameList;
+        bundleNameList.push_back(BUNDLE_NAME);
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+
+        auto ret = sessionManagerPtr_->CleanAndCheckIfNeedWait(err, bundleNameList);
+        EXPECT_FALSE(ret);
+
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+        sessionManagerPtr_->impl_.restoreDataType = RestoreTypeEnum::RESTORE_DATA_READDY;
+        ret = sessionManagerPtr_->CleanAndCheckIfNeedWait(err, bundleNameList);
+        EXPECT_FALSE(ret);
+
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+        sessionManagerPtr_->impl_.restoreDataType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
+        ret = sessionManagerPtr_->CleanAndCheckIfNeedWait(err, bundleNameList);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by CleanAndCheckIfNeedWait.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_CleanAndCheckIfNeedWait_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_CleanAndCheckIfNeedWait_0200
+ * @tc.name: SUB_backup_sa_session_CleanAndCheckIfNeedWait_0200
+ * @tc.desc: 测试 CleanAndCheckIfNeedWait
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_CleanAndCheckIfNeedWait_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_CleanAndCheckIfNeedWait_0200";
+    try {
+        ErrCode err;
+        std::vector<std::string> bundleNameList;
+        bundleNameList.push_back(BUNDLE_NAME);
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+
+        BackupExtInfo extInfo {};
+        extInfo.schedAction = BConstants::ServiceSchedAction::WAIT;
+        extInfo.backUpConnection = nullptr;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
+        auto ret = sessionManagerPtr_->CleanAndCheckIfNeedWait(err, bundleNameList);
+        EXPECT_FALSE(ret);
+
+        BackupExtInfo extInfo2 {};
+        extInfo2.schedAction = BConstants::ServiceSchedAction::RUNNING;
+        extInfo2.isInPublishFile = true;
+        extInfo2.backUpConnection = nullptr;
+        extInfo2.fwkTimerStatus = true;
+        extInfo2.extTimerStatus = false;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = extInfo2;
+        ret = sessionManagerPtr_->CleanAndCheckIfNeedWait(err, bundleNameList);
+        EXPECT_FALSE(ret);
+
+        BackupExtInfo extInfo3 {};
+        extInfo3.schedAction = BConstants::ServiceSchedAction::START;
+        extInfo3.isInPublishFile = true;
+        extInfo3.backUpConnection = nullptr;
+        extInfo3.fwkTimerStatus = true;
+        extInfo3.extTimerStatus = false;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = extInfo3;
+        ret = sessionManagerPtr_->CleanAndCheckIfNeedWait(err, bundleNameList);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by CleanAndCheckIfNeedWait.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_CleanAndCheckIfNeedWait_0200";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_CleanAndCheckIfNeedWait_0300
+ * @tc.name: SUB_backup_sa_session_CleanAndCheckIfNeedWait_0300
+ * @tc.desc: 测试 CleanAndCheckIfNeedWait
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_CleanAndCheckIfNeedWait_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_CleanAndCheckIfNeedWait_0300";
+    try {
+        ErrCode err;
+        std::vector<std::string> bundleNameList;
+        bundleNameList.push_back(BUNDLE_NAME);
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+
+        BackupExtInfo extInfo {};
+        extInfo.schedAction = BConstants::ServiceSchedAction::WAIT;
+        extInfo.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr, BUNDLE_NAME));;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
+        auto ret = sessionManagerPtr_->CleanAndCheckIfNeedWait(err, bundleNameList);
+        EXPECT_FALSE(ret);
+
+        BackupExtInfo extInfo2 {};
+        extInfo2.schedAction = BConstants::ServiceSchedAction::RUNNING;
+        extInfo2.isInPublishFile = true;
+        extInfo2.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr, BUNDLE_NAME));;
+        extInfo2.fwkTimerStatus = true;
+        extInfo2.extTimerStatus = false;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = extInfo2;
+        ret = sessionManagerPtr_->CleanAndCheckIfNeedWait(err, bundleNameList);
+        EXPECT_FALSE(ret);
+
+        BackupExtInfo extInfo3 {};
+        extInfo3.schedAction = BConstants::ServiceSchedAction::START;
+        extInfo3.isInPublishFile = true;
+        extInfo3.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr, BUNDLE_NAME));;
+        extInfo3.fwkTimerStatus = true;
+        extInfo3.extTimerStatus = false;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = extInfo3;
+        ret = sessionManagerPtr_->CleanAndCheckIfNeedWait(err, bundleNameList);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by CleanAndCheckIfNeedWait.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_CleanAndCheckIfNeedWait_0300";
+}
