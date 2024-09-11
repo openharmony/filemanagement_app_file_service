@@ -167,13 +167,11 @@ bool BJsonUtil::HasUnicastInfo(std::string &bundleInfo)
         cJSON *infoItem = cJSON_GetArrayItem(infos, i);
         if (!cJSON_IsObject(infoItem)) {
             HILOGE("Parse json error, info item is not an object");
-            cJSON_Delete(root);
             continue;
         }
         cJSON *type = cJSON_GetObjectItem(infoItem, "type");
         if (type == nullptr || !cJSON_IsString(type) || (type->valuestring == nullptr)) {
             HILOGE("Parse json type element error");
-            cJSON_Delete(root);
             continue;
         }
         if (string(type->valuestring).compare(BConstants::UNICAST_TYPE) == 0) {
