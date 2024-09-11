@@ -43,6 +43,7 @@ private:
     ErrCode CmdGetIncrementalBackupFileHandle(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply);
     ErrCode CmdUpdateFdSendRate(MessageParcel &data, MessageParcel &reply);
+    ErrCode CmdHandleUser0Backup(MessageParcel &data, MessageParcel &reply);
 
 private:
     using ExtensionInterface = int32_t (ExtExtensionStub::*)(MessageParcel &data, MessageParcel &reply);
