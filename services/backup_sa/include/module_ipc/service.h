@@ -20,6 +20,7 @@
 #include <mutex>
 
 #include "b_jsonutil/b_jsonutil.h"
+#include "b_json/b_json_clear_data_config.h"
 #include "b_json/b_json_entity_caps.h"
 #include "b_json/b_json_service_disposal_config.h"
 #include "i_service_reverse.h"
@@ -75,7 +76,7 @@ public:
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;
-    ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result) override;
+    ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result) override;
     ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) override;
     ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario) override;
     ErrCode StartExtTimer(bool &isExtStart) override;
@@ -178,12 +179,6 @@ public:
     void SessionDeactive();
 
     /**
-     * @brief 卸载服务
-     *
-     */
-    void UnloadService();
-
-    /**
      * @brief 构造拉起应用所需的want
      *
      * @param bundleName 应用名称
@@ -238,12 +233,45 @@ public:
      */
     std::function<void()> TimeOutCallback(wptr<Service> ptr, std::string bundleName);
 
+    /**
+     * @brief do timeout
+     *
+     * @param ptr 当前对象
+     * @param bundleName 应用名称
+     */
+    void DoTimeout(wptr<Service> ptr, std::string bundleName);
+
+    /**
+     * @brief 清理残留数据
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void ClearResidualBundleData(const std::string &bundleName);
+
+    /**
+     * @brief 添加清理记录
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void AddClearBundleRecord(const std::string &bundleName);
+
+    /**
+     * @brief 删除清理记录
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void DelClearBundleRecord(const std::vector<std::string> &bundleNames);
+
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(this)));
         disposal_ = make_shared<BJsonDisposalConfig>();
+        clearRecorder_ = make_shared<BJsonClearDataConfig>();
     };
     ~Service() override
     {
@@ -347,13 +375,33 @@ private:
     void SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
         std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType);
 
+    void SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info, std::map<std::string, bool> &isClearDataFlags);
+    
+    /**
+     * @brief add useridinfo to  current backup session
+     *
+     * @param bundleNames: bundleNames list
+     * @param userId: userId
+     *
+     */
+    void SetCurrentBackupSessProperties(const std::vector<std::string> &bundleNames, int32_t userId);
+
+    /**
+     * @brief send userid to app
+     *
+     * @param bundleName: bundleName
+     * @param userId: userId
+     *
+     */
+    void SendUserIdToApp(std::string &bundleName, int32_t userId);
+
     /**
      * @brief 通知权限模块
      *
      * @param bundleName 包名称
      *
     */
-    void NotifyCloneBundleFinish(std::string bundleName);
+    void NotifyCloneBundleFinish(std::string bundleName, const BackupRestoreScenario sennario);
 
     /**
      * @brief SA 备份恢复结束
@@ -402,6 +450,26 @@ private:
      */
     ErrCode GetBackupInfoCmdHandle(BundleName &bundleName, std::string &result);
 
+    /**
+     * @brief 添加需要清理的Session
+     *
+     * @param bundleNames 需要清理的应用包信息
+     *
+     */
+    ErrCode AppendBundlesClearSession(const std::vector<BundleName> &bundleNames);
+
+    /**
+     * @brief 设置是否自占用Session
+     *
+     * @param isOccupyingSession 框架是否自占用session
+     *
+     */
+    void SetOccupySession(bool isOccupyingSession);
+
+    void ReportOnExtConnectFailed(const IServiceReverse::Scenario scenario,
+        const std::string &bundleName, const ErrCode ret);
+
+    void ReleaseOnException();
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -409,12 +477,14 @@ private:
     std::condition_variable getBackupInfoCondition_;
     static inline std::atomic<uint32_t> seed {1};
     std::atomic<bool> isConnectDied_ {false};
-    std::atomic<bool> isUnloadService_ {false};
+    std::atomic<bool> isOccupyingSession_ {false};
 
     sptr<SvcSessionManager> session_;
     sptr<SchedScheduler> sched_;
     std::shared_ptr<BJsonDisposalConfig> disposal_;
-
+    std::shared_ptr<BJsonClearDataConfig> clearRecorder_;
+    std::atomic<bool> isInRelease_ {false};
+    std::atomic<bool> isRmConfigFile_ {true};
     friend class ServiceTest;
 
     OHOS::ThreadPool threadPool_;

@@ -116,6 +116,9 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
             reversePtr_->SendStartAppGalleryNotify(bundleName);
             reversePtr_->ExtStart(bundleName);
         }
+    } else if (action == BConstants::ServiceSchedAction::CLEAN) {
+        HILOGI("Current bundle %{public}s process is cleaning", bundleName.data());
+        reversePtr_->ClearResidualBundleData(bundleName);
     }
 }
 
@@ -137,16 +140,14 @@ void SchedScheduler::RemoveExtConn(const string &bundleName)
 void SchedScheduler::StartTimer()
 {
     extTime_.Setup();
-    if (!BackupPara().GetBackupOverrideBackupSARelease()) {
-        TryUnloadServiceTimer();
-    }
+    TryUnloadServiceTimer();
 }
 
 void SchedScheduler::TryUnloadServiceTimer(bool force)
 {
     auto tryUnload = [sessionPtr {sessionPtr_}]() {
         auto ptr = sessionPtr.promote();
-        if (ptr && !ptr->NeedToUnloadService()) {
+        if (ptr && ptr->GetSessionCnt() > 0) {
             return;
         }
         HILOGI("Unload system ability");

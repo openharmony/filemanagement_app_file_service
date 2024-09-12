@@ -64,10 +64,11 @@ public:
      * @param bundleDetails 结构体对象
      * @param bundleDetailInfo bundle信息
      * @param isClearData 框架是否清理标志
+     * @param userId userId
      *
      */
     static void ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
-        BJsonUtil::BundleDetailInfo bundleDetailInfo, bool &isClearData);
+        BJsonUtil::BundleDetailInfo bundleDetailInfo, bool &isClearData, int32_t userId);
 
     /**
      * @brief 根据业务类型和bundleName确定唯一的bundleInfo
@@ -93,7 +94,7 @@ public:
      * @return 是否组建成功
      *
      */
-    static bool BuildRestoreErrInfo(std::string &jsonStr, int errCode, std::string errMsg);
+    static bool BuildExtensionErrInfo(std::string &jsonStr, int errCode, std::string errMsg);
 
     /**
      * @brief 拼接包名和分身对应的索引
@@ -114,7 +115,7 @@ public:
      * @return 是否组建成功
      *
      */
-    static bool BuildRestoreErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo);
+    static bool BuildExtensionErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo);
 
     /**
      * @brief 组建App进度返回的信息
@@ -126,6 +127,27 @@ public:
      *
      */
     static bool BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet);
+
+    /**
+     * @brief 构建包含userId的detailInfo
+     *
+     * @param userId userId
+     * @param detailInfo 包含userId的detailInfo
+     *
+     * @return 是否组建成功
+     *
+     */
+    static bool BuildBundleInfoJson(int32_t userId, std::string &detailInfo);
+
+    /**
+     * @brief 判断传入的bundleinfo中是否包含unicast字段
+     *
+     * @param bundleinfo json串
+     *
+     * @return 是否包含unicast字段
+     *
+     */
+    static bool HasUnicastInfo(std::string &bundleInfo);
 };
 } // namespace OHOS::FileManagement::Backup
 

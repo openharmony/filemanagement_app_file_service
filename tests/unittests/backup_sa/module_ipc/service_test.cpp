@@ -1165,9 +1165,9 @@ HWTEST_F(ServiceTest, SUB_Service_UpdateTimer_0100, testing::ext::TestSize.Level
     try {
         std::string bundleName = "com.example.app2backup";
         bool result = true;
-        uint32_t timeOut = 30000;
+        uint32_t timeout = 30000;
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->UpdateTimer(bundleName, timeOut, result);
+        servicePtr_->UpdateTimer(bundleName, timeout, result);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by UpdateTimer.";
@@ -1190,10 +1190,10 @@ HWTEST_F(ServiceTest, SUB_Service_UpdateTimer_0101, testing::ext::TestSize.Level
     try {
         std::string bundleName = "com.example.app2backup";
         bool result = true;
-        uint32_t timeOut = 30000;
+        uint32_t timeout = 30000;
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->session_ = nullptr;
-        servicePtr_->UpdateTimer(bundleName, timeOut, result);
+        servicePtr_->UpdateTimer(bundleName, timeout, result);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by UpdateTimer.";
@@ -1516,7 +1516,7 @@ HWTEST_F(ServiceTest, SUB_Service_NotifyCloneBundleFinish_0100, testing::ext::Te
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
         impl_.scenario = IServiceReverse::Scenario::RESTORE;
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->NotifyCloneBundleFinish(BUNDLE_NAME);
+        servicePtr_->NotifyCloneBundleFinish(BUNDLE_NAME, BackupRestoreScenario::FULL_RESTORE);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by NotifyCloneBundleFinish.";
@@ -1782,30 +1782,5 @@ HWTEST_F(ServiceTest, SUB_Service_DeleteDisConfigFile_0100, testing::ext::TestSi
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by DeleteDisConfigFile.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DeleteDisConfigFile_0100";
-}
-
-/**
- * @tc.number: SUB_Service_UnloadService_0100
- * @tc.name: SUB_Service_UnloadService_0100
- * @tc.desc: 测试 UnloadService 接口
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I8ZIMJ
- */
-HWTEST_F(ServiceTest, SUB_Service_UnloadService_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_UnloadService_0100";
-    try {
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
-        EXPECT_EQ(ret, BError(BError::Codes::OK));
-        EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->sched_ = nullptr;
-        servicePtr_->UnloadService();
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by UnloadService.";
-    }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_UnloadService_0100";
 }
 } // namespace OHOS::FileManagement::Backup

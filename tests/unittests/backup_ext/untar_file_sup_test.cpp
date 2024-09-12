@@ -266,4 +266,59 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_IsValidTarBlock_0100, testing::ext::Te
     }
     GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_IsValidTarBlock_0100";
 }
+
+/**
+ * @tc.number: SUB_Untar_File_IsValidTarBlock_0200
+ * @tc.name: SUB_Untar_File_IsValidTarBlock_0200
+ * @tc.desc: 测试 IsValidTarBlock 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileSupTest, SUB_Untar_File_IsValidTarBlock_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_IsValidTarBlock_0200";
+    TarHeader header { .magic = "ustar" };
+    try {
+        EXPECT_EQ(UntarFile::GetInstance().IsValidTarBlock(header), false);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by IsValidTarBlock.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_IsValidTarBlock_0200";
+}
+
+/**
+ * @tc.number: SUB_Untar_File_CheckIfTarBlockValid_0100
+ * @tc.name: SUB_Untar_File_CheckIfTarBlockValid_0100
+ * @tc.desc: 测试 CheckIfTarBlockValid 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileSupTest, SUB_Untar_File_CheckIfTarBlockValid_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_CheckIfTarBlockValid_0100";
+    char buff[BLOCK_SIZE]  = {0};
+    size_t buffLen = 0;
+    TarHeader *header {};
+    int ret = 0;
+    try {
+        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, header, ret), false);
+        for (int i = 0; i < BLOCK_SIZE; i++) {
+            buff[i] = 'a' + i % 26;
+        }
+        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, header, ret), false);
+        buffLen = BLOCK_SIZE;
+        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, header, ret), false);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by CheckIfTarBlockValid.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_CheckIfTarBlockValid_0100";
+}
 } // namespace OHOS::FileManagement::Backup

@@ -60,7 +60,7 @@ struct BackupExtInfo {
     /* Timer Status: true is start & false is stop */
     bool extTimerStatus {false};
     bool fwkTimerStatus {false};
-    uint32_t timeCount;
+    uint32_t timeout;
     uint32_t startTime;
     int64_t dataSize;
     int64_t lastIncrementalTime;
@@ -70,6 +70,7 @@ struct BackupExtInfo {
     std::string extInfo;
     int32_t appendNum {1};
     bool isClearData {true};
+    bool isInPublishFile {false};
 };
 
 class Service;
@@ -106,8 +107,9 @@ public:
      * @brief 激活会话
      *
      * @param impl 客户端信息
+     * @param isOccupyingSession 框架是否自占用session
      */
-    ErrCode Active(Impl newImpl);
+    ErrCode Active(Impl newImpl, bool isOccupyingSession = false);
 
     /**
      * @brief 关闭会话
@@ -425,11 +427,11 @@ public:
      * @brief 重新设置定时器
      *
      * @param bundleName 应用名称
-     * @param timeOut 超时时间
+     * @param timeout 超时时间
      * @return true
      * @return false
      */
-    bool UpdateTimer(const std::string &bundleName, uint32_t timeOut,
+    bool UpdateTimer(const std::string &bundleName, uint32_t timeout,
         const Utils::Timer::TimerCallback &callback);
 
     /**
@@ -437,20 +439,20 @@ public:
      *
      * @param sessionCnt
      */
-    void IncreaseSessionCnt();
+    void IncreaseSessionCnt(const std::string funcName);
 
     /**
      * @brief sessionCnt加计数
      *
      * @param sessionCnt
      */
-    void DecreaseSessionCnt();
+    void DecreaseSessionCnt(const std::string funcName);
 
     /**
      * @brief clear session data
      *
      */
-    void ClearSessionData();
+    ErrCode ClearSessionData();
 
     /**
      * @brief Get the Is Incremental Backup object
@@ -503,6 +505,10 @@ public:
 
     void SetClearDataFlag(const std::string &bundleName, bool isClearData);
     bool GetClearDataFlag(const std::string &bundleName);
+
+    bool CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList);
+
+    void SetPublishFlag(const std::string &bundleName);
 
 private:
     /**
@@ -569,7 +575,6 @@ private:
     uint32_t extConnectNum_ {0};
     Utils::Timer timer_ {"backupTimer"};
     std::atomic<int> sessionCnt_ {0};
-    bool unloadSAFlag_ {false};
     int32_t memoryParaCurSize_ {BConstants::DEFAULT_VFS_CACHE_PRESSURE};
 };
 } // namespace OHOS::FileManagement::Backup

@@ -177,7 +177,7 @@ ErrCode ServiceProxy::GetBackupInfo(std::string &bundleName, std::string &result
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result)
 {
     return BError(BError::Codes::OK);
 }
@@ -199,6 +199,11 @@ ErrCode ServiceProxy::UpdateSendRate(std::string &bundleName, int32_t sendRate, 
 ErrCode ServiceProxy::ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario)
 {
     return BError(BError::Codes::OK);
+}
+
+sptr<IService> ServiceProxy::GetServiceProxyPointer()
+{
+    return serviceProxy_;
 }
 
 sptr<IService> ServiceProxy::GetInstance()

@@ -41,7 +41,7 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
     GTEST_LOG_(INFO) << "VerifyCallerAndScenario";
 }
 
-ErrCode SvcSessionManager::Active(Impl newImpl)
+ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
 {
     GTEST_LOG_(INFO) << "Active";
     extConnectNum_ = 0;
@@ -374,15 +374,15 @@ bool SvcSessionManager::StopExtTimer(const std::string &bundleName)
     return true;
 }
 
-bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeOut,
+bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeout,
     const Utils::Timer::TimerCallback &callback)
 {
     return true;
 }
 
-void SvcSessionManager::IncreaseSessionCnt() {}
+void SvcSessionManager::IncreaseSessionCnt(const std::string funcName) {}
 
-void SvcSessionManager::DecreaseSessionCnt() {}
+void SvcSessionManager::DecreaseSessionCnt(const std::string funcName) {}
 
 int32_t SvcSessionManager::GetMemParaCurSize()
 {
@@ -391,7 +391,10 @@ int32_t SvcSessionManager::GetMemParaCurSize()
 
 void SvcSessionManager::SetMemParaCurSize(int32_t size) {}
 
-void SvcSessionManager::ClearSessionData() {}
+ErrCode SvcSessionManager::ClearSessionData()
+{
+    return 0;
+}
 
 bool SvcSessionManager::GetIsIncrementalBackup()
 {
@@ -431,4 +434,11 @@ int64_t SvcSessionManager::GetLastIncrementalTime(const string &bundleName)
 {
     return 0;
 }
+
+bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList)
+{
+    return false;
+}
+
+void SvcSessionManager::SetPublishFlag(const std::string &bundleName) {}
 } // namespace OHOS::FileManagement::Backup

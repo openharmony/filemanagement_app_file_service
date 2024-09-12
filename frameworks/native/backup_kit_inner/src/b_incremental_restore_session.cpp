@@ -16,6 +16,7 @@
 #include "b_incremental_restore_session.h"
 
 #include "b_error/b_error.h"
+#include "b_radar/b_radar.h"
 #include "filemgmt_libhilog.h"
 #include "service_proxy.h"
 #include "service_reverse.h"
@@ -29,7 +30,7 @@ BIncrementalRestoreSession::~BIncrementalRestoreSession()
         HILOGI("Death Recipient is nullptr");
         return;
     }
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceProxy::GetServiceProxyPointer();
     if (proxy == nullptr) {
         return;
     }
@@ -54,6 +55,10 @@ unique_ptr<BIncrementalRestoreSession> BIncrementalRestoreSession::Init(Callback
         int32_t res = proxy->InitRestoreSession(sptr(new ServiceReverse(callbacks)));
         if (res != 0) {
             HILOGE("Failed to Restore because of %{public}d", res);
+            AppRadar::Info info ("", "", "create restore session failed");
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "BIncrementalRestoreSession::Init",
+                                                         AppRadar::GetInstance().GetUserId(),
+                                                         BizStageRestore::BIZ_STAGE_CREATE_RESTORE_SESSION_FAIL, res);
             return nullptr;
         }
 

@@ -24,7 +24,7 @@ void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceRe
     BackupSvcSessionManager::session->VerifyCallerAndScenario(clientToken, scenario);
 }
 
-ErrCode SvcSessionManager::Active(Impl newImpl)
+ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
 {
     return BackupSvcSessionManager::session->Active(newImpl);
 }
@@ -239,20 +239,20 @@ bool SvcSessionManager::StopExtTimer(const std::string &bundleName)
     return BackupSvcSessionManager::session->StopExtTimer(bundleName);
 }
 
-bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeOut,
+bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t timeout,
     const Utils::Timer::TimerCallback &callback)
 {
-    return BackupSvcSessionManager::session->UpdateTimer(bundleName, timeOut, callback);
+    return BackupSvcSessionManager::session->UpdateTimer(bundleName, timeout, callback);
 }
 
-void SvcSessionManager::IncreaseSessionCnt()
+void SvcSessionManager::IncreaseSessionCnt(const std::string funcName)
 {
-    BackupSvcSessionManager::session->IncreaseSessionCnt();
+    BackupSvcSessionManager::session->IncreaseSessionCnt(funcName);
 }
 
-void SvcSessionManager::DecreaseSessionCnt()
+void SvcSessionManager::DecreaseSessionCnt(const std::string funcName)
 {
-    BackupSvcSessionManager::session->DecreaseSessionCnt();
+    BackupSvcSessionManager::session->DecreaseSessionCnt(funcName);
 }
 
 int32_t SvcSessionManager::GetMemParaCurSize()
@@ -265,9 +265,9 @@ void SvcSessionManager::SetMemParaCurSize(int32_t size)
     BackupSvcSessionManager::session->SetMemParaCurSize(size);
 }
 
-void SvcSessionManager::ClearSessionData()
+ErrCode SvcSessionManager::ClearSessionData()
 {
-    BackupSvcSessionManager::session->ClearSessionData();
+    return BackupSvcSessionManager::session->ClearSessionData();
 }
 
 bool SvcSessionManager::GetIsIncrementalBackup()
@@ -314,4 +314,11 @@ int64_t SvcSessionManager::GetLastIncrementalTime(const string &bundleName)
 {
     return BackupSvcSessionManager::session->GetLastIncrementalTime(bundleName);
 }
+
+bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList)
+{
+    return false;
+}
+
+void SvcSessionManager::SetPublishFlag(const std::string &bundleName) {}
 } // namespace OHOS::FileManagement::Backup

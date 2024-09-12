@@ -226,7 +226,7 @@ ErrCode Service::StartFwkTimer(bool &isFwkStart)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result)
 {
     return BError(BError::Codes::OK);
 }
@@ -249,4 +249,8 @@ void Service::OnSABackup(const std::string &bundleName,
 }
 
 void Service::OnSARestore(const std::string &bundleName, const std::string &result, const ErrCode &errCode) {}
+
+void Service::ClearResidualBundleData(const std::string &bundleName)
+{
+}
 } // namespace OHOS::FileManagement::Backup

@@ -28,6 +28,7 @@ public:
         UNDEFINED,
         BACKUP,
         RESTORE,
+        CLEAN,
     };
 
 public:
