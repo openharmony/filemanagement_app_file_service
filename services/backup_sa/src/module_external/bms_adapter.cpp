@@ -516,4 +516,16 @@ bool BundleMgrAdapter::IsUser0BundleName(std::string bundleName, int32_t userId)
     HILOGI("bundleName:%{public}s is not zero user bundle", bundleName.c_str());
     return false;
 }
+
+vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForAppend(
+        const std::vector<BIncrementalData> &incrementalDataList, int32_t userId)
+{
+    auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(incrementalDataList, userId);
+    for (auto const &info : incrementalDataList) {
+        if (SAUtils::IsSABundleName(info.bundleName)) {
+            GetBundleInfoForSA(info.bundleName, bundleInfos);
+        }
+    }
+    return bundleInfos;
+}
 } // namespace OHOS::FileManagement::Backup
