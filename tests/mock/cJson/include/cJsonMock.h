@@ -34,7 +34,6 @@ public:
     virtual cJSON_bool cJSON_AddItemToObject(cJSON *object, const char *string, cJSON *item) = 0;
     virtual int cJSON_GetArraySize(const cJSON *array) = 0;
     virtual cJSON* cJSON_GetArrayItem(const cJSON* array, int index) = 0;
-    virtual cJSON_bool cJSON_AddItemToArray(cJSON *array, cJSON *item);
     virtual void cJSON_free(void* object) = 0;
     virtual cJSON_bool cJSON_AddItemToArray(cJSON *array, cJSON *item) = 0;
     virtual cJSON *cJSON_AddStringToObject(cJSON *const object, const char *const name, const char *const string) = 0;
