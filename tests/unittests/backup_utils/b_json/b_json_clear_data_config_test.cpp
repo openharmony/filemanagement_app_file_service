@@ -304,8 +304,8 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0401, testing::ext::Te
         ret = config.FindClearBundleRecord(bundleName);
         EXPECT_FALSE(ret);
 
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));  
-        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1)).WillOnce(Return(1));  
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1)).WillOnce(Return(1));
         EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _))
             .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
             .WillOnce(Return(nullptr));
