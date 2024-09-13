@@ -34,8 +34,8 @@ using namespace std;
 using namespace testing;
 
 namespace {
-    const string PATH = "/data/service/el2/100/backup/";
-    const string CONFIG_NAME = "ClearDataConfig.json";
+const string PATH = "/data/service/el2/100/backup/";
+const string CONFIG_NAME = "ClearDataConfig.json";
 } // namespace
 
 class BJsonClearDataConfigTest : public testing::Test {
@@ -76,7 +76,7 @@ void BJsonClearDataConfigTest::TearDownTestCase()
 /**
  * @tc.number: SUB_Clear_Data_Config_Test_0100
  * @tc.name: Clear_Data_Config_Test_0100
- * @tc.desc: 测试配置文件存在的情况
+ * @tc.desc: 测试返回空指针情况
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -86,39 +86,13 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0100, testing::ext::Te
 {
     GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0100";
     try {
-        string filePath = PATH + CONFIG_NAME;
-        ofstream outFile(filePath);
-        outFile.close();
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
         BJsonClearDataConfig config;
-        EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0100";
-}
-
-/**
- * @tc.number: SUB_Clear_Data_Config_Test_0101
- * @tc.name: Clear_Data_Config_Test_0101
- * @tc.desc: 测试配置文件不存在的情况
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: IAAMIK
- */
-HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0101, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0101";
-    try {
-        string filePath = PATH + CONFIG_NAME;
-        BJsonClearDataConfig config;
-        EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0101";
 }
 
 /**
@@ -134,7 +108,10 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0200, testing::ext::Te
 {
     GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0200";
     try {
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
+        int cjson = 0;
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
         BJsonClearDataConfig config;
     } catch (...) {
         EXPECT_TRUE(false);
@@ -156,31 +133,6 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0201, testing::ext::Te
 {
     GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0201";
     try {
-        int cjson = 0;
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        BJsonClearDataConfig config;
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0201";
-}
-
-/**
- * @tc.number: SUB_Clear_Data_Config_Test_0202
- * @tc.name: Clear_Data_Config_Test_0202
- * @tc.desc: 测试返回空指针情况
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: IAAMIK
- */
-HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0202, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0202";
-    try {
         string filePath = PATH + CONFIG_NAME;
         int cjson = 0;
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
@@ -194,7 +146,7 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0202, testing::ext::Te
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0202";
+    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0201";
 }
 
 /**
@@ -315,7 +267,7 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0400, testing::ext::Te
 /**
  * @tc.number: SUB_Clear_Data_Config_Test_0401
  * @tc.name: Clear_Data_Config_Test_0401
- * @tc.desc: 测试 FindClearBundleRecord 接口成功
+ * @tc.desc: 测试 FindClearBundleRecord 接口失败
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -325,64 +277,6 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0401, testing::ext::Te
 {
     GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0401";
     try {
-    string bundleName = "test1";
-    string filePath = PATH + CONFIG_NAME;
-    int cjson = 0;
-    EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-    EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-    EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
-    EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
-    EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-    BJsonClearDataConfig config;
-    EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
-
-    EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-    EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-    EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-    EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(nullptr));
-    EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-    auto ret = config.FindClearBundleRecord(bundleName);
-    EXPECT_TRUE(ret);
-
-    EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-    EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-    EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-    EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-    EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
-    EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-    ret = config.FindClearBundleRecord(bundleName);
-    EXPECT_TRUE(ret);
-
-    EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-    EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-    EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-    EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-    EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _))
-        .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
-        .WillOnce(Return(nullptr));
-    EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-    ret = config.FindClearBundleRecord(bundleName);
-    EXPECT_TRUE(ret);
-    } catch (...) {
-    EXPECT_TRUE(false);
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0401";
-}
-
-/**
- * @tc.number: SUB_Clear_Data_Config_Test_0402
- * @tc.name: Clear_Data_Config_Test_0402
- * @tc.desc: 测试 FindClearBundleRecord 接口成功
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: IAAMIK
- */
-HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0402, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0402";
-    try {
         string bundleName = "test1";
         string filePath = PATH + CONFIG_NAME;
         int cjson = 0;
@@ -395,39 +289,40 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0402, testing::ext::Te
         EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
 
         EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _))
-            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
-            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
-            .WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        auto ret = config.FindClearBundleRecord(bundleName);
-        EXPECT_TRUE(ret);
-
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _))
             .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
             .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
             .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1)).WillOnce(Return(1));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        auto ret = config.FindClearBundleRecord(bundleName);
+        EXPECT_FALSE(ret);
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
         ret = config.FindClearBundleRecord(bundleName);
-        EXPECT_TRUE(ret);
+        EXPECT_FALSE(ret);
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));  
+        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1)).WillOnce(Return(1));  
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _))
+            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
+            .WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        ret = config.FindClearBundleRecord(bundleName);
+        EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0402";
+    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0401";
 }
 
 /**
  * @tc.number: SUB_Clear_Data_Config_Test_0500
  * @tc.name: Clear_Data_Config_Test_0500
- * @tc.desc: 测试 InsertClearBundleRecord 接口失败
+ * @tc.desc: 测试 WriteClearBundleRecord 接口失败
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -436,230 +331,6 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0402, testing::ext::Te
 HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0500, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0500";
-    try {
-        string bundleName = "test1";
-        string filePath = PATH + CONFIG_NAME;
-        int cjson = 0;
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
-        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        BJsonClearDataConfig config;
-        EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
-
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(nullptr));
-        auto ret = config.InsertClearBundleRecord(bundleName);
-        EXPECT_FALSE(ret);
-
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        ret = config.InsertClearBundleRecord(bundleName);
-        EXPECT_FALSE(ret);
-
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(0));
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        ret = config.InsertClearBundleRecord(bundleName);
-        EXPECT_FALSE(ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0500";
-}
-
-/**
- * @tc.number: SUB_Clear_Data_Config_Test_0501
- * @tc.name: Clear_Data_Config_Test_0501
- * @tc.desc: 测试 InsertClearBundleRecord 接口成功
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: IAAMIK
- */
-HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0501, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0501";
-    try {
-        string bundleName = "test1";
-        string filePath = PATH + CONFIG_NAME;
-        char printString[] = {"teststring"};
-        int cjson = 0;
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
-        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        BJsonClearDataConfig config;
-        EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
-
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(0));
-        //WriteClearBundleRecord Mock
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_AddStringToObject(_, _, _)).WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_AddItemToArray(_, _)).WillOnce(Return(true));
-        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(printString));
-        EXPECT_CALL(*cJsonMock, cJSON_free(_)).WillOnce(Return());
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        auto ret = config.InsertClearBundleRecord(bundleName);
-        EXPECT_TRUE(ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0501";
-}
-
-/**
- * @tc.number: SUB_Clear_Data_Config_Test_0502
- * @tc.name: Clear_Data_Config_Test_0502
- * @tc.desc: 测试 InsertClearBundleRecord 接口失败
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: IAAMIK
- */
-HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0502, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0502";
-    try {
-        string bundleName = "test1";
-        string filePath = PATH + CONFIG_NAME;
-        int cjson = 0;
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
-        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        BJsonClearDataConfig config;
-        EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
-
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(nullptr));
-
-        //WriteClearBundleRecord Mock
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(nullptr));
-
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        auto ret = config.InsertClearBundleRecord(bundleName);
-        EXPECT_FALSE(ret);
-
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
-
-        //WriteClearBundleRecord Mock
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(nullptr));
-
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        ret = config.InsertClearBundleRecord(bundleName);
-        EXPECT_FALSE(ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0502";
-}
-
-/**
- * @tc.number: SUB_Clear_Data_Config_Test_0503
- * @tc.name: Clear_Data_Config_Test_0503
- * @tc.desc: 测试 InsertClearBundleRecord 接口失败和成功
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: IAAMIK
- */
-HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0503, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0503";
-    try {
-        string bundleName = "test1";
-        string filePath = PATH + CONFIG_NAME;
-        int cjson = 0;
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
-        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        BJsonClearDataConfig config;
-        EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
-
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _))
-            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
-            .WillOnce(Return(nullptr));
-
-        //WriteClearBundleRecord Mock
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(nullptr));
-
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        auto ret = config.InsertClearBundleRecord(bundleName);
-        EXPECT_FALSE(ret);
-
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _))
-            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
-            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
-            .WillOnce(Return(nullptr));
-
-        //WriteClearBundleRecord Mock
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(nullptr));
-
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        ret = config.InsertClearBundleRecord(bundleName);
-        EXPECT_FALSE(ret);
-
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _))
-            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
-            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
-            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        ret = config.InsertClearBundleRecord(bundleName);
-        EXPECT_TRUE(ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0503";
-}
-
-/**
- * @tc.number: SUB_Clear_Data_Config_Test_0600
- * @tc.name: Clear_Data_Config_Test_0600
- * @tc.desc: 测试 WriteClearBundleRecord 接口失败
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: IAAMIK
- */
-HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0600, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0600";
     try {
         string bundleName = "test1";
         string filePath = PATH + CONFIG_NAME;
@@ -702,25 +373,24 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0600, testing::ext::Te
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0600";
+    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0500";
 }
 
 /**
- * @tc.number: SUB_Clear_Data_Config_Test_0601
- * @tc.name: Clear_Data_Config_Test_0601
- * @tc.desc: 测试 WriteClearBundleRecord 接口成功
+ * @tc.number: SUB_Clear_Data_Config_Test_0600
+ * @tc.name: Clear_Data_Config_Test_0600
+ * @tc.desc: 测试 DeleteClearBundleRecord 接口
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: IAAMIK
  */
-HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0601, testing::ext::TestSize.Level1)
+HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0600, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0601";
+    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-begin Clear_Data_Config_Test_0600";
     try {
         string bundleName = "test1";
         string filePath = PATH + CONFIG_NAME;
-        char printString[] = {"teststring"};
         int cjson = 0;
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
@@ -731,20 +401,14 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0601, testing::ext::Te
         EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
 
         EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_AddStringToObject(_, _, _)).WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_AddItemToArray(_, _)).WillOnce(Return(true));
-
-        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(printString));
-        EXPECT_CALL(*cJsonMock, cJSON_free(_)).WillOnce(Return());
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        auto ret = config.WriteClearBundleRecord(bundleName);
-        EXPECT_TRUE(ret);
+        auto ret = config.DeleteClearBundleRecord(bundleName);
+        EXPECT_FALSE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0601";
+    GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_0600";
 }
 } // namespace OHOS::FileManagement::Backup
