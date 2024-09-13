@@ -663,7 +663,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2000, testing::e
         auto err = restoreSession->PublishSAFile(fileInfo, move(fd));
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
-        EXPECT_CALL(*proxy, PublishIncrementalFile(_)).WillOnce(Return(0));
+        EXPECT_CALL(*proxy, PublishSAIncrementalFile(_, _)).WillOnce(Return(0));
         ServiceProxy::serviceProxy_ = proxy;
         err = restoreSession->PublishSAFile(fileInfo, move(fd));
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());

@@ -35,8 +35,10 @@ public:
     virtual int cJSON_GetArraySize(const cJSON *array) = 0;
     virtual cJSON* cJSON_GetArrayItem(const cJSON* array, int index) = 0;
     virtual cJSON_bool cJSON_AddItemToArray(cJSON *array, cJSON *item);
-    virtual cJSON *cJSON_AddStringToObject(cJSON *const object, const char *const name, const char *const string);
     virtual void cJSON_free(void* object) = 0;
+    virtual cJSON_bool cJSON_AddItemToArray(cJSON *array, cJSON *item) = 0;
+    virtual cJSON *cJSON_AddStringToObject(cJSON *const object, const char *const name, const char *const string) = 0;
+    virtual cJSON_bool cJSON_IsArray(const cJSON * const item) = 0;
 
 public:
     static inline std::shared_ptr<CJson> cJsonPtr = nullptr;
@@ -57,6 +59,7 @@ public:
     MOCK_METHOD3(cJSON_AddStringToObject,
                  cJSON *(cJSON *const object, const char *const name, const char *const string));
     MOCK_METHOD1(cJSON_free, void(void* object));
+    MOCK_METHOD1(cJSON_IsArray, cJSON_bool(const cJSON * const item));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif
