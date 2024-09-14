@@ -394,7 +394,6 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     auto cache = cachedEntity.Structuralize();
     auto bundleInfos = cache.GetBundleInfos();
     if (!bundleInfos.size()) {
-        HILOGE("GetRestoreBundleNames bundleInfos is empty.");
         throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
     }
     HILOGI("restoreInfos size is:%{public}zu", restoreInfos.size());
