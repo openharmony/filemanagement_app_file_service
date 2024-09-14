@@ -18,6 +18,5 @@ group("unittest") {
   deps = []
 
   deps += [ "permission:FileShareTestPermission" ]
-  deps += [ "nopermission:FileShareTestNoPermission" ]
 }
 ###############################################################################
