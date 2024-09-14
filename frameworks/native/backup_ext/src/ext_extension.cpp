@@ -624,15 +624,15 @@ static ErrCode TarFileReady(const TarMap &tarFileInfo, sptr<IService> proxy)
 std::function<void(std::string, int)> BackupExtExtension::ReportErrFileByProc(wptr<BackupExtExtension> obj,
     BackupRestoreScenario scenario)
 {
-    return [obj, scenario](std::string path, int err) {
+    return [obj, scenario](std::string msg, int err) {
         auto extPtr = obj.promote();
         if (extPtr == nullptr) {
-            HILOGE("ReportErr-- ExtPtr is empty.");
+            HILOGE("ReportErr ExtPtr is empty.");
             return;
         }
         string jsonInfo;
-        BJsonUtil::BuildOnProcessErrInfo(jsonInfo, path, err);
-        HILOGI("ReportErr-- Will notify err info.");
+        BJsonUtil::BuildOnProcessErrInfo(jsonInfo, msg, err);
+        HILOGI("ReportErr Will notify err info.");
         extPtr->ReportAppProcessInfo(jsonInfo, scenario);
     };
 }
