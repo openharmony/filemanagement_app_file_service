@@ -622,6 +622,22 @@ static ErrCode TarFileReady(const TarMap &tarFileInfo, sptr<IService> proxy)
     return ret;
 }
 
+std::function<void(std::string, int)> BackupExtExtension::ReportErrFileByProc(wptr<BackupExtExtension> obj,
+    BackupRestoreScenario scenario)
+{
+    return [obj, scenario](std::string msg, int err) {
+        auto extPtr = obj.promote();
+        if (extPtr == nullptr) {
+            HILOGE("ReportErr ExtPtr is empty.");
+            return;
+        }
+        string jsonInfo;
+        BJsonUtil::BuildOnProcessErrInfo(jsonInfo, msg, err);
+        HILOGI("ReportErr Will notify err info.");
+        extPtr->ReportAppProcessInfo(jsonInfo, scenario);
+    };
+}
+
 void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &tar, sptr<IService> proxy)
 {
     HILOGI("DoPacket begin, infos count: %{public}zu", srcFiles.size());
@@ -632,13 +648,14 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
     TarFile::GetInstance().SetPacketMode(true); // 设置下打包模式
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
+    auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
     for (auto small : srcFiles) {
         totalSize += small.second;
         fileCount += 1;
         packFiles.emplace_back(small.first);
         if (totalSize >= BConstants::DEFAULT_SLICE_SIZE || fileCount >= BConstants::MAX_FILE_COUNT) {
             TarMap tarMap {};
-            TarFile::GetInstance().Packet(packFiles, "part", path, tarMap);
+            TarFile::GetInstance().Packet(packFiles, "part", path, tarMap, reportCb);
             tar.insert(tarMap.begin(), tarMap.end());
             // 执行tar包回传功能
             WaitToSendFd(startTime, fdNum);
@@ -653,7 +670,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
     if (fileCount > 0) {
         // 打包回传
         TarMap tarMap {};
-        TarFile::GetInstance().Packet(packFiles, "part", path, tarMap);
+        TarFile::GetInstance().Packet(packFiles, "part", path, tarMap, reportCb);
         TarFileReady(tarMap, proxy);
         fdNum = 1;
         WaitToSendFd(startTime, fdNum);
@@ -1368,6 +1385,7 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
                 HILOGE("On restore, start ext timer fail.");
                 return;
             }
+            ptr->curScenario_ = BackupRestoreScenario::FULL_RESTORE;
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_RESTORE);
             auto callBackup = ptr->OnRestoreCallback(obj);
             auto callBackupEx = ptr->OnRestoreExCallback(obj);
@@ -1419,6 +1437,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
                 HILOGE("On incrementalRestore, start ext timer fail.");
                 return;
             }
+            ptr->curScenario_ = BackupRestoreScenario::INCREMENTAL_RESTORE;
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_RESTORE);
             auto callBackup = ptr->IncreOnRestoreCallback(obj);
             auto callBackupEx = ptr->IncreOnRestoreExCallback(obj);
@@ -1566,6 +1585,7 @@ void BackupExtExtension::AsyncTaskOnBackup()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
+            ptr->curScenario_ = BackupRestoreScenario::FULL_BACKUP;
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_BACKUP);
             auto callBackup = ptr->OnBackupCallback(obj);
             auto callBackupEx = ptr->OnBackupExCallback(obj);
@@ -1948,6 +1968,7 @@ void BackupExtExtension::AsyncTaskOnIncrementalBackup()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
+            ptr->curScenario_ = BackupRestoreScenario::INCREMENTAL_BACKUP;
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_BACKUP);
             auto callBackup = ptr->IncOnBackupCallback(obj);
             auto callBackupEx = ptr->IncOnBackupExCallback(obj);
@@ -1999,6 +2020,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
     string partName = GetIncrmentPartName();
+    auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
     for (auto small : infos) {
         totalSize += static_cast<uint64_t>(small.size);
         fileCount += 1;
@@ -2006,7 +2028,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
         tarInfos.emplace_back(small);
         if (totalSize >= BConstants::DEFAULT_SLICE_SIZE || fileCount >= BConstants::MAX_FILE_COUNT) {
             TarMap tarMap {};
-            TarFile::GetInstance().Packet(packFiles, partName, path, tarMap);
+            TarFile::GetInstance().Packet(packFiles, partName, path, tarMap, reportCb);
             tar.insert(tarMap.begin(), tarMap.end());
             // 执行tar包回传功能
             WaitToSendFd(startTime, fdNum);
@@ -2022,7 +2044,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
     if (fileCount > 0) {
         // 打包回传
         TarMap tarMap {};
-        TarFile::GetInstance().Packet(packFiles, partName, path, tarMap);
+        TarFile::GetInstance().Packet(packFiles, partName, path, tarMap, reportCb);
         IncrementalTarFileReady(tarMap, tarInfos, proxy);
         fdNum = 1;
         WaitToSendFd(startTime, fdNum);
