@@ -1384,6 +1384,7 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
                 HILOGE("On restore, start ext timer fail.");
                 return;
             }
+            ptr->curScenario_ = BackupRestoreScenario::FULL_RESTORE;
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_RESTORE);
             auto callBackup = ptr->OnRestoreCallback(obj);
             auto callBackupEx = ptr->OnRestoreExCallback(obj);
@@ -1435,6 +1436,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
                 HILOGE("On incrementalRestore, start ext timer fail.");
                 return;
             }
+            ptr->curScenario_ = BackupRestoreScenario::INCREMENTAL_RESTORE;
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_RESTORE);
             auto callBackup = ptr->IncreOnRestoreCallback(obj);
             auto callBackupEx = ptr->IncreOnRestoreExCallback(obj);
@@ -1582,6 +1584,7 @@ void BackupExtExtension::AsyncTaskOnBackup()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
+            ptr->curScenario_ = BackupRestoreScenario::FULL_BACKUP;
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_BACKUP);
             auto callBackup = ptr->OnBackupCallback(obj);
             auto callBackupEx = ptr->OnBackupExCallback(obj);
@@ -1964,6 +1967,7 @@ void BackupExtExtension::AsyncTaskOnIncrementalBackup()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
+            ptr->curScenario_ = BackupRestoreScenario::INCREMENTAL_BACKUP;
             ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_BACKUP);
             auto callBackup = ptr->IncOnBackupCallback(obj);
             auto callBackupEx = ptr->IncOnBackupExCallback(obj);
