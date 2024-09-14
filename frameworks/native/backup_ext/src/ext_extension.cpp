@@ -632,9 +632,9 @@ std::function<void(std::string, int)> BackupExtExtension::ReportErrFileByProc(wp
         }
         string jsonInfo;
         BJsonUtil::BuildOnProcessErrInfo(jsonInfo, path, err);
-        HILOGI("ReportErr-- Will notify err info: %{public}s", jsonInfo.c_str());
+        HILOGI("ReportErr-- Will notify err info.");
         extPtr->ReportAppProcessInfo(jsonInfo, scenario);
-    }
+    };
 }
 
 void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &tar, sptr<IService> proxy)
