@@ -163,7 +163,7 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
         HILOGE("Catch exception, errCode = %{public}d", e.GetCode());
         return DisposeErr::IPC_FAIL;
     } catch (...) {
-        HHILOGE("Unexpected exception");
+        HILOGE("Unexpected exception");
         return DisposeErr::IPC_FAIL;
     }
 }
