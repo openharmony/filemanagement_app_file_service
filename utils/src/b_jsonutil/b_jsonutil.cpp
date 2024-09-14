@@ -378,7 +378,7 @@ bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessRetInfo(std::string 
     return true;
 }
 
-static bool BuildOnProcessErrInfo(std::string &reportInfo, std::string path, int err)
+bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessErrInfo(std::string &reportInfo, std::string path, int err)
 {
     cJSON *info = cJSON_CreateObject();
     if (info == nullptr) {
@@ -407,7 +407,7 @@ static bool BuildOnProcessErrInfo(std::string &reportInfo, std::string path, int
         cJSON_Delete(info);
         return false;
     }
-    jsonStr = std::string(data);
+    reportInfo = std::string(data);
     cJSON_Delete(info);
     cJSON_free(data);
     return true;
