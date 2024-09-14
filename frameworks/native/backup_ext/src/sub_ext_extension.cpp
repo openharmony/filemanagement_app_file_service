@@ -598,6 +598,7 @@ void BackupExtExtension::ReportAppProcessInfo(const std::string processInfo, Bac
         HILOGE("Report app process error, proxy is empty");
         return;
     }
+    HILOGI("Will notify backup sa process result");
     auto ret = proxy->ReportAppProcessInfo(processInfo, scenario);
     if (ret != ERR_OK) {
         HILOGE("Report app process error, ipc failed, ret:%{public}d", ret);
@@ -605,12 +606,17 @@ void BackupExtExtension::ReportAppProcessInfo(const std::string processInfo, Bac
     }
 }
 
-void BackupExtExtension::StartOnProcessTaskThread(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
+ErrCode BackupExtExtension::StartOnProcessTaskThread(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
 {
     HILOGI("Begin Create onProcess Task Thread");
     onProcessTimeoutTimer_.Setup();
+    isFirstCallOnProcess_.store(true);
     StartOnProcessTimeOutTimer(obj, scenario);
     SyncCallJsOnProcessTask(obj, scenario);
+    if (isExecAppDone_.load()) {
+        HILOGE("Call onProcess timeout, Current extension finished");
+        return BError(BError::Codes::EXT_ABILITY_TIMEOUT);
+    }
     callJsOnProcessThread_ = std::thread([obj, scenario]() {
         auto extPtr = obj.promote();
         if (extPtr == nullptr) {
@@ -620,11 +626,13 @@ void BackupExtExtension::StartOnProcessTaskThread(wptr<BackupExtExtension> obj, 
         extPtr->ExecCallOnProcessTask(obj, scenario);
     });
     HILOGI("End Create onProcess Task End");
+    return BError(BError::Codes::OK);
 }
 
 void BackupExtExtension::ExecCallOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
 {
     HILOGI("Begin");
+    isFirstCallOnProcess_.store(false);
     while (!stopCallJsOnProcess_.load()) {
         std::unique_lock<std::mutex> lock(onProcessLock_);
         execOnProcessCon_.wait_for(lock, std::chrono::seconds(BConstants::CALL_APP_ON_PROCESS_TIME_INTERVAL),
@@ -634,8 +642,8 @@ void BackupExtExtension::ExecCallOnProcessTask(wptr<BackupExtExtension> obj, Bac
             return;
         }
         HILOGI("Continue call js method onProcess");
-        AsyncCallJsOnProcessTask(obj, scenario);
         StartOnProcessTimeOutTimer(obj, scenario);
+        AsyncCallJsOnProcessTask(obj, scenario);
     }
     HILOGI("End");
 }
@@ -672,7 +680,13 @@ void BackupExtExtension::SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, B
             HILOGE("Async call js onPreocess callback failed, exPtr is empty");
             return;
         }
+        if (extPtr->onProcessTimeout_.load()) {
+            HILOGE("The result of invoking onProcess is timeout.");
+            extPtr->onProcessTimeout_.store(false);
+            return;
+        }
         extPtr->CloseOnProcessTimeOutTimer();
+        extPtr->isFirstCallOnProcess_.store(false);
         extPtr->onProcessTimeout_.store(false);
         if (extPtr->onProcessTimeoutCnt_.load() > 0) {
             extPtr->onProcessTimeoutCnt_ = 0;
@@ -681,6 +695,7 @@ void BackupExtExtension::SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, B
         if (processInfo.size() == 0) {
             HILOGE("Current extension has no js method named onProcess.");
             std::unique_lock<std::mutex> lock(extPtr->onProcessLock_);
+            extPtr->isFirstCallOnProcess_.store(false);
             extPtr->stopCallJsOnProcess_.store(true);
             extPtr->execOnProcessCon_.notify_one();
             lock.unlock();
@@ -688,7 +703,6 @@ void BackupExtExtension::SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, B
         }
         std::string processInfoJsonStr;
         BJsonUtil::BuildOnProcessRetInfo(processInfoJsonStr, processInfo);
-        HILOGI("Will notify backup sa process result");
         extPtr->ReportAppProcessInfo(processInfoJsonStr, scenario);
     };
     auto extenionPtr = obj.promote();
@@ -709,6 +723,8 @@ void BackupExtExtension::FinishOnProcessTask()
     HILOGI("Begin");
     std::unique_lock<std::mutex> lock(onProcessLock_);
     stopCallJsOnProcess_.store(true);
+    isFirstCallOnProcess_.store(false);
+    isExecAppDone_.store(false);
     onProcessTimeoutCnt_ = 0;
     execOnProcessCon_.notify_one();
     lock.unlock();
@@ -731,10 +747,14 @@ void BackupExtExtension::StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj
             HILOGE("Start Create timeout callback failed, extPtr is empty");
             return;
         }
-        if (extPtr->onProcessTimeoutCnt_.load() >= BConstants::APP_ON_PROCESS_TIMEOUT_MAX_COUNT) {
-            HILOGE("Current extension onProcess timeout more than three times");
+        if (extPtr->onProcessTimeoutCnt_.load() >= BConstants::APP_ON_PROCESS_TIMEOUT_MAX_COUNT ||
+            extPtr->isFirstCallOnProcess_.load()) {
+            HILOGE("The extension invokes the onProcess for more than three times or the first invoking of the"
+                "onProcess times out, timeoutCnt:%{public}d", extPtr->onProcessTimeoutCnt_.load());
             std::unique_lock<std::mutex> lock(extPtr->onProcessLock_);
             extPtr->stopCallJsOnProcess_.store(true);
+            extPtr->isFirstCallOnProcess_.store(false);
+            extPtr->isExecAppDone_.store(false);
             extPtr->onProcessTimeoutCnt_ = 0;
             extPtr->execOnProcessCon_.notify_one();
             lock.unlock();
@@ -750,7 +770,9 @@ void BackupExtExtension::StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj
         extPtr->onProcessTimeout_.store(true);
         HILOGE("Extension onProcess timeout, Increase cnt:%{public}d", extPtr->onProcessTimeoutCnt_.load());
     };
-    uint32_t timerId = onProcessTimeoutTimer_.Register(timeoutCallback, BConstants::APP_ON_PROCESS_MAX_TIMEOUT, true);
+    int timeout = isFirstCallOnProcess_.load() ? BConstants::FIRST_CALL_APP_ON_PROCESS_MAX_TIMEOUT :
+        BConstants::APP_ON_PROCESS_MAX_TIMEOUT;
+    uint32_t timerId = onProcessTimeoutTimer_.Register(timeoutCallback, timeout, true);
     onProcessTimeoutTimerId_ = timerId;
     HILOGI("End");
 }
