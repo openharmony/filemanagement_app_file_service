@@ -711,6 +711,74 @@ HWTEST_F(FilePermissionTest, ParseErrorResults_test_002, testing::ext::TestSize.
     GTEST_LOG_(INFO) << "FileShareTest-end ParseErrorResults_test_002";
 }
 
+/**
+ * @tc.name: ErrorCodeConversion_test_001
+ * @tc.desc: Test function of ErrorCodeConversion() interface.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, ErrorCodeConversion_test_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin ErrorCodeConversion_test_001";
+    auto ret = ErrorCodeConversion(SANDBOX_MANAGER_OK);
+    EXPECT_EQ(ret, 0);
+
+    ret = ErrorCodeConversion(PERMISSION_DENIED);
+    EXPECT_EQ(ret, FileManagement::LibN::E_PERMISSION);
+
+    int32_t UNKNOWN_ERROR = -114;
+    ret = ErrorCodeConversion(UNKNOWN_ERROR);
+    EXPECT_EQ(ret, FileManagement::LibN::E_UNKNOWN_ERROR);
+    GTEST_LOG_(INFO) << "FileShareTest-end ErrorCodeConversion_test_001";
+}
+
+/**
+ * @tc.name: ErrorCodeConversion_test_002
+ * @tc.desc: Test function of ErrorCodeConversion() interface.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, ErrorCodeConversion_test_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin ErrorCodeConversion_test_002";
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    auto ret = ErrorCodeConversion(SANDBOX_MANAGER_OK, errorResults, resultCodes);
+    EXPECT_EQ(ret, 0);
+
+    ret = ErrorCodeConversion(INVALID_PARAMTER, errorResults, resultCodes);
+    EXPECT_EQ(ret, EPERM);
+
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::PERSISTENCE_FORBIDDEN));
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_MODE));
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_PATH));
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::PERMISSION_NOT_PERSISTED));
+
+    ret = ErrorCodeConversion(INVALID_PARAMTER, errorResults, resultCodes);
+    EXPECT_EQ(ret, FileManagement::LibN::E_PARAMS);
+
+    errorResults.push_back(true);
+    ret = ErrorCodeConversion(INVALID_PARAMTER, errorResults, resultCodes);
+    EXPECT_EQ(ret, EPERM);
+
+    errorResults.clear();
+    ret = ErrorCodeConversion(SANDBOX_MANAGER_OK, errorResults, resultCodes);
+    EXPECT_EQ(ret, EPERM);
+
+    resultCodes.clear();
+    ret = ErrorCodeConversion(SANDBOX_MANAGER_OK, errorResults, resultCodes);
+    EXPECT_EQ(ret, 0);
+
+    int32_t UNKNOWN_ERROR = -114;
+    ret = ErrorCodeConversion(UNKNOWN_ERROR, errorResults, resultCodes);
+    EXPECT_EQ(ret, FileManagement::LibN::E_UNKNOWN_ERROR);
+    GTEST_LOG_(INFO) << "FileShareTest-end ErrorCodeConversion_test_002";
+}
+
 #endif
 } // namespace AppFileService
 } // namespace OHOS
