@@ -36,6 +36,8 @@
 #include "permission_state_full.h"
 #include "token_setproc.h"
 
+#include "file_permission.cpp"
+
 using namespace testing;
 using namespace testing::ext;
 namespace OHOS {
