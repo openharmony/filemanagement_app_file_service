@@ -289,12 +289,54 @@ ohos_unittest("b_json_other_test") {
   use_exceptions = true
 }
 
+ohos_unittest("b_json_clear_data_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/tests/mock/cJson/src/cJsonMock.cpp",
+    "${path_backup}/tests/unittests/backup_utils/b_json/b_json_clear_data_config_test.cpp",
+    "${path_backup}/utils/src/b_json/b_json_clear_data_config.cpp",
+  ]
+  sources += backup_mock_parameter_src
+
+  include_dirs = [
+    "${path_backup}/utils",
+    "${path_base}/include",
+    "${path_backup}/tests/mock/cJson/include",
+  ]
+  include_dirs += backup_mock_parameter_include_dirs
+
+  deps = [
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+    "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
+  ]
+
+  external_deps = [
+    "cJSON:cjson",
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  defines = [
+    "LOG_TAG=\"app_file_service\"",
+    "LOG_DOMAIN=0xD004303",
+    "private = public",
+    "protected = public",
+  ]
+
+  use_exceptions = true
+}
+
 group("backup_test") {
   testonly = true
 
   deps = [
     ":b_error_test",
     ":b_file_test",
+    ":b_json_clear_data_test",
     ":b_json_other_test",
     ":b_json_test",
     ":b_jsonutil_test",

@@ -177,6 +177,7 @@ HWTEST_F(BJsonServiceDisposalConfigTest, Disposal_Config_Test_0202, testing::ext
         const string bundleName = "test1";
         EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_AddStringToObject(_, _, _)).WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_AddItemToArray(_, _)).WillOnce(Return(true));
@@ -216,7 +217,6 @@ HWTEST_F(BJsonServiceDisposalConfigTest, Disposal_Config_Test_0203, testing::ext
         EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
         const string bundleName = "test1";
         EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
         bool retAdd = config.AppendIntoDisposalConfigFile(bundleName);
         EXPECT_FALSE(retAdd);
     } catch (...) {

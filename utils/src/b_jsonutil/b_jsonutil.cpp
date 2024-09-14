@@ -44,9 +44,8 @@ BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string
         return bundleDetailInfo;
     }
     std::string bundleName = bundleNameStr.substr(0, hasPos);
-    std::string indexStr = "";
     if (to_string(bundleNameStr.back()) != BUNDLE_INDEX_SPLICE) {
-        indexStr = bundleNameStr.substr(hasPos + 1);
+        std::string indexStr = bundleNameStr.substr(hasPos + 1);
         int index = std::stoi(indexStr);
         bundleDetailInfo.bundleIndex = index;
     } else {
@@ -84,9 +83,8 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
             bundleNamesOnly.emplace_back(bundleName);
         } else {
             std::string bundleNameSplit = bundleName.substr(0, pos);
-            std::string indexSplit = "";
             if (to_string(bundleName.back()) != BUNDLE_INDEX_SPLICE) {
-                indexSplit = bundleName.substr(pos + 1);
+                std::string indexSplit = bundleName.substr(pos + 1);
                 int index = std::stoi(indexSplit);
                 bundleIndex = index;
             } else {

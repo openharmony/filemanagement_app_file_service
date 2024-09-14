@@ -2168,4 +2168,360 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalBackupOnRe
     }
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalBackupOnResultReport_0101";
 }
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_BackupOnProcessInfo_0100
+ * @tc.name: SUB_ServiceReverse_proxy_BackupOnProcessInfo_0100
+ * @tc.desc: Test function of BackupOnProcessInfo interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnProcessInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnProcessInfo_0100";
+    try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_TRUE(proxy_ != nullptr);
+        std::string processInfo = "{\"timeInfo\": \"\", \"resultInfo\": \"\"}";
+        proxy_->BackupOnProcessInfo(BUNDLE_NAME, processInfo);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnProcessInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnProcessInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_BackupOnProcessInfo_0101
+ * @tc.name: SUB_ServiceReverse_proxy_BackupOnProcessInfo_0101
+ * @tc.desc: Test function of BackupOnProcessInfo interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnProcessInfo_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_BackupOnProcessInfo_0101";
+    try {
+        std::string processInfo = "{\"timeInfo\": \"\", \"resultInfo\": \"\"}";
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->BackupOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->BackupOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->BackupOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            proxy_->BackupOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by BackupOnProcessInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_BackupOnProcessInfo_0101";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_RestoreOnProcessInfo_0100
+ * @tc.name: SUB_ServiceReverse_proxy_RestoreOnProcessInfo_0100
+ * @tc.desc: Test function of RestoreOnProcessInfo interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnProcessInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_RestoreOnProcessInfo_0100";
+    try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_TRUE(proxy_ != nullptr);
+        std::string processInfo = "{\"timeInfo\": \"\", \"resultInfo\": \"\"}";
+        proxy_->RestoreOnProcessInfo(BUNDLE_NAME, processInfo);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by RestoreOnProcessInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_RestoreOnProcessInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_RestoreOnProcessInfo_0101
+ * @tc.name: SUB_ServiceReverse_proxy_RestoreOnProcessInfo_0101
+ * @tc.desc: Test function of RestoreOnProcessInfo interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_RestoreOnProcessInfo_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_RestoreOnProcessInfo_0101";
+    try {
+        std::string processInfo = "{\"timeInfo\": \"\", \"resultInfo\": \"\"}";
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->RestoreOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->RestoreOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->RestoreOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            proxy_->RestoreOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by RestoreOnProcessInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_RestoreOnProcessInfo_0101";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalBackupOnProcessInfo_0100
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalBackupOnProcessInfo_0100
+ * @tc.desc: Test function of IncrementalBackupOnProcessInfo interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalBackupOnProcessInfo_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalBackupOnProcessInfo_0100";
+    try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_TRUE(proxy_ != nullptr);
+        std::string processInfo = "{\"timeInfo\": \"\", \"resultInfo\": \"\"}";
+        proxy_->IncrementalBackupOnProcessInfo(BUNDLE_NAME, processInfo);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalBackupOnProcessInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalBackupOnProcessInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalBackupOnProcessInfo_0101
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalBackupOnProcessInfo_0101
+ * @tc.desc: Test function of IncrementalBackupOnProcessInfo interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalBackupOnProcessInfo_0101,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalBackupOnProcessInfo_0101";
+    try {
+        std::string processInfo = "{\"timeInfo\": \"\", \"resultInfo\": \"\"}";
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->IncrementalBackupOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->IncrementalBackupOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->IncrementalBackupOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            proxy_->IncrementalBackupOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalBackupOnProcessInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalBackupOnProcessInfo_0101";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalRestoreOnProcessInfo_0100
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalRestoreOnProcessInfo_0100
+ * @tc.desc: Test function of IncrementalRestoreOnProcessInfo interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalRestoreOnProcessInfo_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalRestoreOnProcessInfo_0100";
+    try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        EXPECT_TRUE(proxy_ != nullptr);
+        std::string processInfo = "{\"timeInfo\": \"\", \"resultInfo\": \"\"}";
+        proxy_->IncrementalRestoreOnProcessInfo(BUNDLE_NAME, processInfo);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalRestoreOnProcessInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalRestoreOnProcessInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalRestoreOnProcessInfo_0101
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalRestoreOnProcessInfo_0101
+ * @tc.desc: Test function of IncrementalRestoreOnProcessInfo interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalRestoreOnProcessInfo_0101,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalRestoreOnProcessInfo_0101";
+    try {
+        std::string processInfo = "{\"timeInfo\": \"\", \"resultInfo\": \"\"}";
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->IncrementalRestoreOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->IncrementalRestoreOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->IncrementalRestoreOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            proxy_->IncrementalRestoreOnProcessInfo(BUNDLE_NAME, processInfo);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalRestoreOnProcessInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalRestoreOnProcessInfo_0101";
+}
 } // namespace OHOS::FileManagement::Backup
