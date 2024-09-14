@@ -470,6 +470,10 @@ private:
         const std::string &bundleName, const ErrCode ret);
 
     void ReleaseOnException();
+
+    vector<BIncrementalData> MakeDetailList(const vector<BundleName> &bundleNames);
+
+    vector<string> GetBundleNameByDetails(const std::vector<BIncrementalData> &bundlesToBackup);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
