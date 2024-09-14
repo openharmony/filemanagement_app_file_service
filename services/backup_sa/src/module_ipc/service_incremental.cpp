@@ -273,7 +273,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         session_->AppendBundles(bundleNames);
         SetCurrentBackupSessProperties(bundleNames, session_->GetSessionUserId());
         for (auto info : backupInfos) {
-            session_->SetBundleDataSize(info.name, info.spaceOccupied);
+            session_->SetBundleDataSize(info.name, info.increSpaceOccupied);
             session_->SetBackupExtName(info.name, info.extensionName);
             if (info.allToBackup == false) {
                 session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
@@ -320,6 +320,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         session_->AppendBundles(bundleNames);
         for (auto info : backupInfos) {
             SetCurrentSessProperties(info, isClearDataFlags);
+            session_->SetBundleDataSize(info.name, info.increSpaceOccupied);
             if (info.allToBackup == false) {
                 session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
