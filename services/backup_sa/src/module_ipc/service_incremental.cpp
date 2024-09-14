@@ -251,7 +251,7 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalData> &bundlesToBackup)
 {
     vector<string> bundleNames {};
-    for(auto bundle : bundlesToBackup) {
+    for (auto bundle : bundlesToBackup) {
         bundleNames.emplace_back(bundle.bundleName);
     }
     return bundleNames;
