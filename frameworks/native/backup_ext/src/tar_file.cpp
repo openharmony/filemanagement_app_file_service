@@ -76,7 +76,9 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
         if (!TraversalFile(rootPath_, err)) {
             HILOGE("ReportErr-- Failed to traversal file, file path is:%{public}s, err = %{public}d",
                 GetAnonyPath(filePath).c_str(), err);
-            reportCb(rootPath_, err);
+            if (err != EACCES) {
+                reportCb("", err);
+            }
         }
         index++;
         if (index >= WAIT_INDEX) {
