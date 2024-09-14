@@ -129,6 +129,18 @@ public:
     static bool BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet);
 
     /**
+     * @brief 组建App进度返回的信息
+     *
+     * @param reportInfo 组建结果
+     * @param path 报错文件
+     * @param err 错误码
+     *
+     * @return 是否组建成功
+     *
+     */
+    static bool BuildOnProcessErrInfo(std::string &reportInfo, std::string path, int err);
+
+    /**
      * @brief 构建包含userId的detailInfo
      *
      * @param userId userId
