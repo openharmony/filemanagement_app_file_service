@@ -517,7 +517,7 @@ bool BundleMgrAdapter::IsUser0BundleName(std::string bundleName, int32_t userId)
     return false;
 }
 
-vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForAppend(const std::vector<BIncrementalData> &incrementalDataList,
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppend(const std::vector<BIncrementalData> &incrementalDataList,
     int32_t userId)
 {
     auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(incrementalDataList, userId);
