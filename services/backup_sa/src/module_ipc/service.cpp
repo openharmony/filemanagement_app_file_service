@@ -650,7 +650,6 @@ vector<BIncrementalData> Service::MakeDetailList(const vector<BundleName> &bundl
     }
     return bundleDetails;
 }
-
 ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
