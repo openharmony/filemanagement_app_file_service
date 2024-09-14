@@ -528,15 +528,7 @@ ErrCode BackupExtExtension::HandleBackup(bool isClearData)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     SetClearDataFlag(isClearData);
-    if (extension_ == nullptr) {
-        HILOGE("Failed to handle backup, extension is nullptr");
-        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
-    }
-    string usrConfig = extension_->GetUsrConfig();
-    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
-    auto cache = cachedEntity.Structuralize();
-    if (!cache.GetAllowToBackupRestore()) {
-        HILOGE("Application does not allow backup or restore");
+    if (!IfAllowToBackupRestore()) {
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
             .GetCode();
     }
@@ -952,8 +944,8 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
         HILOGE("Failed to delete the backup index %{public}s", INDEX_FILE_RESTORE.c_str());
     }
     auto endTime = std::chrono::system_clock::now();
-    radarRestoreInfo_.totalFileSpendTime =
-        std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    radarRestoreInfo_.totalFileSpendTime = static_cast<uint32_t>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
     RecordDoRestoreRes(bundleName_, "BackupExtExtension::RestoreFilesForSpecialCloneCloud", radarRestoreInfo_);
     HILOGI("End do restore for SpecialCloneCloud.");
     return ERR_OK;
@@ -1045,7 +1037,8 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
         RestoreBigFileAfter(filePath, item.sta);
     }
     auto end = std::chrono::system_clock::now();
-    radarRestoreInfo_.bigFileSpendTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    radarRestoreInfo_.bigFileSpendTime =
+        static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
     HILOGI("End Restore Big Files");
 }
 
@@ -1208,8 +1201,8 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
             // delete 1.tar/manage.json
             ptr->DeleteBackupIncrementalTars();
             auto endTime = std::chrono::system_clock::now();
-            ptr->radarRestoreInfo_.totalFileSpendTime =
-                std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+            ptr->radarRestoreInfo_.totalFileSpendTime = static_cast<uint32_t>(
+                std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
             RecordDoRestoreRes(ptr->bundleName_, "BackupExtExtension::AsyncTaskIncrementalRestore",
                 ptr->radarRestoreInfo_);
             if (ret == ERR_OK) {
@@ -1637,15 +1630,7 @@ ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, Uniq
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Start HandleIncrementalBackup");
-        if (extension_ == nullptr) {
-            HILOGE("Failed to handle incremental backup, extension is nullptr");
-            return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
-        }
-        string usrConfig = extension_->GetUsrConfig();
-        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
-        auto cache = cachedEntity.Structuralize();
-        if (!cache.GetAllowToBackupRestore()) {
-            HILOGE("Application does not allow backup or restore");
+        if (!IfAllowToBackupRestore()) {
             return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
                 .GetCode();
         }
@@ -1661,15 +1646,7 @@ ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     SetClearDataFlag(isClearData);
-    if (extension_ == nullptr) {
-        HILOGE("Failed to handle incremental onBackup, extension is nullptr");
-        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
-    }
-    string usrConfig = extension_->GetUsrConfig();
-    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
-    auto cache = cachedEntity.Structuralize();
-    if (!cache.GetAllowToBackupRestore()) {
-        HILOGE("Application does not allow backup or restore");
+    if (!IfAllowToBackupRestore()) {
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
             .GetCode();
     }
@@ -2049,5 +2026,131 @@ int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> 
     HILOGI("End, bigFiles num:%{public}zu, smallFiles num:%{public}zu, allFiles num:%{public}zu", bigFiles.size(),
         smallFiles.size(), allFiles.size());
     return err;
+}
+
+bool BackupExtExtension::IfAllowToBackupRestore()
+{
+    if (extension_ == nullptr) {
+        HILOGE("Failed to handle backup, extension is nullptr");
+        return false;
+    }
+    string usrConfig = extension_->GetUsrConfig();
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
+    auto cache = cachedEntity.Structuralize();
+    if (!cache.GetAllowToBackupRestore()) {
+        HILOGE("Application does not allow backup or restore");
+        return false;
+    }
+    return true;
+}
+
+ErrCode BackupExtExtension::User0OnBackup()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (!IfAllowToBackupRestore()) {
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+            .GetCode();
+    }
+    AsyncTaskUser0Backup();
+    return ERR_OK;
+}
+
+void BackupExtExtension::AsyncTaskUser0Backup()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    auto task = [obj {wptr<BackupExtExtension>(this)}]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        const string config = ptr->extension_->GetUsrConfig();
+        try {
+            HILOGI("Do backup, start fwk timer begin.");
+            bool isFwkStart;
+            ptr->StartFwkTimer(isFwkStart);
+            if (!isFwkStart) {
+                HILOGE("Do backup, start fwk timer fail.");
+                return;
+            }
+            HILOGI("Do backup, start fwk timer end.");
+            BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
+            auto cache = cachedEntity.Structuralize();
+            auto ret = ptr->User0DoBackup(cache);
+            if (ret != ERR_OK) {
+                HILOGE("User0DoBackup, err = %{pubilc}d", ret);
+                ptr->AppIncrementalDone(BError::GetCodeByErrno(ret));
+            }
+        } catch (const BError &e) {
+            HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+void BackupExtExtension::DoUser0Backup(const BJsonEntityExtensionConfig &usrConfig)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
+        throw BError(errno);
+    }
+    vector<string> includes = usrConfig.GetIncludes();
+    vector<string> excludes = usrConfig.GetExcludes();
+    auto task = [obj {wptr<BackupExtExtension>(this)}, includes, excludes]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        try {
+            auto [bigFile, smallFile] = BDir::GetBackupList(includes, excludes);
+            vector<struct ReportFileInfo> allFiles;
+            vector<struct ReportFileInfo> smallFiles;
+            vector<struct ReportFileInfo> bigFiles;
+            BDir::GetUser0FileStat(move(bigFile), move(smallFile), allFiles, smallFiles, bigFiles);
+            auto ret = ptr->DoIncrementalBackup(allFiles, smallFiles, bigFiles);
+            ptr->AppIncrementalDone(ret);
+            HILOGI("User0 backup app done %{public}d", ret);
+        } catch (const BError &e) {
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+int BackupExtExtension::User0DoBackup(const BJsonEntityExtensionConfig &usrConfig)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("Start Do User0Backup");
+    if (extension_ == nullptr) {
+        HILOGE("Failed to do backup, extension is nullptr");
+        return BError(BError::Codes::EXT_INVAL_ARG);
+    }
+    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
+        return EPERM;
+    }
+    DoUser0Backup(usrConfig);
+    return ERR_OK;
 }
 } // namespace OHOS::FileManagement::Backup

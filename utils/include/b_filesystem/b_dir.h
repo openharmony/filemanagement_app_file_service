@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <vector>
 
+#include "b_json/b_report_entity.h"
 #include "errors.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -56,6 +57,32 @@ public:
      * @return std::vector<std::string> 目录集合
      */
     static std::vector<std::string> GetDirs(const std::vector<std::string_view> &paths);
+
+    /**
+     * @brief 从给定的includes和excludes目录中获取所有的大文件和小文件
+     *
+     * @param includes 需要包含的文件及目录集合
+     * @param excludes 需要排除的文件及目录集合
+     * @return 大文件和小文件的集合
+     */
+    static std::tuple<std::vector<std::string>, std::vector<std::string>> GetBackupList(
+        const std::vector<std::string> &includes, const std::vector<std::string> &excludes);
+
+    /**
+     * @brief 获取bigfile和smaillfile的文件信息并生成清单
+     *
+     * @param bigFile 需要包含的文件及目录集合
+     * @param smallFile 需要排除的文件及目录集合
+     * @param allFiles 生成的所有文件信息清单
+     * @param smallFiles 生成的小文件信息清单
+     * @param bigFiles 生成的大文件信息清单
+     * @return
+     */
+    static void GetUser0FileStat(std::vector<std::string> bigFile,
+                                 std::vector<std::string> smallFile,
+                                 std::vector<struct ReportFileInfo> &allFiles,
+                                 std::vector<struct ReportFileInfo> &smallFiles,
+                                 std::vector<struct ReportFileInfo> &bigFiles);
 };
 } // namespace OHOS::FileManagement::Backup
 

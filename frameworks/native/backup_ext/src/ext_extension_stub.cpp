@@ -51,6 +51,8 @@ ExtExtensionStub::ExtExtensionStub()
         &ExtExtensionStub::CmdIncrementalOnBackup;
     opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_UPDATE_FD_SENDRATE)] =
         &ExtExtensionStub::CmdUpdateFdSendRate;
+    opToInterfaceMap_[static_cast<uint32_t>(IExtensionInterfaceCode::CMD_HANDLE_USER_0_BACKUP)] =
+        &ExtExtensionStub::CmdHandleUser0Backup;
 }
 
 int32_t ExtExtensionStub::OnRemoteRequest(uint32_t code,
@@ -240,6 +242,16 @@ ErrCode ExtExtensionStub::CmdUpdateFdSendRate(MessageParcel &data, MessageParcel
         return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive sendRate").GetCode();
     }
     int ret = UpdateFdSendRate(bundleName, sendRate);
+    if (!reply.WriteInt32(ret)) {
+        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the ret").GetCode();
+    }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ExtExtensionStub::CmdHandleUser0Backup(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGD("CmdHandleUser0Backup Begin");
+    int ret = User0OnBackup();
     if (!reply.WriteInt32(ret)) {
         return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the ret").GetCode();
     }
