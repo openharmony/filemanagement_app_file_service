@@ -51,7 +51,8 @@ TarFile &TarFile::GetInstance()
     return instance;
 }
 
-bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, const string &pkPath, TarMap &tarMap)
+bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, const string &pkPath, TarMap &tarMap,
+    std::function<void(std::string, int)> reportCb)
 {
     if (tarFileName.empty() || pkPath.empty()) {
         HILOGE("Invalid parameter");
@@ -70,9 +71,12 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
 
     size_t index = 0;
     for (const auto &filePath : srcFiles) {
+        int err = 0;
         rootPath_ = filePath;
-        if (!TraversalFile(rootPath_)) {
-            HILOGE("Failed to traversal file, file path is:%{public}s", GetAnonyPath(filePath).c_str());
+        if (!TraversalFile(rootPath_, err)) {
+            HILOGE("Failed to traversal file, file path is:%{public}s, err = %{public}d",
+                GetAnonyPath(filePath).c_str(), err);
+            reportCb(rootPath_, err);
         }
         index++;
         if (index >= WAIT_INDEX) {
@@ -94,9 +98,10 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
     return true;
 }
 
-bool TarFile::TraversalFile(string &filePath)
+bool TarFile::TraversalFile(string &filePath, int &err)
 {
     if (access(filePath.c_str(), F_OK) != 0) {
+        err = errno;
         HILOGE("File path does not exists, err = %{public}d", errno);
         return false;
     }
@@ -108,10 +113,11 @@ bool TarFile::TraversalFile(string &filePath)
         return false;
     }
     if (lstat(filePath.c_str(), &curFileStat) != 0) {
+        err = errno;
         HILOGE("Failed to lstat, err = %{public}d", errno);
         return false;
     }
-    if (!AddFile(filePath, curFileStat)) {
+    if (!AddFile(filePath, curFileStat, err)) {
         HILOGE("Failed to add file to tar package, file path is:%{public}s", GetAnonyPath(filePath).c_str());
         return false;
     }
@@ -250,7 +256,7 @@ static bool ReadyHeader(TarHeader &hdr, const string &fileName)
     return true;
 }
 
-bool TarFile::AddFile(string &fileName, const struct stat &st)
+bool TarFile::AddFile(string &fileName, const struct stat &st, int &err)
 {
     HILOGD("tar file %{public}s", fileName.c_str());
     currentFileName_ = fileName;
@@ -286,7 +292,7 @@ bool TarFile::AddFile(string &fileName, const struct stat &st)
         return false;
     }
     // write src file content to tar file
-    if (!WriteFileContent(fileName, st.st_size)) {
+    if (!WriteFileContent(fileName, st.st_size, err)) {
         HILOGE("Failed to write file content");
         return false;
     }
@@ -294,10 +300,11 @@ bool TarFile::AddFile(string &fileName, const struct stat &st)
     return true;
 }
 
-bool TarFile::WriteFileContent(const string &fileName, off_t size)
+bool TarFile::WriteFileContent(const string &fileName, off_t size, int &err)
 {
     int fd = open(fileName.c_str(), O_RDONLY | O_CLOEXEC);
     if (fd < 0) {
+        err = errno;
         HILOGE("Failed to open file %{public}s, err = %{public}d", GetAnonyString(fileName).data(), errno);
         return false;
     }
