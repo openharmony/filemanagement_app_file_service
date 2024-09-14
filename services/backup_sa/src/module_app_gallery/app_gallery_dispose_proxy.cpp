@@ -123,41 +123,49 @@ void RecordDoDisposeRes(const std::string &bundleName,
 
 DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, DisposeOperation disposeOperation)
 {
-    HILOGI("DoDispose, app %{public}s, operation %{public}d", bundleName.c_str(), disposeOperation);
-    if (!ConnectExtAbility<AppGalleryDisposeProxy>() || appRemoteObj_ == nullptr) {
-        HILOGI("Can not connect to %{public}s", bundleName.c_str());
-        return DisposeErr::CONN_FAIL;
-    }
+    try {
+        HILOGI("DoDispose, app %{public}s, operation %{public}d", bundleName.c_str(), disposeOperation);
+        if (!ConnectExtAbility<AppGalleryDisposeProxy>() || appRemoteObj_ == nullptr) {
+            HILOGI("Can not connect to %{public}s", bundleName.c_str());
+            return DisposeErr::CONN_FAIL;
+        }
 
-    BJsonUtil::BundleDetailInfo bundleDetailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
-    MessageParcel data;
-    const auto interfaceToken = APP_FOUNDATION_SERVICE;
-    if (!data.WriteInterfaceToken(interfaceToken)) {
-        HILOGI("write WriteInterfaceToken failed");
+        BJsonUtil::BundleDetailInfo bundleDetailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
+        MessageParcel data;
+        const auto interfaceToken = APP_FOUNDATION_SERVICE;
+        if (!data.WriteInterfaceToken(interfaceToken)) {
+            HILOGI("write WriteInterfaceToken failed");
+            return DisposeErr::IPC_FAIL;
+        }
+        if (!data.WriteString16(Str8ToStr16(bundleDetailInfo.bundleName))) {
+            HILOGI("write bundleName failed");
+            return DisposeErr::IPC_FAIL;
+        }
+        if (!data.WriteInt32(static_cast<int32_t>(bundleDetailInfo.bundleIndex))) {
+            HILOGI("write bundleIndex failed");
+            return DisposeErr::IPC_FAIL;
+        }
+
+        MessageParcel reply;
+        MessageOption option(MessageOption::TF_ASYNC);
+        int32_t ret = appRemoteObj_->SendRequest(static_cast<int>(disposeOperation), data, reply, option);
+        if (ret != ERR_NONE) {
+            HILOGI("SendRequest error, code=%{public}d, bundleName=%{public}s , appindex =%{public}d",
+                ret, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
+            RecordDoDisposeRes(bundleName, disposeOperation, ret);
+            return DisposeErr::REQUEST_FAIL;
+        }
+
+        HILOGI("SendRequest success, dispose=%{public}d, bundleName=%{public}s, appindex =%{public}d",
+            disposeOperation, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
+        return DisposeErr::OK;
+    } catch (const BError &e) {
+        HILOGE("Catch exception, errCode = %{public}d", e.GetCode());
+        return DisposeErr::IPC_FAIL;
+    } catch (...) {
+        HHILOGE("Unexpected exception");
         return DisposeErr::IPC_FAIL;
     }
-    if (!data.WriteString16(Str8ToStr16(bundleDetailInfo.bundleName))) {
-        HILOGI("write bundleName failed");
-        return DisposeErr::IPC_FAIL;
-    }
-    if (!data.WriteInt32(static_cast<int32_t>(bundleDetailInfo.bundleIndex))) {
-        HILOGI("write bundleIndex failed");
-        return DisposeErr::IPC_FAIL;
-    }
-
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
-    int32_t ret = appRemoteObj_->SendRequest(static_cast<int>(disposeOperation), data, reply, option);
-    if (ret != ERR_NONE) {
-        HILOGI("SendRequest error, code=%{public}d, bundleName=%{public}s , appindex =%{public}d",
-            ret, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
-        RecordDoDisposeRes(bundleName, disposeOperation, ret);
-        return DisposeErr::REQUEST_FAIL;
-    }
-
-    HILOGI("SendRequest success, dispose=%{public}d, bundleName=%{public}s, appindex =%{public}d",
-        disposeOperation, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
-    return DisposeErr::OK;
 }
 
 } // namespace OHOS::FileManagement::Backup
