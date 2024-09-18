@@ -231,4 +231,6 @@ bool SvcSessionManager::GetClearDataFlag(const std::string &bundleName)
 void SvcSessionManager::IncreaseSessionCnt(const std::string) {}
 
 void SvcSessionManager::DecreaseSessionCnt(const std::string) {}
+
+void SvcSessionManager::SetPublishFlag(const std::string&) {}
 } // namespace OHOS::FileManagement::Backup

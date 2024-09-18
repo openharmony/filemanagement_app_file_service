@@ -54,4 +54,15 @@ void BundleMgrAdapter::GetBundleInfoForSA(std::string bundleName, std::vector<BJ
 {
     return BBundleMgrAdapter::bms->GetBundleInfoForSA(bundleName, bundleInfos);
 }
+
+bool BundleMgrAdapter::IsUser0BundleName(std::string bundleName, int32_t userId)
+{
+    return BBundleMgrAdapter::bms->IsUser0BundleName(bundleName, userId);
+}
+
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppend(
+    const vector<BIncrementalData> &incrementalDataList, int32_t userId)
+{
+    return BBundleMgrAdapter::bms->GetBundleInfosForAppend(incrementalDataList, userId);
+}
 } // namespace OHOS::FileManagement::Backup

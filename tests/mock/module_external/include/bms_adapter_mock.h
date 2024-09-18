@@ -32,6 +32,9 @@ public:
     virtual std::string GetExtName(string, int32_t) = 0;
     virtual std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForSA() = 0;
     virtual void GetBundleInfoForSA(std::string, std::vector<BJsonEntityCaps::BundleInfo>&) = 0;
+    virtual bool IsUser0BundleName(std::string, int32_t) = 0;
+    virtual std::vector<BJsonEntityCaps::BundleInfo>
+        GetBundleInfosForAppend(const std::vector<BIncrementalData>&, int32_t) = 0;
 public:
     BBundleMgrAdapter() = default;
     virtual ~BBundleMgrAdapter() = default;
@@ -51,6 +54,7 @@ public:
     MOCK_METHOD(std::string, GetExtName, (std::string, int32_t));
     MOCK_METHOD((std::vector<BJsonEntityCaps::BundleInfo>), GetBundleInfosForSA, ());
     MOCK_METHOD(void, GetBundleInfoForSA, (std::string, (std::vector<BJsonEntityCaps::BundleInfo>&)));
+    MOCK_METHOD(bool, IsUser0BundleName, (std::string, int32_t));
     MOCK_METHOD((std::vector<BJsonEntityCaps::BundleInfo>), GetBundleInfosForAppend,
         ((const std::vector<BIncrementalData>&), int32_t));
 };
