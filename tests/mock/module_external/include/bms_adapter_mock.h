@@ -51,6 +51,8 @@ public:
     MOCK_METHOD(std::string, GetExtName, (std::string, int32_t));
     MOCK_METHOD((std::vector<BJsonEntityCaps::BundleInfo>), GetBundleInfosForSA, ());
     MOCK_METHOD(void, GetBundleInfoForSA, (std::string, (std::vector<BJsonEntityCaps::BundleInfo>&)));
+    MOCK_METHOD((std::vector<BJsonEntityCaps::BundleInfo>), GetBundleInfosForAppend,
+        ((const std::vector<BIncrementalData>&), int32_t));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_BMS_ADAPTER_MOCK_H

@@ -281,6 +281,9 @@ private:
     int32_t GetOnStartTimeCost();
     bool SetStagingPathProperties();
 
+    std::function<void(std::string, int)> ReportErrFileByProc(wptr<BackupExtExtension> obj,
+        BackupRestoreScenario scenario);
+
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
@@ -313,6 +316,8 @@ private:
     OHOS::ThreadPool onProcessTaskPool_;
     std::atomic<bool> isFirstCallOnProcess_ { false };
     std::atomic<bool> isExecAppDone_ { false };
+
+    BackupRestoreScenario curScenario_;
 };
 } // namespace OHOS::FileManagement::Backup
 
