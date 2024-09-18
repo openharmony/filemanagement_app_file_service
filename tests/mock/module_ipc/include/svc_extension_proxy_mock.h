@@ -37,6 +37,7 @@ public:
     MOCK_METHOD((std::tuple<UniqueFd, UniqueFd>), GetIncrementalBackupFileHandle, ());
     MOCK_METHOD(ErrCode, GetBackupInfo, (std::string&));
     MOCK_METHOD(ErrCode, UpdateFdSendRate, (std::string&, int32_t));
+    MOCK_METHOD(ErrCode, User0OnBackup, ());
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_SVC_BACKUP_CONNECTION_MOCK_H
