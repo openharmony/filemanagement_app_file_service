@@ -171,7 +171,7 @@ private:
     void DoUser0Backup(const BJsonEntityExtensionConfig &usrConfig);
 
     int User0DoBackup(const BJsonEntityExtensionConfig &usrConfig);
-    
+
     int DoIncrementalBackup(const std::vector<struct ReportFileInfo> &allFiles,
                             const std::vector<struct ReportFileInfo> &smallFiles,
                             const std::vector<struct ReportFileInfo> &bigFiles);
@@ -270,7 +270,7 @@ private:
     void DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
         const std::tuple<int, EndFileInfo, ErrFileInfo> &result);
 
-    void StartOnProcessTaskThread(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
+    ErrCode StartOnProcessTaskThread(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void FinishOnProcessTask();
     void ExecCallOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void AsyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
@@ -305,15 +305,17 @@ private:
     std::thread callJsOnProcessThread_;
     Utils::Timer onProcessTimeoutTimer_ {"onProcessTimeoutTimer_"};
     uint32_t onProcessTimeoutTimerId_ { 0 };
-    std::atomic<int> onProcessTimeoutCnt_;
+    std::atomic<int> onProcessTimeoutCnt_ { 0 };
     std::atomic<bool> stopCallJsOnProcess_ {false};
     std::condition_variable execOnProcessCon_;
     std::mutex onProcessLock_;
     std::atomic<bool> onProcessTimeout_ {false};
     std::chrono::time_point<std::chrono::system_clock> g_onStart;
     std::mutex onStartTimeLock_;
-    OHOS::ThreadPool onProcessTaskPool_;
     AppRadar::DoRestoreInfo radarRestoreInfo_ { 0 };
+    OHOS::ThreadPool onProcessTaskPool_;
+    std::atomic<bool> isFirstCallOnProcess_ { false };
+    std::atomic<bool> isExecAppDone_ { false };
 
     BackupRestoreScenario curScenario_;
 };

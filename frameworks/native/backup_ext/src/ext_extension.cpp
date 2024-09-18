@@ -1385,8 +1385,11 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
                 HILOGE("On restore, start ext timer fail.");
                 return;
             }
+            if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_RESTORE)) != ERR_OK) {
+                HILOGE("Call onProcess result is timeout");
+                return;
+            }
             ptr->curScenario_ = BackupRestoreScenario::FULL_RESTORE;
-            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_RESTORE);
             auto callBackup = ptr->OnRestoreCallback(obj);
             auto callBackupEx = ptr->OnRestoreExCallback(obj);
             ptr->UpdateOnStartTime();
@@ -1437,8 +1440,11 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
                 HILOGE("On incrementalRestore, start ext timer fail.");
                 return;
             }
+            if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_RESTORE)) != ERR_OK) {
+                HILOGE("Call onProcess result is timeout");
+                return;
+            }
             ptr->curScenario_ = BackupRestoreScenario::INCREMENTAL_RESTORE;
-            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_RESTORE);
             auto callBackup = ptr->IncreOnRestoreCallback(obj);
             auto callBackupEx = ptr->IncreOnRestoreExCallback(obj);
             ptr->UpdateOnStartTime();
@@ -1450,10 +1456,6 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
             }
         } catch (const BError &e) {
             ptr->AppIncrementalDone(e.GetCode());
-            ptr->DoClear();
-        } catch (const exception &e) {
-            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
-            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
             ptr->DoClear();
         } catch (...) {
             HILOGE("Failed to restore the ext bundle");
@@ -1585,8 +1587,11 @@ void BackupExtExtension::AsyncTaskOnBackup()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
+            if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_BACKUP)) != ERR_OK) {
+                HILOGE("Call onProcess result is timeout");
+                return;
+            }
             ptr->curScenario_ = BackupRestoreScenario::FULL_BACKUP;
-            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_BACKUP);
             auto callBackup = ptr->OnBackupCallback(obj);
             auto callBackupEx = ptr->OnBackupExCallback(obj);
             ptr->UpdateOnStartTime();
@@ -1968,8 +1973,11 @@ void BackupExtExtension::AsyncTaskOnIncrementalBackup()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
+            if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_BACKUP)) != ERR_OK) {
+                HILOGE("Call onProcess result is timeout");
+                return;
+            }
             ptr->curScenario_ = BackupRestoreScenario::INCREMENTAL_BACKUP;
-            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_BACKUP);
             auto callBackup = ptr->IncOnBackupCallback(obj);
             auto callBackupEx = ptr->IncOnBackupExCallback(obj);
             ptr->UpdateOnStartTime();
