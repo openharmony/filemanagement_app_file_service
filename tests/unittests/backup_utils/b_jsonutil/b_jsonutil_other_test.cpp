@@ -115,7 +115,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0201, testing::ext::Tes
 
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_CreateArray())
-            .WillOnce(Return(Return(reinterpret_cast<cJSON *>(&cjson))
+            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
             .WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
         result = BJsonUtil::BuildExtensionErrInfo(jsonStr, errFileInfo);
