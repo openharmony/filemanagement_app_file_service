@@ -294,7 +294,8 @@ ohos_unittest("b_jsonutil_other_test") {
 
   sources = [
     "${path_backup}/tests/mock/cJson/src/cJsonMock.cpp",
-    "b_jsonutil/b_jsonutil_other_test.cpp",
+    "${path_backup}/tests/unittests/backup_utils/b_jsonutil/b_jsonutil_other_test.cpp",
+    "${path_backup}/utils/src/b_jsonutil/b_jsonutil.cpp",
   ]
   sources += backup_mock_parameter_src
 
@@ -378,8 +379,8 @@ group("backup_test") {
     ":b_json_clear_data_test",
     ":b_json_other_test",
     ":b_json_test",
-    ":b_jsonutil_test",
     ":b_jsonutil_other_test",
+    ":b_jsonutil_test",
     ":b_process_test",
     ":b_tarball_cmdline_test",
     ":b_tarball_factory_test",
