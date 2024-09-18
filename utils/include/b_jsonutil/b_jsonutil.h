@@ -97,16 +97,6 @@ public:
     static bool BuildExtensionErrInfo(std::string &jsonStr, int errCode, std::string errMsg);
 
     /**
-     * @brief 拼接包名和分身对应的索引
-     *
-     * @param bundleName 包名
-     * @param bundleIndex 索引
-     *
-     * @return 拼接结果
-     */
-    static std::string BuildBundleNameIndexInfo(const std::string &bundleName, int bundleIndex);
-
-    /**
      * @brief 组建恢复文件错误信息的json
      *
      * @param jsonStr 组建结果
@@ -119,7 +109,6 @@ public:
 
     /**
      * @brief 组建App进度返回的信息
-     *
      * @param jsonStr 组建结果
      * @param onProcessRet onProcess接口返回值
      *
@@ -128,6 +117,15 @@ public:
      */
     static bool BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet);
 
+    /**
+     * @brief 拼接包名和分身对应的索引
+     *
+     * @param bundleName 包名
+     * @param bundleIndex 索引
+     *
+     * @return 拼接结果
+     */
+    static std::string BuildBundleNameIndexInfo(const std::string &bundleName, int bundleIndex);
     /**
      * @brief 构建包含userId的detailInfo
      *

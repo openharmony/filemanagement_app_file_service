@@ -61,7 +61,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext::T
     }
     GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetDirFiles_0100";
 }
-
+1
 /**
  * @tc.number: b_jsonutil_BuildBundleInfos_0100
  * @tc.name: b_jsonutil_BuildBundleInfos_0100

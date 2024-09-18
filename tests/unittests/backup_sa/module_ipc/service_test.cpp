@@ -522,7 +522,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0100, testing::ext::TestSize.Lev
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetFileHandle_0100";
 }
-
+1
 /**
  * @tc.number: SUB_Service_OnBackupExtensionDied_0100
  * @tc.name: SUB_Service_OnBackupExtensionDied_0100

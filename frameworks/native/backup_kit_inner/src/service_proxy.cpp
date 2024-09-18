@@ -297,7 +297,7 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<Bund
         return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send userId").GetCode();
     }
     int32_t ret = Remote()->SendRequest(
-        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION_DETAILS), data, reply,
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION_DETAIL), data, reply,
         option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);

@@ -37,6 +37,7 @@
                 "ipc",
                 "init",
                 "napi",
+                "os_account",
                 "safwk",
                 "samgr",
                 "storage_service",
@@ -48,10 +49,7 @@
                 "openssl"
             ]
         },
-        "adapted_system_type": [
-            "small",
-            "standard"
-        ],
+        "adapted_system_type": [ "small", "standard" ],
         "rom": "1024KB",
         "ram": "1024KB",
         "hisysevent_config": [

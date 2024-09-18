@@ -83,7 +83,7 @@ public:
      * @param detailInfos bundle对应的单双映射的json串
      * @param userId 用户ID
      * @return ErrCode 规范错误码
-    */
+     */
     ErrCode AppendBundles(UniqueFd remoteCap,
                           std::vector<BundleName> bundlesToRestore,
                           std::vector<std::string> detailInfos,

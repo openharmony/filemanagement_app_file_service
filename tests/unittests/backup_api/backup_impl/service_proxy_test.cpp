@@ -32,7 +32,6 @@ using namespace std;
 using namespace testing;
 
 namespace {
-const string BUNDLE_NAME = "com.example.app2backup";
 const string FILE_NAME = "1.tar";
 constexpr int32_t SERVICE_ID = 5203;
 } // namespace
