@@ -532,5 +532,67 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0702, testing::ext::TestSize.Level
     GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0702";
 }
 
+/**
+ * @tc.number: SUB_Ext_Extension_0800
+ * @tc.name: Ext_Extension_Test_0800
+ * @tc.desc: 测试 GetIndexFileRestorePath
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0800, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0800";
+    try {
+        std::string bundleName = BConstants::BUNDLE_FILE_MANAGER;
+        auto ret = GetIndexFileRestorePath(bundleName);
+        EXPECT_EQ(ret, string(BConstants::PATH_FILEMANAGE_BACKUP_HOME)
+            .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)
+            .append(BConstants::EXT_BACKUP_MANAGE));
 
+        bundleName = BConstants::BUNDLE_MEDIAL_DATA;
+        ret = GetIndexFileRestorePath(bundleName);
+        EXPECT_EQ(ret, string(BConstants::PATH_MEDIALDATA_BACKUP_HOME)
+            .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)
+            .append(BConstants::EXT_BACKUP_MANAGE));
+
+        bundleName = "test";
+        ret = GetIndexFileRestorePath(bundleName);
+        EXPECT_EQ(ret, INDEX_FILE_RESTORE);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0800";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_0900
+ * @tc.name: Ext_Extension_Test_0900
+ * @tc.desc: 测试 GetRestoreTempPath
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0900, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0900";
+    try {
+        std::string bundleName = BConstants::BUNDLE_MEDIAL_DATA;
+        auto ret = GetRestoreTempPath(bundleName);
+        EXPECT_EQ(ret, string(BConstants::PATH_MEDIALDATA_BACKUP_HOME)
+            .append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+
+        bundleName = "test";
+        ret = GetRestoreTempPath(bundleName);
+        EXPECT_EQ(ret, string(BConstants::PATH_BUNDLE_BACKUP_HOME)
+            .append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0900";
+}
 } // namespace OHOS::FileManagement::Backup

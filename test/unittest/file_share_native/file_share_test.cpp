@@ -421,4 +421,142 @@ HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0006, testing::ext::TestSize.
     EXPECT_EQ(ret, -EINVAL);
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0006";
 }
+
+/**
+ * @tc.name: File_share_CheckValidPath_0001
+ * @tc.desc: Test function of CheckValidPath() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_CheckValidPath_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_CheckValidPath_0001";
+    std::string filePath1 = "";
+    auto ret = SandboxHelper::CheckValidPath(filePath1);
+    EXPECT_FALSE(ret);
+
+    std::string filePath2(PATH_MAX, 't');
+    ret = SandboxHelper::CheckValidPath(filePath2);
+    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_CheckValidPath_0001";
+}
+
+/**
+ * @tc.name: File_share_GetBackupPhysicalPath_0001
+ * @tc.desc: Test function of GetBackupPhysicalPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetBackupPhysicalPath_0001";
+    std::string fileUri = "file://media/Photo/12/IMG_12345_0011/test.jpg";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetBackupPhysicalPath(fileUri, "100", physicalPath);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(physicalPath, "/mnt/hmdfs/100/account/cloud_merge_view/files/Photo/11/IMG_12345_0011.jpg");
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetBackupPhysicalPath_0001";
+}
+
+/**
+ * @tc.name: File_share_GetBackupPhysicalPath_0002
+ * @tc.desc: Test function of GetBackupPhysicalPath() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetBackupPhysicalPath_0002";
+    std::string fileUri = "file://media/Photo/12/IMG_12345_/test.jpg";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetBackupPhysicalPath(fileUri, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetBackupPhysicalPath_0002";
+}
+
+/**
+ * @tc.name: File_share_GetBackupPhysicalPath_0003
+ * @tc.desc: Test function of GetBackupPhysicalPath() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetBackupPhysicalPath_0003";
+    std::string fileUri = "file://media/Photo/12/IMG_12345_a0011/test.jpg";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetBackupPhysicalPath(fileUri, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetBackupPhysicalPath_0003";
+}
+
+/**
+ * @tc.name: File_share_GetBackupPhysicalPath_0004
+ * @tc.desc: Test function of GetBackupPhysicalPath() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetBackupPhysicalPath_0004";
+    std::string fileUri = "file://media/Photo/IMG_12345_999999/test.jpg";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetBackupPhysicalPath(fileUri, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetBackupPhysicalPath_0004";
+}
+
+/**
+ * @tc.name: File_share_GetBackupPhysicalPath_0005
+ * @tc.desc: Test function of GetBackupPhysicalPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0005, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetBackupPhysicalPath_0005";
+    std::string strPrefix = "file://media/";
+    std::string fileUri = "Photo/12/IMG_12345_999999/test.jpg";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetBackupPhysicalPath(strPrefix + SandboxHelper::Encode(fileUri), "100", physicalPath);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(physicalPath, "/mnt/hmdfs/100/account/cloud_merge_view/files/Photo/575/IMG_12345_999999.jpg");
+
+    std::string fileUri2 = "Photo/12/IMG_12345_999999/test .jpg";
+    std::string physicalPath2;
+    ret = SandboxHelper::GetBackupPhysicalPath(strPrefix + SandboxHelper::Encode(fileUri2), "100", physicalPath2);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(physicalPath2, "/mnt/hmdfs/100/account/cloud_merge_view/files/Photo/575/IMG_12345_999999.jpg");
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetBackupPhysicalPath_0005";
+}
+
+/**
+ * @tc.name: File_share_GetBackupPhysicalPath_0006
+ * @tc.desc: Test function of GetBackupPhysicalPath() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0006, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0006";
+    std::string fileUri = "file://media/Photo/12/IMG_12345_999999/test.jpg/other";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetBackupPhysicalPath(fileUri, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetBackupPhysicalPath_0006";
+}
 } // namespace

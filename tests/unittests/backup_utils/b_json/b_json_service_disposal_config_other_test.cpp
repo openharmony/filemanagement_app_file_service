@@ -225,4 +225,184 @@ HWTEST_F(BJsonServiceDisposalConfigTest, Disposal_Config_Test_0203, testing::ext
     }
     GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-end Disposal_Config_Test_0203";
 }
+
+/* *
+ * @tc.number: SUB_Disposal_Config_Test_0204
+ * @tc.name: Disposal_Config_Test_0204
+ * @tc.desc: 测试修改config文件时print返回空指针
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IAAMIK
+ */
+HWTEST_F(BJsonServiceDisposalConfigTest, Disposal_Config_Test_0204, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-begin Disposal_Config_Test_0204";
+    try {
+        string filePath = PATH + CONFIG_NAME;
+        int cjson = 0;
+        string str = "test";
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        BJsonDisposalConfig config;
+        EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
+        const string bundleName = "test1";
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        bool retAdd = config.AppendIntoDisposalConfigFile(bundleName);
+        EXPECT_FALSE(retAdd);
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(false));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        retAdd = config.AppendIntoDisposalConfigFile(bundleName);
+        EXPECT_FALSE(retAdd);
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        retAdd = config.AppendIntoDisposalConfigFile(bundleName);
+        EXPECT_FALSE(retAdd);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-end Disposal_Config_Test_0204";
+}
+
+/* *
+ * @tc.number: SUB_Disposal_Config_Test_0300
+ * @tc.name: Disposal_Config_Test_0300
+ * @tc.desc: 测试修改config文件时print返回空指针
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IAAMIK
+ */
+HWTEST_F(BJsonServiceDisposalConfigTest, Disposal_Config_Test_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-begin Disposal_Config_Test_0300";
+    try {
+        string filePath = PATH + CONFIG_NAME;
+        int cjson = 0;
+        string str = "test";
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        BJsonDisposalConfig config;
+        EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
+        const string bundleName = "test1";
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        bool ret = config.DeleteFromDisposalConfigFile(bundleName);
+        EXPECT_FALSE(ret);
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(false));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        ret = config.DeleteFromDisposalConfigFile(bundleName);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-end Disposal_Config_Test_0300";
+}
+
+/* *
+ * @tc.number: SUB_Disposal_Config_Test_0400
+ * @tc.name: Disposal_Config_Test_0400
+ * @tc.desc: 测试修改config文件时print返回空指针
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IAAMIK
+ */
+HWTEST_F(BJsonServiceDisposalConfigTest, Disposal_Config_Test_0400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-begin Disposal_Config_Test_0400";
+    try {
+        string filePath = PATH + CONFIG_NAME;
+        int cjson = 0;
+        string str = "test";
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        BJsonDisposalConfig config;
+        EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
+        const string bundleName = "test1";
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        bool ret = config.IfBundleNameInDisposalConfigFile(bundleName);
+        EXPECT_FALSE(ret);
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(false));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        ret = config.IfBundleNameInDisposalConfigFile(bundleName);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-end Disposal_Config_Test_0400";
+}
+
+/* *
+ * @tc.number: SUB_Disposal_Config_Test_0500
+ * @tc.name: Disposal_Config_Test_0500
+ * @tc.desc: 测试修改config文件时print返回空指针
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IAAMIK
+ */
+HWTEST_F(BJsonServiceDisposalConfigTest, Disposal_Config_Test_0500, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-begin Disposal_Config_Test_0500";
+    try {
+        string filePath = PATH + CONFIG_NAME;
+        int cjson = 0;
+        string str = "test";
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        BJsonDisposalConfig config;
+        EXPECT_EQ(access(filePath.c_str(), F_OK), 0);
+        const string bundleName = "test1";
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        auto ret = config.GetBundleNameFromConfigFile();
+        EXPECT_EQ(ret, std::vector<std::string>());
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(false));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        ret = config.GetBundleNameFromConfigFile();
+        EXPECT_EQ(ret, std::vector<std::string>());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "BJsonServiceDisposalConfigTest-end Disposal_Config_Test_0500";
+}
 } // namespace OHOS::FileManagement::Backup
