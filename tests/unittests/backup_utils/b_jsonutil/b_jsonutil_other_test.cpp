@@ -265,7 +265,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfoJson_0402, testing::ext::TestS
             .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_CreateArray())
             .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
-            .WillOnce(Return(nullptr));
+            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _))
             .WillOnce(Return(true))
             .WillOnce(Return(true));
@@ -283,5 +283,5 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfoJson_0402, testing::ext::TestS
         GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfoJson_0402";
-    }
+}
 }
