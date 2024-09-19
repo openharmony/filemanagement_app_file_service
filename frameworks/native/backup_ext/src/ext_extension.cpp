@@ -944,8 +944,8 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
         HILOGE("Failed to delete the backup index %{public}s", INDEX_FILE_RESTORE.c_str());
     }
     auto endTime = std::chrono::system_clock::now();
-    radarRestoreInfo_.totalFileSpendTime = static_cast<uint32_t>(
-        std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
+    radarRestoreInfo_.totalFileSpendTime =
+        std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
     RecordDoRestoreRes(bundleName_, "BackupExtExtension::RestoreFilesForSpecialCloneCloud", radarRestoreInfo_);
     HILOGI("End do restore for SpecialCloneCloud.");
     return ERR_OK;
@@ -1037,8 +1037,7 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
         RestoreBigFileAfter(filePath, item.sta);
     }
     auto end = std::chrono::system_clock::now();
-    radarRestoreInfo_.bigFileSpendTime =
-        static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    radarRestoreInfo_.bigFileSpendTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     HILOGI("End Restore Big Files");
 }
 
@@ -1201,8 +1200,8 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
             // delete 1.tar/manage.json
             ptr->DeleteBackupIncrementalTars();
             auto endTime = std::chrono::system_clock::now();
-            ptr->radarRestoreInfo_.totalFileSpendTime = static_cast<uint32_t>(
-                std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
+            ptr->radarRestoreInfo_.totalFileSpendTime =
+                std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
             RecordDoRestoreRes(ptr->bundleName_, "BackupExtExtension::AsyncTaskIncrementalRestore",
                 ptr->radarRestoreInfo_);
             if (ret == ERR_OK) {

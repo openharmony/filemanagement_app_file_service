@@ -213,7 +213,8 @@ static void InsertBundleDetailInfo(cJSON *infos, int infosCount,
                 HILOGE("creat json error");
                 return;
             }
-            const char *const zeroUserId = static_cast<const char *>(to_string(userId).c_str());
+            string userIdStr = to_string(userId);
+            const char *const zeroUserId = userIdStr.c_str();
             cJSON_AddStringToObject(detail, "type", "userId");
             cJSON_AddStringToObject(detail, "detail", zeroUserId);
             cJSON_AddItemToArray(details, detail);
@@ -410,7 +411,8 @@ bool OHOS::FileManagement::Backup::BJsonUtil::BuildBundleInfoJson(int32_t userId
         cJSON_Delete(root);
         return false;
     }
-    const char *const zeroUserId = static_cast<const char *>(to_string(userId).c_str());
+    string userIdStr = to_string(userId);
+    const char *const zeroUserId = userIdStr.c_str();
     cJSON_AddStringToObject(detail, "type", "userId");
     cJSON_AddStringToObject(detail, "detail", zeroUserId);
     cJSON_AddItemToArray(details, detail);
