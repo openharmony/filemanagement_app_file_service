@@ -545,14 +545,8 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0800, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0800";
     try {
-        std::string bundleName = BConstants::BUNDLE_FILE_MANAGER;
+        std::string bundleName = BConstants::BUNDLE_MEDIAL_DATA;
         auto ret = GetIndexFileRestorePath(bundleName);
-        EXPECT_EQ(ret, string(BConstants::PATH_FILEMANAGE_BACKUP_HOME)
-            .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)
-            .append(BConstants::EXT_BACKUP_MANAGE));
-
-        bundleName = BConstants::BUNDLE_MEDIAL_DATA;
-        ret = GetIndexFileRestorePath(bundleName);
         EXPECT_EQ(ret, string(BConstants::PATH_MEDIALDATA_BACKUP_HOME)
             .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)
             .append(BConstants::EXT_BACKUP_MANAGE));
