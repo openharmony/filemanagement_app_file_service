@@ -616,8 +616,6 @@ void Service::SendUserIdToApp(string &bundleName, int32_t userId)
 void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, int32_t userId)
 {
     HILOGI("start SetCurrentBackupSessProperties");
-    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
-    std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
     for (auto item : bundleNames) {
         std::string bundleName = item;
         if (!BundleMgrAdapter::IsUser0BundleName(bundleName, userId)) {

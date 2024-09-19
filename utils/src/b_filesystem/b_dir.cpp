@@ -125,6 +125,7 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFiles
             }
 
             files.try_emplace(fileName, sta);
+            continue;
         } else if (ptr->d_type != DT_DIR) {
             HILOGE("Not support file type");
             continue;
@@ -337,7 +338,7 @@ static tuple<vector<string>, vector<string>> GetUser0DirFilesDetail(const string
         if (path.at(path.size()-1) != BConstants::FILE_SEPARATOR_CHAR) {
             newPath += BConstants::FILE_SEPARATOR_CHAR;
         }
-        smallFiles.push_back(path);
+        smallFiles.push_back(newPath);
         return {bigFiles, smallFiles};
     }
     if (filesystem::is_regular_file(path)) {
@@ -365,6 +366,7 @@ static tuple<vector<string>, vector<string>> GetUser0DirFilesDetail(const string
             }
 
             bigFiles.push_back(fileName);
+            continue;
         } else if (ptr->d_type != DT_DIR) {
             HILOGE("Not support file type");
             continue;
