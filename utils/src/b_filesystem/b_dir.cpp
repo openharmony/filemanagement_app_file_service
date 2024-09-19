@@ -204,7 +204,7 @@ static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
 tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(const vector<string> &includes,
                                                                                 const vector<string> &excludes)
 {
-    set<string> inc = ExpandPathWildcard(includes, false);
+    set<string> inc = ExpandPathWildcard(includes, true);
 
     map<string, struct stat> incFiles;
     map<string, size_t> incSmallFiles;
@@ -365,6 +365,7 @@ static tuple<vector<string>, vector<string>> GetUser0DirFilesDetail(const string
             }
 
             bigFiles.push_back(fileName);
+            continue;
         } else if (ptr->d_type != DT_DIR) {
             HILOGE("Not support file type");
             continue;
@@ -383,7 +384,7 @@ tuple<vector<string>, vector<string>> BDir::GetBackupList(const vector<string> &
                                                           const vector<string> &excludes)
 {
     HILOGI("start get bigfiles and smallfiles");
-    set<string> inc = ExpandPathWildcard(includes, false);
+    set<string> inc = ExpandPathWildcard(includes, true);
     vector<string> bigFiles;
     vector<string> smallFiles;
     for (const auto &item : inc) {

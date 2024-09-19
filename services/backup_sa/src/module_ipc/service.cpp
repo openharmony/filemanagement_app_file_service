@@ -1806,31 +1806,6 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
 
 ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result)
 {
-    auto timeoutCallback = [ptr {wptr(this)}, bundleName]() {
-        HILOGE("Backup <%{public}s> Extension Process Timeout", bundleName.c_str());
-        auto thisPtr = ptr.promote();
-        if (!thisPtr) {
-            HILOGW("this pointer is null.");
-            return;
-        }
-        auto sessionPtr = ptr->session_;
-        if (sessionPtr == nullptr) {
-            HILOGW("SessionPtr is null.");
-            return;
-        }
-        try {
-            auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
-            sessionPtr->StopFwkTimer(bundleName);
-            sessionPtr->StopExtTimer(bundleName);
-            sessionConnection->DisconnectBackupExtAbility();
-            thisPtr->ClearSessionAndSchedInfo(bundleName);
-            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
-        } catch (...) {
-            HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
-            thisPtr->ClearSessionAndSchedInfo(bundleName);
-            thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
-        }
-    };
     try {
         HILOGI("Service::UpdateTimer begin.");
         if (session_ == nullptr || isCleanService_.load()) {
@@ -1840,6 +1815,7 @@ ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &res
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         VerifyCaller();
+        auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
         result = session_->UpdateTimer(bundleName, timeout, timeoutCallback);
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
