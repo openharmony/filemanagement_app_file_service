@@ -52,14 +52,36 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext::T
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin b_dir_GetDirFiles_0100";
     try {
         std::string bundleName = "com.hos.app01:1";
-        std::string pattern = ":";
-        BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName, pattern);
+        BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
         EXPECT_EQ("com.hos.app01", detailInfo.bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetDirFiles_0100";
+}
+
+/**
+ * @tc.number: b_jsonutil_ParseBundleNameIndexStr_0200
+ * @tc.name: b_jsonutil_ParseBundleNameIndexStr_0200
+ * @tc.desc: Test function of ParseBundleNameIndexStr interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0200, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin ParseBundleNameIndexStr_0200";
+    try {
+        std::string bundleName = "com.hos.app01";
+        BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
+        EXPECT_EQ("com.hos.app01", detailInfo.bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end ParseBundleNameIndexStr_0200";
 }
 
 /**

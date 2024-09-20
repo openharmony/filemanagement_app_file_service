@@ -82,7 +82,7 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdGetFileHandle;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION)] =
         &ServiceStub::CmdAppendBundlesRestoreSession;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION_DETAILS)]
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION_DETAIL)]
         = &ServiceStub::CmdAppendBundlesDetailsRestoreSession;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION)] =
         &ServiceStub::CmdAppendBundlesBackupSession;

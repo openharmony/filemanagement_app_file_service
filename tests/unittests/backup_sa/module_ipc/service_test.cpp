@@ -524,6 +524,40 @@ HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0100, testing::ext::TestSize.Lev
 }
 
 /**
+ * @tc.number: SUB_Service_GetFileHandle_0101
+ * @tc.name: SUB_Service_GetFileHandle_0101
+ * @tc.desc: 测试 GetFileHandle 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetFileHandle_0101";
+    try {
+        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 1;
+        BackupExtInfo extInfo {};
+        auto callDied = [](const string &&bundleName) {};
+        auto callConnected = [](const string &&bundleName) {};
+        extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, BUNDLE_NAME));
+        extInfo.schedAction = BConstants::ServiceSchedAction::RUNNING;
+        impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        ret = servicePtr_->GetFileHandle(BUNDLE_NAME, FILE_NAME);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetFileHandle.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetFileHandle_0101";
+}
+
+/**
  * @tc.number: SUB_Service_OnBackupExtensionDied_0100
  * @tc.name: SUB_Service_OnBackupExtensionDied_0100
  * @tc.desc: 测试 OnBackupExtensionDied 接口

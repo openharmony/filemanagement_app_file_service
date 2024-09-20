@@ -167,13 +167,11 @@ bool BJsonUtil::HasUnicastInfo(std::string &bundleInfo)
         cJSON *infoItem = cJSON_GetArrayItem(infos, i);
         if (!cJSON_IsObject(infoItem)) {
             HILOGE("Parse json error, info item is not an object");
-            cJSON_Delete(root);
             continue;
         }
         cJSON *type = cJSON_GetObjectItem(infoItem, "type");
         if (type == nullptr || !cJSON_IsString(type) || (type->valuestring == nullptr)) {
             HILOGE("Parse json type element error");
-            cJSON_Delete(root);
             continue;
         }
         if (string(type->valuestring).compare(BConstants::UNICAST_TYPE) == 0) {
@@ -306,17 +304,6 @@ bool BJsonUtil::BuildExtensionErrInfo(std::string &jsonStr, int errCode, std::st
     return true;
 }
 
-std::string BJsonUtil::BuildBundleNameIndexInfo(const std::string &bundleName, int appIndex)
-{
-    std::string result = bundleName;
-    if (appIndex == BUNDLE_INDEX_DEFAULT_VAL) {
-        return result;
-    }
-    result += BUNDLE_INDEX_SPLICE;
-    result += std::to_string(appIndex);
-    return result;
-}
-
 bool BJsonUtil::BuildExtensionErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo)
 {
     cJSON *errJson = cJSON_CreateObject();
@@ -353,7 +340,6 @@ bool BJsonUtil::BuildExtensionErrInfo(std::string &jsonStr, std::map<std::string
     cJSON_free(data);
     return true;
 }
-}
 
 bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet)
 {
@@ -381,6 +367,17 @@ bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessRetInfo(std::string 
     return true;
 }
 
+std::string BJsonUtil::BuildBundleNameIndexInfo(const std::string &bundleName, int appIndex)
+{
+    std::string result = bundleName;
+    if (appIndex == BUNDLE_INDEX_DEFAULT_VAL) {
+        return result;
+    }
+    result += BUNDLE_INDEX_SPLICE;
+    result += std::to_string(appIndex);
+    return result;
+}
+}
 bool OHOS::FileManagement::Backup::BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
 {
     cJSON *root = cJSON_CreateObject();
