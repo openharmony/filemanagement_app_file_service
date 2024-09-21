@@ -46,6 +46,8 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 constexpr size_t ARGC_ONE = 1;
+static std::mutex g_extBackupValidLock;
+static bool g_isExtBackupValid = true;
 
 static string GetSrcPath(const AppExecFwk::AbilityInfo &info)
 {
@@ -103,6 +105,11 @@ static napi_status DealNapiException(napi_env env, napi_value &exception, std::s
 
 static napi_value PromiseCallback(napi_env env, napi_callback_info info)
 {
+    std::lock_guard<std::mutex> lock(g_extBackupValidLock);
+    if (!g_isExtBackupValid) {
+        HILOGE("ExtBackup is invalid");
+        return nullptr;
+    }
     HILOGI("Promise callback.");
     void *data = nullptr;
     if (napi_get_cb_info(env, info, nullptr, 0, nullptr, &data) != napi_ok) {
@@ -140,6 +147,12 @@ static napi_value PromiseCatchCallback(napi_env env, napi_callback_info info)
         HILOGE("Failed to throw an exception, %{public}d", throwStatus);
         return nullptr;
     }
+    std::lock_guard<std::mutex> lock(g_extBackupValidLock);
+    if (!g_isExtBackupValid) {
+        HILOGE("ExtBackup is invalid");
+        data = nullptr;
+        return nullptr;
+    }
     callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION), exceptionInfo);
     data = nullptr;
     HILOGI("Promise catch callback end.");
@@ -148,6 +161,11 @@ static napi_value PromiseCatchCallback(napi_env env, napi_callback_info info)
 
 static napi_value PromiseCallbackEx(napi_env env, napi_callback_info info)
 {
+    std::lock_guard<std::mutex> lock(g_extBackupValidLock);
+    if (!g_isExtBackupValid) {
+        HILOGE("ExtBackup is invalid");
+        return nullptr;
+    }
     HILOGI("PromiseEx callback.");
     void *data = nullptr;
     std::string str;
@@ -183,6 +201,12 @@ static napi_value PromiseCatchCallbackEx(napi_env env, napi_callback_info info)
     napi_status throwStatus = napi_fatal_exception(env, argv);
     if (throwStatus != napi_ok) {
         HILOGE("Failed to throw an exception, %{public}d", throwStatus);
+        return nullptr;
+    }
+    std::lock_guard<std::mutex> lock(g_extBackupValidLock);
+    if (!g_isExtBackupValid) {
+        HILOGE("ExtBackup is invalid");
+        data = nullptr;
         return nullptr;
     }
     callbackInfoEx->callbackParam(BError(BError::Codes::EXT_THROW_EXCEPTION), exceptionInfo);
@@ -420,6 +444,20 @@ napi_value AttachBackupExtensionContext(napi_env env, void *value, void *)
         },
         nullptr, nullptr);
     return contextObj;
+}
+
+ExtBackupJs::ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime)
+{
+    g_isExtBackupValid = true;
+    HILOGI("ExtBackupJs::ExtBackupJs.");
+}
+
+ExtBackupJs::~ExtBackupJs()
+{
+    jsRuntime_.FreeNativeReference(std::move(jsObj_));
+    std::lock_guard<std::mutex> lock(g_extBackupValidLock);
+    g_isExtBackupValid = false;
+    HILOGI("ExtBackupJs::~ExtBackupJs.");
 }
 
 void ExtBackupJs::ExportJsContext(void)
