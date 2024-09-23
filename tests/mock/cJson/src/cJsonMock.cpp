@@ -145,7 +145,21 @@ CJSON_PUBLIC(cJSON*) cJSON_AddStringToObject(cJSON * const object, const char * 
     return CJson::cJsonPtr->cJSON_AddStringToObject(object, name, string);
 }
 
+static CJSON_PUBLIC(cJSON_bool) IsArray(const cJSON * const item)
+{
+    if (item == NULL) {
+        return false;
+    }
+
+    return (item->type & 0xFF) == cJSON_Array;
+}
+
 CJSON_PUBLIC(cJSON_bool) cJSON_IsArray(const cJSON * const item)
 {
-    return CJson::cJsonPtr->cJSON_IsArray(item);
+    return (CJson::cJsonPtr == nullptr) ? IsArray(item) : CJson::cJsonPtr->cJSON_IsArray(item);
+}
+
+CJSON_PUBLIC(void) cJSON_free(void *object)
+{
+    return (CJson::cJsonPtr == nullptr) ? free(object) : CJson::cJsonPtr->cJSON_free(object);
 }
