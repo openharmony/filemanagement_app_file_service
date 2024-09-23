@@ -317,7 +317,7 @@ private:
     std::atomic<bool> isFirstCallOnProcess_ { false };
     std::atomic<bool> isExecAppDone_ { false };
 
-    BackupRestoreScenario curScenario_;
+    BackupRestoreScenario curScenario_ { BackupRestoreScenario::FULL_BACKUP };
 };
 } // namespace OHOS::FileManagement::Backup
 

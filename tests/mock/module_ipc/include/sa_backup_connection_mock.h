@@ -21,7 +21,7 @@
 #include "module_ipc/sa_backup_connection.h"
 
 namespace OHOS::FileManagement::Backup {
-class BSABackupConnection : public RefBase {
+class BSABackupConnection {
 public:
     virtual bool InputParaSet(MessageParcel&) = 0;
     virtual bool OutputParaGet(MessageParcel&) = 0;
@@ -37,7 +37,7 @@ public:
     BSABackupConnection() = default;
     virtual ~BSABackupConnection() = default;
 public:
-    static inline sptr<BSABackupConnection> saConnect = nullptr;
+    static inline std::shared_ptr<BSABackupConnection> saConnect = nullptr;
 };
 
 class SABackupConnectionMock : public BSABackupConnection {

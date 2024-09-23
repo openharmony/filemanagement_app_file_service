@@ -243,7 +243,7 @@ public:
     static inline shared_ptr<BundleMgrAdapterMock> bms = nullptr;
     static inline sptr<SvcExtensionProxyMock> svcProxy = nullptr;
     static inline sptr<SvcBackupConnectionMock> connect = nullptr;
-    static inline sptr<SABackupConnectionMock> saConnect = nullptr;
+    static inline shared_ptr<SABackupConnectionMock> saConnect = nullptr;
     static inline shared_ptr<IPCSkeletonMock> skeleton = nullptr;
     static inline sptr<ServiceReverseProxyMock> srProxy = nullptr;
 };
@@ -263,7 +263,7 @@ void ServiceIncrementalTest::SetUpTestCase(void)
     BundleMgrAdapterMock::bms = bms;
     connect = sptr(new SvcBackupConnectionMock());
     SvcBackupConnectionMock::connect = connect;
-    saConnect = sptr(new SABackupConnectionMock());
+    saConnect = make_shared<SABackupConnectionMock>();
     SABackupConnectionMock::saConnect = saConnect;
     skeleton = make_shared<IPCSkeletonMock>();
     IPCSkeletonMock::skeleton = skeleton;
@@ -335,5 +335,274 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetUserIdDefault_0000, T
         GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by GetUserIdDefault.";
     }
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_GetUserIdDefault_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_GetLocalCapabilitiesIncremental_0000
+ * @tc.name: SUB_ServiceIncremental_GetLocalCapabilitiesIncremental_0000
+ * @tc.desc: 测试 GetLocalCapabilitiesIncremental 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetLocalCapabilitiesIncremental_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_GetLocalCapabilitiesIncremental_0000";
+    try {
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        auto fd = service->GetLocalCapabilitiesIncremental({});
+        service->session_ = session_;
+        EXPECT_EQ(static_cast<int>(fd), -ENOENT);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by GetLocalCapabilitiesIncremental.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_GetLocalCapabilitiesIncremental_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_StartGetFdTask_0000
+ * @tc.name: SUB_ServiceIncremental_StartGetFdTask_0000
+ * @tc.desc: 测试 StartGetFdTask 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartGetFdTask_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_StartGetFdTask_0000";
+    try {
+        service->StartGetFdTask("", nullptr);
+        EXPECT_TRUE(true);
+
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        EXPECT_THROW(service->StartGetFdTask("", service), BError);
+
+        service->session_ = session_;
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        EXPECT_THROW(service->StartGetFdTask("", service), BError);
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
+        EXPECT_THROW(service->StartGetFdTask("", service), BError);
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*bms, IsUser0BundleName(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*svcProxy, User0OnBackup()).WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
+        service->StartGetFdTask("", service);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*bms, IsUser0BundleName(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*svcProxy, User0OnBackup()).WillOnce(Return(ERR_OK));
+        service->StartGetFdTask("", service);
+        EXPECT_TRUE(true);
+
+        vector<BJsonEntityCaps::BundleInfo> info;
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*bms, IsUser0BundleName(_, _)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetLastIncrementalTime(_)).WillOnce(Return(0));
+        EXPECT_CALL(*bms, GetBundleInfosForIncremental(An<const vector<BIncrementalData>&>(), An<int32_t>()))
+            .WillOnce(Return(info));
+        EXPECT_THROW(service->StartGetFdTask("", service), BError);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by StartGetFdTask.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_StartGetFdTask_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_GetAppLocalListAndDoIncrementalBackup_0000
+ * @tc.name: SUB_ServiceIncremental_GetAppLocalListAndDoIncrementalBackup_0000
+ * @tc.desc: 测试 GetAppLocalListAndDoIncrementalBackup 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetAppLocalListAndDoIncrementalBackup_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) <<
+        "ServiceIncrementalTest-begin SUB_ServiceIncremental_GetAppLocalListAndDoIncrementalBackup_0000";
+    try {
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        EXPECT_EQ(service->GetAppLocalListAndDoIncrementalBackup(), BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = session_;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by GetAppLocalListAndDoIncrementalBackup.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_GetAppLocalListAndDoIncrementalBackup_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_InitIncrementalBackupSession_0000
+ * @tc.name: SUB_ServiceIncremental_InitIncrementalBackupSession_0000
+ * @tc.desc: 测试 InitIncrementalBackupSession 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSession_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_InitIncrementalBackupSession_0000";
+    try {
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr), BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = session_;
+
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr), BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by InitIncrementalBackupSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_InitIncrementalBackupSession_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000
+ * @tc.name: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000
+ * @tc.desc: 测试 AppendBundlesIncrementalBackupSession 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) <<
+        "ServiceIncrementalTest-begin SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000";
+    try {
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        EXPECT_EQ(service->AppendBundlesIncrementalBackupSession({}), BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = session_;
+
+        vector<BJsonEntityCaps::BundleInfo> bundleInfos {{ .allToBackup = true }};
+        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*bms, GetBundleInfosForAppend(_, _)).WillOnce(Return(bundleInfos));
+        EXPECT_EQ(service->AppendBundlesIncrementalBackupSession({}), BError(BError::Codes::OK).GetCode());
+
+        bundleInfos[0].allToBackup = false;
+        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*bms, GetBundleInfosForAppend(_, _)).WillOnce(Return(bundleInfos));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnBundleStarted(_, _)).WillOnce(Return());
+        EXPECT_EQ(service->AppendBundlesIncrementalBackupSession({}), BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by AppendBundlesIncrementalBackupSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_PublishIncrementalFile_0000
+ * @tc.name: SUB_ServiceIncremental_PublishIncrementalFile_0000
+ * @tc.desc: 测试 PublishIncrementalFile 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_PublishIncrementalFile_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_PublishIncrementalFile_0000";
+    try {
+        BFileInfo fileInfo;
+        fileInfo.fileName = "test";
+        auto ret = service->PublishIncrementalFile(fileInfo);
+        EXPECT_EQ(ret, EPERM);
+
+        fileInfo.fileName.clear();
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        ret = service->PublishIncrementalFile(fileInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        service->session_ = session_;
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        ret = service->PublishIncrementalFile(fileInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
+        ret = service->PublishIncrementalFile(fileInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, PublishIncrementalFile(_))
+            .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        ret = service->PublishIncrementalFile(fileInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, PublishIncrementalFile(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        ret = service->PublishIncrementalFile(fileInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by PublishIncrementalFile.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_PublishIncrementalFile_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_PublishSAIncrementalFile_0000
+ * @tc.name: SUB_ServiceIncremental_PublishSAIncrementalFile_0000
+ * @tc.desc: 测试 PublishSAIncrementalFile 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_PublishSAIncrementalFile_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_PublishSAIncrementalFile_0000";
+    try {
+        BFileInfo fileInfo;
+        auto ret = service->PublishSAIncrementalFile(fileInfo, UniqueFd(-1));
+        EXPECT_EQ(ret, BError(BError::Codes::SA_EXT_ERR_CALL).GetCode());
+
+        fileInfo.owner = "abc";
+        ret = service->PublishSAIncrementalFile(fileInfo, UniqueFd(-1));
+        EXPECT_EQ(ret, BError(BError::Codes::SA_EXT_ERR_CALL).GetCode());
+
+        fileInfo.owner = "123";
+        shared_ptr<SABackupConnection> sa = nullptr;
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        ret = service->PublishSAIncrementalFile(fileInfo, UniqueFd(-1));
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        sa = make_shared<SABackupConnection>(nullptr, nullptr, nullptr, nullptr);
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        EXPECT_CALL(*saConnect, CallRestoreSA(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        ret = service->PublishSAIncrementalFile(fileInfo, UniqueFd(-1));
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by PublishSAIncrementalFile.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_PublishSAIncrementalFile_0000";
 }
 }
