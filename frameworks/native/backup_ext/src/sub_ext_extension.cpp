@@ -107,11 +107,19 @@ void BackupExtExtension::SetClearDataFlag(bool isClearData)
     }
 }
 
+string BackupExtExtension::GetBundlePath()
+{
+    if (bundleName_ == BConstants::BUNDLE_FILE_MANAGER) {
+        return string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    } else if (bundleName_ == BConstants::BUNDLE_MEDIAL_DATA) {
+        return string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    }
+    return string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+}
+
 std::map<std::string, off_t> BackupExtExtension::GetIdxFileInfos(bool isSpecialVersion)
 {
-    string restoreDir = isSpecialVersion ?
-        "" :
-        string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    string restoreDir = isSpecialVersion ? "" : GetBundlePath();
     auto extManageInfo = GetExtManageInfo();
     std::map<std::string, off_t> idxFileInfos;
     for (size_t i = 0; i < extManageInfo.size(); ++i) {
@@ -590,6 +598,7 @@ void BackupExtExtension::ReportAppProcessInfo(const std::string processInfo, Bac
         HILOGE("Report app process error, proxy is empty");
         return;
     }
+    HILOGI("Will notify backup sa process result");
     auto ret = proxy->ReportAppProcessInfo(processInfo, scenario);
     if (ret != ERR_OK) {
         HILOGE("Report app process error, ipc failed, ret:%{public}d", ret);
@@ -597,12 +606,17 @@ void BackupExtExtension::ReportAppProcessInfo(const std::string processInfo, Bac
     }
 }
 
-void BackupExtExtension::StartOnProcessTaskThread(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
+ErrCode BackupExtExtension::StartOnProcessTaskThread(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
 {
     HILOGI("Begin Create onProcess Task Thread");
     onProcessTimeoutTimer_.Setup();
+    isFirstCallOnProcess_.store(true);
     StartOnProcessTimeOutTimer(obj, scenario);
     SyncCallJsOnProcessTask(obj, scenario);
+    if (isExecAppDone_.load()) {
+        HILOGE("Call onProcess timeout, Current extension finished");
+        return BError(BError::Codes::EXT_ABILITY_TIMEOUT);
+    }
     callJsOnProcessThread_ = std::thread([obj, scenario]() {
         auto extPtr = obj.promote();
         if (extPtr == nullptr) {
@@ -612,11 +626,13 @@ void BackupExtExtension::StartOnProcessTaskThread(wptr<BackupExtExtension> obj, 
         extPtr->ExecCallOnProcessTask(obj, scenario);
     });
     HILOGI("End Create onProcess Task End");
+    return BError(BError::Codes::OK);
 }
 
 void BackupExtExtension::ExecCallOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
 {
     HILOGI("Begin");
+    isFirstCallOnProcess_.store(false);
     while (!stopCallJsOnProcess_.load()) {
         std::unique_lock<std::mutex> lock(onProcessLock_);
         execOnProcessCon_.wait_for(lock, std::chrono::seconds(BConstants::CALL_APP_ON_PROCESS_TIME_INTERVAL),
@@ -625,14 +641,9 @@ void BackupExtExtension::ExecCallOnProcessTask(wptr<BackupExtExtension> obj, Bac
             HILOGE("Current extension execute js onProcess method finished");
             return;
         }
-        if (onProcessTimeout_.load()) {
-            HILOGE("Current extension execute js method onProcess timeout");
-            StartOnProcessTimeOutTimer(obj, scenario);
-            continue;
-        }
         HILOGI("Continue call js method onProcess");
-        AsyncCallJsOnProcessTask(obj, scenario);
         StartOnProcessTimeOutTimer(obj, scenario);
+        AsyncCallJsOnProcessTask(obj, scenario);
     }
     HILOGI("End");
 }
@@ -652,7 +663,7 @@ void BackupExtExtension::AsyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, 
         }
         extPtr->SyncCallJsOnProcessTask(obj, scenario);
     };
-    threadPool_.AddTask([task]() { task(); });
+    onProcessTaskPool_.AddTask([task]() { task(); });
     HILOGI("End");
 }
 
@@ -669,26 +680,34 @@ void BackupExtExtension::SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, B
             HILOGE("Async call js onPreocess callback failed, exPtr is empty");
             return;
         }
+        if (extPtr->onProcessTimeout_.load()) {
+            HILOGE("The result of invoking onProcess is timeout.");
+            extPtr->onProcessTimeout_.store(false);
+            return;
+        }
         extPtr->CloseOnProcessTimeOutTimer();
+        extPtr->isFirstCallOnProcess_.store(false);
         extPtr->onProcessTimeout_.store(false);
         if (extPtr->onProcessTimeoutCnt_.load() > 0) {
-            extPtr->onProcessTimeoutCnt_--;
-            HILOGI("onProcess execute success, decrease cnt is:%{public}d", extPtr->onProcessTimeoutCnt_.load());
+            extPtr->onProcessTimeoutCnt_ = 0;
+            HILOGI("onProcess execute success, reset onProcessTimeoutCnt");
         }
         if (processInfo.size() == 0) {
             HILOGE("Current extension has no js method named onProcess.");
+            std::unique_lock<std::mutex> lock(extPtr->onProcessLock_);
+            extPtr->isFirstCallOnProcess_.store(false);
             extPtr->stopCallJsOnProcess_.store(true);
             extPtr->execOnProcessCon_.notify_one();
+            lock.unlock();
             return;
         }
         std::string processInfoJsonStr;
         BJsonUtil::BuildOnProcessRetInfo(processInfoJsonStr, processInfo);
-        HILOGI("Will notify backup sa process result");
         extPtr->ReportAppProcessInfo(processInfoJsonStr, scenario);
     };
     auto extenionPtr = obj.promote();
     if (extenionPtr == nullptr) {
-        HILOGE("Async call js onPreocess failed, extenionPtr is empty");
+        HILOGE("Async call js onProcess failed, extenionPtr is empty");
         return;
     }
     ErrCode ret = extenionPtr->extension_->OnProcess(callBack);
@@ -702,9 +721,13 @@ void BackupExtExtension::SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, B
 void BackupExtExtension::FinishOnProcessTask()
 {
     HILOGI("Begin");
+    std::unique_lock<std::mutex> lock(onProcessLock_);
     stopCallJsOnProcess_.store(true);
+    isFirstCallOnProcess_.store(false);
+    isExecAppDone_.store(false);
     onProcessTimeoutCnt_ = 0;
     execOnProcessCon_.notify_one();
+    lock.unlock();
     if (callJsOnProcessThread_.joinable()) {
         callJsOnProcessThread_.join();
     }
@@ -724,11 +747,17 @@ void BackupExtExtension::StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj
             HILOGE("Start Create timeout callback failed, extPtr is empty");
             return;
         }
-        if (extPtr->onProcessTimeoutCnt_.load() >= BConstants::APP_ON_PROCESS_TIMEOUT_MAX_COUNT) {
-            HILOGE("Current extension onProcess timeout more than three times");
+        if (extPtr->onProcessTimeoutCnt_.load() >= BConstants::APP_ON_PROCESS_TIMEOUT_MAX_COUNT ||
+            extPtr->isFirstCallOnProcess_.load()) {
+            HILOGE("The extension invokes the onProcess for more than three times or the first invoking of the"
+                "onProcess times out, timeoutCnt:%{public}d", extPtr->onProcessTimeoutCnt_.load());
+            std::unique_lock<std::mutex> lock(extPtr->onProcessLock_);
             extPtr->stopCallJsOnProcess_.store(true);
+            extPtr->isFirstCallOnProcess_.store(false);
+            extPtr->isExecAppDone_.store(false);
             extPtr->onProcessTimeoutCnt_ = 0;
             extPtr->execOnProcessCon_.notify_one();
+            lock.unlock();
             if (scenario == BackupRestoreScenario::FULL_BACKUP || scenario == BackupRestoreScenario::FULL_RESTORE) {
                 extPtr->AppDone(BError(BError::Codes::EXT_ABILITY_TIMEOUT));
             } else if (scenario == BackupRestoreScenario::INCREMENTAL_BACKUP ||
@@ -741,7 +770,9 @@ void BackupExtExtension::StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj
         extPtr->onProcessTimeout_.store(true);
         HILOGE("Extension onProcess timeout, Increase cnt:%{public}d", extPtr->onProcessTimeoutCnt_.load());
     };
-    uint32_t timerId = onProcessTimeoutTimer_.Register(timeoutCallback, BConstants::APP_ON_PROCESS_MAX_TIMEOUT, true);
+    int timeout = isFirstCallOnProcess_.load() ? BConstants::FIRST_CALL_APP_ON_PROCESS_MAX_TIMEOUT :
+        BConstants::APP_ON_PROCESS_MAX_TIMEOUT;
+    uint32_t timerId = onProcessTimeoutTimer_.Register(timeoutCallback, timeout, true);
     onProcessTimeoutTimerId_ = timerId;
     HILOGI("End");
 }
@@ -771,5 +802,131 @@ bool BackupExtExtension::SetStagingPathProperties()
         return false;
     }
     return true;
+}
+
+bool BackupExtExtension::IfAllowToBackupRestore()
+{
+    if (extension_ == nullptr) {
+        HILOGE("Failed to handle backup, extension is nullptr");
+        return false;
+    }
+    string usrConfig = extension_->GetUsrConfig();
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
+    auto cache = cachedEntity.Structuralize();
+    if (!cache.GetAllowToBackupRestore()) {
+        HILOGE("Application does not allow backup or restore");
+        return false;
+    }
+    return true;
+}
+
+ErrCode BackupExtExtension::User0OnBackup()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (!IfAllowToBackupRestore()) {
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+            .GetCode();
+    }
+    AsyncTaskUser0Backup();
+    return ERR_OK;
+}
+
+void BackupExtExtension::AsyncTaskUser0Backup()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    auto task = [obj {wptr<BackupExtExtension>(this)}]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        const string config = ptr->extension_->GetUsrConfig();
+        try {
+            HILOGI("Do backup, start fwk timer begin.");
+            bool isFwkStart;
+            ptr->StartFwkTimer(isFwkStart);
+            if (!isFwkStart) {
+                HILOGE("Do backup, start fwk timer fail.");
+                return;
+            }
+            HILOGI("Do backup, start fwk timer end.");
+            BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
+            auto cache = cachedEntity.Structuralize();
+            auto ret = ptr->User0DoBackup(cache);
+            if (ret != ERR_OK) {
+                HILOGE("User0DoBackup, err = %{pubilc}d", ret);
+                ptr->AppIncrementalDone(BError::GetCodeByErrno(ret));
+            }
+        } catch (const BError &e) {
+            HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+void BackupExtExtension::DoUser0Backup(const BJsonEntityExtensionConfig &usrConfig)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
+        throw BError(errno);
+    }
+    vector<string> includes = usrConfig.GetIncludes();
+    vector<string> excludes = usrConfig.GetExcludes();
+    auto task = [obj {wptr<BackupExtExtension>(this)}, includes, excludes]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        try {
+            auto [bigFile, smallFile] = BDir::GetBackupList(includes, excludes);
+            vector<struct ReportFileInfo> allFiles;
+            vector<struct ReportFileInfo> smallFiles;
+            vector<struct ReportFileInfo> bigFiles;
+            BDir::GetUser0FileStat(move(bigFile), move(smallFile), allFiles, smallFiles, bigFiles);
+            auto ret = ptr->DoIncrementalBackup(allFiles, smallFiles, bigFiles);
+            ptr->AppIncrementalDone(ret);
+            HILOGI("User0 backup app done %{public}d", ret);
+        } catch (const BError &e) {
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+int BackupExtExtension::User0DoBackup(const BJsonEntityExtensionConfig &usrConfig)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("Start Do User0Backup");
+    if (extension_ == nullptr) {
+        HILOGE("Failed to do backup, extension is nullptr");
+        return BError(BError::Codes::EXT_INVAL_ARG);
+    }
+    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
+        return EPERM;
+    }
+    DoUser0Backup(usrConfig);
+    return ERR_OK;
 }
 } // namespace OHOS::FileManagement::Backup

@@ -50,6 +50,7 @@
 #include "b_ohos/startup/backup_para.h"
 #include "b_tarball/b_tarball_factory.h"
 #include "b_hiaudit/hi_audit.h"
+#include "b_utils/b_time.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
 #include "i_service.h"
@@ -551,15 +552,7 @@ ErrCode BackupExtExtension::HandleBackup(bool isClearData)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     SetClearDataFlag(isClearData);
-    if (extension_ == nullptr) {
-        HILOGE("Failed to handle backup, extension is nullptr");
-        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
-    }
-    string usrConfig = extension_->GetUsrConfig();
-    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
-    auto cache = cachedEntity.Structuralize();
-    if (!cache.GetAllowToBackupRestore()) {
-        HILOGE("Application does not allow backup or restore");
+    if (!IfAllowToBackupRestore()) {
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
             .GetCode();
     }
@@ -649,6 +642,22 @@ static ErrCode TarFileReady(const TarMap &tarFileInfo, sptr<IService> proxy)
     return ret;
 }
 
+std::function<void(std::string, int)> BackupExtExtension::ReportErrFileByProc(wptr<BackupExtExtension> obj,
+    BackupRestoreScenario scenario)
+{
+    return [obj, scenario](std::string msg, int err) {
+        auto extPtr = obj.promote();
+        if (extPtr == nullptr) {
+            HILOGE("ReportErr ExtPtr is empty.");
+            return;
+        }
+        string jsonInfo;
+        BJsonUtil::BuildOnProcessErrInfo(jsonInfo, msg, err);
+        HILOGI("ReportErr Will notify err info.");
+        extPtr->ReportAppProcessInfo(jsonInfo, scenario);
+    };
+}
+
 void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &tar, sptr<IService> proxy)
 {
     HILOGI("DoPacket begin, infos count: %{public}zu", srcFiles.size());
@@ -659,13 +668,14 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
     TarFile::GetInstance().SetPacketMode(true); // 设置下打包模式
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
+    auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
     for (auto small : srcFiles) {
         totalSize += small.second;
         fileCount += 1;
         packFiles.emplace_back(small.first);
         if (totalSize >= BConstants::DEFAULT_SLICE_SIZE || fileCount >= BConstants::MAX_FILE_COUNT) {
             TarMap tarMap {};
-            TarFile::GetInstance().Packet(packFiles, "part", path, tarMap);
+            TarFile::GetInstance().Packet(packFiles, "part", path, tarMap, reportCb);
             tar.insert(tarMap.begin(), tarMap.end());
             // 执行tar包回传功能
             WaitToSendFd(startTime, fdNum);
@@ -680,7 +690,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
     if (fileCount > 0) {
         // 打包回传
         TarMap tarMap {};
-        TarFile::GetInstance().Packet(packFiles, "part", path, tarMap);
+        TarFile::GetInstance().Packet(packFiles, "part", path, tarMap, reportCb);
         TarFileReady(tarMap, proxy);
         fdNum = 1;
         WaitToSendFd(startTime, fdNum);
@@ -1395,7 +1405,11 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
                 HILOGE("On restore, start ext timer fail.");
                 return;
             }
-            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_RESTORE);
+            ptr->curScenario_ = BackupRestoreScenario::FULL_RESTORE;
+            if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_RESTORE)) != ERR_OK) {
+                HILOGE("Call onProcess result is timeout");
+                return;
+            }
             auto callBackup = ptr->OnRestoreCallback(obj);
             auto callBackupEx = ptr->OnRestoreExCallback(obj);
             ptr->UpdateOnStartTime();
@@ -1446,7 +1460,11 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
                 HILOGE("On incrementalRestore, start ext timer fail.");
                 return;
             }
-            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_RESTORE);
+            ptr->curScenario_ = BackupRestoreScenario::INCREMENTAL_RESTORE;
+            if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_RESTORE)) != ERR_OK) {
+                HILOGE("Call onProcess result is timeout");
+                return;
+            }
             auto callBackup = ptr->IncreOnRestoreCallback(obj);
             auto callBackupEx = ptr->IncreOnRestoreExCallback(obj);
             ptr->UpdateOnStartTime();
@@ -1458,10 +1476,6 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
             }
         } catch (const BError &e) {
             ptr->AppIncrementalDone(e.GetCode());
-            ptr->DoClear();
-        } catch (const exception &e) {
-            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
-            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
             ptr->DoClear();
         } catch (...) {
             HILOGE("Failed to restore the ext bundle");
@@ -1593,7 +1607,11 @@ void BackupExtExtension::AsyncTaskOnBackup()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_BACKUP);
+            ptr->curScenario_ = BackupRestoreScenario::FULL_BACKUP;
+            if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_BACKUP)) != ERR_OK) {
+                HILOGE("Call onProcess result is timeout");
+                return;
+            }
             auto callBackup = ptr->OnBackupCallback(obj);
             auto callBackupEx = ptr->OnBackupExCallback(obj);
             ptr->UpdateOnStartTime();
@@ -1737,15 +1755,7 @@ ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, Uniq
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Start HandleIncrementalBackup");
-        if (extension_ == nullptr) {
-            HILOGE("Failed to handle incremental backup, extension is nullptr");
-            return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
-        }
-        string usrConfig = extension_->GetUsrConfig();
-        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
-        auto cache = cachedEntity.Structuralize();
-        if (!cache.GetAllowToBackupRestore()) {
-            HILOGE("Application does not allow backup or restore");
+        if (!IfAllowToBackupRestore()) {
             return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
                 .GetCode();
         }
@@ -1761,15 +1771,7 @@ ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     SetClearDataFlag(isClearData);
-    if (extension_ == nullptr) {
-        HILOGE("Failed to handle incremental onBackup, extension is nullptr");
-        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
-    }
-    string usrConfig = extension_->GetUsrConfig();
-    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
-    auto cache = cachedEntity.Structuralize();
-    if (!cache.GetAllowToBackupRestore()) {
-        HILOGE("Application does not allow backup or restore");
+    if (!IfAllowToBackupRestore()) {
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
             .GetCode();
     }
@@ -1991,7 +1993,11 @@ void BackupExtExtension::AsyncTaskOnIncrementalBackup()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_BACKUP);
+            ptr->curScenario_ = BackupRestoreScenario::INCREMENTAL_BACKUP;
+            if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_BACKUP)) != ERR_OK) {
+                HILOGE("Call onProcess result is timeout");
+                return;
+            }
             auto callBackup = ptr->IncOnBackupCallback(obj);
             auto callBackupEx = ptr->IncOnBackupExCallback(obj);
             ptr->UpdateOnStartTime();
@@ -2042,6 +2048,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
     string partName = GetIncrmentPartName();
+    auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
     for (auto small : infos) {
         totalSize += static_cast<uint64_t>(small.size);
         fileCount += 1;
@@ -2049,7 +2056,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
         tarInfos.emplace_back(small);
         if (totalSize >= BConstants::DEFAULT_SLICE_SIZE || fileCount >= BConstants::MAX_FILE_COUNT) {
             TarMap tarMap {};
-            TarFile::GetInstance().Packet(packFiles, partName, path, tarMap);
+            TarFile::GetInstance().Packet(packFiles, partName, path, tarMap, reportCb);
             tar.insert(tarMap.begin(), tarMap.end());
             // 执行tar包回传功能
             WaitToSendFd(startTime, fdNum);
@@ -2065,7 +2072,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
     if (fileCount > 0) {
         // 打包回传
         TarMap tarMap {};
-        TarFile::GetInstance().Packet(packFiles, partName, path, tarMap);
+        TarFile::GetInstance().Packet(packFiles, partName, path, tarMap, reportCb);
         IncrementalTarFileReady(tarMap, tarInfos, proxy);
         fdNum = 1;
         WaitToSendFd(startTime, fdNum);

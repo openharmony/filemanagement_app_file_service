@@ -65,6 +65,11 @@ public:
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForSA();
 
     static void GetBundleInfoForSA(std::string bundleName, std::vector<BJsonEntityCaps::BundleInfo> &bundleInfos);
+
+    static bool IsUser0BundleName(std::string bundleName, int32_t userId);
+
+    static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForAppend(
+        const std::vector<BIncrementalData> &incrementalDataList, int32_t userId);
 private:
     static bool GetCurBundleExtenionInfo(AppExecFwk::BundleInfo &installedBundle, const std::string &bundleName,
         std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos, sptr<AppExecFwk::IBundleMgr> bms,

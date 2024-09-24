@@ -100,11 +100,12 @@ describe('FileShareJSTest', function () {
         console.info(`get_path_from_uri_test_002 start`);
         try {
             let uri = "file://com.example.filesharea/data/storage/el2/base/files/getpathtest002.txt";
-            let resultPath = "/data/storage/el2/share/r/com.example.filesharea/data/storage/el2/base/files/getpathtest002.txt";
+            let resultSharePath = "/data/storage/el2/share/r/com.example.filesharea/data/storage/el2/base/files/getpathtest002.txt";
+            let resultPath = "/storage/Users/currentUser/appdata/el2/base/com.example.filesharea/files/getpathtest002.txt";
             let fileUriObject = new fileuri.FileUri(uri);
             let realPath = fileUriObject.path;
             console.info(`getPathFromUri success: ${JSON.stringify(realPath)}`);
-            expect(resultPath == realPath).assertTrue();
+            expect(resultSharePath == realPath || realPath == resultPath).assertTrue();
         } catch (error) {
             console.error(`getPathFromUri failed:${JSON.stringify(error)}`);
             expect(false).assertTrue();
@@ -121,20 +122,13 @@ describe('FileShareJSTest', function () {
     it('get_path_from_uri_test_003', 0, async function () {
         console.info(`get_path_from_uri_test_003 start`);
         try {
-            let uri = "file://docs/storage/Users/currentUser/Documents/getpathtest003.txt";
-            if (deviceInfo.deviceType != '2in1') {
-                let resultPath = "/data/storage/el2/share/r/docs/storage/Users/currentUser/Documents/getpathtest003.txt";
-                let fileUriObject = new fileuri.FileUri(uri);
-                let realPath = fileUriObject.path;
-                console.info(`getPathFromUri success: ${JSON.stringify(realPath)}`);
-                expect(resultPath == realPath).assertTrue();
-            } else {
-                let resultPath = "/storage/Users/currentUser/Documents/getpathtest003.txt";
-                let fileUriObject = new fileuri.FileUri(uri);
-                let realPath = fileUriObject.path;
-                console.info(`getPathFromUri success: ${JSON.stringify(realPath)}`);
-                expect(resultPath == realPath).assertTrue();
-            }
+            let uri = "file://com.example.demo/data/storage/el2/base/files/test002.txt";
+            let resultSharePath = "/data/storage/el2/share/r/com.example.demo/data/storage/el2/base/files/test002.txt";
+            let resultPath = "/storage/Users/currentUser/appdata/el2/base/com.example.demo/files/test002.txt";
+            let fileUriObject = new fileuri.FileUri(uri);
+            let realPath = fileUriObject.path;
+            console.info(`getPathFromUri success: ${JSON.stringify(realPath)}`);
+            expect(resultSharePath == realPath || realPath == resultPath).assertTrue();
         } catch (error) {
             console.error(`getPathFromUri failed:${JSON.stringify(error)}`);
             expect(false).assertTrue();

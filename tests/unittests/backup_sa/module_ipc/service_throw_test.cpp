@@ -408,12 +408,14 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppDone_0100, testing::ext::TestSiz
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
+        EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         auto ret = service->AppDone(0);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
             throw runtime_error("运行时错误");
         }));
+        EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         ret = service->AppDone(0);
         EXPECT_EQ(ret, EPERM);
 
@@ -526,6 +528,12 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_OnBackupExtensionDied_0100, testing
     try {
         EXPECT_NE(service, nullptr);
         string bundleName;
+        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Invoke([]() {
+            throw "未知错误";
+            return IServiceReverse::Scenario::UNDEFINED;
+        }));
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
@@ -536,10 +544,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_OnBackupExtensionDied_0100, testing
         EXPECT_CALL(*sessionMock, RemoveExtInfo(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
-        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
-            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
-            return IServiceReverse::Scenario::UNDEFINED;
-        }));
+        EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         service->OnBackupExtensionDied("bundleName");
         EXPECT_TRUE(true);
     } catch (...) {
@@ -573,11 +578,8 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_ExtStart_0100, testing::ext::TestSi
         }));
         EXPECT_CALL(*sessionMock, RemoveExtInfo(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
-        })).WillOnce(Invoke([]() {
-            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
-        })).WillOnce(Invoke([]() {
-            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
+        EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         service->ExtStart(bundleName);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -605,9 +607,6 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_ExtConnectFailed_0100, testing::ext
         EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
             return IServiceReverse::Scenario::UNDEFINED;
-        })).WillOnce(Invoke([]() {
-            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
-            return IServiceReverse::Scenario::UNDEFINED;
         }));
         service->ExtConnectFailed(bundleName, 0);
         EXPECT_TRUE(true);
@@ -615,17 +614,11 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_ExtConnectFailed_0100, testing::ext
         EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
             throw runtime_error("运行时错误");
             return IServiceReverse::Scenario::UNDEFINED;
-        })).WillOnce(Invoke([]() {
-            throw runtime_error("运行时错误");
-            return IServiceReverse::Scenario::UNDEFINED;
         }));
         service->ExtConnectFailed(bundleName, 0);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
-            throw "未知错误";
-            return IServiceReverse::Scenario::UNDEFINED;
-        })).WillOnce(Invoke([]() {
             throw "未知错误";
             return IServiceReverse::Scenario::UNDEFINED;
         }));
@@ -658,6 +651,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_NoticeClientFinish_0100, testing::e
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
             return IServiceReverse::Scenario::UNDEFINED;
         }));
+        EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         service->NoticeClientFinish(bundleName, errCode);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -722,8 +716,9 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_GetBackupInfo_0100, testing::ext::T
         EXPECT_NE(service, nullptr);
         BundleName bundleName;
         string result;
-        EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
+        EXPECT_CALL(*sessionMock, GetImpl()).WillOnce(Invoke([]() {
             throw "未知错误";
+            return SvcSessionManager::Impl();
         }));
         EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->GetBackupInfo(bundleName, result);
@@ -784,6 +779,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_SADone_0100, testing::ext::TestSize
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
             return false;
         }));
+        EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         auto ret = service->SADone(errCode, bundleName);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
@@ -791,6 +787,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_SADone_0100, testing::ext::TestSize
             throw runtime_error("运行时错误");
             return false;
         }));
+        EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         ret = service->SADone(errCode, bundleName);
         EXPECT_EQ(ret, EPERM);
 
@@ -798,6 +795,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_SADone_0100, testing::ext::TestSize
             throw "未知错误";
             return false;
         }));
+        EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         ret = service->SADone(errCode, bundleName);
         EXPECT_EQ(ret, EPERM);
     } catch (...) {
@@ -1084,12 +1082,14 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppIncrementalDone_0100, testing::e
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
+        EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         auto ret = service->AppIncrementalDone(0);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
+        EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         ret = service->AppIncrementalDone(0);
         EXPECT_EQ(ret, EPERM);
     } catch (...) {

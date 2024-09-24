@@ -272,6 +272,7 @@ public:
         session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(this)));
         disposal_ = make_shared<BJsonDisposalConfig>();
         clearRecorder_ = make_shared<BJsonClearDataConfig>();
+        sched_ = sptr(new SchedScheduler(wptr(this), wptr(session_)));
     };
     ~Service() override
     {
@@ -378,6 +379,24 @@ private:
     void SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info, std::map<std::string, bool> &isClearDataFlags);
 
     /**
+     * @brief add useridinfo to  current backup session
+     *
+     * @param bundleNames: bundleNames list
+     * @param userId: userId
+     *
+     */
+    void SetCurrentBackupSessProperties(const std::vector<std::string> &bundleNames, int32_t userId);
+
+    /**
+     * @brief send userid to app
+     *
+     * @param bundleName: bundleName
+     * @param userId: userId
+     *
+     */
+    void SendUserIdToApp(std::string &bundleName, int32_t userId);
+
+    /**
      * @brief 通知权限模块
      *
      * @param bundleName 包名称
@@ -452,6 +471,10 @@ private:
         const std::string &bundleName, const ErrCode ret);
 
     void ReleaseOnException();
+
+    vector<BIncrementalData> MakeDetailList(const vector<BundleName> &bundleNames);
+
+    vector<string> GetBundleNameByDetails(const std::vector<BIncrementalData> &bundlesToBackup);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

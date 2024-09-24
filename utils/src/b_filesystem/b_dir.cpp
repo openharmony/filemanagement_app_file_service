@@ -19,6 +19,7 @@
 #include <dirent.h>
 #include <fnmatch.h>
 #include <functional>
+#include <filesystem>
 #include <glob.h>
 #include <memory>
 #include <set>
@@ -27,6 +28,7 @@
 #include <vector>
 
 #include "b_error/b_error.h"
+#include "b_filesystem/b_file_hash.h"
 #include "b_resources/b_constants.h"
 #include "directory_ex.h"
 #include "errors.h"
@@ -78,7 +80,7 @@ static uint32_t CheckOverLongPath(const string &path)
 {
     uint32_t len = path.length();
     if (len >= PATH_MAX_LEN) {
-        size_t found = path.find_last_of('/');
+        size_t found = path.find_last_of(BConstants::FILE_SEPARATOR_CHAR);
         string sub = path.substr(found + 1);
         HILOGE("Path over long, length:%{public}d, fileName:%{public}s.", len, sub.c_str());
     }
@@ -94,8 +96,8 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFiles
 
     if (IsEmptyDirectory(path)) {
         string newPath = path;
-        if (path.at(path.size()-1) != '/') {
-            newPath += '/';
+        if (path.at(path.size()-1) != BConstants::FILE_SEPARATOR_CHAR) {
+            newPath += BConstants::FILE_SEPARATOR_CHAR;
         }
         smallFiles.insert(make_pair(newPath, 0));
         return {ERR_OK, files, smallFiles};
@@ -123,6 +125,7 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFiles
             }
 
             files.try_emplace(fileName, sta);
+            continue;
         } else if (ptr->d_type != DT_DIR) {
             HILOGE("Not support file type");
             continue;
@@ -186,7 +189,7 @@ static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
 
     for (auto it = expandPath.begin(); it != expandPath.end(); ++it) {
         filteredPath.insert(*it);
-        if (onlyPath && *it->rbegin() != '/') {
+        if (onlyPath && *it->rbegin() != BConstants::FILE_SEPARATOR_CHAR) {
             continue;
         }
         auto jt = it;
@@ -202,7 +205,7 @@ static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
 tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(const vector<string> &includes,
                                                                                 const vector<string> &excludes)
 {
-    set<string> inc = ExpandPathWildcard(includes, false);
+    set<string> inc = ExpandPathWildcard(includes, true);
 
     map<string, struct stat> incFiles;
     map<string, size_t> incSmallFiles;
@@ -225,7 +228,7 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
                 continue;
             }
             string excludeItem = item;
-            if (excludeItem.at(item.size() - 1) == '/') {
+            if (excludeItem.at(item.size() - 1) == BConstants::FILE_SEPARATOR_CHAR) {
                 excludeItem += "*";
             }
             if (fnmatch(excludeItem.data(), str.data(), FNM_LEADING_DIR) == 0) {
@@ -251,6 +254,181 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
     HILOGI("total number of big files is %{public}d", static_cast<int32_t>(bigFiles.size()));
     HILOGI("total number of small files is %{public}d", static_cast<int32_t>(resSmallFiles.size()));
     return {ERR_OK, move(bigFiles), move(resSmallFiles)};
+}
+
+void BDir::GetUser0FileStat(vector<string> bigFile,
+                            vector<string> smallFile,
+                            vector<struct ReportFileInfo> &allFiles,
+                            vector<struct ReportFileInfo> &smallFiles,
+                            vector<struct ReportFileInfo> &bigFiles)
+{
+    for (const auto &item : smallFile) {
+        struct ReportFileInfo storageFiles;
+        storageFiles.filePath = item;
+        if (filesystem::is_directory(item)) {
+            storageFiles.isDir = 1;
+            storageFiles.userTar = 0;
+        } else {
+            storageFiles.isDir = 0;
+            auto [res, fileHash] = BackupFileHash::HashWithSHA256(item);
+            if (fileHash.empty()) {
+                continue;
+            }
+            storageFiles.hash = fileHash;
+            storageFiles.userTar = 1;
+        }
+        struct stat sta = {};
+        if (stat(item.c_str(), &sta) != 0) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Get file stat failed");
+        }
+        storageFiles.size = sta.st_size;
+        storageFiles.mode = to_string(static_cast<int32_t>(sta.st_mode));
+        int64_t lastUpdateTime = static_cast<int64_t>(sta.st_mtime);
+        storageFiles.mtime = lastUpdateTime;
+        allFiles.push_back(storageFiles);
+        smallFiles.push_back(storageFiles);
+    }
+    for (const auto &item : bigFile) {
+        struct ReportFileInfo storageFiles;
+        storageFiles.filePath = item;
+        auto [res, fileHash] = BackupFileHash::HashWithSHA256(item);
+        if (fileHash.empty()) {
+            continue;
+        }
+        storageFiles.hash = fileHash;
+        struct stat sta = {};
+        if (stat(item.c_str(), &sta) != 0) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Get file stat failed");
+        }
+        storageFiles.size = sta.st_size;
+        storageFiles.mode = to_string(static_cast<int32_t>(sta.st_mode));
+        int64_t lastUpdateTime = static_cast<int64_t>(sta.st_mtime);
+        storageFiles.mtime = lastUpdateTime;
+        storageFiles.userTar = 1;
+        allFiles.push_back(storageFiles);
+        bigFiles.push_back(storageFiles);
+    }
+    HILOGI("get FileStat end, bigfiles = %{public}zu, smallFiles = %{public}zu, allFiles = %{public}zu,",
+        bigFiles.size(), smallFiles.size(), allFiles.size());
+}
+
+static tuple<vector<string>, vector<string>> IsNotPath(const string &path, vector<string> &bigFiles,
+    vector<string> &smallFiles, off_t size)
+{
+    struct stat sta = {};
+    if (CheckOverLongPath(path) >= PATH_MAX_LEN || stat(path.data(), &sta) == -1) {
+        return {};
+    }
+    if (sta.st_size <= size) {
+        smallFiles.push_back(path);
+        HILOGI("bigfiles = %{public}zu, smallfiles = %{public}zu", bigFiles.size(), smallFiles.size());
+        return {bigFiles, smallFiles};
+    }
+    bigFiles.push_back(path);
+    HILOGI("bigfiles = %{public}zu, smallfiles = %{public}zu", bigFiles.size(), smallFiles.size());
+    return {bigFiles, smallFiles};
+}
+
+static tuple<vector<string>, vector<string>> GetUser0DirFilesDetail(const string &path, off_t size = -1)
+{
+    vector<string> bigFiles;
+    vector<string> smallFiles;
+    if (IsEmptyDirectory(path)) {
+        string newPath = path;
+        if (path.at(path.size()-1) != BConstants::FILE_SEPARATOR_CHAR) {
+            newPath += BConstants::FILE_SEPARATOR_CHAR;
+        }
+        smallFiles.push_back(newPath);
+        return {bigFiles, smallFiles};
+    }
+    if (filesystem::is_regular_file(path)) {
+        return IsNotPath(path, bigFiles, smallFiles, size);
+    }
+    unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(path.c_str()), closedir};
+    if (!dir) {
+        HILOGE("Invalid directory path: %{private}s", path.c_str());
+        return {};
+    }
+    struct dirent *ptr = nullptr;
+    while (!!(ptr = readdir(dir.get()))) {
+        // current dir OR parent dir
+        if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
+            continue;
+        } else if (ptr->d_type == DT_REG) {
+            struct stat sta = {};
+            string fileName = IncludeTrailingPathDelimiter(path) + string(ptr->d_name);
+            if (CheckOverLongPath(fileName) >= PATH_MAX_LEN || stat(fileName.data(), &sta) == -1) {
+                continue;
+            }
+            if (sta.st_size <= size) {
+                smallFiles.push_back(fileName);
+                continue;
+            }
+
+            bigFiles.push_back(fileName);
+            continue;
+        } else if (ptr->d_type != DT_DIR) {
+            HILOGE("Not support file type");
+            continue;
+        }
+        // DT_DIR type
+        auto [subBigFiles, subSmallFiles] =
+            GetUser0DirFilesDetail(IncludeTrailingPathDelimiter(path) + string(ptr->d_name), size);
+        bigFiles.insert(bigFiles.end(), subBigFiles.begin(), subBigFiles.end());
+        smallFiles.insert(smallFiles.end(), subSmallFiles.begin(), subSmallFiles.end());
+    }
+    HILOGI("bigfiles = %{public}zu, smallfiles = %{public}zu", bigFiles.size(), smallFiles.size());
+    return {bigFiles, smallFiles};
+}
+
+tuple<vector<string>, vector<string>> BDir::GetBackupList(const vector<string> &includes,
+                                                          const vector<string> &excludes)
+{
+    HILOGI("start get bigfiles and smallfiles");
+    set<string> inc = ExpandPathWildcard(includes, true);
+    vector<string> bigFiles;
+    vector<string> smallFiles;
+    for (const auto &item : inc) {
+        auto [bigFile, smallFile] = GetUser0DirFilesDetail(item, BConstants::BIG_FILE_BOUNDARY);
+        bigFiles.insert(bigFiles.end(), bigFile.begin(), bigFile.end());
+        smallFiles.insert(smallFiles.end(), smallFile.begin(), smallFile.end());
+    }
+    HILOGI("end bigfiles = %{public}zu, smallfiles = %{public}zu", bigFiles.size(), smallFiles.size());
+    auto isMatch = [](const vector<string> &s, const string &str) -> bool {
+        if (str.empty()) {
+            return false;
+        }
+        for (const string &item : s) {
+            if (item.empty()) {
+                continue;
+            }
+            string excludeItem = item;
+            if (excludeItem.at(item.size() - 1) == BConstants::FILE_SEPARATOR_CHAR) {
+                excludeItem += "*";
+            }
+            if (fnmatch(excludeItem.data(), str.data(), FNM_LEADING_DIR) == 0) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (auto item = bigFiles.begin(); item != bigFiles.end();) {
+        if (isMatch(excludes, *item)) {
+            item = bigFiles.erase(item);
+        } else {
+            ++item;
+        }
+    }
+    for (auto item = smallFiles.begin(); item != smallFiles.end();) {
+        if (isMatch(excludes, *item)) {
+            item = smallFiles.erase(item);
+        } else {
+            ++item;
+        }
+    }
+    HILOGI("End compare bigfiles = %{public}zu, smallfiles = %{public}zu", bigFiles.size(), smallFiles.size());
+    return {bigFiles, smallFiles};
 }
 
 vector<string> BDir::GetDirs(const vector<string_view> &paths)

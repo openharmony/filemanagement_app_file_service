@@ -76,4 +76,19 @@ string BundleMgrAdapter::GetExtName(string bundleName, int32_t userId)
 {
     return "BackupExtensionAbility";
 }
+
+bool BundleMgrAdapter::IsUser0BundleName(std::string bundleName, int32_t userId)
+{
+    return true;
+}
+
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppend(
+    const vector<BIncrementalData> &incrementalDataList, int32_t userId)
+{
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    bundleInfos.emplace_back(
+        BJsonEntityCaps::BundleInfo {"com.example.app2backup", 0, {}, {}, 0, 0, true, false,
+            "com.example.app2backup"});
+    return bundleInfos;
+}
 } // namespace OHOS::FileManagement::Backup

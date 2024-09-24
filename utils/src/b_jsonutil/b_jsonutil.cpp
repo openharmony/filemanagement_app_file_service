@@ -22,6 +22,7 @@
 #include "cJSON.h"
 
 #include "b_error/b_error.h"
+#include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
 #include "b_utils/b_time.h"
 
@@ -43,10 +44,14 @@ BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string
         return bundleDetailInfo;
     }
     std::string bundleName = bundleNameStr.substr(0, hasPos);
-    std::string indexStr = bundleNameStr.substr(hasPos + 1);
-    int index = std::stoi(indexStr);
+    if (to_string(bundleNameStr.back()) != BUNDLE_INDEX_SPLICE) {
+        std::string indexStr = bundleNameStr.substr(hasPos + 1);
+        int index = std::stoi(indexStr);
+        bundleDetailInfo.bundleIndex = index;
+    } else {
+        bundleDetailInfo.bundleIndex =  BUNDLE_INDEX_DEFAULT_VAL;
+    }
     bundleDetailInfo.bundleName = bundleName;
-    bundleDetailInfo.bundleIndex = index;
     HILOGI("End parse bundle name and index");
     return bundleDetailInfo;
 }
@@ -78,10 +83,14 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
             bundleNamesOnly.emplace_back(bundleName);
         } else {
             std::string bundleNameSplit = bundleName.substr(0, pos);
-            std::string indexSplit = bundleName.substr(pos + 1);
-            int index = std::stoi(indexSplit);
+            if (to_string(bundleName.back()) != BUNDLE_INDEX_SPLICE) {
+                std::string indexSplit = bundleName.substr(pos + 1);
+                int index = std::stoi(indexSplit);
+                bundleIndex = index;
+            } else {
+                bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
+            }
             bundleNameOnly = bundleNameSplit;
-            bundleIndex = index;
             bundleNamesOnly.emplace_back(bundleNameSplit);
         }
         std::string bundleInfo = bundleInfos[i];
@@ -90,7 +99,7 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
         bundleDetailInfo.bundleName = bundleNameOnly;
         bundleDetailInfo.bundleIndex = bundleIndex;
         bundleDetailInfo.userId = userId;
-        ParseBundleInfoJson(bundleInfo, bundleDetailInfos, bundleDetailInfo, isClearData);
+        ParseBundleInfoJson(bundleInfo, bundleDetailInfos, bundleDetailInfo, isClearData, userId);
         isClearDataFlags[bundleName] = isClearData;
         bundleNameDetailMap[bundleName] = bundleDetailInfos;
     }
@@ -98,10 +107,131 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
     return bundleNameDetailMap;
 }
 
-void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
-    BJsonUtil::BundleDetailInfo bundleDetailInfo, bool &isClearData)
+// 传递的bundleinfo不包含unicast字段时 需要拼接unicast字段
+static bool AddUnicastInfo(std::string &bundleInfo)
 {
     cJSON *root = cJSON_Parse(bundleInfo.c_str());
+    if (root == nullptr) {
+        HILOGE("Parse json error,root is null");
+        return false;
+    }
+    cJSON *info = cJSON_CreateObject();
+    if (info == nullptr) {
+        cJSON_Delete(root);
+        return false;
+    }
+    cJSON_AddStringToObject(info, "type", "unicast");
+    cJSON *details = cJSON_CreateArray();
+    if (details == nullptr) {
+        cJSON_Delete(root);
+        cJSON_Delete(info);
+        return false;
+    }
+    cJSON_AddItemToArray(details, {});
+    cJSON_AddItemToObject(info, "details", details);
+    cJSON *infos = cJSON_GetObjectItem(root, "infos");
+    if (infos == nullptr || !cJSON_IsArray(infos)) {
+        cJSON_Delete(root);
+        cJSON_Delete(info);
+        return false;
+    }
+    cJSON_AddItemToArray(infos, info);
+    char *jsonStr = cJSON_Print(root);
+    if (jsonStr == nullptr) {
+        cJSON_Delete(root);
+        return false;
+    }
+    bundleInfo = string(jsonStr);
+    cJSON_Delete(root);
+    free(jsonStr);
+    return true;
+}
+
+bool BJsonUtil::HasUnicastInfo(std::string &bundleInfo)
+{
+    cJSON *root = cJSON_Parse(bundleInfo.c_str());
+    if (root == nullptr) {
+        HILOGE("Parse json error,root is null");
+        return false;
+    }
+    cJSON *infos = cJSON_GetObjectItem(root, "infos");
+    if (infos == nullptr || !cJSON_IsArray(infos) || cJSON_GetArraySize(infos) == 0) {
+        HILOGE("Parse json error, infos is not array");
+        cJSON_Delete(root);
+        return false;
+    }
+    int infosCount = cJSON_GetArraySize(infos);
+    for (int i = 0; i < infosCount; i++) {
+        cJSON *infoItem = cJSON_GetArrayItem(infos, i);
+        if (!cJSON_IsObject(infoItem)) {
+            HILOGE("Parse json error, info item is not an object");
+            continue;
+        }
+        cJSON *type = cJSON_GetObjectItem(infoItem, "type");
+        if (type == nullptr || !cJSON_IsString(type) || (type->valuestring == nullptr)) {
+            HILOGE("Parse json type element error");
+            continue;
+        }
+        if (string(type->valuestring).compare(BConstants::UNICAST_TYPE) == 0) {
+            cJSON_Delete(root);
+            return true;
+        }
+    }
+    cJSON_Delete(root);
+    return false;
+}
+
+static void InsertBundleDetailInfo(cJSON *infos, int infosCount,
+                                   std::vector<BJsonUtil::BundleDetailInfo> &bundleDetails,
+                                   BJsonUtil::BundleDetailInfo bundleDetailInfo,
+                                   int32_t userId)
+{
+    for (int i = 0; i < infosCount; i++) {
+        cJSON *infoItem = cJSON_GetArrayItem(infos, i);
+        if (!cJSON_IsObject(infoItem)) {
+            HILOGE("Parse json error, info item is not an object");
+            return;
+        }
+        cJSON *type = cJSON_GetObjectItem(infoItem, "type");
+        if (type == nullptr || !cJSON_IsString(type) || (type->valuestring == nullptr)) {
+            HILOGE("Parse json type element error");
+            return;
+        }
+        bundleDetailInfo.type = type->valuestring;
+        cJSON *details = cJSON_GetObjectItem(infoItem, "details");
+        if (details == nullptr || !cJSON_IsArray(details)) {
+            HILOGE("Parse json details element error");
+            return;
+        }
+        if (bundleDetailInfo.type.compare(BConstants::UNICAST_TYPE) == 0) {
+            cJSON *detail = cJSON_CreateObject();
+            if (detail == nullptr) {
+                HILOGE("creat json error");
+                return;
+            }
+            const char *const zeroUserId = static_cast<const char *>(to_string(userId).c_str());
+            cJSON_AddStringToObject(detail, "type", "userId");
+            cJSON_AddStringToObject(detail, "detail", zeroUserId);
+            cJSON_AddItemToArray(details, detail);
+        }
+        char *detailInfos = cJSON_Print(details);
+        bundleDetailInfo.detail = std::string(detailInfos);
+        bundleDetails.emplace_back(bundleDetailInfo);
+        cJSON_free(detailInfos);
+    }
+}
+
+void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
+    BJsonUtil::BundleDetailInfo bundleDetailInfo, bool &isClearData, int32_t userId)
+{
+    string bundleInfoCopy = move(bundleInfo);
+    if (!HasUnicastInfo(bundleInfoCopy)) {
+        if (!AddUnicastInfo(bundleInfoCopy)) {
+            HILOGE("AddUnicastInfo failed");
+            return;
+        }
+    }
+    cJSON *root = cJSON_Parse(bundleInfoCopy.c_str());
     if (root == nullptr) {
         HILOGE("Parse json error,root is null");
         return;
@@ -121,31 +251,7 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<B
         return;
     }
     int infosCount = cJSON_GetArraySize(infos);
-    for (int i = 0; i < infosCount; i++) {
-        cJSON *infoItem = cJSON_GetArrayItem(infos, i);
-        if (!cJSON_IsObject(infoItem)) {
-            HILOGE("Parse json error, info item is not an object");
-            cJSON_Delete(root);
-            return;
-        }
-        cJSON *type = cJSON_GetObjectItem(infoItem, "type");
-        if (type == nullptr || !cJSON_IsString(type) || (type->valuestring == nullptr)) {
-            HILOGE("Parse json type element error");
-            cJSON_Delete(root);
-            return;
-        }
-        bundleDetailInfo.type = type->valuestring;
-        cJSON *details = cJSON_GetObjectItem(infoItem, "details");
-        if (details == nullptr || !cJSON_IsArray(details)) {
-            HILOGE("Parse json details element error");
-            cJSON_Delete(root);
-            return;
-        }
-        char *detailInfos = cJSON_Print(details);
-        bundleDetailInfo.detail = std::string(detailInfos);
-        bundleDetails.emplace_back(bundleDetailInfo);
-        cJSON_free(detailInfos);
-    }
+    InsertBundleDetailInfo(infos, infosCount, bundleDetails, bundleDetailInfo, userId);
     cJSON_Delete(root);
 }
 
@@ -267,5 +373,85 @@ bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessRetInfo(std::string 
     jsonStr = std::string(data);
     cJSON_Delete(info);
     cJSON_free(data);
+    return true;
+}
+
+bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessErrInfo(std::string &reportInfo, std::string path, int err)
+{
+    cJSON *info = cJSON_CreateObject();
+    if (info == nullptr) {
+        return false;
+    }
+    cJSON *item = cJSON_CreateObject();
+    if (item == nullptr) {
+        cJSON_Delete(info);
+        return false;
+    }
+    cJSON *errInfoJs = cJSON_CreateObject();
+    if (errInfoJs == nullptr) {
+        cJSON_Delete(info);
+        cJSON_Delete(item);
+        return false;
+    }
+    std::string errStr = std::to_string(err);
+    std::string timeInfo = std::to_string(TimeUtils::GetTimeS());
+    cJSON_AddStringToObject(errInfoJs, "errorCode", errStr.c_str());
+    cJSON_AddStringToObject(errInfoJs, "errorMessage", path.c_str());
+    cJSON_AddStringToObject(item, "timeInfo", timeInfo.c_str());
+    cJSON_AddItemToObject(item, "errorInfo", errInfoJs);
+    cJSON_AddItemToObject(info, "processResult", item);
+    char *data = cJSON_Print(info);
+    if (data == nullptr) {
+        cJSON_Delete(info);
+        return false;
+    }
+    reportInfo = std::string(data);
+    cJSON_Delete(info);
+    cJSON_free(data);
+    return true;
+}
+
+bool OHOS::FileManagement::Backup::BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
+{
+    cJSON *root = cJSON_CreateObject();
+    if (root == nullptr) {
+        return false;
+    }
+    cJSON *infos = cJSON_CreateArray();
+    if (infos == nullptr) {
+        cJSON_Delete(root);
+        return false;
+    }
+    cJSON_AddItemToObject(root, "infos", infos);
+    cJSON *info = cJSON_CreateObject();
+    if (info == nullptr) {
+        cJSON_Delete(root);
+        return false;
+    }
+    cJSON_AddStringToObject(info, "type", "unicast");
+    cJSON_AddItemToArray(infos, info);
+    cJSON *details = cJSON_CreateArray();
+    if (details == nullptr) {
+        cJSON_Delete(root);
+        return false;
+    }
+    cJSON_AddItemToObject(info, "details", details);
+    cJSON *detail = cJSON_CreateObject();
+    if (detail == nullptr) {
+        cJSON_Delete(root);
+        return false;
+    }
+    const char *const zeroUserId = static_cast<const char *>(to_string(userId).c_str());
+    cJSON_AddStringToObject(detail, "type", "userId");
+    cJSON_AddStringToObject(detail, "detail", zeroUserId);
+    cJSON_AddItemToArray(details, detail);
+    char *jsonStr = cJSON_Print(root);
+    if (jsonStr == nullptr) {
+        cJSON_Delete(root);
+        return false;
+    }
+    detailInfo = string(jsonStr);
+    cJSON_Delete(root);
+    free(jsonStr);
     return true;
 }

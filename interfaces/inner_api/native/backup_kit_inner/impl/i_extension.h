@@ -40,6 +40,7 @@ public:
     virtual std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() = 0;
     virtual ErrCode GetBackupInfo(std::string &result) = 0;
     virtual ErrCode UpdateFdSendRate(std::string &bundleName, int32_t sendRate) = 0;
+    virtual ErrCode User0OnBackup() = 0;
 };
 } // namespace OHOS::FileManagement::Backup
 

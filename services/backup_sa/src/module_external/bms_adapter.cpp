@@ -503,4 +503,32 @@ bool BundleMgrAdapter::GetCurBundleExtenionInfo(AppExecFwk::BundleInfo &installe
     HILOGI("bundleName:%{public}s, extensionInfos size:%{public}zu", bundleName.c_str(), extensionInfos.size());
     return true;
 }
+
+bool BundleMgrAdapter::IsUser0BundleName(std::string bundleName, int32_t userId)
+{
+    auto bms = GetBundleManager();
+    AppExecFwk::BundleInfo installedBundle;
+    if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
+        HILOGI("GetBundleInfo failed, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+    if (installedBundle.applicationInfo.singleton == true) {
+        HILOGI("bundleName:%{public}s is zero user bundle", bundleName.c_str());
+        return true;
+    }
+    HILOGI("bundleName:%{public}s is not zero user bundle", bundleName.c_str());
+    return false;
+}
+
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppend(const std::vector<BIncrementalData> &list,
+    int32_t userId)
+{
+    auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(list, userId);
+    for (auto const &info : list) {
+        if (SAUtils::IsSABundleName(info.bundleName)) {
+            GetBundleInfoForSA(info.bundleName, bundleInfos);
+        }
+    }
+    return bundleInfos;
+}
 } // namespace OHOS::FileManagement::Backup

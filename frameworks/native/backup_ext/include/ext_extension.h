@@ -58,6 +58,7 @@ public:
     void AsyncTaskRestoreForUpgrade(void);
     void ExtClear(void);
     void AsyncTaskIncrementalRestoreForUpgrade(void);
+    ErrCode User0OnBackup() override;
 
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
@@ -68,12 +69,17 @@ public:
         }
         bundleName_ = bundleName;
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        onProcessTaskPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         SetStagingPathProperties();
     }
     ~BackupExtExtension()
     {
         onProcessTimeoutTimer_.Shutdown();
         threadPool_.Stop();
+        onProcessTaskPool_.Stop();
+        if (callJsOnProcessThread_.joinable()) {
+            callJsOnProcessThread_.join();
+        }
     }
 
 private:
@@ -157,6 +163,14 @@ private:
     void AsyncTaskIncreRestoreSpecialVersion();
 
     void AsyncTaskOnBackup();
+
+    bool IfAllowToBackupRestore();
+
+    void AsyncTaskUser0Backup();
+
+    void DoUser0Backup(const BJsonEntityExtensionConfig &usrConfig);
+
+    int User0DoBackup(const BJsonEntityExtensionConfig &usrConfig);
 
     int DoIncrementalBackup(const std::vector<struct ReportFileInfo> &allFiles,
                             const std::vector<struct ReportFileInfo> &smallFiles,
@@ -245,6 +259,7 @@ private:
     void DeleteBackupIncrementalTars();
     void DeleteBackupTars();
     void SetClearDataFlag(bool isClearData);
+    std::string GetBundlePath();
     std::vector<ExtManageInfo> GetExtManageInfo();
     ErrCode RestoreFilesForSpecialCloneCloud();
     void RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo &item);
@@ -255,7 +270,7 @@ private:
     void DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
         const std::tuple<int, EndFileInfo, ErrFileInfo> &result);
 
-    void StartOnProcessTaskThread(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
+    ErrCode StartOnProcessTaskThread(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void FinishOnProcessTask();
     void ExecCallOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
     void AsyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
@@ -265,6 +280,9 @@ private:
     void UpdateOnStartTime();
     int32_t GetOnStartTimeCost();
     bool SetStagingPathProperties();
+
+    std::function<void(std::string, int)> ReportErrFileByProc(wptr<BackupExtExtension> obj,
+        BackupRestoreScenario scenario);
 
 private:
     std::shared_mutex lock_;
@@ -279,7 +297,7 @@ private:
     std::string bundleName_;
     int32_t sendRate_ = BConstants::DEFAULT_FD_SEND_RATE;
     bool isClearData_ {true};
-    bool isDebug_ {false};
+    bool isDebug_ {true};
     std::map<std::string, off_t> endFileInfos_;
     std::map<std::string, std::vector<ErrCode>> errFileInfos_;
     bool isRpValid_ {false};
@@ -287,7 +305,7 @@ private:
     std::thread callJsOnProcessThread_;
     Utils::Timer onProcessTimeoutTimer_ {"onProcessTimeoutTimer_"};
     uint32_t onProcessTimeoutTimerId_ { 0 };
-    std::atomic<int> onProcessTimeoutCnt_;
+    std::atomic<int> onProcessTimeoutCnt_ { 0 };
     std::atomic<bool> stopCallJsOnProcess_ {false};
     std::condition_variable execOnProcessCon_;
     std::mutex onProcessLock_;
@@ -295,6 +313,11 @@ private:
     std::chrono::time_point<std::chrono::system_clock> g_onStart;
     std::mutex onStartTimeLock_;
     AppRadar::DoRestoreInfo radarRestoreInfo_ { 0 };
+    OHOS::ThreadPool onProcessTaskPool_;
+    std::atomic<bool> isFirstCallOnProcess_ { false };
+    std::atomic<bool> isExecAppDone_ { false };
+
+    BackupRestoreScenario curScenario_ { BackupRestoreScenario::FULL_BACKUP };
 };
 } // namespace OHOS::FileManagement::Backup
 

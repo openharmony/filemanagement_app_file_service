@@ -60,7 +60,7 @@ template <typename T> bool ConnectExtAbility()
     }
 
     auto appGalleryBundleName = BundleMgrAdapter::GetAppGalleryBundleName();
-    if (!appGalleryBundleName.c_str()) {
+    if (appGalleryBundleName.empty()) {
         HILOGI("ConnectExtAbility GetAppGalleryBundleName failed");
         return false;
     }

@@ -86,10 +86,11 @@ constexpr int32_t PARAM_STARING_MAX_MEMORY = 2 * 1024 * 1024;
 constexpr uint32_t H2MS = 60 * 60 * 1000;
 constexpr uint32_t MAX_UPDATE_TIMER = 4 * H2MS;
 constexpr uint32_t DEFAULT_TIMEOUT = 15 * 60 * 1000;
-constexpr uint32_t TIMEOUT_NOW = 0;
+constexpr uint32_t TIMEOUT_INVALID = UINT32_MAX;
 
 constexpr int CALL_APP_ON_PROCESS_TIME_INTERVAL = 5; // 框架每隔5s去调用应用的onProcess
 constexpr int APP_ON_PROCESS_MAX_TIMEOUT = 1000; // 应用的onProcess接口最大超时时间为1秒
+constexpr int FIRST_CALL_APP_ON_PROCESS_MAX_TIMEOUT = 15000; // 首次调用应用的onProcess接口最大超时时间为15秒
 constexpr int APP_ON_PROCESS_TIMEOUT_MAX_COUNT = 3; // 应用的onProcess接口超时的上限次数
 
 // backup.para内配置项的名称，该配置项值为true时可在不更新hap包的情况下，可以读取包管理元数据配置文件的内容
@@ -219,6 +220,9 @@ static inline std::string MANIFEST_FD = "manifestFd";
 static inline std::string LAST_INCREMENTAL_TIME = "lastIncrementalTime";
 static inline std::string PARAMETERS = "parameters";
 static inline std::string PRIORITY = "priority";
+
+// unicast
+const std::string UNICAST_TYPE = "unicast";
 
 // 雷达打点引用到的常量
 constexpr int32_t MS_1000 = 1000;

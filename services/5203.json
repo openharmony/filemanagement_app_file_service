@@ -11,7 +11,7 @@
             "start-on-demand": {
                 "commonevent": [
                     {
-                        "name": "usual.event.BOOT_COMPLETED",
+                        "name": "usual.event.USER_UNLOCKED",
                         "conditions": [
                             {
                                 "eventId": "param",
