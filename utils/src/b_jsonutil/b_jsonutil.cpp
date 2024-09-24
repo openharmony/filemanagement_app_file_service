@@ -348,9 +348,8 @@ bool BJsonUtil::BuildExtensionErrInfo(std::string &jsonStr, std::map<std::string
     cJSON_free(data);
     return true;
 }
-}
 
-bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet)
+bool BJsonUtil::BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet)
 {
     cJSON *info = cJSON_CreateObject();
     if (info == nullptr) {
@@ -376,7 +375,7 @@ bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessRetInfo(std::string 
     return true;
 }
 
-bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessErrInfo(std::string &reportInfo, std::string path, int err)
+bool BJsonUtil::BuildOnProcessErrInfo(std::string &reportInfo, std::string path, int err)
 {
     cJSON *info = cJSON_CreateObject();
     if (info == nullptr) {
@@ -411,7 +410,7 @@ bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessErrInfo(std::string 
     return true;
 }
 
-bool OHOS::FileManagement::Backup::BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
+bool BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
 {
     cJSON *root = cJSON_CreateObject();
     if (root == nullptr) {
@@ -454,4 +453,5 @@ bool OHOS::FileManagement::Backup::BJsonUtil::BuildBundleInfoJson(int32_t userId
     cJSON_Delete(root);
     free(jsonStr);
     return true;
+}
 }
