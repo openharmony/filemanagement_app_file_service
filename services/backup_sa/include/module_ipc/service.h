@@ -272,6 +272,7 @@ public:
         session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(this)));
         disposal_ = make_shared<BJsonDisposalConfig>();
         clearRecorder_ = make_shared<BJsonClearDataConfig>();
+        sched_ = sptr(new SchedScheduler(wptr(this), wptr(session_)));
     };
     ~Service() override
     {
@@ -376,7 +377,7 @@ private:
         std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType);
 
     void SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info, std::map<std::string, bool> &isClearDataFlags);
-    
+
     /**
      * @brief add useridinfo to  current backup session
      *

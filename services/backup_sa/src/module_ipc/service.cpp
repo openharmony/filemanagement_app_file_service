@@ -126,8 +126,9 @@ void Service::OnStart()
         HILOGI("SA OnStart, cleaning up backup data");
     }
     bool res = SystemAbility::Publish(sptr(this));
-    sched_ = sptr(new SchedScheduler(wptr(this), wptr(session_)));
-    sched_->StartTimer();
+    if (sched_ != nullptr) {
+        sched_->StartTimer();
+    }
     ClearDisposalOnSaStart();
     auto ret = AppendBundlesClearSession(residualBundleNameList);
     if (isOccupyingSession_.load() && ret) {
@@ -649,6 +650,7 @@ vector<BIncrementalData> Service::MakeDetailList(const vector<BundleName> &bundl
     }
     return bundleDetails;
 }
+
 ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -662,8 +664,9 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
         auto bundleDetails = MakeDetailList(bundleNames);
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundleDetails, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
-        SetCurrentBackupSessProperties(bundleNames, session_->GetSessionUserId());
         for (auto info : backupInfos) {
+            HILOGI("Current backupInfo bundleName:%{public}s, extName:%{public}s", info.name.c_str(),
+                info.extensionName.c_str());
             session_->SetBundleDataSize(info.name, info.spaceOccupied);
             session_->SetBackupExtName(info.name, info.extensionName);
             if (info.allToBackup == false) {
@@ -672,23 +675,24 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
                 session_->RemoveExtInfo(info.name);
             }
         }
+        SetCurrentBackupSessProperties(bundleNames, session_->GetSessionUserId());
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        HILOGE("Failed, errCode = %{public}d", e.GetCode());
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        HILOGE("Failed, errCode = %{public}d", e.GetCode());
         return e.GetCode();
     } catch (const exception &e) {
+        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
         return EPERM;
     } catch (...) {
+        HILOGE("Unexpected exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        HILOGE("Unexpected exception");
         return EPERM;
     }
 }
