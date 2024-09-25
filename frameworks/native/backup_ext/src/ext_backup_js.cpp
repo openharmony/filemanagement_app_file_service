@@ -105,7 +105,7 @@ static napi_status DealNapiException(napi_env env, napi_value &exception, std::s
 
 static napi_value PromiseCallback(napi_env env, napi_callback_info info)
 {
-    std::lock_guard<std::mutex> lock(g_extBackupValidLock);
+    std::lock_guard<std::mutex> lock(extBackupValidLock_);
     if (!isExtBackupValid_) {
         HILOGE("ExtBackup is invalid");
         return nullptr;
@@ -204,7 +204,7 @@ static napi_value PromiseCatchCallbackEx(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::lock_guard<std::mutex> lock(extBackupValidLock_);
-    if (!g_isExtBackupValid) {
+    if (!isExtBackupValid_) {
         HILOGE("ExtBackup is invalid");
         data = nullptr;
         return nullptr;
