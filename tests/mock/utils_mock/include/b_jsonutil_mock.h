@@ -28,11 +28,16 @@ public:
         const std::vector<std::string>&, const std::vector<std::string>&, std::vector<std::string>&, int32_t,
         std::map<std::string, bool>&) = 0;
     virtual void ParseBundleInfoJson(const std::string&, std::vector<BJsonUtil::BundleDetailInfo>&,
-        BJsonUtil::BundleDetailInfo, bool&) = 0;
+        BJsonUtil::BundleDetailInfo, bool&, int32_t) = 0;
     virtual bool FindBundleInfoByName(std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>>&, std::string&,
         const std::string&, BJsonUtil::BundleDetailInfo&) = 0;
-    virtual bool BuildRestoreErrInfo(std::string&, int, std::string) = 0;
+    virtual bool BuildExtensionErrInfo(std::string&, int, std::string) = 0;
     virtual std::string BuildBundleNameIndexInfo(const std::string&, int) = 0;
+    virtual bool BuildExtensionErrInfo(std::string&, std::map<std::string, std::vector<int>>) = 0;
+    virtual bool BuildOnProcessRetInfo(std::string&, std::string) = 0;
+    virtual bool BuildOnProcessErrInfo(std::string&, std::string, int) = 0;
+    virtual bool BuildBundleInfoJson(int32_t, std::string&) = 0;
+    virtual bool HasUnicastInfo(std::string&) = 0;
 public:
     BBJsonUtil() = default;
     virtual ~BBJsonUtil() = default;
@@ -47,11 +52,16 @@ public:
         ((const std::vector<std::string>&), (const std::vector<std::string>&), (std::vector<std::string>&), int32_t,
         (std::map<std::string, bool>&)));
     MOCK_METHOD(void, ParseBundleInfoJson, (const std::string&, (std::vector<BJsonUtil::BundleDetailInfo>&),
-        BJsonUtil::BundleDetailInfo, bool&));
+        BJsonUtil::BundleDetailInfo, bool&, int32_t));
     MOCK_METHOD(bool, FindBundleInfoByName, ((std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>>&),
         std::string&, const std::string&, BJsonUtil::BundleDetailInfo&));
-    MOCK_METHOD(bool, BuildRestoreErrInfo, (std::string&, int, std::string));
+    MOCK_METHOD(bool, BuildExtensionErrInfo, (std::string&, int, std::string));
     MOCK_METHOD(std::string, BuildBundleNameIndexInfo, (const std::string&, int));
+    MOCK_METHOD(bool, BuildExtensionErrInfo, (std::string&, (std::map<std::string, std::vector<int>>)));
+    MOCK_METHOD(bool, BuildOnProcessRetInfo, (std::string&, std::string));
+    MOCK_METHOD(bool, BuildOnProcessErrInfo, (std::string&, std::string, int));
+    MOCK_METHOD(bool, BuildBundleInfoJson, (int32_t, std::string&));
+    MOCK_METHOD(bool, HasUnicastInfo, (std::string&));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_B_JSONUTIL_MOCK_MOCK_H
