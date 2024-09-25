@@ -605,4 +605,441 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_PublishSAIncrementalFile
     }
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_PublishSAIncrementalFile_0000";
 }
+
+/**
+ * @tc.number: SUB_ServiceIncremental_AppIncrementalFileReady_0000
+ * @tc.name: SUB_ServiceIncremental_AppIncrementalFileReady_0000
+ * @tc.desc: 测试 AppIncrementalFileReady 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_AppIncrementalFileReady_0000";
+    try {
+        string fileName;
+        int32_t errCode = 0;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnFileReady(_, _, _, _, _)).WillOnce(Return());
+        auto ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return());
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
+        ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        fileName = BConstants::EXT_BACKUP_MANAGE;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, OnBundleExtManageInfo(_, _)).WillOnce(Return(UniqueFd(-1)));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return());
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
+        ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by AppIncrementalFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_AppIncrementalFileReady_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_AppIncrementalFileReady_0100
+ * @tc.name: SUB_ServiceIncremental_AppIncrementalFileReady_0100
+ * @tc.desc: 测试 AppIncrementalFileReady 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_AppIncrementalFileReady_0100";
+    try {
+        string fileName;
+        int32_t errCode = 0;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return());
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
+        auto ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy)).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return());
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnBundleFinished(_, _)).WillOnce(Return());
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by AppIncrementalFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_AppIncrementalFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_AppIncrementalDone_0000
+ * @tc.name: SUB_ServiceIncremental_AppIncrementalDone_0000
+ * @tc.desc: 测试 AppIncrementalDone 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalDone_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_AppIncrementalDone_0000";
+    try {
+        int32_t errCode = BError(BError::Codes::OK).GetCode();
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        auto ret = service->AppIncrementalDone(errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = session_;
+
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
+        ret = service->AppIncrementalDone(errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        ret = service->AppIncrementalDone(errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        errCode = BError(BError::Codes::SA_INVAL_ARG).GetCode();
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        ret = service->AppIncrementalDone(errCode);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by AppIncrementalDone.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_AppIncrementalDone_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_GetIncrementalFileHandle_0000
+ * @tc.name: SUB_ServiceIncremental_GetIncrementalFileHandle_0000
+ * @tc.desc: 测试 GetIncrementalFileHandle 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetIncrementalFileHandle_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_GetIncrementalFileHandle_0000";
+    try {
+        string bundleName;
+        string fileName;
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::RUNNING));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        auto ret = service->GetIncrementalFileHandle(bundleName, fileName);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = session_;
+
+        EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::RUNNING));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
+        ret = service->GetIncrementalFileHandle(bundleName, fileName);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::RUNNING));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_)).WillOnce(Return(0));
+        ret = service->GetIncrementalFileHandle(bundleName, fileName);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::RUNNING));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_)).WillOnce(Return(1));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        ret = service->GetIncrementalFileHandle(bundleName, fileName);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::WAIT));
+        ret = service->GetIncrementalFileHandle(bundleName, fileName);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by GetIncrementalFileHandle.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_GetIncrementalFileHandle_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_IncrementalBackup_0000
+ * @tc.name: SUB_ServiceIncremental_IncrementalBackup_0000
+ * @tc.desc: 测试 IncrementalBackup 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_IncrementalBackup_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_IncrementalBackup_0000";
+    try {
+        string bundleName;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        EXPECT_THROW(service->IncrementalBackup(bundleName), BError);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
+        EXPECT_THROW(service->IncrementalBackup(bundleName), BError);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        auto ret = service->IncrementalBackup(bundleName);
+        EXPECT_FALSE(ret);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*session, GetIsIncrementalBackup()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetClearDataFlag(_)).WillOnce(Return(false));
+        EXPECT_CALL(*svcProxy, IncrementalOnBackup(_)).WillOnce(Return(0));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnBundleStarted(_, _)).WillOnce(Return());
+        ret = service->IncrementalBackup(bundleName);
+        EXPECT_TRUE(ret);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*session, GetIsIncrementalBackup()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetClearDataFlag(_)).WillOnce(Return(false));
+        EXPECT_CALL(*svcProxy, IncrementalOnBackup(_)).WillOnce(Return(1));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnBundleStarted(_, _)).WillOnce(Return());
+        ret = service->IncrementalBackup(bundleName);
+        EXPECT_TRUE(ret);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*session, GetIsIncrementalBackup()).WillOnce(Return(false));
+        ret = service->IncrementalBackup(bundleName);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by IncrementalBackup.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_IncrementalBackup_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_IncrementalBackup_0100
+ * @tc.name: SUB_ServiceIncremental_IncrementalBackup_0100
+ * @tc.desc: 测试 IncrementalBackup 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_IncrementalBackup_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_IncrementalBackup_0100";
+    try {
+        string bundleName;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(false));
+        auto ret = service->IncrementalBackup(bundleName);
+        EXPECT_FALSE(ret);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(true));
+        EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(false));
+        ret = service->IncrementalBackup(bundleName);
+        EXPECT_FALSE(ret);
+
+        set<string> fileNameVec { "fileName" };
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(true));
+        EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetClearDataFlag(_)).WillOnce(Return(false));
+        EXPECT_CALL(*svcProxy, HandleRestore(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnBundleStarted(_, _)).WillOnce(Return());
+        EXPECT_CALL(*session, GetExtFileNameRequest(_)).WillOnce(Return(fileNameVec));
+        EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        ret = service->IncrementalBackup(bundleName);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by IncrementalBackup.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_IncrementalBackup_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_IncrementalBackup_0200
+ * @tc.name: SUB_ServiceIncremental_IncrementalBackup_0200
+ * @tc.desc: 测试 IncrementalBackup 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_IncrementalBackup_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_IncrementalBackup_0200";
+    try {
+        string bundleName;
+        set<string> fileNameVec { "fileName" };
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(true));
+        EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetClearDataFlag(_)).WillOnce(Return(false));
+        EXPECT_CALL(*svcProxy, HandleRestore(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnBundleStarted(_, _)).WillOnce(Return());
+        EXPECT_CALL(*session, GetExtFileNameRequest(_)).WillOnce(Return(fileNameVec));
+        EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_))
+            .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        auto ret = service->IncrementalBackup(bundleName);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by IncrementalBackup.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_IncrementalBackup_0200";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_NotifyCallerCurAppIncrementDone_0000
+ * @tc.name: SUB_ServiceIncremental_NotifyCallerCurAppIncrementDone_0000
+ * @tc.desc: 测试 NotifyCallerCurAppIncrementDone 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_NotifyCallerCurAppIncrementDone_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_NotifyCallerCurAppIncrementDone_0000";
+    try {
+        ErrCode errCode = 0;
+        string callerName;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        service->NotifyCallerCurAppIncrementDone(errCode, callerName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnBundleFinished(_, _)).WillOnce(Return());
+        service->NotifyCallerCurAppIncrementDone(errCode, callerName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnBundleFinished(_, _)).WillOnce(Return());
+        service->NotifyCallerCurAppIncrementDone(errCode, callerName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by NotifyCallerCurAppIncrementDone.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_NotifyCallerCurAppIncrementDone_0200";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_SendUserIdToApp_0000
+ * @tc.name: SUB_ServiceIncremental_SendUserIdToApp_0000
+ * @tc.desc: 测试 SendUserIdToApp 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_SendUserIdToApp_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_SendUserIdToApp_0000";
+    try {
+        string bundleName;
+        int32_t userId = 100;
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        service->SendUserIdToApp(bundleName, userId);
+        service->session_ = session_;
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*jsonUtil, BuildBundleInfoJson(_, _)).WillOnce(Return(false));
+        service->SendUserIdToApp(bundleName, userId);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*jsonUtil, BuildBundleInfoJson(_, _)).WillOnce(Return(true));
+        service->SendUserIdToApp(bundleName, userId);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by SendUserIdToApp.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_SendUserIdToApp_0200";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_SetCurrentBackupSessProperties_0000
+ * @tc.name: SUB_ServiceIncremental_SetCurrentBackupSessProperties_0000
+ * @tc.desc: 测试 SetCurrentBackupSessProperties 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_SetCurrentBackupSessProperties_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_SetCurrentBackupSessProperties_0000";
+    try {
+        vector<string> bundleNames { "bundleName" };
+        int32_t userId = 100;
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        EXPECT_CALL(*bms, IsUser0BundleName(_, _)).WillOnce(Return(false));
+        service->SetCurrentBackupSessProperties(bundleNames, userId);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*bms, IsUser0BundleName(_, _)).WillOnce(Return(true));
+        service->SetCurrentBackupSessProperties(bundleNames, userId);
+        EXPECT_TRUE(true);
+        service->session_ = session_;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by SetCurrentBackupSessProperties.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_SetCurrentBackupSessProperties_0200";
+}
 }

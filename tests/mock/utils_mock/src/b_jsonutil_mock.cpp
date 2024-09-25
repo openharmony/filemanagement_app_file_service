@@ -32,9 +32,9 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
 }
 
 void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
-    BJsonUtil::BundleDetailInfo bundleDetailInfo, bool &isClearData)
+    BJsonUtil::BundleDetailInfo bundleDetailInfo, bool &isClearData, int32_t userId)
 {
-    BBJsonUtil::jsonUtil->ParseBundleInfoJson(bundleInfo, bundleDetails, bundleDetailInfo, isClearData);
+    BBJsonUtil::jsonUtil->ParseBundleInfoJson(bundleInfo, bundleDetails, bundleDetailInfo, isClearData, userId);
 }
 
 bool BJsonUtil::FindBundleInfoByName(std::map<std::string, std::vector<BundleDetailInfo>> &bundleNameDetailsMap,
@@ -43,13 +43,33 @@ bool BJsonUtil::FindBundleInfoByName(std::map<std::string, std::vector<BundleDet
     return BBJsonUtil::jsonUtil->FindBundleInfoByName(bundleNameDetailsMap, bundleName, jobType, bundleDetail);
 }
 
-bool BJsonUtil::BuildRestoreErrInfo(std::string &jsonStr, int errCode, std::string errMsg)
+bool BJsonUtil::BuildExtensionErrInfo(std::string &jsonStr, int errCode, std::string errMsg)
 {
-    return BBJsonUtil::jsonUtil->BuildRestoreErrInfo(jsonStr, errCode, errMsg);
+    return BBJsonUtil::jsonUtil->BuildExtensionErrInfo(jsonStr, errCode, errMsg);
 }
 
 std::string BJsonUtil::BuildBundleNameIndexInfo(const std::string &bundleName, int appIndex)
 {
     return BBJsonUtil::jsonUtil->BuildBundleNameIndexInfo(bundleName, appIndex);
+}
+
+bool BJsonUtil::BuildExtensionErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo)
+{
+    return BBJsonUtil::jsonUtil->BuildExtensionErrInfo(jsonStr, errFileInfo);
+}
+
+bool BJsonUtil::BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet)
+{
+    return BBJsonUtil::jsonUtil->BuildOnProcessRetInfo(jsonStr, onProcessRet);
+}
+
+bool BJsonUtil::BuildOnProcessErrInfo(std::string &reportInfo, std::string path, int err)
+{
+    return BBJsonUtil::jsonUtil->BuildOnProcessErrInfo(reportInfo, path, err);
+}
+
+bool BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
+{
+    return BBJsonUtil::jsonUtil->BuildBundleInfoJson(userId, detailInfo);
 }
 }

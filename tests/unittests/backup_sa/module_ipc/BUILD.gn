@@ -411,6 +411,7 @@ ohos_unittest("backup_service_incremental_test") {
     "${path_backup_mock}/module_ipc/src/svc_backup_connection_mock.cpp",
     "${path_backup_mock}/module_ipc/src/svc_session_manager_mock.cpp",
     "${path_backup_mock}/module_sched/sched_scheduler_mock.cpp",
+    "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
     "${path_backup_mock}/utils_mock/src/backup_para_mock.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_incremental_proxy.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_proxy.cpp",
