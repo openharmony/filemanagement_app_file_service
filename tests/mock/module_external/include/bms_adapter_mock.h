@@ -35,6 +35,7 @@ public:
     virtual bool IsUser0BundleName(std::string, int32_t) = 0;
     virtual std::vector<BJsonEntityCaps::BundleInfo>
         GetBundleInfosForAppend(const std::vector<BIncrementalData>&, int32_t) = 0;
+    virtual std::vector<BJsonEntityCaps::BundleInfo> GetFullBundleInfos(int32_t) = 0;
 public:
     BBundleMgrAdapter() = default;
     virtual ~BBundleMgrAdapter() = default;
@@ -57,6 +58,7 @@ public:
     MOCK_METHOD(bool, IsUser0BundleName, (std::string, int32_t));
     MOCK_METHOD((std::vector<BJsonEntityCaps::BundleInfo>), GetBundleInfosForAppend,
         ((const std::vector<BIncrementalData>&), int32_t));
+    MOCK_METHOD((std::vector<BJsonEntityCaps::BundleInfo>), GetFullBundleInfos, (int32_t));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_BMS_ADAPTER_MOCK_H

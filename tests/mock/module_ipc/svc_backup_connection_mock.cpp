@@ -81,4 +81,9 @@ sptr<IExtension> SvcBackupConnection::GetBackupExtProxy()
 {
     return backupProxy_;
 }
+
+bool SvcBackupConnection::WaitDisconnectDone()
+{
+    return BSvcBackupConnection::connect->WaitDisconnectDone();
+}
 } // namespace OHOS::FileManagement::Backup

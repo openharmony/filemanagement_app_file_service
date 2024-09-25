@@ -54,6 +54,10 @@ public:
     virtual int32_t GetMemParaCurSize() = 0;
     virtual bool ValidRestoreDataType(RestoreTypeEnum) = 0;
     virtual bool GetClearDataFlag(const std::string&) = 0;
+    virtual bool CleanAndCheckIfNeedWait(ErrCode &, std::vector<std::string> &) = 0;
+    virtual ErrCode ClearSessionData() = 0;
+    virtual int GetSessionCnt() = 0;
+    virtual SvcSessionManager::Impl GetImpl() = 0;
 public:
     BSvcSessionManager() = default;
     virtual ~BSvcSessionManager() = default;
@@ -94,6 +98,10 @@ public:
     MOCK_METHOD(int32_t, GetMemParaCurSize, ());
     MOCK_METHOD(bool, ValidRestoreDataType, (RestoreTypeEnum));
     MOCK_METHOD(bool, GetClearDataFlag, (const std::string&));
+    MOCK_METHOD(bool, CleanAndCheckIfNeedWait, (ErrCode &, std::vector<std::string> &));
+    MOCK_METHOD(ErrCode, ClearSessionData, ());
+    MOCK_METHOD(int, GetSessionCnt, ());
+    MOCK_METHOD(SvcSessionManager::Impl, GetImpl, ());
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_SVC_SESSION_MANAGER_MOCK_H

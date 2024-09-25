@@ -458,11 +458,76 @@ ohos_unittest("backup_service_incremental_test") {
   use_exceptions = true
 }
 
+ohos_unittest("backup_service_other_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup_mock}/accesstoken/accesstoken_kit_mock.cpp",
+    "${path_backup_mock}/module_external/bms_adapter_mock.cpp",
+    "${path_backup_mock}/module_external/src/sms_adapter_mock.cpp",
+    "${path_backup_mock}/module_ipc/app_gallery_dispose_proxy_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/ipc_skeleton_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/sa_backup_connection_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/service_stub_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/svc_backup_connection_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/svc_session_manager_mock.cpp",
+    "${path_backup_mock}/module_sched/sched_scheduler_mock.cpp",
+    "${path_backup_mock}/utils_mock/src/backup_para_mock.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_incremental_proxy.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_proxy.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
+    "service_other_test.cpp",
+  ]
+
+  include_dirs = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/services/backup_sa/include",
+    "${path_backup}/services/backup_sa/include/module_ipc",
+    "${path_backup}/services/backup_sa/src/module_ipc",
+    "${path_backup}/tests/unittests/backup_api/backup_impl/include",
+    "${path_backup}/tests/utils/include/",
+    "${path_backup_mock}/module_external/include",
+    "${path_backup_mock}/module_ipc/include",
+    "${path_backup_mock}/utils_mock/include",
+    "${path_access_token}/interfaces/innerkits/accesstoken/include",
+  ]
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+    "${path_googletest}:gmock_main",
+    "${path_jsoncpp}:jsoncpp",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_manager",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
+  ]
+
+  defines = [ "private=public" ]
+  use_exceptions = true
+}
+
 group("backup_sa_ipc_test") {
   testonly = true
   deps = [
     ":backup_restore_deps_manager_test",
     ":backup_service_incremental_test",
+    ":backup_service_other_test",
     ":backup_service_scheduler_test",
     ":backup_service_session_test",
     ":backup_service_test",
