@@ -233,4 +233,24 @@ void SvcSessionManager::IncreaseSessionCnt(const std::string) {}
 void SvcSessionManager::DecreaseSessionCnt(const std::string) {}
 
 void SvcSessionManager::SetPublishFlag(const std::string&) {}
+
+bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList)
+{
+    return BSvcSessionManager::sessionManager->CleanAndCheckIfNeedWait(ret, bundleNameList);
+}
+
+ErrCode SvcSessionManager::ClearSessionData()
+{
+    return BSvcSessionManager::sessionManager->ClearSessionData();
+}
+
+int SvcSessionManager::GetSessionCnt()
+{
+    return BSvcSessionManager::sessionManager->GetSessionCnt();
+}
+
+SvcSessionManager::Impl SvcSessionManager::GetImpl()
+{
+    return BSvcSessionManager::sessionManager->GetImpl();
+}
 } // namespace OHOS::FileManagement::Backup
