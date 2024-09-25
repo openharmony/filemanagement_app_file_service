@@ -77,6 +77,18 @@ FileManagement_ErrCode OH_FileUri_GetFullDirectoryUri(const char *uri, unsigned 
  * @since 12
  */
 bool OH_FileUri_IsValidUri(const char *uri, unsigned int length);
+
+/**
+* @brief Gets the fileName From uri.
+*
+* @param uri Input a pointer to the uri string.
+* @param length  The length of the input uri.
+* @param result Output a pointer to a FileName string or FolderName string. Please use free() to clear the resource.
+* @return Returns the status code of the execution.
+* @syscap SystemCapability.FileManagement.AppFileService
+* @since 13
+ */
+FileManagement_ErrCode OH_FileUri_GetFileName(const char *uri, unsigned int length, char **result);
 #ifdef __cplusplus
 };
 #endif

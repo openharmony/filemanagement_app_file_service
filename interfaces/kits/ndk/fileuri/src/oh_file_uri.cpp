@@ -90,3 +90,18 @@ bool OH_FileUri_IsValidUri(const char *uri, unsigned int length)
     OHOS::AppFileService::ModuleFileUri::FileUri fileUri(uriStr);
     return fileUri.CheckUriFormat(uriStr);
 }
+
+FileManagement_ErrCode OH_FileUri_GetFileName(const char *uri, unsigned int length, char **result)
+{
+    if (uri == nullptr || strlen(uri) != length || result == nullptr) {
+        return ERR_PARAMS;
+    }
+    std::string uriStr(uri, length);
+    OHOS::AppFileService::ModuleFileUri::FileUri fileUri(uriStr);
+    std::string resultStr = fileUri.GetName();
+    size_t count = resultStr.length();
+    if (count == 0) {
+        return ERR_PARAMS;
+    }
+    return GetValue(resultStr, result);
+}
