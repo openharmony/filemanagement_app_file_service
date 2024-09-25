@@ -47,7 +47,7 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 constexpr size_t ARGC_ONE = 1;
 static std::mutex extBackupValidLock_;
-static bool isExtBackupValid_ = true;
+static bool g_isExtBackupValid = true;
 
 static string GetSrcPath(const AppExecFwk::AbilityInfo &info)
 {
@@ -106,7 +106,7 @@ static napi_status DealNapiException(napi_env env, napi_value &exception, std::s
 static napi_value PromiseCallback(napi_env env, napi_callback_info info)
 {
     std::lock_guard<std::mutex> lock(extBackupValidLock_);
-    if (!isExtBackupValid_) {
+    if (!g_isExtBackupValid) {
         HILOGE("ExtBackup is invalid");
         return nullptr;
     }
@@ -148,7 +148,7 @@ static napi_value PromiseCatchCallback(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::lock_guard<std::mutex> lock(extBackupValidLock_);
-    if (!isExtBackupValid_) {
+    if (!g_isExtBackupValid) {
         HILOGE("ExtBackup is invalid");
         data = nullptr;
         return nullptr;
@@ -162,7 +162,7 @@ static napi_value PromiseCatchCallback(napi_env env, napi_callback_info info)
 static napi_value PromiseCallbackEx(napi_env env, napi_callback_info info)
 {
     std::lock_guard<std::mutex> lock(extBackupValidLock_);
-    if (!isExtBackupValid_) {
+    if (!g_isExtBackupValid) {
         HILOGE("ExtBackup is invalid");
         return nullptr;
     }
@@ -204,7 +204,7 @@ static napi_value PromiseCatchCallbackEx(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::lock_guard<std::mutex> lock(extBackupValidLock_);
-    if (!isExtBackupValid_) {
+    if (!g_isExtBackupValid) {
         HILOGE("ExtBackup is invalid");
         data = nullptr;
         return nullptr;
@@ -448,7 +448,7 @@ napi_value AttachBackupExtensionContext(napi_env env, void *value, void *)
 
 ExtBackupJs::ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime)
 {
-    isExtBackupValid_ = true;
+    g_isExtBackupValid = true;
     HILOGI("ExtBackupJs::ExtBackupJs.");
 }
 
@@ -456,7 +456,7 @@ ExtBackupJs::~ExtBackupJs()
 {
     jsRuntime_.FreeNativeReference(std::move(jsObj_));
     std::lock_guard<std::mutex> lock(extBackupValidLock_);
-    isExtBackupValid_ = false;
+    g_isExtBackupValid = false;
     HILOGI("ExtBackupJs::~ExtBackupJs.");
 }
 
