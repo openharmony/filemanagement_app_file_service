@@ -272,11 +272,13 @@ static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
         return;
     }
 
-    auto cbCompl = [](napi_env env, NError err) -> NVal {
-        return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
+    auto cbCompl = [](napi_env env, vector<napi_value> &argv) -> bool {
+        napi_value napi_res = nullptr;
+        napi_get_undefined(env, &napi_res);
+        argv.push_back(napi_res);
+        return true;
     };
-
-    callbacks->onBackupServiceDied.ThreadSafeSchedule(cbCompl);
+    callbacks->onBackupServiceDied.CallJsMethod(cbCompl);
 }
 
 static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName name, const std::string processInfo)

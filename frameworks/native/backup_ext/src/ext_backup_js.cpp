@@ -46,8 +46,8 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 constexpr size_t ARGC_ONE = 1;
-static std::mutex g_extBackupValidLock;
-static bool g_isExtBackupValid = true;
+static std::mutex extBackupValidLock_;
+static bool isExtBackupValid_ = true;
 
 static string GetSrcPath(const AppExecFwk::AbilityInfo &info)
 {
@@ -106,7 +106,7 @@ static napi_status DealNapiException(napi_env env, napi_value &exception, std::s
 static napi_value PromiseCallback(napi_env env, napi_callback_info info)
 {
     std::lock_guard<std::mutex> lock(g_extBackupValidLock);
-    if (!g_isExtBackupValid) {
+    if (!isExtBackupValid_) {
         HILOGE("ExtBackup is invalid");
         return nullptr;
     }
@@ -147,8 +147,8 @@ static napi_value PromiseCatchCallback(napi_env env, napi_callback_info info)
         HILOGE("Failed to throw an exception, %{public}d", throwStatus);
         return nullptr;
     }
-    std::lock_guard<std::mutex> lock(g_extBackupValidLock);
-    if (!g_isExtBackupValid) {
+    std::lock_guard<std::mutex> lock(extBackupValidLock_);
+    if (!isExtBackupValid_) {
         HILOGE("ExtBackup is invalid");
         data = nullptr;
         return nullptr;
@@ -161,8 +161,8 @@ static napi_value PromiseCatchCallback(napi_env env, napi_callback_info info)
 
 static napi_value PromiseCallbackEx(napi_env env, napi_callback_info info)
 {
-    std::lock_guard<std::mutex> lock(g_extBackupValidLock);
-    if (!g_isExtBackupValid) {
+    std::lock_guard<std::mutex> lock(extBackupValidLock_);
+    if (!isExtBackupValid_) {
         HILOGE("ExtBackup is invalid");
         return nullptr;
     }
@@ -203,7 +203,7 @@ static napi_value PromiseCatchCallbackEx(napi_env env, napi_callback_info info)
         HILOGE("Failed to throw an exception, %{public}d", throwStatus);
         return nullptr;
     }
-    std::lock_guard<std::mutex> lock(g_extBackupValidLock);
+    std::lock_guard<std::mutex> lock(extBackupValidLock_);
     if (!g_isExtBackupValid) {
         HILOGE("ExtBackup is invalid");
         data = nullptr;
@@ -448,15 +448,15 @@ napi_value AttachBackupExtensionContext(napi_env env, void *value, void *)
 
 ExtBackupJs::ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime)
 {
-    g_isExtBackupValid = true;
+    isExtBackupValid_ = true;
     HILOGI("ExtBackupJs::ExtBackupJs.");
 }
 
 ExtBackupJs::~ExtBackupJs()
 {
     jsRuntime_.FreeNativeReference(std::move(jsObj_));
-    std::lock_guard<std::mutex> lock(g_extBackupValidLock);
-    g_isExtBackupValid = false;
+    std::lock_guard<std::mutex> lock(extBackupValidLock_);
+    isExtBackupValid_ = false;
     HILOGI("ExtBackupJs::~ExtBackupJs.");
 }
 
