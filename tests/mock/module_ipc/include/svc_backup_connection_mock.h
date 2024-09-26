@@ -27,6 +27,7 @@ public:
     virtual ErrCode DisconnectBackupExtAbility() = 0;
     virtual bool IsExtAbilityConnected() = 0;
     virtual sptr<IExtension> GetBackupExtProxy() = 0;
+    virtual bool WaitDisconnectDone() = 0;
 public:
     BSvcBackupConnection() = default;
     virtual ~BSvcBackupConnection() = default;
@@ -40,6 +41,7 @@ public:
     MOCK_METHOD(ErrCode, DisconnectBackupExtAbility, ());
     MOCK_METHOD(bool, IsExtAbilityConnected, ());
     MOCK_METHOD((sptr<IExtension>), GetBackupExtProxy, ());
+    MOCK_METHOD(bool, WaitDisconnectDone, ());
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_SVC_EXTENSION_PROXY_MOCK_H

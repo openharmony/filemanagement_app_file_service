@@ -24,6 +24,7 @@ namespace OHOS::FileManagement::Backup {
 class BIPCSkeleton : public RefBase {
 public:
     virtual pid_t GetCallingUid() = 0;
+    virtual uint32_t GetCallingTokenID() = 0;
 public:
     BIPCSkeleton() = default;
     virtual ~BIPCSkeleton() = default;
@@ -34,6 +35,7 @@ public:
 class IPCSkeletonMock : public BIPCSkeleton {
 public:
     MOCK_METHOD(pid_t, GetCallingUid, ());
+    MOCK_METHOD(uint32_t, GetCallingTokenID, ());
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_IPC_SKELETON_MOCK_H

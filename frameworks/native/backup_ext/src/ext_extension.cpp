@@ -194,7 +194,7 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
     if (filePathPrefix == string::npos) {
         HILOGE("GetFileHandleForSpecialCloneCloud: Invalid fileName");
         AuditLog auditLog = {false, "Open fd failed", "ADD", "DataClone in special scenario", 1, "FAILED",
-            "GetFileHandleForSpecialCloneCloud", "CommonFile", GetAnonyPath(fllePath)};
+            "GetFileHandleForSpecialCloneCloud", "CommonFile", GetAnonyPath(filePath)};
         HiAudit::GetInstance(false).Write(auditLog);
         return UniqueFd(-1);
     }

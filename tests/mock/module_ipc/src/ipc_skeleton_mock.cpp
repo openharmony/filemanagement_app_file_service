@@ -24,4 +24,9 @@ pid_t IPCSkeleton::GetCallingUid()
 {
     return OHOS::FileManagement::Backup::BIPCSkeleton::skeleton->GetCallingUid();
 }
+
+uint32_t IPCSkeleton::GetCallingTokenID()
+{
+    return OHOS::FileManagement::Backup::BIPCSkeleton::skeleton->GetCallingTokenID();
+}
 } // namespace OHOS

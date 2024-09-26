@@ -19,7 +19,6 @@
 #include <fstream>
 #include <securec.h>
 
-#include "file_util.h"
 #include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -78,11 +77,11 @@ int ZipUtil::AddFileInZip(zipFile &zipfile, const std::string &srcFile, int keep
 
 FILE *ZipUtil::GetFileHandle(const std::string &file)
 {
-    std::string realPath;
-    if (!HiviewDFX::FileUtil::PathToRealPath(file, realPath)) {
+    char realPath[PATH_MAX] = {0};
+    if (realpath(file.c_str(), realPath) == nullptr) {
         return nullptr;
     }
-    return fopen(realPath.c_str(), "rb");
+    return fopen(realPath, "rb");
 }
 
 std::string ZipUtil::GetDestFilePath(const std::string &srcFile, const std::string &destFilePath,
@@ -94,7 +93,6 @@ std::string ZipUtil::GetDestFilePath(const std::string &srcFile, const std::stri
     std::string file = srcFile;
     std::string result = file;
     std::string parentPathName;
-    HiviewDFX::FileUtil::FormatPath2UnixStyle(file);
     auto pos = file.rfind("/");
     if (pos != std::string::npos && pos != file.length() - 1) {
         result = file.substr(pos + 1);

@@ -26,7 +26,7 @@
 
 #include "filemgmt_libhilog.h"
 #include "b_hiaudit/zip_util.h"
-#include "hi_audit.h"
+#include "b_hiaudit/hi_audit.h"
 
 namespace OHOS::FileManagement::Backup {
 namespace {
@@ -202,16 +202,16 @@ void HiAudit::ZipAuditLog()
         GetFormattedTimestamp(GetMilliseconds(), "%Y%m%d%H%M%S");
     std::string logFilePath = hiAuditConfig_.logPath + hiAuditConfig_.logName + "_audit.csv";
     std::rename(logFilePath.c_str(), (zipFileName + ".csv").c_str());
-    zipFile compressZip = StorageDaemon::ZipUtil::CreateZipFile(zipFileName + ".zip");
+    zipFile compressZip = ZipUtil::CreateZipFile(zipFileName + ".zip");
     if (compressZip == nullptr) {
         HILOGW("open zip file failed.");
         return;
     }
-    if (StorageDaemon::ZipUtil::AddFileInZip(compressZip, zipFileName + ".csv", StorageDaemon::KEEP_NONE_PARENT_PATH) ==
+    if (ZipUtil::AddFileInZip(compressZip, zipFileName + ".csv", KEEP_NONE_PARENT_PATH) ==
         0) {
         remove((zipFileName + ".csv").c_str());
     }
-    StorageDaemon::ZipUtil::CloseZipFile(compressZip);
+    ZipUtil::CloseZipFile(compressZip);
 }
 
 bool HiAudit::MkLogDirSuccess()

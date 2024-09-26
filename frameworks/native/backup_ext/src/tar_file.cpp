@@ -107,7 +107,7 @@ bool TarFile::TraversalFile(string &filePath, int &err)
         err = errno;
         HILOGE("File path does not exists, err = %{public}d", errno);
         AuditLog auditLog = {false, "access file failed", "ADD", "DataClone", 1, "FAILED", "TraversalFile",
-            "Packet File", GetAnonyPath(fllePath)};
+            "Packet File", GetAnonyPath(filePath)};
         HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
@@ -122,14 +122,14 @@ bool TarFile::TraversalFile(string &filePath, int &err)
         err = errno;
         HILOGE("Failed to lstat, err = %{public}d", errno);
         AuditLog auditLog = {false, "lstat file failed", "ADD", "DataClone", 1, "FAILED", "TraversalFile",
-            "Packet File", GetAnonyPath(fllePath)};
+            "Packet File", GetAnonyPath(filePath)};
         HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
     if (!AddFile(filePath, curFileStat, err)) {
         HILOGE("Failed to add file to tar package, file path is:%{public}s", GetAnonyPath(filePath).c_str());
         AuditLog auditLog = {false, "AddFile failed", "ADD", "DataClone", 1, "FAILED", "TraversalFile",
-            "Packet File", GetAnonyPath(fllePath)};
+            "Packet File", GetAnonyPath(filePath)};
         HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
