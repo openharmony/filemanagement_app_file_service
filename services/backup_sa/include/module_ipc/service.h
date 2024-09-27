@@ -32,6 +32,12 @@
 #include "thread_pool.h"
 
 namespace OHOS::FileManagement::Backup {
+struct extensionInfo {
+    std::string bundleName;
+    std::mutex callbackMutex;
+    extensionInfo(std::string bundleName_) : bundleName(bundleName_) {};
+};
+
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(Service);
 
@@ -273,6 +279,21 @@ public:
      */
     void DelClearBundleRecord(const std::vector<std::string> &bundleNames);
 
+    /**
+     * @brief 添加extension锁
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void AddExtensionMutex(const BundleName &bundleName);
+
+    /**
+     * @brief 清理extension锁
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void RemoveExtensionMutex(const BundleName &bundleName);
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {
@@ -503,6 +524,9 @@ private:
     friend class ServiceTest;
 
     OHOS::ThreadPool threadPool_;
+    std::mutex extensionLock_;
+public:
+    std::map<BundleName, std::shared_ptr<extensionInfo>> backupExtMutexMap_;
 };
 } // namespace OHOS::FileManagement::Backup
 

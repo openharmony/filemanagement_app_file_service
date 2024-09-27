@@ -181,6 +181,7 @@ ErrCode Service::AppDone(ErrCode errCode)
         string callerName = VerifyCallerAndGetCallerName();
         HILOGI("Begin, callerName is: %{public}s, errCode: %{public}d", callerName.c_str(), errCode);
         if (session_->OnBundleFileReady(callerName) || errCode != BError(BError::Codes::OK)) {
+            std::lock_guard<std::mutex> lock(backupExtMutexMap_[callerName]->callbackMutex);
             auto backUpConnection = session_->GetExtConnection(callerName);
             if (backUpConnection == nullptr) {
                 HILOGE("App finish error, backUpConnection is empty");
@@ -197,6 +198,7 @@ ErrCode Service::AppDone(ErrCode errCode)
             ClearSessionAndSchedInfo(callerName);
             NotifyCallerCurAppDone(errCode, callerName);
         }
+        RemoveExtensionMutex(callerName);
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
