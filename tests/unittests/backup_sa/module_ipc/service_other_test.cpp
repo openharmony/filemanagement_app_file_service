@@ -109,6 +109,10 @@ void Service::NotifyCallerCurAppIncrementDone(ErrCode, const std::string&) {}
 void Service::SendUserIdToApp(string&, int32_t) {}
 
 void Service::SetCurrentBackupSessProperties(const vector<string>&, int32_t) {}
+
+void Service::AddExtensionMutex(const BundleName &bundleName) {}
+
+void Service::RemoveExtensionMutex(const BundleName &bundleName) {}
 }
 
 namespace OHOS::FileManagement::Backup {

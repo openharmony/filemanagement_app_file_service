@@ -811,6 +811,7 @@ void Service::NotifyCloneBundleFinish(std::string bundleName, const BackupRestor
             return;
         }
         if (session_->OnBundleFileReady(bundleName)) {
+            std::lock_guard<std::mutex> lock(backupExtMutexMap_[bundleName]->callbackMutex);
             auto backUpConnection = session_->GetExtConnection(bundleName);
             if (backUpConnection == nullptr) {
                 throw BError(BError::Codes::SA_INVAL_ARG, "backUpConnection is empty");
@@ -825,6 +826,7 @@ void Service::NotifyCloneBundleFinish(std::string bundleName, const BackupRestor
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(bundleName);
         }
+        RemoveExtensionMutex(bundleName);
         SendEndAppGalleryNotify(bundleName);
         OnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
@@ -929,6 +931,7 @@ void Service::ExtConnectDied(const string &callName)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin, bundleName: %{public}s", callName.c_str());
+        std::lock_guard<std::mutex> lock(backupExtMutexMap_[callName]->callbackMutex);
         /* Clear Timer */
         session_->StopFwkTimer(callName);
         session_->StopExtTimer(callName);
@@ -948,8 +951,8 @@ void Service::ExtConnectDied(const string &callName)
         HILOGE("Unexpected exception, bundleName: %{public}s", callName.c_str());
         ClearSessionAndSchedInfo(callName);
         NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
-        return;
     }
+    RemoveExtensionMutex(callName);
 }
 
 void Service::ExtStart(const string &bundleName)
@@ -1871,6 +1874,7 @@ void Service::DoTimeout(wptr<Service> ptr, std::string bundleName)
                                                      BizStageRestore::BIZ_STAGE_ON_RESTORE, errCode);
     }
     try {
+        std::lock_guard<std::mutex> lock(backupExtMutexMap_[bundleName]->callbackMutex);
         if (SAUtils::IsSABundleName(bundleName)) {
             auto sessionConnection = sessionPtr->GetSAExtConnection(bundleName);
             shared_ptr<SABackupConnection> saConnection = sessionConnection.lock();
@@ -1892,6 +1896,7 @@ void Service::DoTimeout(wptr<Service> ptr, std::string bundleName)
         thisPtr->ClearSessionAndSchedInfo(bundleName);
         thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
     }
+    RemoveExtensionMutex(bundleName);
 }
 
 void Service::AddClearBundleRecord(const std::string &bundleName)
