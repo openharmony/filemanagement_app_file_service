@@ -34,6 +34,7 @@ ohos_shared_library("ohfileshare") {
   sources = [ "oh_file_share.cpp" ]
   deps = [
     "${app_file_service_path}/interfaces/innerkits/native:fileshare_native",
+    "${app_file_service_path}/interfaces/innerkits/native:fileuri_native",
   ]
   external_deps = [
     "access_token:libaccesstoken_sdk",

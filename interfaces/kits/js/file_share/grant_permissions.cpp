@@ -32,30 +32,6 @@ namespace ModuleFileShare {
 using namespace OHOS::FileManagement::LibN;
 using namespace std;
 
-namespace {
-const std::string FILE_ACCESS_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
-const std::string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
-
-static bool CheckPermission(const string &permission)
-{
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
-           Security::AccessToken::PermissionState::PERMISSION_GRANTED;
-}
-
-static bool CheckFileManagerFullMountEnable()
-{
-    char value[] = "false";
-    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER.c_str(), "false", value, sizeof(value));
-    if (retSystem > 0 && !strcmp(value, "true")) {
-        LOGE("The full mount enable parameter is true");
-        return true;
-    }
-    LOGD("The full mount enable parameter is false");
-    return false;
-}
-} // namespace
-
 static napi_value GetErrData(napi_env env, deque<struct PolicyErrorResult> &errorResults)
 {
     napi_value res = nullptr;
@@ -154,16 +130,6 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
 
 napi_value PersistPermission(napi_env env, napi_callback_info info)
 {
-    if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this api");
-        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
-        return nullptr;
-    }
-    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
-        LOGE("PersistPermission has not ohos permission!");
-        NError(E_PERMISSION).ThrowErr(env);
-        return nullptr;
-    }
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         LOGE("PersistPermission Number of arguments unmatched");
@@ -198,16 +164,6 @@ napi_value PersistPermission(napi_env env, napi_callback_info info)
 
 napi_value RevokePermission(napi_env env, napi_callback_info info)
 {
-    if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this api");
-        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
-        return nullptr;
-    }
-    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
-        LOGE("RevokePermission has not ohos permission!");
-        NError(E_PERMISSION).ThrowErr(env);
-        return nullptr;
-    }
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         LOGE("RevokePermission Number of arguments unmatched");
@@ -242,16 +198,6 @@ napi_value RevokePermission(napi_env env, napi_callback_info info)
 
 napi_value ActivatePermission(napi_env env, napi_callback_info info)
 {
-    if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this api");
-        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
-        return nullptr;
-    }
-    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
-        LOGE("PersistPermission has not ohos permission!");
-        NError(E_PERMISSION).ThrowErr(env);
-        return nullptr;
-    }
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         LOGE("ActivatePermission Number of arguments unmatched");
@@ -286,16 +232,6 @@ napi_value ActivatePermission(napi_env env, napi_callback_info info)
 
 napi_value DeactivatePermission(napi_env env, napi_callback_info info)
 {
-    if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this api");
-        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
-        return nullptr;
-    }
-    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
-        LOGE("PersistPermission has not ohos permission!");
-        NError(E_PERMISSION).ThrowErr(env);
-        return nullptr;
-    }
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         LOGE("DeactivatePermission Number of arguments unmatched");
@@ -330,16 +266,6 @@ napi_value DeactivatePermission(napi_env env, napi_callback_info info)
 
 napi_value CheckPersistentPermission(napi_env env, napi_callback_info info)
 {
-    if (!CheckFileManagerFullMountEnable()) {
-        LOGE("The device doesn't support this api");
-        NError(E_DEVICENOTSUPPORT).ThrowErr(env);
-        return nullptr;
-    }
-    if (!CheckPermission(FILE_ACCESS_PERMISSION)) {
-        LOGE("PersistPermission has not ohos permission!");
-        NError(E_PERMISSION).ThrowErr(env);
-        return nullptr;
-    }
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         LOGE("ActivatePermission Number of arguments unmatched");

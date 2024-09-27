@@ -40,9 +40,6 @@ using namespace testing;
 using namespace testing::ext;
 namespace OHOS {
 namespace AppFileService {
-#ifdef SANDBOX_MANAGER
-const char *g_fileManagerFullMountEnableParameter = "const.filemanager.full_mount.enable";
-#endif
 const std::string SET_POLICY_PERMISSION = "ohos.permission.SET_SANDBOX_POLICY";
 const std::string ACCESS_PERSIST_PERMISSION = "ohos.permission.FILE_ACCESS_PERSIST";
 const std::string READ_WRITE_DOWNLOAD_PERMISSION = "ohos.permission.READ_WRITE_DOWNLOAD_DIRECTORY";
@@ -112,31 +109,25 @@ void FilePermissionTest::SetUpTestCase()
     tokenIdEx = OHOS::Security::AccessToken::AccessTokenKit::AllocHapToken(g_testInfoParams, g_testPolicyParams);
     g_mockToken = tokenIdEx.tokenIdExStruct.tokenID;
     EXPECT_EQ(0, SetSelfTokenID(tokenIdEx.tokenIdExStruct.tokenID));
-    #ifdef SANDBOX_MANAGER
+#ifdef SANDBOX_MANAGER
     sandboxMock_ = make_shared<SandboxMock>();
     SandboxMock::sandboxManagerKitMock = sandboxMock_;
-    #endif
+    funcMock = make_shared<LibraryFuncMock>();
+    LibraryFuncMock::libraryFunc_ = funcMock;
+#endif
 }
 void FilePermissionTest::TearDownTestCase()
 {
     OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(g_mockToken);
-    #ifdef SANDBOX_MANAGER
+#ifdef SANDBOX_MANAGER
     SandboxMock::sandboxManagerKitMock = nullptr;
     sandboxMock_ = nullptr;
-    #endif
+    LibraryFuncMock::libraryFunc_ = nullptr;
+    funcMock = nullptr;
+#endif
 }
 
 #ifdef SANDBOX_MANAGER
-static bool CheckFileManagerFullMountEnable()
-{
-    char value[] = "false";
-    int retSystem = GetParameter(g_fileManagerFullMountEnableParameter, "false", value, sizeof(value));
-    if (retSystem > 0 && !std::strcmp(value, "true")) {
-        return true;
-    }
-    LOGE("Not supporting all mounts");
-    return false;
-}
 
 /**
  * @tc.name: PersistPermission_test_0000
@@ -154,9 +145,14 @@ HWTEST_F(FilePermissionTest, PersistPermission_test_0000, testing::ext::TestSize
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
-    EXPECT_CALL(*sandboxMock_, PersistPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
+    vector<uint32_t> resultCodes;
+    resultCodes.push_back(PolicyErrorCode::INVALID_PATH);
+    EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, PersistPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
     int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end PersistPermission_test_0000";
 }
 /**
@@ -179,15 +175,11 @@ HWTEST_F(FilePermissionTest, PersistPermission_test_0001, testing::ext::TestSize
     deque<struct PolicyErrorResult> errorResults;
     vector<uint32_t> resultCodes;
     resultCodes.push_back(PolicyErrorCode::INVALID_MODE);
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*sandboxMock_, PersistPolicy(_, _))
         .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
     int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, EPERM);
-        EXPECT_EQ(INVALID_MODE, errorResults[0].code);
-    } else {
-        EXPECT_EQ(ret, EPERM);
-    };
+    EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end PersistPermission_test_0001";
 }
 /**
@@ -206,15 +198,10 @@ HWTEST_F(FilePermissionTest, PersistPermission_test_0002, testing::ext::TestSize
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*sandboxMock_, PersistPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, EPERM);
-        ASSERT_EQ(uriPolicies.size(), errorResults.size());
-        EXPECT_EQ(INVALID_PATH, errorResults[0].code);
-    } else {
-        EXPECT_EQ(ret, EPERM);
-    };
+    EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end PersistPermission_test_0002";
 }
 /**
@@ -233,9 +220,10 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0000, testing::ext::TestSiz
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_0000";
 }
 /**
@@ -258,15 +246,11 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0001, testing::ext::TestSiz
     deque<struct PolicyErrorResult> errorResults;
     vector<uint32_t> resultCodes;
     resultCodes.push_back(PolicyErrorCode::INVALID_MODE);
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _))
         .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, EPERM);
-        EXPECT_EQ(INVALID_MODE, errorResults[0].code);
-    } else {
-        EXPECT_EQ(ret, EPERM);
-    };
+    EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_0001";
 }
 /**
@@ -285,15 +269,10 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0002, testing::ext::TestSiz
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, EPERM);
-        ASSERT_EQ(uriPolicies.size(), errorResults.size());
-        EXPECT_EQ(INVALID_PATH, errorResults[0].code);
-    } else {
-        EXPECT_EQ(ret, EPERM);
-    };
+    EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_0002";
 }
 /**
@@ -312,9 +291,10 @@ HWTEST_F(FilePermissionTest, DeactivatePermission_test_0000, testing::ext::TestS
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*sandboxMock_, StopAccessingPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::DeactivatePermission(uriPolicies, errorResults);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end DeactivatePermission_test_0000";
 }
 /**
@@ -336,16 +316,12 @@ HWTEST_F(FilePermissionTest, DeactivatePermission_test_0001, testing::ext::TestS
     uriPolicies.emplace_back(infoB);
     deque<struct PolicyErrorResult> errorResults;
     vector<uint32_t> resultCodes;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     resultCodes.push_back(PolicyErrorCode::INVALID_MODE);
     EXPECT_CALL(*sandboxMock_, StopAccessingPolicy(_, _))
         .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
     int32_t ret = FilePermission::DeactivatePermission(uriPolicies, errorResults);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, EPERM);
-        EXPECT_EQ(INVALID_MODE, errorResults[0].code);
-    } else {
-        EXPECT_EQ(ret, EPERM);
-    };
+    EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end DeactivatePermission_test_0001";
 }
 /**
@@ -364,15 +340,10 @@ HWTEST_F(FilePermissionTest, DeactivatePermission_test_0002, testing::ext::TestS
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*sandboxMock_, StopAccessingPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::DeactivatePermission(uriPolicies, errorResults);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, EPERM);
-        ASSERT_EQ(uriPolicies.size(), errorResults.size());
-        EXPECT_EQ(INVALID_PATH, errorResults[0].code);
-    } else {
-        EXPECT_EQ(ret, EPERM);
-    };
+    EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end DeactivatePermission_test_0002";
 }
 /**
@@ -391,9 +362,10 @@ HWTEST_F(FilePermissionTest, RevokePermission_test_0000, testing::ext::TestSize.
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*sandboxMock_, UnPersistPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::RevokePermission(uriPolicies, errorResults);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end RevokePermission_test_0000";
 }
 /**
@@ -413,15 +385,11 @@ HWTEST_F(FilePermissionTest, RevokePermission_test_0001, testing::ext::TestSize.
     deque<struct PolicyErrorResult> errorResults;
     vector<uint32_t> resultCodes;
     resultCodes.push_back(PolicyErrorCode::INVALID_MODE);
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*sandboxMock_, UnPersistPolicy(_, _))
         .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
     int32_t ret = FilePermission::RevokePermission(uriPolicies, errorResults);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, EPERM);
-        EXPECT_EQ(INVALID_MODE, errorResults[0].code);
-    } else {
-        EXPECT_EQ(ret, EPERM);
-    };
+    EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end RevokePermission_test_0001";
 }
 /**
@@ -440,15 +408,10 @@ HWTEST_F(FilePermissionTest, RevokePermission_test_0002, testing::ext::TestSize.
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*sandboxMock_, UnPersistPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::RevokePermission(uriPolicies, errorResults);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, EPERM);
-        ASSERT_EQ(uriPolicies.size(), errorResults.size());
-        EXPECT_EQ(INVALID_PATH, errorResults[0].code);
-    } else {
-        EXPECT_EQ(ret, EPERM);
-    };
+    EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end RevokePermission_test_0002";
 }
 /**
@@ -464,12 +427,8 @@ HWTEST_F(FilePermissionTest, GetPathByPermission_test_0001, testing::ext::TestSi
     GTEST_LOG_(INFO) << "FileShareTest-begin GetPathByPermission_test_0001";
     std::string PermissionName = "ohos.permission.READ_WRITE_DOWNLOAD_DIRECTORY";
     std::string sandboxPath = "/storage/Users/currentUser/Download";
-    std::string path = FilePermission::GetPathByPermission(PermissionName);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(path, sandboxPath);
-    } else {
-        EXPECT_EQ(path, sandboxPath);
-    };
+    std::string path = FilePermission::GetPathByPermission("", PermissionName);
+    EXPECT_EQ(path, sandboxPath);
     GTEST_LOG_(INFO) << "FileShareTest-end GetPathByPermission_test_0001";
 }
 /**
@@ -485,12 +444,8 @@ HWTEST_F(FilePermissionTest, GetPathByPermission_test_0002, testing::ext::TestSi
     GTEST_LOG_(INFO) << "FileShareTest-begin GetPathByPermission_test_0002";
     std::string PermissionName = "ohos.permission.READ_WRITE_DESKTOP_DIRECTORY";
     std::string sandboxPath = "/storage/Users/currentUser/Desktop";
-    std::string path = FilePermission::GetPathByPermission(PermissionName);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(path, sandboxPath);
-    } else {
-        EXPECT_EQ(path, sandboxPath);
-    };
+    std::string path = FilePermission::GetPathByPermission("", PermissionName);
+    EXPECT_EQ(path, sandboxPath);
     GTEST_LOG_(INFO) << "FileShareTest-end GetPathByPermission_test_0002";
 }
 /**
@@ -506,12 +461,8 @@ HWTEST_F(FilePermissionTest, GetPathByPermission_test_0003, testing::ext::TestSi
     GTEST_LOG_(INFO) << "FileShareTest-begin GetPathByPermission_test_0003";
     std::string PermissionName = "ohos.permission.READ_WRITE_DOCUMENTS_DIRECTORY";
     std::string sandboxPath = "/storage/Users/currentUser/Documents";
-    std::string path = FilePermission::GetPathByPermission(PermissionName);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(path, sandboxPath);
-    } else {
-        EXPECT_EQ(path, sandboxPath);
-    };
+    std::string path = FilePermission::GetPathByPermission("", PermissionName);
+    EXPECT_EQ(path, sandboxPath);
     GTEST_LOG_(INFO) << "FileShareTest-end GetPathByPermission_test_0003";
 }
 /**
@@ -532,13 +483,7 @@ HWTEST_F(FilePermissionTest, CheckPersistentPermission_test_0001, testing::ext::
     vector<bool> errorResults;
     EXPECT_CALL(*sandboxMock_, CheckPersistPolicy(_, _, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::CheckPersistentPermission(uriPolicies, errorResults);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, 0);
-        ASSERT_EQ(uriPolicies.size(), errorResults.size());
-        EXPECT_EQ(false, errorResults[0]);
-    } else {
-        EXPECT_EQ(ret, 0);
-    };
+    EXPECT_EQ(ret, 0);
     GTEST_LOG_(INFO) << "FileShareTest-end CheckPersistentPermission_test_0001";
 }
 /**
@@ -557,21 +502,14 @@ HWTEST_F(FilePermissionTest, CheckPersistentPermission_test_0002, testing::ext::
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*sandboxMock_, PersistPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     EXPECT_CALL(*sandboxMock_, CheckPersistPolicy(_, _, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EPERM);
     vector<bool> errorResult;
     ret = FilePermission::CheckPersistentPermission(uriPolicies, errorResult);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, 0);
-        ASSERT_EQ(uriPolicies.size(), errorResult.size());
-        EXPECT_EQ(true, errorResult[0]);
-    } else {
-        EXPECT_EQ(ret, 0);
-    };
-    EXPECT_CALL(*sandboxMock_, UnPersistPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
-    ret = FilePermission::RevokePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, 0);
     GTEST_LOG_(INFO) << "FileShareTest-end CheckPersistentPermission_test_0002";
 }
 /**
@@ -590,14 +528,9 @@ HWTEST_F(FilePermissionTest, CheckPersistentPermission_test_0003, testing::ext::
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     vector<bool> errorResult;
+    EXPECT_CALL(*sandboxMock_, CheckPersistPolicy(_, _, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::CheckPersistentPermission(uriPolicies, errorResult);
-    if (CheckFileManagerFullMountEnable()) {
-        EXPECT_EQ(ret, EPERM);
-        ASSERT_EQ(uriPolicies.size(), errorResult.size());
-        EXPECT_EQ(false, errorResult[0]);
-    } else {
-        EXPECT_EQ(ret, EPERM);
-    };
+    EXPECT_EQ(ret, 0);
     GTEST_LOG_(INFO) << "FileShareTest-end CheckPersistentPermission_test_0003";
 }
 
@@ -622,6 +555,7 @@ HWTEST_F(FilePermissionTest, GetPathPolicyInfoFromUriPolicyInfo_test_0001, testi
     uriPolicies.emplace_back(infoD);
     uriPolicies.emplace_back(infoE);
     vector<bool> errorResult;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     auto pathPolicies = FilePermission::GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResult);
     EXPECT_EQ(pathPolicies.size(), 1);
     ASSERT_TRUE(errorResult.size() == 4);
@@ -648,7 +582,7 @@ HWTEST_F(FilePermissionTest, ParseErrorResults_test_0001, testing::ext::TestSize
     resultCodes.push_back(false);
     FilePermission::ParseErrorResults(resultCodes, errorResults);
     EXPECT_EQ(errorResults.size(), 0);
-    
+
     resultCodes.push_back(false);
     errorResults.push_back(true);
     FilePermission::ParseErrorResults(resultCodes, errorResults);
@@ -710,7 +644,521 @@ HWTEST_F(FilePermissionTest, ParseErrorResults_test_002, testing::ext::TestSize.
     EXPECT_EQ(errorResults[3].code, PolicyErrorCode::PERMISSION_NOT_PERSISTED);
     GTEST_LOG_(INFO) << "FileShareTest-end ParseErrorResults_test_002";
 }
+/**
+ * @tc.name: PersistPermission_test_1000
+ * @tc.desc: Test function of PersistPermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, PersistPermission_test_1000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_1000";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, PersistPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
+    int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    GTEST_LOG_(INFO) << "FileShareTest-end PersistPermission_test_1000";
+}
+/**
+ * @tc.name: PersistPermission_test_1001
+ * @tc.desc: Test function of PersistPermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, PersistPermission_test_1001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_1001";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_PATH));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, PersistPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_PATH);
+    GTEST_LOG_(INFO) << "FileShareTest-end PersistPermission_test_1001";
+}
 
+/**
+ * @tc.name: PersistPermission_test_1002
+ * @tc.desc: Test function of PersistPermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, PersistPermission_test_1002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_1002";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt", .mode = 5};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_MODE));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, PersistPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_MODE);
+    GTEST_LOG_(INFO) << "FileShareTest-end PersistPermission_test_1002";
+}
+
+/**
+ * @tc.name: PersistPermission_test_1003
+ * @tc.desc: Test function of PersistPermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, PersistPermission_test_1003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_1003";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::PERSISTENCE_FORBIDDEN));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, PersistPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::PERSISTENCE_FORBIDDEN);
+    GTEST_LOG_(INFO) << "FileShareTest-end PersistPermission_test_1003";
+}
+
+/**
+ * @tc.name: PersistPermission_test_1004
+ * @tc.desc: Test function of PersistPermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, PersistPermission_test_1004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin PersistPermission_test_1004";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_MODE));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, PersistPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::PersistPermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_MODE);
+    GTEST_LOG_(INFO) << "FileShareTest-end PersistPermission_test_1004";
+}
+
+/**
+ * @tc.name: ActivatePermission_test_1000
+ * @tc.desc: Test function of ActivatePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, ActivatePermission_test_1000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_1000";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
+    int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_1000";
+}
+/**
+ * @tc.name: ActivatePermission_test_1001
+ * @tc.desc: Test function of ActivatePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, ActivatePermission_test_1001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_1001";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_PATH));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_PATH);
+    GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_1001";
+}
+
+/**
+ * @tc.name: ActivatePermission_test_1002
+ * @tc.desc: Test function of ActivatePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, ActivatePermission_test_1002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_1002";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt", .mode = 5};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_MODE));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_MODE);
+    GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_1002";
+}
+
+/**
+ * @tc.name: ActivatePermission_test_1003
+ * @tc.desc: Test function of ActivatePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, ActivatePermission_test_1003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_1003";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::PERSISTENCE_FORBIDDEN));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::PERSISTENCE_FORBIDDEN);
+    GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_1003";
+}
+
+/**
+ * @tc.name: ActivatePermission_test_1004
+ * @tc.desc: Test function of ActivatePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, ActivatePermission_test_1004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin ActivatePermission_test_1004";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_MODE));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_MODE);
+    GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_1004";
+}
+
+/**
+ * @tc.name: DeactivatePermission_test_1000
+ * @tc.desc: Test function of DeactivatePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, DeactivatePermission_test_1000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_1000";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, StopAccessingPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
+    int32_t ret = FilePermission::DeactivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    GTEST_LOG_(INFO) << "FileShareTest-end DeactivatePermission_test_1000";
+}
+/**
+ * @tc.name: DeactivatePermission_test_1001
+ * @tc.desc: Test function of DeactivatePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, DeactivatePermission_test_1001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_1001";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_PATH));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, StopAccessingPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::DeactivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_PATH);
+    GTEST_LOG_(INFO) << "FileShareTest-end DeactivatePermission_test_1001";
+}
+
+/**
+ * @tc.name: DeactivatePermission_test_1002
+ * @tc.desc: Test function of DeactivatePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, DeactivatePermission_test_1002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_1002";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt", .mode = 5};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_MODE));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, StopAccessingPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::DeactivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_MODE);
+    GTEST_LOG_(INFO) << "FileShareTest-end DeactivatePermission_test_1002";
+}
+
+/**
+ * @tc.name: DeactivatePermission_test_1003
+ * @tc.desc: Test function of DeactivatePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, DeactivatePermission_test_1003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_1003";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::PERSISTENCE_FORBIDDEN));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, StopAccessingPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::DeactivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::PERSISTENCE_FORBIDDEN);
+    GTEST_LOG_(INFO) << "FileShareTest-end DeactivatePermission_test_1003";
+}
+
+/**
+ * @tc.name: DeactivatePermission_test_1004
+ * @tc.desc: Test function of DeactivatePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, DeactivatePermission_test_1004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin DeactivatePermission_test_1004";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_MODE));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, StopAccessingPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::DeactivatePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_MODE);
+    GTEST_LOG_(INFO) << "FileShareTest-end DeactivatePermission_test_1004";
+}
+
+/**
+ * @tc.name: RevokePermission_test_1000
+ * @tc.desc: Test function of RevokePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, RevokePermission_test_1000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin RevokePermission_test_1000";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, UnPersistPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
+    int32_t ret = FilePermission::RevokePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    GTEST_LOG_(INFO) << "FileShareTest-end RevokePermission_test_1000";
+}
+/**
+ * @tc.name: RevokePermission_test_1001
+ * @tc.desc: Test function of RevokePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, RevokePermission_test_1001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin RevokePermission_test_1001";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_PATH));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, UnPersistPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::RevokePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_PATH);
+    GTEST_LOG_(INFO) << "FileShareTest-end RevokePermission_test_1001";
+}
+
+/**
+ * @tc.name: RevokePermission_test_1002
+ * @tc.desc: Test function of RevokePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, RevokePermission_test_1002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin RevokePermission_test_1002";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt", .mode = 5};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_MODE));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, UnPersistPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::RevokePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_MODE);
+    GTEST_LOG_(INFO) << "FileShareTest-end RevokePermission_test_1002";
+}
+
+/**
+ * @tc.name: RevokePermission_test_1003
+ * @tc.desc: Test function of RevokePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, RevokePermission_test_1003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin RevokePermission_test_1003";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::PERSISTENCE_FORBIDDEN));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, UnPersistPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::RevokePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::PERSISTENCE_FORBIDDEN);
+    GTEST_LOG_(INFO) << "FileShareTest-end RevokePermission_test_1003";
+}
+
+/**
+ * @tc.name: RevokePermission_test_1004
+ * @tc.desc: Test function of RevokePermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, RevokePermission_test_1004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin RevokePermission_test_1004";
+    UriPolicyInfo infoTestA = {.uri = "file://" + BUNDLE_NAME_A + "/storage/PersistPermission01.txt",
+                               .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoTestA);
+    deque<struct PolicyErrorResult> errorResults;
+    vector<uint32_t> resultCodes;
+    resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_MODE));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*sandboxMock_, UnPersistPolicy(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    int32_t ret = FilePermission::RevokePermission(uriPolicies, errorResults);
+    EXPECT_EQ(ret, EPERM);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_MODE);
+    GTEST_LOG_(INFO) << "FileShareTest-end RevokePermission_test_1004";
+}
 #endif
 } // namespace AppFileService
 } // namespace OHOS

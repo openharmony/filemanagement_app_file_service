@@ -74,7 +74,10 @@ public:
     static int32_t DeactivatePermission(const vector<UriPolicyInfo> &uriPolicies,
                                         deque<struct PolicyErrorResult> &errorResults);
     static int32_t CheckPersistentPermission(const vector<UriPolicyInfo> &uriPolicies, vector<bool> &errorResults);
-    static string GetPathByPermission(const std::string &permission);
+    static string GetPathByPermission(const std::string &userName, const std::string &permission);
+    static int32_t CheckUriPersistentPermission(uint32_t tokenId,
+                                                const vector<UriPolicyInfo> &uriPolicies,
+                                                vector<bool> &errorResults);
 #ifdef SANDBOX_MANAGER
 private:
     static void ParseErrorResults(const vector<uint32_t> &resultCodes,
@@ -85,9 +88,6 @@ private:
                                                                  deque<struct PolicyErrorResult> &errorResults);
     static vector<PolicyInfo> GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
                                                                  vector<bool> &errorResults);
-    static int32_t CheckUriPersistentPermission(uint32_t tokenId,
-                                                const vector<UriPolicyInfo> &uriPolicies,
-                                                vector<bool> &errorResults);
 #endif
 };
 } // namespace AppFileService
