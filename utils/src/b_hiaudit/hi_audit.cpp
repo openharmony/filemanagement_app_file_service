@@ -66,7 +66,7 @@ void HiAudit::Init()
     } else {
         hiAuditConfig_ = HIAUDIT_CONFIG_EXT;
     }
-    if (!MkLogDirSuccess()){
+    if (!MkLogDirSuccess()) {
         HILOGE("Init, Create log dir failed");
         return;
     }
@@ -154,11 +154,12 @@ void HiAudit::CleanOldAuditFile()
         return;
     }
     DIR *dir = opendir(hiAuditConfig_.logPath.c_str());
-    while (true) {
-        struct dirent *ptr = readdir(dir);
-        if (ptr == nullptr) {
-            break;
-        }
+    if (dir == NULL) {
+        HILOGE("open dir error, errno:%{public}d", errno);
+        return;
+    }
+    struct dirent* ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
         if (std::string(ptr->d_name).find(hiAuditConfig_.logName) != std::string::npos &&
             std::string(ptr->d_name).find("zip") != std::string::npos) {
             zipFileSize = zipFileSize + 1;

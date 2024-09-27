@@ -1920,17 +1920,35 @@ ErrCode Service::BackupSA(std::string bundleName)
 void Service::OnSABackup(const std::string &bundleName, const int &fd, const std::string &result,
     const ErrCode &errCode)
 {
-    HILOGI("OnSABackup bundleName: %{public}s, fd: %{public}d, result: %{public}s, err: %{public}d",
-        bundleName.c_str(), fd, result.c_str(), errCode);
-    session_->GetServiceReverseProxy()->BackupOnFileReady(bundleName, "", move(fd), errCode);
-    SAResultReport(bundleName, result, errCode, BackupRestoreScenario::FULL_BACKUP);
+    auto task = [bundleName, fd, result, errCode, this]() {
+        HILOGI("OnSABackup bundleName: %{public}s, fd: %{public}d, result: %{public}s, err: %{public}d",
+            bundleName.c_str(), fd, result.c_str(), errCode);
+        session_->GetServiceReverseProxy()->BackupOnFileReady(bundleName, "", move(fd), errCode);
+        SAResultReport(bundleName, result, errCode, BackupRestoreScenario::FULL_BACKUP);
+    };
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
 }
 
 void Service::OnSARestore(const std::string &bundleName, const std::string &result, const ErrCode &errCode)
 {
-    HILOGI("OnSARestore bundleName: %{public}s, result: %{public}s, err: %{public}d",
-        bundleName.c_str(), result.c_str(), errCode);
-    SAResultReport(bundleName, result, errCode, BackupRestoreScenario::INCREMENTAL_RESTORE);
+    auto task = [bundleName, result, errCode, this]() {
+        HILOGI("OnSARestore bundleName: %{public}s, result: %{public}s, err: %{public}d",
+            bundleName.c_str(), result.c_str(), errCode);
+        SAResultReport(bundleName, result, errCode, BackupRestoreScenario::INCREMENTAL_RESTORE);
+    };
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
 }
 
 ErrCode Service::SADone(ErrCode errCode, std::string bundleName)

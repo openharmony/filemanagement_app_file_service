@@ -466,7 +466,8 @@ ErrCode BackupExtExtension::BigFileReady(const TarMap &bigFileInfo, sptr<IServic
         RefreshTimeInfo(startTime, fdNum);
     }
     AuditLog auditLog = {false, "Send Big File Fd", "ADD", "DataClone", bigFileInfo.size(), "SUCCESS", "Backup Files",
-                "BigFile", ""};
+        "BigFile", ""};
+    HiAudit::GetInstance(false).Write(auditLog);
     HILOGI("BigFileReady End");
     return ret;
 }
@@ -630,6 +631,9 @@ static ErrCode TarFileReady(const TarMap &tarFileInfo, sptr<IService> proxy)
     if (fd < 0) {
         HILOGE("TarFileReady open file failed, file name is %{public}s, err = %{public}d", tarName.c_str(), errno);
         errCode = errno;
+        AuditLog auditLog = {false, "Open fd failed", "ADD", "DataClone", 1, "FAILED",
+            "TarFileReady", "tarFile", tarPath};
+        HiAudit::GetInstance(false).Write(auditLog);
     }
     int ret = proxy->AppFileReady(tarName, std::move(fd), errCode);
     if (SUCCEEDED(ret)) {
@@ -937,6 +941,9 @@ void BackupExtExtension::RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo
     string fileName = item.hashName;
     if (chmod(fileName.c_str(), sta.st_mode) != 0) {
         HILOGE("Failed to chmod filePath, err = %{public}d", errno);
+        AuditLog auditLog = {false, "chmod file failed", "ADD", "DataClone in special scenario", 1, "FAILED",
+            "RestoreBigFilesForSpecialCloneCloud", "CommonFile", GetAnonyPath(fileName)};
+        HiAudit::GetInstance(false).Write(auditLog);
         errFileInfos_[fileName].push_back(errno);
     }
 
@@ -945,6 +952,9 @@ void BackupExtExtension::RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo
     if (fd < 0) {
         HILOGE("Failed to open file = %{public}s, err = %{public}d", GetAnonyPath(fileName).c_str(), errno);
         errFileInfos_[fileName].push_back(errno);
+        AuditLog auditLog = {false, "open fd failed", "ADD", "DataClone in special scenario", 1, "FAILED",
+            "RestoreBigFilesForSpecialCloneCloud", "CommonFile", GetAnonyPath(fileName)};
+        HiAudit::GetInstance(false).Write(auditLog);
         return;
     }
     if (futimens(fd.Get(), tv) != 0) {
@@ -1064,6 +1074,9 @@ void BackupExtExtension::RestoreBigFileAfter(const string &filePath, const struc
     if (fd < 0) {
         errFileInfos_[filePath].push_back(errno);
         HILOGE("Failed to open file = %{public}s, err = %{public}d", GetAnonyPath(filePath).c_str(), errno);
+        AuditLog auditLog = {false, "open fd failed", "ADD", "DataClone in special scenario", 1, "FAILED",
+            "RestoreBigFileAfter", "CommonFile", GetAnonyPath(filePath)};
+        HiAudit::GetInstance(false).Write(auditLog);
         return;
     }
     if (futimens(fd.Get(), tv) != 0) {
@@ -1077,7 +1090,6 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     // 获取索引文件内容
     string path = GetRestoreTempPath(bundleName_);
-
     string indexFileRestorePath = GetIndexFileRestorePath(bundleName_);
     UniqueFd fd(open(indexFileRestorePath.data(), O_RDONLY));
     if (fd < 0) {
