@@ -83,6 +83,14 @@ public:
                                  std::vector<struct ReportFileInfo> &allFiles,
                                  std::vector<struct ReportFileInfo> &smallFiles,
                                  std::vector<struct ReportFileInfo> &bigFiles);
+
+    /**
+     * @brief 核实文件是否为异常无效路径
+     *
+     * @param filePath 待核实的路径
+     * @return 是否是异常无效路径
+     */
+    static bool CheckFilePathInvalid(const std::string &filePath);
 };
 } // namespace OHOS::FileManagement::Backup
 

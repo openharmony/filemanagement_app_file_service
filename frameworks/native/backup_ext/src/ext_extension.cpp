@@ -316,6 +316,43 @@ static string GetIncrementalFileHandlePath(const string &fileName, const string 
     return tarName;
 }
 
+ErrCode BackupExtExtension::GetIncreFileHandleForNormalVersion(const std::string &fileName)
+{
+    HILOGI("extension: GetIncrementalFileHandle single to single Name:%{public}s", GetAnonyPath(fileName).c_str());
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        throw BError(BError::Codes::EXT_BROKEN_IPC, string("Failed to AGetInstance"));
+    }
+    string tarName = GetIncrementalFileHandlePath(fileName, bundleName_);
+    int32_t errCode = ERR_OK;
+    if (access(tarName.c_str(), F_OK) == 0) {
+        HILOGE("The file already exists, tarname = %{private}s, err =%{public}d", tarName.c_str(), errno);
+        errCode = errno;
+    }
+    UniqueFd fd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    if (fd < 0) {
+        HILOGE("Failed to open tar file = %{private}s, err = %{public}d", tarName.c_str(), errno);
+        errCode = errno;
+    }
+    // 对应的简报文件
+    string reportName = GetReportFileName(tarName);
+    if (access(reportName.c_str(), F_OK) == 0) {
+        HILOGE("The report file already exists, Name = %{private}s, err =%{public}d", reportName.c_str(), errno);
+        errCode = errno;
+    }
+    UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    if (reportFd < 0) {
+        HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
+        errCode = errno;
+    }
+    HILOGI("extension: Will notify AppIncrementalFileReady");
+    auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd), errCode);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to AppIncrementalFileReady %{public}d", ret);
+    }
+    return ERR_OK;
+}
+
 ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -326,43 +363,22 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
         VerifyCaller();
-
+        if (BDir::CheckFilePathInvalid(fileName)) {
+            auto proxy = ServiceProxy::GetInstance();
+            if (proxy == nullptr) {
+                throw BError(BError::Codes::EXT_BROKEN_IPC, string("Failed to AGetInstance"));
+            }
+            HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(fileName).c_str());
+            auto ret = proxy->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG));
+            if (ret != ERR_OK) {
+                HILOGE("Failed to notify app incre done. err = %{public}d", ret);
+            }
+            return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+        }
         if (extension_->SpecialVersionForCloneAndCloud()) {
             return GetIncreFileHandleForSpecialVersion(fileName);
         }
-        HILOGI("extension: GetIncrementalFileHandle single to single Name:%{public}s", GetAnonyPath(fileName).c_str());
-        string tarName = GetIncrementalFileHandlePath(fileName, bundleName_);
-        int32_t errCode = ERR_OK;
-        if (access(tarName.c_str(), F_OK) == 0) {
-            HILOGE("The file already exists, tarname = %{private}s, err =%{public}d", tarName.c_str(), errno);
-            errCode = errno;
-        }
-        UniqueFd fd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
-        if (fd < 0) {
-            HILOGE("Failed to open tar file = %{private}s, err = %{public}d", tarName.c_str(), errno);
-            errCode = errno;
-        }
-        // 对应的简报文件
-        string reportName = GetReportFileName(tarName);
-        if (access(reportName.c_str(), F_OK) == 0) {
-            HILOGE("The report file already exists, Name = %{private}s, err =%{public}d", reportName.c_str(), errno);
-            errCode = errno;
-        }
-        UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
-        if (reportFd < 0) {
-            HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
-            errCode = errno;
-        }
-        HILOGI("extension: Will notify AppIncrementalFileReady");
-        auto proxy = ServiceProxy::GetInstance();
-        if (proxy == nullptr) {
-            throw BError(BError::Codes::EXT_BROKEN_IPC, string("Failed to AGetInstance"));
-        }
-        auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd), errCode);
-        if (ret != ERR_OK) {
-            HILOGE("Failed to AppIncrementalFileReady %{public}d", ret);
-        }
-        return ERR_OK;
+        return GetIncreFileHandleForNormalVersion(fileName);
     } catch (...) {
         HILOGE("Failed to get incremental file handle");
         DoClear();
@@ -835,6 +851,10 @@ int BackupExtExtension::DoIncrementalRestore()
             string tarName = path + item;
 
             // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
+            if (BDir::CheckFilePathInvalid(tarName)) {
+                HILOGE("Check incre tarfile path : %{public}s err, path is forbidden", GetAnonyPath(tarName).c_str());
+                return ERR_INVALID_VALUE;
+            }
             unordered_map<string, struct ReportFileInfo> result = GetTarIncludes(tarName);
             if ((!extension_->SpecialVersionForCloneAndCloud()) && (!extension_->UseFullBackupOnly())) {
                 path = "/";
@@ -915,6 +935,11 @@ void BackupExtExtension::RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo
     }
     const struct stat &sta = item.sta;
     string fileName = item.hashName;
+    if (BDir::CheckFilePathInvalid(fileName)) {
+        HILOGE("Check big spec file path : %{public}s err, path is forbidden", GetAnonyPath(fileName).c_str());
+        errFileInfos_[fileName].push_back(DEFAULT_INVAL_VALUE);
+        return;
+    }
     if (chmod(fileName.c_str(), sta.st_mode) != 0) {
         HILOGE("Failed to chmod filePath, err = %{public}d", errno);
         errFileInfos_[fileName].push_back(errno);
@@ -947,6 +972,14 @@ ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &
     }
     HILOGI("Start to untar file = %{public}s, untarPath = %{public}s", GetAnonyPath(item.hashName).c_str(),
         GetAnonyPath(untarPath).c_str());
+    if (BDir::CheckFilePathInvalid(tarName)) {
+        HILOGE("Check spec tarfile hash path : %{public}s err, path is forbidden", GetAnonyPath(tarName).c_str());
+        return ERR_INVALID_VALUE;
+    }
+    if (BDir::CheckFilePathInvalid(untarPath)) {
+        HILOGE("Check spec tarfile path : %{public}s err, path is forbidden", GetAnonyPath(untarPath).c_str());
+        return ERR_INVALID_VALUE;
+    }
     auto [err, fileInfos, errInfos] = UntarFile::GetInstance().UnPacket(tarName, untarPath);
     if (isDebug_) {
         endFileInfos_.merge(fileInfos);
@@ -1052,6 +1085,46 @@ void BackupExtExtension::RestoreBigFileAfter(const string &filePath, const struc
     }
 }
 
+void BackupExtExtension::RestoreOneBigFile(const std::string &path,
+    const ExtManageInfo &item, const bool appendTargetPath)
+{
+    radarRestoreInfo_.bigFileNum++;
+    radarRestoreInfo_.bigFileSize += static_cast<uint64_t>(item.sta.st_size);
+    string itemHashName = item.hashName;
+    string itemFileName = item.fileName;
+    // check if item.hasName and fileName need decode by report item attribute
+    string reportPath = GetReportFileName(path + item.hashName);
+    UniqueFd fd(open(reportPath.data(), O_RDONLY));
+    if (fd < 0) {
+        HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportPath.c_str(), errno);
+        errFileInfos_[item.hashName].push_back(errno);
+        throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
+    }
+    BReportEntity rp(move(fd));
+    rp.CheckAndUpdateIfReportLineEncoded(itemFileName);
+
+    string fileName = path + itemHashName;
+    string filePath = appendTargetPath ? (path + itemFileName) : itemFileName;
+    if (BDir::CheckFilePathInvalid(filePath)) {
+        HILOGE("Check big file path : %{public}s err, path is forbidden", GetAnonyPath(filePath).c_str());
+        return;
+    }
+    if (isDebug_) {
+        endFileInfos_[filePath] = item.sta.st_size;
+    }
+
+    if (!RestoreBigFilePrecheck(fileName, path, item.hashName, filePath)) {
+        return;
+    }
+    if (!BFile::MoveFile(fileName, filePath)) {
+        errFileInfos_[filePath].push_back(errno);
+        HILOGE("failed to move the file. err = %{public}d", errno);
+        return;
+    }
+
+    RestoreBigFileAfter(filePath, item.sta);
+}
+
 void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -1073,38 +1146,7 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
         if (item.hashName.empty() || (!item.isUserTar && !item.isBigFile)) {
             continue;
         }
-        radarRestoreInfo_.bigFileNum++;
-        radarRestoreInfo_.bigFileSize += static_cast<uint64_t>(item.sta.st_size);
-        string itemHashName = item.hashName;
-        string itemFileName = item.fileName;
-        // check if item.hasName and fileName need decode by report item attribute
-        string reportPath = GetReportFileName(path + item.hashName);
-        UniqueFd fd(open(reportPath.data(), O_RDONLY));
-        if (fd < 0) {
-            HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportPath.c_str(), errno);
-            errFileInfos_[item.hashName].push_back(errno);
-            throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
-        }
-        BReportEntity rp(move(fd));
-        rp.CheckAndUpdateIfReportLineEncoded(itemFileName);
-
-        string fileName = path + itemHashName;
-        string filePath = appendTargetPath ? (path + itemFileName) : itemFileName;
-
-        if (isDebug_) {
-            endFileInfos_[filePath] = item.sta.st_size;
-        }
-
-        if (!RestoreBigFilePrecheck(fileName, path, item.hashName, filePath)) {
-            continue;
-        }
-        if (!BFile::MoveFile(fileName, filePath)) {
-            errFileInfos_[filePath].push_back(errno);
-            HILOGE("failed to move the file. err = %{public}d", errno);
-            continue;
-        }
-
-        RestoreBigFileAfter(filePath, item.sta);
+        RestoreOneBigFile(path, item, appendTargetPath);
     }
     auto end = std::chrono::system_clock::now();
     radarRestoreInfo_.bigFileSpendTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -1270,6 +1312,37 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
     });
 }
 
+int BackupExtExtension::DealIncreRestoreBigAndTarFile()
+{
+    if (isDebug_) {
+        CheckTmpDirFileInfos();
+    }
+    auto startTime = std::chrono::system_clock::now();
+    // 解压
+    int ret = ERR_OK;
+    ret = DoIncrementalRestore();
+    if (ret != ERR_OK) {
+        HILOGE("Do incremental restore err");
+        return ret;
+    }
+    // 恢复用户tar包以及大文件
+    // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景
+    bool appendTargetPath =
+        extension_->UseFullBackupOnly() && !extension_->SpecialVersionForCloneAndCloud();
+    RestoreBigFiles(appendTargetPath);
+    // delete 1.tar/manage.json
+    DeleteBackupIncrementalTars();
+    if (isDebug_) {
+        CheckRestoreFileInfos();
+    }
+    auto endTime = std::chrono::system_clock::now();
+    radarRestoreInfo_.totalFileSpendTime =
+        std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    RecordDoRestoreRes(bundleName_, "BackupExtExtension::AsyncTaskIncrementalRestore",
+        radarRestoreInfo_);
+    return ret;
+}
+
 void BackupExtExtension::AsyncTaskIncrementalRestore()
 {
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
@@ -1277,27 +1350,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            if (ptr != nullptr && ptr->isDebug_) {
-                ptr->CheckTmpDirFileInfos();
-            }
-            auto startTime = std::chrono::system_clock::now();
-            // 解压
-            int ret = ptr->DoIncrementalRestore();
-            // 恢复用户tar包以及大文件
-            // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景
-            bool appendTargetPath =
-                ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpecialVersionForCloneAndCloud();
-            ptr->RestoreBigFiles(appendTargetPath);
-            // delete 1.tar/manage.json
-            ptr->DeleteBackupIncrementalTars();
-            if (ptr != nullptr && ptr->isDebug_) {
-                ptr->CheckRestoreFileInfos();
-            }
-            auto endTime = std::chrono::system_clock::now();
-            ptr->radarRestoreInfo_.totalFileSpendTime =
-                std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-            RecordDoRestoreRes(ptr->bundleName_, "BackupExtExtension::AsyncTaskIncrementalRestore",
-                ptr->radarRestoreInfo_);
+            int ret = ptr->DealIncreRestoreBigAndTarFile();
             if (ret == ERR_OK) {
                 HILOGI("after extra, do incremental restore.");
                 ptr->AsyncTaskIncrementalRestoreForUpgrade();
