@@ -147,7 +147,7 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
         }
 
         MessageParcel reply;
-        MessageOption option(MessageOption::TF_ASYNC);
+        MessageOption option;
         int32_t ret = appRemoteObj_->SendRequest(static_cast<int>(disposeOperation), data, reply, option);
         if (ret != ERR_NONE) {
             HILOGI("SendRequest error, code=%{public}d, bundleName=%{public}s , appindex =%{public}d",
