@@ -283,6 +283,9 @@ private:
 
     std::function<void(std::string, int)> ReportErrFileByProc(wptr<BackupExtExtension> obj,
         BackupRestoreScenario scenario);
+    ErrCode GetIncreFileHandleForNormalVersion(const std::string &fileName);
+    void RestoreOneBigFile(const std::string &path, const ExtManageInfo &item, const bool appendTargetPath);
+    int DealIncreRestoreBigAndTarFile();
 
 private:
     std::shared_mutex lock_;
