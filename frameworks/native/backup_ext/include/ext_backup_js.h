@@ -138,12 +138,8 @@ public:
     ErrCode OnProcess(std::function<void(ErrCode, const std::string)> callback) override;
 
 public:
-    explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
-    ~ExtBackupJs()
-    {
-        jsRuntime_.FreeNativeReference(std::move(jsObj_));
-    }
-
+    explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime);
+    ~ExtBackupJs();
 private:
     int CallJsMethod(const std::string &funcName,
                      AbilityRuntime::JsRuntime &jsRuntime,
