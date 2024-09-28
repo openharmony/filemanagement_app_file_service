@@ -80,7 +80,7 @@ private:
     std::mutex mutex_;
     int writeFd_;
     std::atomic<uint32_t> writeLogSize_ = 0;
-    bool isSaJob_;
+    bool isSaJob_ = false;
     HiAuditConfig hiAuditConfig_;
 };
 } // namespace OHOS::FileManagement::Backup

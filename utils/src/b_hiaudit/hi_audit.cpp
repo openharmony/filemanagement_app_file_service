@@ -49,7 +49,9 @@ HiAudit::HiAudit(bool isSaJob)
 
 HiAudit::~HiAudit()
 {
-    close(writeFd_);
+    if (writeFd_ >= 0) {
+        close(writeFd_);
+    }
 }
 
 HiAudit &HiAudit::GetInstance(bool isSaJob)
@@ -74,7 +76,7 @@ void HiAudit::Init()
     writeFd_ =
         open(logFilePath.c_str(), O_CREAT | O_APPEND | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
     if (writeFd_ < 0) {
-        HILOGE("Init, writeFd_ open error, logFilePath is:%{public}s", logFilePath.c_str());
+        HILOGE("Init, open error, logFilePath is:%{public}s, errno:%{public}d", logFilePath.c_str(), errno);
     }
     struct stat st;
     writeLogSize_ = stat(HIAUDIT_LOG_NAME.c_str(), &st) ? 0 : static_cast<uint64_t>(st.st_size);
@@ -119,7 +121,7 @@ void HiAudit::Write(const AuditLog &auditLog)
     }
     std::string writeLog =
         GetFormattedTimestampEndWithMilli() + ", " + hiAuditConfig_.logName + ", NO, " + auditLog.ToString();
-    HILOGE("write %{public}s.", writeLog.c_str());
+    HILOGI("write %{public}s.", writeLog.c_str());
     if (writeLog.length() > hiAuditConfig_.logSize) {
         writeLog = writeLog.substr(0, hiAuditConfig_.logSize);
     }
@@ -142,6 +144,9 @@ void HiAudit::GetWriteFilePath()
     std::string logFilePath = hiAuditConfig_.logPath + hiAuditConfig_.logName + "_audit.csv";
     writeFd_ =
         open(logFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+    if (writeFd_ < 0) {
+        HILOGE("GetWriteFilePath, Open fd error, errno:%{public}d", errno);
+    }
     writeLogSize_ = 0;
 }
 
@@ -185,11 +190,11 @@ void HiAudit::CleanOldAuditFile()
 void HiAudit::WriteToFile(const std::string &content)
 {
     GetWriteFilePath();
-    if (writeFd_ > 0) {
-        write(writeFd_, content.c_str(), content.length());
-    } else {
-        HILOGE("write error.");
+    if (writeFd_ < 0) {
+        HILOGE("Write content to file error, fd is invalid");
+        return;
     }
+    write(writeFd_, content.c_str(), content.length());
     writeLogSize_ = writeLogSize_ + content.length();
 }
 

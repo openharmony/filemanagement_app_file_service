@@ -43,6 +43,7 @@
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "b_file_info.h"
+#include "b_hiaudit/hi_audit.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_ohos/startup/backup_para.h"
@@ -788,7 +789,6 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
         if (res) {
             HILOGE("Failed to publish file for backup extension");
         }
-
         return res;
     } catch (const BError &e) {
         return e.GetCode();
@@ -806,16 +806,16 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         string callerName = VerifyCallerAndGetCallerName();
-        HILOGD("Caller name is:%{public}s", callerName.c_str());
         if (fileName.find('/') != string::npos) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not valid");
         }
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
             fd = session_->OnBundleExtManageInfo(callerName, move(fd));
         }
-
         session_->GetServiceReverseProxy()->BackupOnFileReady(callerName, fileName, move(fd), errCode);
-
+        AuditLog auditLog = { false, "Backup File Ready", "ADD", "DataClone", 1, "SUCCESS", "AppFileReady",
+            callerName, GetAnonyPath(fileName) };
+        HiAudit::GetInstance(true).Write(auditLog);
         if (session_->OnBundleFileReady(callerName, fileName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
             if (backUpConnection == nullptr) {
@@ -983,7 +983,6 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
     string bundleExtInfo = session_->GetBackupExtInfo(bundleName);
     HILOGI("BundleExtInfo is:%{public}s", GetAnonyString(bundleExtInfo).c_str());
-
     want.SetElementName(bundleDetail.bundleName, backupExtName);
     want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
     want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<long>(versionCode));

@@ -34,6 +34,7 @@
 #include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
+#include "b_hiaudit/hi_audit.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_caps.h"
 #include "b_ohos/startup/backup_para.h"
@@ -417,13 +418,15 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
                                                                               move(manifestFd), errCode);
             return BError(BError::Codes::OK);
         }
-
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
             fd = session_->OnBundleExtManageInfo(callerName, move(fd));
         }
         HILOGD("reverse: Will notify IncrementalBackupOnFileReady");
         session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(callerName, fileName, move(fd),
-                                                                         move(manifestFd), errCode);
+            move(manifestFd), errCode);
+        AuditLog auditLog = { false, "Backup File Ready", "ADD", "CloudDriver", 1, "SUCCESS", "AppIncrementalFileReady",
+            callerName, GetAnonyPath(fileName) };
+        HiAudit::GetInstance(true).Write(auditLog);
         if (session_->OnBundleFileReady(callerName, fileName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
             auto proxy = backUpConnection->GetBackupExtProxy();

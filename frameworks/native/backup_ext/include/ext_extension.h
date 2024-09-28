@@ -283,6 +283,13 @@ private:
 
     std::function<void(std::string, int)> ReportErrFileByProc(wptr<BackupExtExtension> obj,
         BackupRestoreScenario scenario);
+    ErrCode GetIncreFileHandleForNormalVersion(const std::string &fileName);
+    void RestoreOneBigFile(const std::string &path, const ExtManageInfo &item, const bool appendTargetPath);
+    int DealIncreRestoreBigAndTarFile();
+    ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo, const vector<struct ReportFileInfo> &srcFiles,
+        sptr<IService> proxy);
+    ErrCode IncrementalAllFileReady(const TarMap &pkgInfo, const vector<struct ReportFileInfo> &srcFiles,
+        sptr<IService> proxy);
 
 private:
     std::shared_mutex lock_;
