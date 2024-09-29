@@ -220,6 +220,9 @@ static inline std::string LAST_INCREMENTAL_TIME = "lastIncrementalTime";
 static inline std::string PARAMETERS = "parameters";
 static inline std::string PRIORITY = "priority";
 
+// unicast
+const std::string UNICAST_TYPE = "unicast";
+
 // 雷达打点引用到的常量
 constexpr int32_t MS_1000 = 1000;
 constexpr uint8_t INDEX = 3;

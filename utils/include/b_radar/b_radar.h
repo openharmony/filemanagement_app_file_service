@@ -76,11 +76,11 @@ public:
     struct DoRestoreInfo {
         uint32_t bigFileNum;
         uint64_t bigFileSize;
-        uint32_t bigFileSpendTime;
+        int64_t bigFileSpendTime;
         uint32_t tarFileNum;
         uint64_t tarFileSize;
-        uint32_t tarFileSpendTime;
-        uint32_t totalFileSpendTime;
+        int64_t tarFileSpendTime;
+        int64_t totalFileSpendTime;
     };
 
 public:

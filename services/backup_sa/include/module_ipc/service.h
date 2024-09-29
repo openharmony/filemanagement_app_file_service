@@ -376,6 +376,24 @@ private:
         std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType);
 
     void SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info, std::map<std::string, bool> &isClearDataFlags);
+    
+    /**
+     * @brief add useridinfo to  current backup session
+     *
+     * @param bundleNames: bundleNames list
+     * @param userId: userId
+     *
+     */
+    void SetCurrentBackupSessProperties(const std::vector<std::string> &bundleNames, int32_t userId);
+
+    /**
+     * @brief send userid to app
+     *
+     * @param bundleName: bundleName
+     * @param userId: userId
+     *
+     */
+    void SendUserIdToApp(std::string &bundleName, int32_t userId);
 
     /**
      * @brief 通知权限模块

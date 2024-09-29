@@ -1677,40 +1677,31 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_UpdateTimer_0100, testing:
         auto callback = []() -> void {};
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->impl_.clientToken = 0;
-        auto ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, 30, callback);
+        auto ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, BConstants::DEFAULT_TIMEOUT, callback);
         EXPECT_FALSE(ret);
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        EXPECT_THROW(sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, BConstants::TIMEOUT_INVALID, callback), BError);
 
         BackupExtInfo info;
         info.extTimerStatus = false;
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
-        ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, 30, callback);
-        EXPECT_TRUE(ret);
-
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
-        ret = sessionManagerPtr_->StartExtTimer(BUNDLE_NAME, callback);
-        EXPECT_TRUE(ret);
-        ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, 30, callback);
-        EXPECT_TRUE(ret);
-        ret = sessionManagerPtr_->StopExtTimer(BUNDLE_NAME);
+        ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, BConstants::DEFAULT_TIMEOUT, callback);
         EXPECT_TRUE(ret);
 
         info.extTimerStatus = true;
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
-        ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, 30, callback);
-        EXPECT_FALSE(ret);
+        ret = sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, BConstants::DEFAULT_TIMEOUT, callback);
+        EXPECT_TRUE(ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by UpdateTimer.";
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_UpdateTimer_0100";
 }
-
 /**
  * @tc.number: SUB_backup_sa_session_StopFwkTimer_0100
  * @tc.name: SUB_backup_sa_session_StopFwkTimer_0100
