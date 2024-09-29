@@ -35,6 +35,7 @@ public:
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
     ErrCode GetBackupInfo(std::string &result) override;
     ErrCode UpdateFdSendRate(std::string &bundleName, int32_t sendRate) override;
+    ErrCode User0OnBackup() override;
 
 public:
     explicit SvcExtensionProxy(const sptr<IRemoteObject> &remote) : IRemoteProxy<IExtension>(remote) {}
