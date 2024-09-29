@@ -309,4 +309,70 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0700, testing::ext::Tes
     }
     GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0700";
 }
+
+/**
+ * @tc.number: SUB_backup_b_session_backup_0800
+ * @tc.name: SUB_backup_b_session_backup_0800
+ * @tc.desc: 测试AppendBundles接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0800, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionBackupTest-AppendBundles SUB_backup_b_session_backup_0800";
+    try {
+        if (backupPtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_backup_0800 backupPtr_ == nullptr";
+            return;
+        }
+        vector<BundleName> bundleNames;
+        vector<std::string> detailInfos;
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        SetMockGetInstance(true);
+        auto ret = backupPtr_->AppendBundles(bundleNames, detailInfos);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        SetMockGetInstance(false);
+        ret = backupPtr_->AppendBundles(bundleNames, detailInfos);
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionBackupTest-an exception occurred by AppendBundles.";
+    }
+    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0800";
+}
+
+/**
+ * @tc.number: SUB_backup_b_session_backup_0900
+ * @tc.name: SUB_backup_b_session_backup_0900
+ * @tc.desc: 测试AppendBundles接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_0900, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionBackupTest-Release SUB_backup_b_session_backup_0900";
+    try {
+        if (backupPtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_backup_0900 backupPtr_ == nullptr";
+            return;
+        }
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        SetMockGetInstance(true);
+        auto ret = backupPtr_->Release();
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        SetMockGetInstance(false);
+        ret = backupPtr_->Release();
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionBackupTest-an exception occurred by Release.";
+    }
+    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_0900";
+}
 } // namespace OHOS::FileManagement::Backup

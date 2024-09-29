@@ -55,11 +55,6 @@ static void OnBackupServiceDied()
     GTEST_LOG_(INFO) << "BSessionRestoreTest OnBackupServiceDied OK";
 }
 
-static void OnResultReport(std::string bundleName, const std::string result)
-{
-    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest OnResultReport OK";
-}
-
 class BSessionRestoreTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
@@ -93,7 +88,6 @@ void BSessionRestoreTest::Init()
     callbacks_.onBundleFinished = OnBundleFinished;
     callbacks_.onAllBundlesFinished = OnAllBundlesFinished;
     callbacks_.onBackupServiceDied = OnBackupServiceDied;
-    callbacks_.onResultReport = OnResultReport;
 }
 
 /**
