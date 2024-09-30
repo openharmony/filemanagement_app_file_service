@@ -929,4 +929,247 @@ int BackupExtExtension::User0DoBackup(const BJsonEntityExtensionConfig &usrConfi
     DoUser0Backup(usrConfig);
     return ERR_OK;
 }
+
+/**
+ * 获取增量的大文件的信息
+ */
+static TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files)
+{
+    auto getStringHash = [](const TarMap &tarMap, const string &str) -> string {
+        ostringstream strHex;
+        strHex << hex;
+
+        hash<string> strHash;
+        size_t szHash = strHash(str);
+        strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
+        string name = strHex.str();
+        for (int i = 0; tarMap.find(name) != tarMap.end(); ++i, strHex.str("")) {
+            szHash = strHash(str + to_string(i));
+            strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
+            name = strHex.str();
+        }
+
+        return name;
+    };
+
+    TarMap bigFiles;
+    for (const auto &item : files) {
+        struct stat sta = {};
+        if (stat(item.filePath.c_str(), &sta) != 0) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Get file stat failed");
+        }
+        string md5Name = getStringHash(bigFiles, item.filePath);
+        if (!md5Name.empty()) {
+            bigFiles.emplace(md5Name, make_tuple(item.filePath, sta, true));
+        }
+    }
+
+    return bigFiles;
+}
+
+int BackupExtExtension::DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd manifestFd)
+{
+    auto start = std::chrono::system_clock::now();
+    vector<struct ReportFileInfo> allFiles;
+    vector<struct ReportFileInfo> smallFiles;
+    vector<struct ReportFileInfo> bigFiles;
+    CompareFiles(move(incrementalFd), move(manifestFd), allFiles, smallFiles, bigFiles);
+    auto ret = DoIncrementalBackup(allFiles, smallFiles, bigFiles);
+    auto end = std::chrono::system_clock::now();
+    auto cost = to_string(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    AppRadar::Info info(bundleName_, "", string("\"spend_time\":").append(cost).append(string("ms\"")));
+    AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::AsyncTaskDoIncrementalBackup",
+        AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, static_cast<int32_t>(ret));
+    return ret;
+}
+
+void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
+{
+    HILOGI("Do IncrementalBackup, start fwk timer begin.");
+    bool isFwkStart;
+    StartFwkTimer(isFwkStart);
+    if (!isFwkStart) {
+        HILOGE("Do IncrementalBackup, start fwk timer fail.");
+        return;
+    }
+    HILOGI("Do IncrementalBackup, start fwk timer end.");
+    int incrementalFdDup = dup(incrementalFd);
+    int manifestFdDup = dup(manifestFd);
+    if (incrementalFdDup < 0) {
+        throw BError(BError::Codes::EXT_INVAL_ARG, "dup failed");
+    }
+    auto task = [obj {wptr<BackupExtExtension>(this)}, manifestFdDup, incrementalFdDup]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        try {
+            UniqueFd incrementalDupFd(dup(incrementalFdDup));
+            UniqueFd manifestDupFd(dup(manifestFdDup));
+            if (incrementalDupFd < 0) {
+                throw BError(BError::Codes::EXT_INVAL_ARG, "dup failed");
+            }
+            close(incrementalFdDup);
+            close(manifestFdDup);
+            auto ret = ptr->DoIncrementalBackupTask(move(incrementalDupFd), move(manifestDupFd));
+            ptr->AppIncrementalDone(ret);
+            HILOGI("Incremental backup app done %{public}d", ret);
+        } catch (const BError &e) {
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+void BackupExtExtension::AsyncTaskOnIncrementalBackup()
+{
+    auto task = [obj {wptr<BackupExtExtension>(this)}]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
+        try {
+            ptr->curScenario_ = BackupRestoreScenario::INCREMENTAL_BACKUP;
+            if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_BACKUP)) != ERR_OK) {
+                HILOGE("Call onProcess result is timeout");
+                return;
+            }
+            auto callBackup = ptr->IncOnBackupCallback(obj);
+            auto callBackupEx = ptr->IncOnBackupExCallback(obj);
+            ptr->UpdateOnStartTime();
+            ErrCode err = ptr->extension_->OnBackup(callBackup, callBackupEx);
+            if (err != ERR_OK) {
+                HILOGE("OnBackup done, err = %{pubilc}d", err);
+                ptr->AppIncrementalDone(BError::GetCodeByErrno(err));
+            }
+        } catch (const BError &e) {
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+static string GetIncrmentPartName()
+{
+    auto now = chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    auto milliseconds = chrono::duration_cast<chrono::milliseconds>(duration);
+
+    return to_string(milliseconds.count()) + "_part";
+}
+
+void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &infos, TarMap &tar,
+    sptr<IService> proxy)
+{
+    HILOGI("IncrementalPacket begin, infos count: %{public}zu", infos.size());
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    uint64_t totalSize = 0;
+    uint32_t fileCount = 0;
+    vector<string> packFiles;
+    vector<struct ReportFileInfo> tarInfos;
+    TarFile::GetInstance().SetPacketMode(true); // 设置下打包模式
+    auto startTime = std::chrono::system_clock::now();
+    int fdNum = 0;
+    string partName = GetIncrmentPartName();
+    auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
+    for (auto small : infos) {
+        totalSize += static_cast<uint64_t>(small.size);
+        fileCount += 1;
+        packFiles.emplace_back(small.filePath);
+        tarInfos.emplace_back(small);
+        if (totalSize >= BConstants::DEFAULT_SLICE_SIZE || fileCount >= BConstants::MAX_FILE_COUNT) {
+            TarMap tarMap {};
+            TarFile::GetInstance().Packet(packFiles, partName, path, tarMap, reportCb);
+            tar.insert(tarMap.begin(), tarMap.end());
+            // 执行tar包回传功能
+            WaitToSendFd(startTime, fdNum);
+            IncrementalTarFileReady(tarMap, tarInfos, proxy);
+            totalSize = 0;
+            fileCount = 0;
+            packFiles.clear();
+            tarInfos.clear();
+            fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
+            RefreshTimeInfo(startTime, fdNum);
+        }
+    }
+    if (fileCount > 0) {
+        // 打包回传
+        TarMap tarMap {};
+        TarFile::GetInstance().Packet(packFiles, partName, path, tarMap, reportCb);
+        IncrementalTarFileReady(tarMap, tarInfos, proxy);
+        fdNum = 1;
+        WaitToSendFd(startTime, fdNum);
+        tar.insert(tarMap.begin(), tarMap.end());
+        packFiles.clear();
+        tarInfos.clear();
+        RefreshTimeInfo(startTime, fdNum);
+    }
+}
+
+int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> &allFiles,
+                                            const vector<struct ReportFileInfo> &smallFiles,
+                                            const vector<struct ReportFileInfo> &bigFiles)
+{
+    HILOGI("Do increment backup begin");
+    if (extension_ == nullptr) {
+        HILOGE("Failed to do incremental backup, extension is nullptr");
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
+    }
+    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
+        return EPERM;
+    }
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
+        throw BError(errno);
+    }
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
+    }
+    // 获取增量文件和全量数据
+    if (smallFiles.size() == 0 && bigFiles.size() == 0) {
+        // 没有增量，则不需要上传
+        TarMap tMap;
+        ErrCode err = IncrementalAllFileReady(tMap, allFiles, proxy);
+        HILOGI("Do increment backup, IncrementalAllFileReady end, file empty");
+        return err;
+    }
+    // tar包数据
+    TarMap tarMap;
+    IncrementalPacket(smallFiles, tarMap, proxy);
+    HILOGI("Do increment backup, IncrementalPacket end");
+    // 最后回传大文件
+    TarMap bigMap = GetIncrmentBigInfos(bigFiles);
+    IncrementalBigFileReady(bigMap, bigFiles, proxy);
+    HILOGI("Do increment backup, IncrementalBigFileReady end");
+    bigMap.insert(tarMap.begin(), tarMap.end());
+    // 回传manage.json和全量文件
+    ErrCode err = IncrementalAllFileReady(bigMap, allFiles, proxy);
+    HILOGI("End, bigFiles num:%{public}zu, smallFiles num:%{public}zu, allFiles num:%{public}zu", bigFiles.size(),
+        smallFiles.size(), allFiles.size());
+    return err;
+}
 } // namespace OHOS::FileManagement::Backup

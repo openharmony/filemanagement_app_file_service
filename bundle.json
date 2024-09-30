@@ -40,7 +40,8 @@
                 "safwk",
                 "samgr",
                 "storage_service",
-                "sandbox_manager"
+                "sandbox_manager",
+                "zlib"
             ],
             "third_party": [
                 "bounds_checking_function",

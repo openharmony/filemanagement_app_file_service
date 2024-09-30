@@ -65,6 +65,8 @@ ohos_shared_library("backup_utils") {
     "src/b_filesystem/b_dir.cpp",
     "src/b_filesystem/b_file.cpp",
     "src/b_filesystem/b_file_hash.cpp",
+    "src/b_hiaudit/hi_audit.cpp",
+    "src/b_hiaudit/zip_util.cpp",
     "src/b_json/b_json_clear_data_config.cpp",
     "src/b_json/b_json_entity_ext_manage.cpp",
     "src/b_json/b_json_entity_extension_config.cpp",
@@ -96,6 +98,7 @@ ohos_shared_library("backup_utils") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "zlib:shared_libz",
   ]
 
   include_dirs = [
