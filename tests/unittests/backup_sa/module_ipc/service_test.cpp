@@ -22,6 +22,7 @@
 #include "module_ipc/service.h"
 #include "service.cpp"
 #include "service_reverse_mock.h"
+#include "sub_service.cpp"
 #include "test_manager.h"
 
 namespace OHOS::FileManagement::Backup {

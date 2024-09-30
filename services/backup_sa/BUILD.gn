@@ -36,6 +36,7 @@ ohos_shared_library("backup_sa") {
     "src/module_ipc/service_incremental_reverse_proxy.cpp",
     "src/module_ipc/service_reverse_proxy.cpp",
     "src/module_ipc/service_stub.cpp",
+    "src/module_ipc/sub_service.cpp",
     "src/module_ipc/svc_backup_connection.cpp",
     "src/module_ipc/svc_extension_incremental_proxy.cpp",
     "src/module_ipc/svc_extension_proxy.cpp",
