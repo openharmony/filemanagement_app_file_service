@@ -212,7 +212,8 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo>&
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo>&, std::vector<std::string>&,
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>>&, std::map<std::string, bool>&, RestoreTypeEnum) {}
 
-void Service::SetCurrentSessProperties(BJsonEntityCaps::BundleInfo&, std::map<std::string, bool>&) {}
+void Service::SetCurrentSessProperties(BJsonEntityCaps::BundleInfo&, std::map<std::string, bool>&,
+    const std::string&) {}
 
 void Service::ReleaseOnException() {}
 

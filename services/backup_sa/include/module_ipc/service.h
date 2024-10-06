@@ -376,7 +376,8 @@ private:
     void SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
         std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType);
 
-    void SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info, std::map<std::string, bool> &isClearDataFlags);
+    void SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info, std::map<std::string, bool> &isClearDataFlags,
+        const std::string &bundleNameIndexInfo);
 
     /**
      * @brief add useridinfo to  current backup session
@@ -475,6 +476,14 @@ private:
     vector<BIncrementalData> MakeDetailList(const vector<BundleName> &bundleNames);
 
     vector<string> GetBundleNameByDetails(const std::vector<BIncrementalData> &bundlesToBackup);
+
+    void HandleCurGroupBackupInfos(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
+        std::map<std::string, bool> &isClearDataFlags);
+
+    void HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
+        std::map<std::string, bool> &isClearDataFlags);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

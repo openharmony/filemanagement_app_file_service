@@ -30,6 +30,7 @@
 
 #include "module_ipc/service.h"
 #include "service.cpp"
+#include "sub_service.cpp"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -232,15 +233,15 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0100, TestSize.Level1
         EXPECT_TRUE(servicePtr_ != nullptr);
         BJsonEntityCaps::BundleInfo info;
         std::map<std::string, bool> isClearDataFlags;
-
+        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
         servicePtr_->session_ = nullptr;
-        servicePtr_->SetCurrentSessProperties(info, isClearDataFlags);
+        servicePtr_->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
         servicePtr_->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(servicePtr_)));
-        servicePtr_->SetCurrentSessProperties(info, isClearDataFlags);
+        servicePtr_->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
 
         info = BJsonEntityCaps::BundleInfo{BUNDLE_NAME, 0, {}, {}, 0, 0, true, false, BUNDLE_NAME};
         isClearDataFlags = {{BUNDLE_NAME, true}};
-        servicePtr_->SetCurrentSessProperties(info, isClearDataFlags);
+        servicePtr_->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
