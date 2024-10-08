@@ -125,8 +125,11 @@ void BackupRestoreCallback::CallJsMethod(InputArgsParser argParser)
     work->data = reinterpret_cast<void *>(workArgs.get());
     HILOGI("Will execute current js method");
     int ret = uv_queue_work(
-        loop, work.get(), [](uv_work_t *work) {},
+        loop, work.get(), [](uv_work_t *work) {
+            HILOGI("Enter, %{public}zu", (size_t)work);
+        },
         [](uv_work_t *work, int status) {
+            HILOGI("AsyncWork Enter, %{public}zu", (size_t)work);
             auto workArgs = reinterpret_cast<WorkArgs *>(work->data);
             do {
                 if (workArgs == nullptr) {

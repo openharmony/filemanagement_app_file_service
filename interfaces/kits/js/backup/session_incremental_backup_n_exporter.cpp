@@ -56,12 +56,10 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
         return;
     }
     ErrCode errCode = BError::GetCodeByErrno(sysErrno);
-    std::string errMsg = "system errno: " + to_string(sysErrno);
-    std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, errMsg);
-
+    std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, "system errno: " + to_string(sysErrno));
+    HILOGI("callback function incremental backup onFileReady cbCompl begin errcode: %{public}d", std::get<0>(errInfo));
     auto cbCompl = [bundleName {fileInfo.owner}, fileName {fileInfo.fileName},
-                    fd {make_shared<UniqueFd>(fd.Release())},
-                    manifestFd {make_shared<UniqueFd>(manifestFd.Release())},
+                    fd {make_shared<UniqueFd>(fd.Release())}, manifestFd {make_shared<UniqueFd>(manifestFd.Release())},
                     errInfo](napi_env env, NError err) -> NVal {
         if (err) {
             return {env, err.GetNapiErr(env)};
@@ -88,6 +86,7 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
                 NVal::DeclareNapiProperty(BConstants::MANIFEST_FD.c_str(),
                     NVal::CreateInt32(env, manifestFd->Release()).val_)});
         }
+        HILOGI("callback function incremental backup onFileReady end errcode: %{public}d", std::get<0>(errInfo));
         return {obj};
     };
 
@@ -114,7 +113,7 @@ static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, co
     ErrCode errCode = BError::GetBackupCodeByErrno(err);
     std::string errMsg = BError::GetBackupMsgByErrno(errCode) + ", origin errno: " + to_string(err);
     std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, errMsg);
-
+    HILOGI("callback function incremental backup onBundleBegin start errCode: %{public}d", std::get<0>(errInfo));
     auto cbCompl = [name {name}, errCode {err}, errInfo](napi_env env, NError err) -> NVal {
         NVal bundleName = NVal::CreateUTF8String(env, name);
         if (!err && errCode == 0) {
@@ -133,7 +132,7 @@ static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, co
         if (status != napi_ok) {
             HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s", status, name.c_str());
         }
-
+        HILOGI("callback function incremental backup onBundleBegin end errCode: %{public}d", std::get<0>(errInfo));
         return res;
     };
 
@@ -160,7 +159,7 @@ static void onBundleEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, cons
     ErrCode errCode = BError::GetBackupCodeByErrno(err);
     std::string errMsg = BError::GetBackupMsgByErrno(errCode) + ", origin errno: " + to_string(err);
     std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, errMsg);
-
+    HILOGI("callback function incremental backup onBundleEnd start errCode: %{public}d", std::get<0>(errInfo));
     auto cbCompl = [name {name}, errCode {err}, errInfo](napi_env env, NError err) -> NVal {
         NVal bundleName = NVal::CreateUTF8String(env, name);
         if (!err && errCode == 0) {
@@ -179,7 +178,7 @@ static void onBundleEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, cons
         if (status != napi_ok) {
             HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s", status, name.c_str());
         }
-
+        HILOGI("callback function incremental backup onBundleBegin end errCode: %{public}d", std::get<0>(errInfo));
         return res;
     };
 
@@ -205,7 +204,7 @@ static void onAllBundlesEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err)
     ErrCode errCode = BError::GetBackupCodeByErrno(err);
     std::string errMsg = BError::GetBackupMsgByErrno(errCode) + ", origin errno: " + to_string(err);
     std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, errMsg);
-
+    HILOGI("callback function incremental backup onAllBundlesEnd begin errCode: %{public}d", std::get<0>(errInfo));
     auto cbCompl = [errCode {err}, errInfo](napi_env env, NError err) -> NVal {
         if (!err && errCode == 0) {
             return NVal::CreateUndefined(env);
@@ -219,7 +218,7 @@ static void onAllBundlesEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err)
         } else {
             res = NVal {env, NError(errorParam).GetNapiErr(env)};
         }
-
+        HILOGI("callback function incremental backup onAllBundlesEnd end errCode: %{public}d", std::get<0>(errInfo));
         return res;
     };
 
@@ -273,6 +272,7 @@ static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
     }
 
     auto cbCompl = [](napi_env env, vector<napi_value> &argv) -> bool {
+        argv.push_back(nullptr);
         napi_value napi_res = nullptr;
         napi_get_undefined(env, &napi_res);
         argv.push_back(napi_res);
