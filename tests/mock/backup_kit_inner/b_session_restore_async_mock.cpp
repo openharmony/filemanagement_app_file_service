@@ -80,7 +80,6 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap, vector<BundleNam
     bFileInfo.fileName = "manage.json";
     GTEST_LOG_(INFO) << "File ready callback for manage.json";
     callbacks_.onFileReady(bFileInfo, move(fdManage), 0);
-
     callbacks_.onBundleFinished(0, "com.example.app2backup");
 
     callbacks_.onAllBundlesFinished(0);
@@ -124,7 +123,6 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
     callbacks_.onBundleStarted(1, "com.example.app2backup");
     callbacks_.onBundleFinished(1, "com.example.app2backup");
     callbacks_.onAllBundlesFinished(1);
-    callbacks_.onResultReport("com.example.app2backup", "ok");
     callbacks_.onBackupServiceDied();
     callbacks_.onProcess("com.example.app2backup", "100");
     return BError(BError::Codes::OK);

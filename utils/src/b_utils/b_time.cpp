@@ -27,14 +27,12 @@ int64_t TimeUtils::GetTimeS()
         std::chrono::system_clock::now().time_since_epoch());
         return nowS.count();
 }
-
 int64_t TimeUtils::GetTimeMS()
 {
     std::chrono::milliseconds nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch());
         return nowMs.count();
 }
-
 int64_t TimeUtils::GetTimeUS()
 {
     std::chrono::microseconds nowUs = std::chrono::duration_cast<std::chrono::microseconds>(

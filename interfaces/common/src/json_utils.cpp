@@ -39,7 +39,7 @@ int32_t JsonUtils::GetJsonObjFromPath(nlohmann::json& jsonObj, const std::string
     jsonFileStream.close();
 
     jsonObj = nlohmann::json::parse(buf.str(), nullptr, false);
-    if (!jsonObj.is_discarded()) {
+    if (jsonObj.is_discarded()) {
         LOGE("Parse json file path %{public}s failed", jsonPath.c_str());
     }
     return 0;
