@@ -487,6 +487,7 @@ private:
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
+    std::mutex getBackupInfoLock_;
     std::mutex getBackupInfoMutx_;
     std::condition_variable getBackupInfoCondition_;
     static inline std::atomic<uint32_t> seed {1};
