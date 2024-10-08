@@ -313,6 +313,7 @@ static void GetNetworkIdFromUri(const std::string &fileUri, string &networkId)
     if (networkIdInfo.empty()) {
         return;
     }
+
     size_t posIndex = networkIdInfo.find('=');
     if (posIndex == string::npos || posIndex == (networkIdInfo.size() - 1)) {
         return;
@@ -422,7 +423,6 @@ bool SandboxHelper::IsValidPath(const std::string &path)
 bool SandboxHelper::CheckValidPath(const std::string &filePath)
 {
     if (filePath.empty() || filePath.size() >= PATH_MAX) {
-        LOGE("filePath is invalid, size = %{public}zu", filePath.size());
         return false;
     }
 

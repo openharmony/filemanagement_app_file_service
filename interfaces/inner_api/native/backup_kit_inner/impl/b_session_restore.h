@@ -64,7 +64,7 @@ public:
      */
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName);
 
-    /**
+     /**
      * @brief 用于追加应用，现阶段仅支持在Start之前调用
      *
      * @param remoteCap 已打开的保存远端设备能力的Json文件。可使用GetLocalCapabilities方法获取
