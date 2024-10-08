@@ -1510,6 +1510,7 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
 ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
 {
     try {
+        std::lock_guard<std::mutex> lock(getBackupInfoLock_);
         HILOGI("Service::GetBackupInfo begin.");
         if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Get BackupInfo error, session is empty.");
@@ -1519,10 +1520,8 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
             return BError(BError::Codes::SA_REFUSED_ACT, "Already have an active session");
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-        std::unique_lock<std::mutex> lock(getBackupInfoLock_);
         auto ret = GetBackupInfoCmdHandle(bundleName, result);
-        getBackupInfoLock_.unlock();
-        HILOGI("Service::GetBackupInfo end. result: %s", result.c_str());
+        HILOGI("Service::GetBackupInfo end. result: %{public}s", result.c_str());
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return ret;
     } catch (...) {
