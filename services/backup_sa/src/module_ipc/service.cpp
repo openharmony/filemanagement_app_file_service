@@ -1519,7 +1519,9 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
             return BError(BError::Codes::SA_REFUSED_ACT, "Already have an active session");
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        std::unique_lock<std::mutex> lock(getBackupInfoLock_);
         auto ret = GetBackupInfoCmdHandle(bundleName, result);
+        getBackupInfoLock_.unlock();
         HILOGI("Service::GetBackupInfo end. result: %s", result.c_str());
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return ret;
