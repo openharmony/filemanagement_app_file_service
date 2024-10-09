@@ -136,7 +136,7 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
             fd = session_->OnBundleExtManageInfo(callerName, move(fd));
         }
         session_->GetServiceReverseProxy()->BackupOnFileReady(callerName, fileName, move(fd), errCode);
-        AuditLog auditLog = { false, "Backup File Ready", "ADD", "DataClone", 1, "SUCCESS", "AppFileReady",
+        AuditLog auditLog = { false, "Backup File Ready", "ADD", "", 1, "SUCCESS", "AppFileReady",
             callerName, GetAnonyPath(fileName) };
         HiAudit::GetInstance(true).Write(auditLog);
         if (session_->OnBundleFileReady(callerName, fileName)) {

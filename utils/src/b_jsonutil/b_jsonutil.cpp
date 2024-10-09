@@ -35,7 +35,6 @@ namespace {
 
 BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string &bundleNameStr)
 {
-    HILOGI("Start parse bundle name and index");
     size_t hasPos = bundleNameStr.find(BUNDLE_INDEX_SPLICE);
     BundleDetailInfo bundleDetailInfo;
     if (hasPos == std::string::npos) {
@@ -52,7 +51,8 @@ BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string
         bundleDetailInfo.bundleIndex =  BUNDLE_INDEX_DEFAULT_VAL;
     }
     bundleDetailInfo.bundleName = bundleName;
-    HILOGI("End parse bundle name and index");
+    HILOGI("End parse bundle name and index, bundleName:%{public}s, index:%{public}d",
+        bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
     return bundleDetailInfo;
 }
 
