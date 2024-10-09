@@ -37,7 +37,7 @@ vector<string> BJsonEntityExtensionConfig::GetIncludes() const
         return {BConstants::PATHES_TO_BACKUP.begin(), BConstants::PATHES_TO_BACKUP.end()};
     }
     if (!obj_.isMember("includes")) {
-        HILOGD("'includes' field not found");
+        HILOGE("'includes' field not found");
         return {BConstants::PATHES_TO_BACKUP.begin(), BConstants::PATHES_TO_BACKUP.end()};
     }
     if (!obj_["includes"].isArray()) {

@@ -1145,6 +1145,11 @@ void Service::ClearSessionAndSchedInfo(const string &bundleName)
         sched_->RemoveExtConn(bundleName);
         HandleRestoreDepsBundle(bundleName);
         DelClearBundleRecord({bundleName});
+        if (isOccupyingSession_.load() && session_->IsOnAllBundlesFinished()) {
+            SetOccupySession(false);
+            StopAll(nullptr, true);
+            return;
+        }
         sched_->Sched();
     } catch (const BError &e) {
         return;
@@ -1450,11 +1455,6 @@ void Service::ClearResidualBundleData(const std::string &bundleName)
         backUpConnection->DisconnectBackupExtAbility();
     }
     ClearSessionAndSchedInfo(bundleName);
-    if (isOccupyingSession_.load() && session_->IsOnAllBundlesFinished()) {
-        SetOccupySession(false);
-        StopAll(nullptr, true);
-        return ;
-    }
     // 非清理任务，需要上报
     if (session_->GetScenario() != IServiceReverse::Scenario::CLEAN) {
         OnAllBundlesFinished(BError(BError::Codes::OK));
@@ -1585,7 +1585,7 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
     try {
         if (bundleNames.empty() || session_ == nullptr) {
             HILOGE("Init Incremental backup session error, session is empty");
-            return BError(BError::Codes::SA_INVAL_ARG);
+            return EPERM;
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
