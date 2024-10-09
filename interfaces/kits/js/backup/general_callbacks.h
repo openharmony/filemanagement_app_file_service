@@ -59,7 +59,7 @@ public:
     LibN::NAsyncWorkCallback onBundleBegin;
     LibN::NAsyncWorkCallback onBundleEnd;
     LibN::NAsyncWorkCallback onAllBundlesEnd;
-    LibN::NAsyncWorkCallback onBackupServiceDied;
+    BackupRestoreCallback onBackupServiceDied;
     BackupRestoreCallback onResultReport;
     BackupRestoreCallback onProcess;
 };
