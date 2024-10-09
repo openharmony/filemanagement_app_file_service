@@ -15,22 +15,101 @@
 
 #include <gtest/gtest.h>
 #include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
 
+#include "accesstoken_kit_mock.h"
 #include "backup_para_mock.h"
 #include "bms_adapter_mock.h"
+#include "b_json_clear_data_config_mock.h"
+#include "b_json_service_disposal_config_mock.h"
 #include "b_jsonutil_mock.h"
+#include "b_sa_utils_mock.h"
 #include "ipc_skeleton_mock.h"
 #include "sa_backup_connection_mock.h"
 #include "service_reverse_proxy_mock.h"
 #include "svc_backup_connection_mock.h"
 #include "svc_extension_proxy_mock.h"
+#include "svc_restore_deps_manager_mock.h"
 #include "svc_session_manager_mock.h"
+#include "system_ability_mock.h"
 
-#include "module_ipc/service.h"
 #include "service.cpp"
 #include "sub_service.cpp"
+
+namespace OHOS::FileManagement::Backup {
+ErrCode Service::Release()
+{
+    return BError(BError::Codes::OK);
+}
+
+UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData>&)
+{
+    return UniqueFd(-1);
+}
+
+void Service::StartGetFdTask(std::string, wptr<Service>) {}
+
+ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse>)
+{
+    return BError(BError::Codes::OK);
+}
+
+vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalData>&)
+{
+    return {};
+}
+
+ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData>&)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData>&,
+    const std::vector<std::string>&)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::PublishIncrementalFile(const BFileInfo&)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::PublishSAIncrementalFile(const BFileInfo&, UniqueFd)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::AppIncrementalFileReady(const std::string&, UniqueFd, UniqueFd, int32_t)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::AppIncrementalDone(ErrCode)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::GetIncrementalFileHandle(const std::string&, const std::string&)
+{
+    return BError(BError::Codes::OK);
+}
+
+bool Service::IncrementalBackup(const string&)
+{
+    return false;
+}
+
+void Service::NotifyCallerCurAppIncrementDone(ErrCode, const std::string&) {}
+
+void Service::SendUserIdToApp(string&, int32_t) {}
+
+void Service::SetCurrentBackupSessProperties(const vector<string>&, int32_t) {}
+}
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -47,7 +126,7 @@ public:
     void SetUp() {};
     void TearDown() {};
 
-    static inline sptr<Service> servicePtr_ = nullptr;
+    static inline sptr<Service> service = nullptr;
     static inline shared_ptr<BackupParaMock> param = nullptr;
     static inline shared_ptr<BJsonUtilMock> jsonUtil = nullptr;
     static inline shared_ptr<SvcSessionManagerMock> session = nullptr;
@@ -57,12 +136,18 @@ public:
     static inline shared_ptr<SABackupConnectionMock> saConnect = nullptr;
     static inline shared_ptr<IPCSkeletonMock> skeleton = nullptr;
     static inline sptr<ServiceReverseProxyMock> srProxy = nullptr;
+    static inline shared_ptr<BJsonClearDataConfigMock> cdConfig = nullptr;
+    static inline shared_ptr<SAUtilsMock> saUtils = nullptr;
+    static inline shared_ptr<AccessTokenKitMock> token = nullptr;
+    static inline shared_ptr<BJsonDisposalConfigMock> jdConfig = nullptr;
+    static inline shared_ptr<SystemAbilityMock> ability = nullptr;
+    static inline shared_ptr<SvcRestoreDepsManagerMock> depManager = nullptr;
 };
 
 void ServiceTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase enter";
-    servicePtr_ = sptr<Service>(new Service(SERVICE_ID));
+    service = sptr(new Service(SERVICE_ID));
     param = make_shared<BackupParaMock>();
     BackupParaMock::backupPara = param;
     jsonUtil = make_shared<BJsonUtilMock>();
@@ -79,12 +164,24 @@ void ServiceTest::SetUpTestCase(void)
     skeleton = make_shared<IPCSkeletonMock>();
     IPCSkeletonMock::skeleton = skeleton;
     srProxy = sptr(new ServiceReverseProxyMock());
+    cdConfig = make_shared<BJsonClearDataConfigMock>();
+    BJsonClearDataConfigMock::config = cdConfig;
+    saUtils = make_shared<SAUtilsMock>();
+    SAUtilsMock::utils = saUtils;
+    token = make_shared<AccessTokenKitMock>();
+    AccessTokenKitMock::token = token;
+    jdConfig = make_shared<BJsonDisposalConfigMock>();
+    BJsonDisposalConfigMock::config = jdConfig;
+    ability = make_shared<SystemAbilityMock>();
+    SystemAbilityMock::ability = ability;
+    depManager = make_shared<SvcRestoreDepsManagerMock>();
+    SvcRestoreDepsManagerMock::manager = depManager;
 }
 
 void ServiceTest::TearDownTestCase()
 {
     GTEST_LOG_(INFO) << "TearDownTestCase enter";
-    servicePtr_ = nullptr;
+    service = nullptr;
     BackupParaMock::backupPara = nullptr;
     param = nullptr;
     BJsonUtilMock::jsonUtil = nullptr;
@@ -101,6 +198,191 @@ void ServiceTest::TearDownTestCase()
     IPCSkeletonMock::skeleton = nullptr;
     skeleton = nullptr;
     srProxy = nullptr;
+    BJsonClearDataConfigMock::config = nullptr;
+    cdConfig = nullptr;
+    SAUtilsMock::utils = nullptr;
+    saUtils = nullptr;
+    AccessTokenKitMock::token = nullptr;
+    token = nullptr;
+    BJsonDisposalConfigMock::config = nullptr;
+    jdConfig = nullptr;
+    SystemAbilityMock::ability = nullptr;
+    ability = nullptr;
+    SvcRestoreDepsManagerMock::manager = nullptr;
+    depManager = nullptr;
+}
+
+/**
+ * @tc.number: SUB_Service_GetUserIdDefault_0000
+ * @tc.name: SUB_Service_GetUserIdDefault_0000
+ * @tc.desc: 测试 GetUserIdDefault 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetUserIdDefault_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetUserIdDefault_0000";
+    try {
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        auto ret = GetUserIdDefault();
+        EXPECT_EQ(ret, DEBUG_ID + 1);
+
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        ret = GetUserIdDefault();
+        EXPECT_EQ(ret, BConstants::DEFAULT_USER_ID);
+
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(true, 0)));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        ret = GetUserIdDefault();
+        EXPECT_EQ(ret, BConstants::DEFAULT_USER_ID);
+
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::XTS_UID));
+        ret = GetUserIdDefault();
+        EXPECT_EQ(ret, BConstants::DEFAULT_USER_ID);
+
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
+        EXPECT_CALL(*skeleton, GetCallingUid())
+            .WillOnce(Return(BConstants::SPAN_USERID_UID + BConstants::SPAN_USERID_UID));
+        ret = GetUserIdDefault();
+        EXPECT_EQ(ret, 2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetUserIdDefault.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetUserIdDefault_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_OnStart_0100
+ * @tc.name: SUB_Service_OnStart_0100
+ * @tc.desc: 测试 OnStart
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_OnStart_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnStart_0100";
+    try {
+        vector<string> bundleNames;
+        auto disposal = service->disposal_;
+        auto clearRecorder = service->clearRecorder_;
+        auto sched_ = service->sched_;
+        service->disposal_ = nullptr;
+        service->clearRecorder_ = nullptr;
+        service->sched_ = nullptr;
+        service->isOccupyingSession_ = false;
+
+        EXPECT_CALL(*ability, Publish(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNames));
+        service->OnStart();
+        EXPECT_TRUE(true);
+
+        service->disposal_ = disposal;
+        EXPECT_CALL(*ability, Publish(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNames))
+            .WillOnce(Return(bundleNames));
+        service->OnStart();
+        EXPECT_TRUE(true);
+
+        service->clearRecorder_ = clearRecorder;
+        EXPECT_CALL(*ability, Publish(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNames))
+            .WillOnce(Return(bundleNames));
+        EXPECT_CALL(*cdConfig, GetAllClearBundleRecords()).WillOnce(Return(bundleNames));
+        service->OnStart();
+        EXPECT_TRUE(true);
+
+        service->sched_ = sched_;
+        EXPECT_CALL(*ability, Publish(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNames))
+            .WillOnce(Return(bundleNames));
+        EXPECT_CALL(*cdConfig, GetAllClearBundleRecords()).WillOnce(Return(bundleNames));
+        service->OnStart();
+        EXPECT_TRUE(true);
+
+        service->isOccupyingSession_ = false;
+        EXPECT_CALL(*ability, Publish(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNames))
+            .WillOnce(Return(bundleNames));
+        EXPECT_CALL(*cdConfig, GetAllClearBundleRecords()).WillOnce(Return(bundleNames));
+        service->OnStart();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnStart.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnStart_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_OnStart_0200
+ * @tc.name: SUB_Service_OnStart_0200
+ * @tc.desc: 测试 OnStart
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_OnStart_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnStart_0200";
+    try {
+        service->isOccupyingSession_ = true;
+        EXPECT_CALL(*ability, Publish(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(vector<string>()))
+            .WillOnce(Return(vector<string>()));
+        EXPECT_CALL(*cdConfig, GetAllClearBundleRecords()).WillOnce(Return(vector<string>()));
+        service->OnStart();
+        EXPECT_TRUE(true);
+
+        service->isOccupyingSession_ = false;
+        EXPECT_CALL(*ability, Publish(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(vector<string>(1)))
+            .WillOnce(Return(vector<string>()));
+        EXPECT_CALL(*cdConfig, GetAllClearBundleRecords()).WillOnce(Return(vector<string>()));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        service->OnStart();
+        EXPECT_TRUE(true);
+
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        EXPECT_CALL(*ability, Publish(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(vector<string>()))
+            .WillOnce(Return(vector<string>()));
+        EXPECT_CALL(*cdConfig, GetAllClearBundleRecords()).WillOnce(Return(vector<string>(1)));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        service->OnStart();
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*ability, Publish(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(vector<string>(1)))
+            .WillOnce(Return(vector<string>()));
+        EXPECT_CALL(*cdConfig, GetAllClearBundleRecords()).WillOnce(Return(vector<string>(1)));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        service->OnStart();
+        service->session_ = session_;
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnStart.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnStart_0200";
 }
 
 /**
@@ -116,16 +398,16 @@ HWTEST_F(ServiceTest, SUB_Service_GetLocalCapabilities_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetLocalCapabilities_0100";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->session_ = nullptr;
-        UniqueFd fd = servicePtr_->GetLocalCapabilities();
+        ASSERT_TRUE(service != nullptr);
+        service->session_ = nullptr;
+        UniqueFd fd = service->GetLocalCapabilities();
         EXPECT_NE(fd, BError(BError::Codes::OK));
 
-        servicePtr_->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(servicePtr_)));
-        servicePtr_->isOccupyingSession_.store(true);
-        fd = servicePtr_->GetLocalCapabilities();
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        service->isOccupyingSession_.store(true);
+        fd = service->GetLocalCapabilities();
         EXPECT_NE(fd, BError(BError::Codes::OK));
-        servicePtr_->isOccupyingSession_.store(false);
+        service->isOccupyingSession_.store(false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetLocalCapabilities.";
@@ -146,29 +428,21 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0100, TestSize.Lev
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppendBundlesRestoreSession_0100";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
-            .WillOnce(Return(make_pair<bool, int32_t>(false, 0)))
-            .WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
-        EXPECT_CALL(*skeleton, GetCallingUid())
-            .WillOnce(Return(BConstants::SYSTEM_UID))
-            .WillOnce(Return(BConstants::SYSTEM_UID));
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
-        UniqueFd fd = servicePtr_->GetLocalCapabilities();
+        ASSERT_TRUE(service != nullptr);
         std::vector<BundleName> bundleNames;
         std::vector<std::string> bundleInfos;
         RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
         int32_t userId = 100;
 
-        servicePtr_->session_ = nullptr;
-        auto ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, bundleInfos, restoreType, userId);
-        EXPECT_NE(ret, BError(BError::Codes::OK));
+        service->session_ = nullptr;
+        auto ret = service->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames, bundleInfos, restoreType, userId);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
 
-        servicePtr_->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(servicePtr_)));
-        servicePtr_->isOccupyingSession_.store(true);
-        ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, bundleInfos, restoreType, userId);
-        EXPECT_NE(ret, BError(BError::Codes::OK));
-        servicePtr_->isOccupyingSession_.store(false);
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        service->isOccupyingSession_.store(true);
+        ret = service->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames, bundleInfos, restoreType, userId);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+        service->isOccupyingSession_.store(false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppendBundlesRestoreSession.";
@@ -189,27 +463,23 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0200, TestSize.Lev
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppendBundlesRestoreSession_0200";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
-            .WillOnce(Return(make_pair<bool, int32_t>(false, 0)))
-            .WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
-        EXPECT_CALL(*skeleton, GetCallingUid())
-            .WillOnce(Return(BConstants::SYSTEM_UID))
-            .WillOnce(Return(BConstants::SYSTEM_UID));
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
-        UniqueFd fd = servicePtr_->GetLocalCapabilities();
-        std::vector<BundleName> bundleNames;
-        std::vector<std::string> bundleInfos;
+        ASSERT_TRUE(service != nullptr);
+        vector<string> bundleInfos;
+        vector<BundleName> bundleNames;
+        vector<BJsonEntityCaps::BundleInfo> infos;
         RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
         int32_t userId = DEFAULT_INVAL_VALUE;
-
+        map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
         EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
-        EXPECT_CALL(*session, IsOnOnStartSched()).WillOnce(Return(false));
-        auto ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, bundleInfos, restoreType, userId);
-        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillOnce(Return(bundleNameDetailMap));
+        EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillOnce(Return(infos));
+        auto ret = service->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames, bundleInfos, restoreType, userId);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppendBundlesRestoreSession.";
@@ -230,18 +500,19 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0100, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetCurrentSessProperties_0100";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
+        ASSERT_TRUE(service != nullptr);
         BJsonEntityCaps::BundleInfo info;
-        std::map<std::string, bool> isClearDataFlags;
-        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
-        servicePtr_->session_ = nullptr;
-        servicePtr_->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
-        servicePtr_->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(servicePtr_)));
-        servicePtr_->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
+        map<string, bool> isClearDataFlags;
+        string bundleNameIndexInfo;
+
+        service->session_ = nullptr;
+        service->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        service->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
 
         info = BJsonEntityCaps::BundleInfo{BUNDLE_NAME, 0, {}, {}, 0, 0, true, false, BUNDLE_NAME};
         isClearDataFlags = {{BUNDLE_NAME, true}};
-        servicePtr_->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
+        service->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
@@ -262,18 +533,17 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesBackupSession_0100, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppendBundlesBackupSession_0100";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
+        ASSERT_TRUE(service != nullptr);
         std::vector<BundleName> bundleNames;
 
-        servicePtr_->session_ = nullptr;
-        auto ret = servicePtr_->AppendBundlesBackupSession(bundleNames);
+        service->session_ = nullptr;
+        auto ret = service->AppendBundlesBackupSession(bundleNames);
         EXPECT_NE(ret, BError(BError::Codes::OK));
 
-        servicePtr_->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(servicePtr_)));
-        servicePtr_->isOccupyingSession_.store(true);
-        ret = servicePtr_->AppendBundlesBackupSession(bundleNames);
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        service->isOccupyingSession_.store(true);
+        ret = service->AppendBundlesBackupSession(bundleNames);
         EXPECT_NE(ret, BError(BError::Codes::OK));
-        servicePtr_->isOccupyingSession_.store(false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppendBundlesBackupSession.";
@@ -294,13 +564,17 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesBackupSession_0200, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppendBundlesBackupSession_0200";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
-        std::vector<BundleName> bundleNames;
-
+        ASSERT_TRUE(service != nullptr);
+        vector<BundleName> bundleNames;
+        vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+        service->isOccupyingSession_.store(false);
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*bms, GetBundleInfosForAppend(_, _)).WillOnce(Return(bundleInfos));
         EXPECT_CALL(*session, IsOnOnStartSched()).WillOnce(Return(false));
-        auto ret = servicePtr_->AppendBundlesBackupSession(bundleNames);
+        auto ret = service->AppendBundlesBackupSession(bundleNames);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -323,19 +597,19 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesDetailsBackupSession_0100, TestSi
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppendBundlesDetailsBackupSession_0100";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
+        ASSERT_TRUE(service != nullptr);
         std::vector<BundleName> bundleNames;
         std::vector<std::string> bundleInfos;
 
-        servicePtr_->session_ = nullptr;
-        auto ret = servicePtr_->AppendBundlesDetailsBackupSession(bundleNames, bundleInfos);
+        service->session_ = nullptr;
+        auto ret = service->AppendBundlesDetailsBackupSession(bundleNames, bundleInfos);
         EXPECT_NE(ret, BError(BError::Codes::OK));
 
-        servicePtr_->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(servicePtr_)));
-        servicePtr_->isOccupyingSession_.store(true);
-        ret = servicePtr_->AppendBundlesDetailsBackupSession(bundleNames, bundleInfos);
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        service->isOccupyingSession_.store(true);
+        ret = service->AppendBundlesDetailsBackupSession(bundleNames, bundleInfos);
         EXPECT_NE(ret, BError(BError::Codes::OK));
-        servicePtr_->isOccupyingSession_.store(false);
+        service->isOccupyingSession_.store(false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppendBundlesDetailsBackupSession.";
@@ -356,14 +630,19 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesDetailsBackupSession_0200, TestSi
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppendBundlesDetailsBackupSession_0200";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
-        std::vector<BundleName> bundleNames;
-        std::vector<std::string> bundleInfos;
-
+        ASSERT_TRUE(service != nullptr);
+        vector<BundleName> bundleNames;
+        vector<string> bundleInfos;
+        vector<BJsonEntityCaps::BundleInfo> infos;
+        map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillOnce(Return(bundleNameDetailMap));
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*bms, GetBundleInfosForAppend(_, _)).WillOnce(Return(infos));
         EXPECT_CALL(*session, IsOnOnStartSched()).WillOnce(Return(false));
-        auto ret = servicePtr_->AppendBundlesDetailsBackupSession(bundleNames, bundleInfos);
+        auto ret = service->AppendBundlesDetailsBackupSession(bundleNames, bundleInfos);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -385,26 +664,32 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_PublishFile_0100";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
+        ASSERT_TRUE(service != nullptr);
         BFileInfo fileInfo {BUNDLE_NAME, "", 0};
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-        auto ret = servicePtr_->PublishFile(fileInfo);
+        auto ret = service->PublishFile(fileInfo);
         EXPECT_NE(ret, BError(BError::Codes::OK));
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
-        ret = servicePtr_->PublishFile(fileInfo);
+        ret = service->PublishFile(fileInfo);
         EXPECT_NE(ret, BError(BError::Codes::OK));
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, PublishFile(_))
         .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
-        ret = servicePtr_->PublishFile(fileInfo);
+        ret = service->PublishFile(fileInfo);
         EXPECT_NE(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -426,18 +711,21 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppDone_0100";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
+        ASSERT_TRUE(service != nullptr);
         ErrCode errCode = BError(BError::Codes::OK).GetCode();
 
-        servicePtr_->session_ = nullptr;
-        auto ret = servicePtr_->AppDone(errCode);
+        service->session_ = nullptr;
+        auto ret = service->AppDone(errCode);
         EXPECT_NE(ret, BError(BError::Codes::OK));
-        servicePtr_->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(servicePtr_)));
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false)).WillOnce(Return(false));
-        ret = servicePtr_->AppDone(errCode);
+        ret = service->AppDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -459,21 +747,27 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0200, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppDone_0200";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
+        ASSERT_TRUE(service != nullptr);
         ErrCode errCode = BError(BError::Codes::SA_INVAL_ARG).GetCode();
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-        auto ret = servicePtr_->AppDone(errCode);
+        auto ret = service->AppDone(errCode);
         EXPECT_NE(ret, BError(BError::Codes::OK));
 
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
-        ret = servicePtr_->AppDone(errCode);
+        ret = service->AppDone(errCode);
         EXPECT_NE(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -495,26 +789,31 @@ HWTEST_F(ServiceTest, SUB_Service_NotifyCloneBundleFinish_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_NotifyCloneBundleFinish_0100";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
+        ASSERT_TRUE(service != nullptr);
         std::string bundleName = BUNDLE_NAME;
         BackupRestoreScenario senario = BackupRestoreScenario::INCREMENTAL_BACKUP;
-        servicePtr_->NotifyCloneBundleFinish(bundleName, senario);
+        service->NotifyCloneBundleFinish(bundleName, senario);
+        EXPECT_TRUE(true);
 
         senario = BackupRestoreScenario::FULL_RESTORE;
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
-        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false))
-            .WillOnce(Return(false)).WillOnce(Return(false));
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
-        servicePtr_->NotifyCloneBundleFinish(bundleName, senario);
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        service->NotifyCloneBundleFinish(bundleName, senario);
+        EXPECT_TRUE(true);
 
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-        servicePtr_->NotifyCloneBundleFinish(bundleName, senario);
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        service->NotifyCloneBundleFinish(bundleName, senario);
+        EXPECT_TRUE(true);
 
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
-        servicePtr_->NotifyCloneBundleFinish(bundleName, senario);
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        service->NotifyCloneBundleFinish(bundleName, senario);
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by NotifyCloneBundleFinish.";
@@ -535,23 +834,28 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_LaunchBackupExtension_0100";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
+        ASSERT_TRUE(service != nullptr);
         std::string bundleName = "";
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        auto ret = servicePtr_->LaunchBackupExtension(bundleName);
-        EXPECT_NE(ret, BError(BError::Codes::OK));
+        auto ret = service->LaunchBackupExtension(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
 
+        BJsonUtil::BundleDetailInfo info;
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(info));
         EXPECT_CALL(*session, GetBackupExtName(_)).WillOnce(Return(""));
         EXPECT_CALL(*session, GetBundleVersionName(_)).WillOnce(Return(""));
         EXPECT_CALL(*session, GetBundleVersionCode(_)).WillOnce(Return(0));
         EXPECT_CALL(*session, GetBundleRestoreType(_)).WillOnce(Return(RestoreTypeEnum::RESTORE_DATA_READDY));
         EXPECT_CALL(*session, GetBackupExtInfo(_)).WillOnce(Return(""));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-        ret = servicePtr_->LaunchBackupExtension(bundleName);
-        EXPECT_NE(ret, BError(BError::Codes::OK));
+        ret = service->LaunchBackupExtension(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(info));
         EXPECT_CALL(*session, GetBackupExtName(_)).WillOnce(Return(""));
         EXPECT_CALL(*session, GetBundleVersionName(_)).WillOnce(Return(""));
         EXPECT_CALL(*session, GetBundleVersionCode(_)).WillOnce(Return(0));
@@ -560,8 +864,8 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0100, TestSize.Level1)
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
         EXPECT_CALL(*connect, WaitDisconnectDone()).WillOnce(Return(false));
-        ret = servicePtr_->LaunchBackupExtension(bundleName);
-        EXPECT_NE(ret, BError(BError::Codes::OK));
+        ret = service->LaunchBackupExtension(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by LaunchBackupExtension.";
@@ -582,10 +886,12 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0200, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_LaunchBackupExtension_0200";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
-        std::string bundleName = "";
-
+        ASSERT_TRUE(service != nullptr);
+        string bundleName = "";
+        BJsonUtil::BundleDetailInfo info;
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(info));
         EXPECT_CALL(*session, GetBackupExtName(_)).WillOnce(Return(""));
         EXPECT_CALL(*session, GetBundleVersionName(_)).WillOnce(Return(""));
         EXPECT_CALL(*session, GetBundleVersionCode(_)).WillOnce(Return(0));
@@ -596,10 +902,12 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0200, TestSize.Level1)
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _))
             .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
-        auto ret = servicePtr_->LaunchBackupExtension(bundleName);
-        EXPECT_NE(ret, BError(BError::Codes::OK));
+        auto ret = service->LaunchBackupExtension(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_BOOT_EXT_FAIL));
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(info));
         EXPECT_CALL(*session, GetBackupExtName(_)).WillOnce(Return(""));
         EXPECT_CALL(*session, GetBundleVersionName(_)).WillOnce(Return(""));
         EXPECT_CALL(*session, GetBundleVersionCode(_)).WillOnce(Return(0));
@@ -611,8 +919,8 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0200, TestSize.Level1)
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _))
             .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
-        ret = servicePtr_->LaunchBackupExtension(bundleName);
-        EXPECT_NE(ret, BError(BError::Codes::OK));
+        ret = service->LaunchBackupExtension(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_BOOT_EXT_FAIL));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by LaunchBackupExtension.";
@@ -633,15 +941,15 @@ HWTEST_F(ServiceTest, SUB_Service_ClearResidualBundleData_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ClearResidualBundleData_0100";
     try {
-        EXPECT_TRUE(servicePtr_ != nullptr);
+        ASSERT_TRUE(service != nullptr);
         std::string bundleName = BUNDLE_NAME;
-        servicePtr_->session_ = nullptr;
-        servicePtr_->ClearResidualBundleData(bundleName);
-        servicePtr_->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(servicePtr_)));
+        service->session_ = nullptr;
+        service->ClearResidualBundleData(bundleName);
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
 
         try {
             EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-            servicePtr_->ClearResidualBundleData(bundleName);
+            service->ClearResidualBundleData(bundleName);
             EXPECT_TRUE(false);
         } catch (...) {
             EXPECT_TRUE(true);
@@ -650,7 +958,7 @@ HWTEST_F(ServiceTest, SUB_Service_ClearResidualBundleData_0100, TestSize.Level1)
         try {
             EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
             EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
-            servicePtr_->ClearResidualBundleData(bundleName);
+            service->ClearResidualBundleData(bundleName);
             EXPECT_TRUE(false);
         } catch (...) {
             EXPECT_TRUE(true);

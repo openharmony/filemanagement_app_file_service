@@ -133,20 +133,20 @@ HWTEST_F(BDirTest, b_dir_GetBigFiles_0100, testing::ext::TestSize.Level1)
         string rootDir = tm.GetRootDirCurTest();
         string filePath1 = rootDir + "a.txt";
         string filePath2 = rootDir + "b.txt";
-        // 文件大小大于等于1GB（1024MB）的文件属于大文件，因此这里创建大小为1025MB和1026MB的大文件
+        // 文件大小大于2M的文件属于大文件，因此这里创建大小为3MB文件和4MB的文件
         auto [bFatalErr, ret] =
-            BProcess::ExecuteCmd({"dd", "if=/dev/urandom", ("of=" + filePath1).c_str(), "bs=1M", "count=1025"});
+            BProcess::ExecuteCmd({"dd", "if=/dev/urandom", ("of=" + filePath1).c_str(), "bs=1M", "count=3"});
         EXPECT_FALSE(bFatalErr);
         EXPECT_EQ(ret, 0);
         tie(bFatalErr, ret) =
-            BProcess::ExecuteCmd({"dd", "if=/dev/urandom", ("of=" + filePath2).c_str(), "bs=1M", "count=1026"});
+            BProcess::ExecuteCmd({"dd", "if=/dev/urandom", ("of=" + filePath2).c_str(), "bs=1M", "count=4"});
         EXPECT_FALSE(bFatalErr);
         EXPECT_EQ(ret, 0);
         vector<string> includes = {rootDir};
         vector<string> excludes = {filePath2};
         auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
         EXPECT_EQ(errCode, ERR_OK);
-        EXPECT_EQ(mpNameToStat.at(filePath1).st_size, 1024 * 1024 * 1025);
+        EXPECT_EQ(mpNameToStat.at(filePath1).st_size, 1024 * 1024 * 3);
         EXPECT_EQ(mpNameToStat.find(filePath2), mpNameToStat.end());
     } catch (...) {
         EXPECT_TRUE(false);
