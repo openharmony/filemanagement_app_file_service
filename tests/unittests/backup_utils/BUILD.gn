@@ -295,7 +295,6 @@ group("backup_test") {
     ":b_file_test",
     ":b_json_other_test",
     ":b_json_test",
-    ":b_jsonutil_test",
     ":b_process_test",
     ":b_tarball_cmdline_test",
     ":b_tarball_factory_test",
