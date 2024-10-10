@@ -301,17 +301,6 @@ bool BJsonUtil::BuildExtensionErrInfo(std::string &jsonStr, int errCode, std::st
     return true;
 }
 
-std::string BJsonUtil::BuildBundleNameIndexInfo(const std::string &bundleName, int appIndex)
-{
-    std::string result = bundleName;
-    if (appIndex == BUNDLE_INDEX_DEFAULT_VAL) {
-        return result;
-    }
-    result += BUNDLE_INDEX_SPLICE;
-    result += std::to_string(appIndex);
-    return result;
-}
-
 bool BJsonUtil::BuildExtensionErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo)
 {
     cJSON *errJson = cJSON_CreateObject();
@@ -373,6 +362,17 @@ bool BJsonUtil::BuildOnProcessRetInfo(std::string &jsonStr, std::string onProces
     cJSON_Delete(info);
     cJSON_free(data);
     return true;
+}
+
+std::string BJsonUtil::BuildBundleNameIndexInfo(const std::string &bundleName, int appIndex)
+{
+    std::string result = bundleName;
+    if (appIndex == BUNDLE_INDEX_DEFAULT_VAL) {
+        return result;
+    }
+    result += BUNDLE_INDEX_SPLICE;
+    result += std::to_string(appIndex);
+    return result;
 }
 
 bool BJsonUtil::BuildOnProcessErrInfo(std::string &reportInfo, std::string path, int err)
