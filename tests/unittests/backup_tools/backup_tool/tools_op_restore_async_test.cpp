@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -294,6 +294,32 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_0400, testing::ext::Tes
 }
 
 /**
+ * @tc.number: SUB_backup_tools_op_restore_async_0401
+ * @tc.name: tools_op_restore_async_0401
+ * @tc.desc: test func
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9JNFM
+ */
+HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_0401, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_0401";
+    try {
+        auto ctx = make_shared<SessionAsync>();
+        ctx->cnt_ = 1;
+        ErrCode err = -1;
+        BundleName name = "testBundle";
+        OnBundleStarted(ctx, err, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end tools_op_restore_async_0401";
+}
+
+/**
  * @tc.number: SUB_backup_tools_op_restore_async_0500
  * @tc.name: tools_op_restore_async_0500
  * @tc.desc: 测试OnBundleFinished方法
@@ -316,6 +342,32 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_0500, testing::ext::Tes
         GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end tools_op_restore_async_0500";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_async_0501
+ * @tc.name: tools_op_restore_async_0501
+ * @tc.desc: 测试OnBundleFinished方法
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9JNFM
+ */
+HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_0501, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_0501";
+    try {
+        auto ctx = make_shared<SessionAsync>();
+        ctx->cnt_ = 1;
+        ErrCode err = -1;
+        BundleName name = "testBundle";
+        OnBundleFinished(ctx, err, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end tools_op_restore_async_0501";
 }
 
 /**
@@ -452,8 +504,9 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1001, testing::ext::Tes
     GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_1001";
     try {
         vector<BundleName> bundleNames;
-        bundleNames.push_back("bundle/name");\
+        bundleNames.push_back("bundle/name");
         shared_ptr<SessionAsync> restore = make_shared<SessionAsync>();
+        restore->session_ = {};
         RestoreApp(restore, bundleNames);
     } catch (BError &e) {
         EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
@@ -479,8 +532,9 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1002, testing::ext::Tes
     GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_1002";
     try {
         vector<BundleName> bundleNames;
-        bundleNames.push_back("bundlename");\
+        bundleNames.push_back("bundlename");
         shared_ptr<SessionAsync> restore = make_shared<SessionAsync>();
+        restore->session_ = {};
         RestoreApp(restore, bundleNames);
     } catch (BError &e) {
         EXPECT_EQ(e.GetCode(), BError(BError::Codes::TOOL_INVAL_ARG).GetCode());
@@ -508,7 +562,7 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1100, testing::ext::Tes
         string pathCapFile = "/data/user/0/test/files/bundleInfo.json";
         vector<string> bundleNames = {"bundlenames"};
         string type = "false";
-        int32_t ret =ChangeBundleInfo(pathCapFile, bundleNames, type);
+        int32_t ret = ChangeBundleInfo(pathCapFile, bundleNames, type);
         EXPECT_LT(ret, 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -533,7 +587,7 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1101, testing::ext::Tes
         string pathCapFile = " ";
         vector<string> bundleNames = {"bundlenames"};
         string type = "false";
-        int32_t ret =ChangeBundleInfo(pathCapFile, bundleNames, type);
+        int32_t ret = ChangeBundleInfo(pathCapFile, bundleNames, type);
         EXPECT_LT(ret, 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -558,7 +612,7 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1102, testing::ext::Tes
         string pathCapFile = "/data/user/0/test/files/bundleInfo.json";
         vector<string> bundleNames = {};
         string type = "true";
-        int32_t ret =ChangeBundleInfo(pathCapFile, bundleNames, type);
+        int32_t ret = ChangeBundleInfo(pathCapFile, bundleNames, type);
         EXPECT_LT(ret, 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -768,7 +822,6 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1401, testing::ext::Tes
 {
     GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_1401";
     try {
-
         map<string, vector<string>> mapArgToVal;
         int ret = Exec(mapArgToVal);
         EXPECT_EQ(ret, -EPERM);
@@ -777,5 +830,98 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1401, testing::ext::Tes
         GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end tools_op_restore_async_1401";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_async_1500
+ * @tc.name: tools_op_restore_async_1500
+ * @tc.desc: test func
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1500, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_1500";
+    try {
+        std::string path = "/data/backup/receive";
+        std::vector<ExtManageInfo> pkgInfo;
+        ExtManageInfo info;
+        info.hashName = "hashName";
+        info.fileName = "fileName";
+        info.isBigFile = false;
+        info.isUserTar = false;
+        pkgInfo.push_back(info);
+
+        auto result = ReadyExtManage(path, pkgInfo);
+        EXPECT_EQ(result.size(), 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end tools_op_restore_async_1500";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_async_1501
+ * @tc.name: tools_op_restore_async_1501
+ * @tc.desc: test func
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1501, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_1501";
+    try {
+        std::string path = "/data/backup/receive";
+        std::vector<ExtManageInfo> pkgInfo;
+        ExtManageInfo info;
+        info.hashName = "";
+        info.fileName = "";
+        info.isBigFile = false;
+        info.isUserTar = false;
+        pkgInfo.push_back(info);
+
+        auto result = ReadyExtManage(path, pkgInfo);
+        EXPECT_EQ(result.size(), 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end tools_op_restore_async_1501";
+}
+
+/**
+ * @tc.number: SUB_backup_tools_op_restore_async_1502
+ * @tc.name: tools_op_restore_async_1502
+ * @tc.desc: test func
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9NOPD
+ */
+HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1502, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-begin tools_op_restore_async_1502";
+    try {
+        std::string path = "/data/backup/receive";
+        std::vector<ExtManageInfo> pkgInfo;
+        ExtManageInfo info;
+        info.hashName = "hashName";
+        info.fileName = "fileName";
+        info.isBigFile = true;
+        info.isUserTar = true;
+        pkgInfo.push_back(info);
+
+        auto result = ReadyExtManage(path, pkgInfo);
+        EXPECT_EQ(result.size(), 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end tools_op_restore_async_1502";
 }
 } // namespace OHOS::FileManagement::Backup
