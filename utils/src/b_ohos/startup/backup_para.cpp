@@ -42,11 +42,12 @@ static tuple<bool, string> GetConfigParameterValue(const string &key, uint32_t l
         HILOGI("Fail to find parameter.");
         return {false, ""};
     }
+    HILOGI("Find parameter, handle = %{public}d", handle);
     try {
         unique_ptr<char[]> buffer = make_unique<char[]>(len + 1);
         int res = GetParameterValue(handle, buffer.get(), len + 1);
         if (res < 0) {
-            HILOGI("Fail to get parameter value.");
+            HILOGI("Fail to get parameter value, handle = %{public}d.", handle);
             return {false, ""};
         }
         return {true, buffer.get()};
@@ -61,7 +62,8 @@ bool BackupPara::GetBackupDebugOverrideExtensionConfig()
     auto [getCfgParaValSucc, value] = GetConfigParameterValue(BConstants::BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_KEY,
                                                               BConstants::BACKUP_PARA_VALUE_MAX);
     if (!getCfgParaValSucc) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Fail to get configuration parameter value of backup.para");
+        HILOGE("Fail to get configuration parameter value of backup.para");
+        return false;
     }
     return value == "true";
 }
@@ -71,7 +73,8 @@ bool BackupPara::GetBackupOverrideBackupSARelease()
     auto [getCfgParaValSucc, value] =
         GetConfigParameterValue(BConstants::BACKUP_OVERRIDE_BACKUP_SA_RELEASE_KEY, BConstants::BACKUP_PARA_VALUE_MAX);
     if (!getCfgParaValSucc) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Fail to get configuration parameter value of backup.para");
+        HILOGE("Fail to get configuration parameter value of backup.para");
+        return true;
     }
     return value == "true";
 }
@@ -81,7 +84,8 @@ bool BackupPara::GetBackupOverrideIncrementalRestore()
     auto [getCfgParaValSucc, value] =
         GetConfigParameterValue(BConstants::BACKUP_OVERRIDE_INCREMENTAL_KEY, BConstants::BACKUP_PARA_VALUE_MAX);
     if (!getCfgParaValSucc) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Fail to get configuration parameter value of backup.para");
+        HILOGE("Fail to get configuration parameter value of backup.para");
+        return true;
     }
     HILOGI("Get Parse IncrementalRestore result, value: %{public}s", value.c_str());
     return value == "true";
