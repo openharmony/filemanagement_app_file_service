@@ -268,4 +268,33 @@ namespace OHOS::AppFileService::ModuleFileUri {
         EXPECT_EQ(folderUriObject.GetFullDirectoryUri(), folderDirectoryUri);
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0000";
     }
+
+    /**
+     * @tc.name: File_uri_IsRemoteUri_0000
+     * @tc.desc: Test function of IsRemoteUri() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require:
+     */
+    HWTEST_F(FileUriTest, File_uri_IsRemoteUri_0000, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetFullDirectoryUri_0000";
+        string fileStr = "file://" + BUNDLE_A + "/data/test";
+        FileUri fileUriObject(fileStr);
+        EXPECT_EQ(fileUriObject.IsRemoteUri(), false);
+
+        string fileStr2 = "file://" + BUNDLE_A + "/data/test?networkid=";
+        FileUri fileUriObject2(fileStr2);
+        EXPECT_EQ(fileUriObject2.IsRemoteUri(), false);
+
+        string fileStr3 = "file://" + BUNDLE_A + "/data/test?networkid=123456/";
+        FileUri fileUriObject3(fileStr3);
+        EXPECT_EQ(fileUriObject3.IsRemoteUri(), false);
+
+        string fileStr4 = "file://" + BUNDLE_A + "/data/test?networkid=123456";
+        FileUri fileUriObject4(fileStr4);
+        EXPECT_EQ(fileUriObject4.IsRemoteUri(), true);
+        GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0000";
+    }
 }
