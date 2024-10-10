@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -451,5 +451,59 @@ HWTEST_F(BErrorTest, b_error_int_0100, testing::ext::TestSize.Level0)
     int result = BError();
     EXPECT_EQ(result, 0);
     GTEST_LOG_(INFO) << "BErrorTest-end b_error_int_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_error_GetCodeByErrno_0100
+ * @tc.name: b_error_GetCodeByErrno_0100
+ * @tc.desc: Test function of int interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0100, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCodeByErrno_0100";
+    int32_t errnoSys = 0;
+    int result = BError::GetCodeByErrno(errnoSys);
+    EXPECT_EQ(result, 0);
+    GTEST_LOG_(INFO) << "BErrorTest-end b_error_GetCodeByErrno_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_error_GetCodeByErrno_0200
+ * @tc.name: b_error_GetCodeByErrno_0200
+ * @tc.desc: Test function of int interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0200, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCodeByErrno_0200";
+    int32_t errnoSys = EPERM;
+    int result = BError::GetCodeByErrno(errnoSys);
+    EXPECT_EQ(result, BError::BackupErrorCode::E_PERM);
+    GTEST_LOG_(INFO) << "BErrorTest-end b_error_GetCodeByErrno_0200";
+}
+
+/**
+ * @tc.number: SUB_backup_b_error_GetCodeByErrno_0300
+ * @tc.name: b_error_GetCodeByErrno_0300
+ * @tc.desc: Test function of int interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0300, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCodeByErrno_0300";
+    int32_t errnoSys = -EPERM;
+    int result = BError::GetCodeByErrno(errnoSys);
+    EXPECT_EQ(result, BError::BackupErrorCode::E_UKERR);
+    GTEST_LOG_(INFO) << "BErrorTest-end b_error_GetCodeByErrno_0300";
 }
 } // namespace OHOS::FileManagement::Backup
