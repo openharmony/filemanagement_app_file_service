@@ -167,11 +167,12 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
     struct stat curFileStat {};
     for (const auto &it : endFileInfos_) {
         if (lstat(it.first.c_str(), &curFileStat) != 0) {
-            HILOGE("(Debug) Failed to lstat, err = %{public}d", errno);
+            HILOGE("Failed to lstat %{public}s, err = %{public}d", GetAnonyPath(it.first).c_str(), errno);
             errFiles.emplace_back(it.first);
             errFileInfos_[it.first].push_back(errno);
         } else if (curFileStat.st_size != it.second) {
-            HILOGE("(Debug) File size check error, file: %{public}s", GetAnonyPath(it.first).c_str());
+            HILOGE("File size error, file: %{public}s, idx: %{public}" PRId64 ", act: %{public}" PRId64 "",
+                GetAnonyPath(it.first).c_str(), it.second, curFileStat.st_size);
             errFiles.emplace_back(it.first);
             errFileInfos_[it.first].push_back(errno);
         }
