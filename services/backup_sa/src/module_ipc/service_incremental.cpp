@@ -436,7 +436,7 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
         HILOGD("reverse: Will notify IncrementalBackupOnFileReady");
         session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(callerName, fileName, move(fd),
             move(manifestFd), errCode);
-        AuditLog auditLog = { false, "Backup File Ready", "ADD", "CloudDriver", 1, "SUCCESS", "AppIncrementalFileReady",
+        AuditLog auditLog = { false, "Backup File Ready", "ADD", "", 1, "SUCCESS", "AppIncrementalFileReady",
             callerName, GetAnonyPath(fileName) };
         HiAudit::GetInstance(true).Write(auditLog);
         if (session_->OnBundleFileReady(callerName, fileName)) {

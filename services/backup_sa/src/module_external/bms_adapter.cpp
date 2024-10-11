@@ -342,7 +342,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
 
     vector<BIncrementalData> bundleNames;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
-    HILOGI("Begin get bundle infos");
+    HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
     for (auto const &installedBundle : installedBundles) {
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
@@ -385,14 +385,15 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetFullBundleInfos(int32_t
     }
     vector<string> bundleNames;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
     for (auto const &installedBundle : installedBundles) {
-        HILOGI("Begin get bundle infos, bundleName = %{public}s", installedBundle.name.data());
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
         }
         if (installedBundle.appIndex > 0) {
+            HILOGI("Current bundle %{public}s is a twin application", installedBundle.name.c_str());
             std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(installedBundle.name,
                 installedBundle.appIndex);
             bundleNames.emplace_back(bundleNameIndexInfo);
@@ -527,7 +528,8 @@ bool BundleMgrAdapter::IsUser0BundleName(std::string bundleName, int32_t userId)
     BJsonUtil::BundleDetailInfo bundleDetailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
     int32_t flags = static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
         static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY) |
-        static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
+        static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) |
+        static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
     ErrCode ret = bms->GetCloneBundleInfo(bundleDetailInfo.bundleName, flags, bundleDetailInfo.bundleIndex,
         installedBundle, userId);
     if (ret != ERR_OK) {

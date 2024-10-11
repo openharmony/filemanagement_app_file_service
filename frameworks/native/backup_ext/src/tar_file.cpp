@@ -106,7 +106,7 @@ bool TarFile::TraversalFile(string &filePath, int &err)
     if (access(filePath.c_str(), F_OK) != 0) {
         err = errno;
         HILOGE("File path does not exists, err = %{public}d", errno);
-        AuditLog auditLog = {false, "access file failed", "ADD", "DataClone", 1, "FAILED", "TraversalFile",
+        AuditLog auditLog = {false, "access file failed", "ADD", "", 1, "FAILED", "TraversalFile",
             "Packet File", GetAnonyPath(filePath)};
         HiAudit::GetInstance(false).Write(auditLog);
         return false;
@@ -121,14 +121,14 @@ bool TarFile::TraversalFile(string &filePath, int &err)
     if (lstat(filePath.c_str(), &curFileStat) != 0) {
         err = errno;
         HILOGE("Failed to lstat, err = %{public}d", errno);
-        AuditLog auditLog = {false, "lstat file failed", "ADD", "DataClone", 1, "FAILED", "TraversalFile",
+        AuditLog auditLog = {false, "lstat file failed", "ADD", "", 1, "FAILED", "TraversalFile",
             "Packet File", GetAnonyPath(filePath)};
         HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
     if (!AddFile(filePath, curFileStat, err)) {
         HILOGE("Failed to add file to tar package, file path is:%{public}s", GetAnonyPath(filePath).c_str());
-        AuditLog auditLog = {false, "AddFile failed", "ADD", "DataClone", 1, "FAILED", "TraversalFile",
+        AuditLog auditLog = {false, "AddFile failed", "ADD", "", 1, "FAILED", "TraversalFile",
             "Packet File", GetAnonyPath(filePath)};
         HiAudit::GetInstance(false).Write(auditLog);
         return false;
@@ -316,7 +316,7 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size, int &err)
 {
     int fd = open(fileName.c_str(), O_RDONLY | O_CLOEXEC);
     if (fd < 0) {
-        AuditLog auditLog = {false, "open fd failed", "ADD", "DataClone", 1, "FAILED", "WriteFileContent",
+        AuditLog auditLog = {false, "open fd failed", "ADD", "", 1, "FAILED", "WriteFileContent",
             "Packet File", GetAnonyPath(fileName)};
         HiAudit::GetInstance(false).Write(auditLog);
         err = errno;
