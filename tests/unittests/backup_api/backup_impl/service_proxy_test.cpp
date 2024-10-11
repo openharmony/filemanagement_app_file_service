@@ -32,7 +32,6 @@ using namespace std;
 using namespace testing;
 
 namespace {
-const string BUNDLE_NAME = "com.example.app2backup";
 const string FILE_NAME = "1.tar";
 constexpr int32_t SERVICE_ID = 5203;
 } // namespace
@@ -272,6 +271,36 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppDone_0100, testing::ext::TestSiz
 }
 
 /**
+ * @tc.number: SUB_Service_proxy_ServiceResultReport_0100
+ * @tc.name: SUB_Service_proxy_ServiceResultReport_0100
+ * @tc.desc: 测试 ServiceResultReport
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_ServiceResultReport_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_ServiceResultReport_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_ServiceResultReport_0100 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+    std::string restoreRetInfo = "test_restoreRetInfo";
+    BackupRestoreScenario scenario = FULL_BACKUP;
+    int32_t result = proxy_->ServiceResultReport(restoreRetInfo, scenario, BError(BError::Codes::OK));
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->ServiceResultReport(restoreRetInfo, scenario, BError(BError::Codes::OK));
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_ServiceResultReport_0100";
+}
+
+/**
  * @tc.number: SUB_Service_proxy_GetFileHandle_0100
  * @tc.name: SUB_Service_proxy_GetFileHandle_0100
  * @tc.desc: 测试 GetFileHandle 获取真实文件调用成功和失败
@@ -392,6 +421,38 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesBackupSession_0100, te
     result = proxy_->AppendBundlesBackupSession(bundleNames);
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppendBundlesBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_AppendBundlesDetailsBackupSession_0100
+ * @tc.name: SUB_Service_proxy_AppendBundlesDetailsBackupSession_0100
+ * @tc.desc: 测试 AppendBundlesDetailsBackupSession
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppendBundlesDetailsBackupSession_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppendBundlesDetailsBackupSession_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_AppendBundlesDetailsBackupSession_0100 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+
+    std::vector<std::string> bundleNames;
+    std::vector<std::string> detailInfos;
+
+    int32_t result = proxy_->AppendBundlesDetailsBackupSession(bundleNames, detailInfos);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+    
+    result = proxy_->AppendBundlesDetailsBackupSession(bundleNames, detailInfos);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppendBundlesDetailsBackupSession_0100";
 }
 
 /**
@@ -605,6 +666,43 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishIncrementalFile_0100, testin
 }
 
 /**
+ * @tc.number: SUB_Service_proxy_PublishSAIncrementalFile_0100
+ * @tc.name: SUB_Service_proxy_PublishSAIncrementalFile_0100
+ * @tc.desc: 测试 PublishSAIncrementalFile 接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_PublishSAIncrementalFile_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_PublishSAIncrementalFile_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_PublishSAIncrementalFile_0100 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+
+    string bundleName = "com.example.app2backup";
+    string fileName = "";
+    BFileInfo fileInfo(bundleName, fileName, -1);
+    TestManager tm("AppIncrementalFileReady_GetFd_0100");
+    std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
+    UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+    ErrCode ret = proxy_->PublishSAIncrementalFile(fileInfo, move(fd));
+    EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+    TestManager tmErr("AppIncrementalFileReady_GetFd_0200");
+    UniqueFd fdErr(open(tmErr.GetRootDirCurTest().append(FILE_NAME).data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+    ret = proxy_->PublishSAIncrementalFile(fileInfo, move(fdErr));
+    EXPECT_NE(ret, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_PublishSAIncrementalFile_0100";
+}
+
+/**
  * @tc.number: SUB_Service_proxy_AppIncrementalFileReady_0100
  * @tc.name: SUB_Service_proxy_AppIncrementalFileReady_0100
  * @tc.desc: 测试 AppIncrementalFileReady 接口成功和失败
@@ -641,6 +739,41 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppIncrementalFileReady_0100, testi
     result = proxy_->AppIncrementalFileReady(bundleName, move(fdErr), move(manifestFdErr), 0);
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppIncrementalFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_AppIncrementalFileReady_0200
+ * @tc.name: SUB_Service_proxy_AppIncrementalFileReady_0200
+ * @tc.desc: 测试 AppIncrementalFileReady 接口成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_AppIncrementalFileReady_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_AppIncrementalFileReady_0200";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_AppIncrementalFileReady_0200 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Return(0))
+        .WillOnce(Return(0));
+
+    string bundleName = "com.example.app2backup";
+    TestManager tm("AppIncrementalFileReady_0200");
+    std::string filePath = tm.GetRootDirCurTest().append(FILE_NAME);
+    UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+    UniqueFd manifestFd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+
+    int32_t result = proxy_->AppIncrementalFileReady(bundleName, UniqueFd(-1), move(manifestFd), 0);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->AppIncrementalFileReady(bundleName, move(fd), UniqueFd(-1), 0);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_AppIncrementalFileReady_0200";
 }
 
 /**
