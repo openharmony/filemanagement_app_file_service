@@ -65,4 +65,9 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppend(
 {
     return BBundleMgrAdapter::bms->GetBundleInfosForAppend(incrementalDataList, userId);
 }
+
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetFullBundleInfos(int32_t userId)
+{
+    return BBundleMgrAdapter::bms->GetFullBundleInfos(userId);
+}
 } // namespace OHOS::FileManagement::Backup
