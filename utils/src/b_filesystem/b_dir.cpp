@@ -438,5 +438,4 @@ vector<string> BDir::GetDirs(const vector<string_view> &paths)
     vector<string> dirs(inc.begin(), inc.end());
     return dirs;
 }
-
 } // namespace OHOS::FileManagement::Backup

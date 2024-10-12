@@ -1562,6 +1562,7 @@ void Service::SessionDeactive()
             }
             return;
         }
+        isInRelease_.store(false);
         if (!bundleNameList.empty()) {
             DelClearBundleRecord(bundleNameList);
         }
