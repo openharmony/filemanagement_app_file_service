@@ -42,7 +42,7 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
     backupProxy_ = nullptr;
     isConnected_.store(false);
     string bundleName = "";
-    callDied_(move(bundleName));
+    callDied_(move(bundleName), false);
 }
 
 ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId)
@@ -72,7 +72,7 @@ void SvcBackupConnection::SetCallback(function<void(const std::string &&)> callC
     callConnected_ = callConnected;
 }
 
-void SvcBackupConnection::SetCallDied(function<void(const std::string &&)> callDied)
+void SvcBackupConnection::SetCallDied(function<void(const std::string &&, bool)> callDied)
 {
     callDied_ = callDied;
 }

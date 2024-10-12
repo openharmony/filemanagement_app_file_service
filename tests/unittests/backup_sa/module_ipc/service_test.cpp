@@ -581,7 +581,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0101, testing::ext::TestSize.Lev
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
         BackupExtInfo extInfo {};
-        auto callDied = [](const string &&bundleName) {};
+        auto callDied = [](const string &&bundleName, bool isSecondCalled) {};
         auto callConnected = [](const string &&bundleName) {};
         string bundleNameIndexInfo = "123456";
         extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, bundleNameIndexInfo));
@@ -724,7 +724,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtStart_0101, testing::ext::TestSize.Level1)
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
         BackupExtInfo extInfo {};
-        auto callDied = [](const string &&bundleName) {};
+        auto callDied = [](const string &&bundleName, bool isSecondCalled) {};
         auto callConnected = [](const string &&bundleName) {};
         string bundleNameIndexInfo = "123456789";
         extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, bundleNameIndexInfo));
@@ -1592,7 +1592,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0100, testing::ext::TestSize.Le
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
         BackupExtInfo extInfo {};
-        auto callDied = [](const string &&bundleName) {};
+        auto callDied = [](const string &&bundleName, bool isSecondCalled) {};
         auto callConnected = [](const string &&bundleName) {};
         string bundleNameIndexInfo = "123456789";
         extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, bundleNameIndexInfo));

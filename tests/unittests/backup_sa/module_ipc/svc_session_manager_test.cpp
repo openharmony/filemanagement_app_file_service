@@ -507,13 +507,13 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupAbilityExt_0100, 
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->reversePtr_ = nullptr;
         auto ret = sessionManagerPtr_->GetBackupAbilityExt(BUNDLE_NAME);
-        ret->callDied_("");
+        ret->callDied_("", false);
         ret->callConnected_("");
         EXPECT_TRUE(true);
 
         sessionManagerPtr_->reversePtr_ = servicePtr_;
         ret = sessionManagerPtr_->GetBackupAbilityExt(BUNDLE_NAME);
-        ret->callDied_("");
+        ret->callDied_("", false);
         ret->callConnected_("");
         EXPECT_TRUE(true);
     } catch (...) {

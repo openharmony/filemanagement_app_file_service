@@ -41,7 +41,7 @@ public:
     static inline shared_ptr<IfaceCastMock> castMock = nullptr;
 };
 
-static void CallDied(const std::string &&name)
+static void CallDied(const std::string &&name, bool isSecondCalled)
 {
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-CallDied SUCCESS";
 }

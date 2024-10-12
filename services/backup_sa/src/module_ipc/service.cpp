@@ -898,9 +898,15 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
     }
 }
 
-void Service::OnBackupExtensionDied(const string &&bundleName)
+void Service::OnBackupExtensionDied(const string &&bundleName, bool isSecondCalled)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (isSecondCalled) {
+        HILOGE("Backup <%{public}s> Extension Process second Died", bundleName.c_str());
+        ClearSessionAndSchedInfo(bundleName);
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+        return;
+    }
     int32_t errCode = BError(BError::Codes::EXT_ABILITY_DIED).GetCode();
     AppRadar::Info info (bundleName, "", "");
     if (session_->GetScenario() == IServiceReverse::Scenario::BACKUP) {
@@ -1422,9 +1428,10 @@ std::function<void(const std::string &&)> Service::GetBackupInfoConnectDone(wptr
     };
 }
 
-std::function<void(const std::string &&)> Service::GetBackupInfoConnectDied(wptr<Service> obj, std::string &bundleName)
+std::function<void(const std::string &&, bool)> Service::GetBackupInfoConnectDied(
+    wptr<Service> obj, std::string &bundleName)
 {
-    return [obj](const string &&bundleName) {
+    return [obj](const string &&bundleName, bool isSecondCalled) {
         HILOGI("GetBackupInfoConnectDied, bundleName: %{public}s", bundleName.c_str());
         auto thisPtr = obj.promote();
         if (!thisPtr) {

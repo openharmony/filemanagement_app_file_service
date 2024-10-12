@@ -88,14 +88,21 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
         return;
     }
     bundleName = bundleNameIndexInfo_;
+    if (isSecondOnDisCon_ == false) {
+        isSecondOnDisCon_.store(true);
+    } else {
+        HILOGE("It's error that the backup extension second died before the backup sa. name : %{public}s",
+            bundleName.data());
+        callDied_(move(bundleName), true);
+    }
     if (isConnectedDone_ == false) {
         isConnectedDone_.store(true);
         HILOGE("It's error that the backup extension dies before the backup sa. name : %{public}s", bundleName.data());
-        callDied_(move(bundleName));
+        callDied_(move(bundleName), false);
     }
     condition_.notify_all();
     waitCondition_.notify_all();
-    HILOGI("called end, name: %{public}s", bundleName.c_str());
+    HILOGI("called end, name: %{public}s", bundleNameIndexInfo_.c_str());
 }
 
 ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId)
@@ -154,7 +161,7 @@ void SvcBackupConnection::SetCallback(function<void(const std::string &&)> callC
     callConnected_ = callConnected;
 }
 
-void SvcBackupConnection::SetCallDied(function<void(const std::string &&)> callDied)
+void SvcBackupConnection::SetCallDied(function<void(const std::string &&, bool)> callDied)
 {
     callDied_ = callDied;
 }
