@@ -38,7 +38,7 @@ const char* BACKUP_DEBUG_STATE = "sys.backup.check.enable";
 static tuple<bool, string> GetConfigParameterValue(const string &key, uint32_t len)
 {
     char configParam[] = "false";
-    int ret = GetParameter(key.c_str(), "", configParam, len);
+    int ret = GetParameter(key.c_str(), "", configParam, len + 1);
     if (ret <= 0) {
         HILOGE("Fail to GetParameter name = %{public}s, ret = %{public}d", key.c_str(), ret);
         return {false, ""};
