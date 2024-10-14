@@ -969,4 +969,593 @@ HWTEST_F(ServiceTest, SUB_Service_ClearResidualBundleData_0100, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ClearResidualBundleData_0100";
 }
+
+/**
+ * @tc.number: SUB_Service_AppendBundlesClearSession_0000
+ * @tc.name: SUB_Service_AppendBundlesClearSession_0000
+ * @tc.desc: 测试 AppendBundlesClearSession 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppendBundlesClearSession_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppendBundlesClearSession_0000";
+    try {
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        auto ret = service->AppendBundlesClearSession({ "bundleNames" });
+        service->session_ = session_;
+        EXPECT_EQ(ret, EPERM);
+
+        ret = service->AppendBundlesClearSession({});
+        EXPECT_EQ(ret, EPERM);
+
+        vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillOnce(Return(bundleInfos));
+        EXPECT_CALL(*session, IsOnOnStartSched()).WillOnce(Return(false));
+        ret = service->AppendBundlesClearSession({ "bundleNames" });
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppendBundlesClearSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppendBundlesClearSession_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_UpdateTimer_0000
+ * @tc.name: SUB_Service_UpdateTimer_0000
+ * @tc.desc: 测试 UpdateTimer 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_UpdateTimer_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_UpdateTimer_0000";
+    try {
+        string bundleName;
+        bool result = 0;
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        auto ret = service->UpdateTimer(bundleName, 0, result);
+        service->session_ = session_;
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        service->isOccupyingSession_ = true;
+        ret = service->UpdateTimer(bundleName, 0, result);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        service->isOccupyingSession_ = false;
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*session, UpdateTimer(_, _, _)).WillOnce(Return(false));
+        ret = service->UpdateTimer(bundleName, 0, result);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by UpdateTimer.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_UpdateTimer_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_UpdateSendRate_0000
+ * @tc.name: SUB_Service_UpdateSendRate_0000
+ * @tc.desc: 测试 UpdateSendRate 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_UpdateSendRate_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_UpdateSendRate_0000";
+    try {
+        string bundleName;
+        bool result = 0;
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        auto ret = service->UpdateSendRate(bundleName, 0, result);
+        service->session_ = session_;
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        service->isOccupyingSession_ = true;
+        ret = service->UpdateSendRate(bundleName, 0, result);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        service->isOccupyingSession_ = false;
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        ret = service->UpdateSendRate(bundleName, 0, result);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
+        ret = service->UpdateSendRate(bundleName, 0, result);
+        EXPECT_EQ(ret, EPERM);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by UpdateSendRate.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_UpdateSendRate_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_UpdateSendRate_0100
+ * @tc.name: SUB_Service_UpdateSendRate_0100
+ * @tc.desc: 测试 UpdateSendRate 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_UpdateSendRate_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_UpdateSendRate_0100";
+    try {
+        string bundleName;
+        bool result = 0;
+        service->isOccupyingSession_ = false;
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, UpdateFdSendRate(_, _)).WillOnce(Return(EPERM));
+        auto ret = service->UpdateSendRate(bundleName, 0, result);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_BROKEN_IPC).GetCode());
+
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, UpdateFdSendRate(_, _)).WillOnce(Return(NO_ERROR));
+        ret = service->UpdateSendRate(bundleName, 0, result);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by UpdateSendRate.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_UpdateSendRate_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_BackupSA_0000
+ * @tc.name: SUB_Service_BackupSA_0000
+ * @tc.desc: 测试 BackupSA 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_BackupSA_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_BackupSA_0000";
+    try {
+        string bundleName;
+        shared_ptr<SABackupConnection> sa = nullptr;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        auto ret = service->BackupSA(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        sa = make_shared<SABackupConnection>(nullptr, nullptr, nullptr, nullptr);
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        ret = service->BackupSA(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        EXPECT_CALL(*saConnect, CallBackupSA()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, BackupOnBundleStarted(_, _)).WillOnce(Return());
+        ret = service->BackupSA(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        EXPECT_CALL(*saConnect, CallBackupSA()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, BackupOnBundleStarted(_, _)).WillOnce(Return());
+        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        ret = service->BackupSA(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnBundleStarted(_, _)).WillOnce(Return());
+        ret = service->BackupSA(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by BackupSA.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_BackupSA_0000";
+}
+
+
+/**
+ * @tc.number: SUB_Service_SADone_0000
+ * @tc.name: SUB_Service_SADone_0000
+ * @tc.desc: 测试 SADone 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_SADone_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SADone_0000";
+    try {
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        auto ret = service->SADone(0, "");
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        shared_ptr<SABackupConnection> sa = nullptr;
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        ret = service->SADone(0, "");
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        sa = make_shared<SABackupConnection>(nullptr, nullptr, nullptr, nullptr);
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        EXPECT_CALL(*saConnect, DisconnectBackupSAExt()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        ret = service->SADone(0, "");
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SADone.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SADone_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_NotifyCallerCurAppDone_0000
+ * @tc.name: SUB_Service_NotifyCallerCurAppDone_0000
+ * @tc.desc: 测试 NotifyCallerCurAppDone 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_NotifyCallerCurAppDone_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_NotifyCallerCurAppDone_0000";
+    try {
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        service->NotifyCallerCurAppDone(0, "");
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, BackupOnBundleFinished(_, _)).WillOnce(Return());
+        service->NotifyCallerCurAppDone(0, "");
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, RestoreOnBundleFinished(_, _)).WillOnce(Return());
+        service->NotifyCallerCurAppDone(0, "");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by NotifyCallerCurAppDone.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_NotifyCallerCurAppDone_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_ReportAppProcessInfo_0000
+ * @tc.name: SUB_Service_ReportAppProcessInfo_0000
+ * @tc.desc: 测试 ReportAppProcessInfo 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_ReportAppProcessInfo_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ReportAppProcessInfo_0000";
+    try {
+        string processInfo;
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(OHOS::Security::AccessToken::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, RestoreOnProcessInfo(_, _)).WillOnce(Return());
+        auto ret = service->ReportAppProcessInfo(processInfo, BackupRestoreScenario::FULL_RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(OHOS::Security::AccessToken::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnProcessInfo(_, _)).WillOnce(Return());
+        ret = service->ReportAppProcessInfo(processInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(OHOS::Security::AccessToken::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, BackupOnProcessInfo(_, _)).WillOnce(Return());
+        ret = service->ReportAppProcessInfo(processInfo, BackupRestoreScenario::FULL_BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(OHOS::Security::AccessToken::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnProcessInfo(_, _)).WillOnce(Return());
+        ret = service->ReportAppProcessInfo(processInfo, BackupRestoreScenario::INCREMENTAL_BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by ReportAppProcessInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ReportAppProcessInfo_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_TimeOutCallback_0000
+ * @tc.name: SUB_Service_TimeOutCallback_0000
+ * @tc.desc: 测试 TimeOutCallback 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_TimeOutCallback_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TimeOutCallback_0000";
+    try {
+        string bundleName;
+        auto fun = service->TimeOutCallback(nullptr, bundleName);
+        fun();
+        EXPECT_TRUE(true);
+
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        fun = service->TimeOutCallback(service, bundleName);
+        fun();
+        service->session_ = session_;
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by TimeOutCallback.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_TimeOutCallback_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_DoTimeout_0000
+ * @tc.name: SUB_Service_DoTimeout_0000
+ * @tc.desc: 测试 DoTimeout 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_DoTimeout_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_DoTimeout_0000";
+    try {
+        string bundleName;
+        service->DoTimeout(nullptr, bundleName);
+        EXPECT_TRUE(true);
+
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        service->DoTimeout(service, bundleName);
+        service->session_ = session_;
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(false));
+        service->DoTimeout(service, bundleName);
+        EXPECT_TRUE(true);
+
+        shared_ptr<SABackupConnection> sa = nullptr;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        service->DoTimeout(service, bundleName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by DoTimeout.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DoTimeout_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_DoTimeout_0100
+ * @tc.name: SUB_Service_DoTimeout_0100
+ * @tc.desc: 测试 DoTimeout 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_DoTimeout_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_DoTimeout_0100";
+    try {
+        string bundleName;
+        shared_ptr<SABackupConnection> sa = nullptr;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        service->DoTimeout(service, bundleName);
+        EXPECT_TRUE(true);
+
+        sa = nullptr;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        service->DoTimeout(service, bundleName);
+        EXPECT_TRUE(true);
+
+        sa = make_shared<SABackupConnection>(nullptr, nullptr, nullptr, nullptr);
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
+        EXPECT_CALL(*saConnect, DisconnectBackupSAExt()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(false));
+        service->DoTimeout(service, bundleName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by DoTimeout.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DoTimeout_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_AddClearBundleRecord_0000
+ * @tc.name: SUB_Service_AddClearBundleRecord_0000
+ * @tc.desc: 测试 AddClearBundleRecord 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_AddClearBundleRecord_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AddClearBundleRecord_0000";
+    try {
+        string bundleName;
+        EXPECT_CALL(*cdConfig, InsertClearBundleRecord(_)).WillOnce(Return(false));
+        service->AddClearBundleRecord(bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*cdConfig, InsertClearBundleRecord(_)).WillOnce(Return(true));
+        service->AddClearBundleRecord(bundleName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AddClearBundleRecord.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddClearBundleRecord_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_DelClearBundleRecord_0000
+ * @tc.name: SUB_Service_DelClearBundleRecord_0000
+ * @tc.desc: 测试 DelClearBundleRecord 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_DelClearBundleRecord_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_DelClearBundleRecord_0000";
+    try {
+        vector<string> bundleNames { "bundleName" };
+        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(false));
+        service->DelClearBundleRecord(bundleNames);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
+        service->DelClearBundleRecord(bundleNames);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by DelClearBundleRecord.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DelClearBundleRecord_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_ReleaseOnException_0000
+ * @tc.name: SUB_Service_ReleaseOnException_0000
+ * @tc.desc: 测试 ReleaseOnException 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_ReleaseOnException_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ReleaseOnException_0000";
+    try {
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        service->ReleaseOnException();
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        service->isInRelease_ = false;
+        service->ReleaseOnException();
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        service->isInRelease_ = true;
+        service->ReleaseOnException();
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        service->isInRelease_ = true;
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        service->ReleaseOnException();
+        service->session_ = session_;
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by ReleaseOnException.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ReleaseOnException_0000";
+}
 }
