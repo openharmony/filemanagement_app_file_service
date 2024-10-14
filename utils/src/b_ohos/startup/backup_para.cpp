@@ -40,7 +40,7 @@ static tuple<bool, string> GetConfigParameterValue(const string &key, uint32_t l
     char configParam[] = "false";
     int ret = GetParameter(key.c_str(), "", configParam, len);
     if (ret <= 0) {
-        LOGE("Fail to GetParameter name = %{public}s, ret = %{public}d", key.c_str(), ret);
+        HILOGE("Fail to GetParameter name = %{public}s, ret = %{public}d", key.c_str(), ret);
         return {false, ""};
     }
     return {true, configParam};
@@ -52,7 +52,7 @@ bool BackupPara::GetBackupDebugOverrideExtensionConfig()
                                                               BConstants::BACKUP_PARA_VALUE_MAX);
     if (!getCfgParaValSucc) {
         HILOGE("Fail to get configuration parameter value of backup.para, return default value");
-        return BConstants::BACKUP_OVERRIDE_EXTENSION_CONFIG_DEFAULT_VALUE;
+        return BConstants::BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_DEFAULT_VALUE;
     }
     return value == "true";
 }
@@ -63,7 +63,7 @@ bool BackupPara::GetBackupOverrideBackupSARelease()
         GetConfigParameterValue(BConstants::BACKUP_OVERRIDE_BACKUP_SA_RELEASE_KEY, BConstants::BACKUP_PARA_VALUE_MAX);
     if (!getCfgParaValSucc) {
         HILOGE("Fail to get configuration parameter value of backup.para, return default value");
-        return BConstants::BACKUP_OVERRIDE_BACKUP_SA_RELEASE_DEFAULT_VALUE;
+        return BConstants::BACKUP_DEBUG_OVERRIDE_BACKUP_SA_RELEASE_DEFAULT_VALUE;
     }
     return value == "true";
 }
@@ -74,7 +74,7 @@ bool BackupPara::GetBackupOverrideIncrementalRestore()
         GetConfigParameterValue(BConstants::BACKUP_OVERRIDE_INCREMENTAL_KEY, BConstants::BACKUP_PARA_VALUE_MAX);
     if (!getCfgParaValSucc) {
         HILOGE("Fail to get configuration parameter value of backup.para, return default value");
-        return BConstants::BACKUP_OVERRIDE_INCREMENTAL_DEFAULT_VALUE;
+        return BConstants::BACKUP_DEBUG_OVERRIDE_INCREMENTAL_DEFAULT_VALUE;
     }
     HILOGI("Get Parse IncrementalRestore result, value: %{public}s", value.c_str());
     return value == "true";
