@@ -37,24 +37,13 @@ const char* BACKUP_DEBUG_STATE = "sys.backup.check.enable";
  */
 static tuple<bool, string> GetConfigParameterValue(const string &key, uint32_t len)
 {
-    int handle = static_cast<int>(FindParameter(key.c_str()));
-    if (handle == -1) {
-        HILOGI("Fail to find parameter.");
+    char configParam[] = "false";
+    int ret = GetParameter(key.c_str(), "", configParam, len);
+    if (ret <= 0) {
+        LOGE("Fail to GetParameter name = %{public}s, ret = %{public}d", key.c_str(), ret);
         return {false, ""};
     }
-    HILOGI("Find parameter, handle = %{public}d", handle);
-    try {
-        unique_ptr<char[]> buffer = make_unique<char[]>(len + 1);
-        int res = GetParameterValue(handle, buffer.get(), len + 1);
-        if (res < 0) {
-            HILOGI("Fail to get parameter value, handle = %{public}d.", handle);
-            return {false, ""};
-        }
-        return {true, buffer.get()};
-    } catch (const bad_alloc &e) {
-        HILOGE("Fail to get parameter value: %{public}s.", e.what());
-        return {false, ""};
-    }
+    return {true, configParam};
 }
 
 bool BackupPara::GetBackupDebugOverrideExtensionConfig()
@@ -62,8 +51,8 @@ bool BackupPara::GetBackupDebugOverrideExtensionConfig()
     auto [getCfgParaValSucc, value] = GetConfigParameterValue(BConstants::BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_KEY,
                                                               BConstants::BACKUP_PARA_VALUE_MAX);
     if (!getCfgParaValSucc) {
-        HILOGE("Fail to get configuration parameter value of backup.para");
-        return false;
+        HILOGE("Fail to get configuration parameter value of backup.para, return default value");
+        return BConstants::BACKUP_OVERRIDE_EXTENSION_CONFIG_DEFAULT_VALUE;
     }
     return value == "true";
 }
@@ -73,8 +62,8 @@ bool BackupPara::GetBackupOverrideBackupSARelease()
     auto [getCfgParaValSucc, value] =
         GetConfigParameterValue(BConstants::BACKUP_OVERRIDE_BACKUP_SA_RELEASE_KEY, BConstants::BACKUP_PARA_VALUE_MAX);
     if (!getCfgParaValSucc) {
-        HILOGE("Fail to get configuration parameter value of backup.para");
-        return true;
+        HILOGE("Fail to get configuration parameter value of backup.para, return default value");
+        return BConstants::BACKUP_OVERRIDE_BACKUP_SA_RELEASE_DEFAULT_VALUE;
     }
     return value == "true";
 }
@@ -84,8 +73,8 @@ bool BackupPara::GetBackupOverrideIncrementalRestore()
     auto [getCfgParaValSucc, value] =
         GetConfigParameterValue(BConstants::BACKUP_OVERRIDE_INCREMENTAL_KEY, BConstants::BACKUP_PARA_VALUE_MAX);
     if (!getCfgParaValSucc) {
-        HILOGE("Fail to get configuration parameter value of backup.para");
-        return true;
+        HILOGE("Fail to get configuration parameter value of backup.para, return default value");
+        return BConstants::BACKUP_OVERRIDE_INCREMENTAL_DEFAULT_VALUE;
     }
     HILOGI("Get Parse IncrementalRestore result, value: %{public}s", value.c_str());
     return value == "true";
