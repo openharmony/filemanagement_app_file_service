@@ -85,6 +85,7 @@ const std::string BACKUPSERVICE_WORK_STATUS_KEY = "persist.backupservice.worksta
 const std::string BACKUPSERVICE_WORK_STATUS_ON = "true";
 const std::string BACKUPSERVICE_WORK_STATUS_OFF = "false";
 const std::string BACKUP_PERMISSION = "ohos.permission.BACKUP";
+const int32_t MAX_TRY_CLEAR_DISPOSE_NUM = 3;
 } // namespace
 
 /* Shell/Xts user id equal to 0/1, we need set default 100 */
@@ -1247,15 +1248,15 @@ void Service::SendStartAppGalleryNotify(const BundleName &bundleName)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (SAUtils::IsSABundleName(bundleName)) {
         HILOGI("SA does not need to StartRestore");
-        return ;
+        return;
     }
     IServiceReverse::Scenario scenario = session_->GetScenario();
     if (scenario != IServiceReverse::Scenario::RESTORE) {
-        return ;
+        return;
     }
     if (!disposal_->IfBundleNameInDisposalConfigFile(bundleName)) {
         HILOGE("WriteDisposalConfigFile Failed");
-        return ;
+        return;
     }
     HILOGI("AppendIntoDisposalConfigFile OK, bundleName=%{public}s", bundleName.c_str());
     DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
@@ -1268,24 +1269,42 @@ void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (SAUtils::IsSABundleName(bundleName)) {
         HILOGI("SA does not need to EndRestore");
-        return ;
+        return;
     }
     IServiceReverse::Scenario scenario = session_->GetScenario();
     if (scenario != IServiceReverse::Scenario::RESTORE) {
-        return ;
+        return;
     }
     DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
     HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
         bundleName.c_str());
     if (disposeErr != DisposeErr::OK) {
         HILOGE("Error, disposal will be clear in the end");
-        return ;
+        return;
     }
     if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
         HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
-        return ;
+        return;
     }
     HILOGI("DeleteFromDisposalConfigFile OK, bundleName=%{public}s", bundleName.c_str());
+}
+
+void Service::TryToClearDispose(const BundleName &bundleName)
+{
+    int32_t maxAtt = MAX_TRY_CLEAR_DISPOSE_NUM;
+    int32_t att = 0;
+    while (att < maxAtt) {
+        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
+        HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr, bundleName.c_str());
+        if (disposeErr == DisposeErr::OK) {
+            break;
+        }
+        ++ att;
+        HILOGI("Try to clear dispose, num = %{public}d", att);
+    }
+    if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
+        HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
+    }
 }
 
 void Service::SendErrAppGalleryNotify()
@@ -1293,26 +1312,16 @@ void Service::SendErrAppGalleryNotify()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     IServiceReverse::Scenario scenario = session_->GetScenario();
     if (scenario != IServiceReverse::Scenario::RESTORE) {
-        return ;
+        return;
     }
     vector<string> bundleNameList = disposal_->GetBundleNameFromConfigFile();
     if (bundleNameList.empty()) {
         HILOGI("End, All disposal pasitions have been cleared");
-        return ;
+        return;
     }
     for (vector<string>::iterator it = bundleNameList.begin(); it != bundleNameList.end(); ++it) {
         string bundleName = *it;
-        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
-        HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
-            bundleName.c_str());
-        if (disposeErr != DisposeErr::OK) {
-            HILOGE("Error, disposal will be clear in the end");
-            return ;
-        }
-        if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
-            HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
-            return ;
-        }
+        TryToClearDispose(bundleName);
     }
 }
 
@@ -1323,17 +1332,7 @@ void Service::ClearDisposalOnSaStart()
     if (!bundleNameList.empty()) {
         for (vector<string>::iterator it = bundleNameList.begin(); it != bundleNameList.end(); ++it) {
             string bundleName = *it;
-            DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
-            HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
-                bundleName.c_str());
-            if (disposeErr != DisposeErr::OK) {
-                HILOGE("Error, disposal will be clear in the end");
-                return ;
-            }
-            if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
-                HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
-                return ;
-            }
+            TryToClearDispose(bundleName);
         }
     }
     HILOGI("SA start, All Errdisposal pasitions have been cleared");
@@ -1344,12 +1343,12 @@ void Service::DeleteDisConfigFile()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     IServiceReverse::Scenario scenario = session_->GetScenario();
     if (scenario != IServiceReverse::Scenario::RESTORE) {
-        return ;
+        return;
     }
     vector<string> bundleNameList = disposal_->GetBundleNameFromConfigFile();
     if (!bundleNameList.empty()) {
         HILOGE("DisposalConfigFile is not empty");
-        return ;
+        return;
     }
     if (!disposal_->DeleteConfigFile()) {
         HILOGE("DeleteConfigFile failed");
@@ -1442,7 +1441,7 @@ std::function<void(const std::string &&)> Service::GetBackupInfoConnectDied(wptr
 void Service::ClearResidualBundleData(const std::string &bundleName)
 {
     if (session_ == nullptr) {
-        return ;
+        return;
     }
     auto backUpConnection = session_->GetExtConnection(bundleName);
     if (backUpConnection == nullptr) {
