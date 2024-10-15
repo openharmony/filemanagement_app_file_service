@@ -37,24 +37,24 @@ BJsonClearDataConfig::BJsonClearDataConfig()
     string filePath = PATH_BUNDLE_BACKUP_HOME + CONFIG_NAME;
     if (access(filePath.c_str(), F_OK) == 0) {
         HILOGI("file exist filePath:%{public}s", filePath.c_str());
-        return ;
+        return;
     }
     HILOGI("Failed to access filePath :%{public}s", filePath.c_str());
     UniqueFd fd(open(filePath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
     if (fd < 0) {
         HILOGE("Failed to creat filePath :%{public}s", filePath.c_str());
-        return ;
+        return;
     }
     cJSON *jsonObjectDis = cJSON_CreateObject();
     if (jsonObjectDis == nullptr) {
         HILOGE("Creat json failed");
-        return ;
+        return;
     }
     cJSON *jsonArray = cJSON_CreateArray();
     if (jsonArray == nullptr) {
         HILOGE("Creat json failed");
         cJSON_Delete(jsonObjectDis);
-        return ;
+        return;
     }
     cJSON_AddItemToObject(jsonObjectDis, "ClearDataConfigFile", jsonArray);
 
@@ -62,14 +62,14 @@ BJsonClearDataConfig::BJsonClearDataConfig()
     if (newStr == nullptr) {
         HILOGE("cJSON_Print json failed");
         cJSON_Delete(jsonObjectDis);
-        return ;
+        return;
     }
     ofstream outFile(filePath);
     if (!outFile.is_open()) {
         HILOGE("open json failed");
         cJSON_free(newStr);
         cJSON_Delete(jsonObjectDis);
-        return ;
+        return;
     }
     outFile << newStr;
     outFile.close();
