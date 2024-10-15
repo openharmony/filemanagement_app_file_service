@@ -754,6 +754,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0200, TestSize.Level1)
         ASSERT_TRUE(service != nullptr);
         ErrCode errCode = BError(BError::Codes::SA_INVAL_ARG).GetCode();
 
+        service->backupExtMutexMap_[""] = make_shared<extensionInfo>("");
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
         EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
@@ -762,7 +763,6 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0200, TestSize.Level1)
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
         auto ret = service->AppDone(errCode);
         EXPECT_NE(ret, BError(BError::Codes::OK));
-
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
@@ -806,6 +806,7 @@ HWTEST_F(ServiceTest, SUB_Service_NotifyCloneBundleFinish_0100, TestSize.Level1)
         service->NotifyCloneBundleFinish(bundleName, senario);
         EXPECT_TRUE(true);
 
+        service->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
