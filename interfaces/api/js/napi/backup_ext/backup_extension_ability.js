@@ -35,4 +35,4 @@ class BackupExtensionAbility {
     }
 }
 
-export default BackupExtensionAbility
+export default BackupExtensionAbility;
