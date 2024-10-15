@@ -39,6 +39,9 @@ ohos_shared_library("fileshare") {
     "file_share/grant_uri_permission.cpp",
   ]
 
+  deps =
+      [ "${app_file_service_path}/interfaces/innerkits/native:fileuri_native" ]
+
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",

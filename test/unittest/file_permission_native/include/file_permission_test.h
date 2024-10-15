@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include "sandbox_mock.h"
+#include "library_func_mock.h"
 
 namespace OHOS {
 namespace AppFileService {
@@ -30,6 +31,7 @@ public:
     void TearDown() {};
     #ifdef SANDBOX_MANAGER
     static inline shared_ptr<SandboxMock> sandboxMock_ = nullptr;
+    static inline shared_ptr<LibraryFuncMock> funcMock = nullptr;
     #endif
 };
 } // namespace AppFileService

@@ -53,6 +53,9 @@ ohos_shared_library("fileshare_native") {
 
   public_configs = [ ":file_share_config" ]
 
+  deps =
+      [ "${app_file_service_path}/interfaces/innerkits/native:fileuri_native" ]
+
   external_deps = [
     "ability_base:base",
     "ability_base:want",

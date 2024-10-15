@@ -13,21 +13,23 @@
  * limitations under the License.
  */
 #include "file_permission.h"
+#include "accesstoken_kit.h"
+#include "file_uri.h"
 #include "log.h"
 #include "parameter.h"
 #include "uri.h"
+#include <sys/stat.h>
 #include <unistd.h>
 #include <unordered_set>
 #ifdef SANDBOX_MANAGER
-#include "accesstoken_kit.h"
+#include "sandbox_manager_err_code.h"
+#endif
 #include "bundle_constants.h"
 #include "hap_token_info.h"
 #include "ipc_skeleton.h"
 #include "n_error.h"
 #include "sandbox_helper.h"
-#include "sandbox_manager_err_code.h"
 #include "tokenid_kit.h"
-#endif
 
 namespace OHOS {
 namespace AppFileService {
@@ -43,6 +45,7 @@ const std::string SANDBOX_STORAGE_PATH = "/storage/Users/currentUser/";
 const std::string DOWNLOAD_PATH = "/storage/Users/currentUser/Download";
 const std::string DESKTOP_PATH = "/storage/Users/currentUser/Desktop";
 const std::string DOCUMENTS_PATH = "/storage/Users/currentUser/Documents";
+const std::string CURRENTUSER = "currentUser";
 const std::string READ_WRITE_DOWNLOAD_PERMISSION = "ohos.permission.READ_WRITE_DOWNLOAD_DIRECTORY";
 const std::string READ_WRITE_DESKTOP_PERMISSION = "ohos.permission.READ_WRITE_DESKTOP_DIRECTORY";
 const std::string READ_WRITE_DOCUMENTS_PERMISSION = "ohos.permission.READ_WRITE_DOCUMENTS_DIRECTORY";
@@ -53,6 +56,7 @@ const std::unordered_map<std::string, std::string> permissionPathMap = {
     {READ_WRITE_DOCUMENTS_PERMISSION, DOCUMENTS_PATH}};
 #ifdef SANDBOX_MANAGER
 namespace {
+
 bool CheckValidUri(const string &uriStr)
 {
     if (uriStr.find(FILE_SCHEME_PREFIX) != 0) {
@@ -71,6 +75,7 @@ bool CheckValidUri(const string &uriStr)
     }
     return true;
 }
+
 int32_t ErrorCodeConversion(int32_t sandboxManagerErrorCode,
                             const deque<struct PolicyErrorResult> &errorResults,
                             const vector<uint32_t> &resultCodes)
@@ -90,6 +95,10 @@ int32_t ErrorCodeConversion(int32_t sandboxManagerErrorCode,
     }
     if (!errorResults.empty()) {
         LOGE("Some of the incoming URIs failed");
+        return EPERM;
+    }
+    if (resultCodes.size() == 0) {
+        LOGE("Sandboxmanager not processed");
         return EPERM;
     }
     for (size_t i = 0; i < resultCodes.size(); i++) {
@@ -120,7 +129,7 @@ void FilePermission::ParseErrorResults(const vector<uint32_t> &resultCodes,
                                        const vector<PolicyInfo> &pathPolicies,
                                        deque<struct PolicyErrorResult> &errorResults)
 {
-    if (resultCodes.size() != pathPolicies.size()) {
+    if (resultCodes.size() == 0 || resultCodes.size() != pathPolicies.size()) {
         LOGE("resultCodes size is not equals pathPolicies size");
         return;
     }
@@ -169,8 +178,8 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
 {
     vector<PolicyInfo> pathPolicies;
     for (auto uriPolicy : uriPolicies) {
-        Uri uri(uriPolicy.uri);
-        string path = SandboxHelper::Decode(uri.GetPath());
+        AppFileService::ModuleFileUri::FileUri fileuri(uriPolicy.uri);
+        string path = fileuri.GetRealPath();
         if (!CheckValidUri(uriPolicy.uri) || access(path.c_str(), F_OK) != 0) {
             LOGE("Not correct uri!");
             PolicyErrorResult result = {uriPolicy.uri, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
@@ -188,9 +197,9 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
 {
     vector<PolicyInfo> pathPolicies;
     for (const auto &uriPolicy : uriPolicies) {
-        Uri uri(uriPolicy.uri);
-        string path = SandboxHelper::Decode(uri.GetPath());
-        if (!CheckValidUri(uriPolicy.uri) || access(path.c_str(), F_OK) != 0) {
+        AppFileService::ModuleFileUri::FileUri fileuri(uriPolicy.uri);
+        string path = fileuri.GetRealPath();
+        if (!CheckValidUri(uriPolicy.uri)) {
             LOGE("Not correct uri!");
             errorResults.emplace_back(false);
         } else {
@@ -220,12 +229,13 @@ static bool CheckFileManagerUriPermission(uint32_t providerTokenId, const string
            (pathStr.find(DESKTOP_PATH) == 0 && CheckPermission(providerTokenId, READ_WRITE_DESKTOP_PERMISSION)) ||
            (pathStr.find(DOCUMENTS_PATH) == 0 && CheckPermission(providerTokenId, READ_WRITE_DOCUMENTS_PERMISSION));
 }
-
+#endif
 int32_t FilePermission::CheckUriPersistentPermission(uint32_t tokenId,
                                                      const vector<UriPolicyInfo> &uriPolicies,
                                                      vector<bool> &errorResults)
 {
     int errorCode = 0;
+#ifdef SANDBOX_MANAGER
     vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
     if (pathPolicies.size() == 0) {
         return EPERM;
@@ -244,23 +254,26 @@ int32_t FilePermission::CheckUriPersistentPermission(uint32_t tokenId,
 
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode);
     ParseErrorResults(resultCodes, errorResults);
+#endif
     return errorCode;
 }
-#endif
 
 int32_t FilePermission::PersistPermission(const vector<UriPolicyInfo> &uriPolicies,
                                           deque<struct PolicyErrorResult> &errorResults)
 {
     int errorCode = 0;
 #ifdef SANDBOX_MANAGER
-    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
-    vector<uint32_t> resultCodes;
-    int32_t sandboxManagerErrorCode = SandboxManagerKit::PersistPolicy(pathPolicies, resultCodes);
-    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
-    if (resultCodes.size() > MAX_ARRAY_SIZE) {
+    if (uriPolicies.size() == 0 || uriPolicies.size() > MAX_ARRAY_SIZE) {
         LOGE("The number of result codes exceeds the maximum");
         return FileManagement::LibN::E_PARAMS;
     }
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    if (pathPolicies.size() == 0) {
+        return EPERM;
+    }
+    vector<uint32_t> resultCodes;
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::PersistPolicy(pathPolicies, resultCodes);
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
@@ -273,14 +286,17 @@ int32_t FilePermission::RevokePermission(const vector<UriPolicyInfo> &uriPolicie
 {
     int errorCode = 0;
 #ifdef SANDBOX_MANAGER
-    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
-    vector<uint32_t> resultCodes;
-    int32_t sandboxManagerErrorCode = SandboxManagerKit::UnPersistPolicy(pathPolicies, resultCodes);
-    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
-    if (resultCodes.size() > MAX_ARRAY_SIZE) {
+    if (uriPolicies.size() == 0 || uriPolicies.size() > MAX_ARRAY_SIZE) {
         LOGE("The number of result codes exceeds the maximum");
         return FileManagement::LibN::E_PARAMS;
     }
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    if (pathPolicies.size() == 0) {
+        return EPERM;
+    }
+    vector<uint32_t> resultCodes;
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::UnPersistPolicy(pathPolicies, resultCodes);
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
@@ -293,14 +309,17 @@ int32_t FilePermission::ActivatePermission(const vector<UriPolicyInfo> &uriPolic
 {
     int errorCode = 0;
 #ifdef SANDBOX_MANAGER
-    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
-    vector<uint32_t> resultCodes;
-    int32_t sandboxManagerErrorCode = SandboxManagerKit::StartAccessingPolicy(pathPolicies, resultCodes);
-    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
-    if (resultCodes.size() > MAX_ARRAY_SIZE) {
+    if (uriPolicies.size() == 0 || uriPolicies.size() > MAX_ARRAY_SIZE) {
         LOGE("The number of result codes exceeds the maximum");
         return FileManagement::LibN::E_PARAMS;
     }
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    if (pathPolicies.size() == 0) {
+        return EPERM;
+    }
+    vector<uint32_t> resultCodes;
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::StartAccessingPolicy(pathPolicies, resultCodes);
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
@@ -313,14 +332,17 @@ int32_t FilePermission::DeactivatePermission(const vector<UriPolicyInfo> &uriPol
 {
     int errorCode = 0;
 #ifdef SANDBOX_MANAGER
-    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
-    vector<uint32_t> resultCodes;
-    int32_t sandboxManagerErrorCode = SandboxManagerKit::StopAccessingPolicy(pathPolicies, resultCodes);
-    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
-    if (resultCodes.size() > MAX_ARRAY_SIZE) {
+    if (uriPolicies.size() == 0 || uriPolicies.size() > MAX_ARRAY_SIZE) {
         LOGE("The number of result codes exceeds the maximum");
         return FileManagement::LibN::E_PARAMS;
     }
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    if (pathPolicies.size() == 0) {
+        return EPERM;
+    }
+    vector<uint32_t> resultCodes;
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::StopAccessingPolicy(pathPolicies, resultCodes);
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
@@ -332,19 +354,25 @@ int32_t FilePermission::CheckPersistentPermission(const vector<UriPolicyInfo> &u
 {
     int errorCode = 0;
 #ifdef SANDBOX_MANAGER
+    if (uriPolicies.size() == 0 || uriPolicies.size() > MAX_ARRAY_SIZE) {
+        LOGE("The number of result codes exceeds the maximum");
+        return FileManagement::LibN::E_PARAMS;
+    }
     auto tokenId = IPCSkeleton::GetCallingTokenID();
     errorCode = CheckUriPersistentPermission(tokenId, uriPolicies, errorResults);
 #endif
     return errorCode;
 }
 
-string FilePermission::GetPathByPermission(const std::string &permission)
+string FilePermission::GetPathByPermission(const std::string &userName, const std::string &permission)
 {
-#ifdef SANDBOX_MANAGER
     if (permissionPathMap.find(permission) != permissionPathMap.end()) {
-        return permissionPathMap.at(permission);
+        string path = permissionPathMap.at(permission);
+        if (!userName.empty()) {
+            path = path.replace(path.find(CURRENTUSER), CURRENTUSER.length(), userName);
+        }
+        return path;
     }
-#endif
     return "";
 }
 } // namespace AppFileService
