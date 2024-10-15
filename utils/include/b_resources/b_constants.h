@@ -52,7 +52,7 @@ constexpr int XTS_UID = 1;
 constexpr int DEFAULT_USER_ID = 100;
 constexpr int BACKUP_UID = 1089;
 constexpr int EXTENSION_THREAD_POOL_COUNT = 1;
-constexpr int BACKUP_LOADSA_TIMEOUT_MS = 4000;
+constexpr int BACKUP_LOADSA_TIMEOUT_MS = 5000;
 
 constexpr int DECIMAL_BASE = 10; // 十进制基数
 

@@ -173,6 +173,14 @@ public:
     void DeleteDisConfigFile();
 
     /**
+     * @brief 尝试清理处置
+     *
+     * @param bundleName 应用名称
+     *
+     */
+    void TryToClearDispose(const BundleName &bundleName);
+
+    /**
      * @brief 结束会话删除session，卸载服务
      *
      */
