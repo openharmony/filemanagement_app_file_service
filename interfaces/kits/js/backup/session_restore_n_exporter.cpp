@@ -409,6 +409,7 @@ static bool VerifyNapiObject(napi_env env, NFuncArg &funcArg)
     }
     return false;
 }
+
 static bool VerifyNarg(napi_env env, NVal &callbacks)
 {
     if (!callbacks.TypeIs(napi_object)) {

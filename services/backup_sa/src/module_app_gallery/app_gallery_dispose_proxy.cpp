@@ -20,6 +20,7 @@
 #include "b_jsonutil/b_jsonutil.h"
 #include "filemgmt_libhilog.h"
 #include "message_parcel.h"
+
 #include "module_app_gallery/app_gallery_dispose_proxy.h"
 #include "module_app_gallery/app_gallery_service_connection.h"
 #include "want.h"
@@ -159,11 +160,12 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
             disposeOperation, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
         return DisposeErr::OK;
     } catch (const BError &e) {
-        HILOGI("Catch exception, errCode = %{public}d", e.GetCode());
+        HILOGE("Catch exception, errCode = %{public}d", e.GetCode());
         return DisposeErr::IPC_FAIL;
     } catch (...) {
-        HILOGI("Unexpected exception");
+        HILOGE("Unexpected exception");
         return DisposeErr::IPC_FAIL;
     }
 }
+
 } // namespace OHOS::FileManagement::Backup
