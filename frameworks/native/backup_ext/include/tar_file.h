@@ -86,7 +86,8 @@ public:
     bool Packet(const std::vector<std::string> &srcFiles,
                 const std::string &tarFileName,
                 const std::string &pkPath,
-                TarMap &tarMap);
+                TarMap &tarMap,
+                std::function<void(std::string, int)> reportCb);
     
     /**
      * @brief set packet mode
@@ -108,7 +109,7 @@ private:
      * @return true 遍历成功
      * @return false 遍历失败
      */
-    bool TraversalFile(std::string &fileName);
+    bool TraversalFile(std::string &fileName, int &err);
 
     /**
      * @brief add files to the tar package
@@ -116,7 +117,7 @@ private:
      * @param filename 文件名
      * @param st 文件参数结构体
      */
-    bool AddFile(std::string &fileName, const struct stat &st);
+    bool AddFile(std::string &fileName, const struct stat &st, int &err);
 
     /**
      * @brief write files to content
@@ -124,7 +125,7 @@ private:
      * @param filename 文件名
      * @param size 文件大小
      */
-    bool WriteFileContent(const std::string &fileName, off_t size);
+    bool WriteFileContent(const std::string &fileName, off_t size, int &err);
 
     /**
      * @brief split write

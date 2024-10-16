@@ -273,7 +273,10 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_UnPacket_0500, testing::ext::TestSize.Lev
         vector<string> smallFiles;
         smallFiles.emplace_back(aFile);
         smallFiles.emplace_back(bFile);
-        TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap);
++       auto reportCb = [](std::string msg, int err) {
++           return;
++       };
++       TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap, reportCb);
 
         string rootPath(root);
         int ret = UntarFile::GetInstance().UnPacket(tarFile, rootPath);
@@ -323,7 +326,10 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_IncrementalUnPacket_0100, testing::ext::T
         vector<string> smallFiles;
         smallFiles.emplace_back(aFile);
         smallFiles.emplace_back(bFile);
-        TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap);
+        auto reportCb = [](std::string msg, int err) {
+            return;
+        };
+        TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap, reportCb);
 
         string tarFile = root + "/test.0.tar";
         string rootPath(root);
@@ -395,7 +401,10 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_IncrementalUnPacket_0300, testing::ext::T
         TarMap tarMap {};
         vector<string> smallFiles;
         smallFiles.emplace_back(aFile);
-        TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap);
+        auto reportCb = [](std::string msg, int err) {
+            return;
+        };
+        TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap, reportCb);
 
         string tarFile = root + "/test.0.tar";
         string rootPath(root);
@@ -451,7 +460,10 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_IncrementalUnPacket_0400, testing::ext::T
         vector<string> smallFiles;
         smallFiles.emplace_back(aFile);
         smallFiles.emplace_back(bFile);
-        TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap);
+        auto reportCb = [](std::string msg, int err) {
+            return;
+        };
+        TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap, reportCb);
 
         string tarFile = root + "/test.0.tar";
         string rootPath(root);
