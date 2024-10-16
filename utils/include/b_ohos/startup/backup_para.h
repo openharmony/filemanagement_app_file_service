@@ -49,6 +49,13 @@ public:
      * @return 获取的配置项backup.overrideIncrementalRestore的值为true时则返回true，否则返回false
      */
     bool GetBackupOverrideIncrementalRestore();
+
+    /**
+     * @brief 获取backup.para配置项backupDebugState的值
+     *
+     * @return 获取的配置项backup.backupDebugState的值为true时则返回true，否则返回false
+     */
+    static bool GetBackupDebugState();
 };
 } // namespace OHOS::FileManagement::Backup
 
