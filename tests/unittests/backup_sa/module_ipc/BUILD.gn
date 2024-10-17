@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ohos_unittest("module_ipc_test") {
@@ -68,6 +69,7 @@ ohos_unittest("module_ipc_test") {
   ]
 
   sanitize = {
+    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false
@@ -93,7 +95,6 @@ ohos_unittest("backup_service_test") {
     "${path_backup_mock}/module_ipc/app_gallery_dispose_proxy_mock.cpp",
     "${path_backup_mock}/timer/timer_mock.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/sa_backup_connection.cpp",
-    "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
@@ -107,6 +108,7 @@ ohos_unittest("backup_service_test") {
   include_dirs = [
     "${path_backup}/services/backup_sa/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/services/backup_sa/src/module_ipc",
     "${path_backup}/tests/unittests/backup_api/backup_impl/include",
     "${path_access_token}/interfaces/innerkits/accesstoken/include",
     "${path_backup_mock}/b_process/",
@@ -137,13 +139,24 @@ ohos_unittest("backup_service_test") {
   ]
 
   sanitize = {
+    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false
     blocklist = "${path_backup}/cfi_blocklist.txt"
   }
 
+  defines = [ "private=public" ]
   use_exceptions = true
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
 }
 
 ohos_unittest("backup_service_throw_test") {
@@ -244,6 +257,7 @@ ohos_unittest("backup_service_session_test") {
   ]
 
   deps = [
+    "${app_file_service_path}/services/backup_sa:backup_sa",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
@@ -317,6 +331,7 @@ ohos_unittest("backup_service_scheduler_test") {
   ]
 
   sanitize = {
+    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false

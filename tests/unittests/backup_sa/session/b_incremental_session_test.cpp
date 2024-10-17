@@ -643,4 +643,34 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1900, testing::e
     GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_1900";
 }
 
+/**
+ * @tc.number: SUB_b_incremental_session_test_2000
+ * @tc.name: SUB_b_incremental_session_test_2000
+ * @tc.desc: 测试 PublishSAFile 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2000";
+    try {
+        ServiceProxy::serviceProxy_ = nullptr;
+        BFileInfo fileInfo;
+        UniqueFd fd;
+        EXPECT_TRUE(restoreSession != nullptr);
+        auto err = restoreSession->PublishSAFile(fileInfo, move(fd));
+        EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
+
+        EXPECT_CALL(*proxy, PublishIncrementalFile(_)).WillOnce(Return(0));
+        ServiceProxy::serviceProxy_ = proxy;
+        err = restoreSession->PublishSAFile(fileInfo, move(fd));
+        EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(true);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by RemoveExtConn.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2000";
+}
 } // namespace OHOS::FileManagement::Backup
