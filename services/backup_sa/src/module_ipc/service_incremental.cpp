@@ -249,6 +249,15 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
     }
 }
 
+vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalData> &bundlesToBackup)
+{
+    vector<string> bundleNames {};
+    for (auto bundle : bundlesToBackup) {
+        bundleNames.emplace_back(bundle.bundleName);
+    }
+    return bundleNames;
+}
+
 ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -259,25 +268,26 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
-        vector<string> bundleNames {};
-        for (auto &bundle : bundlesToBackup) {
-            bundleNames.emplace_back(bundle.bundleName);
-        }
-        auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
+        vector<string> bundleNames = GetBundleNameByDetails(bundlesToBackup);
+        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
+            session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
-        SetCurrentBackupSessProperties(bundleNames, session_->GetSessionUserId());
         for (auto info : backupInfos) {
-            session_->SetBundleDataSize(info.name, info.spaceOccupied);
-            session_->SetBackupExtName(info.name, info.extensionName);
+            HILOGI("Current backupInfo bundleName:%{public}s, index:%{public}d, extName:%{public}s", info.name.c_str(),
+                info.appIndex, info.extensionName.c_str());
+            std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
+            session_->SetBundleDataSize(bundleNameIndexInfo, info.increSpaceOccupied);
+            session_->SetBackupExtName(bundleNameIndexInfo, info.extensionName);
             if (info.allToBackup == false) {
                 session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
-                    BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
-                session_->RemoveExtInfo(info.name);
+                    BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), bundleNameIndexInfo);
+                session_->RemoveExtInfo(bundleNameIndexInfo);
             }
         }
         for (auto &bundleInfo : bundlesToBackup) {
             session_->SetIncrementalData(bundleInfo);
         }
+        SetCurrentBackupSessProperties(bundleNames, session_->GetSessionUserId());
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
@@ -303,30 +313,16 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
-        vector<string> bundleNames {};
-        for (auto &bundle : bundlesToBackup) {
-            bundleNames.emplace_back(bundle.bundleName);
-        }
+        vector<string> bundleNames = GetBundleNameByDetails(bundlesToBackup);
         std::vector<std::string> bundleNamesOnly;
         std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, infos, bundleNamesOnly,
             session_->GetSessionUserId(), isClearDataFlags);
-        auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
+        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
+            session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
-        for (auto info : backupInfos) {
-            SetCurrentSessProperties(info, isClearDataFlags);
-            if (info.allToBackup == false) {
-                session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
-                    BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
-                session_->RemoveExtInfo(info.name);
-            }
-            BJsonUtil::BundleDetailInfo uniCastInfo;
-            if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, info.name, UNICAST_TYPE, uniCastInfo)) {
-                HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
-                session_->SetBackupExtInfo(info.name, uniCastInfo.detail);
-            }
-        }
+        HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
         for (auto &bundleInfo : bundlesToBackup) {
             session_->SetIncrementalData(bundleInfo);
         }
@@ -341,6 +337,30 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("Unexpected exception");
         return EPERM;
+    }
+}
+
+void Service::HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &backupInfos,
+    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
+    std::map<std::string, bool> &isClearDataFlags)
+{
+    for (auto &info : backupInfos) {
+        HILOGI("Current backupInfo bundleName:%{public}s, index:%{public}d, extName:%{public}s", info.name.c_str(),
+            info.appIndex, info.extensionName.c_str());
+        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
+        SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
+        session_->SetBundleDataSize(bundleNameIndexInfo, info.increSpaceOccupied);
+        if (info.allToBackup == false) {
+            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
+                BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), bundleNameIndexInfo);
+            session_->RemoveExtInfo(bundleNameIndexInfo);
+        }
+        BJsonUtil::BundleDetailInfo uniCastInfo;
+        if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {
+            HILOGI("current bundle:%{public}s, unicast info:%{public}s", bundleNameIndexInfo.c_str(),
+                GetAnonyString(uniCastInfo.detail).c_str());
+            session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
+        }
     }
 }
 

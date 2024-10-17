@@ -133,7 +133,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
             GetAllowAndExtName(extensionInfos);
         int64_t dataSize = 0;
         if (allToBackup) {
-            dataSize = GetBundleStats(installedBundle.name, userId);
+            dataSize = GetBundleStats(bundleName, userId);
         }
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.appIndex,
                                                               installedBundle.versionCode,
@@ -191,8 +191,18 @@ static bool CreateIPCInteractionFiles(int32_t userId, const string &bundleName, 
     const vector<string> &includes, const vector<string> &excludes)
 {
     // backup_sa bundle path
-    string backupSaBundleDir = BConstants::BACKUP_PATH_PREFIX + to_string(userId) + BConstants::BACKUP_PATH_SURFFIX +
-        bundleName + BConstants::FILE_SEPARATOR_CHAR;
+    BJsonUtil::BundleDetailInfo bundleDetail = BJsonUtil::ParseBundleNameIndexStr(bundleName);
+    string backupSaBundleDir;
+    if (bundleDetail.bundleIndex > 0) {
+        std::string bundleNameIndex  = "+clone-" + std::to_string(bundleDetail.bundleIndex) + "+" +
+            bundleDetail.bundleName;
+        backupSaBundleDir = BConstants::BACKUP_PATH_PREFIX + to_string(userId) + BConstants::BACKUP_PATH_SURFFIX +
+            bundleNameIndex + BConstants::FILE_SEPARATOR_CHAR;
+    } else {
+        backupSaBundleDir = BConstants::BACKUP_PATH_PREFIX + to_string(userId) + BConstants::BACKUP_PATH_SURFFIX +
+            bundleDetail.bundleName + BConstants::FILE_SEPARATOR_CHAR;
+    }
+    HILOGI("bundleInteraction dir is:%{public}s", backupSaBundleDir.c_str());
     if (access(backupSaBundleDir.data(), F_OK) != 0) {
         int32_t err = mkdir(backupSaBundleDir.data(), S_IRWXU | S_IRWXG);
         if (err != 0 && errno != EEXIST) {
@@ -279,7 +289,6 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     auto bms = GetBundleManager();
     for (auto const &bundleNameTime : incrementalDataList) {
         auto bundleName = bundleNameTime.bundleName;
-        HILOGD("Begin get bundleName:%{private}s", bundleName.c_str());
         AppExecFwk::BundleInfo installedBundle;
         std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos;
         bool getBundleSuccess = GetCurBundleExtenionInfo(installedBundle, bundleName, extensionInfos, bms, userId);
@@ -289,7 +298,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         }
         struct BJsonEntityCaps::BundleBackupConfigPara backupPara;
         if (!GetBackupExtConfig(extensionInfos, backupPara)) {
-            HILOGE("No backup extension ability found");
+            HILOGE("No backup extension ability found, bundleName:%{public}s", bundleName.c_str());
             continue;
         }
         if (!CreateIPCInteractionFiles(userId, bundleName, bundleNameTime.lastIncrementalTime, backupPara.includes,
@@ -303,7 +312,13 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
                                                               backupPara.extensionName,
                                                               backupPara.restoreDeps, backupPara.supportScene,
                                                               backupPara.extraInfo});
-        bundleNames.emplace_back(bundleName);
+        if (installedBundle.appIndex > 0) {
+            std::string bundleNameIndex  = "+clone-" + std::to_string(installedBundle.appIndex) + "+" +
+                installedBundle.name;
+            bundleNames.emplace_back(bundleNameIndex);
+        } else {
+            bundleNames.emplace_back(bundleName);
+        }
         incrementalBackTimes.emplace_back(bundleNameTime.lastIncrementalTime);
     }
     vector<BJsonEntityCaps::BundleInfo> newBundleInfos {};
@@ -327,7 +342,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
 
     vector<BIncrementalData> bundleNames;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
-    HILOGI("Begin get bundle infos");
+    HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
     for (auto const &installedBundle : installedBundles) {
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
@@ -370,11 +385,18 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetFullBundleInfos(int32_t
     }
     vector<string> bundleNames;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
     for (auto const &installedBundle : installedBundles) {
-        HILOGI("Begin get bundle infos, bundleName = %{public}s", installedBundle.name.data());
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
+            continue;
+        }
+        if (installedBundle.appIndex > 0) {
+            HILOGI("Current bundle %{public}s is a twin application", installedBundle.name.c_str());
+            std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(installedBundle.name,
+                installedBundle.appIndex);
+            bundleNames.emplace_back(bundleNameIndexInfo);
             continue;
         }
         auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo] =
@@ -490,8 +512,6 @@ bool BundleMgrAdapter::GetCurBundleExtenionInfo(AppExecFwk::BundleInfo &installe
         HILOGE("Unsupported applications, name : %{public}s", installedBundle.name.data());
         return false;
     }
-    HILOGI("bundleName:%{public}s, hapMoudleInfos size:%{public}zu", bundleName.c_str(),
-        installedBundle.hapModuleInfos.size());
     std::vector<AppExecFwk::HapModuleInfo> hapModuleInfos = installedBundle.hapModuleInfos;
     for (auto &hapModuleInfo : hapModuleInfos) {
         extensionInfos.insert(extensionInfos.end(), hapModuleInfo.extensionInfos.begin(),
@@ -505,8 +525,15 @@ bool BundleMgrAdapter::IsUser0BundleName(std::string bundleName, int32_t userId)
 {
     auto bms = GetBundleManager();
     AppExecFwk::BundleInfo installedBundle;
-    if (!bms->GetBundleInfo(bundleName, AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundle, userId)) {
-        HILOGI("GetBundleInfo failed, bundleName:%{public}s", bundleName.c_str());
+    BJsonUtil::BundleDetailInfo bundleDetailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
+    int32_t flags = static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY) |
+        static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) |
+        static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    ErrCode ret = bms->GetCloneBundleInfo(bundleDetailInfo.bundleName, flags, bundleDetailInfo.bundleIndex,
+        installedBundle, userId);
+    if (ret != ERR_OK) {
+        HILOGE("bundleName:%{public}s, ret:%{public}d, GetBundle Failed from BMS", bundleName.c_str(), ret);
         return false;
     }
     if (installedBundle.applicationInfo.singleton == true) {
@@ -515,5 +542,17 @@ bool BundleMgrAdapter::IsUser0BundleName(std::string bundleName, int32_t userId)
     }
     HILOGI("bundleName:%{public}s is not zero user bundle", bundleName.c_str());
     return false;
+}
+
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppend(const std::vector<BIncrementalData> &list,
+    int32_t userId)
+{
+    auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(list, userId);
+    for (auto const &info : list) {
+        if (SAUtils::IsSABundleName(info.bundleName)) {
+            GetBundleInfoForSA(info.bundleName, bundleInfos);
+        }
+    }
+    return bundleInfos;
 }
 } // namespace OHOS::FileManagement::Backup

@@ -90,6 +90,7 @@ constexpr uint32_t TIMEOUT_INVALID = UINT32_MAX;
 
 constexpr int CALL_APP_ON_PROCESS_TIME_INTERVAL = 5; // 框架每隔5s去调用应用的onProcess
 constexpr int APP_ON_PROCESS_MAX_TIMEOUT = 1000; // 应用的onProcess接口最大超时时间为1秒
+constexpr int FIRST_CALL_APP_ON_PROCESS_MAX_TIMEOUT = 15000; // 首次调用应用的onProcess接口最大超时时间为15秒
 constexpr int APP_ON_PROCESS_TIMEOUT_MAX_COUNT = 3; // 应用的onProcess接口超时的上限次数
 
 // backup.para内配置项的名称，该配置项值为true时可在不更新hap包的情况下，可以读取包管理元数据配置文件的内容

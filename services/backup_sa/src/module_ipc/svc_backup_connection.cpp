@@ -47,7 +47,8 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
     }
     isConnected_.store(true);
     string bundleName = element.GetBundleName();
-    HILOGI("%{public}s, OnAbilityConnectDone", bundleName.c_str());
+    HILOGI("bundleName:%{public}s, OnAbilityConnectDone, bundleNameIndexInfo:%{public}s", bundleName.c_str(),
+        bundleNameIndexInfo_.c_str());
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
@@ -68,7 +69,8 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
             bundleNameIndexInfo_.c_str(), bundleName.c_str());
         return;
     }
-    callConnected_(move(bundleNameIndexInfo_));
+    bundleName = bundleNameIndexInfo_;
+    callConnected_(move(bundleName));
     HILOGI("called end");
 }
 
@@ -78,6 +80,14 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
     isConnected_.store(false);
     backupProxy_ = nullptr;
     string bundleName = element.GetBundleName();
+    HILOGI("bundleName:%{public}s, OnAbilityDisconnectDone, bundleNameIndexInfo:%{public}s", bundleName.c_str(),
+        bundleNameIndexInfo_.c_str());
+    if (bundleNameIndexInfo_.find(bundleName) == string::npos) {
+        HILOGE("Current bundle name is wrong, bundleNameIndexInfo:%{public}s, bundleName:%{public}s",
+            bundleNameIndexInfo_.c_str(), bundleName.c_str());
+        return;
+    }
+    bundleName = bundleNameIndexInfo_;
     if (isConnectedDone_ == false) {
         isConnectedDone_.store(true);
         HILOGE("It's error that the backup extension dies before the backup sa. name : %{public}s", bundleName.data());
