@@ -204,22 +204,22 @@ bool TarFile::I2OcsConvert(const struct stat &st, TarHeader &hdr, string &fileNa
 
     if (S_ISREG(st.st_mode)) {
         hdr.typeFlag = REGTYPE;
-        off_t hdrSize = st.st_size;
-        if (sizeof(off_t) <= OFF_T_SIZE || st.st_size <= static_cast<off_t>(MAX_FILE_SIZE)) {
-            size = I2Ocs(sizeof(hdr.size), hdrSize);
-            ret = memcpy_s(hdr.size, sizeof(hdr.size), size.c_str(), min(sizeof(hdr.size) - 1, size.length()));
-            if (ret != EOK) {
-                HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
-                return false;
-            }
-        } else {
-            HILOGE("Invalid tar header size");
-            return false;
-        }
     } else if (S_ISDIR(st.st_mode)) {
         hdr.typeFlag = DIRTYPE;
     } else {
         return true;
+    }
+    off_t hdrSize = st.st_size;
+    if (sizeof(off_t) <= OFF_T_SIZE || st.st_size <= static_cast<off_t>(MAX_FILE_SIZE)) {
+        size = I2Ocs(sizeof(hdr.size), hdrSize);
+        ret = memcpy_s(hdr.size, sizeof(hdr.size), size.c_str(), min(sizeof(hdr.size) - 1, size.length()));
+        if (ret != EOK) {
+            HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+            return false;
+        }
+    } else {
+        HILOGE("Invalid tar header size");
+        return false;
     }
 
     if (S_ISDIR(st.st_mode) && fileName.back() != '/') {

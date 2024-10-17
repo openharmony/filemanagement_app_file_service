@@ -27,7 +27,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
-
+const char* BACKUP_DEBUG_STATE = "sys.backup.check.enable";
 /**
  * @brief 获取配置参数的值
  *
@@ -103,5 +103,17 @@ tuple<bool, int32_t> BackupPara::GetBackupDebugOverrideAccount()
         return {true, stoi(value)};
     }
     return {false, 0};
+}
+
+bool BackupPara::GetBackupDebugState()
+{
+    char paraValue[30] = {0}; // 30: for system paramter
+    auto res = GetParameter(BACKUP_DEBUG_STATE, "-1", paraValue, sizeof(paraValue));
+    if (res <= 0) {
+        HILOGE("GetParameter fail, key:%{public}s res:%{public}d", BACKUP_DEBUG_STATE, res);
+        return false;
+    }
+    std::string result(paraValue);
+    return result == "true";
 }
 } // namespace OHOS::FileManagement::Backup

@@ -107,6 +107,88 @@ void BackupExtExtension::SetClearDataFlag(bool isClearData)
     }
 }
 
+std::map<std::string, off_t> BackupExtExtension::GetIdxFileInfos(bool isSpecialVersion)
+{
+    string restoreDir = isSpecialVersion ?
+        "" :
+        string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    auto extManageInfo = GetExtManageInfo();
+    std::map<std::string, off_t> idxFileInfos;
+    for (size_t i = 0; i < extManageInfo.size(); ++i) {
+        std::string realPath = restoreDir + extManageInfo[i].hashName;
+        idxFileInfos[realPath] = extManageInfo[i].sta.st_size;
+    }
+    return idxFileInfos;
+}
+
+void BackupExtExtension::CheckTmpDirFileInfos(bool isSpecialVersion)
+{
+    ErrFileInfo errFiles;
+    auto idxFileInfos = GetIdxFileInfos(isSpecialVersion);
+    struct stat attr;
+    for (auto it : idxFileInfos) {
+        if (it.first.size() >= PATH_MAX || stat(it.first.data(), &attr) == -1) {
+            HILOGE("(Debug) Failed to get stat of %{public}s, errno = %{public}d", GetAnonyPath(it.first).c_str(),
+                errno);
+            errFiles[it.first].push_back(errno);
+        } else if (it.second != attr.st_size && (!S_ISDIR(attr.st_mode))) {
+            HILOGE("(Debug) RecFile:%{public}s size err, recSize: %{public}" PRId64 ", idxSize: %{public}" PRId64 "",
+                GetAnonyPath(it.first).c_str(), attr.st_size, it.second);
+            errFiles[it.first] = std::vector<int>();
+        }
+    }
+    HILOGE("(Debug) Temp file check result: Total file: %{public}zu, err file: %{public}zu", idxFileInfos.size(),
+        errFiles.size());
+    if (!errFiles.empty()) {
+        HILOGE("(Debug) The received file and idx is not same");
+        std::stringstream ss;
+        ss << "\"total_file\": \"" << idxFileInfos.size() << "\", \"restore_file\": \""
+        << idxFileInfos.size() - errFiles.size() << "\"" << "\"info\": \"different received file and idx\"";
+        AppRadar::Info info (bundleName_, "", ss.str());
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::CheckTmpDirFileInfos",
+            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_CHECK_DATA_FAIL,
+            static_cast<int32_t>(BError::BackupErrorCode::E_UKERR));
+    } else {
+        HILOGI("(Debug) The received file and idx is same");
+    }
+}
+
+tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
+{
+    vector<string> errFiles;
+    struct stat curFileStat {};
+    for (const auto &it : endFileInfos_) {
+        if (lstat(it.first.c_str(), &curFileStat) != 0) {
+            HILOGE("Failed to lstat %{public}s, err = %{public}d", GetAnonyPath(it.first).c_str(), errno);
+            errFiles.emplace_back(it.first);
+            errFileInfos_[it.first].push_back(errno);
+        } else if (curFileStat.st_size != it.second && (!S_ISDIR(curFileStat.st_mode))) {
+            HILOGE("File size error, file: %{public}s, idx: %{public}" PRId64 ", act: %{public}" PRId64 "",
+                GetAnonyPath(it.first).c_str(), it.second, curFileStat.st_size);
+            errFiles.emplace_back(it.first);
+            errFileInfos_[it.first].push_back(errno);
+        }
+    }
+    for (const auto &it : errFileInfos_) {
+        for (const auto &codeIt : it.second) {
+            HILOGE("(Debug)  errfileInfos file = %{public}s -> %{public}d", GetAnonyPath(it.first).c_str(), codeIt);
+        }
+    }
+    HILOGE("(Debug) End file check result Total file: %{public}zu, err file: %{public}zu", endFileInfos_.size(),
+        errFileInfos_.size());
+    if (errFiles.size()) {
+        std::stringstream ss;
+        ss << "\"total_file\": \"" << endFileInfos_.size() << "\", \"restore_file\": \""
+        << endFileInfos_.size() - errFileInfos_.size() << "\"";
+        AppRadar::Info info (bundleName_, "", ss.str());
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::CheckRestoreFileInfos",
+            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_CHECK_DATA_FAIL,
+            static_cast<int32_t>(BError::BackupErrorCode::E_UKERR));
+        return { false, errFiles };
+    }
+    return { true, errFiles };
+}
+
 void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
 {
     HILOGI("Begin");
@@ -691,5 +773,76 @@ bool BackupExtExtension::SetStagingPathProperties()
         return false;
     }
     return true;
+}
+
+bool BackupExtExtension::IfAllowToBackupRestore()
+{
+    if (extension_ == nullptr) {
+        HILOGE("Failed to handle backup, extension is nullptr");
+        return false;
+    }
+    string usrConfig = extension_->GetUsrConfig();
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
+    auto cache = cachedEntity.Structuralize();
+    if (!cache.GetAllowToBackupRestore()) {
+        HILOGE("Application does not allow backup or restore");
+        return false;
+    }
+    return true;
+}
+
+void BackupExtExtension::DoUser0Backup(const BJsonEntityExtensionConfig &usrConfig)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
+        throw BError(errno);
+    }
+    vector<string> includes = usrConfig.GetIncludes();
+    vector<string> excludes = usrConfig.GetExcludes();
+    auto task = [obj {wptr<BackupExtExtension>(this)}, includes, excludes]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        try {
+            auto [bigFile, smallFile] = BDir::GetBackupList(includes, excludes);
+            vector<struct ReportFileInfo> allFiles;
+            vector<struct ReportFileInfo> smallFiles;
+            vector<struct ReportFileInfo> bigFiles;
+            BDir::GetUser0FileStat(move(bigFile), move(smallFile), allFiles, smallFiles, bigFiles);
+            auto ret = ptr->DoIncrementalBackup(allFiles, smallFiles, bigFiles);
+            ptr->AppIncrementalDone(ret);
+            HILOGI("User0 backup app done %{public}d", ret);
+        } catch (const BError &e) {
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+int BackupExtExtension::User0DoBackup(const BJsonEntityExtensionConfig &usrConfig)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("Start Do User0Backup");
+    if (extension_ == nullptr) {
+        HILOGE("Failed to do backup, extension is nullptr");
+        return BError(BError::Codes::EXT_INVAL_ARG);
+    }
+    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
+        return EPERM;
+    }
+    DoUser0Backup(usrConfig);
+    return ERR_OK;
 }
 } // namespace OHOS::FileManagement::Backup

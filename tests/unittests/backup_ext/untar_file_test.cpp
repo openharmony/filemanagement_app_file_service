@@ -108,7 +108,7 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_UnPacket_0100, testing::ext::TestSize.Lev
     try {
         string tarFile("");
         string rootPath("");
-        int ret = UntarFile::GetInstance().UnPacket(tarFile, rootPath);
+        auto [ret, fileInfos, errFileInfos] = UntarFile::GetInstance().UnPacket(tarFile, rootPath);
         EXPECT_EQ(ret, ENOENT);
         ClearCache();
     } catch (...) {
@@ -151,7 +151,7 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_UnPacket_0200, testing::ext::TestSize.Lev
             GTEST_LOG_(INFO) << " execute tar failure, errno :" << errno;
             throw BError(errno);
         }
-        int ret = UntarFile::GetInstance().UnPacket(tarFile, rootPath);
+        auto [ret, fileInfos, errFileInfos] = UntarFile::GetInstance().UnPacket(tarFile, rootPath);
         EXPECT_EQ(ret, 0);
         ClearCache();
     } catch (...) {
@@ -186,7 +186,7 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_UnPacket_0300, testing::ext::TestSize.Lev
         SaveStringToFile(aFile, "hello");
 
         string rootPath(root);
-        int ret = UntarFile::GetInstance().UnPacket(aFile, rootPath);
+        auto [ret, fileInfos, errFileInfos] = UntarFile::GetInstance().UnPacket(aFile, rootPath);
         EXPECT_EQ(ret, 0);
         ClearCache();
     } catch (...) {
@@ -225,7 +225,7 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_UnPacket_0400, testing::ext::TestSize.Lev
         }
 
         string rootPath(root);
-        int ret = UntarFile::GetInstance().UnPacket(tarFile, rootPath);
+        auto [ret, fileInfos, errFileInfos] = UntarFile::GetInstance().UnPacket(tarFile, rootPath);
         EXPECT_EQ(ret, 0);
         ClearCache();
     } catch (...) {
@@ -279,7 +279,7 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_UnPacket_0500, testing::ext::TestSize.Lev
 +       TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap, reportCb);
 
         string rootPath(root);
-        int ret = UntarFile::GetInstance().UnPacket(tarFile, rootPath);
+        auto [ret, fileInfos, errFileInfos] = UntarFile::GetInstance().UnPacket(tarFile, rootPath);
         EXPECT_EQ(ret, 0);
         ClearCache();
     } catch (...) {
@@ -334,7 +334,8 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_IncrementalUnPacket_0100, testing::ext::T
         string tarFile = root + "/test.0.tar";
         string rootPath(root);
         unordered_map<string, struct ReportFileInfo> cloudFiles;
-        int ret = UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, cloudFiles);
+        auto [ret, fileInfos, errFileInfos] =
+            UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, cloudFiles);
         EXPECT_EQ(ret, 0);
         ClearCache();
     } catch (...) {
@@ -364,7 +365,8 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_IncrementalUnPacket_0200, testing::ext::T
         string tarFile = root + "/empty.0.tar";
         string rootPath(root);
         unordered_map<string, struct ReportFileInfo> cloudFiles;
-        int ret = UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, cloudFiles);
+        auto [ret, fileInfos, errFileInfos] =
+            UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, cloudFiles);
         EXPECT_EQ(ret, 2); // 错误码2表示找不到文件或路径
         ClearCache();
     } catch (...) {
@@ -413,7 +415,8 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_IncrementalUnPacket_0300, testing::ext::T
         FILE *currentTarFile = fopen(tarFile.c_str(), "wb+");
         fwrite("\0", sizeof(uint8_t), 1, currentTarFile);
         fclose(currentTarFile);
-        int ret = UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, cloudFiles);
+        auto [ret, fileInfos, errFileInfos] =
+            UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, cloudFiles);
         EXPECT_EQ(ret, 0);
         ClearCache();
     } catch (...) {
@@ -473,7 +476,8 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_IncrementalUnPacket_0400, testing::ext::T
         fseeko(currentTarFile, 1L, SEEK_SET);
         fwrite("\0", sizeof(uint8_t), 1, currentTarFile);
         fclose(currentTarFile);
-        int ret = UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, cloudFiles);
+        auto [ret, fileInfos, errFileInfos] =
+            UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, cloudFiles);
         EXPECT_EQ(ret, 0);
         ClearCache();
     } catch (...) {
