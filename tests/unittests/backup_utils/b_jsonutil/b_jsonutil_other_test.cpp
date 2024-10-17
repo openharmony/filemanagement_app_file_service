@@ -30,6 +30,9 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
+namespace {
+    const static int BUNDLE_INDEX_DEFAULT_VAL = 0;
+}
 
 class BJsonUtilTest : public testing::Test {
 public:
@@ -283,5 +286,84 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfoJson_0402, testing::ext::TestS
         GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfoJson_0402";
+}
+
+/**
+ * @tc.number: b_jsonutil_BuildOnProcessErrInfo_0501
+ * @tc.name: b_jsonutil_BuildOnProcessErrInfo_0501
+ * @tc.desc: Test function of BuildOnProcessErrInfo interface.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildOnProcessErrInfo_0501, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildOnProcessErrInfo_0501";
+    try {
+        std::string reportInfo;
+        std::string path;
+        int err = 0;
+        int cjson = 0;
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
+        bool result = BJsonUtil::BuildOnProcessErrInfo(reportInfo, path, err);
+        EXPECT_FALSE(result);
+
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject())
+            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
+            .WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        result = BJsonUtil::BuildOnProcessErrInfo(reportInfo, path, err);
+        EXPECT_FALSE(result);
+
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject())
+            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
+            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
+            .WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return()).WillOnce(Return());
+        result = BJsonUtil::BuildOnProcessErrInfo(reportInfo, path, err);
+        EXPECT_FALSE(result);
+
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject())
+            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
+            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
+            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        result = BJsonUtil::BuildOnProcessErrInfo(reportInfo, path, err);
+        EXPECT_FALSE(result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildOnProcessErrInfo_0501";
+}
+
+/**
+ * @tc.number: b_jsonutil_BuildBundleNameIndexInfo_0601
+ * @tc.name: b_jsonutil_BuildBundleNameIndexInfo_0601
+ * @tc.desc: Test function of BuildBundleNameIndexInfo interface.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleNameIndexInfo_0601, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleNameIndexInfo_0601";
+    try {
+        std::string bundleName = "test";
+        int appIndex = BUNDLE_INDEX_DEFAULT_VAL;
+        auto ret = BJsonUtil::BuildBundleNameIndexInfo(bundleName, appIndex);
+        EXPECT_EQ(ret, bundleName);
+
+        appIndex = -1;
+        ret = BJsonUtil::BuildBundleNameIndexInfo(bundleName, appIndex);
+        EXPECT_NE(ret, bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleNameIndexInfo_0601";
 }
 }
