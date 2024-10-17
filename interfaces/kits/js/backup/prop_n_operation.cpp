@@ -247,23 +247,6 @@ napi_value PropNOperation::DoGetBackupInfo(napi_env env, napi_callback_info info
     return nResult;
 }
 
-bool PropNOperation::UpdateTimer(std::string &bundleName, uint32_t timeout)
-{
-    bool result = false;
-    ServiceProxy::InvaildInstance();
-    auto proxy = ServiceProxy::GetInstance();
-    if (!proxy) {
-        HILOGE("called DoUpdateTimer,failed to get proxy");
-        return result;
-    }
-    ErrCode errcode = proxy->UpdateTimer(bundleName, timeout, result);
-    if (errcode != 0) {
-        HILOGE("proxy->UpdateTimer faild.");
-        return result;
-    }
-    return result;
-}
-
 bool PropNOperation::UpdateSendRate(std::string &bundleName, int32_t sendRate)
 {
     bool result = false;
@@ -276,6 +259,23 @@ bool PropNOperation::UpdateSendRate(std::string &bundleName, int32_t sendRate)
     ErrCode errCode = proxy->UpdateSendRate(bundleName, sendRate, result);
     if (errCode != 0) {
         HILOGE("Proxy execute UpdateSendRate failed. errCode:%{public}d", errCode);
+        return result;
+    }
+    return result;
+}
+
+bool PropNOperation::UpdateTimer(std::string &bundleName, uint32_t timeout)
+{
+    bool result = false;
+    ServiceProxy::InvaildInstance();
+    auto proxy = ServiceProxy::GetInstance();
+    if (!proxy) {
+        HILOGE("called DoUpdateTimer,failed to get proxy");
+        return result;
+    }
+    ErrCode errcode = proxy->UpdateTimer(bundleName, timeout, result);
+    if (errcode != 0) {
+        HILOGE("proxy->UpdateTimer faild.");
         return result;
     }
     return result;
@@ -309,7 +309,7 @@ napi_value PropNOperation::DoUpdateTimer(napi_env env, napi_callback_info info)
     }
     NVal jsBundleInt(env, funcArg[NARG_POS::SECOND]);
     auto [succInt, time] = jsBundleInt.ToInt32();
-    if (!succInt || time <= 0 || time > static_cast<int32_t>(BConstants::MAX_UPDATE_TIMER)) {
+    if (!succInt || time < 0 || time > static_cast<int32_t>(BConstants::MAX_UPDATE_TIMER)) {
         HILOGE("Second argument is not number.");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
