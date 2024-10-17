@@ -25,6 +25,7 @@ class CommonFunc {
 public:
     static std::string GetSelfBundleName();
     static std::string GetUriFromPath(const std::string &path);
+    static bool GetDirByBundleNameAndAppIndex(const std::string &bundleName, int32_t appIndex, std::string &dirName);
 };
 } // namespace AppFileService
 } // namespace OHOS

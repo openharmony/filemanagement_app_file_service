@@ -27,6 +27,7 @@
 #include "hap_token_info.h"
 #include "log.h"
 #include "sandbox_helper.h"
+#include "common_func.h"
 #include "uri.h"
 
 namespace OHOS {
@@ -50,6 +51,7 @@ const string SHARE_RW_PATH = "/rw/";
 const string SHARE_PATH = "/share/";
 const string EXTERNAL_PATH = "file://docs/storage/External";
 const string NETWORK_PARA = "networkid=";
+const int32_t DLP_COMMON = 0;
 }
 
 struct FileShareInfo {
@@ -75,10 +77,14 @@ static int32_t GetTargetInfo(uint32_t tokenId, string &bundleName, string &curre
     }
     bundleName = hapInfo.bundleName;
     currentUid = to_string(hapInfo.userID);
-
     int index = hapInfo.instIndex;
+    string dirName = "" ;
     if (index != 0) {
-        bundleName = to_string(index) + "_" + bundleName;
+        if (hapInfo.dlpType != DLP_COMMON) {
+            bundleName = to_string(index) + "_" + bundleName;
+        } else if (CommonFunc::GetDirByBundleNameAndAppIndex(bundleName, index, dirName)) {
+            bundleName = dirName;
+        }
     }
     return 0;
 }
