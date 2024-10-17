@@ -265,8 +265,9 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         }
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
-        SetCurrentBackupSessProperties(bundleNames, session_->GetSessionUserId());
         for (auto info : backupInfos) {
+            HILOGI("Current backupInfo bundleName:%{public}s, extName:%{public}s", info.name.c_str(),
+                info.extensionName.c_str());
             session_->SetBundleDataSize(info.name, info.spaceOccupied);
             session_->SetBackupExtName(info.name, info.extensionName);
             if (info.allToBackup == false) {
@@ -278,6 +279,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         for (auto &bundleInfo : bundlesToBackup) {
             session_->SetIncrementalData(bundleInfo);
         }
+        SetCurrentBackupSessProperties(bundleNames, session_->GetSessionUserId());
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
