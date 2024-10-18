@@ -110,9 +110,9 @@ void Service::SendUserIdToApp(string&, int32_t) {}
 
 void Service::SetCurrentBackupSessProperties(const vector<string>&, int32_t) {}
 
-void Service::AddExtensionMutex(const BundleName &bundleName) {}
+void Service::AddExtensionMutex(const BundleName&) {}
 
-void Service::RemoveExtensionMutex(const BundleName &bundleName) {}
+void Service::RemoveExtensionMutex(const BundleName&) {}
 }
 
 namespace OHOS::FileManagement::Backup {
@@ -417,6 +417,221 @@ HWTEST_F(ServiceTest, SUB_Service_GetLocalCapabilities_0100, TestSize.Level1)
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetLocalCapabilities.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetLocalCapabilities_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_VerifyCallerAndGetCallerName_0100
+ * @tc.name: SUB_Service_VerifyCallerAndGetCallerName_0100
+ * @tc.desc: 测试 VerifyCallerAndGetCallerName
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_VerifyCallerAndGetCallerName_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_VerifyCallerAndGetCallerName_0100";
+    try {
+        ASSERT_TRUE(service != nullptr);
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_THROW(service->VerifyCallerAndGetCallerName(), BError);
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
+        auto ret = service->VerifyCallerAndGetCallerName();
+        EXPECT_TRUE(ret.empty());
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_THROW(service->VerifyCallerAndGetCallerName(), BError);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by VerifyCallerAndGetCallerName.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_VerifyCallerAndGetCallerName_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_VerifyCaller_0100
+ * @tc.name: SUB_Service_VerifyCaller_0100
+ * @tc.desc: 测试 VerifyCaller
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_VerifyCaller_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_VerifyCaller_0100";
+    try {
+        ASSERT_TRUE(service != nullptr);
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_DENIED));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_THROW(service->VerifyCaller(), BError);
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        service->VerifyCaller();
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_DENIED));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_THROW(service->VerifyCaller(), BError);
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*token, IsSystemAppByFullTokenID(_)).WillOnce(Return(false));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_THROW(service->VerifyCaller(), BError);
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*token, IsSystemAppByFullTokenID(_)).WillOnce(Return(true));
+        service->VerifyCaller();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by VerifyCaller.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_VerifyCaller_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_VerifyCaller_0200
+ * @tc.name: SUB_Service_VerifyCaller_0200
+ * @tc.desc: 测试 VerifyCaller
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_VerifyCaller_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_VerifyCaller_0200";
+    try {
+        ASSERT_TRUE(service != nullptr);
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::XTS_UID));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_THROW(service->VerifyCaller(), BError);
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        service->VerifyCaller();
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_INVALID));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_THROW(service->VerifyCaller(), BError);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by VerifyCaller.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_VerifyCaller_0200";
+}
+
+/**
+ * @tc.number: SUB_Service_SpecialVersion_0200
+ * @tc.name: SUB_Service_SpecialVersion_0200
+ * @tc.desc: 测试 SpecialVersion
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_SpecialVersion_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SpecialVersion_0200";
+    try {
+        string versionName(BConstants::DEFAULT_VERSION_NAME);
+        auto ret = SpecialVersion(versionName);
+        EXPECT_TRUE(ret);
+
+        versionName.clear();
+        ret = SpecialVersion(versionName);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SpecialVersion.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SpecialVersion_0200";
+}
+
+/**
+ * @tc.number: SUB_Service_OnBundleStarted_0100
+ * @tc.name: SUB_Service_OnBundleStarted_0100
+ * @tc.desc: 测试 OnBundleStarted
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_OnBundleStarted_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBundleStarted_0100";
+    try {
+        BError error(BError::Codes::OK);
+        sptr<SvcSessionManager> session_ = service->session_;
+        BundleName bundleName;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        OnBundleStarted(error, session_, bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, RestoreOnBundleStarted(_, _)).WillOnce(Return());
+        OnBundleStarted(error, session_, bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(true));
+        EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, RestoreOnBundleStarted(_, _)).WillOnce(Return());
+        OnBundleStarted(error, session_, bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(true));
+        EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnBundleStarted(_, _)).WillOnce(Return());
+        OnBundleStarted(error, session_, bundleName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnBundleStarted.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnBundleStarted_0100";
 }
 
 /**
