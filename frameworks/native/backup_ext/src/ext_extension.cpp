@@ -810,6 +810,10 @@ int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
         endFileInfos_.merge(fileInfos);
         errFileInfos_.merge(errInfos);
     }
+    if (BDir::CheckAndRmSoftLink(tarName) || BDir::CheckAndRmSoftLink(fileInfos)) {
+        HILOGE("File soft links are forbidden");
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
+    }
     if (ret != 0) {
         HILOGE("Failed to untar file = %{public}s, err = %{public}d", tarName.c_str(), ret);
         return ret;
@@ -841,24 +845,25 @@ static unordered_map<string, struct ReportFileInfo> GetTarIncludes(const string 
     return rp.GetReportInfos();
 }
 
-void BackupExtExtension::DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
+int BackupExtExtension::DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
     const std::tuple<int, EndFileInfo, ErrFileInfo> &result)
 {
-    if (!isDebug_) {
-        return;
-    }
     int err = std::get<FIRST_PARAM>(result);
+    EndFileInfo tmpEndInfo = std::get<SECOND_PARAM>(result);
     if (!isRpValid_) {
         if (err != ERR_OK) {
             endFileInfos_[tarFileName] = tarFileSize;
             errFileInfos_[tarFileName] = {err};
-        } else {
-            EndFileInfo tmpEndInfo = std::get<SECOND_PARAM>(result);
-            endFileInfos_.merge(tmpEndInfo);
         }
+        endFileInfos_.merge(tmpEndInfo);
+    }
+    if (BDir::CheckAndRmSoftLink(tmpEndInfo)) {
+        HILOGE("File soft links are forbidden");
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
     }
     ErrFileInfo tmpErrInfo = std::get<THIRD_PARAM>(result);
     errFileInfos_.merge(tmpErrInfo);
+    return ERR_OK;
 }
 
 int BackupExtExtension::DoIncrementalRestore()
@@ -891,6 +896,10 @@ int BackupExtExtension::DoIncrementalRestore()
                 HILOGE("Check incre tarfile path : %{public}s err, path is forbidden", GetAnonyPath(tarName).c_str());
                 return ERR_INVALID_VALUE;
             }
+            if (BDir::CheckAndRmSoftLink(tarName)) {
+                HILOGE("File soft links are forbidden");
+                return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
+            }
             unordered_map<string, struct ReportFileInfo> result = GetTarIncludes(tarName);
             if ((!extension_->SpecialVersionForCloneAndCloud()) && (!extension_->UseFullBackupOnly())) {
                 path = "/";
@@ -900,7 +909,9 @@ int BackupExtExtension::DoIncrementalRestore()
             }
             unPacketRes = UntarFile::GetInstance().IncrementalUnPacket(tarName, path, result);
             err = std::get<FIRST_PARAM>(unPacketRes);
-            DealIncreUnPacketResult(tarFileSize, item, unPacketRes);
+            if (int tmpErr = DealIncreUnPacketResult(tarFileSize, item, unPacketRes); tmpErr != ERR_OK) {
+                return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
+            }
             HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
             DeleteBackupIncrementalTars(tarName);
         }
@@ -975,6 +986,13 @@ void BackupExtExtension::RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo
     if (BDir::CheckFilePathInvalid(fileName)) {
         HILOGE("Check big spec file path : %{public}s err, path is forbidden", GetAnonyPath(fileName).c_str());
         errFileInfos_[fileName].push_back(DEFAULT_INVAL_VALUE);
+        if (!RemoveFile(fileName)) {
+            HILOGE("Failed to delete the backup bigFile %{public}s", GetAnonyPath(fileName).c_str());
+        }
+        return;
+    }
+    if (BDir::CheckAndRmSoftLink(fileName)) {
+        HILOGE("File soft links are forbidden");
         return;
     }
     if (chmod(fileName.c_str(), sta.st_mode) != 0) {
@@ -1019,6 +1037,10 @@ ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &
         HILOGE("Check spec tarfile hash path : %{public}s err, path is forbidden", GetAnonyPath(tarName).c_str());
         return ERR_INVALID_VALUE;
     }
+    if (BDir::CheckAndRmSoftLink(tarName)) {
+        HILOGE("File soft links are forbidden");
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
+    }
     if (BDir::CheckFilePathInvalid(untarPath)) {
         HILOGE("Check spec tarfile path : %{public}s err, path is forbidden", GetAnonyPath(untarPath).c_str());
         return ERR_INVALID_VALUE;
@@ -1028,12 +1050,16 @@ ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &
         endFileInfos_.merge(fileInfos);
         errFileInfos_.merge(errInfos);
     }
-    if (err != ERR_OK) {
-        HILOGE("Failed to untar file = %{public}s, err = %{public}d", tarName.c_str(), err);
-        return err;
+    if (BDir::CheckAndRmSoftLink(fileInfos)) {
+        HILOGE("File soft links are forbidden");
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
     }
     if (!RemoveFile(tarName)) {
         HILOGE("Failed to delete the backup tar %{public}s", tarName.c_str());
+    }
+    if (err != ERR_OK) {
+        HILOGE("Failed to untar file = %{public}s, err = %{public}d", tarName.c_str(), err);
+        return err;
     }
     return ERR_OK;
 }
@@ -1161,6 +1187,10 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path,
         HiAudit::GetInstance(false).Write(auditLog);
         return;
     }
+    if (BDir::CheckAndRmSoftLink(fileName)) {
+        HILOGE("File soft links are forbidden");
+        return;
+    }
     if (isDebug_) {
         endFileInfos_[filePath] = item.sta.st_size;
     }
@@ -1176,7 +1206,10 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path,
         HiAudit::GetInstance(false).Write(auditLog);
         return;
     }
-
+    if (BDir::CheckAndRmSoftLink(filePath)) {
+        HILOGE("File soft links are forbidden");
+        return;
+    }
     RestoreBigFileAfter(filePath, item.sta);
 }
 

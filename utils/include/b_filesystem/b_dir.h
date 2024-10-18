@@ -30,6 +30,7 @@
 #include "errors.h"
 
 namespace OHOS::FileManagement::Backup {
+using EndFileInfo = std::map<std::string, off_t>;
 class BDir {
 public:
     /**
@@ -91,6 +92,22 @@ public:
      * @return 是否是异常无效路径
      */
     static bool CheckFilePathInvalid(const std::string &filePath);
+
+    /**
+     * @brief 核实文件是否存在软链接并删除
+     *
+     * @param filePath 待核实的路径
+     * @return 是否存在软连接
+     */
+    static bool CheckAndRmSoftLink(const std::string &filePath);
+
+    /**
+     * @brief 核实文件是否存在软链接并删除
+     *
+     * @param filePaths 待核实的路径集合
+     * @return 是否存在软连接
+     */
+    static bool CheckAndRmSoftLink(const EndFileInfo &filePaths);
 };
 } // namespace OHOS::FileManagement::Backup
 
