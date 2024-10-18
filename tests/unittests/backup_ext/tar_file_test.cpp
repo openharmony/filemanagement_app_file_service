@@ -102,9 +102,9 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0100, testing::ext::TestSize.Level1)
         string pkPath = "";
         TarMap tarMap;
         auto reportCb = [](std::string path, int err) {
-+            return;
-+       };
-+       bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap, reportCb);
+            return;
+        };
+        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap, reportCb);
         EXPECT_TRUE(tarMap.empty());
         EXPECT_FALSE(ret);
     } catch (...) {
