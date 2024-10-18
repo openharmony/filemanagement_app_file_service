@@ -718,7 +718,6 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalDone_0000,
         ret = service->AppIncrementalDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
-        service->backupExtMutexMap_[""] = make_shared<extensionInfo>("");
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
         ret = service->AppIncrementalDone(errCode);

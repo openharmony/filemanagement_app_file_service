@@ -92,7 +92,6 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
         lock.unlock();
         // launch extension
         if (reversePtr_ != nullptr) {
-            reversePtr_->AddExtensionMutex(bundleName);
             ErrCode errCode = reversePtr_->LaunchBackupExtension(bundleName);
             if (errCode) {
                 reversePtr_->ExtConnectFailed(bundleName, errCode);

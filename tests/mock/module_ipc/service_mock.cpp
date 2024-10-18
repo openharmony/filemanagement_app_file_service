@@ -254,8 +254,9 @@ void Service::ClearResidualBundleData(const std::string &bundleName)
 {
 }
 
-void Service::AddExtensionMutex(const BundleName &bundleName)
+std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName &bundleName)
 {
+    return make_shared<ExtensionMutexInfo>(bundleName);
 }
 
 void Service::RemoveExtensionMutex(const BundleName &bundleName)
