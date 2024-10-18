@@ -33,8 +33,11 @@ public:
     virtual void cJSON_Delete(cJSON *item) = 0;
     virtual cJSON_bool cJSON_AddItemToObject(cJSON *object, const char *string, cJSON *item) = 0;
     virtual int cJSON_GetArraySize(const cJSON *array) = 0;
-    virtual cJSON_bool cJSON_AddItemToArray(cJSON *array, cJSON *item);
-    virtual cJSON *cJSON_AddStringToObject(cJSON *const object, const char *const name, const char *const string);
+    virtual cJSON* cJSON_GetArrayItem(const cJSON* array, int index) = 0;
+    virtual void cJSON_free(void* object) = 0;
+    virtual cJSON_bool cJSON_AddItemToArray(cJSON *array, cJSON *item) = 0;
+    virtual cJSON *cJSON_AddStringToObject(cJSON *const object, const char *const name, const char *const string) = 0;
+    virtual cJSON_bool cJSON_IsArray(const cJSON * const item) = 0;
 
 public:
     static inline std::shared_ptr<CJson> cJsonPtr = nullptr;
@@ -50,9 +53,12 @@ public:
     MOCK_METHOD1(cJSON_Parse, cJSON *(const char *value));
     MOCK_METHOD2(cJSON_GetObjectItem, cJSON *(const cJSON *const object, const char *const string));
     MOCK_METHOD1(cJSON_GetArraySize, int(const cJSON *array));
+    MOCK_METHOD2(cJSON_GetArrayItem, cJSON *(const cJSON* array, int index));
     MOCK_METHOD2(cJSON_AddItemToArray, cJSON_bool(cJSON *array, cJSON *item));
     MOCK_METHOD3(cJSON_AddStringToObject,
                  cJSON *(cJSON *const object, const char *const name, const char *const string));
+    MOCK_METHOD1(cJSON_free, void(void* object));
+    MOCK_METHOD1(cJSON_IsArray, cJSON_bool(const cJSON * const item));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif
