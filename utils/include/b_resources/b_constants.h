@@ -94,6 +94,7 @@ constexpr int APP_ON_PROCESS_TIMEOUT_MAX_COUNT = 3; // 应用的onProcess接口�
 
 // backup.para内配置项的名称，该配置项值为true时可在不更新hap包的情况下，可以读取包管理元数据配置文件的内容
 static inline std::string BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_KEY = "backup.debug.overrideExtensionConfig";
+static const bool BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_DEFAULT_VALUE = false;
 
 // backup.para内配置项的名称，该配置项AccountConfig为true时存在时，可以按照配置的AccountNumber备份恢复
 static inline std::string BACKUP_DEBUG_OVERRIDE_ACCOUNT_CONFIG_KEY = "backup.debug.overrideAccountConfig";
@@ -109,9 +110,11 @@ static const std::string BACKUP_EXCLUDE = "EXCLUDES";
 
 // backup.para内配置项的名称，该配置项为true时备份恢复支持Release接口调用
 static inline std::string BACKUP_OVERRIDE_BACKUP_SA_RELEASE_KEY = "backup.overrideBackupSARelease";
+static const bool BACKUP_DEBUG_OVERRIDE_BACKUP_SA_RELEASE_DEFAULT_VALUE = true;
 
 // backup.para内配置项的名称，该配置项为true时备份恢复支持增量恢复
 static inline std::string BACKUP_OVERRIDE_INCREMENTAL_KEY = "backup.overrideIncrementalRestore";
+static const bool BACKUP_DEBUG_OVERRIDE_INCREMENTAL_DEFAULT_VALUE = true;
 
 // 应用备份数据暂存路径
 static inline std::string_view SA_BUNDLE_BACKUP_BACKUP = "/backup/";
