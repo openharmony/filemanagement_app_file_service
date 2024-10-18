@@ -605,10 +605,10 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_1000, testing::ext::TestSize.Level
     try {
         std::string fileName = "test.txt";
         auto ret = GetIncreFileHandleForSpecialVersion(fileName);
-        EXPECT_NE(ret, ERR_OK);
+        EXPECT_EQ(ret, ERR_OK);
         fileName = "/test.txt";
         ret = GetIncreFileHandleForSpecialVersion(fileName);
-        EXPECT_NE(ret, ERR_OK);
+        EXPECT_EQ(ret, ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";

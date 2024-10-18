@@ -328,6 +328,11 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildOnProcessErrInfo_0501, testing::ext::Tes
             .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
             .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
             .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_AddStringToObject(_, _, _))
+            .WillOnce(Return(nullptr))
+            .WillOnce(Return(nullptr))
+            .WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
         result = BJsonUtil::BuildOnProcessErrInfo(reportInfo, path, err);

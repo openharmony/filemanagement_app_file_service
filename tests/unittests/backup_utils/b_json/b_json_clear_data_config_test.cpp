@@ -478,13 +478,13 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0800, testing::ext::Te
 
         EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(nullptr));
         auto ret = config.GetAllClearBundleRecords(bundleName);
-        EXPECT_EQ(ret, {});
+        EXPECT_EQ(ret.size(), 0);
 
         EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
         ret = config.GetAllClearBundleRecords(bundleName);
-        EXPECT_EQ(ret, {});
+        EXPECT_EQ(ret.size(), 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-an exception occurred by construction.";
