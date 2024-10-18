@@ -526,7 +526,6 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_OnBackupExtensionDied_0100, testing
     try {
         EXPECT_NE(service, nullptr);
         string bundleName;
-        service->backupExtMutexMap_["bundleName"] = make_shared<extensionInfo>("bundleName");
         EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
             .WillOnce(Invoke([]() {

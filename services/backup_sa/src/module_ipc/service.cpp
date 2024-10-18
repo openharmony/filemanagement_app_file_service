@@ -805,7 +805,12 @@ void Service::NotifyCloneBundleFinish(std::string bundleName, const BackupRestor
             return;
         }
         if (session_->OnBundleFileReady(bundleName)) {
-            std::lock_guard<std::mutex> lock(backupExtMutexMap_[bundleName]->callbackMutex);
+            std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(bundleName);
+            if (mutexPtr == nullptr) {
+                HILOGE("extension mutex ptr is nullptr");
+                return;
+            }
+            std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
             auto backUpConnection = session_->GetExtConnection(bundleName);
             if (backUpConnection == nullptr) {
                 throw BError(BError::Codes::SA_INVAL_ARG, "backUpConnection is empty");
@@ -925,7 +930,12 @@ void Service::ExtConnectDied(const string &callName)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin, bundleName: %{public}s", callName.c_str());
-        std::lock_guard<std::mutex> lock(backupExtMutexMap_[callName]->callbackMutex);
+        std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callName);
+        if (mutexPtr == nullptr) {
+            HILOGE("extension mutex ptr is nullptr");
+            return;
+        }
+        std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
         /* Clear Timer */
         session_->StopFwkTimer(callName);
         session_->StopExtTimer(callName);
@@ -1845,6 +1855,20 @@ std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bu
     };
 }
 
+void Service::TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string &bundleName)
+{
+    int32_t errCode = BError(BError::Codes::EXT_ABILITY_TIMEOUT).GetCode();
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        AppRadar::Info info(bundleName, "", "on backup timeout");
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
+            BizStageBackup::BIZ_STAGE_ON_BACKUP, errCode);
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        AppRadar::Info info(bundleName, "", "on restore timeout");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
+            BizStageRestore::BIZ_STAGE_ON_RESTORE, errCode);
+    }
+}
+
 void Service::DoTimeout(wptr<Service> ptr, std::string bundleName)
 {
     auto thisPtr = ptr.promote();
@@ -1858,18 +1882,14 @@ void Service::DoTimeout(wptr<Service> ptr, std::string bundleName)
         return;
     }
     IServiceReverse::Scenario scenario = sessionPtr->GetScenario();
-    int32_t errCode = BError(BError::Codes::EXT_ABILITY_TIMEOUT).GetCode();
-    if (scenario == IServiceReverse::Scenario::BACKUP) {
-        AppRadar::Info info(bundleName, "", "on backup timeout");
-        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
-                                                    BizStageBackup::BIZ_STAGE_ON_BACKUP, errCode);
-    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-        AppRadar::Info info(bundleName, "", "on restore timeout");
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
-                                                     BizStageRestore::BIZ_STAGE_ON_RESTORE, errCode);
-    }
+    TimeoutRadarReport(scenario, bundleName);
     try {
-        std::lock_guard<std::mutex> lock(backupExtMutexMap_[bundleName]->callbackMutex);
+        std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(bundleName);
+        if (mutexPtr == nullptr) {
+            HILOGE("extension mutex ptr is nullptr");
+            return;
+        }
+        std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
         if (SAUtils::IsSABundleName(bundleName)) {
             auto sessionConnection = sessionPtr->GetSAExtConnection(bundleName);
             shared_ptr<SABackupConnection> saConnection = sessionConnection.lock();

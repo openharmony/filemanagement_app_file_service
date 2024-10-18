@@ -32,10 +32,10 @@
 #include "thread_pool.h"
 
 namespace OHOS::FileManagement::Backup {
-struct extensionInfo {
+struct ExtensionMutexInfo {
     std::string bundleName;
     std::mutex callbackMutex;
-    extensionInfo(std::string bundleName_) : bundleName(bundleName_) {};
+    ExtensionMutexInfo(std::string bundleName_) : bundleName(bundleName_) {};
 };
 
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
@@ -280,12 +280,12 @@ public:
     void DelClearBundleRecord(const std::vector<std::string> &bundleNames);
 
     /**
-     * @brief 添加extension锁
+     * @brief 获取extension锁
      *
      * @param bundleName 应用名称
      *
      */
-    void AddExtensionMutex(const BundleName &bundleName);
+    std::shared_ptr<ExtensionMutexInfo> GetExtensionMutex(const BundleName &bundleName);
 
     /**
      * @brief 清理extension锁
@@ -505,6 +505,8 @@ private:
     void HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         std::map<std::string, bool> &isClearDataFlags);
+
+    void TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string &bundleName);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -524,9 +526,9 @@ private:
     friend class ServiceTest;
 
     OHOS::ThreadPool threadPool_;
-    std::mutex extensionLock_;
+    std::mutex extensionMutexLock_;
 public:
-    std::map<BundleName, std::shared_ptr<extensionInfo>> backupExtMutexMap_;
+    std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
 };
 } // namespace OHOS::FileManagement::Backup
 
