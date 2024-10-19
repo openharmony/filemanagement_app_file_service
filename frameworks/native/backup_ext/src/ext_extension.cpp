@@ -1461,6 +1461,7 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
                 HILOGE("On restore, start ext timer fail.");
                 return;
             }
+            HILOGI("On restore, start ext timer end.");
             ptr->curScenario_ = BackupRestoreScenario::FULL_RESTORE;
             if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_RESTORE)) != ERR_OK) {
                 HILOGE("Call onProcess result is timeout");
@@ -1516,6 +1517,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
                 HILOGE("On incrementalRestore, start ext timer fail.");
                 return;
             }
+            HILOGI("On incrementalRestore, start ext timer end.");
             ptr->curScenario_ = BackupRestoreScenario::INCREMENTAL_RESTORE;
             if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_RESTORE)) != ERR_OK) {
                 HILOGE("Call onProcess result is timeout");

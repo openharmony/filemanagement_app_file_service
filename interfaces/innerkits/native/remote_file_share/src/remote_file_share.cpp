@@ -15,13 +15,13 @@
 
 #include "remote_file_share.h"
 
+#include <climits>
 #include <fcntl.h>
+#include <pthread.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <climits>
-#include <pthread.h>
 
 #include "log.h"
 #ifdef ENABLE_DEVICE_MANAGER
@@ -30,8 +30,8 @@
 #endif
 #include "sandbox_helper.h"
 #include "securec.h"
-#include "uri.h"
 #include "unique_fd.h"
+#include "uri.h"
 
 namespace OHOS {
 namespace AppFileService {
@@ -40,29 +40,29 @@ namespace ModuleRemoteFileShare {
 using namespace OHOS::DistributedHardware;
 #endif
 namespace {
-    const int HMDFS_CID_SIZE = 64;
-    const int USER_ID_INIT = 100;
-    const unsigned HMDFS_IOC = 0xf2;
-    const std::string FILE_SCHEME = "file";
-    const std::string DISTRIBUTED_DIR_PATH = "/data/storage/el2/distributedfiles";
-    const std::string DST_PATH_HEAD = "/data/service/el2/";
-    const std::string DST_PATH_MID = "/hmdfs/account/data/";
-    const std::string SHAER_PATH_HEAD = "/mnt/hmdfs/";
-    const std::string SHAER_PATH_MID = "/account/merge_view/services/";
-    const std::string LOWER_SHARE_PATH_HEAD = "/mnt/hmdfs/";
-    const std::string LOWER_SHARE_PATH_MID = "/account/device_view/local/services/";
-    const std::string SHARE_PATH_DIR = "/.share";
-    const std::string REMOTE_SHARE_PATH_DIR = "/.remote_share";
-    const std::string MEDIA_AUTHORITY = "media";
-    const std::string FILE_MANAGER_AUTHORITY = "docs";
-    const std::string PACKAGE_NAME = "get_dfs_uri_from_local";
-    const std::string NETWORK_PARA = "?networkid=";
-    const std::string MEDIA_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
-    const std::string FILE_MANAGER_URI_HEAD = "/storage/";
-    const std::string REMOTE_SHARE_PATH_MID = "hmdfs/";
-}
+const int HMDFS_CID_SIZE = 64;
+const int USER_ID_INIT = 100;
+const unsigned HMDFS_IOC = 0xf2;
+const std::string FILE_SCHEME = "file";
+const std::string DISTRIBUTED_DIR_PATH = "/data/storage/el2/distributedfiles";
+const std::string DST_PATH_HEAD = "/data/service/el2/";
+const std::string DST_PATH_MID = "/hmdfs/account/data/";
+const std::string SHAER_PATH_HEAD = "/mnt/hmdfs/";
+const std::string SHAER_PATH_MID = "/account/merge_view/services/";
+const std::string LOWER_SHARE_PATH_HEAD = "/mnt/hmdfs/";
+const std::string LOWER_SHARE_PATH_MID = "/account/device_view/local/services/";
+const std::string SHARE_PATH_DIR = "/.share";
+const std::string REMOTE_SHARE_PATH_DIR = "/.remote_share";
+const std::string MEDIA_AUTHORITY = "media";
+const std::string FILE_MANAGER_AUTHORITY = "docs";
+const std::string PACKAGE_NAME = "get_dfs_uri_from_local";
+const std::string NETWORK_PARA = "?networkid=";
+const std::string MEDIA_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
+const std::string FILE_MANAGER_URI_HEAD = "/storage/";
+const std::string REMOTE_SHARE_PATH_MID = "hmdfs/";
+} //namespace
 
-#define HMDFS_IOC_SET_SHARE_PATH    _IOW(HMDFS_IOC, 1, struct HmdfsShareControl)
+#define HMDFS_IOC_SET_SHARE_PATH _IOW(HMDFS_IOC, 1, struct HmdfsShareControl)
 #define HMDFS_IOC_GET_DST_PATH _IOR(HMDFS_IOC, 3, unsigned int)
 
 struct HmdfsShareControl {
@@ -175,8 +175,7 @@ static bool DeleteShareDir(const std::string &PACKAGE_PATH, const std::string &S
     return result;
 }
 
-static int CreateShareFile(struct HmdfsShareControl &shareControl, const char* file,
-                           const std::string &deviceId)
+static int CreateShareFile(struct HmdfsShareControl &shareControl, const char *file, const std::string &deviceId)
 {
     int32_t dirFd = open(file, O_RDONLY);
     if (dirFd < 0) {
@@ -200,12 +199,13 @@ static int CreateShareFile(struct HmdfsShareControl &shareControl, const char* f
 
 static int CheckInputValidity(const int &fd, const int &userId, const std::string &deviceId)
 {
-    return (fd < 0) || (userId < USER_ID_INIT) || (deviceId != SHARE_ALL_DEVICE &&
-                                                        deviceId.size() != HMDFS_CID_SIZE);
+    return (fd < 0) || (userId < USER_ID_INIT) || (deviceId != SHARE_ALL_DEVICE && deviceId.size() != HMDFS_CID_SIZE);
 }
 
-int RemoteFileShare::CreateSharePath(const int &fd, std::string &sharePath,
-                                     const int &userId, const std::string &deviceId)
+int RemoteFileShare::CreateSharePath(const int &fd,
+                                     std::string &sharePath,
+                                     const int &userId,
+                                     const std::string &deviceId)
 {
     struct HmdfsShareControl shareControl;
     shareControl.fd = fd;
@@ -265,7 +265,10 @@ int RemoteFileShare::CreateSharePath(const int &fd, std::string &sharePath,
     return 0;
 }
 
-static int GetDistributedPath(Uri &uri, const int &userId, std::string &distributedPath, const std::string &bundleName)
+static int GetDistributedPath(Uri &uri,
+                              const int &userId,
+                              std::string &distributedPath,
+                              const std::string &bundleName)
 {
     distributedPath = DST_PATH_HEAD + std::to_string(userId) + DST_PATH_MID + bundleName +
                       REMOTE_SHARE_PATH_DIR + SandboxHelper::Decode(uri.GetPath());
@@ -293,8 +296,10 @@ static std::string GetPhysicalPath(Uri &uri, const std::string &userId)
     return physicalPath;
 }
 
-static void InitHmdfsInfo(struct HmdfsDstInfo &hdi, const std::string &physicalPath,
-                          const std::string &distributedPath, const std::string &bundleName)
+static void InitHmdfsInfo(struct HmdfsDstInfo &hdi,
+                          const std::string &physicalPath,
+                          const std::string &distributedPath,
+                          const std::string &bundleName)
 {
     hdi.localLen = physicalPath.size() + 1;
     hdi.localPathIndex = reinterpret_cast<uint64_t>(physicalPath.c_str());
@@ -312,7 +317,7 @@ static std::string GetLocalNetworkId()
 {
     const std::string LOCAL = "local";
     std::string networkId = LOCAL;
-    #ifdef ENABLE_DEVICE_MANAGER
+#ifdef ENABLE_DEVICE_MANAGER
     auto callback = std::make_shared<InitDMCallback>();
     int32_t ret = DeviceManager::GetInstance().InitDeviceManager(PACKAGE_NAME, callback);
     if (ret != 0) {
@@ -326,7 +331,7 @@ static std::string GetLocalNetworkId()
     if (ret != 0 || networkId.empty()) {
         return "";
     }
-    #endif
+#endif
     return networkId;
 }
 
@@ -446,7 +451,6 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
         if (bundleName == MEDIA_AUTHORITY) {
             bundleName = MEDIA_BUNDLE_NAME;
         }
-
         if (bundleName == FILE_MANAGER_AUTHORITY) {
             HmdfsUriInfo dfsUriInfo;
             (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, dfsUriInfo, networkId);

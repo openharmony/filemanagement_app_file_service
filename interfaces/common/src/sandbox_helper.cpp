@@ -313,6 +313,7 @@ static void GetNetworkIdFromUri(const std::string &fileUri, string &networkId)
     if (networkIdInfo.empty()) {
         return;
     }
+
     size_t posIndex = networkIdInfo.find('=');
     if (posIndex == string::npos || posIndex == (networkIdInfo.size() - 1)) {
         return;

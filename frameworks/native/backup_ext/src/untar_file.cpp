@@ -516,7 +516,7 @@ bool UntarFile::IsValidTarBlock(TarHeader &header)
     if (strncmp(header.magic, TMAGIC.c_str(), TMAGIC_LEN - 1) == 0 && VerifyChecksum(header)) {
         return true;
     }
-    HILOGW("Invalid tar block");
+    HILOGE("Invalid tar block");
     return false;
 }
 
@@ -548,7 +548,7 @@ ErrFileInfo UntarFile::CreateDir(string &path, mode_t mode)
         path[len - 1] = '\0';
     }
     if (access(path.c_str(), F_OK) != 0) {
-        HILOGW("directory does not exist, path:%{public}s, err = %{public}d", path.c_str(), errno);
+        HILOGE("directory does not exist, path:%{public}s, err = %{public}d", path.c_str(), errno);
         if (!ForceCreateDirectoryWithMode(path, mode)) {
             HILOGE("Failed to force create directory %{public}s, err = %{public}d", path.c_str(), errno);
             errFileInfo[path].push_back(errno);
@@ -565,7 +565,7 @@ FILE *UntarFile::CreateFile(string &filePath)
     }
 
     uint32_t len = filePath.length();
-    HILOGW("Failed to open file %{public}d, %{public}s, err = %{public}d", len,
+    HILOGE("Failed to open file %{public}d, %{public}s, err = %{public}d", len,
         GetAnonyPath(filePath).c_str(), errno);
     size_t pos = filePath.rfind('/');
     if (pos == string::npos) {
@@ -576,7 +576,7 @@ FILE *UntarFile::CreateFile(string &filePath)
     if (ForceCreateDirectory(path)) {
         f = fopen(filePath.c_str(), "wb+");
         if (f == nullptr) {
-            HILOGE("Failed to create file %{public}s, err = %{public}d", GetAnonyPath(filePath).c_str(), errno);
+            HILOGE("Failed to open file %{public}s, err = %{public}d", GetAnonyPath(filePath).c_str(), errno);
         }
     }
 

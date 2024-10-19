@@ -82,7 +82,7 @@ describe('FileShareJSTest', function () {
             let fileUriObject = new fileuri.FileUri(uri);
             let realPath = fileUriObject.path;
             console.info(`getPathFromUri success: ${JSON.stringify(realPath)}`);
-            expect(resultPath == realPath).assertTrue();
+            expect(resultPath === realPath).assertTrue();
         } catch (error) {
             console.error(`getPathFromUri failed:${JSON.stringify(error)}`);
             expect(false).assertTrue();
@@ -105,7 +105,7 @@ describe('FileShareJSTest', function () {
             let fileUriObject = new fileuri.FileUri(uri);
             let realPath = fileUriObject.path;
             console.info(`getPathFromUri success: ${JSON.stringify(realPath)}`);
-            expect(resultSharePath == realPath || realPath == resultPath).assertTrue();
+            expect(resultSharePath === realPath || realPath === resultPath).assertTrue();
         } catch (error) {
             console.error(`getPathFromUri failed:${JSON.stringify(error)}`);
             expect(false).assertTrue();
@@ -128,7 +128,7 @@ describe('FileShareJSTest', function () {
             let fileUriObject = new fileuri.FileUri(uri);
             let realPath = fileUriObject.path;
             console.info(`getPathFromUri success: ${JSON.stringify(realPath)}`);
-            expect(resultSharePath == realPath || realPath == resultPath).assertTrue();
+            expect(resultSharePath === realPath || realPath === resultPath).assertTrue();
         } catch (error) {
             console.error(`getPathFromUri failed:${JSON.stringify(error)}`);
             expect(false).assertTrue();
