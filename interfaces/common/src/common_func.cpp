@@ -18,6 +18,8 @@
 #include <mutex>
 #include <vector>
 
+#include <singleton.h>
+#include "bundle_mgr_client.h"
 #include "bundle_mgr_proxy.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
@@ -57,6 +59,21 @@ static sptr<BundleMgrProxy> GetBundleMgrProxy()
     return iface_cast<BundleMgrProxy>(remoteObject);
 }
 
+bool CommonFunc::GetDirByBundleNameAndAppIndex(const std::string &bundleName, int32_t appIndex, std::string &dirName)
+{
+    auto bmsClient = DelayedSingleton<AppExecFwk::BundleMgrClient>::GetInstance();
+    if (bmsClient == nullptr) {
+        LOGE("bundleMgrClient is nullptr.");
+        return false;
+    }
+    auto bmsRet = bmsClient->GetDirByBundleNameAndAppIndex(bundleName, appIndex, dirName);
+    if (bmsRet != ERR_OK) {
+        LOGE("GetDirByBundleNameAndAppIndex failed, ret:%{public}d", bmsRet);
+        return false;
+    }
+    return true;
+}
+
 string CommonFunc::GetSelfBundleName()
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
@@ -71,7 +88,10 @@ string CommonFunc::GetSelfBundleName()
         LOGE("GetSelfBundleName: bundleName get fail.");
         return "";
     }
-
+    string dirName = "" ;
+    if (GetDirByBundleNameAndAppIndex(bundleInfo.name, bundleInfo.appIndex, dirName)) {
+        return dirName;
+    }
     return bundleInfo.name;
 }
 
