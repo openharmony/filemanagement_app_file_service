@@ -392,7 +392,6 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     auto cache = cachedEntity.Structuralize();
     auto bundleInfos = cache.GetBundleInfos();
     if (!bundleInfos.size()) {
-        HILOGE("GetRestoreBundleNames bundleInfos is empty.");
         throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
     }
     HILOGI("restoreInfos size is:%{public}zu", restoreInfos.size());
@@ -457,7 +456,6 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
     HILOGI("Begin");
     try {
         if (session_ == nullptr || isCleanService_.load()) {
-            HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -541,7 +539,6 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         if (session_ == nullptr || isCleanService_.load()) {
-            HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -650,7 +647,6 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         if (session_ == nullptr || isCleanService_.load()) {
-            HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时

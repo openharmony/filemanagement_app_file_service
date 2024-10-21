@@ -276,6 +276,9 @@ private:
     int32_t GetOnStartTimeCost();
     bool SetStagingPathProperties();
 
+    std::function<void(std::string, int)> ReportErrFileByProc(wptr<BackupExtExtension> obj,
+        BackupRestoreScenario scenario);
+
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;

@@ -101,7 +101,10 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0100, testing::ext::TestSize.Level1)
         string tarFileName = "";
         string pkPath = "";
         TarMap tarMap;
-        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap);
+        auto reportCb = [](std::string path, int err) {
+            return;
+        };
+        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap, reportCb);
         EXPECT_TRUE(tarMap.empty());
         EXPECT_FALSE(ret);
     } catch (...) {
@@ -136,7 +139,10 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0200, testing::ext::TestSize.Level1)
         TarMap tarMap;
         string tarFileName = "part";
         string pkPath = root;
-        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap);
+        auto reportCb = [](std::string path, int err) {
+            return;
+        };
+        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap, reportCb);
         EXPECT_TRUE(ret);
         EXPECT_EQ(tarMap.size(), 1);
         ClearCache();
@@ -172,7 +178,10 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0300, testing::ext::TestSize.Level1)
         string pkPath = root;
         string tarFileName = "part";
         TarMap tarMap;
-        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap);
+        auto reportCb = [](std::string path, int err) {
+            return;
+        };
+        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap, reportCb);
         EXPECT_TRUE(ret);
         EXPECT_EQ(tarMap.size(), 1);
         ClearCache();
@@ -200,7 +209,10 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0400, testing::ext::TestSize.Level1)
         string tarFileName = "part";
         string pkPath = "/data/storage/el2/backup/backup";
         TarMap tarMap;
-        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap);
+        auto reportCb = [](std::string path, int err) {
+            return;
+        };
+        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap, reportCb);
         EXPECT_FALSE(ret);
         EXPECT_TRUE(tarMap.empty());
     } catch (...) {
@@ -241,7 +253,10 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0500, testing::ext::TestSize.Level1)
         string tarFileName = "part";
         string pkPath = root;
         TarMap tarMap;
-        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap);
+        auto reportCb = [](std::string path, int err) {
+            return;
+        };
+        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap, reportCb);
         EXPECT_TRUE(ret);
         EXPECT_EQ(tarMap.size(), 1);
         ClearCache();
@@ -284,7 +299,10 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0600, testing::ext::TestSize.Level1)
         TarMap tarMap;
         string tarFileName = "part";
         string pkPath = root;
-        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap);
+        auto reportCb = [](std::string path, int err) {
+            return;
+        };
+        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap, reportCb);
         EXPECT_TRUE(ret);
         EXPECT_EQ(tarMap.size(), 2);
         ClearCache();
@@ -332,7 +350,10 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0700, testing::ext::TestSize.Level1)
         string tarFileName = "part";
         string pkPath = root;
         TarMap tarMap;
-        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap);
+        auto reportCb = [](std::string path, int err) {
+            return;
+        };
+        bool ret = TarFile::GetInstance().Packet(srcFiles, tarFileName, pkPath, tarMap, reportCb);
         EXPECT_TRUE(ret);
         EXPECT_EQ(tarMap.size(), 2);
         ClearCache();
