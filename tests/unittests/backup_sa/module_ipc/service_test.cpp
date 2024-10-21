@@ -371,18 +371,15 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0100, testing::ext::TestSize.Level1)
     try {
         GTEST_LOG_(INFO) << "SUB_Service_AppDone Branches Start";
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         auto ret = servicePtr_->AppDone(BError(BError::Codes::OK));
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "SUB_Service_AppDone_0100 BACKUP";
         ret = Init(IServiceReverse::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "ServiceTest-AppDone Branches";
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         ret = servicePtr_->AppDone(1);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "ServiceTest-AppDone Branches End";
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         ret = servicePtr_->AppDone(BError(BError::Codes::OK));
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
@@ -407,13 +404,11 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0101, testing::ext::TestSize.Level1)
     try {
         GTEST_LOG_(INFO) << "SUB_Service_AppDone Branches Start";
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         auto ret = servicePtr_->AppDone(BError(BError::Codes::OK));
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "SUB_Service_AppDone_0101 RESTORE";
         ret = Init(IServiceReverse::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         ret = servicePtr_->AppDone(BError(BError::Codes::OK));
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
@@ -439,7 +434,6 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0102, testing::ext::TestSize.Level1)
         GTEST_LOG_(INFO) << "SUB_Service_AppDone Branches Start";
         string bundleName = "";
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         auto ret = servicePtr_->AppDone(BError(BError::Codes::OK));
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
@@ -465,23 +459,18 @@ HWTEST_F(ServiceTest, SUB_Service_ServiceResultReport_0000, testing::ext::TestSi
         GTEST_LOG_(INFO) << "SUB_Service_ServiceResultReport Branches Start";
         string bundleName = "";
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         auto ret = servicePtr_->ServiceResultReport("test", BackupRestoreScenario::FULL_RESTORE, 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
 
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         ret = servicePtr_->ServiceResultReport("test", BackupRestoreScenario::INCREMENTAL_RESTORE, 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
 
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         ret = servicePtr_->ServiceResultReport("test", BackupRestoreScenario::FULL_BACKUP, 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
 
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         ret = servicePtr_->ServiceResultReport("test", BackupRestoreScenario::INCREMENTAL_BACKUP, 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
 
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         ret = servicePtr_->ServiceResultReport("test", static_cast<BackupRestoreScenario>(1000), 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
@@ -626,13 +615,11 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0100, testing::ext::Test
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         string bundleName = BUNDLE_NAME;
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         servicePtr_->OnBackupExtensionDied(move(bundleName));
         GTEST_LOG_(INFO) << "SUB_Service_OnBackupExtensionDied_0100 BACKUP";
         ret = Init(IServiceReverse::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         bundleName = BUNDLE_NAME;
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         servicePtr_->OnBackupExtensionDied(move(bundleName));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -667,7 +654,6 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0101, testing::ext::Test
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
         impl_.scenario = IServiceReverse::Scenario::RESTORE;
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->backupExtMutexMap_[bundleName] = make_shared<extensionInfo>(bundleName);
         servicePtr_->OnBackupExtensionDied(move(bundleName));
         GTEST_LOG_(INFO) << "SUB_Service_OnBackupExtensionDied_0101 BACKUP";
 
@@ -676,7 +662,6 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0101, testing::ext::Test
         impl_.restoreDataType = RESTORE_DATA_READDY;
         bundleName = "123456789";
         impl_.backupExtNameMap[bundleName] = extInfo;
-        servicePtr_->backupExtMutexMap_[bundleName] = make_shared<extensionInfo>(bundleName);
         servicePtr_->OnBackupExtensionDied(move(bundleName));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1532,7 +1517,6 @@ HWTEST_F(ServiceTest, SUB_Service_NotifyCloneBundleFinish_0100, testing::ext::Te
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
         impl_.scenario = IServiceReverse::Scenario::RESTORE;
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->backupExtMutexMap_[BUNDLE_NAME] = make_shared<extensionInfo>(BUNDLE_NAME);
         servicePtr_->NotifyCloneBundleFinish(BUNDLE_NAME, BackupRestoreScenario::FULL_RESTORE);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1615,9 +1599,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0100, testing::ext::TestSize.Le
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
         impl_.scenario = IServiceReverse::Scenario::RESTORE;
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->backupExtMutexMap_[callName] = make_shared<extensionInfo>(callName);
         servicePtr_->ExtConnectDied(callName);
-        servicePtr_->backupExtMutexMap_[callName] = make_shared<extensionInfo>(callName);
         extInfo.backUpConnection->isConnected_.store(true);
         servicePtr_->ExtConnectDied(callName);
     } catch (...) {
