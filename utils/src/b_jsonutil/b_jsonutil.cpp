@@ -381,6 +381,41 @@ bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessRetInfo(std::string 
     return true;
 }
 
+bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessErrInfo(std::string &reportInfo, std::string path, int err)
+{
+    cJSON *info = cJSON_CreateObject();
+    if (info == nullptr) {
+        return false;
+    }
+    cJSON *item = cJSON_CreateObject();
+    if (item == nullptr) {
+        cJSON_Delete(info);
+        return false;
+    }
+    cJSON *errInfoJs = cJSON_CreateObject();
+    if (errInfoJs == nullptr) {
+        cJSON_Delete(info);
+        cJSON_Delete(item);
+        return false;
+    }
+    std::string errStr = std::to_string(err);
+    std::string timeInfo = std::to_string(TimeUtils::GetTimeS());
+    cJSON_AddStringToObject(errInfoJs, "errorCode", errStr.c_str());
+    cJSON_AddStringToObject(errInfoJs, "errorMessage", path.c_str());
+    cJSON_AddStringToObject(item, "timeInfo", timeInfo.c_str());
+    cJSON_AddItemToObject(item, "errorInfo", errInfoJs);
+    cJSON_AddItemToObject(info, "processResult", item);
+    char *data = cJSON_Print(info);
+    if (data == nullptr) {
+        cJSON_Delete(info);
+        return false;
+    }
+    reportInfo = std::string(data);
+    cJSON_Delete(info);
+    cJSON_free(data);
+    return true;
+}
+
 bool OHOS::FileManagement::Backup::BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
 {
     cJSON *root = cJSON_CreateObject();

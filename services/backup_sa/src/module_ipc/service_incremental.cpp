@@ -249,6 +249,15 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
     }
 }
 
+vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalData> &bundlesToBackup)
+{
+    vector<string> bundleNames {};
+    for (auto bundle : bundlesToBackup) {
+        bundleNames.emplace_back(bundle.bundleName);
+    }
+    return bundleNames;
+}
+
 ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -259,11 +268,9 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
-        vector<string> bundleNames {};
-        for (auto &bundle : bundlesToBackup) {
-            bundleNames.emplace_back(bundle.bundleName);
-        }
-        auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
+        vector<string> bundleNames = GetBundleNameByDetails(bundlesToBackup);
+        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
+            session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
         for (auto info : backupInfos) {
             HILOGI("Current backupInfo bundleName:%{public}s, extName:%{public}s", info.name.c_str(),
@@ -305,19 +312,18 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
-        vector<string> bundleNames {};
-        for (auto &bundle : bundlesToBackup) {
-            bundleNames.emplace_back(bundle.bundleName);
-        }
+        vector<string> bundleNames = GetBundleNameByDetails(bundlesToBackup);
         std::vector<std::string> bundleNamesOnly;
         std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, infos, bundleNamesOnly,
             session_->GetSessionUserId(), isClearDataFlags);
-        auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
+        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
+            session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
         for (auto info : backupInfos) {
             SetCurrentSessProperties(info, isClearDataFlags);
+            session_->SetBundleDataSize(info.name, info.increSpaceOccupied);
             if (info.allToBackup == false) {
                 session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), info.name);
