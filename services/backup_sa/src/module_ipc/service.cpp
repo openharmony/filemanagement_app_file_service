@@ -127,8 +127,9 @@ void Service::OnStart()
         HILOGI("SA OnStart, cleaning up backup data");
     }
     bool res = SystemAbility::Publish(sptr(this));
-    sched_ = sptr(new SchedScheduler(wptr(this), wptr(session_)));
-    sched_->StartTimer();
+    if (sched_ != nullptr) {
+        sched_->StartTimer();
+    }
     ClearDisposalOnSaStart();
     auto ret = AppendBundlesClearSession(residualBundleNameList);
     if (isCleanService_.load() && ret) {
