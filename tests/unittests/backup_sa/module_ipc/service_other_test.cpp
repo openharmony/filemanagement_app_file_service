@@ -17,6 +17,7 @@
 #include <string>
 
 #include "accesstoken_kit_mock.h"
+#include "app_gallery_dispose_proxy_mock.h"
 #include "backup_para_mock.h"
 #include "bms_adapter_mock.h"
 #include "b_json_clear_data_config_mock.h"
@@ -24,6 +25,7 @@
 #include "b_jsonutil_mock.h"
 #include "b_sa_utils_mock.h"
 #include "ipc_skeleton_mock.h"
+#include "notify_work_service_mock.h"
 #include "sa_backup_connection_mock.h"
 #include "service_reverse_proxy_mock.h"
 #include "svc_backup_connection_mock.h"
@@ -116,6 +118,8 @@ std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName 
 }
 
 void Service::RemoveExtensionMutex(const BundleName&) {}
+
+void Service::CreateDirIfNotExist(const std::string&) {}
 }
 
 namespace OHOS::FileManagement::Backup {
@@ -149,6 +153,8 @@ public:
     static inline shared_ptr<BJsonDisposalConfigMock> jdConfig = nullptr;
     static inline shared_ptr<SystemAbilityMock> ability = nullptr;
     static inline shared_ptr<SvcRestoreDepsManagerMock> depManager = nullptr;
+    static inline shared_ptr<NotifyWorkServiceMock> notify = nullptr;
+    static inline shared_ptr<AppGalleryDisposeProxyMock> gallery = nullptr;
 };
 
 void ServiceTest::SetUpTestCase(void)
@@ -183,6 +189,10 @@ void ServiceTest::SetUpTestCase(void)
     SystemAbilityMock::ability = ability;
     depManager = make_shared<SvcRestoreDepsManagerMock>();
     SvcRestoreDepsManagerMock::manager = depManager;
+    notify = make_shared<NotifyWorkServiceMock>();
+    NotifyWorkServiceMock::notify = notify;
+    gallery = make_shared<AppGalleryDisposeProxyMock>();
+    AppGalleryDisposeProxyMock::proxy = gallery;
 }
 
 void ServiceTest::TearDownTestCase()
@@ -217,7 +227,13 @@ void ServiceTest::TearDownTestCase()
     ability = nullptr;
     SvcRestoreDepsManagerMock::manager = nullptr;
     depManager = nullptr;
+    NotifyWorkServiceMock::notify = nullptr;
+    notify = nullptr;
+    AppGalleryDisposeProxyMock::proxy = nullptr;
+    gallery = nullptr;
 }
+
+#include "sub_service_test.cpp"
 
 /**
  * @tc.number: SUB_Service_GetUserIdDefault_0000
@@ -638,6 +654,61 @@ HWTEST_F(ServiceTest, SUB_Service_OnBundleStarted_0100, TestSize.Level1)
 }
 
 /**
+ * @tc.number: SUB_Service_GetRestoreBundleNames_0100
+ * @tc.name: SUB_Service_GetRestoreBundleNames_0100
+ * @tc.desc: 测试 GetRestoreBundleNames
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetRestoreBundleNames_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetRestoreBundleNames_0100";
+    try {
+        vector<BundleName> bundleNames;
+        vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillOnce(Return(bundleInfos));
+        EXPECT_THROW(GetRestoreBundleNames(UniqueFd(-1), service->session_, bundleNames), BError);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetRestoreBundleNames.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetRestoreBundleNames_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_HandleExceptionOnAppendBundles_0100
+ * @tc.name: SUB_Service_HandleExceptionOnAppendBundles_0100
+ * @tc.desc: 测试 HandleExceptionOnAppendBundles
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_HandleExceptionOnAppendBundles_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_HandleExceptionOnAppendBundles_0100";
+    try {
+        vector<BundleName> appendBundleNames { "bundleName" };
+        vector<BundleName> restoreBundleNames;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        HandleExceptionOnAppendBundles(service->session_, appendBundleNames, restoreBundleNames);
+        EXPECT_TRUE(true);
+
+        restoreBundleNames.emplace_back("bundleName");
+        restoreBundleNames.emplace_back("bundleName2");
+        HandleExceptionOnAppendBundles(service->session_, appendBundleNames, restoreBundleNames);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleExceptionOnAppendBundles.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleExceptionOnAppendBundles_0100";
+}
+
+/**
  * @tc.number: SUB_Service_AppendBundlesRestoreSession_0100
  * @tc.name: SUB_Service_AppendBundlesRestoreSession_0100
  * @tc.desc: 测试 AppendBundlesRestoreSession
@@ -664,7 +735,6 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0100, TestSize.Lev
         service->isOccupyingSession_.store(true);
         ret = service->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames, bundleInfos, restoreType, userId);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
-        service->isOccupyingSession_.store(false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppendBundlesRestoreSession.";
@@ -692,6 +762,8 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0200, TestSize.Lev
         RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
         int32_t userId = DEFAULT_INVAL_VALUE;
         map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
+        service->isOccupyingSession_.store(false);
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
@@ -740,6 +812,125 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0100, TestSize.Level1
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetCurrentSessProperties_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SetCurrentSessProperties_0200
+ * @tc.name: SUB_Service_SetCurrentSessProperties_0200
+ * @tc.desc: 测试 SetCurrentSessProperties
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetCurrentSessProperties_0200";
+    try {
+        ASSERT_TRUE(service != nullptr);
+        vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos = {
+            {.name = "bundleName", .appIndex = 0, .allToBackup = false, .versionName = ""} };
+        vector<string> restoreBundleNames;
+        map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
+        map<string, bool> isClearDataFlags;
+        RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
+        EXPECT_THROW(service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
+            isClearDataFlags, restoreType), BError);
+
+        restoreBundleNames.emplace_back("bundleName");
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
+            isClearDataFlags, restoreType);
+        EXPECT_TRUE(true);
+
+        restoreBundleInfos[0].allToBackup = true;
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
+            isClearDataFlags, restoreType);
+        EXPECT_TRUE(true);
+
+        restoreBundleInfos[0].allToBackup = false;
+        restoreBundleInfos[0].versionName = string(BConstants::DEFAULT_VERSION_NAME);
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
+            isClearDataFlags, restoreType);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetCurrentSessProperties_0200";
+}
+
+/**
+ * @tc.number: SUB_Service_SetCurrentSessProperties_0300
+ * @tc.name: SUB_Service_SetCurrentSessProperties_0300
+ * @tc.desc: 测试 SetCurrentSessProperties
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetCurrentSessProperties_0300";
+    try {
+        ASSERT_TRUE(service != nullptr);
+        vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos = {
+            {.name = "bundleName", .appIndex = 0, .allToBackup = true, .extensionName = ""} };
+        vector<string> restoreBundleNames { "bundleName" };
+        map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
+        map<string, bool> isClearDataFlags;
+        RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
+
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
+        EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false)).WillOnce(Return(false));
+        service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
+            isClearDataFlags, restoreType);
+        EXPECT_TRUE(true);
+
+        restoreBundleInfos[0].extensionName = "extensionName";
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"));
+        EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false)).WillOnce(Return(false));
+        service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
+            isClearDataFlags, restoreType);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"));
+        EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false)).WillOnce(Return(false));
+        service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
+            isClearDataFlags, restoreType);
+
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"));
+        EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(true)).WillOnce(Return(false));
+        EXPECT_CALL(*notify, NotifyBundleDetail(_)).WillOnce(Return(true));
+        service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
+            isClearDataFlags, restoreType);
+
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"));
+        EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false)).WillOnce(Return(true));
+        service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
+            isClearDataFlags, restoreType);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetCurrentSessProperties_0300";
 }
 
 /**
@@ -909,8 +1100,7 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0100, TestSize.Level1)
         EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        EXPECT_CALL(*svcProxy, PublishFile(_))
-        .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        EXPECT_CALL(*svcProxy, PublishFile(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
         ret = service->PublishFile(fileInfo);
         EXPECT_NE(ret, BError(BError::Codes::OK));
     } catch (...) {
@@ -946,7 +1136,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0100, TestSize.Level1)
         EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
-        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false)).WillOnce(Return(false));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
         ret = service->AppDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
@@ -988,6 +1178,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0200, TestSize.Level1)
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
         ret = service->AppDone(errCode);
         EXPECT_NE(ret, BError(BError::Codes::OK));
     } catch (...) {
@@ -1397,6 +1588,7 @@ HWTEST_F(ServiceTest, SUB_Service_BackupSA_0000, TestSize.Level1)
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, BackupOnBundleStarted(_, _)).WillOnce(Return());
         EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(false));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
         ret = service->BackupSA(bundleName);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
@@ -1481,6 +1673,7 @@ HWTEST_F(ServiceTest, SUB_Service_NotifyCallerCurAppDone_0000, TestSize.Level1)
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, RestoreOnBundleFinished(_, _)).WillOnce(Return());
         service->NotifyCallerCurAppDone(0, "");
@@ -1605,7 +1798,7 @@ HWTEST_F(ServiceTest, SUB_Service_DoTimeout_0000, TestSize.Level1)
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
@@ -1664,7 +1857,7 @@ HWTEST_F(ServiceTest, SUB_Service_DoTimeout_0100, TestSize.Level1)
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
         EXPECT_CALL(*saConnect, DisconnectBackupSAExt()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));

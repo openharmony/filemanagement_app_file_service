@@ -150,7 +150,7 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
         MessageOption option;
         int32_t ret = appRemoteObj_->SendRequest(static_cast<int>(disposeOperation), data, reply, option);
         if (ret != ERR_NONE) {
-            HILOGI("SendRequest error, code=%{public}d, bundleName=%{public}s , appindex =%{public}d",
+            HILOGE("SendRequest error, code=%{public}d, bundleName=%{public}s , appindex =%{public}d",
                 ret, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
             RecordDoDisposeRes(bundleName, disposeOperation, ret);
             return DisposeErr::REQUEST_FAIL;
