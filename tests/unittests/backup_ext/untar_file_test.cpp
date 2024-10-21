@@ -273,10 +273,10 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_UnPacket_0500, testing::ext::TestSize.Lev
         vector<string> smallFiles;
         smallFiles.emplace_back(aFile);
         smallFiles.emplace_back(bFile);
-+       auto reportCb = [](std::string msg, int err) {
-+           return;
-+       };
-+       TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap, reportCb);
+        auto reportCb = [](std::string msg, int err) {
+            return;
+        };
+        TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap, reportCb);
 
         string rootPath(root);
         auto [ret, fileInfos, errFileInfos] = UntarFile::GetInstance().UnPacket(tarFile, rootPath);
