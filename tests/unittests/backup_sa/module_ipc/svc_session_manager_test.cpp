@@ -1345,7 +1345,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleRestoreType_0100,
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
         sessionManagerPtr_->SetBundleRestoreType(BUNDLE_NAME, RESTORE_DATA_READDY);
-        EXPECT_EQ(sessionManagerPtr_->impl_.restoreDataType, RESTORE_DATA_READDY);
+        EXPECT_EQ(sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME].restoreType, RESTORE_DATA_READDY);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetBundleRestoreType.";
@@ -2157,5 +2157,30 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetPublishFlag_0100, testi
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetPublishFlag_0100";
 }
 
+/**
+ * @tc.number: SUB_backup_sa_session_SetImplRestoreType_0100
+ * @tc.name: SUB_backup_sa_session_SetImplRestoreType_0100
+ * @tc.desc: 测试 SetImplRestoreType
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetImplRestoreType_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetImplRestoreType_0100";
+    try {
+        sessionManagerPtr_->SetImplRestoreType(RESTORE_DATA_WAIT_SEND);
+        bool isValid = sessionManagerPtr_->ValidRestoreDataType(RESTORE_DATA_READDY);
+        EXPECT_EQ(isValid, false);
+        isValid = sessionManagerPtr_->ValidRestoreDataType(RESTORE_DATA_WAIT_SEND);
+        EXPECT_EQ(isValid, true);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetImplRestoreType.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetImplRestoreType_0100";
+}
 #include "svc_session_manager_ex_test.cpp"
 } // namespace OHOS::FileManagement::Backup

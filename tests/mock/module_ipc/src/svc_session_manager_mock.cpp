@@ -253,4 +253,6 @@ SvcSessionManager::Impl SvcSessionManager::GetImpl()
 {
     return BSvcSessionManager::sessionManager->GetImpl();
 }
+
+void SvcSessionManager::SetImplRestoreType(const RestoreTypeEnum restoreType) {}
 } // namespace OHOS::FileManagement::Backup
