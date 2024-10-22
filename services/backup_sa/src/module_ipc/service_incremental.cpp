@@ -657,7 +657,7 @@ void Service::SendUserIdToApp(string &bundleName, int32_t userId)
         HILOGI("BuildBundleInfoJson failed, bundleName : %{public}s", bundleName.c_str());
         return;
     }
-    HILOGI("current bundle, unicast info: %{public}s", detailInfo.c_str());
+    HILOGI("current bundle, unicast info: %{public}s", GetAnonyString(detailInfo).c_str());
     session_->SetBackupExtInfo(bundleName, detailInfo);
 }
 
