@@ -60,7 +60,7 @@ struct BackupExtInfo {
     /* Timer Status: true is start & false is stop */
     bool extTimerStatus {false};
     bool fwkTimerStatus {false};
-    uint32_t timeout;
+    uint32_t timeout = BConstants::TIMEOUT_INVALID;
     uint32_t startTime;
     int64_t dataSize;
     int64_t lastIncrementalTime;

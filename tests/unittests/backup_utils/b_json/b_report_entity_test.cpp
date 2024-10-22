@@ -227,4 +227,124 @@ HWTEST_F(BReportEntityTest, b_report_entity_DealLine_0100, testing::ext::TestSiz
     GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_DealLine_0100";
 }
 
+/**
+ * @tc.number: SUB_backup_b_report_entity_DealLine_0101
+ * @tc.name: b_report_entity_DealLine_0101
+ * @tc.desc: Test function of DealLine interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_DealLine_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_DealLine_0101";
+    try {
+        unordered_map<string, int> keys;
+        int num = 1;
+        string line = "";
+        unordered_map<string, struct ReportFileInfo> infos;
+        DealLine(keys, num, line, infos);
+        EXPECT_EQ(infos.size(), 0);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by DealLine. " << e.what();
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_DealLine_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_b_report_entity_StorageDealLine_0100
+ * @tc.name: b_report_entity_StorageDealLine_0100
+ * @tc.desc: Test function of DealLine interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_StorageDealLine_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_StorageDealLine_0100";
+    try {
+        unordered_map<string, int> keys;
+        int num = 1;
+        string line = "";
+        StorageDealLine(keys, num, line);
+        EXPECT_TRUE(true);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by DealLine. " << e.what();
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_StorageDealLine_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_report_entity_StorageDealLine_0101
+ * @tc.name: b_report_entity_StorageDealLine_0101
+ * @tc.desc: Test function of DealLine interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_StorageDealLine_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_StorageDealLine_0101";
+    try {
+        unordered_map<string, int> keys;
+        int num = 0;
+        string line = "test\r";
+        StorageDealLine(keys, num, line);
+        EXPECT_TRUE(true);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by DealLine. " << e.what();
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_StorageDealLine_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_b_report_entity_StorageDealLine_0102
+ * @tc.name: b_report_entity_StorageDealLine_0102
+ * @tc.desc: Test function of DealLine interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_StorageDealLine_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_StorageDealLine_0102";
+    try {
+        unordered_map<string, int> keys;
+        int num = 1;
+        string line = "key1;key2;key3";
+        StorageDealLine(keys, num, line);
+        EXPECT_TRUE(true);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by DealLine. " << e.what();
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_StorageDealLine_0102";
+}
+
+/**
+ * @tc.number: SUB_backup_b_report_entity_StorageDealLine_0103
+ * @tc.name: b_report_entity_StorageDealLine_0103
+ * @tc.desc: Test function of DealLine interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_StorageDealLine_0103, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_StorageDealLine_0103";
+    try {
+        unordered_map<string, int> keys;
+        int num = INFO_ALIGN_NUM;
+        string line = "key1;key2;key3";
+        StorageDealLine(keys, num, line);
+        EXPECT_TRUE(true);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by DealLine. " << e.what();
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_StorageDealLine_0103";
+}
 } // namespace OHOS::FileManagement::Backup
