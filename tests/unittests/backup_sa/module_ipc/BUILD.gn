@@ -96,7 +96,6 @@ ohos_unittest("backup_service_test") {
     "${path_backup_mock}/timer/timer_mock.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/sa_backup_connection.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
-    "${path_backup}/services/backup_sa/src/module_ipc/sub_service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
     "service_test.cpp",
