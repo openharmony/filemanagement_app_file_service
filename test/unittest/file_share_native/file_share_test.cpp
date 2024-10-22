@@ -25,7 +25,6 @@
 
 #include "access_token_error.h"
 #include "accesstoken_kit.h"
-#include "file_permission.h"
 #include "file_share.h"
 #include "ipc_skeleton.h"
 #include "log.h"
