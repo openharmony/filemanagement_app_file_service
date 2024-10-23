@@ -1485,7 +1485,7 @@ void Service::TryToClearDispose(const BundleName &bundleName)
         if (disposeErr == DisposeErr::OK) {
             break;
         }
-        ++ att;
+        ++att;
         HILOGI("Try to clear dispose, num = %{public}d", att);
     }
     if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
