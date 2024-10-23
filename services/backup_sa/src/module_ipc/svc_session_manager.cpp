@@ -611,7 +611,6 @@ void SvcSessionManager::SetBundleRestoreType(const std::string &bundleName, Rest
 
     auto it = GetBackupExtNameMap(bundleName);
     it->second.restoreType = restoreType;
-    impl_.restoreDataType = restoreType;
 }
 
 RestoreTypeEnum SvcSessionManager::GetBundleRestoreType(const std::string &bundleName)
@@ -1004,5 +1003,10 @@ void SvcSessionManager::SetPublishFlag(const std::string &bundleName)
     auto it = GetBackupExtNameMap(bundleName);
     it->second.isInPublishFile = true;
     HILOGE("Set PublishFile success, bundleName = %{public}s", bundleName.c_str());
+}
+
+void SvcSessionManager::SetImplRestoreType(const RestoreTypeEnum restoreType)
+{
+    impl_.restoreDataType = restoreType;
 }
 } // namespace OHOS::FileManagement::Backup

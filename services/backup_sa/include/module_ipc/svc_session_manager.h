@@ -510,6 +510,8 @@ public:
 
     void SetPublishFlag(const std::string &bundleName);
 
+    void SetImplRestoreType(const RestoreTypeEnum restoreType);
+
 private:
     /**
      * @brief 获取backup extension ability
