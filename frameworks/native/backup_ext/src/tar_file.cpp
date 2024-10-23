@@ -307,7 +307,7 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size, int &err)
     int fd = open(fileName.c_str(), O_RDONLY | O_CLOEXEC);
     if (fd < 0) {
         err = errno;
-        HILOGE("Failed to open file %{public}s, err = %{public}d", fileName.data(), errno);
+        HILOGE("Failed to open file %{public}s, err = %{public}d", GetAnonyString(fileName).data(), errno);
         return false;
     }
 

@@ -342,7 +342,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
 
     vector<BIncrementalData> bundleNames;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
-    HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
+    HILOGI("Begin get bundle infos");
     for (auto const &installedBundle : installedBundles) {
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
@@ -353,8 +353,8 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
             GetAllowAndExtName(installedBundle.extensionInfos);
         if (!allToBackup) {
             bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.appIndex,
-                installedBundle.versionCode, installedBundle.versionName, 0, 0, allToBackup, fullBackupOnly, extName,
-                restoreDeps, supportScene, extraInfo});
+                installedBundle.versionCode, installedBundle.versionName, 0, 0, allToBackup, fullBackupOnly,
+                extName, restoreDeps, supportScene, extraInfo});
             continue;
         }
         auto it = std::find_if(extraIncreData.begin(), extraIncreData.end(),
@@ -385,15 +385,14 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetFullBundleInfos(int32_t
     }
     vector<string> bundleNames;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
-    HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
     for (auto const &installedBundle : installedBundles) {
+        HILOGI("Begin get bundle infos, bundleName = %{public}s", installedBundle.name.data());
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
         }
         if (installedBundle.appIndex > 0) {
-            HILOGI("Current bundle %{public}s is a twin application", installedBundle.name.c_str());
             std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(installedBundle.name,
                 installedBundle.appIndex);
             bundleNames.emplace_back(bundleNameIndexInfo);

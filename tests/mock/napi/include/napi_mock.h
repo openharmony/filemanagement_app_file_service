@@ -60,6 +60,7 @@ public:
     virtual napi_status napi_create_function(napi_env, const char*, size_t, napi_callback, void*, napi_value*) = 0;
     virtual napi_status napi_open_handle_scope(napi_env, napi_handle_scope*) = 0;
     virtual napi_status napi_close_handle_scope(napi_env, napi_handle_scope) = 0;
+    virtual napi_status napi_is_exception_pending(napi_env, bool*) = 0;
 public:
     static inline std::shared_ptr<Napi> napi = nullptr;
 };
@@ -96,6 +97,7 @@ public:
     MOCK_METHOD6(napi_create_function, napi_status(napi_env, const char*, size_t, napi_callback, void*, napi_value*));
     MOCK_METHOD2(napi_open_handle_scope, napi_status(napi_env, napi_handle_scope*));
     MOCK_METHOD2(napi_close_handle_scope, napi_status(napi_env, napi_handle_scope));
+    MOCK_METHOD2(napi_is_exception_pending, napi_status(napi_env, bool*));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // TEST_UNITTEST_MOCK_NAPI_H

@@ -164,3 +164,8 @@ NAPI_EXTERN napi_status napi_close_handle_scope(napi_env env, napi_handle_scope 
 {
     return OHOS::FileManagement::Backup::Napi::napi->napi_close_handle_scope(env, scope);
 }
+
+napi_status napi_is_exception_pending(napi_env env, bool* result)
+{
+    return OHOS::FileManagement::Backup::Napi::napi->napi_is_exception_pending(env, result);
+}

@@ -33,7 +33,7 @@ vector<string> SvcRestoreDepsManager::GetRestoreBundleNames(const vector<BJsonEn
         restoreBundleNames.emplace_back(bundleNameIndexInfo);
         string restoreDeps = bundleInfo.restoreDeps;
         if (!restoreDeps.empty()) {
-            HILOGI("RestoreDeps is not empty, bundleName=%{public}s", bundleNameIndexInfo.c_str());
+            HILOGI("RestoreDeps is not empty, bundleName=%{public}s", bundleInfo.name.c_str());
             if (IsAllDepsRestored(bundleNameIndexInfo)) {
                 HILOGI("RestoreDeps is all restored, bundleName=%{public}s", bundleInfo.name.c_str());
             }
