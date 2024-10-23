@@ -191,7 +191,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfoJson_0401, testing::ext::TestS
         std::string detailInfo;
         int cjson = 0;
 
-        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(nullptr);
+        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(nullptr));
         bool result = BJsonUtil::BuildBundleInfoJson(userId, detailInfo);
         EXPECT_FALSE(result);
 
