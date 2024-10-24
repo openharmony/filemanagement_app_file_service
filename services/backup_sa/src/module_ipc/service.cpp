@@ -1477,7 +1477,7 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
         HILOGE("ConnectBackupExtAbility faild, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
         return BError(BError::Codes::SA_BOOT_EXT_FAIL);
     }
-    std::unique_lock<std::mutex> lock(getBackupInfoMutx_);
+    std::unique_lock<std::mutex> lock(getBackupInfoSyncLock_);
     getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
     if (isConnectDied_.load()) {
         HILOGE("GetBackupInfoConnectDied, please check bundleName: %{public}s", bundleName.c_str());
@@ -1505,6 +1505,7 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
 ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
 {
     try {
+        std::unique_lock<std::mutex> lock(getBackupInfoProcLock_);
         HILOGI("Service::GetBackupInfo begin.");
         if (session_ == nullptr || isCleanService_.load()) {
             HILOGE("Get BackupInfo error, session is empty.");
@@ -1515,7 +1516,7 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         auto ret = GetBackupInfoCmdHandle(bundleName, result);
-        HILOGI("Service::GetBackupInfo end. result: %s", result.c_str());
+        HILOGI("Service::GetBackupInfo end. result: %{public}s", result.c_str());
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return ret;
     } catch (...) {
