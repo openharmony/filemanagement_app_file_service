@@ -159,12 +159,11 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
     struct stat curFileStat {};
     for (const auto &it : endFileInfos_) {
         if (lstat(it.first.c_str(), &curFileStat) != 0) {
-            HILOGE("Failed to lstat %{public}s, err = %{public}d", GetAnonyPath(it.first).c_str(), errno);
+            HILOGE("(Debug) Failed to lstat, err = %{public}d", errno);
             errFiles.emplace_back(it.first);
             errFileInfos_[it.first].push_back(errno);
         } else if (curFileStat.st_size != it.second && (!S_ISDIR(curFileStat.st_mode))) {
-            HILOGE("File size error, file: %{public}s, idx: %{public}" PRId64 ", act: %{public}" PRId64 "",
-                GetAnonyPath(it.first).c_str(), it.second, curFileStat.st_size);
+            HILOGE("(Debug) File size check error, file: %{public}s", GetAnonyPath(it.first).c_str());
             errFiles.emplace_back(it.first);
             errFileInfos_[it.first].push_back(errno);
         }
@@ -187,73 +186,6 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
         return { false, errFiles };
     }
     return { true, errFiles };
-}
-
-void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
-{
-    HILOGI("Begin");
-    auto proxy = ServiceProxy::GetInstance();
-        if (proxy == nullptr) {
-        HILOGE("Failed to obtain the ServiceProxy handle");
-        DoClear();
-        return;
-    }
-    auto ret = proxy->AppIncrementalDone(errCode);
-    if (ret != ERR_OK) {
-        HILOGE("Failed to notify the app done. err = %{public}d", ret);
-    }
-}
-
-ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
-{
-    auto obj = wptr<BackupExtExtension>(this);
-    auto ptr = obj.promote();
-    if (ptr == nullptr) {
-        HILOGE("Failed to get ext extension.");
-        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
-    }
-    if (ptr->extension_ == nullptr) {
-        HILOGE("Failed to get extension.");
-        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
-    }
-    auto callBackup = [ptr](ErrCode errCode, const std::string result) {
-        if (ptr == nullptr) {
-            HILOGE("Failed to get ext extension.");
-            return;
-        }
-        HILOGI("GetBackupInfo callBackup start. errCode = %{public}d, result = %{public}s", errCode, result.c_str());
-        if (errCode == ERR_OK) {
-            ptr->backupInfo_ = result;
-        }
-    };
-    auto ret = ptr->extension_->GetBackupInfo(callBackup);
-    if (ret != ERR_OK) {
-        HILOGE("Failed to get backupInfo. err = %{public}d", ret);
-        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
-    }
-    HILOGD("backupInfo = %s", backupInfo_.c_str());
-    result = backupInfo_;
-    backupInfo_.clear();
-
-    return ERR_OK;
-}
-
-ErrCode BackupExtExtension::UpdateFdSendRate(std::string &bundleName, int32_t sendRate)
-{
-    try {
-        std::lock_guard<std::mutex> lock(updateSendRateLock_);
-        HILOGI("Update SendRate, bundleName:%{public}s, sendRate:%{public}d", bundleName.c_str(), sendRate);
-        VerifyCaller();
-        bundleName_ = bundleName;
-        sendRate_ = sendRate;
-        if (sendRate > 0) {
-            startSendFdRateCon_.notify_one();
-        }
-        return ERR_OK;
-    } catch (...) {
-        HILOGE("Failed to UpdateFdSendRate");
-        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
-    }
 }
 
 std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreCallback(wptr<BackupExtExtension> obj)
@@ -361,10 +293,10 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
             auto spendTime = extensionPtr->GetOnStartTimeCost();
             std::stringstream ss;
             ss << "\"spend_time\": \"" << spendTime << "ms\"";
-            AppRadar::Info info (extensionPtr->bundleName_, ss.str(), "");
+            AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreExCallback",
-                                                         AppRadar::GetInstance().GetUserId(),
-                                                         BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+                AppRadar::GetInstance().GetUserId(),
+                BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
         }
         extensionPtr->FinishOnProcessTask();
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
@@ -742,12 +674,12 @@ void BackupExtExtension::StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj
         }
         if (extPtr->onProcessTimeoutCnt_.load() >= BConstants::APP_ON_PROCESS_TIMEOUT_MAX_COUNT ||
             extPtr->isFirstCallOnProcess_.load()) {
-            HILOGE("The extension invokes the onProcess for more than three times or the first invoking of the"
-                "onProcess times out, timeoutCnt:%{public}d", extPtr->onProcessTimeoutCnt_.load());
+            HILOGE("The extension invokes the onProcess for more than three times or the first invoking of the "
+                   "onProcess times out, timeoutCnt:%{public}d", extPtr->onProcessTimeoutCnt_.load());
             std::unique_lock<std::mutex> lock(extPtr->onProcessLock_);
             extPtr->stopCallJsOnProcess_.store(true);
             extPtr->isFirstCallOnProcess_.store(false);
-            extPtr->isExecAppDone_.store(false);
+            extPtr->isExecAppDone_.store(true);
             extPtr->onProcessTimeoutCnt_ = 0;
             extPtr->execOnProcessCon_.notify_one();
             lock.unlock();
@@ -764,7 +696,7 @@ void BackupExtExtension::StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj
         HILOGE("Extension onProcess timeout, Increase cnt:%{public}d", extPtr->onProcessTimeoutCnt_.load());
     };
     int timeout = isFirstCallOnProcess_.load() ? BConstants::FIRST_CALL_APP_ON_PROCESS_MAX_TIMEOUT :
-        BConstants::APP_ON_PROCESS_MAX_TIMEOUT;
+                                                 BConstants::APP_ON_PROCESS_MAX_TIMEOUT;
     uint32_t timerId = onProcessTimeoutTimer_.Register(timeoutCallback, timeout, true);
     onProcessTimeoutTimerId_ = timerId;
     HILOGI("End");
@@ -775,6 +707,73 @@ void BackupExtExtension::CloseOnProcessTimeOutTimer()
     HILOGI("Begin");
     onProcessTimeoutTimer_.Unregister(onProcessTimeoutTimerId_);
     HILOGI("End");
+}
+
+void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
+{
+    HILOGI("Begin");
+    auto proxy = ServiceProxy::GetInstance();
+        if (proxy == nullptr) {
+        HILOGE("Failed to obtain the ServiceProxy handle");
+        DoClear();
+        return;
+    }
+    auto ret = proxy->AppIncrementalDone(errCode);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to notify the app done. err = %{public}d", ret);
+    }
+}
+
+ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
+{
+    auto obj = wptr<BackupExtExtension>(this);
+    auto ptr = obj.promote();
+    if (ptr == nullptr) {
+        HILOGE("Failed to get ext extension.");
+        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
+    }
+    if (ptr->extension_ == nullptr) {
+        HILOGE("Failed to get extension.");
+        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
+    }
+    auto callBackup = [ptr](ErrCode errCode, const std::string result) {
+        if (ptr == nullptr) {
+            HILOGE("Failed to get ext extension.");
+            return;
+        }
+        HILOGI("GetBackupInfo callBackup start. errCode = %{public}d, result = %{public}s", errCode, result.c_str());
+        if (errCode == ERR_OK) {
+            ptr->backupInfo_ = result;
+        }
+    };
+    auto ret = ptr->extension_->GetBackupInfo(callBackup);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to get backupInfo. err = %{public}d", ret);
+        return BError(BError::Codes::EXT_INVAL_ARG, "extension getBackupInfo exception").GetCode();
+    }
+    HILOGD("backupInfo = %s", backupInfo_.c_str());
+    result = backupInfo_;
+    backupInfo_.clear();
+
+    return ERR_OK;
+}
+
+ErrCode BackupExtExtension::UpdateFdSendRate(std::string &bundleName, int32_t sendRate)
+{
+    try {
+        std::lock_guard<std::mutex> lock(updateSendRateLock_);
+        HILOGI("Update SendRate, bundleName:%{public}s, sendRate:%{public}d", bundleName.c_str(), sendRate);
+        VerifyCaller();
+        bundleName_ = bundleName;
+        sendRate_ = sendRate;
+        if (sendRate > 0) {
+            startSendFdRateCon_.notify_one();
+        }
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to UpdateFdSendRate");
+        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
+    }
 }
 
 bool BackupExtExtension::SetStagingPathProperties()
@@ -856,7 +855,6 @@ void BackupExtExtension::DoUser0Backup(const BJsonEntityExtensionConfig &usrConf
 int BackupExtExtension::User0DoBackup(const BJsonEntityExtensionConfig &usrConfig)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Start Do User0Backup");
     if (extension_ == nullptr) {
         HILOGE("Failed to do backup, extension is nullptr");
         return BError(BError::Codes::EXT_INVAL_ARG);

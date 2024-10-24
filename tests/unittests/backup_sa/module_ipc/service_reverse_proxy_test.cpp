@@ -2080,4 +2080,92 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalRestoreOnR
     }
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalRestoreOnResultReport_0101";
 }
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalBackupOnResultReport_0100
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalBackupOnResultReport_0100
+ * @tc.desc: Test function of IncrementalBackupOnResultReport interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9OVHB
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalBackupOnResultReport_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalBackupOnResultReport_0100";
+    try {
+        std::string bundleName = "app01";
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+            EXPECT_TRUE(proxy_ != nullptr);
+            proxy_->IncrementalBackupOnResultReport(RESULT_REPORT, bundleName);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
+            proxy_->IncrementalBackupOnResultReport(RESULT_REPORT, bundleName);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(false));
+            proxy_->IncrementalBackupOnResultReport(RESULT_REPORT, bundleName);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+
+        try {
+            EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+            EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+            EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(-1));
+            proxy_->IncrementalBackupOnResultReport(RESULT_REPORT, bundleName);
+            EXPECT_TRUE(false);
+        } catch (BError &err) {
+            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_BROKEN_IPC);
+        }
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by IncrementalBackupOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalBackupOnResultReport_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceReverse_proxy_IncrementalBackupOnResultReport_0101
+ * @tc.name: SUB_ServiceReverse_proxy_IncrementalBackupOnResultReport_0101
+ * @tc.desc: Test function of IncrementalBackupOnResultReport interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalBackupOnResultReport_0101,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalBackupOnResultReport_0101";
+    try {
+        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .Times(1)
+            .WillOnce(Invoke(mock_.GetRefPtr(), &ServiceReverseMock::InvokeSendRequest));
+        std::string bundleName = "app01";
+        EXPECT_TRUE(proxy_ != nullptr);
+        proxy_->IncrementalBackupOnResultReport(RESULT_REPORT, bundleName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseProxyTest-an exception occurred by RestoreOnResultReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseProxyTest-end SUB_ServiceReverse_proxy_IncrementalBackupOnResultReport_0101";
+}
 } // namespace OHOS::FileManagement::Backup
