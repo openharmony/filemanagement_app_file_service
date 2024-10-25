@@ -313,7 +313,10 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
-        vector<string> bundleNames = GetBundleNameByDetails(bundlesToBackup);
+        vector<string> bundleNames {};
+        for (auto &bundle : bundlesToBackup) {
+            bundleNames.emplace_back(bundle.bundleName);
+        }
         std::vector<std::string> bundleNamesOnly;
         std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
@@ -514,6 +517,7 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        HILOGI("Begin get incrementalFileHandle");
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {
