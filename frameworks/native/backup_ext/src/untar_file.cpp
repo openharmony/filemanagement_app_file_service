@@ -559,8 +559,13 @@ ErrFileInfo UntarFile::CreateDir(string &path, mode_t mode)
 
 FILE *UntarFile::CreateFile(string &filePath)
 {
-    FILE *f = fopen(filePath.c_str(), "wb+");
-    if (f != nullptr) {
+    FILE *f = nullptr;
+    char rpath[PATH_MAX] = {0};
+    if (realpath(filePath.c_str(), rpath)) {
+        f = fopen(filePath.c_str(), "wb+");
+        if (f == nullptr) {
+            HILOGE("Failed to create file %{public}s, err = %{public}d", GetAnonyPath(filePath).c_str(), errno);
+        }
         return f;
     }
 
@@ -574,6 +579,10 @@ FILE *UntarFile::CreateFile(string &filePath)
 
     string path = filePath.substr(0, pos);
     if (ForceCreateDirectory(path)) {
+        if (!realpath(path.c_str(), rpath)) {
+            HILOGE("Failed to access path %{public}s, err = %{public}d", GetAnonyPath(path).c_str(), errno);
+            return nullptr;
+        }
         f = fopen(filePath.c_str(), "wb+");
         if (f == nullptr) {
             HILOGE("Failed to create file %{public}s, err = %{public}d", GetAnonyPath(filePath).c_str(), errno);

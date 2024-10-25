@@ -93,7 +93,7 @@ tuple<bool, int32_t> BackupPara::GetBackupDebugOverrideAccount()
         if (!getCfgParaValSucc) {
             return {false, 0};
         }
-        return {true, stoi(value)};
+        return {true, atoi(value.c_str())};
     }
     return {false, 0};
 }
