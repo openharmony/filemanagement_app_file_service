@@ -132,7 +132,6 @@ ErrCode SABackupConnection::LoadBackupSAExtInner()
         return LoadBackupSAExt();
     }
     isConnected_.store(true);
-    callConnected_(move(bundleName_));
     return LoadBackupSAExt();
 }
 

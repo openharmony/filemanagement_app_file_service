@@ -105,6 +105,11 @@ string ExtBackup::GetUsrConfig() const
     if (!client.GetProfileFromAbility(info, "ohos.extension.backup", config)) {
         throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to invoke the GetProfileFromAbility method.");
     }
+    if (config.empty()) {
+        HILOGE("GetUsrConfig empty.");
+    } else {
+        HILOGI("GetUsrConfig:%{public}s", config[0].c_str());
+    }
 
     return config.empty() ? "" : config[0];
 }
