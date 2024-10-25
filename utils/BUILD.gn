@@ -114,6 +114,14 @@ ohos_shared_library("backup_utils") {
     "//third_party/openssl:libcrypto_shared",
   ]
 
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+    "-Os",
+  ]
+
   use_exceptions = true
   innerapi_tags = [ "platformsdk" ]
   part_name = "app_file_service"
