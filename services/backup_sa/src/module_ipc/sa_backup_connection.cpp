@@ -128,9 +128,11 @@ ErrCode SABackupConnection::LoadBackupSAExtInner()
                                             [loadCallback]() { return loadCallback->isLoadSuccess_.load(); });
     if (!waitStatus) {
         HILOGE("Load sa %{public}d timeout", saId_);
+        lock.unlock();
         isConnected_.store(false);
         return LoadBackupSAExt();
     }
+    lock.unlock();
     isConnected_.store(true);
     callConnected_(move(bundleName_));
     return LoadBackupSAExt();
