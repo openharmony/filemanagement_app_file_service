@@ -82,6 +82,14 @@ ohos_shared_library("backup_sa") {
     "storage_service:storage_manager_sa_proxy",
   ]
 
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+    "-Os",
+  ]
+
   use_exceptions = true
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
