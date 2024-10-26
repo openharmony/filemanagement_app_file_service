@@ -395,7 +395,6 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     if (!bundleInfos.size()) {
         throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
     }
-    HILOGI("restoreInfos size is:%{public}zu", restoreInfos.size());
     vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {};
     for (auto &restoreInfo : restoreInfos) {
         if (SAUtils::IsSABundleName(restoreInfo.name)) {
@@ -429,7 +428,6 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
                                             .restoreDeps = restoreInfo.restoreDeps};
         restoreBundleInfos.emplace_back(info);
     }
-    HILOGI("restoreBundleInfos size is:%{public}zu", restoreInfos.size());
     return restoreBundleInfos;
 }
 
@@ -454,9 +452,9 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
     const std::vector<std::string> &bundleInfos, RestoreTypeEnum restoreType, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin");
     try {
         if (session_ == nullptr || isCleanService_.load()) {
+            HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -540,6 +538,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         if (session_ == nullptr || isCleanService_.load()) {
+            HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -648,6 +647,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         if (session_ == nullptr || isCleanService_.load()) {
+            HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
@@ -681,7 +681,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
-    } catch(...) {
+    } catch (...) {
         HILOGE("Unexpected exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -895,13 +895,14 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 void Service::OnBackupExtensionDied(const string &&bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    int32_t errCode = BError(BError::Codes::EXT_ABILITY_DIED).GetCode();
     AppRadar::Info info (bundleName, "", "");
     if (session_->GetScenario() == IServiceReverse::Scenario::BACKUP) {
         AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::OnBackupExtensionDied", GetUserIdDefault(),
-            BizStageBackup::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, BError(BError::Codes::EXT_ABILITY_DIED).GetCode());
+                                                    BizStageBackup::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, errCode);
     } else if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::OnBackupExtensionDied", GetUserIdDefault(),
-            BizStageRestore::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, BError(BError::Codes::EXT_ABILITY_DIED).GetCode());
+                                                     BizStageRestore::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT, errCode);
     }
     try {
         string callName = move(bundleName);
