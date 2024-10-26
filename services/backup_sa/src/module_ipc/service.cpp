@@ -125,7 +125,7 @@ void Service::OnStart()
                 .userId = GetUserIdDefault(),
             },
             isOccupyingSession_.load());
-        HILOGI("SA OnStart, cleaning up backup data");
+        HILOGE("SA OnStart, cleaning up backup data");
     }
     bool res = SystemAbility::Publish(sptr(this));
     if (sched_ != nullptr) {
@@ -1612,7 +1612,8 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
         for (auto info : backupInfos) {
-            session_->SetBackupExtName(info.name, info.extensionName);
+            std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
+            session_->SetBackupExtName(bundleNameIndexInfo, info.extensionName);
         }
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
