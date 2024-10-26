@@ -174,6 +174,7 @@ UniqueFd Service::GetLocalCapabilities()
         VerifyCaller();
         string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
         BExcepUltils::VerifyPath(path, false);
+        CreateDirIfNotExist(path);
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("Failed to open config file = %{private}s, err = %{public}d", path.c_str(), errno);
