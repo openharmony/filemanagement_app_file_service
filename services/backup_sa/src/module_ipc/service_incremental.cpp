@@ -115,9 +115,9 @@ void Service::CreateDirIfNotExist(const std::string &path)
     if (access(path.c_str(), F_OK) != 0) {
         bool created = ForceCreateDirectory(path.data());
         if (created) {
-            HILOGI("Create backup root dir successfully.");
+            HILOGI("Create directory successfully.");
         } else {
-            HILOGE("Failed to create backup root dir, err = %{public}d", errno);
+            HILOGE("Failed to create directory, path = %{private}s, err = %{public}d", path.c_str(), errno);
         }
     }
 }
