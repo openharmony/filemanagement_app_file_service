@@ -204,10 +204,6 @@ public:
             if (item.isMember("extraInfo") && item["extraInfo"].isObject()) {
                 extraInfo = item["extraInfo"];
             }
-            int64_t increSpaceOccupied = 0;
-            if (item.isMember("increSpaceOccupied") && item["increSpaceOccupied"].isInt64()) {
-                increSpaceOccupied = item["increSpaceOccupied"].asInt64();
-            }
             bool fullBackupOnly = false;
             if (item.isMember("fullBackupOnly") && item["fullBackupOnly"].isBool()) {
                 fullBackupOnly = item["fullBackupOnly"].asBool();
@@ -216,10 +212,13 @@ public:
             if (item.isMember("appIndex") && item["appIndex"].isInt()) {
                 appIndex = item["appIndex"].asInt();
             }
+            int64_t increSpaceOccupied = 0;
+            if (item.isMember("increSpaceOccupied") && item["increSpaceOccupied"].isInt64()) {
+                increSpaceOccupied = item["increSpaceOccupied"].asInt64();
+            }
             bundleInfos.emplace_back(BundleInfo {item["name"].asString(), appIndex, item["versionCode"].asInt64(),
                                                  item["versionName"].asString(), item["spaceOccupied"].asInt64(),
-                                                 increSpaceOccupied,
-                                                 item["allToBackup"].asBool(), fullBackupOnly,
+                                                 increSpaceOccupied, item["allToBackup"].asBool(), fullBackupOnly,
                                                  item["extensionName"].asString(),
                                                  restoreDeps, supportScene, extraInfo});
         }

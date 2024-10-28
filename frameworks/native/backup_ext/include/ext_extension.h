@@ -217,30 +217,30 @@ private:
     void StartFwkTimer(bool &isFwkStart);
 
     /**
-     * @brief get increCallbackEx for execute onRestore with string param
+     * @brief get callbackEx for execute onRestore
      *
-     * @param errCode
+     * @param obj
      */
     std::function<void(ErrCode, const std::string)> IncreOnRestoreExCallback(wptr<BackupExtExtension> obj);
 
     /**
      * @brief get increCallback for execute onRestore with string param
      *
-     * @param errCode
+     * @param obj
      */
     std::function<void(ErrCode, const std::string)> IncreOnRestoreCallback(wptr<BackupExtExtension> obj);
 
     /**
      * @brief get callback for execute onRestore with string param
      *
-     * @param errCode
+     * @param obj
      */
     std::function<void(ErrCode, std::string)> OnRestoreCallback(wptr<BackupExtExtension> obj);
 
     /**
-     * @brief get callbackEx for execute onRestore with string param
+     * @brief get increCallbackEx for execute onRestore with string param
      *
-     * @param errCode
+     * @param obj
      */
     std::function<void(ErrCode, std::string)> OnRestoreExCallback(wptr<BackupExtExtension> obj);
 
@@ -322,8 +322,8 @@ private:
     std::mutex onStartTimeLock_;
     AppRadar::DoRestoreInfo radarRestoreInfo_ { 0 };
     OHOS::ThreadPool onProcessTaskPool_;
-    std::atomic<bool> isFirstCallOnProcess_ { false };
-    std::atomic<bool> isExecAppDone_ { false };
+    std::atomic<bool> isFirstCallOnProcess_ {false};
+    std::atomic<bool> isExecAppDone_ {false};
 
     BackupRestoreScenario curScenario_ { BackupRestoreScenario::FULL_BACKUP };
 };
