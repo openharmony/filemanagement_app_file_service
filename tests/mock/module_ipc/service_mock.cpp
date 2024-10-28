@@ -263,7 +263,7 @@ void Service::RemoveExtensionMutex(const BundleName &bundleName)
 {
 }
 
-void CreateDirIfNotExist(const std::string &path)
+void Service::CreateDirIfNotExist(const std::string &path)
 {
 }
 } // namespace OHOS::FileManagement::Backup
