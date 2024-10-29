@@ -225,6 +225,8 @@ void ServiceTest::TearDownTestCase()
     notify = nullptr;
 }
 
+#include "sub_service_test.cpp"
+
 /**
  * @tc.number: SUB_Service_GetUserIdDefault_0000
  * @tc.name: SUB_Service_GetUserIdDefault_0000
@@ -1090,8 +1092,7 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0100, TestSize.Level1)
         EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        EXPECT_CALL(*svcProxy, PublishFile(_))
-        .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        EXPECT_CALL(*svcProxy, PublishFile(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
         ret = service->PublishFile(fileInfo);
         EXPECT_NE(ret, BError(BError::Codes::OK));
     } catch (...) {
