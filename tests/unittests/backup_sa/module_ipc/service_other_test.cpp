@@ -17,6 +17,7 @@
 #include <string>
 
 #include "accesstoken_kit_mock.h"
+#include "app_gallery_dispose_proxy_mock.h"
 #include "backup_para_mock.h"
 #include "bms_adapter_mock.h"
 #include "b_json_clear_data_config_mock.h"
@@ -153,6 +154,7 @@ public:
     static inline shared_ptr<SystemAbilityMock> ability = nullptr;
     static inline shared_ptr<SvcRestoreDepsManagerMock> depManager = nullptr;
     static inline shared_ptr<NotifyWorkServiceMock> notify = nullptr;
+    static inline shared_ptr<AppGalleryDisposeProxyMock> gallery = nullptr;
 };
 
 void ServiceTest::SetUpTestCase(void)
@@ -189,6 +191,8 @@ void ServiceTest::SetUpTestCase(void)
     SvcRestoreDepsManagerMock::manager = depManager;
     notify = make_shared<NotifyWorkServiceMock>();
     NotifyWorkServiceMock::notify = notify;
+    gallery = make_shared<AppGalleryDisposeProxyMock>();
+    AppGalleryDisposeProxyMock::proxy = gallery;
 }
 
 void ServiceTest::TearDownTestCase()
@@ -225,6 +229,8 @@ void ServiceTest::TearDownTestCase()
     depManager = nullptr;
     NotifyWorkServiceMock::notify = nullptr;
     notify = nullptr;
+    AppGalleryDisposeProxyMock::proxy = nullptr;
+    gallery = nullptr;
 }
 
 #include "sub_service_test.cpp"

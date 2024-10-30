@@ -176,5 +176,6 @@ ohos_shared_library("backup") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "samgr:samgr_proxy",
   ]
 }
