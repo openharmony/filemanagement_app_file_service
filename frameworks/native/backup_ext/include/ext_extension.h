@@ -217,7 +217,7 @@ private:
     void StartFwkTimer(bool &isFwkStart);
 
     /**
-     * @brief get callbackEx for execute onRestore
+     * @brief get increCallbackEx for execute onRestore with string param
      *
      * @param obj
      */
@@ -238,7 +238,7 @@ private:
     std::function<void(ErrCode, std::string)> OnRestoreCallback(wptr<BackupExtExtension> obj);
 
     /**
-     * @brief get increCallbackEx for execute onRestore with string param
+     * @brief get callbackEx for execute onRestore with string param
      *
      * @param obj
      */
