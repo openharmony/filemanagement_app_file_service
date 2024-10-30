@@ -44,12 +44,6 @@ ohos_unittest("b_session_test") {
     "${path_backup}/utils:backup_utils",
   ]
 
-  cflags = [ "--coverage" ]
-
-  ldflags = [ "--coverage" ]
-
-  cflags_cc = [ "--coverage" ]
-
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
