@@ -134,6 +134,8 @@ static inline std::string BACKUP_DIR_PRE = "/data/storage/";
 static inline std::string CONTEXT_ELS[] = {"el1", "el2"};
 static inline std::string BACKUP_DIR_END = "/base/.backup/";
 static inline std::string BUNDLE_BASE_DIR = "/data/storage/el2/base";
+static inline std::string PATH_PUBLIC_HOME = "/storage/Users/currentUser/";
+static inline std::string PATH_APP_DATA = "appdata";
 
 // 文管bundleName
 static inline std::string BUNDLE_FILE_MANAGER = "hmos.filemanager";
