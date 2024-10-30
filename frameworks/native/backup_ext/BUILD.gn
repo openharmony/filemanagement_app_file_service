@@ -75,6 +75,7 @@ ohos_shared_library("backup_extension_ability_native") {
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "samgr:samgr_proxy",
   ]
 
   cflags_cc = [
