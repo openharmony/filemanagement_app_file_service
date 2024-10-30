@@ -117,6 +117,8 @@ std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName 
 }
 
 void Service::RemoveExtensionMutex(const BundleName&) {}
+
+void Service::CreateDirIfNotExist(const std::string&) {}
 }
 
 namespace OHOS::FileManagement::Backup {

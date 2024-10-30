@@ -110,6 +110,18 @@ void Service::RemoveExtensionMutex(const BundleName &bundleName)
     backupExtMutexMap_.erase(it);
 }
 
+void Service::CreateDirIfNotExist(const std::string &path)
+{
+    if (access(path.c_str(), F_OK) != 0) {
+        bool created = ForceCreateDirectory(path.data());
+        if (created) {
+            HILOGI("Create directory successfully.");
+        } else {
+            HILOGE("Failed to create directory, path = %{private}s, err = %{public}d", path.c_str(), errno);
+        }
+    }
+}
+
 UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -127,6 +139,7 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
         VerifyCaller();
         string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
         BExcepUltils::VerifyPath(path, false);
+        CreateDirIfNotExist(path);
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("GetLocalCapabilitiesIncremental: open file failed, err = %{public}d", errno);
