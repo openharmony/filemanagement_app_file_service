@@ -125,7 +125,7 @@ void Service::OnStart()
                 .userId = GetUserIdDefault(),
             },
             isOccupyingSession_.load());
-        HILOGI("SA OnStart, cleaning up backup data");
+        HILOGE("SA OnStart, cleaning up backup data");
     }
     bool res = SystemAbility::Publish(sptr(this));
     if (sched_ != nullptr) {
@@ -174,6 +174,7 @@ UniqueFd Service::GetLocalCapabilities()
         VerifyCaller();
         string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
         BExcepUltils::VerifyPath(path, false);
+        CreateDirIfNotExist(path);
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("Failed to open config file = %{private}s, err = %{public}d", path.c_str(), errno);
@@ -448,7 +449,7 @@ static void HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
                 [&bundleName](const auto &obj) { return obj == bundleName; });
             if (it == restoreBundleNames.end()) {
                 HILOGE("AppendBundles failed, bundleName = %{public}s.", bundleName.c_str());
-                OnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), session, bundleName);
+                OnBundleStarted(BError(BError::Codes::SA_BUNDLE_INFO_EMPTY), session, bundleName);
             }
         }
     }
@@ -465,6 +466,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        session_->SetImplRestoreType(restoreType);
         if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
             session_->SetSessionUserId(userId);
         } else {
@@ -549,6 +551,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        session_->SetImplRestoreType(restoreType);
         if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
             session_->SetSessionUserId(userId);
         } else {
@@ -1316,7 +1319,7 @@ void Service::TryToClearDispose(const BundleName &bundleName)
         if (disposeErr == DisposeErr::OK) {
             break;
         }
-        ++ att;
+        ++att;
         HILOGI("Try to clear dispose, num = %{public}d", att);
     }
     if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
@@ -1612,7 +1615,8 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         session_->AppendBundles(bundleNames);
         for (auto info : backupInfos) {
-            session_->SetBackupExtName(info.name, info.extensionName);
+            std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
+            session_->SetBackupExtName(bundleNameIndexInfo, info.extensionName);
         }
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);

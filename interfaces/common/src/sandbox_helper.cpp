@@ -251,7 +251,7 @@ static int32_t GetFileIdFromFileName(const std::string &fileName)
         return -EINVAL;
     }
 
-    return std::stoi(idStr);
+    return std::atoi(idStr.c_str());
 }
 
 static int32_t GetBucketNum(const std::string &fileName)

@@ -78,6 +78,14 @@ ohos_shared_library("backup_kit_inner") {
 
   deps = [ "${path_backup}/utils:backup_utils" ]
 
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+    "-Os",
+  ]
+
   use_exceptions = true
   innerapi_tags = [ "platformsdk" ]
   part_name = "app_file_service"

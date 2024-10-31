@@ -31,7 +31,7 @@ public:
     static inline std::shared_ptr<BNotifyWorkService> notify = nullptr;
 };
 
-class IPCSkeletonMock : public BNotifyWorkService {
+class NotifyWorkServiceMock : public BNotifyWorkService {
 public:
     MOCK_METHOD(bool, NotifyBundleDetail, (BJsonUtil::BundleDetailInfo));
 };

@@ -45,7 +45,7 @@ BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string
     std::string bundleName = bundleNameStr.substr(0, hasPos);
     if (to_string(bundleNameStr.back()) != BUNDLE_INDEX_SPLICE) {
         std::string indexStr = bundleNameStr.substr(hasPos + 1);
-        int index = std::stoi(indexStr);
+        int index = std::atoi(indexStr.c_str());
         bundleDetailInfo.bundleIndex = index;
     } else {
         bundleDetailInfo.bundleIndex =  BUNDLE_INDEX_DEFAULT_VAL;
@@ -85,7 +85,7 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
             std::string bundleNameSplit = bundleName.substr(0, pos);
             if (to_string(bundleName.back()) != BUNDLE_INDEX_SPLICE) {
                 std::string indexSplit = bundleName.substr(pos + 1);
-                int index = std::stoi(indexSplit);
+                int index = std::atoi(indexSplit.c_str());
                 bundleIndex = index;
             } else {
                 bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
@@ -209,7 +209,8 @@ static void InsertBundleDetailInfo(cJSON *infos, int infosCount,
                 HILOGE("creat json error");
                 return;
             }
-            const char *const zeroUserId = static_cast<const char *>(to_string(userId).c_str());
+            string userIdstr = to_string(userId);
+            const char *const zeroUserId = userIdstr.c_str();
             cJSON_AddStringToObject(detail, "type", "userId");
             cJSON_AddStringToObject(detail, "detail", zeroUserId);
             cJSON_AddItemToArray(details, detail);
@@ -412,45 +413,27 @@ bool BJsonUtil::BuildOnProcessErrInfo(std::string &reportInfo, std::string path,
 
 bool BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
 {
-    cJSON *root = cJSON_CreateObject();
-    if (root == nullptr) {
-        return false;
-    }
     cJSON *infos = cJSON_CreateArray();
     if (infos == nullptr) {
-        cJSON_Delete(root);
         return false;
     }
-    cJSON_AddItemToObject(root, "infos", infos);
     cJSON *info = cJSON_CreateObject();
     if (info == nullptr) {
-        cJSON_Delete(root);
+        cJSON_Delete(infos);
         return false;
     }
-    cJSON_AddStringToObject(info, "type", "unicast");
+    string userIdstr = to_string(userId);
+    const char *const zeroUserId = userIdstr.c_str();
+    cJSON_AddStringToObject(info, "type", "userId");
+    cJSON_AddStringToObject(info, "detail", zeroUserId);
     cJSON_AddItemToArray(infos, info);
-    cJSON *details = cJSON_CreateArray();
-    if (details == nullptr) {
-        cJSON_Delete(root);
-        return false;
-    }
-    cJSON_AddItemToObject(info, "details", details);
-    cJSON *detail = cJSON_CreateObject();
-    if (detail == nullptr) {
-        cJSON_Delete(root);
-        return false;
-    }
-    const char *const zeroUserId = static_cast<const char *>(to_string(userId).c_str());
-    cJSON_AddStringToObject(detail, "type", "userId");
-    cJSON_AddStringToObject(detail, "detail", zeroUserId);
-    cJSON_AddItemToArray(details, detail);
-    char *jsonStr = cJSON_Print(root);
+    char *jsonStr = cJSON_Print(infos);
     if (jsonStr == nullptr) {
-        cJSON_Delete(root);
+        cJSON_Delete(infos);
         return false;
     }
     detailInfo = string(jsonStr);
-    cJSON_Delete(root);
+    cJSON_Delete(infos);
     free(jsonStr);
     return true;
 }
