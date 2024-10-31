@@ -85,6 +85,30 @@ ErrCode Service::Release()
     return BError(BError::Codes::OK);
 }
 
+std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName &bundleName)
+{
+    std::unique_lock<std::mutex> lock(extensionMutexLock_);
+    auto it = backupExtMutexMap_.find(bundleName);
+    if (it == backupExtMutexMap_.end()) {
+        HILOGI("BackupExtMutexMap not contain %{public}s", bundleName.c_str());
+        backupExtMutexMap_[bundleName] = std::make_shared<ExtensionMutexInfo>(bundleName);
+        return backupExtMutexMap_[bundleName];
+    }
+    HILOGI("BackupExtMutexMap contain %{public}s", bundleName.c_str());
+    return it->second;
+}
+
+void Service::RemoveExtensionMutex(const BundleName &bundleName)
+{
+    std::unique_lock<std::mutex> lock(extensionMutexLock_);
+    auto it = backupExtMutexMap_.find(bundleName);
+    if (it == backupExtMutexMap_.end()) {
+        HILOGI("BackupExtMutexMap not contain %{public}s", bundleName.c_str());
+        return;
+    }
+    backupExtMutexMap_.erase(it);
+}
+
 UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -484,6 +508,12 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
         HILOGI("Service AppIncrementalDone start, callerName is %{public}s, errCode is: %{public}d",
             callerName.c_str(), errCode);
         if (session_->OnBundleFileReady(callerName) || errCode != BError(BError::Codes::OK)) {
+            std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
+            if (mutexPtr == nullptr) {
+                HILOGE("extension mutex ptr is nullptr");
+                return BError(BError::Codes::SA_INVAL_ARG, "Extension mutex ptr is null.");
+            }
+            std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
             auto tempBackUpConnection = session_->GetExtConnection(callerName);
             auto backUpConnection = tempBackUpConnection.promote();
             if (backUpConnection == nullptr) {
@@ -500,6 +530,7 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
             ClearSessionAndSchedInfo(callerName);
             NotifyCallerCurAppIncrementDone(errCode, callerName);
         }
+        RemoveExtensionMutex(callerName);
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {

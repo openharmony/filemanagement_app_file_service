@@ -253,4 +253,13 @@ void Service::OnSARestore(const std::string &bundleName, const std::string &resu
 void Service::ClearResidualBundleData(const std::string &bundleName)
 {
 }
+
+std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName &bundleName)
+{
+    return nullptr;
+}
+
+void Service::RemoveExtensionMutex(const BundleName &bundleName)
+{
+}
 } // namespace OHOS::FileManagement::Backup

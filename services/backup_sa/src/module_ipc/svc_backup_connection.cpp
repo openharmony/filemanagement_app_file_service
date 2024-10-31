@@ -78,7 +78,6 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
 {
     HILOGI("called begin");
     isConnected_.store(false);
-    backupProxy_ = nullptr;
     string bundleName = element.GetBundleName();
     HILOGI("bundleName:%{public}s, OnAbilityDisconnectDone, bundleNameIndexInfo:%{public}s", bundleName.c_str(),
         bundleNameIndexInfo_.c_str());
