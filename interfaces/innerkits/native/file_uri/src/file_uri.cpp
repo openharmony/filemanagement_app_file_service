@@ -15,6 +15,7 @@
 
 #include "file_uri.h"
 
+#include <mutex>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -39,6 +40,8 @@ const std::string MEDIA_AUTHORITY = "media";
 const std::string NETWORK_PARA = "?networkid=";
 const std::string BACKFLASH = "/";
 const std::string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
+std::string BUNDLE_NAME = "";
+std::mutex g_globalMutex;
 static bool CheckFileManagerFullMountEnable()
 {
     char value[] = "false";
@@ -91,8 +94,13 @@ string FileUri::GetRealPath()
         (access(realPath.c_str(), F_OK) == 0 || CheckFileManagerFullMountEnable())) {
         return realPath;
     }
-
-    if (((bundleName != "") && (bundleName != CommonFunc::GetSelfBundleName())) ||
+    {
+        std::lock_guard<std::mutex> lock(g_globalMutex);
+        if (BUNDLE_NAME.empty()) {
+            BUNDLE_NAME = CommonFunc::GetSelfBundleName();
+        }
+    }
+    if (((!bundleName.empty()) && (bundleName != BUNDLE_NAME)) ||
         uri_.ToString().find(NETWORK_PARA) != string::npos) {
         realPath = PATH_SHARE + MODE_RW + bundleName + sandboxPath;
         if (access(realPath.c_str(), F_OK) != 0) {
