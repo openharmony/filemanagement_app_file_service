@@ -27,6 +27,7 @@
 #include <tuple>
 #include <vector>
 
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_filesystem/b_file_hash.h"
 #include "b_resources/b_constants.h"
@@ -503,5 +504,32 @@ bool BDir::CheckFilePathInvalid(const std::string &filePath)
         return true;
     }
     return false;
+}
+
+bool BDir::CheckAndRmSoftLink(const std::string &filePath)
+{
+    if (std::filesystem::is_symlink(filePath)) {
+        HILOGE("Soft link is not allowed, path = %{public}s", GetAnonyPath(filePath).c_str());
+        if (unlink(filePath.c_str()) < 0) {
+            HILOGE("Failed to unlink the backup file : %{public}s", GetAnonyPath(filePath).c_str());
+        }
+        return true;
+    }
+    return false;
+}
+
+bool BDir::CheckAndRmSoftLink(const EndFileInfo &filePaths)
+{
+    bool isSoftLink = false;
+    for (const auto &it : filePaths) {
+        if (std::filesystem::is_symlink(it.first)) {
+            HILOGE("Soft link is not allowed, path = %{public}s", GetAnonyPath(it.first).c_str());
+            isSoftLink = true;
+            if (unlink(it.first.c_str()) < 0) {
+                HILOGE("Failed to unlink the backup file : %{public}s", GetAnonyPath(it.first).c_str());
+            }
+        }
+    }
+    return isSoftLink;
 }
 } // namespace OHOS::FileManagement::Backup

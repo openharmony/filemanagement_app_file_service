@@ -268,7 +268,7 @@ private:
     void RestoreBigFiles(bool appendTargetPath);
     void FillEndFileInfos(const std::string &path, const unordered_map<string, struct ReportFileInfo> &result);
     void RestoreBigFileAfter(const string &filePath, const struct stat &sta);
-    void DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
+    int DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
         const std::tuple<int, EndFileInfo, ErrFileInfo> &result);
 
     ErrCode StartOnProcessTaskThread(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario);
