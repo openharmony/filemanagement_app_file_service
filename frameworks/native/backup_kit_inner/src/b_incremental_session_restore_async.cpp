@@ -61,12 +61,11 @@ shared_ptr<BIncrementalSessionRestoreAsync> BIncrementalSessionRestoreAsync::Ini
             .onResultReport = callbacks.onResultReport,
             .onBackupServiceDied = callbacks.onBackupServiceDied};
         int32_t res = proxy->InitRestoreSession(sptr(new ServiceReverse(callbacksTmp)));
-        if (res != 0) {
+        if (res != ERR_OK) {
             HILOGE("Failed to Restore because of %{public}d", res);
             AppRadar::Info info ("", "", "create restore session failed");
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "BIncrementalSessionRestoreAsync::Init",
-                                                         AppRadar::GetInstance().GetUserId(),
-                                                         BizStageRestore::BIZ_STAGE_CREATE_RESTORE_SESSION_FAIL, res);
+                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_CREATE_RESTORE_SESSION_FAIL, res);
             return nullptr;
         }
 
@@ -107,8 +106,14 @@ ErrCode BIncrementalSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos, restoreType,
+    ErrCode res = proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos, restoreType,
         userId);
+    if (res != ERR_OK) {
+        AppRadar::Info info("", "", "");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "BIncrementalSessionRestoreAsync::AppendBundles",
+            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
+    }
+    return res;
 }
 
 ErrCode BIncrementalSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
@@ -120,8 +125,13 @@ ErrCode BIncrementalSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-
-    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, restoreType, userId);
+    ErrCode res = proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, restoreType, userId);
+    if (res != ERR_OK) {
+        AppRadar::Info info("", "", "");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "BIncrementalSessionRestoreAsync::AppendBundles",
+            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
+    }
+    return res;
 }
 
 ErrCode BIncrementalSessionRestoreAsync::Release()

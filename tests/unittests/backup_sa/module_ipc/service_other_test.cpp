@@ -621,14 +621,14 @@ HWTEST_F(ServiceTest, SUB_Service_OnBundleStarted_0100, TestSize.Level1)
         sptr<SvcSessionManager> session_ = service->session_;
         BundleName bundleName;
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        OnBundleStarted(error, session_, bundleName);
+        service->OnBundleStarted(error, session_, bundleName);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
         EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(false));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, RestoreOnBundleStarted(_, _)).WillOnce(Return());
-        OnBundleStarted(error, session_, bundleName);
+        service->OnBundleStarted(error, session_, bundleName);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
@@ -636,7 +636,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnBundleStarted_0100, TestSize.Level1)
         EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, RestoreOnBundleStarted(_, _)).WillOnce(Return());
-        OnBundleStarted(error, session_, bundleName);
+        service->OnBundleStarted(error, session_, bundleName);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
@@ -644,7 +644,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnBundleStarted_0100, TestSize.Level1)
         EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalRestoreOnBundleStarted(_, _)).WillOnce(Return());
-        OnBundleStarted(error, session_, bundleName);
+        service->OnBundleStarted(error, session_, bundleName);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -694,12 +694,12 @@ HWTEST_F(ServiceTest, SUB_Service_HandleExceptionOnAppendBundles_0100, TestSize.
         vector<BundleName> appendBundleNames { "bundleName" };
         vector<BundleName> restoreBundleNames;
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        HandleExceptionOnAppendBundles(service->session_, appendBundleNames, restoreBundleNames);
+        service->HandleExceptionOnAppendBundles(service->session_, appendBundleNames, restoreBundleNames);
         EXPECT_TRUE(true);
 
         restoreBundleNames.emplace_back("bundleName");
         restoreBundleNames.emplace_back("bundleName2");
-        HandleExceptionOnAppendBundles(service->session_, appendBundleNames, restoreBundleNames);
+        service->HandleExceptionOnAppendBundles(service->session_, appendBundleNames, restoreBundleNames);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -765,6 +765,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0200, TestSize.Lev
         service->isOccupyingSession_.store(false);
         service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));

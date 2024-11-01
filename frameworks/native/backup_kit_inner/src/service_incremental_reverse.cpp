@@ -16,6 +16,7 @@
 #include "service_reverse.h"
 
 #include "b_error/b_error.h"
+#include "b_radar/b_radar.h"
 #include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {

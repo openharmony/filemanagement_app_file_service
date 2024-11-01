@@ -221,6 +221,27 @@ bool SvcRestoreDepsManager::UpdateToRestoreBundleMap(const string&, const string
 {
     return true;
 }
+
+void Service::OnBundleStarted(BError error, sptr<SvcSessionManager> session, const BundleName &bundleName) {}
+
+void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
+    const vector<BundleName> &appendBundleNames, const vector<BundleName> &restoreBundleNames) {}
+
+void Service::BundleBeginRadarReport(const std::string &bundleName, const ErrCode errCode,
+    const IServiceReverse::Scenario scenario) {}
+
+void Service::BundleEndRadarReport(const std::string &bundleName, const ErrCode errCode,
+    const IServiceReverse::Scenario scenario) {}
+
+void Service::FileReadyRadarReport(const std::string &bundleName, const std::string &fileName, const ErrCode errCode,
+    const IServiceReverse::Scenario scenario) {}
+
+void Service::ExtensionConnectFailRadarReport(const std::string &bundleName, const ErrCode errCode,
+    const IServiceReverse::Scenario scenario) {}
+
+void Service::UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo) {}
+
+void Service::ClearFailedBundles() {}
 } // namespace OHOS::FileManagement::Backup
 
 namespace OHOS::FileManagement::Backup {

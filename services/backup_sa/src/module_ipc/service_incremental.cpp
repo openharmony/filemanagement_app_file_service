@@ -275,11 +275,16 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
             HILOGE("Init Incremental backup session  error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        return session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
-                                 .scenario = IServiceReverse::Scenario::BACKUP,
-                                 .clientProxy = remote,
-                                 .userId = GetUserIdDefault(),
-                                 .isIncrementalBackup = true});
+        ErrCode errCode = session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
+            .scenario = IServiceReverse::Scenario::BACKUP,
+            .clientProxy = remote,
+            .userId = GetUserIdDefault(),
+            .isIncrementalBackup = true});
+        if (errCode == 0) {
+            ClearFailedBundles();
+            successBundlesNum_ = 0;
+        }
+        return errCode;
     } catch (const BError &e) {
         StopAll(nullptr, true);
         return e.GetCode();
@@ -318,6 +323,8 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
             if (info.allToBackup == false) {
                 session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), bundleNameIndexInfo);
+                BundleBeginRadarReport(bundleNameIndexInfo, BError(BError::Codes::SA_FORBID_BACKUP_RESTORE).GetCode(),
+                    IServiceReverse::Scenario::BACKUP);
                 session_->RemoveExtInfo(bundleNameIndexInfo);
             }
         }
@@ -390,6 +397,8 @@ void Service::HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &
         if (info.allToBackup == false) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
                 BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), bundleNameIndexInfo);
+            BundleBeginRadarReport(bundleNameIndexInfo, BError(BError::Codes::SA_FORBID_BACKUP_RESTORE).GetCode(),
+                IServiceReverse::Scenario::BACKUP);
             session_->RemoveExtInfo(bundleNameIndexInfo);
         }
         BJsonUtil::BundleDetailInfo uniCastInfo;
@@ -465,6 +474,7 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
         if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(callerName, fileName, move(fd),
                                                                               move(manifestFd), errCode);
+            FileReadyRadarReport(callerName, fileName, errCode, IServiceReverse::Scenario::RESTORE);
             return BError(BError::Codes::OK);
         }
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
@@ -473,6 +483,7 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
         HILOGD("reverse: Will notify IncrementalBackupOnFileReady");
         session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(callerName, fileName, move(fd),
             move(manifestFd), errCode);
+        FileReadyRadarReport(callerName, fileName, errCode, IServiceReverse::Scenario::BACKUP);
         AuditLog auditLog = { false, "Backup File Ready", "ADD", "", 1, "SUCCESS", "AppIncrementalFileReady",
             callerName, GetAnonyPath(fileName) };
         HiAudit::GetInstance(true).Write(auditLog);
@@ -491,6 +502,7 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
             HILOGI("reverse: Will notify IncrementalBackupOnBundleFinished");
             session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK),
                                                                                   callerName);
+            BundleEndRadarReport(callerName, BError(BError::Codes::OK), IServiceReverse::Scenario::BACKUP);
             // 断开extension
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
@@ -573,8 +585,8 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
                 HILOGE("GetIncrementalFileHandle error, Extension backup Proxy is empty");
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
-            int res = proxy->GetIncrementalFileHandle(fileName);
-            if (res) {
+            ErrCode res = proxy->GetIncrementalFileHandle(fileName);
+            if (res != ERR_OK) {
                 HILOGE("Failed to extension file handle");
                 AppRadar::Info info (bundleName, "", "");
                 AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandle",
@@ -611,6 +623,7 @@ bool Service::IncrementalBackup(const string &bundleName)
     if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
         auto ret = proxy->IncrementalOnBackup(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
+        BundleBeginRadarReport(bundleName, ret, IServiceReverse::Scenario::BACKUP);
         if (ret) {
             ClearSessionAndSchedInfo(bundleName);
             NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
@@ -620,6 +633,7 @@ bool Service::IncrementalBackup(const string &bundleName)
                session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
         auto ret = proxy->HandleRestore(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(ret, bundleName);
+        BundleBeginRadarReport(bundleName, ret, IServiceReverse::Scenario::RESTORE);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (auto &fileName : fileNameVec) {
             ret = proxy->GetIncrementalFileHandle(fileName);
@@ -638,6 +652,7 @@ void Service::NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string
     if (scenario == IServiceReverse::Scenario::BACKUP) {
         HILOGI("will notify clone data, scenario is incremental backup");
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, callerName);
+        BundleEndRadarReport(callerName, errCode, scenario);
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
@@ -655,6 +670,7 @@ void Service::NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string
         HILOGI("will notify clone data, scenario is Restore");
         SendEndAppGalleryNotify(callerName);
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, callerName);
+        BundleEndRadarReport(callerName, errCode, scenario);
     }
 }
 

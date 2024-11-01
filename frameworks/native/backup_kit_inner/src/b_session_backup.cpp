@@ -54,7 +54,7 @@ unique_ptr<BSessionBackup> BSessionBackup::Init(Callbacks callbacks)
         }
 
         int32_t res = proxy->InitBackupSession(sptr(new ServiceReverse(callbacks)));
-        if (res != 0) {
+        if (res != ERR_OK) {
             HILOGE("Failed to Backup because of %{public}d", res);
             AppRadar::Info info("", "", "");
             AppRadar::GetInstance().RecordBackupFuncRes(info, "BSessionBackup::Init",
@@ -108,12 +108,8 @@ ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup)
     }
 
     int32_t res = proxy->AppendBundlesBackupSession(bundlesToBackup);
-    if (res != 0) {
-        std::string ss;
-        for (const auto &bundleName:bundlesToBackup) {
-            ss += bundleName + ", ";
-        }
-        AppRadar::Info info(ss.c_str(), "", "");
+    if (res != ERR_OK) {
+        AppRadar::Info info("", "", "");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "BSessionBackup::AppendBundles",
             AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
@@ -128,12 +124,8 @@ ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup, vector
     }
 
     int32_t res = proxy->AppendBundlesDetailsBackupSession(bundlesToBackup, detailInfos);
-    if (res != 0) {
-        std::string ss;
-        for (const auto &bundleName:bundlesToBackup) {
-            ss += bundleName + ", ";
-        }
-        AppRadar::Info info(ss.c_str(), "", "");
+    if (res != ERR_OK) {
+        AppRadar::Info info("", "", "");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "BSessionBackup::AppendBundles",
             AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }

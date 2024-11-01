@@ -54,7 +54,7 @@ unique_ptr<BIncrementalBackupSession> BIncrementalBackupSession::Init(Callbacks 
         }
 
         int32_t res = proxy->InitIncrementalBackupSession(sptr(new ServiceReverse(callbacks)));
-        if (res != 0) {
+        if (res != ERR_OK) {
             HILOGE("Failed to Backup because of %{public}d", res);
             AppRadar::Info info("", "", "");
             AppRadar::GetInstance().RecordBackupFuncRes(info, "BIncrementalBackupSession::Init",
@@ -97,13 +97,9 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
-    int32_t res = proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup);
-    if (res != 0) {
-        std::string ss;
-        for (const auto &bundle : bundlesToBackup) {
-            ss += bundle.bundleName + ", ";
-        }
-        AppRadar::Info info(ss.c_str(), "", "");
+    ErrCode res = proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup);
+    if (res != ERR_OK) {
+        AppRadar::Info info("", "", "");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "BIncrementalBackupSession::AppendBundles",
             AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
@@ -119,12 +115,8 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
     }
 
     int32_t res = proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup, infos);
-    if (res != 0) {
-        std::string ss;
-        for (const auto &bundle : bundlesToBackup) {
-            ss += bundle.bundleName + ", ";
-        }
-        AppRadar::Info info(ss.c_str(), "", "AppendBundles with infos");
+    if (res != ERR_OK) {
+        AppRadar::Info info("", "", "AppendBundles with infos");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "BIncrementalBackupSession::AppendBundles",
             AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
