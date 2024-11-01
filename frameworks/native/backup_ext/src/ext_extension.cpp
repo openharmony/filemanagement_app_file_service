@@ -75,15 +75,15 @@ static void RecordDoRestoreRes(const std::string &bundleName, const std::string 
     AppRadar::DoRestoreInfo &restoreInfo)
 {
     std::stringstream ss;
-    ss << "\"bigFileNums\": " << restoreInfo.bigFileNum << ", ";
-    ss << "\"bigFileSize\": " << restoreInfo.bigFileSize << ", ";
-    ss << "\"RestoreBigFileTime\": " << restoreInfo.bigFileSpendTime << ", ";
-    ss << "\"unTarFileNums\": " << restoreInfo.tarFileNum << ", ";
-    ss << "\"unTarFileSize\": " << restoreInfo.tarFileSize << ", ";
-    ss << "\"unTarTime\": " << restoreInfo.tarFileSpendTime << ", ";
-    ss << "\"totalFileNum\": " << restoreInfo.bigFileNum + restoreInfo.tarFileNum << ", ";
-    ss << "\"totalFileSize\": " << restoreInfo.bigFileSize + restoreInfo.tarFileSize << ", ";
-    ss << "\"restoreAllFileTime\": " << restoreInfo.totalFileSpendTime;
+    ss << R"("bigFileNums": )" << restoreInfo.bigFileNum << ", ";
+    ss << R"("bigFileSize": )" << restoreInfo.bigFileSize << ", ";
+    ss << R"("RestoreBigFileTime": )" << restoreInfo.bigFileSpendTime << ", ";
+    ss << R"("unTarFileNums": )" << restoreInfo.tarFileNum << ", ";
+    ss << R"("unTarFileSize": )" << restoreInfo.tarFileSize << ", ";
+    ss << R"("unTarTime": )" << restoreInfo.tarFileSpendTime << ", ";
+    ss << R"("totalFileNum": )" << restoreInfo.bigFileNum + restoreInfo.tarFileNum << ", ";
+    ss << R"("totalFileSize": )" << restoreInfo.bigFileSize + restoreInfo.tarFileSize << ", ";
+    ss << R"("restoreAllFileTime": )" << restoreInfo.totalFileSpendTime;
     int32_t err = static_cast<int32_t>(BError::Codes::OK);
     AppRadar::Info info (bundleName, "", ss.str());
     AppRadar::GetInstance().RecordRestoreFuncRes(info, func, AppRadar::GetInstance().GetUserId(),

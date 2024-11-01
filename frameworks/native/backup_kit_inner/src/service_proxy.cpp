@@ -301,13 +301,6 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<Bund
         option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
-        std::string ss;
-        for (const auto &bundleName : bundleNames) {
-            ss += bundleName + ", ";
-        }
-        AppRadar::Info info(ss.c_str(), "", str);
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "ServiceProxy::AppendBundlesRestoreSession", userId,
-            BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
     return reply.ReadInt32();
@@ -345,13 +338,6 @@ ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
         static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION), data, reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
-        std::string ss;
-        for (const auto &bundleName : bundleNames) {
-            ss += bundleName + ", ";
-        }
-        AppRadar::Info info(ss.c_str(), "", str);
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "ServiceProxy::AppendBundlesRestoreSession", userId,
-            BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
     return reply.ReadInt32();
@@ -473,7 +459,7 @@ sptr<IService> ServiceProxy::GetInstance()
         AppRadar::Info info("", "", "\"reason\":\"Load backup sa timeout\"");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "ServiceProxy::GetInstance",
             AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_BOOT_BACKUP_SA_FAIL,
-            static_cast<int32_t>(BError::Codes::SA_INVAL_ARG));
+            BError(BError::Codes::SA_INVAL_ARG).GetCode());
         return nullptr;
     }
     return serviceProxy_;

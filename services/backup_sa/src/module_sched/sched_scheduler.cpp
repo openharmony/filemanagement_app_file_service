@@ -29,6 +29,7 @@
 
 #include "b_error/b_error.h"
 #include "b_ohos/startup/backup_para.h"
+#include "b_radar/b_radar.h"
 #include "filemgmt_libhilog.h"
 #include "iservice_registry.h"
 #include "module_external/bms_adapter.h"
