@@ -40,21 +40,6 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-void ExtDiedClearFailRadarReport(const string& bundleName, IServiceReverse::Scenario scenario, ErrCode res)
-{
-    if (res == ERR_OK) {
-        return;
-    }
-    AppRadar::Info info(bundleName, "", "");
-    if (scenario == IServiceReverse::Scenario::RESTORE) {
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "SchedScheduler::ExecutingQueueTasks",
-            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT_CLEAR_FAIL, res);
-    } else if (scenario == IServiceReverse::Scenario::BACKUP) {
-        AppRadar::GetInstance().RecordBackupFuncRes(info, "SchedScheduler::ExecutingQueueTasks",
-            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_EXTENSION_ABNORMAL_EXIT_CLEAR_FAIL, res);
-    }
-}
-
 void SchedScheduler::Sched(string bundleName)
 {
     if (bundleName == "") {
@@ -134,9 +119,7 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
         }
     } else if (action == BConstants::ServiceSchedAction::CLEAN) {
         HILOGI("Current bundle %{public}s process is cleaning", bundleName.data());
-        ErrCode res = reversePtr_->ClearResidualBundleData(bundleName);
-        IServiceReverse::Scenario scenario = sessionPtr_->GetScenario();
-        ExtDiedClearFailRadarReport(bundleName, scenario, res);
+        reversePtr_->ClearResidualBundleData(bundleName);
     }
 }
 

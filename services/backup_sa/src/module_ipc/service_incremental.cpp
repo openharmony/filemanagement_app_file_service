@@ -276,10 +276,10 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         ErrCode errCode = session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
-            .scenario = IServiceReverse::Scenario::BACKUP,
-            .clientProxy = remote,
-            .userId = GetUserIdDefault(),
-            .isIncrementalBackup = true});
+                                            .scenario = IServiceReverse::Scenario::BACKUP,
+                                            .clientProxy = remote,
+                                            .userId = GetUserIdDefault(),
+                                            .isIncrementalBackup = true});
         if (errCode == 0) {
             ClearFailedBundles();
             successBundlesNum_ = 0;

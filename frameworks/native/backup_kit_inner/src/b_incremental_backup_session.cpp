@@ -99,7 +99,11 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
 
     ErrCode res = proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup);
     if (res != ERR_OK) {
-        AppRadar::Info info("", "", "");
+        std::string ss;
+        for (const auto &bundle : bundlesToBackup) {
+            ss += bundle.bundleName + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", "");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "BIncrementalBackupSession::AppendBundles",
             AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
@@ -116,7 +120,11 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
 
     int32_t res = proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup, infos);
     if (res != ERR_OK) {
-        AppRadar::Info info("", "", "AppendBundles with infos");
+        std::string ss;
+        for (const auto &bundle : bundlesToBackup) {
+            ss += bundle.bundleName + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", "AppendBundles with infos");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "BIncrementalBackupSession::AppendBundles",
             AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }

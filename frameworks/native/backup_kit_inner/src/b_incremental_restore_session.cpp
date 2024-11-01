@@ -105,7 +105,11 @@ ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<Bun
     }
     ErrCode res = proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore);
     if (res != ERR_OK) {
-        AppRadar::Info info("", "", "");
+        std::string ss;
+        for (const auto &bundle : bundlesToRestore) {
+            ss += bundle + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", "");
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BIncrementalRestoreSession::AppendBundles",
             AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
@@ -121,7 +125,11 @@ ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<Bun
     }
     ErrCode res = proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos);
     if (res != ERR_OK) {
-        AppRadar::Info info("", "", "");
+        std::string ss;
+        for (const auto &bundle : bundlesToRestore) {
+            ss += bundle + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", "AppendBundles with infos");
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BIncrementalRestoreSession::AppendBundles",
             AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }

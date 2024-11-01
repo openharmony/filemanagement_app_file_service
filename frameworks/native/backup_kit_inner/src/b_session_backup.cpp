@@ -109,7 +109,11 @@ ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup)
 
     int32_t res = proxy->AppendBundlesBackupSession(bundlesToBackup);
     if (res != ERR_OK) {
-        AppRadar::Info info("", "", "");
+        std::string ss;
+        for (const auto &bundleName:bundlesToBackup) {
+            ss += bundleName + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", "");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "BSessionBackup::AppendBundles",
             AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
@@ -125,7 +129,11 @@ ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup, vector
 
     int32_t res = proxy->AppendBundlesDetailsBackupSession(bundlesToBackup, detailInfos);
     if (res != ERR_OK) {
-        AppRadar::Info info("", "", "");
+        std::string ss;
+        for (const auto &bundleName:bundlesToBackup) {
+            ss += bundleName + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", "AppendBundles with infos");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "BSessionBackup::AppendBundles",
             AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }

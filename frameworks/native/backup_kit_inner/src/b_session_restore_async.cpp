@@ -110,7 +110,11 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
     ErrCode res = proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos, restoreType,
         userId);
     if (res != ERR_OK) {
-        AppRadar::Info info("", "", "");
+        std::string ss;
+        for (const auto &bundle : bundlesToRestore) {
+            ss += bundle + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", "AppendBundles with infos");
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BSessionRestoreAsync::AppendBundles",
             AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
@@ -129,7 +133,11 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
 
     ErrCode res = proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, restoreType, userId);
     if (res != ERR_OK) {
-        AppRadar::Info info("", "", "");
+        std::string ss;
+        for (const auto &bundle : bundlesToRestore) {
+            ss += bundle + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", "");
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BSessionRestoreAsync::AppendBundles",
             AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
