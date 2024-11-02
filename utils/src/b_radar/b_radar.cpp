@@ -97,4 +97,24 @@ void AppRadar::RecordRestoreFuncRes(Info &info, const std::string &func, int32_t
         "RESULT_CODE", resultCode,
         "RESULT_INFO", ss.str());
 }
+
+void AppRadar::RecordStatisticRes(StatInfo &statInfo, int32_t userId, enum IServiceReverse::Scenario scenario,
+                                  int32_t succ_cnt, int32_t fail_cnt, int32_t resultCode)
+{
+    std::stringstream ss;
+    ss << R"("result_info": {)" << statInfo.resInfo << "}}";
+    HiSysEventWrite(
+        OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
+        BConstants::FILE_BACKUP_RESTORE_STATISTIC,
+        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        "CALLER_NAME", statInfo.callerName,
+        "USER_ID", userId,
+        "PID", getpid(),
+        "TIME", TimeUtils::GetCurrentTime(),
+        "BIZ_SCENE", static_cast<int32_t>(scenario),
+        "SUCC_CNT", succ_cnt,
+        "FAIL_CNT", fail_cnt,
+        "RESULT_CODE", resultCode,
+        "RESULT_INFO", ss.str());
+}
 } // namespace OHOS::FileManagement::Backup

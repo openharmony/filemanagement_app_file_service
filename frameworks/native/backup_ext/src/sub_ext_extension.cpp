@@ -150,8 +150,8 @@ void BackupExtExtension::CheckTmpDirFileInfos(bool isSpecialVersion)
     if (!errFiles.empty()) {
         HILOGE("(Debug) The received file and idx is not same");
         std::stringstream ss;
-        ss << "\"total_file\": \"" << idxFileInfos.size() << "\", \"restore_file\": \""
-        << idxFileInfos.size() - errFiles.size() << "\"" << "\"info\": \"different received file and idx\"";
+        ss << R"("totalFile": )" << idxFileInfos.size() << R"(, "restoreFile": )"
+            << idxFileInfos.size() - errFiles.size() << R"(, "info": "different received file and idx")";
         AppRadar::Info info (bundleName_, "", ss.str());
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::CheckTmpDirFileInfos",
             AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_CHECK_DATA_FAIL,
@@ -186,8 +186,8 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
         errFileInfos_.size());
     if (errFiles.size()) {
         std::stringstream ss;
-        ss << "\"total_file\": \"" << endFileInfos_.size() << "\", \"restore_file\": \""
-        << endFileInfos_.size() - errFileInfos_.size() << "\"";
+        ss << R"("totalFile": )" << endFileInfos_.size() << R"(, "restoreFile": )"
+            << endFileInfos_.size() - errFileInfos_.size();
         AppRadar::Info info (bundleName_, "", ss.str());
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::CheckRestoreFileInfos",
             AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_CHECK_DATA_FAIL,
@@ -276,11 +276,13 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreCallback(
         HILOGI("Current bundle will execute app done");
         if (errCode == ERR_OK) {
             auto spendTime = extensionPtr->GetOnStartTimeCost();
-            std::stringstream ss;
-            ss << "\"spend_time\": \"" << spendTime << "ms\"";
-            AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
-            AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::OnRestoreCallback",
-                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+            if (spendTime >= BConstants::MAX_TIME_COST) {
+                std::stringstream ss;
+                ss << R"("spendTime": )"<< spendTime << "ms";
+                AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::OnRestoreCallback",
+                    AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+            }
         }
         extensionPtr->FinishOnProcessTask();
         if (errMsg.empty()) {
@@ -309,11 +311,13 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreExCallbac
         }
         if (errCode == ERR_OK && !restoreRetInfo.empty()) {
             auto spendTime = extensionPtr->GetOnStartTimeCost();
-            std::stringstream ss;
-            ss << "\"spend_time\": \"" << spendTime << "ms\"";
-            AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
-            AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::OnRestoreExCallback",
-                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+            if (spendTime >= BConstants::MAX_TIME_COST) {
+                std::stringstream ss;
+                ss << R"("spendTime": )"<< spendTime << "ms";
+                AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::OnRestoreExCallback",
+                    AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+            }
         }
         extensionPtr->FinishOnProcessTask();
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
@@ -367,12 +371,14 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
         }
         if (errCode == ERR_OK && !restoreRetInfo.empty()) {
             auto spendTime = extensionPtr->GetOnStartTimeCost();
-            std::stringstream ss;
-            ss << "\"spend_time\": \"" << spendTime << "ms\"";
-            AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
-            AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreExCallback",
-                AppRadar::GetInstance().GetUserId(),
-                BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+            if (spendTime >= BConstants::MAX_TIME_COST) {
+                std::stringstream ss;
+                ss << R"("spendTime": )"<< spendTime << "ms";
+                AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreExCallback",
+                    AppRadar::GetInstance().GetUserId(),
+                    BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+            }
         }
         extensionPtr->FinishOnProcessTask();
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
@@ -405,11 +411,13 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreCall
         HILOGI("Current bundle will execute app done");
         if (errCode == ERR_OK) {
             auto spendTime = extensionPtr->GetOnStartTimeCost();
-            std::stringstream ss;
-            ss << "\"spend_time\": \"" << spendTime << "ms\"";
-            AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
-            AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreCallback",
-                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+            if (spendTime >= BConstants::MAX_TIME_COST) {
+                std::stringstream ss;
+                ss << R"("spendTime": )"<< spendTime << "ms";
+                AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
+                AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreCallback",
+                    AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+            }
         }
         extensionPtr->FinishOnProcessTask();
         if (errMsg.empty()) {
@@ -448,11 +456,13 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupCall
         extensionPtr->FinishOnProcessTask();
         if (errCode == ERR_OK) {
             auto spendTime = extensionPtr->GetOnStartTimeCost();
-            AppRadar::Info info(extensionPtr->bundleName_, "", string("\"spend_time\":\" ").
-                append(to_string(spendTime)).append(string("ms\"")));
-            AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::OnBackupCallback",
-                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
-                static_cast<int32_t>(ERR_OK));
+            if (spendTime >= BConstants::MAX_TIME_COST) {
+                AppRadar::Info info(extensionPtr->bundleName_, "", string("\"spend_time\":\" ").
+                    append(to_string(spendTime)).append(string("ms\"")));
+                AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::OnBackupCallback",
+                    AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
+                    static_cast<int32_t>(ERR_OK));
+            }
             extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
             return;
         }
@@ -485,11 +495,13 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
         if (errCode == ERR_OK) {
             if (backupExRetInfo.size()) {
                 auto spendTime = extensionPtr->GetOnStartTimeCost();
-                AppRadar::Info info(extensionPtr->bundleName_, "", string("\"spend_time\":\" ").
-                    append(to_string(spendTime)).append(string("ms\"")));
-                AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::OnBackupExCallback",
-                    AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
-                    static_cast<int32_t>(ERR_OK));
+                if (spendTime >= BConstants::MAX_TIME_COST) {
+                    AppRadar::Info info(extensionPtr->bundleName_, "", string("\"spend_time\":\" ").
+                        append(to_string(spendTime)).append(string("ms\"")));
+                    AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::OnBackupExCallback",
+                        AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
+                        static_cast<int32_t>(ERR_OK));
+                }
                 HILOGI("Will notify backup result report");
                 extensionPtr->FinishOnProcessTask();
                 extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
@@ -527,11 +539,13 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupC
         extPtr->FinishOnProcessTask();
         if (errCode == ERR_OK) {
             auto spendTime = extPtr->GetOnStartTimeCost();
-            AppRadar::Info info(extPtr->bundleName_, "", string("\"spend_time\":\" ").
-                append(to_string(spendTime)).append(string("ms\"")));
-            AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::IncOnBackupCallback",
-                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
-                static_cast<int32_t>(ERR_OK));
+            if (spendTime >= BConstants::MAX_TIME_COST) {
+                AppRadar::Info info(extPtr->bundleName_, "", string("\"spend_time\":\" ").
+                    append(to_string(spendTime)).append(string("ms\"")));
+                AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::IncOnBackupCallback",
+                    AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
+                    static_cast<int32_t>(ERR_OK));
+            }
             proxy->GetAppLocalListAndDoIncrementalBackup();
             return;
         }
@@ -567,11 +581,13 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupE
         if (errCode == ERR_OK) {
             if (backupExRetInfo.size()) {
                 auto spendTime = extensionPtr->GetOnStartTimeCost();
-                AppRadar::Info info(extensionPtr->bundleName_, "", string("\"spend_time\":\" ").
-                    append(to_string(spendTime)).append(string("ms\"")));
-                AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::IncOnBackupExCallback",
-                    AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
-                    static_cast<int32_t>(ERR_OK));
+                if (spendTime >= BConstants::MAX_TIME_COST) {
+                    AppRadar::Info info(extensionPtr->bundleName_, "", string("\"spend_time\":\" ").
+                        append(to_string(spendTime)).append(string("ms\"")));
+                    AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::IncOnBackupExCallback",
+                        AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
+                        static_cast<int32_t>(ERR_OK));
+                }
                 HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
                 extensionPtr->FinishOnProcessTask();
                 proxy->GetAppLocalListAndDoIncrementalBackup();
@@ -976,11 +992,18 @@ int BackupExtExtension::DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd
     vector<struct ReportFileInfo> bigFiles;
     CompareFiles(move(incrementalFd), move(manifestFd), allFiles, smallFiles, bigFiles);
     auto ret = DoIncrementalBackup(allFiles, smallFiles, bigFiles);
-    auto end = std::chrono::system_clock::now();
-    auto cost = to_string(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
-    AppRadar::Info info(bundleName_, "", string("\"spend_time\":").append(cost).append(string("ms\"")));
-    AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::AsyncTaskDoIncrementalBackup",
-        AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, static_cast<int32_t>(ret));
+    if (ret == ERR_OK) {
+        auto end = std::chrono::system_clock::now();
+        auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        if (cost >= BConstants::MAX_TIME_COST) {
+            std::stringstream ss;
+            ss << R"("spendTime": )"<< cost << R"(ms, "totalFiles": )" << allFiles.size() << R"(, "smallFiles": )"
+                << smallFiles.size() << R"(, "bigFiles": )" << bigFiles.size();
+            AppRadar::Info info(bundleName_, "", ss.str());
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::DoIncrementalBackupTask",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, static_cast<int32_t>(ret));
+        }
+    }
     return ret;
 }
 

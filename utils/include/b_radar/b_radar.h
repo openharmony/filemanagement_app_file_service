@@ -94,6 +94,23 @@ public:
         int64_t totalFileSpendTime;
     };
 
+    struct DoBackupInfo {
+        int64_t cost;
+        uint32_t allFileNum;
+        uint32_t smallFileNum;
+        uint32_t tarFileNum;
+        uint32_t includeNum;
+        uint32_t excludeNum;
+    };
+
+    struct StatInfo {
+        std::string callerName;
+        std::string resInfo;
+
+        StatInfo(const std::string &callerName, const std::string &resInfo)
+            : callerName(callerName), resInfo(resInfo) {}
+    };
+
 public:
     int32_t GetUserId();
     void RecordDefaultFuncRes(Info &info, const std::string &func, int32_t userId,
@@ -102,6 +119,8 @@ public:
                              enum BizStageBackup bizStage, int32_t resultCode);
     void RecordRestoreFuncRes(Info &info, const std::string &func, int32_t userId,
                               enum BizStageRestore bizStage, int32_t resultCode);
+    void RecordStatisticRes(StatInfo &statInfo, int32_t userId, enum IServiceReverse::Scenario scenario,
+                            int32_t succ_cnt, int32_t fail_cnt, int32_t resultCode);
 private:
     AppRadar() = default;
     ~AppRadar() = default;
