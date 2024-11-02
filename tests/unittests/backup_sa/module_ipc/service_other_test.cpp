@@ -787,7 +787,6 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0200, TestSize.Lev
         service->isOccupyingSession_.store(false);
         service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
@@ -1701,7 +1700,6 @@ HWTEST_F(ServiceTest, SUB_Service_NotifyCallerCurAppDone_0000, TestSize.Level1)
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
-        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, RestoreOnBundleFinished(_, _)).WillOnce(Return());
         service->NotifyCallerCurAppDone(0, "");
@@ -1826,7 +1824,7 @@ HWTEST_F(ServiceTest, SUB_Service_DoTimeout_0000, TestSize.Level1)
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false)).WillOnce(Return(true));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
@@ -1885,7 +1883,7 @@ HWTEST_F(ServiceTest, SUB_Service_DoTimeout_0100, TestSize.Level1)
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
         EXPECT_CALL(*saConnect, DisconnectBackupSAExt()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));

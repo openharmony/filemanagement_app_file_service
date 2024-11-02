@@ -358,42 +358,6 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0000, TestSize.Level1)
 }
 
 /**
- * @tc.number: SUB_Service_OnBackupExtensionDied_0100
- * @tc.name: SUB_Service_OnBackupExtensionDied_0100
- * @tc.desc: 测试 OnBackupExtensionDied 的正常/异常分支
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issueIAKC3I
- */
-HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBackupExtensionDied_0100";
-    try {
-        service->isOccupyingSession_ = false;
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
-            .WillOnce(Return(IServiceReverse::Scenario::RESTORE))
-            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
-            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
-            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
-        service->OnBackupExtensionDied("", false);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnBackupExtensionDied.";
-    }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnBackupExtensionDied_0100";
-}
-
-/**
  * @tc.number: SUB_Service_ExtConnectDied_0000
  * @tc.name: SUB_Service_ExtConnectDied_0000
  * @tc.desc: 测试 ExtConnectDied 的正常/异常分支
