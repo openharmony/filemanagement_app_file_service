@@ -34,12 +34,12 @@ namespace OHOS {
 namespace AppFileService {
 using namespace OHOS::AppExecFwk;
 namespace {
-    const std::string FILE_SCHEME_PREFIX = "file://";
-    const char BACKFLASH = '/';
-    const std::string FILE_MANAGER_URI_HEAD = "/storage/";
-    const std::string FILE_MANAGER_AUTHORITY = "docs";
-    std::string g_bundleName = "";
-    std::mutex g_globalMutex;
+const std::string FILE_SCHEME_PREFIX = "file://";
+const char BACKFLASH = '/';
+const std::string FILE_MANAGER_URI_HEAD = "/storage/";
+const std::string FILE_MANAGER_AUTHORITY = "docs";
+std::string g_bundleName = "";
+std::mutex g_globalMutex;
 }
 static sptr<BundleMgrProxy> GetBundleMgrProxy()
 {
@@ -123,4 +123,3 @@ string CommonFunc::GetUriFromPath(const string &path)
 }
 } // namespace AppFileService
 } // namespace OHOS
-

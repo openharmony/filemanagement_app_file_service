@@ -23,7 +23,6 @@
 #include "js_native_api.h"
 #include "log.h"
 #include "n_napi.h"
-#include "parameter.h"
 #include "tokenid_kit.h"
 
 namespace OHOS {

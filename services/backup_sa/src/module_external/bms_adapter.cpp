@@ -354,8 +354,8 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
             GetAllowAndExtName(installedBundle.extensionInfos);
         if (!allToBackup) {
             bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.appIndex,
-                installedBundle.versionCode, installedBundle.versionName, 0, 0, allToBackup, fullBackupOnly, extName,
-                restoreDeps, supportScene, extraInfo});
+                installedBundle.versionCode, installedBundle.versionName, 0, 0, allToBackup, fullBackupOnly,
+                extName, restoreDeps, supportScene, extraInfo});
             continue;
         }
         auto it = std::find_if(extraIncreData.begin(), extraIncreData.end(),

@@ -14,7 +14,6 @@
  */
 #include "file_permission.h"
 #include "accesstoken_kit.h"
-#include "file_uri.h"
 #include "log.h"
 #include "parameter.h"
 #include "uri.h"
@@ -25,6 +24,7 @@
 #include "sandbox_manager_err_code.h"
 #endif
 #include "bundle_constants.h"
+#include "file_uri.h"
 #include "hap_token_info.h"
 #include "ipc_skeleton.h"
 #include "n_error.h"
@@ -211,7 +211,7 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
     return pathPolicies;
 }
 
-static bool CheckPermission(uint64_t tokenCaller, const string &permission)
+static bool CheckPermission(uint32_t tokenCaller, const string &permission)
 {
     return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
            Security::AccessToken::PermissionState::PERMISSION_GRANTED;
