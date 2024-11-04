@@ -288,4 +288,9 @@ void Service::ClearFailedBundles() {}
 void Service::CreateDirIfNotExist(const std::string &path)
 {
 }
+
+std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool)
+{
+    return {};
+}
 } // namespace OHOS::FileManagement::Backup

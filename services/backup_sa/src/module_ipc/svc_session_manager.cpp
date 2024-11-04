@@ -433,12 +433,17 @@ bool SvcSessionManager::GetSchedBundleName(string &bundleName)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (extConnectNum_ >= BConstants::EXT_CONNECT_MAX_COUNT) {
+        HILOGE("Sched bundle count is too many");
         return false;
     }
 
     for (auto &&it : impl_.backupExtNameMap) {
         if (it.second.schedAction == BConstants::ServiceSchedAction::WAIT) {
             bundleName = it.first;
+            if (!SAUtils::IsSABundleName(bundleName) && it.second.backupExtName.empty()) {
+                HILOGE("Current bundle:%{public}s can not sched", bundleName.c_str());
+                return false;
+            }
             it.second.schedAction = BConstants::ServiceSchedAction::START;
             extConnectNum_++;
             return true;
