@@ -37,6 +37,8 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 const int32_t PATH_MAX_LEN = 4096;
+const std::string APP_DATA_DIR = BConstants::PATH_PUBLIC_HOME +
+    BConstants::PATH_APP_DATA + BConstants::FILE_SEPARATOR_CHAR;
 
 static bool IsEmptyDirectory(const string &path)
 {
@@ -169,6 +171,57 @@ tuple<ErrCode, vector<string>> BDir::GetDirFiles(const string &path)
     return {ERR_OK, files};
 }
 
+static std::set<std::string> GetSubDir(const std::string &path)
+{
+    if (path.empty()) {
+        return {};
+    }
+    std::set<std::string> result;
+    unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(path.c_str()), closedir};
+    if (!dir) {
+        HILOGE("Invalid directory path: %{private}s", path.c_str());
+        return {};
+    }
+
+    struct dirent *ptr = nullptr;
+    while (!!(ptr = readdir(dir.get()))) {
+        // current dir OR parent dir
+        if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
+            continue;
+        } else if (ptr->d_type == DT_DIR) {
+            std::string tmpPath = IncludeTrailingPathDelimiter(path) +
+                string(ptr->d_name) + BConstants::FILE_SEPARATOR_CHAR;
+            if (tmpPath == APP_DATA_DIR) {
+                HILOGI("Filter appdata successfully");
+                continue;
+            }
+            result.emplace(tmpPath);
+        } else {
+            result.emplace(IncludeTrailingPathDelimiter(path) + string(ptr->d_name));
+        }
+    }
+    return result;
+}
+
+static void RmForceExcludePath(set<string> &expandPath)
+{
+    set<string> addPaths;
+    for (auto it = expandPath.begin(); it != expandPath.end();) {
+        if (*it == BConstants::PATH_PUBLIC_HOME) {
+            addPaths = GetSubDir(*it);
+        }
+        if ((*it).find(APP_DATA_DIR) == 0) {
+            it = expandPath.erase(it);
+            continue;
+        }
+        ++it;
+    }
+    if (!addPaths.empty()) {
+        expandPath.erase(BConstants::PATH_PUBLIC_HOME);
+        expandPath.merge(addPaths);
+    }
+}
+
 static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
 {
     unique_ptr<glob_t, function<void(glob_t *)>> gl {new glob_t, [](glob_t *ptr) { globfree(ptr); }};
@@ -184,9 +237,14 @@ static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
 
     set<string> expandPath, filteredPath;
     for (size_t i = 0; i < gl->gl_pathc; ++i) {
-        expandPath.emplace(gl->gl_pathv[i]);
+        std::string tmpPath = gl->gl_pathv[i];
+        auto pos = tmpPath.find(BConstants::FILE_SEPARATOR_CHAR);
+        if (pos != 0 && pos != std::string::npos) {
+            tmpPath = BConstants::FILE_SEPARATOR_CHAR + tmpPath;
+        }
+        expandPath.emplace(tmpPath);
     }
-
+    RmForceExcludePath(expandPath);
     for (auto it = expandPath.begin(); it != expandPath.end(); ++it) {
         filteredPath.insert(*it);
         if (onlyPath && *it->rbegin() != BConstants::FILE_SEPARATOR_CHAR) {
