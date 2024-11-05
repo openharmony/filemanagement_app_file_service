@@ -17,6 +17,7 @@
 
 #include "backup_para_mock.h"
 #include "bms_adapter_mock.h"
+#include "b_json/b_json_entity_caps.h"
 #include "b_jsonutil_mock.h"
 #include "ipc_skeleton_mock.h"
 #include "sa_backup_connection_mock.h"
@@ -242,6 +243,11 @@ void Service::ExtensionConnectFailRadarReport(const std::string &bundleName, con
 void Service::UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo) {}
 
 void Service::ClearFailedBundles() {}
+
+std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool)
+{
+    return {};
+}
 } // namespace OHOS::FileManagement::Backup
 
 namespace OHOS::FileManagement::Backup {
@@ -1048,14 +1054,18 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_SetCurrentBackupSessProp
     try {
         vector<string> bundleNames { "bundleName" };
         int32_t userId = 100;
+        vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+        BJsonEntityCaps::BundleInfo bundleInfo;
+        bundleInfo.name = "bundleName";
+        bundleInfos.push_back(bundleInfo);
         auto session_ = service->session_;
         service->session_ = nullptr;
         EXPECT_CALL(*bms, IsUser0BundleName(_, _)).WillOnce(Return(false));
-        service->SetCurrentBackupSessProperties(bundleNames, userId);
+        service->SetCurrentBackupSessProperties(bundleNames, userId, bundleInfos, true);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*bms, IsUser0BundleName(_, _)).WillOnce(Return(true));
-        service->SetCurrentBackupSessProperties(bundleNames, userId);
+        service->SetCurrentBackupSessProperties(bundleNames, userId, bundleInfos, true);
         EXPECT_TRUE(true);
         service->session_ = session_;
     } catch (...) {

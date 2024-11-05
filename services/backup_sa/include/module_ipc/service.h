@@ -419,9 +419,12 @@ private:
      *
      * @param bundleNames: bundleNames list
      * @param userId: userId
+     * @param backupBundleInfos: backupBundleInfos
+     * @param isIncBackup: isIncBackup
      *
      */
-    void SetCurrentBackupSessProperties(const std::vector<std::string> &bundleNames, int32_t userId);
+    void SetCurrentBackupSessProperties(const std::vector<std::string> &bundleNames, int32_t userId,
+        std::vector<BJsonEntityCaps::BundleInfo> &backupBundleInfos, bool isIncBackup);
 
     /**
      * @brief send userid to app
@@ -526,10 +529,10 @@ private:
 
     void HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session, const vector<BundleName> &appendBundleNames,
         const vector<BundleName> &restoreBundleNames);
-    
+
     void BundleBeginRadarReport(const std::string &bundleName, const ErrCode errCode,
         const IServiceReverse::Scenario scenario);
-    
+
     void BundleEndRadarReport(const std::string &bundleName, const ErrCode errCode,
         const IServiceReverse::Scenario scenario);
 
@@ -538,11 +541,14 @@ private:
 
     void ExtensionConnectFailRadarReport(const std::string &bundleName, const ErrCode errCode,
         const IServiceReverse::Scenario scenario);
-    
+
     void UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo);
 
     void ClearFailedBundles();
     void CreateDirIfNotExist(const std::string &path);
+
+    std::vector<std::string> GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
+        bool isIncBackup);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

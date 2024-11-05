@@ -22,6 +22,7 @@
 #include "bms_adapter_mock.h"
 #include "b_json_clear_data_config_mock.h"
 #include "b_json_service_disposal_config_mock.h"
+#include "b_json/b_json_entity_caps.h"
 #include "b_jsonutil_mock.h"
 #include "b_sa_utils_mock.h"
 #include "ipc_skeleton_mock.h"
@@ -110,7 +111,8 @@ void Service::NotifyCallerCurAppIncrementDone(ErrCode, const std::string&) {}
 
 void Service::SendUserIdToApp(string&, int32_t) {}
 
-void Service::SetCurrentBackupSessProperties(const vector<string>&, int32_t) {}
+void Service::SetCurrentBackupSessProperties(const vector<string>&, int32_t,
+    std::vector<BJsonEntityCaps::BundleInfo>&, bool) {}
 
 std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName &bundleName)
 {
