@@ -150,7 +150,7 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
     try {
         HILOGI("DoDispose, app %{public}s, operation %{public}d", bundleName.c_str(), disposeOperation);
         if (!ConnectExtAbility<AppGalleryDisposeProxy>() || appRemoteObj_ == nullptr) {
-            HILOGI("Can not connect to %{public}s", bundleName.c_str());
+            HILOGE("Can not connect to %{public}s", bundleName.c_str());
             return DisposeErr::CONN_FAIL;
         }
 
@@ -158,15 +158,15 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
         MessageParcel data;
         const auto interfaceToken = APP_FOUNDATION_SERVICE;
         if (!data.WriteInterfaceToken(interfaceToken)) {
-            HILOGI("write WriteInterfaceToken failed");
+            HILOGE("write WriteInterfaceToken failed");
             return DisposeErr::IPC_FAIL;
         }
         if (!data.WriteString16(Str8ToStr16(bundleDetailInfo.bundleName))) {
-            HILOGI("write bundleName failed");
+            HILOGE("write bundleName failed");
             return DisposeErr::IPC_FAIL;
         }
         if (!data.WriteInt32(static_cast<int32_t>(bundleDetailInfo.bundleIndex))) {
-            HILOGI("write bundleIndex failed");
+            HILOGE("write bundleIndex failed");
             return DisposeErr::IPC_FAIL;
         }
 
