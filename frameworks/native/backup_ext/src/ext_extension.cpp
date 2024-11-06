@@ -478,13 +478,27 @@ static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
     return ret;
 }
 
-ErrCode BackupExtExtension::BigFileReady(const TarMap &bigFileInfo, sptr<IService> proxy)
+void BackupExtExtension::ClearNoPermissionFiles(TarMap &pkgInfo, vector<std::string> &noPermissionFiles)
+{
+    HILOGI("start ClearNoPermissionFiles;");
+    for (const auto &item : noPermissionFiles) {
+        auto it = pkgInfo.find(item);
+        if (it != pkgInfo.end()) {
+            HILOGI("noPermissionFile, don't need to backup, path = %{public}s",
+                GetAnonyString(std::get<0>(it->second)).c_str());
+            pkgInfo.erase(it);
+        }
+    }
+}
+
+ErrCode BackupExtExtension::BigFileReady(TarMap &bigFileInfo, sptr<IService> proxy)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("BigFileReady Begin: bigFileInfo file size is: %{public}zu", bigFileInfo.size());
     ErrCode ret {ERR_OK};
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
+    vector<string> noPermissionFiles;
     for (auto &item : bigFileInfo) {
         WaitToSendFd(startTime, fdNum);
         int32_t errCode = ERR_OK;
@@ -497,6 +511,10 @@ ErrCode BackupExtExtension::BigFileReady(const TarMap &bigFileInfo, sptr<IServic
             AuditLog auditLog = {false, "Open fd failed", "ADD", "", 1, "FAILED", "Backup File",
                 "BigFile", GetAnonyPath(filePath)};
             HiAudit::GetInstance(false).Write(auditLog);
+            if (errCode == ERR_NO_PERMISSION) {
+                noPermissionFiles.emplace_back(item.first.c_str());
+                continue;
+            }
         }
         ret = proxy->AppFileReady(item.first, std::move(fd), errCode);
         if (SUCCEEDED(ret)) {
@@ -507,6 +525,7 @@ ErrCode BackupExtExtension::BigFileReady(const TarMap &bigFileInfo, sptr<IServic
         fdNum++;
         RefreshTimeInfo(startTime, fdNum);
     }
+    ClearNoPermissionFiles(bigFileInfo, noPermissionFiles);
     AuditLog auditLog = {false, "Send Big File Fd", "ADD", "", bigFileInfo.size(), "SUCCESS", "Backup Files",
         "BigFile", ""};
     HiAudit::GetInstance(false).Write(auditLog);
@@ -1949,13 +1968,14 @@ ErrCode BackupExtExtension::IncrementalTarFileReady(const TarMap &bigFileInfo,
 /**
  * 增量大文件和简报信息回传
  */
-ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
+ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
     const vector<struct ReportFileInfo> &bigInfos, sptr<IService> proxy)
 {
     ErrCode ret {ERR_OK};
     HILOGI("IncrementalBigFileReady Begin, pkgInfo size:%{public}zu", pkgInfo.size());
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
+    vector<string> noPermissionFiles;
     for (auto &item : pkgInfo) {
         if (item.first.empty()) {
             continue;
@@ -1968,6 +1988,10 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
             HILOGE("IncrementalBigFileReady open file failed, file name is %{public}s, err = %{public}d",
                 GetAnonyString(path).c_str(), errno);
             errCode = errno;
+            if (errCode == ERR_NO_PERMISSION) {
+                noPermissionFiles.emplace_back(item.first.c_str());
+                continue;
+            }
         }
         vector<struct ReportFileInfo> bigInfo;
         for (const auto &tempFile : bigInfos) {
@@ -1989,6 +2013,7 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
         fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
         RefreshTimeInfo(startTime, fdNum);
     }
+    ClearNoPermissionFiles(pkgInfo, noPermissionFiles);
     HILOGI("IncrementalBigFileReady End");
     return ret;
 }
