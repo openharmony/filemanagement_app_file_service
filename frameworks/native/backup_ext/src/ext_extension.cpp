@@ -767,7 +767,13 @@ int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
         return ret;
     }
     HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
-
+    if (!isClearData_) {
+        HILOGI("configured not clear data");
+        return ERR_OK;
+    }
+    if (!RemoveFile(tarName)) {
+        HILOGE("Failed to delete the backup tar %{public}s", tarName.c_str());
+    }
     return ERR_OK;
 }
 
@@ -849,6 +855,7 @@ int BackupExtExtension::DoIncrementalRestore()
             err = std::get<FIRST_PARAM>(unPacketRes);
             DealIncreUnPacketResult(tarFileSize, item, unPacketRes);
             HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
+            DeleteBackupIncrementalTars(tarName);
         }
     }
     auto endTime = std::chrono::system_clock::now();
@@ -1134,7 +1141,7 @@ void BackupExtExtension::FillEndFileInfos(const std::string &path,
     }
 }
 
-void BackupExtExtension::DeleteBackupTars()
+void BackupExtExtension::DeleteBackupIdxFile()
 {
     if (!isClearData_) {
         HILOGI("configured not clear data.");
@@ -1142,72 +1149,41 @@ void BackupExtExtension::DeleteBackupTars()
     }
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     string indexFileRestorePath = GetIndexFileRestorePath(bundleName_);
-    UniqueFd fd(open(indexFileRestorePath.data(), O_RDONLY));
-    if (fd < 0) {
-        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", indexFileRestorePath.c_str(), errno);
-        return;
-    }
-    // The directory include tars and manage.json which would be deleted
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
-    auto cache = cachedEntity.Structuralize();
-    auto info = cache.GetExtManage();
-    auto path = GetRestoreTempPath(bundleName_);
-    auto extManageInfo = GetExtManageInfo();
-    for (auto &item : info) {
-        off_t tarFileSize = 0;
-        if (ExtractFileExt(item) != "tar" || IsUserTar(item, extManageInfo, tarFileSize)) {
-            continue;
-        }
-        string tarPath = path + item;
-        if (!RemoveFile(tarPath)) {
-            HILOGE("Failed to delete the backup tar %{public}s", tarPath.c_str());
-        }
-    }
     if (!RemoveFile(indexFileRestorePath)) {
         HILOGE("Failed to delete the backup index %{public}s", indexFileRestorePath.c_str());
     }
-    HILOGI("End execute DeleteBackupTars");
+    HILOGI("End execute DeleteBackupIdxFile");
 }
 
-void BackupExtExtension::DeleteBackupIncrementalTars()
+void BackupExtExtension::DeleteBackupIncrementalIdxFile()
 {
     if (!isClearData_) {
         HILOGI("configured not clear data.");
         return;
     }
     string indexFileRestorePath = GetIndexFileRestorePath(bundleName_);
-    UniqueFd fd(open(indexFileRestorePath.data(), O_RDONLY));
-    if (fd < 0) {
-        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", indexFileRestorePath.c_str(), errno);
-        return;
-    }
-    // The directory include tars and manage.json which would be deleted
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
-    auto cache = cachedEntity.Structuralize();
-    auto info = cache.GetExtManage();
-    auto path = GetRestoreTempPath(bundleName_);
-    auto extManageInfo = GetExtManageInfo();
-    for (auto &item : info) {
-        off_t tarFileSize = 0;
-        if (ExtractFileExt(item) != "tar" || IsUserTar(item, extManageInfo, tarFileSize)) {
-            continue;
-        }
-        string tarPath = path + item;
-        if (!RemoveFile(tarPath)) {
-            HILOGE("Failed to delete the backup tar %{private}s, err = %{public}d", tarPath.c_str(), errno);
-        }
-        // 删除简报文件
-        string reportPath = GetReportFileName(tarPath);
-        if (!RemoveFile(reportPath)) {
-            HILOGE("Failed to delete the backup report %{private}s, err = %{public}d", reportPath.c_str(), errno);
-        }
-    }
     if (!RemoveFile(indexFileRestorePath)) {
         HILOGE("Failed to delete the backup index %{public}s", indexFileRestorePath.c_str());
     }
     string reportManagePath = GetReportFileName(indexFileRestorePath); // GetIncrementalFileHandle创建的空fd
     if (!RemoveFile(reportManagePath)) {
         HILOGE("Failed to delete the backup report index %{public}s", reportManagePath.c_str());
+    }
+}
+
+void BackupExtExtension::DeleteBackupIncrementalTars(const string &tarName)
+{
+    if (!isClearData_) {
+        HILOGI("configured not need clear data");
+        return;
+    }
+    if (!RemoveFile(tarName)) {
+        HILOGE("Failed to delete the backup tar %{private}s, err = %{public}d", tarName.c_str(), errno);
+    }
+    // 删除简报文件
+    string reportPath = GetReportFileName(tarName);
+    if (!RemoveFile(reportPath)) {
+        HILOGE("Failed to delete backup report %{private}s, err = %{public}d", reportPath.c_str(), errno);
     }
 }
 
@@ -1247,7 +1223,7 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
             bool appendTargetPath =
                 ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpecialVersionForCloneAndCloud();
             ptr->RestoreBigFiles(appendTargetPath);
-            ptr->DeleteBackupTars();
+            ptr->DeleteBackupIdxFile();
             if (ret == ERR_OK) {
                 ptr->AsyncTaskRestoreForUpgrade();
             } else {
@@ -1295,7 +1271,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
                 ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpecialVersionForCloneAndCloud();
             ptr->RestoreBigFiles(appendTargetPath);
             // delete 1.tar/manage.json
-            ptr->DeleteBackupIncrementalTars();
+            ptr->DeleteBackupIncrementalIdxFile();
             if (ptr != nullptr && ptr->isDebug_) {
                 ptr->CheckRestoreFileInfos();
             }
