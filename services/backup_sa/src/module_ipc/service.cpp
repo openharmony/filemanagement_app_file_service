@@ -613,7 +613,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
     HILOGI("Begin");
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
-            HILOGE("Init Incremental backup session error, session is empty");
+            HILOGE("AppendBundles restore session with infos error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -698,7 +698,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
-            HILOGE("Init Incremental backup session error, session is empty");
+            HILOGE("AppendBundles restore session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -793,7 +793,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
-            HILOGE("Init Incremental backup session error, session is empty");
+            HILOGE("AppendBundles backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
@@ -830,7 +830,7 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
-            HILOGE("Init Incremental backup session error, session is empty");
+            HILOGE("AppendBundles backup session with infos error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
@@ -1728,7 +1728,7 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         if (bundleNames.empty() || session_ == nullptr) {
-            HILOGE("Init Incremental backup session error, session is empty");
+            HILOGE("AppendBundles clear session error, session is empty");
             return EPERM;
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
