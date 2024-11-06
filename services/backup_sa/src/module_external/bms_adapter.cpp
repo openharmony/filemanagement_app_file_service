@@ -127,7 +127,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
         std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos;
         bool getBundleSuccess = GetCurBundleExtenionInfo(installedBundle, bundleName, extensionInfos, bms, userId);
         if (!getBundleSuccess) {
-            HILOGE("Get current extension failed");
+            HILOGE("Get current extension failed, bundleName:%{public}s", bundleName.c_str());
             continue;
         }
         auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo] =

@@ -255,4 +255,6 @@ SvcSessionManager::Impl SvcSessionManager::GetImpl()
 }
 
 void SvcSessionManager::SetImplRestoreType(const RestoreTypeEnum restoreType) {}
+
+void SvcSessionManager::SetIsReadyLaunch(const std::string&) {}
 } // namespace OHOS::FileManagement::Backup
