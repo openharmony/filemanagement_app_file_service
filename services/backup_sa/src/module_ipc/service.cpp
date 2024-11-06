@@ -104,8 +104,7 @@ static inline int32_t GetUserIdDefault()
     return multiuser.userId;
 }
 
-void OnStartResRadarReport(const IServiceReverse::Scenario scenario,
-                           const std::vector<std::string> &bundleNameList, int32_t stage)
+void OnStartResRadarReport(const std::vector<std::string> &bundleNameList, int32_t stage)
 {
     std::stringstream ss;
     ss << "failedBundles:{";
@@ -114,13 +113,8 @@ void OnStartResRadarReport(const IServiceReverse::Scenario scenario,
     }
     ss << "}";
     AppRadar::Info info("", "", ss.str());
-    if (scenario == IServiceReverse::Scenario::RESTORE) {
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::OnStart", GetUserIdDefault(),
-            static_cast<BizStageRestore>(stage), ERR_OK);
-    } else if (scenario == IServiceReverse::Scenario::BACKUP) {
-        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::OnStart", GetUserIdDefault(),
-            static_cast<BizStageBackup>(stage), ERR_OK);
-    }
+    AppRadar::GetInstance().RecordDefaultFuncRes(info, "Service::OnStart", GetUserIdDefault(),
+        static_cast<BizStageBackup>(stage), ERR_OK);
 }
 
 void Service::ClearFailedBundles()
@@ -223,13 +217,12 @@ void Service::OnStart()
         residualBundleNameList = clearRecorder_->GetAllClearBundleRecords();
     }
     if (!bundleNameList.empty() || !residualBundleNameList.empty()) {
-        IServiceReverse::Scenario scenario = session_->GetScenario();
         if (!bundleNameList.empty()) {
-            OnStartResRadarReport(scenario, bundleNameList,
+            OnStartResRadarReport(bundleNameList,
                 static_cast<int32_t>(BizStageBackup::BIZ_STAGE_ONSTART_DISPOSE));
         }
         if (!residualBundleNameList.empty()) {
-            OnStartResRadarReport(scenario, residualBundleNameList,
+            OnStartResRadarReport(residualBundleNameList,
                 static_cast<int32_t>(BizStageBackup::BIZ_STAGE_ONSTART_RESIDUAL));
         }
         SetOccupySession(true);
