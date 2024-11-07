@@ -242,6 +242,8 @@ void Service::ExtensionConnectFailRadarReport(const std::string &bundleName, con
 void Service::UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo) {}
 
 void Service::ClearFailedBundles() {}
+
+void Service::StartRunningTimer(const std::string &bundleName) {}
 } // namespace OHOS::FileManagement::Backup
 
 namespace OHOS::FileManagement::Backup {

@@ -270,6 +270,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetUserIdDefault_0000, TestSize.Level1)
 
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
         EXPECT_CALL(*skeleton, GetCallingUid())
+            .WillOnce(Return(BConstants::SPAN_USERID_UID + BConstants::SPAN_USERID_UID))
             .WillOnce(Return(BConstants::SPAN_USERID_UID + BConstants::SPAN_USERID_UID));
         ret = GetUserIdDefault();
         EXPECT_EQ(ret, 2);
@@ -370,21 +371,42 @@ HWTEST_F(ServiceTest, SUB_Service_OnStart_0200, TestSize.Level1)
         EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(vector<string>(1)))
             .WillOnce(Return(vector<string>()));
         EXPECT_CALL(*cdConfig, GetAllClearBundleRecords()).WillOnce(Return(vector<string>()));
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
         service->OnStart();
         EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnStart.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnStart_0200";
+}
 
+/**
+ * @tc.number: SUB_Service_OnStart_0300
+ * @tc.name: SUB_Service_OnStart_0300
+ * @tc.desc: 测试 OnStart
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_OnStart_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnStart_0300";
+    try {
         auto session_ = service->session_;
         service->session_ = nullptr;
         EXPECT_CALL(*ability, Publish(_)).WillOnce(Return(false));
         EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(vector<string>()))
             .WillOnce(Return(vector<string>()));
         EXPECT_CALL(*cdConfig, GetAllClearBundleRecords()).WillOnce(Return(vector<string>(1)));
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
         service->OnStart();
@@ -394,8 +416,9 @@ HWTEST_F(ServiceTest, SUB_Service_OnStart_0200, TestSize.Level1)
         EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(vector<string>(1)))
             .WillOnce(Return(vector<string>()));
         EXPECT_CALL(*cdConfig, GetAllClearBundleRecords()).WillOnce(Return(vector<string>(1)));
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
         service->OnStart();
@@ -405,7 +428,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnStart_0200, TestSize.Level1)
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnStart.";
     }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnStart_0200";
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnStart_0300";
 }
 
 /**

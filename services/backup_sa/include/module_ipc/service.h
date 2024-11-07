@@ -300,6 +300,7 @@ public:
      *
      */
     void RemoveExtensionMutex(const BundleName &bundleName);
+    void StartRunningTimer(const std::string &bundleName);
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {

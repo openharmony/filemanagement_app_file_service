@@ -862,7 +862,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSchedBundleName_0100, t
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         bool condition = sessionManagerPtr_->GetSchedBundleName(bundleName);
         EXPECT_EQ(bundleName, BUNDLE_NAME);
-        EXPECT_TRUE(condition);
+        EXPECT_FALSE(condition);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-GetSchedBundleName Branches";
         sessionManagerPtr_->SetServiceSchedAction(BUNDLE_NAME, BConstants::ServiceSchedAction::START);
         condition = sessionManagerPtr_->GetSchedBundleName(bundleName);

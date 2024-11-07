@@ -288,4 +288,6 @@ void Service::ClearFailedBundles() {}
 void Service::CreateDirIfNotExist(const std::string &path)
 {
 }
+
+void Service::StartRunningTimer(const std::string &bundleName) {}
 } // namespace OHOS::FileManagement::Backup

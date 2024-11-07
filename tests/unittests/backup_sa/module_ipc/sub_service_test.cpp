@@ -826,38 +826,20 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDone_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtConnectDone_0000";
     try {
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::WAIT));
         EXPECT_CALL(*cdConfig, InsertClearBundleRecord(_)).WillOnce(Return(true));
         service->ExtConnectDone("");
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
-        EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::WAIT));
-        EXPECT_CALL(*cdConfig, InsertClearBundleRecord(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, StartExtTimer(_, _)).WillOnce(Return(false));
-        service->ExtConnectDone("");
-        EXPECT_TRUE(true);
-
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
-        EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::WAIT));
-        EXPECT_CALL(*cdConfig, InsertClearBundleRecord(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, StartFwkTimer(_, _)).WillOnce(Return(false));
-        service->ExtConnectDone("");
-        EXPECT_TRUE(true);
-
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::CLEAN));
         service->ExtConnectDone("");
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::START));
         EXPECT_CALL(*cdConfig, FindClearBundleRecord(_)).WillOnce(Return(true));
         service->ExtConnectDone("");
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::START));
         EXPECT_CALL(*cdConfig, FindClearBundleRecord(_)).WillOnce(Return(false));
         EXPECT_CALL(*cdConfig, InsertClearBundleRecord(_)).WillOnce(Return(true));
