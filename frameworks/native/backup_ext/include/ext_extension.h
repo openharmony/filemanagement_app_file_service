@@ -256,8 +256,9 @@ private:
     std::function<void(ErrCode, const std::string)> OnBackupCallback(wptr<BackupExtExtension> obj);
 
     void HandleSpecialVersionRestore();
-    void DeleteBackupIncrementalTars();
-    void DeleteBackupTars();
+    void DeleteBackupIncrementalIdxFile();
+    void DeleteBackupIdxFile();
+    void DeleteBackupIncrementalTars(const string &tarName);
     void SetClearDataFlag(bool isClearData);
     std::vector<ExtManageInfo> GetExtManageInfo();
     ErrCode RestoreFilesForSpecialCloneCloud();

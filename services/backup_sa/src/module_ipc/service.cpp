@@ -1543,13 +1543,13 @@ ErrCode Service::StartExtTimer(bool &isExtStart)
 {
     try {
         HILOGI("Service::StartExtTimer begin.");
-        string bundleName = VerifyCallerAndGetCallerName();
         if (session_ == nullptr) {
             HILOGE("StartExtTimer error, session_ is nullptr.");
             isExtStart = false;
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        string bundleName = VerifyCallerAndGetCallerName();
         auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
         session_->StopFwkTimer(bundleName);
         isExtStart = session_->StartExtTimer(bundleName, timeoutCallback);
@@ -1567,13 +1567,13 @@ ErrCode Service::StartFwkTimer(bool &isFwkStart)
 {
     try {
         HILOGI("Service::StartFwkTimer begin.");
-        string bundleName = VerifyCallerAndGetCallerName();
         if (session_ == nullptr) {
             HILOGE("StartFwkTimer error, session_ is nullptr.");
             isFwkStart = false;
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        string bundleName = VerifyCallerAndGetCallerName();
         auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
         session_->StopExtTimer(bundleName);
         isFwkStart = session_->StartFwkTimer(bundleName, timeoutCallback);
