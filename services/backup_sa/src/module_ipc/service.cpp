@@ -1236,18 +1236,22 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
     }
 }
 
+void Service::StartRunningTimer(const std::string &bundleName)
+{
+    auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
+    auto scenario = session_->GetScenario();
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        session_->StartExtTimer(bundleName, timeoutCallback);
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        session_->StartFwkTimer(bundleName, timeoutCallback);
+    }
+}
+
 void Service::ExtConnectDone(string bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGE("begin %{public}s", bundleName.data());
-        auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
-        auto scenario = session_->GetScenario();
-        if (scenario == IServiceReverse::Scenario::BACKUP) {
-            session_->StartExtTimer(bundleName, timeoutCallback);
-        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-            session_->StartFwkTimer(bundleName, timeoutCallback);
-        }
 
         BConstants::ServiceSchedAction curSchedAction = session_->GetServiceSchedAction(bundleName);
         if (curSchedAction == BConstants::ServiceSchedAction::CLEAN) {
