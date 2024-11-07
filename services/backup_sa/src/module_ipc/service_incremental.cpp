@@ -398,6 +398,7 @@ void Service::HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &
             session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }
         session_->SetBackupExtName(bundleNameIndexInfo, info.extensionName);
+        session_->SetIsReadyLaunch(bundleNameIndexInfo);
     }
 }
 
@@ -700,6 +701,7 @@ void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, 
         auto it = bundleNameIndexBundleInfoMap.find(bundleName);
         if (it == bundleNameIndexBundleInfoMap.end()) {
             HILOGE("Current bundleName can not find bundleInfo, bundleName:%{public}s", bundleName.c_str());
+            session_->RemoveExtInfo(bundleName);
             continue;
         }
         auto bundleInfo = it->second;
@@ -709,6 +711,7 @@ void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, 
             session_->SetBundleDataSize(bundleName, bundleInfo.spaceOccupied);
         }
         session_->SetBackupExtName(bundleName, bundleInfo.extensionName);
+        session_->SetIsReadyLaunch(bundleName);
     }
     HILOGI("end SetCurrentBackupSessProperties");
 }

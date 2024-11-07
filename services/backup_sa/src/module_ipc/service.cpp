@@ -679,6 +679,7 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
             SendUserIdToApp(bundleNameIndexInfo, session_->GetSessionUserId());
         }
         session_->SetBackupExtName(bundleNameIndexInfo, restoreInfo.extensionName);
+        session_->SetIsReadyLaunch(bundleNameIndexInfo);
     }
     HILOGI("End");
 }
@@ -777,6 +778,7 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
             session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }
         session_->SetBackupExtName(bundleNameIndexInfo, restoreInfo.extensionName);
+        session_->SetIsReadyLaunch(bundleNameIndexInfo);
     }
     HILOGI("End");
 }
@@ -870,6 +872,7 @@ void Service::HandleCurGroupBackupInfos(std::vector<BJsonEntityCaps::BundleInfo>
             session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }
         session_->SetBackupExtName(bundleNameIndexInfo, info.extensionName);
+        session_->SetIsReadyLaunch(bundleNameIndexInfo);
     }
 }
 
@@ -1337,6 +1340,7 @@ void Service::HandleRestoreDepsBundle(const string &bundleName)
                 session_->SetExtFileNameRequest(bundleInfo.name, fileName);
             }
             session_->SetBackupExtName(bundleInfo.name, bundleInfo.extensionName);
+            session_->SetIsReadyLaunch(bundleInfo.name);
         }
     }
     HILOGI("End");
@@ -1730,10 +1734,16 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
-        session_->AppendBundles(bundleNames);
+        std::vector<std::string> supportBundleNames;
+        for (auto info : backupInfos) {
+            std::string bundleNameIndexStr = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
+            supportBundleNames.emplace_back(bundleNameIndexStr);
+        }
+        session_->AppendBundles(supportBundleNames);
         for (auto info : backupInfos) {
             std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
             session_->SetBackupExtName(bundleNameIndexInfo, info.extensionName);
+            session_->SetIsReadyLaunch(bundleNameIndexInfo);
         }
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);

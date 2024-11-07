@@ -63,7 +63,6 @@ void SchedScheduler::Sched(string bundleName)
             return;
         }
         if (!sessionPtr_->GetSchedBundleName(bundleName)) {
-            HILOGE("Current bundle can not execute sched, bundleName:%{public}s", bundleName.c_str());
             return;
         }
     }
