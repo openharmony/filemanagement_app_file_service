@@ -22,6 +22,7 @@
 #include "bms_adapter_mock.h"
 #include "b_json_clear_data_config_mock.h"
 #include "b_json_service_disposal_config_mock.h"
+#include "b_json/b_json_entity_caps.h"
 #include "b_jsonutil_mock.h"
 #include "b_sa_utils_mock.h"
 #include "ipc_skeleton_mock.h"
@@ -110,7 +111,8 @@ void Service::NotifyCallerCurAppIncrementDone(ErrCode, const std::string&) {}
 
 void Service::SendUserIdToApp(string&, int32_t) {}
 
-void Service::SetCurrentBackupSessProperties(const vector<string>&, int32_t) {}
+void Service::SetCurrentBackupSessProperties(const vector<string>&, int32_t,
+    std::vector<BJsonEntityCaps::BundleInfo>&, bool) {}
 
 std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName &bundleName)
 {
@@ -371,6 +373,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnStart_0200, TestSize.Level1)
         EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(vector<string>(1)))
             .WillOnce(Return(vector<string>()));
         EXPECT_CALL(*cdConfig, GetAllClearBundleRecords()).WillOnce(Return(vector<string>()));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
@@ -789,7 +792,6 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0200, TestSize.Lev
         service->isOccupyingSession_.store(false);
         service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
@@ -1234,7 +1236,6 @@ HWTEST_F(ServiceTest, SUB_Service_NotifyCloneBundleFinish_0100, TestSize.Level1)
 
         senario = BackupRestoreScenario::FULL_RESTORE;
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
-        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
         service->NotifyCloneBundleFinish(bundleName, senario);
         EXPECT_TRUE(true);
@@ -1339,6 +1340,8 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0200, TestSize.Level1)
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _))
             .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         auto ret = service->LaunchBackupExtension(bundleName);
         EXPECT_EQ(ret, BError(BError::Codes::SA_BOOT_EXT_FAIL));
 
@@ -1356,6 +1359,8 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0200, TestSize.Level1)
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _))
             .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         ret = service->LaunchBackupExtension(bundleName);
         EXPECT_EQ(ret, BError(BError::Codes::SA_BOOT_EXT_FAIL));
     } catch (...) {
@@ -1609,14 +1614,14 @@ HWTEST_F(ServiceTest, SUB_Service_BackupSA_0000, TestSize.Level1)
             .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
-        EXPECT_CALL(*saConnect, CallBackupSA()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        EXPECT_CALL(*saConnect, CallBackupSA()).WillOnce(Return(BError(BError::Codes::SA_BOOT_EXT_FAIL).GetCode()));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, BackupOnBundleStarted(_, _)).WillOnce(Return());
         EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(false));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
         ret = service->BackupSA(bundleName);
-        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        EXPECT_EQ(ret, BError(BError::Codes::SA_BOOT_EXT_FAIL).GetCode());
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
         EXPECT_CALL(*session, GetSAExtConnection(_)).WillOnce(Return(sa));
@@ -1698,7 +1703,6 @@ HWTEST_F(ServiceTest, SUB_Service_NotifyCallerCurAppDone_0000, TestSize.Level1)
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
-        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, RestoreOnBundleFinished(_, _)).WillOnce(Return());
         service->NotifyCallerCurAppDone(0, "");

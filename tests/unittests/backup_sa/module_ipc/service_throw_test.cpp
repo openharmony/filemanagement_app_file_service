@@ -907,6 +907,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0100, 
             return 0;
         }));
         EXPECT_CALL(*sessionMock, Deactive(_, _)).WillOnce(Return());
+        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         auto ret = service->InitIncrementalBackupSession(nullptr);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
     } catch (...) {

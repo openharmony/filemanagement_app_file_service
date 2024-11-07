@@ -291,4 +291,47 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     want.SetParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA, bundleExtInfo);
     want.SetParam(BConstants::EXTENSION_APP_CLONE_INDEX_PARA, bundleDetail.bundleIndex);
 }
+
+std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &backupInfos,
+    bool isIncBackup)
+{
+    HILOGI("Begin");
+    std::vector<std::string> supportBackupNames;
+    for (auto info : backupInfos) {
+        HILOGI("Current backupInfo bundleName:%{public}s, index:%{public}d, extName:%{public}s", info.name.c_str(),
+            info.appIndex, info.extensionName.c_str());
+        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
+        if (!info.allToBackup) {
+            if (isIncBackup) {
+                session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
+                    BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), bundleNameIndexInfo);
+            } else {
+                session_->GetServiceReverseProxy()->BackupOnBundleStarted(
+                    BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), bundleNameIndexInfo);
+            }
+            BundleBeginRadarReport(bundleNameIndexInfo, BError(BError::Codes::SA_FORBID_BACKUP_RESTORE).GetCode(),
+                IServiceReverse::Scenario::BACKUP);
+            continue;
+        }
+        supportBackupNames.push_back(bundleNameIndexInfo);
+    }
+    HILOGI("End");
+    return supportBackupNames;
+}
+
+void Service::SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info,
+    std::map<std::string, bool> &isClearDataFlags, const std::string &bundleNameIndexInfo)
+{
+    HILOGI("Begin");
+    if (session_ == nullptr) {
+        HILOGE("Set currrent session properties error, session is empty");
+        return;
+    }
+    session_->SetBundleDataSize(bundleNameIndexInfo, info.spaceOccupied);
+    auto iter = isClearDataFlags.find(bundleNameIndexInfo);
+    if (iter != isClearDataFlags.end()) {
+        session_->SetClearDataFlag(bundleNameIndexInfo, iter->second);
+    }
+    HILOGI("End");
+}
 }
