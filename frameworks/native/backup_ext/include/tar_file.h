@@ -56,6 +56,7 @@ const char AREGTYPE = '\0'; // regular file
 const char SYMTYPE = '2';   // reserved
 const char DIRTYPE = '5';   // directory
 const char GNUTYPE_LONGNAME = 'L';
+const int ERR_NO_PERMISSION = 13;
 } // namespace
 
 // 512 bytes
@@ -214,6 +215,8 @@ private:
      * @param hdr  tar包文件头
      */
     bool I2OcsConvert(const struct stat &st, TarHeader &hdr, std::string &fileName);
+
+    bool ToAddFile(std::string &path, int &err);
 
 private:
     uint32_t fileCount_ {0};

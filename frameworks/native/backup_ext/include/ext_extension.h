@@ -185,9 +185,9 @@ private:
     void AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     void AsyncTaskOnIncrementalBackup();
     int DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd manifestFd);
-    ErrCode IncrementalBigFileReady(const TarMap &pkgInfo, const vector<struct ReportFileInfo> &bigInfos,
+    ErrCode IncrementalBigFileReady(TarMap &pkgInfo, const vector<struct ReportFileInfo> &bigInfos,
         sptr<IService> proxy);
-    ErrCode BigFileReady(const TarMap &bigFileInfo, sptr<IService> proxy);
+    ErrCode BigFileReady(TarMap &bigFileInfo, sptr<IService> proxy);
     void WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
     void RefreshTimeInfo(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
     void IncrementalPacket(const vector<struct ReportFileInfo> &infos, TarMap &tar, sptr<IService> proxy);
@@ -291,7 +291,7 @@ private:
         sptr<IService> proxy);
     ErrCode IncrementalAllFileReady(const TarMap &pkgInfo, const vector<struct ReportFileInfo> &srcFiles,
         sptr<IService> proxy);
-
+    void ClearNoPermissionFiles(TarMap &pkgInfo, vector<std::string> &noPermissionFiles);
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
