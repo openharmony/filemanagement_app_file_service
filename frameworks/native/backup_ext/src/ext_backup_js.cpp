@@ -437,13 +437,18 @@ napi_value AttachBackupExtensionContext(napi_env env, void *value, void *)
         HILOGE("Failed to get backup extension context");
         return nullptr;
     }
-    napi_wrap(
+    napi_status status = napi_wrap(
         env, contextObj, workContext,
         [](napi_env, void *data, void *) {
             HILOG_DEBUG("Finalizer for weak_ptr base context is called");
             delete static_cast<std::weak_ptr<ExtBackupContext> *>(data);
         },
         nullptr, nullptr);
+    if (status != napi_ok) {
+        HILOG_DEBUG("Failed to wrap js instance");
+        delete workContext;
+        workContext = nullptr;
+    }
     return contextObj;
 }
 
@@ -500,13 +505,18 @@ void ExtBackupJs::ExportJsContext(void)
     napi_coerce_to_native_binding_object(env, contextObj, AbilityRuntime::DetachCallbackFunc,
                                          AttachBackupExtensionContext, workContext, nullptr);
     HILOGI("Set backup extension ability context pointer is nullptr: %{public}d", context.get() == nullptr);
-    napi_wrap(
+    napi_status status = napi_wrap(
         env, contextObj, workContext,
         [](napi_env, void *data, void *) {
             HILOG_DEBUG("Finalizer for weak_ptr base context is called");
             delete static_cast<std::weak_ptr<ExtBackupContext> *>(data);
         },
         nullptr, nullptr);
+    if (status != napi_ok) {
+        HILOG_DEBUG("Failed to wrap js instance");
+        delete workContext;
+        workContext = nullptr;
+    }
 }
 
 [[maybe_unused]] tuple<ErrCode, napi_value> ExtBackupJs::CallObjectMethod(string_view name,
