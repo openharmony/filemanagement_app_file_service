@@ -102,19 +102,19 @@ void RecordDoDisposeRes(const std::string &bundleName,
     switch (disposeOperation) {
         case AppGalleryDisposeProxy::DisposeOperation::START_BACKUP:
             AppRadar::GetInstance().RecordBackupFuncRes(info, "StartBackup", AppRadar::GetInstance().GetUserId(),
-                                                        BizStageBackup::BIZ_STAGE_START_DISPOSE_FAIL, err);
+                                                        BizStageBackup::BIZ_STAGE_START_DISPOSE, err);
             break;
         case AppGalleryDisposeProxy::DisposeOperation::END_BACKUP:
             AppRadar::GetInstance().RecordBackupFuncRes(info, "EndBackup", AppRadar::GetInstance().GetUserId(),
-                                                        BizStageBackup::BIZ_STAGE_END_DISPOSE_FAIL, err);
+                                                        BizStageBackup::BIZ_STAGE_END_DISPOSE, err);
             break;
         case AppGalleryDisposeProxy::DisposeOperation::START_RESTORE:
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "StartRestore", AppRadar::GetInstance().GetUserId(),
-                                                         BizStageRestore::BIZ_STAGE_START_DISPOSE_FAIL, err);
+                                                         BizStageRestore::BIZ_STAGE_START_DISPOSE, err);
             break;
         case AppGalleryDisposeProxy::DisposeOperation::END_RESTORE:
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "EndRestore", AppRadar::GetInstance().GetUserId(),
-                                                         BizStageRestore::BIZ_STAGE_END_DISPOSE_FAIL, err);
+                                                         BizStageRestore::BIZ_STAGE_END_DISPOSE, err);
             break;
         default:
             break;

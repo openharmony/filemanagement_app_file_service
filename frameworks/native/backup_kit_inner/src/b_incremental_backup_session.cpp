@@ -54,7 +54,7 @@ unique_ptr<BIncrementalBackupSession> BIncrementalBackupSession::Init(Callbacks 
         }
 
         int32_t res = proxy->InitIncrementalBackupSession(sptr(new ServiceReverse(callbacks)));
-        if (res != 0) {
+        if (res != ERR_OK) {
             HILOGE("Failed to Backup because of %{public}d", res);
             AppRadar::Info info("", "", "");
             AppRadar::GetInstance().RecordBackupFuncRes(info, "BIncrementalBackupSession::Init",
@@ -97,8 +97,8 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
-    int32_t res = proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup);
-    if (res != 0) {
+    ErrCode res = proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup);
+    if (res != ERR_OK) {
         std::string ss;
         for (const auto &bundle : bundlesToBackup) {
             ss += bundle.bundleName + ", ";
@@ -119,7 +119,7 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
     }
 
     int32_t res = proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup, infos);
-    if (res != 0) {
+    if (res != ERR_OK) {
         std::string ss;
         for (const auto &bundle : bundlesToBackup) {
             ss += bundle.bundleName + ", ";

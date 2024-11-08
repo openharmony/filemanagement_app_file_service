@@ -231,8 +231,11 @@ const std::string UNICAST_TYPE = "unicast";
 
 // 雷达打点引用到的常量
 constexpr int32_t MS_1000 = 1000;
+constexpr int32_t MAX_TIME_COST = 900000;
+constexpr int32_t MAX_INEXCLUDE_SIZE = 25;
 constexpr uint8_t INDEX = 3;
 static inline std::string FILE_BACKUP_RESTORE_EVENTS = "FILE_BACKUP_RESTORE_EVENTS";
+static inline std::string FILE_BACKUP_RESTORE_STATISTIC = "FILE_BACKUP_RESTORE_STATISTIC";
 } // namespace OHOS::FileManagement::Backup::BConstants
 
 #endif // OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H
