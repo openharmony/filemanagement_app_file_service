@@ -507,13 +507,13 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupAbilityExt_0100, 
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->reversePtr_ = nullptr;
         auto ret = sessionManagerPtr_->GetBackupAbilityExt(BUNDLE_NAME);
-        ret->callDied_("");
+        ret->callDied_("", false);
         ret->callConnected_("");
         EXPECT_TRUE(true);
 
         sessionManagerPtr_->reversePtr_ = servicePtr_;
         ret = sessionManagerPtr_->GetBackupAbilityExt(BUNDLE_NAME);
-        ret->callDied_("");
+        ret->callDied_("", false);
         ret->callConnected_("");
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1345,7 +1345,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleRestoreType_0100,
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
         sessionManagerPtr_->SetBundleRestoreType(BUNDLE_NAME, RESTORE_DATA_READDY);
-        EXPECT_EQ(sessionManagerPtr_->impl_.restoreDataType, RESTORE_DATA_READDY);
+        EXPECT_EQ(sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME].restoreType, RESTORE_DATA_READDY);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetBundleRestoreType.";

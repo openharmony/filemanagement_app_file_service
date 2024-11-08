@@ -102,7 +102,7 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
         return nullptr;
     }
     if (!it->second.backUpConnection) {
-        auto callDied = [](const string &&bundleName) {};
+        auto callDied = [](const string &&bundleName, bool isSecondCalled = false) {};
         auto callConnected = [](const string &&bundleName) {};
         it->second.backUpConnection = sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnected,
             bundleName));
@@ -441,4 +441,6 @@ bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::s
 }
 
 void SvcSessionManager::SetPublishFlag(const std::string &bundleName) {}
+
+void SvcSessionManager::SetImplRestoreType(const RestoreTypeEnum restoreType) {}
 } // namespace OHOS::FileManagement::Backup
