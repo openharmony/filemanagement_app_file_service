@@ -21,9 +21,15 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-TestManager::TestManager(std::string functionName)
+TestManager::TestManager(std::string functionName, MakeDirType dirType)
 {
-    rootDirCurTest_ = "/data/test/backup/" + functionName + "/";
+    switch (dirType) {
+        case MakeDirType::CURRENTUSER :
+            rootDirCurTest_ = PATH_CURRENT_USER;
+            break;
+        default :
+            rootDirCurTest_ = "/data/test/backup/" + functionName + "/";
+    }
     //  REM：先删后创建
     if (bool created = ForceCreateDirectory(rootDirCurTest_); !created) {
         throw std::system_error(errno, std::system_category());
