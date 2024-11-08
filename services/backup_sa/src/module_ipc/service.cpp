@@ -442,7 +442,7 @@ static void HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
                 [&bundleName](const auto &obj) { return obj == bundleName; });
             if (it == restoreBundleNames.end()) {
                 HILOGE("AppendBundles failed, bundleName = %{public}s.", bundleName.c_str());
-                OnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), session, bundleName);
+                OnBundleStarted(BError(BError::Codes::SA_BUNDLE_INFO_EMPTY), session, bundleName);
             }
         }
     }
@@ -458,6 +458,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        session_->SetImplRestoreType(restoreType);
         if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
             session_->SetSessionUserId(userId);
         } else {
@@ -542,6 +543,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        session_->SetImplRestoreType(restoreType);
         if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
             session_->SetSessionUserId(userId);
         } else {
@@ -899,9 +901,15 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
     }
 }
 
-void Service::OnBackupExtensionDied(const string &&bundleName)
+void Service::OnBackupExtensionDied(const string &&bundleName, bool isSecondCalled)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (isSecondCalled) {
+        HILOGE("Backup <%{public}s> Extension Process second Died", bundleName.c_str());
+        ClearSessionAndSchedInfo(bundleName);
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+        return;
+    }
     int32_t errCode = BError(BError::Codes::EXT_ABILITY_DIED).GetCode();
     AppRadar::Info info (bundleName, "", "");
     if (session_->GetScenario() == IServiceReverse::Scenario::BACKUP) {
@@ -1429,9 +1437,10 @@ std::function<void(const std::string &&)> Service::GetBackupInfoConnectDone(wptr
     };
 }
 
-std::function<void(const std::string &&)> Service::GetBackupInfoConnectDied(wptr<Service> obj, std::string &bundleName)
+std::function<void(const std::string &&, bool)> Service::GetBackupInfoConnectDied(
+    wptr<Service> obj, std::string &bundleName)
 {
-    return [obj](const string &&bundleName) {
+    return [obj](const string &&bundleName, bool isSecondCalled) {
         HILOGI("GetBackupInfoConnectDied, bundleName: %{public}s", bundleName.c_str());
         auto thisPtr = obj.promote();
         if (!thisPtr) {

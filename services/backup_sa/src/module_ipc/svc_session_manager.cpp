@@ -272,14 +272,14 @@ std::weak_ptr<SABackupConnection> SvcSessionManager::GetSAExtConnection(const Bu
 
 sptr<SvcBackupConnection> SvcSessionManager::GetBackupAbilityExt(const string &bundleName)
 {
-    auto callDied = [revPtr {reversePtr_}](const string &&bundleName) {
+    auto callDied = [revPtr {reversePtr_}](const string &&bundleName, bool isSecondCalled = false) {
         auto revPtrStrong = revPtr.promote();
         if (!revPtrStrong) {
             // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        revPtrStrong->OnBackupExtensionDied(move(bundleName));
+        revPtrStrong->OnBackupExtensionDied(move(bundleName), isSecondCalled);
     };
 
     auto callConnected = [revPtr {reversePtr_}](const string &&bundleName) {
@@ -609,7 +609,6 @@ void SvcSessionManager::SetBundleRestoreType(const std::string &bundleName, Rest
 
     auto it = GetBackupExtNameMap(bundleName);
     it->second.restoreType = restoreType;
-    impl_.restoreDataType = restoreType;
 }
 
 RestoreTypeEnum SvcSessionManager::GetBundleRestoreType(const std::string &bundleName)
@@ -1002,5 +1001,10 @@ void SvcSessionManager::SetPublishFlag(const std::string &bundleName)
     auto it = GetBackupExtNameMap(bundleName);
     it->second.isInPublishFile = true;
     HILOGE("Set PublishFile success, bundleName = %{public}s", bundleName.c_str());
+}
+
+void SvcSessionManager::SetImplRestoreType(const RestoreTypeEnum restoreType)
+{
+    impl_.restoreDataType = restoreType;
 }
 } // namespace OHOS::FileManagement::Backup

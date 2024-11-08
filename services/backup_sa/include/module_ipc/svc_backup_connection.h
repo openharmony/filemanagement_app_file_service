@@ -82,7 +82,7 @@ public:
      *
      * @param callDied
      */
-    void SetCallDied(std::function<void(const std::string &&)> callDied);
+    void SetCallDied(std::function<void(const std::string &&, bool)> callDied);
 
     /**
      * @brief wait disconnect done
@@ -90,7 +90,7 @@ public:
     bool WaitDisconnectDone();
 
 public:
-    SvcBackupConnection(std::function<void(const std::string &&)> callDied,
+    SvcBackupConnection(std::function<void(const std::string &&, bool)> callDied,
                         std::function<void(const std::string &&)> callConnected,
                         std::string bundleNameIndexInfo)
         : callDied_(callDied), callConnected_(callConnected), bundleNameIndexInfo_(bundleNameIndexInfo)
@@ -105,9 +105,10 @@ private:
     std::condition_variable waitCondition_;
     std::atomic<bool> isConnected_ = {false};
     std::atomic<bool> isConnectedDone_ = {false};
+    std::atomic<bool> isSecondOnDisCon_ = {false};
     sptr<IExtension> backupProxy_;
 
-    std::function<void(const std::string &&)> callDied_;
+    std::function<void(const std::string &&, bool)> callDied_;
     std::function<void(const std::string &&)> callConnected_;
     std::string bundleNameIndexInfo_;
 };

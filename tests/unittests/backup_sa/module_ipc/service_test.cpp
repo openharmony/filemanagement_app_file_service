@@ -581,7 +581,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0101, testing::ext::TestSize.Lev
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
         BackupExtInfo extInfo {};
-        auto callDied = [](const string &&bundleName) {};
+        auto callDied = [](const string &&bundleName, bool isSecondCalled) {};
         auto callConnected = [](const string &&bundleName) {};
         extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, BUNDLE_NAME));
         extInfo.schedAction = BConstants::ServiceSchedAction::RUNNING;
@@ -723,7 +723,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtStart_0101, testing::ext::TestSize.Level1)
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
         BackupExtInfo extInfo {};
-        auto callDied = [](const string &&bundleName) {};
+        auto callDied = [](const string &&bundleName, bool isSecondCalled) {};
         auto callConnected = [](const string &&bundleName) {};
         extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, BUNDLE_NAME));
         extInfo.backUpConnection->backupProxy_ = nullptr;
@@ -1590,7 +1590,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0100, testing::ext::TestSize.Le
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
         BackupExtInfo extInfo {};
-        auto callDied = [](const string &&bundleName) {};
+        auto callDied = [](const string &&bundleName, bool isSecondCalled) {};
         auto callConnected = [](const string &&bundleName) {};
         extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, BUNDLE_NAME));
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;

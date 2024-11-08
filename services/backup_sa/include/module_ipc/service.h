@@ -120,7 +120,7 @@ public:
      *
      * @param bundleName 应用名称
      */
-    void OnBackupExtensionDied(const std::string &&bundleName);
+    void OnBackupExtensionDied(const std::string &&bundleName, bool isSecondCalled = false);
 
     /**
      * @brief extension启动连接成功
@@ -237,7 +237,8 @@ public:
      * @param bundleName 应用名称
      *
      */
-    std::function<void(const std::string &&)> GetBackupInfoConnectDied(wptr<Service> obj, std::string &bundleName);
+    std::function<void(const std::string &&, bool)> GetBackupInfoConnectDied(
+        wptr<Service> obj, std::string &bundleName);
 
     /**
      * @brief timeout callback
