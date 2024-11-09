@@ -71,6 +71,7 @@ struct BackupExtInfo {
     int32_t appendNum {1};
     bool isClearData {true};
     bool isInPublishFile {false};
+    bool isReadyLaunch {false};
 };
 
 class Service;
@@ -510,6 +511,8 @@ public:
     void SetPublishFlag(const std::string &bundleName);
 
     void SetImplRestoreType(const RestoreTypeEnum restoreType);
+
+    void SetIsReadyLaunch(const std::string &bundleName);
 
 private:
     /**
