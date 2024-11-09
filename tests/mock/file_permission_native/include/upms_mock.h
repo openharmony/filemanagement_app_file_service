@@ -12,30 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef FILE_PERMISSION_TEST_H
-#define FILE_PERMISSION_TEST_H
 
-#include <gtest/gtest.h>
+#ifndef FILEMANAGEMENT_APP_FILE_SERVICE_UPMS_MOCK_H
+#define FILEMANAGEMENT_APP_FILE_SERVICE_UPMS_MOCK_H
+#ifdef SANDBOX_MANAGER
+#include <gmock/gmock.h>
 
-#include "library_func_mock.h"
-#include "sandbox_mock.h"
-#include "upms_mock.h"
+#include "uri_permission_manager_client.h"
 
 namespace OHOS {
 namespace AppFileService {
-using namespace std;
-class FilePermissionTest : public testing::Test {
+using namespace OHOS::AccessControl::SandboxManager;
+class UpmsManagerKitMock {
 public:
-    static void SetUpTestCase();
-    static void TearDownTestCase();
-    void SetUp() {};
-    void TearDown() {};
-#ifdef SANDBOX_MANAGER
-    static inline shared_ptr<SandboxMock> sandboxMock_ = nullptr;
-    static inline shared_ptr<LibraryFuncMock> funcMock = nullptr;
-    static inline shared_ptr<UpmsMock> upmsMock_ = nullptr;
-#endif
+    virtual ~UpmsManagerKitMock() = default;
+    virtual int32_t Active(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result) = 0;
+    static inline std::shared_ptr<UpmsManagerKitMock> upmsManagerKitMock = nullptr;
+};
+
+class UpmsMock : public UpmsManagerKitMock {
+public:
+    MOCK_METHOD2(Active, int32_t(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result));
 };
 } // namespace AppFileService
 } // namespace OHOS
-#endif // FILE_PERMISSION_TEST_H
+#endif
+#endif

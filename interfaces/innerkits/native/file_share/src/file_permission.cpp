@@ -22,6 +22,7 @@
 #include <unordered_set>
 #ifdef SANDBOX_MANAGER
 #include "sandbox_manager_err_code.h"
+#include "uri_permission_manager_client.h"
 #endif
 #include "bundle_constants.h"
 #include "file_uri.h"
@@ -318,7 +319,8 @@ int32_t FilePermission::ActivatePermission(const vector<UriPolicyInfo> &uriPolic
         return EPERM;
     }
     vector<uint32_t> resultCodes;
-    int32_t sandboxManagerErrorCode = SandboxManagerKit::StartAccessingPolicy(pathPolicies, resultCodes);
+    auto &uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
+    int32_t sandboxManagerErrorCode = uriPermissionClient.Active(pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);

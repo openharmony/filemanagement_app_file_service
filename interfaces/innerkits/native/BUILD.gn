@@ -71,8 +71,14 @@ ohos_shared_library("fileshare_native") {
   ]
   defines = []
   if (sandbox_manarer) {
-    external_deps += [ "sandbox_manager:libsandbox_manager_sdk" ]
-    defines += [ "SANDBOX_MANAGER" ]
+    external_deps += [
+      "ability_runtime:uri_permission_mgr",
+      "sandbox_manager:libsandbox_manager_sdk",
+    ]
+    defines += [
+      "SANDBOX_MANAGER",
+      "ABILITY_RUNTIME_FEATURE_SANDBOXMANAGER",
+    ]
   }
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
