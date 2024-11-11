@@ -96,7 +96,8 @@ static int64_t GetBundleStats(const string &bundleName, int32_t userId)
     auto bms = GetBundleManager();
     vector<int64_t> bundleStats;
     BJsonUtil::BundleDetailInfo bundleDetailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
-    bool res = bms->GetBundleStats(bundleDetailInfo.bundleName, userId, bundleStats, bundleDetailInfo.bundleIndex);
+    bool res = bms->GetBundleStats(bundleDetailInfo.bundleName, userId, bundleStats, bundleDetailInfo.bundleIndex,
+                                   AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE);
     if (!res || bundleStats.size() != dataDir.size()) {
         HILOGE("An error occurred in querying bundle stats. name:%{public}s", bundleName.c_str());
         return 0;
