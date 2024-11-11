@@ -260,6 +260,7 @@ private:
     void DeleteBackupIdxFile();
     void DeleteBackupIncrementalTars(const string &tarName);
     void SetClearDataFlag(bool isClearData);
+    std::string GetBundlePath();
     std::vector<ExtManageInfo> GetExtManageInfo();
     ErrCode RestoreFilesForSpecialCloneCloud();
     void RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo &item);
@@ -297,7 +298,7 @@ private:
     std::string bundleName_;
     int32_t sendRate_ = BConstants::DEFAULT_FD_SEND_RATE;
     bool isClearData_ {true};
-    bool isDebug_ {false};
+    bool isDebug_ {true};
     std::map<std::string, off_t> endFileInfos_;
     std::map<std::string, std::vector<ErrCode>> errFileInfos_;
     bool isRpValid_ {false};
