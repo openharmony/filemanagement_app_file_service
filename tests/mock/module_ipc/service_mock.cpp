@@ -262,4 +262,9 @@ std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName 
 void Service::RemoveExtensionMutex(const BundleName &bundleName)
 {
 }
+
+std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool)
+{
+    return {};
+}
 } // namespace OHOS::FileManagement::Backup
