@@ -81,15 +81,17 @@ ErrCode Service::Release()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("KILL");
-    IServiceReverse::Scenario scenario = session_->GetScenario();
-    VerifyCaller(scenario);
-    AppRadar::Info info("", "", "call release");
-    if (scenario == IServiceReverse::Scenario::RESTORE) {
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::Release", session_->GetSessionUserId(),
-            BizStageRestore::BIZ_STAGE_RELEASE, ERR_OK);
-    } else if (scenario == IServiceReverse::Scenario::BACKUP) {
-        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::Release", session_->GetSessionUserId(),
-            BizStageBackup::BIZ_STAGE_RELEASE, ERR_OK);
+    if (session_ != nullptr) {
+        IServiceReverse::Scenario scenario = session_->GetScenario();
+        VerifyCaller(scenario);
+        AppRadar::Info info("", "", "call release");
+        if (scenario == IServiceReverse::Scenario::RESTORE) {
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::Release", session_->GetSessionUserId(),
+                                                         BizStageRestore::BIZ_STAGE_RELEASE, ERR_OK);
+        } else if (scenario == IServiceReverse::Scenario::BACKUP) {
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::Release", session_->GetSessionUserId(),
+                                                        BizStageBackup::BIZ_STAGE_RELEASE, ERR_OK);
+        }
     }
     SessionDeactive();
     return BError(BError::Codes::OK);
@@ -462,6 +464,10 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        if (session_ == nullptr) {
+            HILOGE("AppIncrementalFileReady error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         string callerName = VerifyCallerAndGetCallerName();
         if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(callerName, fileName, move(fd),
@@ -564,6 +570,10 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        if (session_ == nullptr) {
+            HILOGE("GetIncrementalFileHandle error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {

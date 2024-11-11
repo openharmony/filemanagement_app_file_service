@@ -93,6 +93,10 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        if (session_ == nullptr) {
+            HILOGE("PublishFile error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         if (!fileInfo.fileName.empty()) {
             HILOGE("Forbit to use publishFile with fileName for App");
@@ -128,6 +132,10 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        if (session_ == nullptr) {
+            HILOGE("AppFileReady error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         string callerName = VerifyCallerAndGetCallerName();
         if (fileName.find('/') != string::npos) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not valid");
