@@ -275,7 +275,7 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
         if (errCode == 0) {
             int32_t num = static_cast<int32_t>(files.size());
             incFiles.merge(move(files));
-            HILOGW("big files: %{public}d; small files: %{public}d", num, static_cast<int32_t>(smallFiles.size()));
+            HILOGW("big files: %{public}d; small files: %{public}zu", num, smallFiles.size());
             incSmallFiles.insert(smallFiles.begin(), smallFiles.end());
         }
     }
@@ -312,8 +312,8 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
             bigFiles[item.first] = item.second;
         }
     }
-    HILOGW("total number of big files is %{public}d", static_cast<int32_t>(bigFiles.size()));
-    HILOGW("total number of small files is %{public}d", static_cast<int32_t>(resSmallFiles.size()));
+    HILOGW("total number of big files is %{public}zu", bigFiles.size());
+    HILOGW("total number of small files is %{public}zu", resSmallFiles.size());
     return {ERR_OK, move(bigFiles), move(resSmallFiles)};
 }
 
