@@ -273,9 +273,8 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
         HILOGW("GetBigFiles, path = %{public}s", item.c_str());
         auto [errCode, files, smallFiles] = GetDirFilesDetail(item, true, BConstants::BIG_FILE_BOUNDARY);
         if (errCode == 0) {
-            int32_t num = static_cast<int32_t>(files.size());
             incFiles.merge(move(files));
-            HILOGW("big files: %{public}d; small files: %{public}zu", num, smallFiles.size());
+            HILOGW("big files: %{public}zu; small files: %{public}zu", files.size(), smallFiles.size());
             incSmallFiles.insert(smallFiles.begin(), smallFiles.end());
         }
     }
