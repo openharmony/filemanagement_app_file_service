@@ -508,6 +508,8 @@ private:
         std::map<std::string, bool> &isClearDataFlags);
 
     void TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string &bundleName);
+
+    void CreateDirIfNotExist(const std::string &path);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
