@@ -413,48 +413,29 @@ bool OHOS::FileManagement::Backup::BJsonUtil::BuildOnProcessErrInfo(std::string 
     return true;
 }
 
-bool OHOS::FileManagement::Backup::BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
+bool BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
 {
-    cJSON *root = cJSON_CreateObject();
-    if (root == nullptr) {
-        return false;
-    }
     cJSON *infos = cJSON_CreateArray();
     if (infos == nullptr) {
-        cJSON_Delete(root);
         return false;
     }
-    cJSON_AddItemToObject(root, "infos", infos);
     cJSON *info = cJSON_CreateObject();
     if (info == nullptr) {
-        cJSON_Delete(root);
-        return false;
-    }
-    cJSON_AddStringToObject(info, "type", "unicast");
-    cJSON_AddItemToArray(infos, info);
-    cJSON *details = cJSON_CreateArray();
-    if (details == nullptr) {
-        cJSON_Delete(root);
-        return false;
-    }
-    cJSON_AddItemToObject(info, "details", details);
-    cJSON *detail = cJSON_CreateObject();
-    if (detail == nullptr) {
-        cJSON_Delete(root);
+        cJSON_Delete(infos);
         return false;
     }
     string userIdstr = to_string(userId);
     const char *const zeroUserId = userIdstr.c_str();
-    cJSON_AddStringToObject(detail, "type", "userId");
-    cJSON_AddStringToObject(detail, "detail", zeroUserId);
-    cJSON_AddItemToArray(details, detail);
-    char *jsonStr = cJSON_Print(root);
+    cJSON_AddStringToObject(info, "type", "userId");
+    cJSON_AddStringToObject(info, "detail", zeroUserId);
+    cJSON_AddItemToArray(infos, info);
+    char *jsonStr = cJSON_Print(infos);
     if (jsonStr == nullptr) {
-        cJSON_Delete(root);
+        cJSON_Delete(infos);
         return false;
     }
     detailInfo = string(jsonStr);
-    cJSON_Delete(root);
+    cJSON_Delete(infos);
     free(jsonStr);
     return true;
 }
