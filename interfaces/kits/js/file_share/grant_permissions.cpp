@@ -141,6 +141,11 @@ napi_value PersistPermission(napi_env env, napi_callback_info info)
         return nullptr;
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
+    if (arg == nullptr) {
+        LOGE("PolicyErrorArgs make_shared is failed");
+        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        return nullptr;
+    }
     auto cbExec = [uriPolicies, arg]() -> NError {
         arg->errNo = FilePermission::PersistPermission(uriPolicies, arg->errorResults);
         return NError(arg->errNo);
@@ -175,6 +180,11 @@ napi_value RevokePermission(napi_env env, napi_callback_info info)
         return nullptr;
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
+    if (arg == nullptr) {
+        LOGE("PolicyErrorArgs make_shared is failed");
+        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        return nullptr;
+    }
     auto cbExec = [uriPolicies, arg]() -> NError {
         arg->errNo = FilePermission::RevokePermission(uriPolicies, arg->errorResults);
         return NError(arg->errNo);
@@ -209,6 +219,11 @@ napi_value ActivatePermission(napi_env env, napi_callback_info info)
         return nullptr;
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
+    if (arg == nullptr) {
+        LOGE("PolicyErrorArgs make make_shared failed");
+        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        return nullptr;
+    }
     auto cbExec = [uriPolicies, arg]() -> NError {
         arg->errNo = FilePermission::ActivatePermission(uriPolicies, arg->errorResults);
         return NError(arg->errNo);
@@ -243,6 +258,11 @@ napi_value DeactivatePermission(napi_env env, napi_callback_info info)
         return nullptr;
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
+    if (arg == nullptr) {
+        LOGE("PolicyErrorArgs make_shared is failed");
+        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        return nullptr;
+    }
     auto cbExec = [uriPolicies, arg]() -> NError {
         arg->errNo = FilePermission::DeactivatePermission(uriPolicies, arg->errorResults);
         return NError(arg->errNo);
@@ -277,6 +297,11 @@ napi_value CheckPersistentPermission(napi_env env, napi_callback_info info)
         return nullptr;
     }
     shared_ptr<PolicyInfoResultArgs> arg = make_shared<PolicyInfoResultArgs>();
+    if (arg == nullptr) {
+        LOGE("PolicyInfoResultArgs make_shared is failed");
+        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        return nullptr;
+    }
     auto cbExec = [uriPolicies, arg]() -> NError {
         arg->errNo = FilePermission::CheckPersistentPermission(uriPolicies, arg->resultData);
         return NError(arg->errNo);
