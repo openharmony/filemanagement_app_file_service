@@ -816,15 +816,16 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_CallJsMethod_0100, testing::ext::Tes
 {
     GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_CallJsMethod_0100";
     try {
+        extBackupJs->jsObj_ = make_unique<NativeReferenceMock>();
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_invalid_arg));
-        auto ret = extBackupJs->CallJsMethod("", *jsRuntime, nullptr, nullptr, nullptr);
+        auto ret = extBackupJs->CallJsMethod("", *jsRuntime, extBackupJs->jsObj_.get(), nullptr, nullptr);
         EXPECT_EQ(ret, EINVAL);
 
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(Return(1));
-        ret = extBackupJs->CallJsMethod("", *jsRuntime, nullptr, nullptr, nullptr);
+        ret = extBackupJs->CallJsMethod("", *jsRuntime, extBackupJs->jsObj_.get(), nullptr, nullptr);
         EXPECT_EQ(ret, EINVAL);
 
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
@@ -834,7 +835,7 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_CallJsMethod_0100, testing::ext::Tes
                 after_work_cb(req, 0);
         })), Return(0)));
         EXPECT_CALL(*napiMock, napi_open_handle_scope(_, _)).WillOnce(Return(napi_ok));
-        ret = extBackupJs->CallJsMethod("", *jsRuntime, nullptr, nullptr, nullptr);
+        ret = extBackupJs->CallJsMethod("", *jsRuntime, extBackupJs->jsObj_.get(), nullptr, nullptr);
         EXPECT_EQ(ret, ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);

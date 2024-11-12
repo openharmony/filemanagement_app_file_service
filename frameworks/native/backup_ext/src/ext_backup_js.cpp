@@ -557,6 +557,10 @@ ErrCode ExtBackupJs::CallJsOnBackupEx()
             bool isExceptionPending;
             napi_is_exception_pending(envir, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (!callbackInfoEx) {
+                HILOGE("callbackInfoEx is nullptr");
+                return false;
+            }
             if (isExceptionPending) {
                 napi_value exception;
                 DealNapiException(envir, exception, str);
@@ -597,6 +601,10 @@ ErrCode ExtBackupJs::CallJsOnBackup()
             bool isExceptionPending;
             napi_is_exception_pending(env, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (!callbackInfo) {
+                HILOGE("callbackInfo is nullptr");
+                return false;
+            }
             if (isExceptionPending) {
                 napi_value exception;
                 DealNapiException(env, exception, str);
@@ -642,6 +650,10 @@ ErrCode ExtBackupJs::CallJSRestoreEx()
             bool isExceptionPending;
             napi_is_exception_pending(envir, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (!callbackInfoEx) {
+                HILOGE("callbackInfoEx is nullptr");
+                return false;
+            }
             if (isExceptionPending) {
                 napi_value exception;
                 DealNapiException(envir, exception, str);
@@ -681,6 +693,10 @@ ErrCode ExtBackupJs::CallJSRestore()
             bool isExceptionPending;
             napi_is_exception_pending(env, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (!callbackInfo) {
+                HILOGE("callbackInfo is nullptr");
+                return false;
+            }
             if (isExceptionPending) {
                 napi_value exception;
                 DealNapiException(env, exception, str);
@@ -714,6 +730,10 @@ ErrCode ExtBackupJs::GetBackupInfo(std::function<void(ErrCode, const std::string
             bool isExceptionPending;
             napi_is_exception_pending(env, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (!callBackInfo) {
+                HILOGE("callBackInfo is nullptr");
+                return false;
+            }
             if (isExceptionPending) {
                 string str;
                 napi_value exception;
@@ -744,29 +764,12 @@ ErrCode ExtBackupJs::GetBackupInfo(std::function<void(ErrCode, const std::string
     return errCode;
 }
 
-static int DoCallJsMethod(CallJsParam *param)
+static int InvokeJsMethod(CallJsParam *param, AbilityRuntime::HandleEscape& handleEscape, napi_env env,
+    napi_handle_scope& scope, vector<napi_value>& argv)
 {
-    AbilityRuntime::JsRuntime *jsRuntime = param->jsRuntime;
-    HILOGI("Start execute DoCallJsMethod");
-    if (jsRuntime == nullptr) {
-        HILOGE("failed to get jsRuntime.");
+    if (param == nullptr || param->jsObj == nullptr) {
+        HILOGE("param or jsObj is nullptr");
         return EINVAL;
-    }
-    AbilityRuntime::HandleEscape handleEscape(*jsRuntime);
-    auto env = jsRuntime->GetNapiEnv();
-    napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(env, &scope);
-    if (scope == nullptr) {
-        HILOGE("scope is nullptr");
-        return EINVAL;
-    }
-    vector<napi_value> argv = {};
-    if (param->argParser != nullptr) {
-        if (!param->argParser(env, argv)) {
-            HILOGE("failed to get params.");
-            napi_close_handle_scope(env, scope);
-            return EINVAL;
-        }
     }
     napi_value value = param->jsObj->GetNapiValue();
     if (value == nullptr) {
@@ -791,8 +794,40 @@ static int DoCallJsMethod(CallJsParam *param)
         return EINVAL;
     }
     napi_close_handle_scope(env, scope);
-    HILOGI("End execute DoCallJsMethod");
     return ERR_OK;
+}
+
+static int DoCallJsMethod(CallJsParam *param)
+{
+    if (param == nullptr) {
+        HILOGE("param is nullptr");
+        return EINVAL;
+    }
+    AbilityRuntime::JsRuntime *jsRuntime = param->jsRuntime;
+    HILOGI("Start execute DoCallJsMethod");
+    if (jsRuntime == nullptr) {
+        HILOGE("failed to get jsRuntime");
+        return EINVAL;
+    }
+    AbilityRuntime::HandleEscape handleEscape(*jsRuntime);
+    auto env = jsRuntime->GetNapiEnv();
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(env, &scope);
+    if (scope == nullptr) {
+        HILOGE("scope is nullptr");
+        return EINVAL;
+    }
+    vector<napi_value> argv = {};
+    if (param->argParser != nullptr) {
+        if (!param->argParser(env, argv)) {
+            HILOGE("failed to get params.");
+            napi_close_handle_scope(env, scope);
+            return EINVAL;
+        }
+    }
+    auto ret = InvokeJsMethod(param, handleEscape, env, scope, argv);
+    HILOGI("End execute DoCallJsMethod");
+    return ret;
 }
 
 int ExtBackupJs::CallJsMethod(const std::string &funcName,
@@ -929,6 +964,10 @@ ErrCode ExtBackupJs::OnProcess(std::function<void(ErrCode, const std::string)> c
             bool isExceptionPending;
             napi_is_exception_pending(env, &isExceptionPending);
             HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (!callBackInfo) {
+                HILOGE("callbackInfo is nullptr");
+                return false;
+            }
             if (isExceptionPending) {
                 napi_value exception;
                 napi_get_and_clear_last_exception(env, &exception);
