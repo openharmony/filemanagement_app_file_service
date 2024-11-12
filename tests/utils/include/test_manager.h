@@ -19,9 +19,15 @@
 #include <string>
 
 namespace OHOS::FileManagement::Backup {
+enum class MakeDirType {
+    DEFAULT,
+    CURRENTUSER
+};
+const std::string PATH_CURRENT_USER = "/storage/Users/currentUser/";
+const char FILE_SEPARATOR_CHAR = '/';
 class TestManager {
 public:
-    explicit TestManager(std::string functionName);
+    explicit TestManager(std::string functionName,  MakeDirType dirType = MakeDirType::DEFAULT);
     ~TestManager();
 
     /**
