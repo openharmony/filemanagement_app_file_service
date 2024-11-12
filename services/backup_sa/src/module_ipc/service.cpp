@@ -854,6 +854,7 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         callerName = VerifyCallerAndGetCallerName();
+        SendEndAppGalleryNotify(callerName);
         if (sennario == BackupRestoreScenario::FULL_RESTORE) {
             session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, callerName, errCode);
             NotifyCloneBundleFinish(callerName, sennario);
@@ -931,7 +932,6 @@ void Service::NotifyCloneBundleFinish(std::string bundleName, const BackupRestor
             ClearSessionAndSchedInfo(bundleName);
         }
         RemoveExtensionMutex(bundleName);
-        SendEndAppGalleryNotify(bundleName);
         OnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
         HILOGI("Unexpected exception");
@@ -1180,6 +1180,7 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("begin %{public}s", bundleName.c_str());
     try {
+        SendEndAppGalleryNotify(bundleName);
         auto scenario = session_->GetScenario();
         if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
@@ -1377,7 +1378,7 @@ void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
     HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
         bundleName.c_str());
     if (disposeErr != DisposeErr::OK) {
-        HILOGE("Error, disposal will be clear in the end");
+        HILOGE("Error code=%{public}d, disposal will be clear in the end", disposeErr);
         return;
     }
     if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
@@ -1430,6 +1431,7 @@ void Service::ClearDisposalOnSaStart()
     if (!bundleNameList.empty()) {
         for (vector<string>::iterator it = bundleNameList.begin(); it != bundleNameList.end(); ++it) {
             string bundleName = *it;
+            HILOGE("dispose has residual, clear now, bundelName =%{public}s", bundleName.c_str());
             TryToClearDispose(bundleName);
         }
     }
