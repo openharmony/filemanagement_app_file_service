@@ -867,8 +867,8 @@ void Service::HandleCurGroupBackupInfos(std::vector<BJsonEntityCaps::BundleInfo>
         SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
         BJsonUtil::BundleDetailInfo uniCastInfo;
         if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {
-            HILOGI("current bundle:%{public}s, unicast info:%{public}s", bundleNameIndexInfo.c_str(),
-                GetAnonyString(uniCastInfo.detail).c_str());
+            HILOGI("current bundle:%{public}s, unicast info:%{public}s, unicast info size:%{public}zu",
+                bundleNameIndexInfo.c_str(), GetAnonyString(uniCastInfo.detail).c_str(), uniCastInfo.detail.size());
             session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }
         session_->SetBackupExtName(bundleNameIndexInfo, info.extensionName);
