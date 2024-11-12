@@ -35,6 +35,7 @@
 #include "napi_remote_object.h"
 #include "unique_fd.h"
 
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "b_json/b_json_cached_entity.h"
@@ -839,7 +840,7 @@ std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::Pa
     auto onBackupExFun = [backupExtInfo(backupExtInfo_)](napi_env env, vector<napi_value> &argv) -> bool {
         napi_value backupExtInfoVal = nullptr;
         napi_create_object(env, &backupExtInfoVal);
-        HILOGI("backupExtInfo is:%{public}s", backupExtInfo.c_str());
+        HILOGI("backupExtInfo is:%{public}s", GetAnonyString(backupExtInfo).c_str());
         napi_create_string_utf8(env, backupExtInfo.c_str(), backupExtInfo.size(), &backupExtInfoVal);
         argv.push_back(backupExtInfoVal);
         return true;
@@ -851,7 +852,7 @@ std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::Pa
 {
     auto onRestoreExFun = [appVersionCode(appVersionCode_), appVersionStr(appVersionStr_),
         restoreExtInfo(restoreExtInfo_)](napi_env env, vector<napi_value> &argv) -> bool {
-        HILOGI("restoreExtInfo is:%{public}s", restoreExtInfo.c_str());
+        HILOGI("restoreExtInfo is:%{public}s", GetAnonyString(restoreExtInfo).c_str());
         napi_value objValue = nullptr;
         napi_value restoreRetValue = nullptr;
         napi_create_object(env, &objValue);
