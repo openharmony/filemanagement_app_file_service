@@ -284,4 +284,8 @@ void Service::ExtensionConnectFailRadarReport(const std::string &bundleName, con
 void Service::UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo) {}
 
 void Service::ClearFailedBundles() {}
+std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool)
+{
+    return {};
+}
 } // namespace OHOS::FileManagement::Backup

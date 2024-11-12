@@ -1134,9 +1134,9 @@ void BackupExtExtension::FillEndFileInfos(const std::string &path,
     for (const auto &it : result) {
         std::string filePath = it.first;
         if (!filePath.empty() && filePath.size() <= PATH_MAX) {
-            endFileInfos_[filePath] = it.second.size;
+            endFileInfos_[path + filePath] = it.second.size;
         } else {
-            HILOGE("FileName : %{public}s error", GetAnonyPath(filePath).c_str());
+            HILOGE("File name : %{public}s check error", GetAnonyPath(path + filePath).c_str());
         }
     }
 }

@@ -314,4 +314,20 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
     HILOGI("End");
     return supportBackupNames;
 }
+
+void Service::SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info,
+    std::map<std::string, bool> &isClearDataFlags, const std::string &bundleNameIndexInfo)
+{
+    HILOGI("Begin");
+    if (session_ == nullptr) {
+        HILOGE("Set currrent session properties error, session is empty");
+        return;
+    }
+    session_->SetBundleDataSize(bundleNameIndexInfo, info.spaceOccupied);
+    auto iter = isClearDataFlags.find(bundleNameIndexInfo);
+    if (iter != isClearDataFlags.end()) {
+        session_->SetClearDataFlag(bundleNameIndexInfo, iter->second);
+    }
+    HILOGI("End");
+}
 }
