@@ -135,6 +135,7 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
             fd = session_->OnBundleExtManageInfo(callerName, move(fd));
         }
         session_->GetServiceReverseProxy()->BackupOnFileReady(callerName, fileName, move(fd), errCode);
+        FileReadyRadarReport(callerName, fileName, errCode, session_->GetScenario());
         if (session_->OnBundleFileReady(callerName, fileName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
             if (backUpConnection == nullptr) {
@@ -153,6 +154,7 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
             session_->StopExtTimer(callerName);
             // 通知TOOL 备份完成
             session_->GetServiceReverseProxy()->BackupOnBundleFinished(BError(BError::Codes::OK), callerName);
+            BundleEndRadarReport(callerName, BError(BError::Codes::OK), session_->GetScenario());
             // 断开extension
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
@@ -251,6 +253,7 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         ErrCode ret = backUpConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
         if (ret) {
             HILOGE("ConnectBackupExtAbility faild, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
+            ExtensionConnectFailRadarReport(bundleName, ret, scenario);
             return BError(BError::Codes::SA_BOOT_EXT_FAIL);
         }
         return BError(BError::Codes::OK);
@@ -302,6 +305,8 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
                 session_->GetServiceReverseProxy()->BackupOnBundleStarted(
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), bundleNameIndexInfo);
             }
+            BundleBeginRadarReport(bundleNameIndexInfo, BError(BError::Codes::SA_FORBID_BACKUP_RESTORE).GetCode(),
+                IServiceReverse::Scenario::BACKUP);
             continue;
         }
         supportBackupNames.emplace_back(bundleNameIndexInfo);

@@ -53,12 +53,11 @@ unique_ptr<BSessionRestore> BSessionRestore::Init(Callbacks callbacks)
             return nullptr;
         }
         int32_t res = proxy->InitRestoreSession(new ServiceReverse(callbacks));
-        if (res != 0) {
+        if (res != ERR_OK) {
             HILOGE("Failed to Restore because of %{public}d", res);
             AppRadar::Info info ("", "", "create restore session failed");
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "BSessionRestore::Init",
-                                                         AppRadar::GetInstance().GetUserId(),
-                                                         BizStageRestore::BIZ_STAGE_CREATE_RESTORE_SESSION_FAIL, res);
+                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_CREATE_RESTORE_SESSION_FAIL, res);
             return nullptr;
         }
 
@@ -106,7 +105,17 @@ ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bu
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos);
+    ErrCode res = proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos);
+    if (res != ERR_OK) {
+        std::string ss;
+        for (const auto &bundle : bundlesToRestore) {
+            ss += bundle + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", "AppendBundles with infos");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "BSessionRestore::AppendBundles",
+            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
+    }
+    return res;
 }
 
 ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)
@@ -115,8 +124,17 @@ ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bu
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-
-    return proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore);
+    ErrCode res = proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore);
+    if (res != ERR_OK) {
+        std::string ss;
+        for (const auto &bundle : bundlesToRestore) {
+            ss += bundle + ", ";
+        }
+        AppRadar::Info info(ss.c_str(), "", "");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "BSessionRestore::AppendBundles",
+            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
+    }
+    return res;
 }
 
 ErrCode BSessionRestore::Finish()

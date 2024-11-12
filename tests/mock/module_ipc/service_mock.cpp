@@ -250,8 +250,9 @@ void Service::OnSABackup(const std::string &bundleName,
 
 void Service::OnSARestore(const std::string &bundleName, const std::string &result, const ErrCode &errCode) {}
 
-void Service::ClearResidualBundleData(const std::string &bundleName)
+ErrCode Service::ClearResidualBundleData(const std::string &bundleName)
 {
+    return BError(BError::Codes::OK);
 }
 
 std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName &bundleName)
@@ -263,6 +264,26 @@ void Service::RemoveExtensionMutex(const BundleName &bundleName)
 {
 }
 
+void Service::OnBundleStarted(BError error, sptr<SvcSessionManager> session, const BundleName &bundleName) {}
+
+void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
+    const vector<BundleName> &appendBundleNames, const vector<BundleName> &restoreBundleNames) {}
+
+void Service::BundleBeginRadarReport(const std::string &bundleName, const ErrCode errCode,
+    const IServiceReverse::Scenario scenario) {}
+
+void Service::BundleEndRadarReport(const std::string &bundleName, const ErrCode errCode,
+    const IServiceReverse::Scenario scenario) {}
+
+void Service::FileReadyRadarReport(const std::string &bundleName, const std::string &fileName, const ErrCode errCode,
+    const IServiceReverse::Scenario scenario) {}
+
+void Service::ExtensionConnectFailRadarReport(const std::string &bundleName, const ErrCode errCode,
+    const IServiceReverse::Scenario scenario) {}
+
+void Service::UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo) {}
+
+void Service::ClearFailedBundles() {}
 std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool)
 {
     return {};
