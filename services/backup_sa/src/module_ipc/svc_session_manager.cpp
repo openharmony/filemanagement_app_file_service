@@ -108,6 +108,14 @@ void SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool
     }
 
     deathRecipient_ = nullptr;
+    AppRadar::Info info("", "", "deactive session success");
+    if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "SvcSessionManager::Deactive", impl_.userId,
+            BizStageRestore::BIZ_STAGE_DEACTIVE_SESSION, ERR_OK);
+    } else if (impl_.scenario == IServiceReverse::Scenario::BACKUP) {
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "SvcSessionManager::Deactive", impl_.userId,
+            BizStageBackup::BIZ_STAGE_DEACTIVE_SESSION, ERR_OK);
+    }
     HILOGI("Succeed to deactive a session");
     impl_ = {};
     extConnectNum_ = 0;
@@ -367,15 +375,18 @@ void SvcSessionManager::InitClient(Impl &newImpl)
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        AppRadar::Info info ("", "", "client died");
-        AppRadar::GetInstance().RecordDefaultFuncRes(info, "SvcSessionManager::InitClient",
-                                                     AppRadar::GetInstance().GetUserId(),
-                                                     BizStageBackup::BIZ_STAGE_CLIENT_ABNORMAL_EXIT,
-                                                     BError(BError::Codes::SA_BROKEN_IPC).GetCode());
         (void)revPtrStrong->SessionDeactive();
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(callback));
     remoteObj->AddDeathRecipient(deathRecipient_);
+    AppRadar::Info info("", "", "active session success");
+    if (newImpl.scenario == IServiceReverse::Scenario::RESTORE) {
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "SvcSessionManager::InitClient", newImpl.userId,
+            BizStageRestore::BIZ_STAGE_ACTIVE_SESSION, ERR_OK);
+    } else if (newImpl.scenario == IServiceReverse::Scenario::BACKUP) {
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "SvcSessionManager::InitClient", newImpl.userId,
+            BizStageBackup::BIZ_STAGE_ACTIVE_SESSION, ERR_OK);
+    }
     HILOGI("Succeed to active a session");
 }
 
@@ -427,6 +438,10 @@ bool SvcSessionManager::GetSchedBundleName(string &bundleName)
     for (auto &&it : impl_.backupExtNameMap) {
         if (it.second.schedAction == BConstants::ServiceSchedAction::WAIT) {
             bundleName = it.first;
+            if (!it.second.isReadyLaunch) {
+                HILOGE("Current bundle:%{public}s can not sched, baseInfo is not set done", bundleName.c_str());
+                return false;
+            }
             it.second.schedAction = BConstants::ServiceSchedAction::START;
             extConnectNum_++;
             return true;
@@ -1006,5 +1021,16 @@ void SvcSessionManager::SetPublishFlag(const std::string &bundleName)
 void SvcSessionManager::SetImplRestoreType(const RestoreTypeEnum restoreType)
 {
     impl_.restoreDataType = restoreType;
+}
+
+void SvcSessionManager::SetIsReadyLaunch(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    auto it = GetBackupExtNameMap(bundleName);
+    it->second.isReadyLaunch = true;
+    HILOGE("SetIsReadyLaunch success, bundleName = %{public}s", bundleName.c_str());
 }
 } // namespace OHOS::FileManagement::Backup

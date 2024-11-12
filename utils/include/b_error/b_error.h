@@ -116,6 +116,7 @@ public:
         E_EXCEPTION = 13500007,
         E_UNPACKET = 13500008,
         E_BEF = 13500009,
+        E_TASKFAIL = 13500010,
     };
 
 public:

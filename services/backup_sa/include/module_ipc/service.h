@@ -38,6 +38,11 @@ struct ExtensionMutexInfo {
     ExtensionMutexInfo(std::string bundleName_) : bundleName(bundleName_) {};
 };
 
+struct BundleTaskInfo {
+    std::string reportTime;
+    ErrCode errCode;
+};
+
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(Service);
 
@@ -262,7 +267,7 @@ public:
      * @param bundleName 应用名称
      *
      */
-    void ClearResidualBundleData(const std::string &bundleName);
+    ErrCode ClearResidualBundleData(const std::string &bundleName);
 
     /**
      * @brief 添加清理记录
@@ -414,9 +419,12 @@ private:
      *
      * @param bundleNames: bundleNames list
      * @param userId: userId
+     * @param backupBundleInfos: backupBundleInfos
+     * @param isIncBackup: isIncBackup
      *
      */
-    void SetCurrentBackupSessProperties(const std::vector<std::string> &bundleNames, int32_t userId);
+    void SetCurrentBackupSessProperties(const std::vector<std::string> &bundleNames, int32_t userId,
+        std::vector<BJsonEntityCaps::BundleInfo> &backupBundleInfos, bool isIncBackup);
 
     /**
      * @brief send userid to app
@@ -472,7 +480,7 @@ private:
     void NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string &callerName);
 
     void SetWant(AAFwk::Want &want, const BundleName &bundleName, const BConstants::ExtensionAction &action);
-    
+
     /**
      * @brief GetBackupInfo 任务执行
      *
@@ -510,6 +518,29 @@ private:
     void TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string &bundleName);
 
     void CreateDirIfNotExist(const std::string &path);
+    
+    void OnBundleStarted(BError error, sptr<SvcSessionManager> session, const BundleName &bundleName);
+
+    void HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session, const vector<BundleName> &appendBundleNames,
+        const vector<BundleName> &restoreBundleNames);
+    
+    void BundleBeginRadarReport(const std::string &bundleName, const ErrCode errCode,
+        const IServiceReverse::Scenario scenario);
+    
+    void BundleEndRadarReport(const std::string &bundleName, const ErrCode errCode,
+        const IServiceReverse::Scenario scenario);
+
+    void FileReadyRadarReport(const std::string &bundleName, const std::string &fileName, const ErrCode errCode,
+        const IServiceReverse::Scenario scenario);
+
+    void ExtensionConnectFailRadarReport(const std::string &bundleName, const ErrCode errCode,
+        const IServiceReverse::Scenario scenario);
+    
+    void UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo);
+
+    void ClearFailedBundles();
+    std::vector<std::string> GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
+        bool isIncBackup);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -530,8 +561,11 @@ private:
 
     OHOS::ThreadPool threadPool_;
     std::mutex extensionMutexLock_;
+    std::mutex failedBundlesLock_;
 public:
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
+    std::map<BundleName, BundleTaskInfo> failedBundles_;
+    std::atomic<uint32_t> successBundlesNum_ {0};
 };
 } // namespace OHOS::FileManagement::Backup
 

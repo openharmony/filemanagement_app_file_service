@@ -135,6 +135,7 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
             fd = session_->OnBundleExtManageInfo(callerName, move(fd));
         }
         session_->GetServiceReverseProxy()->BackupOnFileReady(callerName, fileName, move(fd), errCode);
+        FileReadyRadarReport(callerName, fileName, errCode, session_->GetScenario());
         if (session_->OnBundleFileReady(callerName, fileName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
             if (backUpConnection == nullptr) {
@@ -153,6 +154,7 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
             session_->StopExtTimer(callerName);
             // 通知TOOL 备份完成
             session_->GetServiceReverseProxy()->BackupOnBundleFinished(BError(BError::Codes::OK), callerName);
+            BundleEndRadarReport(callerName, BError(BError::Codes::OK), session_->GetScenario());
             // 断开extension
             backUpConnection->DisconnectBackupExtAbility();
             ClearSessionAndSchedInfo(callerName);
@@ -251,6 +253,7 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         ErrCode ret = backUpConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
         if (ret) {
             HILOGE("ConnectBackupExtAbility faild, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
+            ExtensionConnectFailRadarReport(bundleName, ret, scenario);
             return BError(BError::Codes::SA_BOOT_EXT_FAIL);
         }
         return BError(BError::Codes::OK);
@@ -283,5 +286,48 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     want.SetParam(BConstants::EXTENSION_RESTORE_EXT_INFO_PARA, bundleExtInfo);
     want.SetParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA, bundleExtInfo);
     want.SetParam(BConstants::EXTENSION_APP_CLONE_INDEX_PARA, bundleDetail.bundleIndex);
+}
+
+std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &backupInfos,
+    bool isIncBackup)
+{
+    HILOGI("Begin");
+    std::vector<std::string> supportBackupNames;
+    for (auto info : backupInfos) {
+        HILOGI("Current backupInfo bundleName:%{public}s, index:%{public}d, extName:%{public}s", info.name.c_str(),
+            info.appIndex, info.extensionName.c_str());
+        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
+        if (!info.allToBackup) {
+            if (isIncBackup) {
+                session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
+                    BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), bundleNameIndexInfo);
+            } else {
+                session_->GetServiceReverseProxy()->BackupOnBundleStarted(
+                    BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), bundleNameIndexInfo);
+            }
+            BundleBeginRadarReport(bundleNameIndexInfo, BError(BError::Codes::SA_FORBID_BACKUP_RESTORE).GetCode(),
+                IServiceReverse::Scenario::BACKUP);
+            continue;
+        }
+        supportBackupNames.emplace_back(bundleNameIndexInfo);
+    }
+    HILOGI("End");
+    return supportBackupNames;
+}
+
+void Service::SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info,
+    std::map<std::string, bool> &isClearDataFlags, const std::string &bundleNameIndexInfo)
+{
+    HILOGI("Begin");
+    if (session_ == nullptr) {
+        HILOGE("Set currrent session properties error, session is empty");
+        return;
+    }
+    session_->SetBundleDataSize(bundleNameIndexInfo, info.spaceOccupied);
+    auto iter = isClearDataFlags.find(bundleNameIndexInfo);
+    if (iter != isClearDataFlags.end()) {
+        session_->SetClearDataFlag(bundleNameIndexInfo, iter->second);
+    }
+    HILOGI("End");
 }
 }

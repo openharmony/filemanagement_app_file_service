@@ -1269,11 +1269,11 @@ HWTEST_F(ServiceTest, SUB_Service_OnBundleStarted_0100, testing::ext::TestSize.L
         wptr<Service> reversePtr(new Service(saID));
         sptr<SvcSessionManager> session(new SvcSessionManager(reversePtr));
         EXPECT_TRUE(servicePtr_ != nullptr);
-        OnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), session, BUNDLE_NAME);
+        servicePtr_->OnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), session, BUNDLE_NAME);
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
         impl_.scenario = IServiceReverse::Scenario::RESTORE;
-        OnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), session, BUNDLE_NAME);
+        servicePtr_->OnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), session, BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnBundleStarted.";
@@ -1300,14 +1300,14 @@ HWTEST_F(ServiceTest, SUB_Service_HandleExceptionOnAppendBundles_0100, testing::
         vector<BundleName> appendBundleNames {"123456"};
         vector<BundleName> restoreBundleNames {"abcdef"};
         EXPECT_TRUE(servicePtr_ != nullptr);
-        HandleExceptionOnAppendBundles(session, appendBundleNames, restoreBundleNames);
+        servicePtr_->HandleExceptionOnAppendBundles(session, appendBundleNames, restoreBundleNames);
 
         appendBundleNames.push_back("789");
-        HandleExceptionOnAppendBundles(session, appendBundleNames, restoreBundleNames);
+        servicePtr_->HandleExceptionOnAppendBundles(session, appendBundleNames, restoreBundleNames);
 
         restoreBundleNames.push_back("123456");
         restoreBundleNames.push_back("123");
-        HandleExceptionOnAppendBundles(session, appendBundleNames, restoreBundleNames);
+        servicePtr_->HandleExceptionOnAppendBundles(session, appendBundleNames, restoreBundleNames);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleExceptionOnAppendBundles.";
