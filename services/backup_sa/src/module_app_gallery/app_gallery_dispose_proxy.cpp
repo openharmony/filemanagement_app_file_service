@@ -66,13 +66,25 @@ sptr<AppGalleryDisposeProxy> AppGalleryDisposeProxy::GetInstance()
 DisposeErr AppGalleryDisposeProxy::StartBackup(const std::string &bundleName)
 {
     HILOGI("StartBackup, app %{public}s", bundleName.c_str());
-    return DoDispose(bundleName, DisposeOperation::START_BACKUP);
+    DisposeErr res = DoDispose(bundleName, DisposeOperation::START_BACKUP);
+    if (res != DisposeErr::REQUEST_FAIL) {
+        AppRadar::Info info(bundleName, "", "");
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "StartBackup", AppRadar::GetInstance().GetUserId(),
+            BizStageBackup::BIZ_STAGE_START_DISPOSE, static_cast<int32_t>(res));
+    }
+    return res;
 }
 
 DisposeErr AppGalleryDisposeProxy::EndBackup(const std::string &bundleName)
 {
     HILOGI("EndBackup, app %{public}s", bundleName.c_str());
-    return DoDispose(bundleName, DisposeOperation::END_BACKUP);
+    DisposeErr res = DoDispose(bundleName, DisposeOperation::END_BACKUP);
+    if (res != DisposeErr::REQUEST_FAIL) {
+        AppRadar::Info info(bundleName, "", "");
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "EndBackup", AppRadar::GetInstance().GetUserId(),
+            BizStageBackup::BIZ_STAGE_END_DISPOSE, static_cast<int32_t>(res));
+    }
+    return res;
 }
 
 DisposeErr AppGalleryDisposeProxy::StartRestore(const std::string &bundleName)
@@ -82,7 +94,13 @@ DisposeErr AppGalleryDisposeProxy::StartRestore(const std::string &bundleName)
         return DisposeErr::OK;
     }
     HILOGI("StartRestore, app %{public}s", bundleName.c_str());
-    return DoDispose(bundleName, DisposeOperation::START_RESTORE);
+    DisposeErr res = DoDispose(bundleName, DisposeOperation::START_RESTORE);
+    if (res != DisposeErr::REQUEST_FAIL) {
+        AppRadar::Info info(bundleName, "", "");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "StartRestore", AppRadar::GetInstance().GetUserId(),
+            BizStageRestore::BIZ_STAGE_START_DISPOSE, static_cast<int32_t>(res));
+    }
+    return res;
 }
 
 DisposeErr AppGalleryDisposeProxy::EndRestore(const std::string &bundleName)
@@ -92,13 +110,19 @@ DisposeErr AppGalleryDisposeProxy::EndRestore(const std::string &bundleName)
         return DisposeErr::OK;
     }
     HILOGI("EndRestore, app %{public}s", bundleName.c_str());
-    return DoDispose(bundleName, DisposeOperation::END_RESTORE);
+    DisposeErr res = DoDispose(bundleName, DisposeOperation::END_RESTORE);
+    if (res != DisposeErr::REQUEST_FAIL) {
+        AppRadar::Info info(bundleName, "", "");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "EndRestore", AppRadar::GetInstance().GetUserId(),
+            BizStageRestore::BIZ_STAGE_END_DISPOSE, static_cast<int32_t>(res));
+    }
+    return res;
 }
 
 void RecordDoDisposeRes(const std::string &bundleName,
                         AppGalleryDisposeProxy::DisposeOperation disposeOperation, int32_t err)
 {
-    AppRadar::Info info (bundleName, "", "");
+    AppRadar::Info info (bundleName, "", "REQUEST FAIL");
     switch (disposeOperation) {
         case AppGalleryDisposeProxy::DisposeOperation::START_BACKUP:
             AppRadar::GetInstance().RecordBackupFuncRes(info, "StartBackup", AppRadar::GetInstance().GetUserId(),
@@ -126,7 +150,7 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
     try {
         HILOGI("DoDispose, app %{public}s, operation %{public}d", bundleName.c_str(), disposeOperation);
         if (!ConnectExtAbility<AppGalleryDisposeProxy>() || appRemoteObj_ == nullptr) {
-            HILOGI("Can not connect to %{public}s", bundleName.c_str());
+            HILOGE("Can not connect to %{public}s", bundleName.c_str());
             return DisposeErr::CONN_FAIL;
         }
 
@@ -134,15 +158,15 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
         MessageParcel data;
         const auto interfaceToken = APP_FOUNDATION_SERVICE;
         if (!data.WriteInterfaceToken(interfaceToken)) {
-            HILOGI("write WriteInterfaceToken failed");
+            HILOGE("write WriteInterfaceToken failed");
             return DisposeErr::IPC_FAIL;
         }
         if (!data.WriteString16(Str8ToStr16(bundleDetailInfo.bundleName))) {
-            HILOGI("write bundleName failed");
+            HILOGE("write bundleName failed");
             return DisposeErr::IPC_FAIL;
         }
         if (!data.WriteInt32(static_cast<int32_t>(bundleDetailInfo.bundleIndex))) {
-            HILOGI("write bundleIndex failed");
+            HILOGE("write bundleIndex failed");
             return DisposeErr::IPC_FAIL;
         }
 
