@@ -427,6 +427,10 @@ bool SvcSessionManager::GetSchedBundleName(string &bundleName)
     for (auto &&it : impl_.backupExtNameMap) {
         if (it.second.schedAction == BConstants::ServiceSchedAction::WAIT) {
             bundleName = it.first;
+            if (!it.second.isReadyLaunch) {
+                HILOGE("Current bundle:%{public}s can not sched, baseInfo is not set done", bundleName.c_str());
+                return false;
+            }
             it.second.schedAction = BConstants::ServiceSchedAction::START;
             extConnectNum_++;
             return true;
@@ -1006,5 +1010,16 @@ void SvcSessionManager::SetPublishFlag(const std::string &bundleName)
 void SvcSessionManager::SetImplRestoreType(const RestoreTypeEnum restoreType)
 {
     impl_.restoreDataType = restoreType;
+}
+
+void SvcSessionManager::SetIsReadyLaunch(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    auto it = GetBackupExtNameMap(bundleName);
+    it->second.isReadyLaunch = true;
+    HILOGE("SetIsReadyLaunch success, bundleName = %{public}s", bundleName.c_str());
 }
 } // namespace OHOS::FileManagement::Backup

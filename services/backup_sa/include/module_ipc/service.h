@@ -414,9 +414,12 @@ private:
      *
      * @param bundleNames: bundleNames list
      * @param userId: userId
+     * @param backupBundleInfos: backupBundleInfos
+     * @param isIncBackup: isIncBackup
      *
      */
-    void SetCurrentBackupSessProperties(const std::vector<std::string> &bundleNames, int32_t userId);
+    void SetCurrentBackupSessProperties(const std::vector<std::string> &bundleNames, int32_t userId,
+        std::vector<BJsonEntityCaps::BundleInfo> &backupBundleInfos, bool isIncBackup);
 
     /**
      * @brief send userid to app
@@ -472,7 +475,7 @@ private:
     void NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string &callerName);
 
     void SetWant(AAFwk::Want &want, const BundleName &bundleName, const BConstants::ExtensionAction &action);
-    
+
     /**
      * @brief GetBackupInfo 任务执行
      *
@@ -508,6 +511,9 @@ private:
         std::map<std::string, bool> &isClearDataFlags);
 
     void TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string &bundleName);
+
+    std::vector<std::string> GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
+        bool isIncBackup);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

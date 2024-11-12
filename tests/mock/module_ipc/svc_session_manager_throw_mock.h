@@ -89,6 +89,7 @@ public:
     virtual bool CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList) = 0;
     virtual void SetPublishFlag(const std::string &bundleName) = 0;
     virtual void SetImplRestoreType(const RestoreTypeEnum restoreType) = 0;
+    virtual void SetIsReadyLaunch(const std::string &bundleName) = 0;
 public:
     static inline std::shared_ptr<BackupSvcSessionManager> session = nullptr;
 };
@@ -157,6 +158,7 @@ public:
     MOCK_METHOD(bool, CleanAndCheckIfNeedWait, (ErrCode &, std::vector<std::string> &));
     MOCK_METHOD(void, SetPublishFlag, (const std::string &));
     MOCK_METHOD(void, SetImplRestoreType, (const RestoreTypeEnum restoreType));
+    MOCK_METHOD(void, SetIsReadyLaunch, (const std::string &));
 };
 
 } // namespace OHOS::FileManagement::Backup
