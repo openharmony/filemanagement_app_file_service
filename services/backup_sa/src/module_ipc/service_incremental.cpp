@@ -464,10 +464,6 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_ == nullptr) {
-            HILOGE("AppIncrementalFileReady error, session is empty");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
         string callerName = VerifyCallerAndGetCallerName();
         if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(callerName, fileName, move(fd),
