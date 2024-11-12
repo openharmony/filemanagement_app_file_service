@@ -517,6 +517,8 @@ private:
 
     void TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string &bundleName);
 
+    void CreateDirIfNotExist(const std::string &path);
+    
     void OnBundleStarted(BError error, sptr<SvcSessionManager> session, const BundleName &bundleName);
 
     void HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session, const vector<BundleName> &appendBundleNames,

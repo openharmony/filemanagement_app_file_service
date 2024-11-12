@@ -264,6 +264,10 @@ void Service::RemoveExtensionMutex(const BundleName &bundleName)
 {
 }
 
+void Service::CreateDirIfNotExist(const std::string &path)
+{
+}
+
 void Service::OnBundleStarted(BError error, sptr<SvcSessionManager> session, const BundleName &bundleName) {}
 
 void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
