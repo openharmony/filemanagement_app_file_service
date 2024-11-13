@@ -70,6 +70,7 @@ public:
         bundleName_ = bundleName;
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         onProcessTaskPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        reportOnProcessRetPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         SetStagingPathProperties();
     }
     ~BackupExtExtension()
@@ -77,6 +78,7 @@ public:
         onProcessTimeoutTimer_.Shutdown();
         threadPool_.Stop();
         onProcessTaskPool_.Stop();
+        reportOnProcessRetPool_.Stop();
         if (callJsOnProcessThread_.joinable()) {
             callJsOnProcessThread_.join();
         }
@@ -292,6 +294,9 @@ private:
     ErrCode IncrementalAllFileReady(const TarMap &pkgInfo, const vector<struct ReportFileInfo> &srcFiles,
         sptr<IService> proxy);
     void ClearNoPermissionFiles(TarMap &pkgInfo, vector<std::string> &noPermissionFiles);
+    std::function<void(ErrCode, std::string)> ReportOnProcessResultCallback(wptr<BackupExtExtension> obj,
+        BackupRestoreScenario scenario);
+
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
@@ -324,6 +329,7 @@ private:
     OHOS::ThreadPool onProcessTaskPool_;
     std::atomic<bool> isFirstCallOnProcess_ {false};
     std::atomic<bool> isExecAppDone_ {false};
+    OHOS::ThreadPool reportOnProcessRetPool_;
 
     BackupRestoreScenario curScenario_ { BackupRestoreScenario::FULL_BACKUP };
 };
