@@ -99,10 +99,8 @@ private:
      * @brief creat a file
      *
      * @param path 文件路径名
-     * @param mode 文件打开模式
-     * @param fileType 文件类型
      */
-    FILE *CreateFile(std::string &path, mode_t mode, char fileType);
+    FILE *CreateFile(std::string &path);
 
     /**
      * @brief parse regular file
@@ -110,7 +108,7 @@ private:
      * @param info 文件属性结构体
      * @param typeFlag 文件类型标志
      */
-    ErrFileInfo ParseRegularFile(FileStatInfo &info, char typeFlag);
+    ErrFileInfo ParseRegularFile(FileStatInfo &info);
 
     /**
      * @brief handle tar buffer
@@ -181,6 +179,17 @@ private:
      * @param ret out param, the err info
      */
     bool CheckIfTarBlockValid(char *buff, size_t buffLen, TarHeader *header, int &ret);
+
+    /**
+     * @brief deal file tag info
+     *
+     * @param errFileInfo out param, err file info
+     * @param info out param, file info
+     * @param isFilter out param, is Filter
+     * @param tmpFullPath in param, tmpFullPath
+     */
+    bool DealFileTag(ErrFileInfo &errFileInfo,
+        FileStatInfo &info, bool &isFilter, const std::string &tmpFullPath);
 
 private:
     std::string rootPath_ {};
