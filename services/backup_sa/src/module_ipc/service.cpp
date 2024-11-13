@@ -317,6 +317,27 @@ void Service::StopAll(const wptr<IRemoteObject> &obj, bool force)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     std::lock_guard<std::mutex> lock(failedBundlesLock_);
+    int32_t fail_cnt = failedBundles_.size();
+    int32_t totalBundles = fail_cnt + successBundlesNum_.load();
+    if (totalBundles != 0) {
+        int32_t result = 0;
+        if (fail_cnt != 0) {
+            result = BError::BackupErrorCode::E_TASKFAIL;
+        }
+        std::stringstream ss;
+        ss << "successBundleNum:" << successBundlesNum_ << "," << "failedBundleNum:" <<
+            fail_cnt << "," << "failedBundles:{";
+        for (auto &failBundle : failedBundles_) {
+            ss << "\"" << failBundle.first << "\":" << "{errCode:" << failBundle.second.errCode << ","
+                << "reportTime:" << failBundle.second.reportTime << "},";
+        }
+        ss << "}";
+        string resultInfo = ss.str();
+        AppRadar::StatInfo statInfo("", resultInfo);
+        IServiceReverse::Scenario scenario = session_->GetScenario();
+        AppRadar::GetInstance().RecordStatisticRes(statInfo, GetUserIdDefault(), scenario,
+                                                   successBundlesNum_.load(), fail_cnt, result);
+    }
     failedBundles_.clear();
     successBundlesNum_ = 0;
     session_->Deactive(obj, force);

@@ -88,6 +88,26 @@ static void RecordDoRestoreRes(const std::string &bundleName, const std::string 
         BizStageRestore::BIZ_STAGE_DO_RESTORE, err);
 }
 
+static void RecordDoBackupRes(const std::string &bundleName, const ErrCode errCode, AppRadar::DoBackupInfo &backupInfo)
+{
+    uint32_t inExcludeNum = backupInfo.includeNum + backupInfo.excludeNum;
+    if (inExcludeNum >= BConstants::MAX_INEXCLUDE_SIZE) {
+        AppRadar::Info infoInExclude(bundleName, "", string("\"total inExclude\":").append(to_string(inExcludeNum)));
+        AppRadar::GetInstance().RecordBackupFuncRes(infoInExclude, "BackupExtExtension::DoBackup",
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, ERR_OK);
+    }
+    if (errCode == ERR_OK && backupInfo.cost >= BConstants::MAX_TIME_COST) {
+        std::stringstream ss;
+        ss << R"("spendTime": )" << backupInfo.cost << "ms, ";
+        ss << R"("totalFilesNum": )" << backupInfo.allFileNum << ", ";
+        ss << R"("smallFilesNum": )" << backupInfo.smallFileNum << ", ";
+        ss << R"("bigFilesNum": )" << backupInfo.allFileNum - backupInfo.tarFileNum;
+        AppRadar::Info info(bundleName, "", ss.str());
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::DoBackup",
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, errCode);
+    }
+}
+
 static string GetIndexFileRestorePath(const string &bundleName)
 {
     if (BFile::EndsWith(bundleName, BConstants::BUNDLE_FILE_MANAGER) && bundleName.size() == BConstants::FM_LEN) {
@@ -682,6 +702,7 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start Do backup");
+    auto start = std::chrono::system_clock::now();
     if (extension_ == nullptr) {
         HILOGE("Failed to do backup, extension is nullptr");
         throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
@@ -697,7 +718,6 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
 
     vector<string> includes = usrConfig.GetIncludes();
     vector<string> excludes = usrConfig.GetExcludes();
-
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
         throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
@@ -730,6 +750,11 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
     }
 
     HILOGI("HandleBackup finish, ret = %{public}d", res);
+    auto end = std::chrono::system_clock::now();
+    auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    AppRadar::DoBackupInfo doBackupInfo = {cost, bigFileInfo.size(), smallFiles.size(), tarMap.size(),
+                                           includes.size(), excludes.size()};
+    RecordDoBackupRes(bundleName_, res, doBackupInfo);
     return res;
 }
 
@@ -881,13 +906,7 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
             HILOGI("Do backup, start fwk timer end.");
             BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
             auto cache = cachedEntity.Structuralize();
-            auto start = std::chrono::system_clock::now();
             auto ret = ptr->DoBackup(cache);
-            auto end = std::chrono::system_clock::now();
-            auto cost = to_string(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
-            AppRadar::Info info(ptr->bundleName_, "", string("\"spend_time\":").append(cost).append(string("ms\"")));
-            AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::AsyncTaskBackup",
-                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, static_cast<int32_t>(ret));
             // REM: 处理返回结果 ret
             ptr->AppDone(ret);
             HILOGI("backup app done %{public}d", ret);
@@ -1888,11 +1907,18 @@ int BackupExtExtension::DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd
     vector<struct ReportFileInfo> bigFiles;
     CompareFiles(move(incrementalFd), move(manifestFd), allFiles, smallFiles, bigFiles);
     auto ret = DoIncrementalBackup(allFiles, smallFiles, bigFiles);
-    auto end = std::chrono::system_clock::now();
-    auto cost = to_string(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
-    AppRadar::Info info(bundleName_, "", string("\"spend_time\":").append(cost).append(string("ms\"")));
-    AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::AsyncTaskDoIncrementalBackup",
-        AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, static_cast<int32_t>(ret));
+    if (ret == ERR_OK) {
+        auto end = std::chrono::system_clock::now();
+        auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        if (cost >= BConstants::MAX_TIME_COST) {
+            std::stringstream ss;
+            ss << R"("spendTime": )"<< cost << R"(ms, "totalFiles": )" << allFiles.size() << R"(, "smallFiles": )"
+                << smallFiles.size() << R"(, "bigFiles": )" << bigFiles.size();
+            AppRadar::Info info(bundleName_, "", ss.str());
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::DoIncrementalBackupTask",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, static_cast<int32_t>(ret));
+        }
+    }
     return ret;
 }
 
