@@ -206,6 +206,10 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreCallback(
             HILOGE("Ext extension handle have been released");
             return;
         }
+        if (extensionPtr->isExecAppDone_.load()) {
+            HILOGE("Appdone has been executed for the current application");
+            return;
+        }
         HILOGI("Current bundle will execute app done");
         if (errCode == ERR_OK) {
             auto spendTime = extensionPtr->GetOnStartTimeCost();
@@ -240,6 +244,10 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreExCallbac
         }
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
+            return;
+        }
+        if (extensionPtr->isExecAppDone_.load()) {
+            HILOGE("Appdone has been executed for the current application");
             return;
         }
         if (errCode == ERR_OK && !restoreRetInfo.empty()) {
@@ -302,6 +310,10 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
             HILOGE("Extension handle have been released");
             return;
         }
+        if (extensionPtr->isExecAppDone_.load()) {
+            HILOGE("Appdone has been executed for the current application");
+            return;
+        }
         if (errCode == ERR_OK && !restoreRetInfo.empty()) {
             auto spendTime = extensionPtr->GetOnStartTimeCost();
             if (spendTime >= BConstants::MAX_TIME_COST) {
@@ -339,6 +351,10 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreCall
         auto extensionPtr = obj.promote();
         if (extensionPtr == nullptr) {
             HILOGE("Ext extension handle have been released");
+            return;
+        }
+        if (extensionPtr->isExecAppDone_.load()) {
+            HILOGE("Appdone has been executed for the current application");
             return;
         }
         HILOGI("Current bundle will execute app done");
