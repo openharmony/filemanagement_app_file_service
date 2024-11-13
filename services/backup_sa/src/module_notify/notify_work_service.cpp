@@ -25,9 +25,6 @@
 #include "want_params.h"
 
 namespace OHOS::FileManagement::Backup {
-namespace {
-    const static std::string EVENT_NAME = "COMMON_EVENT_RESTORE_START";
-}
 NotifyWorkService::NotifyWorkService() {}
 NotifyWorkService::~NotifyWorkService() {}
 
@@ -43,7 +40,7 @@ bool NotifyWorkService::NotifyBundleDetail(BJsonUtil::BundleDetailInfo bundleDet
     want.SetParam("userId", bundleDetailInfo.userId);
     want.SetParam("index", bundleDetailInfo.bundleIndex);
     want.SetParam("detail", bundleDetail);
-    want.SetAction(EVENT_NAME);
+    want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_RESTORE_START);
     EventFwk::CommonEventData commonData {want};
     HILOGI("End publish event, bundleName is: %{public}s", bundleName.c_str());
     return EventFwk::CommonEventManager::PublishCommonEvent(commonData);
