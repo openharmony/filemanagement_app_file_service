@@ -496,4 +496,12 @@ vector<string> BDir::GetDirs(const vector<string_view> &paths)
     vector<string> dirs(inc.begin(), inc.end());
     return dirs;
 }
+
+bool BDir::CheckFilePathInvalid(const std::string &filePath)
+{
+    if (filePath.find("../") != std::string::npos) {
+        return true;
+    }
+    return false;
+}
 } // namespace OHOS::FileManagement::Backup

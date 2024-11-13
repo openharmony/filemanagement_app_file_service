@@ -837,6 +837,61 @@ bool BackupExtExtension::IfAllowToBackupRestore()
     return true;
 }
 
+ErrCode BackupExtExtension::User0OnBackup()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (!IfAllowToBackupRestore()) {
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+            .GetCode();
+    }
+    AsyncTaskUser0Backup();
+    return ERR_OK;
+}
+
+void BackupExtExtension::AsyncTaskUser0Backup()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    auto task = [obj {wptr<BackupExtExtension>(this)}]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        const string config = ptr->extension_->GetUsrConfig();
+        try {
+            HILOGI("Do backup, start fwk timer begin.");
+            bool isFwkStart;
+            ptr->StartFwkTimer(isFwkStart);
+            if (!isFwkStart) {
+                HILOGE("Do backup, start fwk timer fail.");
+                return;
+            }
+            HILOGI("Do backup, start fwk timer end.");
+            BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
+            auto cache = cachedEntity.Structuralize();
+            auto ret = ptr->User0DoBackup(cache);
+            if (ret != ERR_OK) {
+                HILOGE("User0DoBackup, err = %{pubilc}d", ret);
+                ptr->AppIncrementalDone(BError::GetCodeByErrno(ret));
+            }
+        } catch (const BError &e) {
+            HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
+            ptr->AppIncrementalDone(e.GetCode());
+        } catch (const exception &e) {
+            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
 void BackupExtExtension::DoUser0Backup(const BJsonEntityExtensionConfig &usrConfig)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);

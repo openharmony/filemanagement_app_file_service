@@ -18,6 +18,7 @@
 #include <utime.h>
 
 #include "b_anony/b_anony.h"
+#include "b_filesystem/b_dir.h"
 #include "directory_ex.h"
 #include "filemgmt_libhilog.h"
 #include "securec.h"
@@ -26,6 +27,7 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 const int32_t PATH_MAX_LEN = 4096;
 const int32_t OCTAL = 8;
+const int DEFAULT_ERR = -1;
 
 static bool IsEmptyBlock(const char *p)
 {
@@ -334,18 +336,31 @@ tuple<int, bool, ErrFileInfo> UntarFile::ParseFileByTypeFlag(char typeFlag, File
         case REGTYPE:
         case AREGTYPE:
             info.fullPath = GenRealPath(rootPath_, info.fullPath);
-            errFileInfo = ParseRegularFile(info, typeFlag);
+            if (BDir::CheckFilePathInvalid(info.fullPath)) {
+                HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
+                return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
+            }
+            errFileInfo = ParseRegularFile(info);
             isFilter = false;
             break;
         case SYMTYPE:
             break;
         case DIRTYPE:
             info.fullPath = GenRealPath(rootPath_, info.fullPath);
+            if (BDir::CheckFilePathInvalid(info.fullPath)) {
+                HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
+                return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
+            }
             errFileInfo = CreateDir(info.fullPath, info.mode);
             isFilter = false;
             break;
         case GNUTYPE_LONGNAME: {
             auto result = ReadLongName(info);
+            if (BDir::CheckFilePathInvalid(info.fullPath) || BDir::CheckFilePathInvalid(info.longName)) {
+                HILOGE("Check file path : %{public}s or long name : %{public}s err, path is forbidden",
+                    GetAnonyPath(info.fullPath).c_str(), GetAnonyPath(info.longName).c_str());
+                return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
+            }
             errFileInfo = std::get<SECOND_PARAM>(result);
             return {std::get<FIRST_PARAM>(result), isFilter, errFileInfo};
             break;
@@ -361,6 +376,28 @@ tuple<int, bool, ErrFileInfo> UntarFile::ParseFileByTypeFlag(char typeFlag, File
     return {0, isFilter, errFileInfo};
 }
 
+bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
+    FileStatInfo &info, bool &isFilter, const std::string &tmpFullPath)
+{
+    if (!includes_.empty() && includes_.find(tmpFullPath) == includes_.end()) { // not in includes
+        if (fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET) != 0) {
+            HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
+            errFileInfo[info.fullPath].push_back(DEFAULT_ERR);
+        }
+        return false;
+    }
+    info.fullPath = GenRealPath(rootPath_, info.fullPath);
+    if (BDir::CheckFilePathInvalid(info.fullPath)) {
+        HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
+        errFileInfo[info.fullPath].push_back(DEFAULT_ERR);
+        return false;
+    }
+    errFileInfo = ParseRegularFile(info);
+    isFilter = false;
+    return true;
+}
+
+
 std::tuple<int, bool, ErrFileInfo> UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, FileStatInfo &info)
 {
     HILOGD("untar file: %{public}s, rootPath: %{public}s", GetAnonyPath(info.fullPath).c_str(), rootPath_.c_str());
@@ -371,34 +408,35 @@ std::tuple<int, bool, ErrFileInfo> UntarFile::ParseIncrementalFileByTypeFlag(cha
     switch (typeFlag) {
         case REGTYPE:
         case AREGTYPE: {
-            if (!includes_.empty() && includes_.find(tmpFullPath) == includes_.end()) { // not in includes
-                if (fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET) != 0) {
-                    HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
-                    return {-1, true, {}};
-                }
-                break;
+            if (!DealFileTag(errFileInfo, info, isFilter, tmpFullPath)) {
+                return {DEFAULT_ERR, true, errFileInfo};
             }
-            info.fullPath = GenRealPath(rootPath_, info.fullPath);
-            errFileInfo = ParseRegularFile(info, typeFlag);
-            isFilter = false;
             break;
         }
         case SYMTYPE:
             break;
         case DIRTYPE:
             info.fullPath = GenRealPath(rootPath_, info.fullPath);
+            if (BDir::CheckFilePathInvalid(info.fullPath)) {
+                HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
+                return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
+            }
             errFileInfo = CreateDir(info.fullPath, info.mode);
             isFilter = false;
             break;
         case GNUTYPE_LONGNAME: {
             auto result = ReadLongName(info);
+            if (BDir::CheckFilePathInvalid(info.fullPath)) {
+                HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
+                return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
+            }
             return {std::get<FIRST_PARAM>(result), isFilter, std::get<SECOND_PARAM>(result)};
             break;
         }
         default: {
             if (fseeko(tarFilePtr_, tarFileBlockCnt_ * BLOCK_SIZE, SEEK_CUR) != 0) {
                 HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
-                return {-1, true, {}};
+                return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
             }
             break;
         }
@@ -407,10 +445,10 @@ std::tuple<int, bool, ErrFileInfo> UntarFile::ParseIncrementalFileByTypeFlag(cha
     return {0, isFilter, errFileInfo};
 }
 
-ErrFileInfo UntarFile::ParseRegularFile(FileStatInfo &info, char typeFlag)
+ErrFileInfo UntarFile::ParseRegularFile(FileStatInfo &info)
 {
     ErrFileInfo errFileInfo;
-    FILE *destFile = CreateFile(info.fullPath, info.mode, typeFlag);
+    FILE *destFile = CreateFile(info.fullPath);
     if (destFile != nullptr) {
         string destStr("");
         destStr.resize(READ_BUFF_SIZE);
@@ -519,7 +557,7 @@ ErrFileInfo UntarFile::CreateDir(string &path, mode_t mode)
     return errFileInfo;
 }
 
-FILE *UntarFile::CreateFile(string &filePath, mode_t mode, char fileType)
+FILE *UntarFile::CreateFile(string &filePath)
 {
     FILE *f = fopen(filePath.c_str(), "wb+");
     if (f != nullptr) {
