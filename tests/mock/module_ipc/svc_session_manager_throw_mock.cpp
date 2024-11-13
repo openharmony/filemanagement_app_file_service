@@ -323,4 +323,6 @@ bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::s
 void SvcSessionManager::SetPublishFlag(const std::string &bundleName) {}
 
 void SvcSessionManager::SetImplRestoreType(const RestoreTypeEnum restoreType) {}
+
+void SvcSessionManager::SetIsReadyLaunch(const std::string &bundleName) {}
 } // namespace OHOS::FileManagement::Backup

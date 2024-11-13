@@ -313,7 +313,7 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
                 IServiceReverse::Scenario::BACKUP);
             continue;
         }
-        supportBackupNames.push_back(bundleNameIndexInfo);
+        supportBackupNames.emplace_back(bundleNameIndexInfo);
     }
     HILOGI("End");
     return supportBackupNames;

@@ -343,4 +343,188 @@ HWTEST_F(BDirTest, b_dir_GetFile_0100, testing::ext::TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetFile_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_b_dir_ExpandPathWildcard_0100
+ * @tc.name: b_dir_ExpandPathWildcard_0100
+ * @tc.desc: Test function of ExpandPathWildcard interface for SUCCESS
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_ExpandPathWildcard_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_ExpandPathWildcard_0100";
+    try {
+        TestManager tmCurrentUser("", MakeDirType::CURRENTUSER);
+        std::string dirCurrentUser = tmCurrentUser.GetRootDirCurTest();
+        std::string cmdMkdirPre = std::string("mkdir -p ") + dirCurrentUser;
+        std::string dirAppData = "appdata/test";
+        std::string dirHaps = "haps/test";
+        std::string cmdMkdir = cmdMkdirPre + dirAppData;
+        system(cmdMkdir.c_str());
+        cmdMkdir = cmdMkdirPre + dirHaps;
+        system(cmdMkdir.c_str());
+        std::string cmdTouchFile = std::string("touch ") + dirCurrentUser + dirAppData + FILE_SEPARATOR_CHAR + "1.txt";
+        system(cmdTouchFile.c_str());
+        cmdTouchFile = string("touch ") + dirCurrentUser + "2.txt";
+        system(cmdTouchFile.c_str());
+
+        std::vector<std::string> include = { dirCurrentUser };
+        std::set<std::string> res = ExpandPathWildcard(include, true);
+        EXPECT_EQ(res.size(), 2); // 2: valid path number
+        EXPECT_EQ(res.count(dirCurrentUser), 0);
+
+        std::string testDir = dirCurrentUser + "appdata";
+        include = { testDir };
+        res = ExpandPathWildcard(include, true);
+        EXPECT_EQ(res.size(), 0);
+
+        testDir = dirCurrentUser + "*.txt";
+        include = { testDir };
+
+        res = ExpandPathWildcard(include, true);
+        EXPECT_EQ(res.size(), 1); // 1: dirCurrentUser + "2.txt"
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an ExpandPathWildcard_0100 exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_ExpandPathWildcard_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_dir_ExpandPathWildcard_0200
+ * @tc.name: b_dir_ExpandPathWildcard_0200
+ * @tc.desc: Test function of ExpandPathWildcard interface for SUCCESS
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_ExpandPathWildcard_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_ExpandPathWildcard_0200";
+    try {
+        TestManager tmDefault("b_dir_ExpandPathWildcard_0200");
+        std::string dirDefault = tmDefault.GetRootDirCurTest();
+        std::string cmdMkdirPre = std::string("mkdir -p ") + dirDefault;
+        std::string dirAppData = "appdata/test";
+        std::string dirHaps = "haps/test";
+        std::string cmdMkdir = cmdMkdirPre + dirAppData;
+        system(cmdMkdir.c_str());
+        cmdMkdir = cmdMkdirPre + dirHaps;
+        system(cmdMkdir.c_str());
+        std::string cmdTouchFile = std::string("touch ") + dirDefault + dirAppData + FILE_SEPARATOR_CHAR + "1.txt";
+        system(cmdTouchFile.c_str());
+        cmdTouchFile = string("touch ") + dirDefault + "2.txt";
+        system(cmdTouchFile.c_str());
+
+        std::vector<std::string> include = { dirDefault };
+        std::set<std::string> res = ExpandPathWildcard(include, true);
+        EXPECT_EQ(res.size(), 1); // 1: dirDefault
+
+        std::string testDir = dirDefault + "*.txt";
+        include = { testDir };
+        res = ExpandPathWildcard(include, true);
+        EXPECT_EQ(res.size(), 1); // 1: dirCurrentUser + "2.txt"
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an ExpandPathWildcard_0200 exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_ExpandPathWildcard_0200";
+}
+
+/**
+ * @tc.number: SUB_backup_b_dir_RmForceExcludePath_0100
+ * @tc.name: b_dir_RmForceExcludePath_0100
+ * @tc.desc: Test function of RmForceExcludePath interface for SUCCESS
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_RmForceExcludePath_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_RmForceExcludePath_0100";
+    try {
+        TestManager tmCurrentUser("", MakeDirType::CURRENTUSER);
+        std::string dirCurrentUser = tmCurrentUser.GetRootDirCurTest();
+        std::string cmdMkdirPre = std::string("mkdir -p ") + dirCurrentUser;
+        std::string dirAppData = "appdata/test";
+        std::string dirHaps = "haps/test";
+        std::string cmdMkdir = cmdMkdirPre + dirAppData;
+        system(cmdMkdir.c_str());
+        cmdMkdir = cmdMkdirPre + dirHaps;
+        system(cmdMkdir.c_str());
+        std::string cmdTouchFile = std::string("touch ") + dirCurrentUser + dirAppData + FILE_SEPARATOR_CHAR + "1.txt";
+        system(cmdTouchFile.c_str());
+        cmdTouchFile = string("touch ") + dirCurrentUser + "2.txt";
+        system(cmdTouchFile.c_str());
+
+        std::set<std::string> testPath = {
+            dirCurrentUser
+        };
+        RmForceExcludePath(testPath);
+        EXPECT_EQ(testPath.size(), 2); // 2: valid path number
+
+        testPath = {
+            dirCurrentUser + "appdata/"
+        };
+        RmForceExcludePath(testPath);
+        EXPECT_EQ(testPath.size(), 0);
+
+        testPath = {
+            dirCurrentUser + "haps"
+        };
+        RmForceExcludePath(testPath);
+        EXPECT_EQ(testPath.size(), 1); // 1: dirCurrentUser + "haps"
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an RmForceExcludePath exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_RmForceExcludePath_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_dir_GetSubDir_0100
+ * @tc.name: b_dir_GetSubDir_0100
+ * @tc.desc: Test function of GetSubDir interface for SUCCESS
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_GetSubDir_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetSubDir_0100";
+    try {
+        TestManager tmCurrentUser("", MakeDirType::CURRENTUSER);
+        std::string dirCurrentUser = tmCurrentUser.GetRootDirCurTest();
+        std::string cmdMkdirPre = std::string("mkdir -p ") + dirCurrentUser;
+        std::string dirAppData = "appdata/test";
+        std::string dirHaps = "haps/test";
+        std::string cmdMkdir = cmdMkdirPre + dirAppData;
+        system(cmdMkdir.c_str());
+        cmdMkdir = cmdMkdirPre + dirHaps;
+        system(cmdMkdir.c_str());
+        std::string cmdTouchFile = std::string("touch ") + dirCurrentUser + dirAppData + FILE_SEPARATOR_CHAR + "1.txt";
+        system(cmdTouchFile.c_str());
+        cmdTouchFile = string("touch ") + dirCurrentUser + "2.txt";
+        system(cmdTouchFile.c_str());
+
+        std::set<std::string> result = GetSubDir("");
+        EXPECT_EQ(result.size(), 0);
+
+        result = GetSubDir("test");
+        EXPECT_EQ(result.size(), 0);
+
+        result = GetSubDir(dirCurrentUser);
+        EXPECT_EQ(result.size(), 2); // 2: valid path number
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an GetSubDir exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetSubDir_0100";
+}
 } // namespace OHOS::FileManagement::Backup

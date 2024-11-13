@@ -114,6 +114,8 @@ void FilePermissionTest::SetUpTestCase()
     SandboxMock::sandboxManagerKitMock = sandboxMock_;
     funcMock = make_shared<LibraryFuncMock>();
     LibraryFuncMock::libraryFunc_ = funcMock;
+    upmsMock_ = make_shared<UpmsMock>();
+    UpmsMock::upmsManagerKitMock = upmsMock_;
 #endif
 }
 void FilePermissionTest::TearDownTestCase()
@@ -124,6 +126,8 @@ void FilePermissionTest::TearDownTestCase()
     sandboxMock_ = nullptr;
     LibraryFuncMock::libraryFunc_ = nullptr;
     funcMock = nullptr;
+    UpmsMock::upmsManagerKitMock = nullptr;
+    upmsMock_ = nullptr;
 #endif
 }
 
@@ -221,7 +225,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0000, testing::ext::TestSiz
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
     EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
+    EXPECT_CALL(*upmsMock_, Active(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
     EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_0000";
@@ -247,8 +251,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0001, testing::ext::TestSiz
     vector<uint32_t> resultCodes;
     resultCodes.push_back(PolicyErrorCode::INVALID_MODE);
     EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _))
-        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    EXPECT_CALL(*upmsMock_, Active(_, _)).WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
     EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_0001";
@@ -270,7 +273,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0002, testing::ext::TestSiz
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
     EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
+    EXPECT_CALL(*upmsMock_, Active(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
     EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_0002";
@@ -790,7 +793,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_1000, testing::ext::TestSiz
     uriPolicies.emplace_back(infoTestA);
     deque<struct PolicyErrorResult> errorResults;
     EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
+    EXPECT_CALL(*upmsMock_, Active(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
     EXPECT_EQ(ret, EPERM);
     GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_1000";
@@ -814,8 +817,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_1001, testing::ext::TestSiz
     vector<uint32_t> resultCodes;
     resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_PATH));
     EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _))
-        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    EXPECT_CALL(*upmsMock_, Active(_, _)).WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
     EXPECT_EQ(ret, EPERM);
     EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_PATH);
@@ -840,8 +842,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_1002, testing::ext::TestSiz
     vector<uint32_t> resultCodes;
     resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_MODE));
     EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _))
-        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    EXPECT_CALL(*upmsMock_, Active(_, _)).WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
     EXPECT_EQ(ret, EPERM);
     EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_MODE);
@@ -867,8 +868,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_1003, testing::ext::TestSiz
     vector<uint32_t> resultCodes;
     resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::PERSISTENCE_FORBIDDEN));
     EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _))
-        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    EXPECT_CALL(*upmsMock_, Active(_, _)).WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
     EXPECT_EQ(ret, EPERM);
     EXPECT_EQ(errorResults[0].code, PolicyErrorCode::PERSISTENCE_FORBIDDEN);
@@ -894,8 +894,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_1004, testing::ext::TestSiz
     vector<uint32_t> resultCodes;
     resultCodes.emplace_back(static_cast<uint32_t>(PolicyErrorCode::INVALID_MODE));
     EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _))
-        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    EXPECT_CALL(*upmsMock_, Active(_, _)).WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
     EXPECT_EQ(ret, EPERM);
     EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_MODE);

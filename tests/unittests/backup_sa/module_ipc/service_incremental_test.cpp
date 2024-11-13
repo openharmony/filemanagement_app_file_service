@@ -244,6 +244,7 @@ void Service::UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo 
 
 void Service::ClearFailedBundles() {}
 
+void Service::StartRunningTimer(const std::string &bundleName) {}
 std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool)
 {
     return {};

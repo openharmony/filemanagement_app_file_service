@@ -71,6 +71,7 @@ struct BackupExtInfo {
     int32_t appendNum {1};
     bool isClearData {true};
     bool isInPublishFile {false};
+    bool isReadyLaunch {false};
 };
 
 class Service;
@@ -293,7 +294,7 @@ public:
      * @param bundleName 应用名称
      */
     sptr<SvcBackupConnection> CreateBackupConnection(BundleName &bundleName);
-    
+
     /**
      * @brief 开始备份
      *
@@ -511,6 +512,8 @@ public:
     void SetPublishFlag(const std::string &bundleName);
 
     void SetImplRestoreType(const RestoreTypeEnum restoreType);
+
+    void SetIsReadyLaunch(const std::string &bundleName);
 
 private:
     /**
