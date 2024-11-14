@@ -128,7 +128,7 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
     return BError(BError::Codes::OK);
 }
 
-void Service::OnBackupExtensionDied(const string &&bundleName, bool isSecondCalled) {}
+void Service::OnBackupExtensionDied(const string &&bundleName, bool isCleanCalled) {}
 
 void Service::ExtConnectDied(const string &callName) {}
 
