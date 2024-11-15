@@ -236,7 +236,13 @@ int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
     if (!data.ReadInt32(errCode)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive errCode");
     }
-    return AppDone(errCode);
+    int res = AppDone(errCode);
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::SA_BROKEN_IPC, ss.str());
+    }
+    return BError(BError::Codes::OK);
 }
 
 int32_t ServiceStub::CmdResultReport(MessageParcel &data, MessageParcel &reply)
@@ -254,7 +260,13 @@ int32_t ServiceStub::CmdResultReport(MessageParcel &data, MessageParcel &reply)
     if (!data.ReadInt32(errCode)) {
         return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive errCode");
     }
-    return ServiceResultReport(restoreRetInfo, secenrioInfo, errCode);
+    int res = ServiceResultReport(restoreRetInfo, secenrioInfo, errCode);
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::SA_BROKEN_IPC, ss.str());
+    }
+    return BError(BError::Codes::OK);
 }
 
 int32_t ServiceStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)

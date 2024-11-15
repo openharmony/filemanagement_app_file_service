@@ -201,14 +201,13 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
 
     MessageParcel reply;
     MessageOption option;
-    option.SetFlags(MessageOption::TF_ASYNC);
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_DONE), data, reply, option);
     if (ret != NO_ERROR) {
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
-    return ret;
+    return reply.ReadInt32();
 }
 
 ErrCode ServiceProxy::ServiceResultReport(const std::string restoreRetInfo,
@@ -231,7 +230,6 @@ ErrCode ServiceProxy::ServiceResultReport(const std::string restoreRetInfo,
     }
     MessageParcel reply;
     MessageOption option;
-    option.SetFlags(MessageOption::TF_ASYNC);
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RESULT_REPORT), data, reply,
             option);
@@ -239,7 +237,7 @@ ErrCode ServiceProxy::ServiceResultReport(const std::string restoreRetInfo,
         string str = "Failed to send out the request because of " + to_string(ret);
         return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
     }
-    return ret;
+    return reply.ReadInt32();
 }
 
 ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &fileName)
