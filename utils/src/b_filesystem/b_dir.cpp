@@ -65,7 +65,8 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetFile(con
     map<string, size_t> smallFiles;
     struct stat sta = {};
     if (stat(path.data(), &sta) == -1) {
-        return {BError(errno).GetCode(), files, smallFiles};
+        HILOGE("File not exist, errno:%{public}d, fileName:%{private}s.", errno, path.c_str());
+        return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
     }
     if (path == "/") {
         return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
@@ -268,11 +269,11 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
     map<string, struct stat> incFiles;
     map<string, size_t> incSmallFiles;
     for (const auto &item : inc) {
+        HILOGW("GetBigFiles, path = %{public}s", item.c_str());
         auto [errCode, files, smallFiles] = GetDirFilesDetail(item, true, BConstants::BIG_FILE_BOUNDARY);
         if (errCode == 0) {
-            int32_t num = static_cast<int32_t>(files.size());
             incFiles.merge(move(files));
-            HILOGI("big files: %{public}d; small files: %{public}d", num, static_cast<int32_t>(smallFiles.size()));
+            HILOGW("big files: %{public}zu; small files: %{public}zu", files.size(), smallFiles.size());
             incSmallFiles.insert(smallFiles.begin(), smallFiles.end());
         }
     }
@@ -309,8 +310,8 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
             bigFiles[item.first] = item.second;
         }
     }
-    HILOGI("total number of big files is %{public}d", static_cast<int32_t>(bigFiles.size()));
-    HILOGI("total number of small files is %{public}d", static_cast<int32_t>(resSmallFiles.size()));
+    HILOGW("total number of big files is %{public}zu", bigFiles.size());
+    HILOGW("total number of small files is %{public}zu", resSmallFiles.size());
     return {ERR_OK, move(bigFiles), move(resSmallFiles)};
 }
 
