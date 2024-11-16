@@ -18,11 +18,11 @@
 #include <algorithm>
 #include <cerrno>
 #include <chrono>
+#include <cinttypes>
 #include <cstddef>
 #include <cstdint>
 
 #include <fcntl.h>
-#include <inttypes.h>
 #include <iomanip>
 #include <sys/stat.h>
 #include <sys/types.h>
