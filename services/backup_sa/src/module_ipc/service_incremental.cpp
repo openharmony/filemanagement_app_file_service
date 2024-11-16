@@ -22,6 +22,7 @@
 #include <cstdint>
 
 #include <fcntl.h>
+#include <inttypes.h>
 #include <iomanip>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -213,7 +214,8 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
     int64_t lastTime = session->GetLastIncrementalTime(bundleName);
     std::vector<BIncrementalData> bundleNames;
     bundleNames.emplace_back(BIncrementalData {bundleName, lastTime});
-    BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session->GetSessionUserId());
+    auto newBundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session->GetSessionUserId());
+    RefreshBundleDataSize(newBundleInfos, bundleName, ptr);
     string path = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId()).
                     append(bundleName).
                     append("/").
@@ -230,6 +232,28 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
     if (ret) {
         thisPtr->ClearSessionAndSchedInfo(bundleName);
         thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
+    }
+}
+
+void Service::RefreshBundleDataSize(const vector<BJsonEntityCaps::BundleInfo> &newBundleInfos,
+    std::string bundleName, wptr<Service> ptr)
+{
+    auto thisPtr = ptr.promote();
+    if (!thisPtr) {
+        HILOGE("this pointer is null");
+        return;
+    }
+    auto session = thisPtr->session_;
+    if (session == nullptr) {
+        HILOGE("session is nullptr");
+        return;
+    }
+    for (auto &info : newBundleInfos) {
+        if (info.name == bundleName) {
+            session->SetBundleDataSize(bundleName, info.increSpaceOccupied);
+            HILOGI("RefreshBundleDataSize, bundlename = %{public}s , datasize = %{public}" PRId64 "",
+                bundleName.c_str(), info.increSpaceOccupied);
+        }
     }
 }
 

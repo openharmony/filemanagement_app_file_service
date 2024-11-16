@@ -550,6 +550,9 @@ private:
 
     std::vector<std::string> GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
         bool isIncBackup);
+
+    void RefreshBundleDataSize(const vector<BJsonEntityCaps::BundleInfo> &newBundleInfos,
+        std::string bundleName, wptr<Service> ptr);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
