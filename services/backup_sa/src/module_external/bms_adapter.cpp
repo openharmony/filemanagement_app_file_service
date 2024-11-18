@@ -304,6 +304,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         }
         if (!CreateIPCInteractionFiles(userId, bundleName, bundleNameTime.lastIncrementalTime, backupPara.includes,
             backupPara.excludes)) {
+            HILOGE("Create bundleInteraction dir failed, bundleName:%{public}s", bundleName.c_str());
             continue;
         }
         bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.appIndex,
