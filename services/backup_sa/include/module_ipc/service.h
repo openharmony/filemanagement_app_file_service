@@ -549,10 +549,13 @@ private:
     void CreateDirIfNotExist(const std::string &path);
 
     std::vector<std::string> GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
-        bool isIncBackup);
+        bool isIncBackup, const vector<std::string> &srcBundleNames);
 
     void RefreshBundleDataSize(const vector<BJsonEntityCaps::BundleInfo> &newBundleInfos,
         std::string bundleName, wptr<Service> ptr);
+
+    void HandleNotSupportBundleNames(const std::vector<std::string> &srcBundleNames,
+        std::vector<std::string> &supportBundleNames, bool isIncBackup);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

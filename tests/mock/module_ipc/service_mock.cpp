@@ -290,8 +290,12 @@ void Service::CreateDirIfNotExist(const std::string &path)
 }
 
 void Service::StartRunningTimer(const std::string &bundleName) {}
-std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool)
+
+std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool,
+    const vector<string>&)
 {
     return {};
 }
+
+void Service::HandleNotSupportBundleNames(const vector<string>&, vector<string>&, bool) {}
 } // namespace OHOS::FileManagement::Backup

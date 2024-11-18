@@ -795,7 +795,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
         VerifyCaller(IServiceReverse::Scenario::BACKUP);
         auto bundleDetails = MakeDetailList(bundleNames);
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundleDetails, session_->GetSessionUserId());
-        std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false);
+        std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false, bundleNames);
         session_->AppendBundles(supportBackupNames);
         SetCurrentBackupSessProperties(supportBackupNames, session_->GetSessionUserId(), backupInfos, false);
         OnStartSched();
@@ -837,7 +837,7 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
             session_->GetSessionUserId(), isClearDataFlags);
         auto bundleDetails = MakeDetailList(bundleNames);
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundleDetails, session_->GetSessionUserId());
-        std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false);
+        std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false, bundleNames);
         session_->AppendBundles(supportBackupNames);
         HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
         OnStartSched();
