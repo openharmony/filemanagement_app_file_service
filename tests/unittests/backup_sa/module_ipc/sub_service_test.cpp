@@ -31,10 +31,6 @@ HWTEST_F(ServiceTest, SUB_Service_HandleCurGroupBackupInfos_0000, TestSize.Level
         map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
         map<string, bool> isClearDataFlags;
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
-        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
-        EXPECT_CALL(*srProxy, BackupOnBundleStarted(_, _)).WillOnce(Return());
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false));
         service->HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
         EXPECT_TRUE(true);
@@ -858,4 +854,554 @@ HWTEST_F(ServiceTest, SUB_Service_HandleRestoreDepsBundle_0000, TestSize.Level1)
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleRestoreDepsBundle.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleRestoreDepsBundle_0000";
+}
+
+
+/**
+ * @tc.number: SUB_Service_OnAllBundlesFinished_0000
+ * @tc.name: SUB_Service_OnAllBundlesFinished_0000
+ * @tc.desc: 测试 OnAllBundlesFinished 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_OnAllBundlesFinished_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnAllBundlesFinished_0000";
+    try {
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        service->OnAllBundlesFinished(0);
+        EXPECT_TRUE(true);
+
+        service->isInRelease_.store(false);
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*param, GetBackupOverrideBackupSARelease()).WillOnce(Return(true));
+        service->OnAllBundlesFinished(0);
+        EXPECT_TRUE(true);
+
+        service->isInRelease_.store(true);
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*param, GetBackupOverrideBackupSARelease()).WillOnce(Return(true));
+        service->OnAllBundlesFinished(0);
+        EXPECT_TRUE(true);
+
+        service->isInRelease_.store(true);
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE))
+            .WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, CleanAndCheckIfNeedWait(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, RestoreOnAllBundlesFinished(_)).WillOnce(Return());
+        EXPECT_CALL(*param, GetBackupOverrideBackupSARelease()).WillOnce(Return(true));
+        service->OnAllBundlesFinished(0);
+        EXPECT_TRUE(true);
+
+        service->isInRelease_.store(false);
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetIsIncrementalBackup()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnAllBundlesFinished(_)).WillOnce(Return());
+        EXPECT_CALL(*param, GetBackupOverrideBackupSARelease()).WillOnce(Return(true));
+        service->OnAllBundlesFinished(0);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnAllBundlesFinished_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_OnAllBundlesFinished_0100
+ * @tc.name: SUB_Service_OnAllBundlesFinished_0100
+ * @tc.desc: 测试 OnAllBundlesFinished 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_OnAllBundlesFinished_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnAllBundlesFinished_0100";
+    try {
+        service->isInRelease_.store(false);
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetIsIncrementalBackup()).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, BackupOnAllBundlesFinished(_)).WillOnce(Return());
+        EXPECT_CALL(*param, GetBackupOverrideBackupSARelease()).WillOnce(Return(true));
+        service->OnAllBundlesFinished(0);
+        EXPECT_TRUE(true);
+
+        service->isInRelease_.store(false);
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(true));
+        EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnAllBundlesFinished(_)).WillOnce(Return());
+        EXPECT_CALL(*param, GetBackupOverrideBackupSARelease()).WillOnce(Return(true));
+        service->OnAllBundlesFinished(0);
+        EXPECT_TRUE(true);
+
+        service->isInRelease_.store(false);
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(true));
+        EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, RestoreOnAllBundlesFinished(_)).WillOnce(Return());
+        EXPECT_CALL(*param, GetBackupOverrideBackupSARelease()).WillOnce(Return(true));
+        service->OnAllBundlesFinished(0);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnAllBundlesFinished_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_OnAllBundlesFinished_0200
+ * @tc.name: SUB_Service_OnAllBundlesFinished_0200
+ * @tc.desc: 测试 OnAllBundlesFinished 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_OnAllBundlesFinished_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnAllBundlesFinished_0200";
+    try {
+        service->isInRelease_.store(false);
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, RestoreOnAllBundlesFinished(_)).WillOnce(Return());
+        EXPECT_CALL(*param, GetBackupOverrideBackupSARelease()).WillOnce(Return(true));
+        service->OnAllBundlesFinished(0);
+        EXPECT_TRUE(true);
+
+        service->isInRelease_.store(false);
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*param, GetBackupOverrideBackupSARelease()).WillOnce(Return(false));
+        service->OnAllBundlesFinished(0);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnAllBundlesFinished.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnAllBundlesFinished_0200";
+}
+
+/**
+ * @tc.number: SUB_Service_OnStartSched_0000
+ * @tc.name: SUB_Service_OnStartSched_0000
+ * @tc.desc: 测试 OnStartSched 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_OnStartSched_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnStartSched_0000";
+    try {
+        EXPECT_CALL(*session, IsOnOnStartSched()).WillOnce(Return(false));
+        service->OnStartSched();
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, IsOnOnStartSched()).WillOnce(Return(true));
+        service->OnStartSched();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnStartSched.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnStartSched_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_SendStartAppGalleryNotify_0000
+ * @tc.name: SUB_Service_SendStartAppGalleryNotify_0000
+ * @tc.desc: 测试 SendStartAppGalleryNotify 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_SendStartAppGalleryNotify_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SendStartAppGalleryNotify_0000";
+    try {
+        BundleName bundleName;
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
+        service->SendStartAppGalleryNotify(bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        service->SendStartAppGalleryNotify(bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*jdConfig, IfBundleNameInDisposalConfigFile(_)).WillOnce(Return(false));
+        service->SendStartAppGalleryNotify(bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*jdConfig, IfBundleNameInDisposalConfigFile(_)).WillOnce(Return(true));
+        EXPECT_CALL(*gallery, StartRestore(_)).WillOnce(Return(DisposeErr::OK));
+        service->SendStartAppGalleryNotify(bundleName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SendStartAppGalleryNotify.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SendStartAppGalleryNotify_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_SendEndAppGalleryNotify_0000
+ * @tc.name: SUB_Service_SendEndAppGalleryNotify_0000
+ * @tc.desc: 测试 SendEndAppGalleryNotify 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_SendEndAppGalleryNotify_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SendEndAppGalleryNotify_0000";
+    try {
+        BundleName bundleName;
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
+        service->SendEndAppGalleryNotify(bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        service->SendEndAppGalleryNotify(bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::REQUEST_FAIL));
+        service->SendEndAppGalleryNotify(bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(false));
+        service->SendEndAppGalleryNotify(bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));
+        service->SendEndAppGalleryNotify(bundleName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SendEndAppGalleryNotify.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SendEndAppGalleryNotify_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_TryToClearDispose_0000
+ * @tc.name: SUB_Service_TryToClearDispose_0000
+ * @tc.desc: 测试 TryToClearDispose 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_TryToClearDispose_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TryToClearDispose_0000";
+    try {
+        BundleName bundleName;
+        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));
+        service->TryToClearDispose(bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::REQUEST_FAIL))
+            .WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(false));
+        service->TryToClearDispose(bundleName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by TryToClearDispose.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_TryToClearDispose_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_SendErrAppGalleryNotify_0000
+ * @tc.name: SUB_Service_SendErrAppGalleryNotify_0000
+ * @tc.desc: 测试 SendErrAppGalleryNotify 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_SendErrAppGalleryNotify_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SendErrAppGalleryNotify_0000";
+    try {
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        service->SendErrAppGalleryNotify();
+        EXPECT_TRUE(true);
+
+        vector<string> bundleNameList;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNameList));
+        service->SendErrAppGalleryNotify();
+        EXPECT_TRUE(true);
+
+        bundleNameList.emplace_back("bundleName");
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNameList));
+        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));
+        service->SendErrAppGalleryNotify();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SendErrAppGalleryNotify.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SendErrAppGalleryNotify_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_ClearDisposalOnSaStart_0000
+ * @tc.name: SUB_Service_ClearDisposalOnSaStart_0000
+ * @tc.desc: 测试 ClearDisposalOnSaStart 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_ClearDisposalOnSaStart_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ClearDisposalOnSaStart_0000";
+    try {
+        vector<string> bundleNameList;
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNameList));
+        service->ClearDisposalOnSaStart();
+        EXPECT_TRUE(true);
+
+        bundleNameList.emplace_back("bundleName");
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNameList));
+        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));
+        service->ClearDisposalOnSaStart();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by ClearDisposalOnSaStart.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ClearDisposalOnSaStart_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_DeleteDisConfigFile_0000
+ * @tc.name: SUB_Service_DeleteDisConfigFile_0000
+ * @tc.desc: 测试 DeleteDisConfigFile 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_DeleteDisConfigFile_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_DeleteDisConfigFile_0000";
+    try {
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        service->DeleteDisConfigFile();
+        EXPECT_TRUE(true);
+
+        vector<string> bundleNameList {"bundleName"};
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNameList));
+        service->DeleteDisConfigFile();
+        EXPECT_TRUE(true);
+
+        bundleNameList.clear();
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNameList));
+        EXPECT_CALL(*jdConfig, DeleteConfigFile()).WillOnce(Return(false));
+        service->DeleteDisConfigFile();
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNameList));
+        EXPECT_CALL(*jdConfig, DeleteConfigFile()).WillOnce(Return(true));
+        service->DeleteDisConfigFile();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by DeleteDisConfigFile.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DeleteDisConfigFile_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_SessionDeactive_0000
+ * @tc.name: SUB_Service_SessionDeactive_0000
+ * @tc.desc: 测试 SessionDeactive 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_SessionDeactive_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SessionDeactive_0000";
+    try {
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        service->SessionDeactive();
+        service->session_ = session_;
+        EXPECT_TRUE(true);
+
+        auto sched = service->sched_;
+        service->sched_ = nullptr;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        service->SessionDeactive();
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, CleanAndCheckIfNeedWait(_, _)).WillOnce(Return(false));
+        service->SessionDeactive();
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, CleanAndCheckIfNeedWait(_, _))
+            .WillOnce(DoAll(SetArgReferee<0>(BError(BError::Codes::SA_INVAL_ARG)), Return(true)));
+        service->SessionDeactive();
+        EXPECT_TRUE(true);
+
+        vector<string> bundleNameList {"bundleName"};
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, CleanAndCheckIfNeedWait(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(bundleNameList), Return(true)));
+        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
+        service->SessionDeactive();
+        service->sched_ = sched;
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SessionDeactive.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SessionDeactive_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_SessionDeactive_0100
+ * @tc.name: SUB_Service_SessionDeactive_0100
+ * @tc.desc: 测试 SessionDeactive 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_SessionDeactive_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SessionDeactive_0100";
+    try {
+        service->failedBundles_.clear();
+        service->successBundlesNum_ = 0;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, ClearSessionData()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+        EXPECT_CALL(*session, GetSessionCnt()).WillOnce(Return(0));
+        service->SessionDeactive();
+        EXPECT_TRUE(true);
+
+        service->isRmConfigFile_ = true;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, ClearSessionData()).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*cdConfig, DeleteConfigFile()).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetSessionCnt()).WillOnce(Return(0));
+        service->SessionDeactive();
+        EXPECT_TRUE(true);
+
+        service->isRmConfigFile_ = false;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, ClearSessionData()).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*session, GetSessionCnt()).WillOnce(Return(0));
+        service->SessionDeactive();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SessionDeactive.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SessionDeactive_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SessionDeactive_0200
+ * @tc.name: SUB_Service_SessionDeactive_0200
+ * @tc.desc: 测试 SessionDeactive 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_SessionDeactive_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SessionDeactive_0200";
+    try {
+        service->failedBundles_.clear();
+        service->successBundlesNum_ = 0;
+        service->isRmConfigFile_ = false;
+        auto clearRecorder = service->clearRecorder_;
+        service->clearRecorder_ = nullptr;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, ClearSessionData()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+        EXPECT_CALL(*session, GetSessionCnt()).WillOnce(Return(0));
+        service->SessionDeactive();
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, ClearSessionData()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+        EXPECT_CALL(*session, GetSessionCnt()).WillOnce(Return(-1));
+        service->SessionDeactive();
+        service->clearRecorder_ = clearRecorder;
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SessionDeactive.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SessionDeactive_0200";
 }
