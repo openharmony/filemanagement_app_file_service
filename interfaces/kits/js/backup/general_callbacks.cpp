@@ -49,15 +49,18 @@ BackupRestoreCallback::~BackupRestoreCallback()
     }
     work->data = static_cast<void *>(ctx_);
 
-    int ret = uv_queue_work(
-        loop, work.get(), [](uv_work_t *work) {},
-        [](uv_work_t *work, int status) {
-            LibN::NAsyncContextCallback *ctx = static_cast<LibN::NAsyncContextCallback *>(work->data);
-            delete ctx;
-            delete work;
-        });
-    if (ret) {
-        HILOGE("Failed to call uv_queue_work %{public}d", status);
+    auto task = [work {work.get()}]() {
+        if (work == nullptr) {
+            HILOGE("failed to get work.");
+            return;
+        }
+        LibN::NAsyncContextCallback *ctx = static_cast<LibN::NAsyncContextCallback *>(work->data);
+        delete ctx;
+        delete work;
+    };
+    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        HILOGE("Failed to call napi_send_event, ret:%{public}d, status:%{public}d", ret, status);
         return;
     }
     ptr.release();
@@ -124,28 +127,29 @@ void BackupRestoreCallback::CallJsMethod(InputArgsParser argParser)
     workArgs->argParser = argParser;
     work->data = reinterpret_cast<void *>(workArgs.get());
     HILOGI("Will execute current js method");
-    int ret = uv_queue_work(
-        loop, work.get(), [](uv_work_t *work) {
-            HILOGI("Enter, %{public}zu", (size_t)work);
-        },
-        [](uv_work_t *work, int status) {
-            HILOGI("AsyncWork Enter, %{public}zu", (size_t)work);
-            auto workArgs = reinterpret_cast<WorkArgs *>(work->data);
-            do {
-                if (workArgs == nullptr) {
-                    HILOGE("failed to get workArgs.");
-                    break;
-                }
-                DoCallJsMethod(workArgs->ptr->env_, workArgs->ptr->ctx_, workArgs->argParser);
-            } while (false);
-            HILOGI("will notify current thread info");
-            std::unique_lock<std::mutex> lock(workArgs->callbackMutex);
-            workArgs->isReady.store(true);
-            workArgs->callbackCondition.notify_all();
-            delete work;
-        });
-    if (ret != 0) {
-        HILOGE("failed to exec uv_queue_work.");
+    auto task = [work {work.get()}]() {
+        if (work == nullptr) {
+            HILOGE("failed to get work.");
+            return;
+        }
+        HILOGI("AsyncWork Enter, %{public}zu", (size_t)work);
+        auto workArgs = reinterpret_cast<WorkArgs *>(work->data);
+        do {
+            if (workArgs == nullptr) {
+                HILOGE("failed to get workArgs.");
+                break;
+            }
+            DoCallJsMethod(workArgs->ptr->env_, workArgs->ptr->ctx_, workArgs->argParser);
+        } while (false);
+        HILOGI("will notify current thread info");
+        std::unique_lock<std::mutex> lock(workArgs->callbackMutex);
+        workArgs->isReady.store(true);
+        workArgs->callbackCondition.notify_all();
+        delete work;
+    };
+    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        HILOGE("failed to napi_send_event, ret:%{public}d.", ret);
         work.reset();
         return;
     }
