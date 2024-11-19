@@ -658,7 +658,7 @@ void BackupExtExtension::SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, B
     }
     auto callBack = ReportOnProcessResultCallback(obj, scenario);
     auto extenionPtr = obj.promote();
-    if (extenionPtr == nullptr) {
+    if (extenionPtr == nullptr || extenionPtr->extension_ == nullptr) {
         HILOGE("Async call js onProcess failed, extenionPtr is empty");
         return;
     }
@@ -856,6 +856,7 @@ void BackupExtExtension::AsyncTaskUser0Backup()
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         const string config = ptr->extension_->GetUsrConfig();
         try {
             HILOGI("Do backup, start fwk timer begin.");

@@ -439,7 +439,7 @@ sptr<IService> ServiceProxy::GetInstance()
         HILOGE("Get an empty samgr");
         return nullptr;
     }
-    sptr<ServiceProxyLoadCallback> loadCallback = new ServiceProxyLoadCallback();
+    sptr<ServiceProxyLoadCallback> loadCallback = sptr(new ServiceProxyLoadCallback());
     if (loadCallback == nullptr) {
         HILOGE("loadCallback is nullptr.");
         return nullptr;

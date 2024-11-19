@@ -860,6 +860,8 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSchedBundleName_0100, t
     try {
         string bundleName;
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
         sessionManagerPtr_->SetIsReadyLaunch(BUNDLE_NAME);
         bool condition = sessionManagerPtr_->GetSchedBundleName(bundleName);
         EXPECT_EQ(bundleName, BUNDLE_NAME);

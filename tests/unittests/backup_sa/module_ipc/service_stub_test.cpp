@@ -460,8 +460,8 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_AppDone_0100, testing::ext::
         EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true));
         EXPECT_CALL(*service, AppDone(_)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
-        auto ret = service->CmdAppDone(data, reply);
-        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        err = service->CmdAppDone(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by AppDone.";
@@ -1371,40 +1371,18 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdResultReport_0100, testin
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
         err = service->CmdResultReport(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
+        EXPECT_CALL(*service, ServiceResultReport(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        err = service->CmdResultReport(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by CmdResultReport.";
     }
     GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_CmdResultReport_0100";
-}
-
-/**
- * @tc.number: SUB_backup_sa_ServiceStub_CmdResultReport_0200
- * @tc.name: SUB_backup_sa_ServiceStub_CmdResultReport_0200
- * @tc.desc: Test function of GetIncrementalFileHandle interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdResultReport_0200, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_CmdResultReport_0200";
-    try {
-        MessageParcel data;
-        MessageParcel reply;
-        EXPECT_TRUE(service != nullptr);
-        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*messageParcelMock, ReadInt32(_)).WillOnce(Return(true)).WillOnce(Return(true));
-        EXPECT_CALL(*service, ServiceResultReport(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
-        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
-        auto ret = service->CmdResultReport(data, reply);
-        EXPECT_EQ(ret, BError(BError::Codes::OK));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by CmdResultReport.";
-    }
-    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_CmdResultReport_0200";
 }
 
 /**
