@@ -31,6 +31,10 @@ static napi_value Export(napi_env env, napi_value exports)
     products.emplace_back(make_unique<FileUriNExporter>(env, exports));
     products.emplace_back(make_unique<PropNExporter>(env, exports));
     for (auto &&product : products) {
+        if (product == nullptr) {
+            LOGE("INNER BUG. product is nullptr");
+            return nullptr;
+        }
         if (!product->Export()) {
             LOGE("INNER BUG. Failed to export class %{public}s for module backup", product->GetClassName().c_str());
             return nullptr;
