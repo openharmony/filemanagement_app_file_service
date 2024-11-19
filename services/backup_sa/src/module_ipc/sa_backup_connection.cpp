@@ -117,7 +117,7 @@ ErrCode SABackupConnection::LoadBackupSAExtInner()
     }
     int32_t ret = samgrProxy->LoadSystemAbility(saId_, loadCallback);
     if (ret != ERR_OK) {
-        HILOGE("Failed to Load systemAbility, systemAbility:%{private}d. ret code:%{public}d", saId_, ret);
+        HILOGE("Failed to Load systemAbility, systemAbility:%{public}d. ret code:%{public}d", saId_, ret);
         return BError(BError::Codes::SA_EXT_ERR_SAMGR);
     }
     isLoaded_.store(true);
@@ -221,7 +221,7 @@ ErrCode SABackupConnection::CallRestoreSA(UniqueFd fd)
 void SABackupConnection::SALoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
                                                                     const OHOS::sptr<IRemoteObject> &remoteObject)
 {
-    HILOGI("Load backup sa success, systemAbilityId: %{private}d, remoteObject result:%{private}s", systemAbilityId,
+    HILOGI("Load backup sa success, systemAbilityId: %{public}d, remoteObject result:%{public}s", systemAbilityId,
            (remoteObject != nullptr) ? "true" : "false");
     if (remoteObject == nullptr) {
         isLoadSuccess_.store(false);
@@ -234,7 +234,7 @@ void SABackupConnection::SALoadCallback::OnLoadSystemAbilitySuccess(int32_t syst
 
 void SABackupConnection::SALoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
 {
-    HILOGE("Load backup sa failed, systemAbilityId:%{private}d", systemAbilityId);
+    HILOGE("Load backup sa failed, systemAbilityId:%{public}d", systemAbilityId);
     isLoadSuccess_.store(false);
     proxyConVar_.notify_one();
 }

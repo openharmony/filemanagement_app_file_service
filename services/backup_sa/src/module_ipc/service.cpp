@@ -992,6 +992,10 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        if (session_ == nullptr) {
+            HILOGE("GetFileHandle error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
 
         bool updateRes = SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);

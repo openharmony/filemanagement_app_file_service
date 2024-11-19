@@ -82,6 +82,10 @@ ErrCode Service::Release()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("KILL");
+    if (session_ == nullptr) {
+        HILOGE("Release error, session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
     IServiceReverse::Scenario scenario = session_->GetScenario();
     VerifyCaller(scenario);
     AppRadar::Info info("", "", "call release");
@@ -588,6 +592,10 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        if (session_ == nullptr) {
+            HILOGE("GetIncrementalFileHandle error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::RUNNING) {
