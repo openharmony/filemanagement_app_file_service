@@ -70,12 +70,12 @@ sptr<ILocalAbilityManager> SABackupConnection::GetBackupSAExtProxy()
 ErrCode SABackupConnection::LoadBackupSAExt()
 {
     if (proxy_ && isConnected_.load()) {
-        HILOGI("SA %{private}d is running.", saId_);
+        HILOGI("SA %{public}d is running.", saId_);
         callConnected_(move(bundleName_));
         return BError(BError::Codes::OK);
     }
     if (reloadNum_.load() >= BConstants::BACKUP_SA_RELOAD_MAX) {
-        HILOGI("SA %{private}d reload done and return", saId_);
+        HILOGI("SA %{public}d reload done and return", saId_);
         callDied_(move(bundleName_));
         return BError(BError::Codes::SA_EXT_RELOAD_FAIL);
     }
@@ -117,7 +117,7 @@ ErrCode SABackupConnection::LoadBackupSAExtInner()
     }
     int32_t ret = samgrProxy->LoadSystemAbility(saId_, loadCallback);
     if (ret != ERR_OK) {
-        HILOGE("Failed to Load systemAbility, systemAbility:%{private}d. ret code:%{public}d", saId_, ret);
+        HILOGE("Failed to Load systemAbility, systemAbility:%{public}d. ret code:%{public}d", saId_, ret);
         return BError(BError::Codes::SA_EXT_ERR_SAMGR);
     }
     isLoaded_.store(true);
@@ -127,7 +127,7 @@ ErrCode SABackupConnection::LoadBackupSAExtInner()
         loadCallback->proxyConVar_.wait_for(lock, std::chrono::milliseconds(BConstants::BACKUP_LOADSA_TIMEOUT_MS),
                                             [loadCallback]() { return loadCallback->isLoadSuccess_.load(); });
     if (!waitStatus) {
-        HILOGE("Load sa %{private}d timeout", saId_);
+        HILOGE("Load sa %{public}d timeout", saId_);
         lock.unlock();
         isConnected_.store(false);
         return LoadBackupSAExt();
@@ -141,21 +141,21 @@ bool SABackupConnection::InputParaSet(MessageParcel &data)
 {
     if (extension_ == BConstants::EXTENSION_BACKUP) {
         if (!data.WriteString(extInfo_)) {
-            HILOGE("InputParaSet WriteString failed sa: %{private}d, extInfo: %{public}s, extension: %{public}s",
+            HILOGE("InputParaSet WriteString failed sa: %{public}d, extInfo: %{public}s, extension: %{public}s",
                 saId_, extInfo_.c_str(), extension_.c_str());
             return false;
         }
         return true;
     } else if (extension_ == BConstants::EXTENSION_RESTORE) {
         if (!data.WriteFileDescriptor(fd_) || !data.WriteString(extInfo_)) {
-            HILOGE("InputParaSet WriteString failed sa: %{private}d, extension: %{public}s",
+            HILOGE("InputParaSet WriteString failed sa: %{public}d, extension: %{public}s",
                 saId_, extension_.c_str());
             return false;
         }
         return true;
     }
 
-    HILOGD("SABackupExtentionPara InFunc sa: %{private}d, extension: %{public}s", saId_, extension_.c_str());
+    HILOGD("SABackupExtentionPara InFunc sa: %{public}d, extension: %{public}s", saId_, extension_.c_str());
     return false;
 }
 
@@ -163,10 +163,10 @@ bool SABackupConnection::OutputParaGet(MessageParcel &reply)
 {
     parcel_.ClearFileDescriptor();
     if (!parcel_.Append(reply)) {
-        HILOGE("OutputParaGet append failed sa is %{private}d, extension: %{public}s", saId_, extension_.c_str());
+        HILOGE("OutputParaGet append failed sa is %{public}d, extension: %{public}s", saId_, extension_.c_str());
         return false;
     }
-    HILOGD("SABackupExtentionPara OutFunc sa is %{private}d, extension: %{public}s", saId_, extension_.c_str());
+    HILOGD("SABackupExtentionPara OutFunc sa is %{public}d, extension: %{public}s", saId_, extension_.c_str());
     return true;
 }
 
@@ -221,7 +221,7 @@ ErrCode SABackupConnection::CallRestoreSA(UniqueFd fd)
 void SABackupConnection::SALoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
                                                                     const OHOS::sptr<IRemoteObject> &remoteObject)
 {
-    HILOGI("Load backup sa success, systemAbilityId: %{private}d, remoteObject result:%{private}s", systemAbilityId,
+    HILOGI("Load backup sa success, systemAbilityId: %{public}d, remoteObject result:%{public}s", systemAbilityId,
            (remoteObject != nullptr) ? "true" : "false");
     if (remoteObject == nullptr) {
         isLoadSuccess_.store(false);
@@ -234,7 +234,7 @@ void SABackupConnection::SALoadCallback::OnLoadSystemAbilitySuccess(int32_t syst
 
 void SABackupConnection::SALoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
 {
-    HILOGE("Load backup sa failed, systemAbilityId:%{private}d", systemAbilityId);
+    HILOGE("Load backup sa failed, systemAbilityId:%{public}d", systemAbilityId);
     isLoadSuccess_.store(false);
     proxyConVar_.notify_one();
 }

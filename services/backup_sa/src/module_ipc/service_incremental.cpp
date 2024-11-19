@@ -81,17 +81,19 @@ ErrCode Service::Release()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("KILL");
-    if (session_ != nullptr) {
-        IServiceReverse::Scenario scenario = session_->GetScenario();
-        VerifyCaller(scenario);
-        AppRadar::Info info("", "", "call release");
-        if (scenario == IServiceReverse::Scenario::RESTORE) {
-            AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::Release", session_->GetSessionUserId(),
-                                                         BizStageRestore::BIZ_STAGE_RELEASE, ERR_OK);
-        } else if (scenario == IServiceReverse::Scenario::BACKUP) {
-            AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::Release", session_->GetSessionUserId(),
-                                                        BizStageBackup::BIZ_STAGE_RELEASE, ERR_OK);
-        }
+    if (session_ == nullptr) {
+        HILOGE("Release error, session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    VerifyCaller(scenario);
+    AppRadar::Info info("", "", "call release");
+    if (scenario == IServiceReverse::Scenario::RESTORE) {
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::Release", session_->GetSessionUserId(),
+                                                     BizStageRestore::BIZ_STAGE_RELEASE, ERR_OK);
+    } else if (scenario == IServiceReverse::Scenario::BACKUP) {
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::Release", session_->GetSessionUserId(),
+                                                    BizStageBackup::BIZ_STAGE_RELEASE, ERR_OK);
     }
     SessionDeactive();
     return BError(BError::Codes::OK);
