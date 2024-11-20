@@ -556,6 +556,9 @@ private:
 
     void HandleNotSupportBundleNames(const std::vector<std::string> &srcBundleNames,
         std::vector<std::string> &supportBundleNames, bool isIncBackup);
+
+    void SetBundleIncDataInfo(const std::vector<BIncrementalData> &bundlesToBackup,
+        std::vector<std::string> &supportBundleNames);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
