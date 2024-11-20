@@ -298,4 +298,6 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
 }
 
 void Service::HandleNotSupportBundleNames(const vector<string>&, vector<string>&, bool) {}
+
+void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>&, std::vector<std::string>&) {}
 } // namespace OHOS::FileManagement::Backup
