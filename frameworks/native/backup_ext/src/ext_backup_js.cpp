@@ -48,7 +48,7 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 constexpr size_t ARGC_ONE = 1;
 static std::mutex g_extBackupValidLock;
-static bool g_isExtBackupValid = true;
+static int32_t g_extBackupCount = 0;
 
 static string GetSrcPath(const AppExecFwk::AbilityInfo &info)
 {
@@ -107,8 +107,8 @@ static napi_status DealNapiException(napi_env env, napi_value &exception, std::s
 static napi_value PromiseCallback(napi_env env, napi_callback_info info)
 {
     std::lock_guard<std::mutex> lock(g_extBackupValidLock);
-    if (!g_isExtBackupValid) {
-        HILOGE("ExtBackup is invalid");
+    if (g_extBackupCount <= 0) {
+        HILOGE("ExtBackup is invalid, count=%{public}d", g_extBackupCount);
         return nullptr;
     }
     HILOGI("Promise callback.");
@@ -149,8 +149,8 @@ static napi_value PromiseCatchCallback(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::lock_guard<std::mutex> lock(g_extBackupValidLock);
-    if (!g_isExtBackupValid) {
-        HILOGE("ExtBackup is invalid");
+    if (g_extBackupCount <= 0) {
+        HILOGE("ExtBackup is invalid, count=%{public}d", g_extBackupCount);
         data = nullptr;
         return nullptr;
     }
@@ -163,8 +163,8 @@ static napi_value PromiseCatchCallback(napi_env env, napi_callback_info info)
 static napi_value PromiseCallbackEx(napi_env env, napi_callback_info info)
 {
     std::lock_guard<std::mutex> lock(g_extBackupValidLock);
-    if (!g_isExtBackupValid) {
-        HILOGE("ExtBackup is invalid");
+    if (g_extBackupCount <= 0) {
+        HILOGE("ExtBackup is invalid, count=%{public}d", g_extBackupCount);
         return nullptr;
     }
     HILOGI("PromiseEx callback.");
@@ -205,8 +205,8 @@ static napi_value PromiseCatchCallbackEx(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::lock_guard<std::mutex> lock(g_extBackupValidLock);
-    if (!g_isExtBackupValid) {
-        HILOGE("ExtBackup is invalid");
+    if (g_extBackupCount <= 0) {
+        HILOGE("ExtBackup is invalid, count=%{public}d", g_extBackupCount);
         data = nullptr;
         return nullptr;
     }
@@ -449,16 +449,17 @@ napi_value AttachBackupExtensionContext(napi_env env, void *value, void *)
 
 ExtBackupJs::ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime) : jsRuntime_(jsRuntime)
 {
-    g_isExtBackupValid = true;
-    HILOGI("ExtBackupJs::ExtBackupJs.");
+    std::lock_guard<std::mutex> lock(g_extBackupValidLock);
+    g_extBackupCount += 1;
+    HILOGI("ExtBackupJs::ExtBackupJs, count=%{public}d.", g_extBackupCount);
 }
 
 ExtBackupJs::~ExtBackupJs()
 {
     jsRuntime_.FreeNativeReference(std::move(jsObj_));
     std::lock_guard<std::mutex> lock(g_extBackupValidLock);
-    g_isExtBackupValid = false;
-    HILOGI("ExtBackupJs::~ExtBackupJs.");
+    g_extBackupCount -= 1;
+    HILOGI("ExtBackupJs::~ExtBackupJs, count=%{public}d.", g_extBackupCount);
 }
 
 void ExtBackupJs::ExportJsContext(void)
