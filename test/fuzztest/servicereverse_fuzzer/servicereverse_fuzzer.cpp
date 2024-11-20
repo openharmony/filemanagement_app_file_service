@@ -34,7 +34,6 @@
 using namespace OHOS::FileManagement::Backup;
 
 namespace OHOS {
-constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr uint8_t MAX_CALL_TRANSACTION = 24;
 constexpr int32_t SHIFT_FIRST = 24;
@@ -56,6 +55,11 @@ uint32_t ConvertToUint32(const uint8_t* ptr)
 
 bool BackupFuzzTest(const uint8_t *data, size_t size)
 {
+    /* Validate the length of size */
+    if (data == nullptr || size < U32_AT_SIZE) {
+        return false;
+    }
+
     uint32_t code = ConvertToUint32(data);
     if (code > static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_TASK_FINISHED)) {
         return true;
@@ -77,6 +81,11 @@ bool BackupFuzzTest(const uint8_t *data, size_t size)
 
 bool RestoreFuzzTest(const uint8_t *data, size_t size)
 {
+    /* Validate the length of size */
+    if (data == nullptr || size < U32_AT_SIZE) {
+        return false;
+    }
+
     uint32_t code = ConvertToUint32(data);
     if (code < static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_SUB_TASK_STARTED) ||
         code > static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_FILE_READY)) {
@@ -99,6 +108,11 @@ bool RestoreFuzzTest(const uint8_t *data, size_t size)
 
 bool IncrementalBackupFuzzTest(const uint8_t *data, size_t size)
 {
+    /* Validate the length of size */
+    if (data == nullptr || size < U32_AT_SIZE) {
+        return false;
+    }
+
     uint32_t code = ConvertToUint32(data);
     if (code < static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_FILE_READY) ||
         code > static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_TASK_FINISHED)) {
@@ -121,6 +135,11 @@ bool IncrementalBackupFuzzTest(const uint8_t *data, size_t size)
 
 bool IncrementalRestoreFuzzTest(const uint8_t *data, size_t size)
 {
+    /* Validate the length of size */
+    if (data == nullptr || size < U32_AT_SIZE) {
+        return false;
+    }
+
     uint32_t code = ConvertToUint32(data);
     if (code < static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_SUB_TASK_STARTED) ||
         code > static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_FILE_READY)) {
@@ -145,16 +164,6 @@ bool IncrementalRestoreFuzzTest(const uint8_t *data, size_t size)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-
-    /* Validate the length of size */
-    if (size < OHOS::U32_AT_SIZE || size > OHOS::FOO_MAX_LEN) {
-        return 0;
-    }
-
     OHOS::BackupFuzzTest(data, size);
     OHOS::RestoreFuzzTest(data, size);
     OHOS::IncrementalBackupFuzzTest(data, size);

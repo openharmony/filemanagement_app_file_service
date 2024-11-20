@@ -142,7 +142,7 @@ bool ShareFilePathIoctlFdFuzzTest(const uint8_t* data, size_t size)
     int32_t ret = 0;
     int32_t dirFd;
 
-    if (size == 0) {
+    if (data == nullptr || size < sizeof(int)) {
         return false;
     }
 
@@ -168,7 +168,7 @@ bool ShareFilePathIoctlFdFuzzTest(const uint8_t* data, size_t size)
         close(dirFd);
         return false;
     }
-    sc.srcFd = size;
+    sc.srcFd = *(reinterpret_cast<const int*>(data));
 
     ret = ioctl(dirFd, HMDFS_IOC_SET_SHARE_PATH, &sc);
     if (ret < 0) {
