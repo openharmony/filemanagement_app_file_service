@@ -125,7 +125,7 @@ ErrCode SvcBackupConnection::DisconnectBackupExtAbility()
             HILOGE("Dis connect failed");
             return false;
         }
-        return extPtr->GetBackupExtProxy() == nullptr;
+        return extPtr->isConnected_.load() == false;
     };
     if (condition_.wait_for(lock, std::chrono::seconds(WAIT_TIME), callback)) {
         HILOGI("Wait until the connection ends");
