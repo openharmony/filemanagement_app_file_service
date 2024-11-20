@@ -1038,10 +1038,10 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
     }
 }
 
-void Service::OnBackupExtensionDied(const string &&bundleName, bool isSecondCalled)
+void Service::OnBackupExtensionDied(const string &&bundleName, bool isCleanCalled)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    if (isSecondCalled) {
+    if (isCleanCalled) {
         HILOGE("Backup <%{public}s> Extension Process second Died", bundleName.c_str());
         ClearSessionAndSchedInfo(bundleName);
         OnAllBundlesFinished(BError(BError::Codes::OK));
@@ -1572,7 +1572,7 @@ std::function<void(const std::string &&)> Service::GetBackupInfoConnectDone(wptr
 std::function<void(const std::string &&, bool)> Service::GetBackupInfoConnectDied(
     wptr<Service> obj, std::string &bundleName)
 {
-    return [obj](const string &&bundleName, bool isSecondCalled) {
+    return [obj](const string &&bundleName, bool isCleanCalled) {
         HILOGI("GetBackupInfoConnectDied, bundleName: %{public}s", bundleName.c_str());
         auto thisPtr = obj.promote();
         if (!thisPtr) {
@@ -1626,7 +1626,7 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
     backupConnection->SetCallback(callConnected);
     backupConnection->SetCallDied(callDied);
     AAFwk::Want want = CreateConnectWant(bundleName);
-    auto ret = backupConnection->ConnectBackupExtAbility(want, GetUserIdDefault());
+    auto ret = backupConnection->ConnectBackupExtAbility(want, GetUserIdDefault(), false);
     if (ret) {
         HILOGE("ConnectBackupExtAbility faild, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
         return BError(BError::Codes::SA_BOOT_EXT_FAIL);

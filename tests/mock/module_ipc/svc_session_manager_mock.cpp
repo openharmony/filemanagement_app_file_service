@@ -102,7 +102,7 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
         return nullptr;
     }
     if (!it->second.backUpConnection) {
-        auto callDied = [](const string &&bundleName, bool isSecondCalled = false) {};
+        auto callDied = [](const string &&bundleName, bool isCleanCalled = false) {};
         auto callConnected = [](const string &&bundleName) {};
         it->second.backUpConnection = sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnected,
             bundleName));

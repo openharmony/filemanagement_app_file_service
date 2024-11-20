@@ -23,7 +23,7 @@
 namespace OHOS::FileManagement::Backup {
 class BSvcBackupConnection : public RefBase {
 public:
-    virtual ErrCode ConnectBackupExtAbility(AAFwk::Want&, int32_t) = 0;
+    virtual ErrCode ConnectBackupExtAbility(AAFwk::Want&, int32_t, bool) = 0;
     virtual ErrCode DisconnectBackupExtAbility() = 0;
     virtual bool IsExtAbilityConnected() = 0;
     virtual sptr<IExtension> GetBackupExtProxy() = 0;
@@ -37,7 +37,7 @@ public:
 
 class SvcBackupConnectionMock : public BSvcBackupConnection {
 public:
-    MOCK_METHOD(ErrCode, ConnectBackupExtAbility, (AAFwk::Want&, int32_t));
+    MOCK_METHOD(ErrCode, ConnectBackupExtAbility, (AAFwk::Want&, int32_t, bool));
     MOCK_METHOD(ErrCode, DisconnectBackupExtAbility, ());
     MOCK_METHOD(bool, IsExtAbilityConnected, ());
     MOCK_METHOD((sptr<IExtension>), GetBackupExtProxy, ());

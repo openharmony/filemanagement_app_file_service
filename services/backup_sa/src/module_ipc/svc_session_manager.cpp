@@ -281,14 +281,14 @@ std::weak_ptr<SABackupConnection> SvcSessionManager::GetSAExtConnection(const Bu
 
 sptr<SvcBackupConnection> SvcSessionManager::GetBackupAbilityExt(const string &bundleName)
 {
-    auto callDied = [revPtr {reversePtr_}](const string &&bundleName, bool isSecondCalled = false) {
+    auto callDied = [revPtr {reversePtr_}](const string &&bundleName, bool isCleanCalled = false) {
         auto revPtrStrong = revPtr.promote();
         if (!revPtrStrong) {
             // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        revPtrStrong->OnBackupExtensionDied(move(bundleName), isSecondCalled);
+        revPtrStrong->OnBackupExtensionDied(move(bundleName), isCleanCalled);
     };
 
     auto callConnected = [revPtr {reversePtr_}](const string &&bundleName) {

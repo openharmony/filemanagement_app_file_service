@@ -24,9 +24,9 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName&, c
 
 void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName&, int) {}
 
-ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId)
+ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId, bool isCleanCalled)
 {
-    return BSvcBackupConnection::connect->ConnectBackupExtAbility(want, userId);
+    return BSvcBackupConnection::connect->ConnectBackupExtAbility(want, userId, isCleanCalled);
 }
 
 ErrCode SvcBackupConnection::DisconnectBackupExtAbility()

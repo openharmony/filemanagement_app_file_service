@@ -41,7 +41,7 @@ public:
     static inline shared_ptr<IfaceCastMock> castMock = nullptr;
 };
 
-static void CallDied(const std::string &&name, bool isSecondCalled)
+static void CallDied(const std::string &&name, bool isCleanCalled)
 {
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-CallDied SUCCESS";
 }
@@ -114,12 +114,12 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityDisconnectDone_0
         int resultCode = 1;
 
         EXPECT_TRUE(backupCon_ != nullptr);
-        backupCon_->isConnectedDone_ = false;
+        backupCon_->isConnectCalled_ = false;
         backupCon_->OnAbilityDisconnectDone(element, resultCode);
         bool ret = backupCon_->IsExtAbilityConnected();
         EXPECT_FALSE(ret);
 
-        backupCon_->isConnectedDone_ = true;
+        backupCon_->isConnectCalled_ = true;
         backupCon_->OnAbilityDisconnectDone(element, resultCode);
         ret = backupCon_->IsExtAbilityConnected();
         EXPECT_FALSE(ret);

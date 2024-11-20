@@ -262,7 +262,9 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
             HILOGE("LaunchBackupExtension error, WaitDisconnectDone failed");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        ErrCode ret = backUpConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId());
+        BConstants::ServiceSchedAction bundleAction = session_->GetServiceSchedAction(bundleName);
+        ErrCode ret = backUpConnection->ConnectBackupExtAbility(want, session_->GetSessionUserId(),
+            bundleAction == BConstants::ServiceSchedAction::CLEAN);
         if (ret) {
             HILOGE("ConnectBackupExtAbility faild, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
             ExtensionConnectFailRadarReport(bundleName, ret, scenario);

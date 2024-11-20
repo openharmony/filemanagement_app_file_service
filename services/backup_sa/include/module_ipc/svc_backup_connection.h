@@ -49,7 +49,7 @@ public:
     /**
      * @brief connect remote ability of ExtBackup.
      */
-    ErrCode ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId);
+    ErrCode ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId, bool isCleanCalled);
 
     /**
      * @brief disconnect remote ability of ExtBackup.
@@ -104,8 +104,8 @@ private:
     std::condition_variable condition_;
     std::condition_variable waitCondition_;
     std::atomic<bool> isConnected_ = {false};
-    std::atomic<bool> isConnectedDone_ = {false};
-    std::atomic<bool> isSecondOnDisCon_ = {false};
+    std::atomic<bool> isCleanCalled_ = {false};
+    std::atomic<bool> isConnectCalled_ = {false};
     sptr<IExtension> backupProxy_;
 
     std::function<void(const std::string &&, bool)> callDied_;

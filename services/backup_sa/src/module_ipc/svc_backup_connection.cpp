@@ -87,26 +87,27 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
         return;
     }
     bundleName = bundleNameIndexInfo_;
-    if (isSecondOnDisCon_ == false) {
-        isSecondOnDisCon_.store(true);
-    } else {
-        HILOGE("It's error that the backup extension second died before the backup sa. name : %{public}s",
-            bundleName.data());
-        callDied_(move(bundleName), true);
-    }
-    if (isConnectedDone_ == false) {
-        isConnectedDone_.store(true);
-        HILOGE("It's error that the backup extension dies before the backup sa. name : %{public}s", bundleName.data());
-        callDied_(move(bundleName), false);
+    if (isConnectCalled_ == true) {
+        if (isCleanCalled_ == true) {
+            HILOGE("It's error that the backup extension clean died before the backup sa. name : %{public}s",
+                bundleName.data());
+            callDied_(move(bundleName), true);
+        } else {
+            HILOGE("It's error that the backup extension died before the backup sa. name : %{public}s",
+                bundleName.data());
+            callDied_(move(bundleName), false);
+        }
     }
     condition_.notify_all();
     waitCondition_.notify_all();
     HILOGI("called end, name: %{public}s", bundleNameIndexInfo_.c_str());
 }
 
-ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId)
+ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId, bool isCleanCalled)
 {
     HILOGI("Called begin");
+    isCleanCalled_.store(isCleanCalled);
+    isConnectCalled_.store(true);
     std::unique_lock<std::mutex> lock(mutex_);
     ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, userId);
     HILOGI("Called end, ret=%{public}d, userId=%{public}d.", ret, userId);
@@ -116,7 +117,7 @@ ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t 
 ErrCode SvcBackupConnection::DisconnectBackupExtAbility()
 {
     HILOGI("called begin");
-    isConnectedDone_.store(true);
+    isConnectCalled_.store(false);
     std::unique_lock<std::mutex> lock(mutex_);
     ErrCode ret = AppExecFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(this);
     auto callback = [extConn {wptr(this)}] {

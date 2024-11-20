@@ -125,7 +125,7 @@ public:
      *
      * @param bundleName 应用名称
      */
-    void OnBackupExtensionDied(const std::string &&bundleName, bool isSecondCalled = false);
+    void OnBackupExtensionDied(const std::string &&bundleName, bool isCleanCalled = false);
 
     /**
      * @brief extension启动连接成功
