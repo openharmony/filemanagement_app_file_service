@@ -1959,6 +1959,7 @@ void Service::NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerN
         );
     } else if (scenario == IServiceReverse::Scenario::RESTORE) {
         HILOGI("will notify clone data, scenario is Restore");
+        SendEndAppGalleryNotify(callerName);
         session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, callerName);
     }
     BundleEndRadarReport(callerName, errCode, scenario);
