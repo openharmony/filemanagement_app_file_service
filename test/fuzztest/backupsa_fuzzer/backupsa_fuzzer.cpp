@@ -31,7 +31,6 @@
 using namespace OHOS::FileManagement::Backup;
 
 namespace OHOS {
-constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr uint8_t MAX_CALL_TRANSACTION = 24;
 constexpr int32_t SERVICE_ID = 5203;
@@ -42,16 +41,20 @@ uint32_t GetU32Data(const char* ptr)
     return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | (ptr[3]);
 }
 
-bool BackupSaFuzzTest(std::unique_ptr<char[]> data, size_t size)
+bool BackupSaFuzzTest(const uint8_t *data, size_t size)
 {
+    if (data == nullptr || size < U32_AT_SIZE) {
+        return true;
+    }
+
     sptr service = sptr(new Service(SERVICE_ID));
-    uint32_t code = GetU32Data(data.get());
+    uint32_t code = GetU32Data(reinterpret_cast<const char*>(data));
     if (code == 0) {
         return true;
     }
     MessageParcel datas;
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(reinterpret_cast<const char*>(data + U32_AT_SIZE), size - U32_AT_SIZE);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -64,21 +67,6 @@ bool BackupSaFuzzTest(std::unique_ptr<char[]> data, size_t size)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t dataSize)
 {
-    /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-
-    /* Validate the length of size */
-    if (dataSize < OHOS::U32_AT_SIZE || dataSize > OHOS::FOO_MAX_LEN) {
-        return 0;
-    }
-
-    auto str = std::make_unique<char[]>(dataSize + 1);
-    (void)memset_s(str.get(), dataSize + 1, 0x00, dataSize + 1);
-    if (memcpy_s(str.get(), dataSize, data, dataSize) != EOK) {
-        return 0;
-    }
-    OHOS::BackupSaFuzzTest(move(str), dataSize);
+    OHOS::BackupSaFuzzTest(data, dataSize);
     return 0;
 }

@@ -74,6 +74,10 @@ void GetInfo(const uint8_t *data, size_t size, vector<BJsonEntityCaps::BundleInf
 
 bool SvcRestoreDepsManagerFuzzTest(const uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
     if (size >= sizeof(RestoreTypeEnum)) {
@@ -112,10 +116,6 @@ bool SvcRestoreDepsManagerFuzzTest(const uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-
     OHOS::SvcRestoreDepsManagerFuzzTest(data, size);
     return 0;
 }

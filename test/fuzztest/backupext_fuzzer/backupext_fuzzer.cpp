@@ -175,9 +175,14 @@ bool CmdHandleClearFuzzTest(shared_ptr<BackupExtExtension> extension, const uint
 
 bool CmdHandleBackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
+    if (data == nullptr || size < sizeof(bool)) {
+        return true;
+    }
+
     MessageParcel msg;
     MessageParcel reply;
 
+    msg.WriteBool(*reinterpret_cast<const bool*>(data));
     extension->CmdHandleBackup(msg, reply);
     return true;
 }
@@ -194,9 +199,14 @@ bool CmdPublishFileFuzzTest(shared_ptr<BackupExtExtension> extension, const uint
 
 bool CmdHandleRestoreFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
+    if (data == nullptr || size < sizeof(bool)) {
+        return true;
+    }
+
     MessageParcel msg;
     MessageParcel reply;
 
+    msg.WriteBool(*reinterpret_cast<const bool*>(data));
     extension->CmdHandleRestore(msg, reply);
     return true;
 }
@@ -241,9 +251,14 @@ bool CmdHandleIncrementalBackupFuzzTest(shared_ptr<BackupExtExtension> extension
 
 bool CmdIncrementalOnBackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
+    if (data == nullptr || size < sizeof(bool)) {
+        return true;
+    }
+
     MessageParcel msg;
     MessageParcel reply;
 
+    msg.WriteBool(*reinterpret_cast<const bool*>(data));
     extension->CmdIncrementalOnBackup(msg, reply);
     return true;
 }
@@ -255,15 +270,6 @@ bool CmdGetIncrementalBackupFileHandleFuzzTest(shared_ptr<BackupExtExtension> ex
     MessageParcel reply;
 
     extension->CmdGetIncrementalBackupFileHandle(msg, reply);
-    return true;
-}
-
-bool CmdGetBackupInfoFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
-{
-    MessageParcel msg;
-    MessageParcel reply;
-
-    extension->CmdGetBackupInfo(msg, reply);
     return true;
 }
 } // namespace OHOS
@@ -300,7 +306,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         OHOS::CmdHandleIncrementalBackupFuzzTest(extension, data, size);
         OHOS::CmdIncrementalOnBackupFuzzTest(extension, data, size);
         OHOS::CmdGetIncrementalBackupFileHandleFuzzTest(extension, data, size);
-        OHOS::CmdGetBackupInfoFuzzTest(extension, data, size);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
