@@ -396,8 +396,12 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if ((extension_ == nullptr) || (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE)) {
-            HILOGE("Failed to get incremental file handle, extension or action is invalid, action %{public}d.",
+        if (extension_ == nullptr) {
+            HILOGE("Failed to get incremental file handle, extension  is invalid");
+            throw BError(BError::Codes::EXT_INVAL_ARG, "extension is invalid");
+        }
+        if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
+            HILOGE("Failed to get incremental file handle, action is invalid, action %{public}d.",
                 extension_->GetExtensionAction());
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
