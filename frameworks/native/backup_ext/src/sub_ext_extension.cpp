@@ -206,6 +206,10 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreCallback(
             HILOGE("Ext extension handle have been released");
             return;
         }
+        if (extensionPtr->isExecAppDone_.load()) {
+            HILOGE("Appdone has been executed for the current application");
+            return;
+        }
         HILOGI("Current bundle will execute app done");
         if (errCode == ERR_OK) {
             auto spendTime = extensionPtr->GetOnStartTimeCost();
@@ -240,6 +244,10 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreExCallbac
         }
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
+            return;
+        }
+        if (extensionPtr->isExecAppDone_.load()) {
+            HILOGE("Appdone has been executed for the current application");
             return;
         }
         if (errCode == ERR_OK && !restoreRetInfo.empty()) {
@@ -302,6 +310,10 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
             HILOGE("Extension handle have been released");
             return;
         }
+        if (extensionPtr->isExecAppDone_.load()) {
+            HILOGE("Appdone has been executed for the current application");
+            return;
+        }
         if (errCode == ERR_OK && !restoreRetInfo.empty()) {
             auto spendTime = extensionPtr->GetOnStartTimeCost();
             if (spendTime >= BConstants::MAX_TIME_COST) {
@@ -339,6 +351,10 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreCall
         auto extensionPtr = obj.promote();
         if (extensionPtr == nullptr) {
             HILOGE("Ext extension handle have been released");
+            return;
+        }
+        if (extensionPtr->isExecAppDone_.load()) {
+            HILOGE("Appdone has been executed for the current application");
             return;
         }
         HILOGI("Current bundle will execute app done");
@@ -386,6 +402,10 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupCall
             HILOGE("Extension handle have been released");
             return;
         }
+        if (extensionPtr->isExecAppDone_.load()) {
+            HILOGE("Appdone has been executed for the current application");
+            return;
+        }
         extensionPtr->FinishOnProcessTask();
         if (errCode == ERR_OK) {
             auto spendTime = extensionPtr->GetOnStartTimeCost();
@@ -422,6 +442,10 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
         }
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
+            return;
+        }
+        if (extensionPtr->isExecAppDone_.load()) {
+            HILOGE("Appdone has been executed for the current application");
             return;
         }
         extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
@@ -468,6 +492,10 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupC
             HILOGE("Current extension execute call backup error, extPtr is empty");
             return;
         }
+        if (extPtr->isExecAppDone_.load()) {
+            HILOGE("Appdone has been executed for the current application");
+            return;
+        }
         HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
         extPtr->FinishOnProcessTask();
         if (errCode == ERR_OK) {
@@ -508,6 +536,10 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupE
         }
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
+            return;
+        }
+        if (extensionPtr->isExecAppDone_.load()) {
+            HILOGE("Appdone has been executed for the current application");
             return;
         }
         extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
@@ -624,37 +656,7 @@ void BackupExtExtension::SyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, B
         HILOGE("Current extension execute finished");
         return;
     }
-    auto callBack = [obj, scenario](ErrCode errCode, const std::string processInfo) {
-        auto extPtr = obj.promote();
-        if (extPtr == nullptr) {
-            HILOGE("Async call js onPreocess callback failed, exPtr is empty");
-            return;
-        }
-        if (extPtr->onProcessTimeout_.load()) {
-            HILOGE("The result of invoking onProcess is timeout.");
-            extPtr->onProcessTimeout_.store(false);
-            return;
-        }
-        extPtr->CloseOnProcessTimeOutTimer();
-        extPtr->isFirstCallOnProcess_.store(false);
-        extPtr->onProcessTimeout_.store(false);
-        if (extPtr->onProcessTimeoutCnt_.load() > 0) {
-            extPtr->onProcessTimeoutCnt_ = 0;
-            HILOGI("onProcess execute success, reset onProcessTimeoutCnt");
-        }
-        if (processInfo.size() == 0) {
-            HILOGE("Current extension has no js method named onProcess.");
-            std::unique_lock<std::mutex> lock(extPtr->onProcessLock_);
-            extPtr->isFirstCallOnProcess_.store(false);
-            extPtr->stopCallJsOnProcess_.store(true);
-            extPtr->execOnProcessCon_.notify_one();
-            lock.unlock();
-            return;
-        }
-        std::string processInfoJsonStr;
-        BJsonUtil::BuildOnProcessRetInfo(processInfoJsonStr, processInfo);
-        extPtr->ReportAppProcessInfo(processInfoJsonStr, scenario);
-    };
+    auto callBack = ReportOnProcessResultCallback(obj, scenario);
     auto extenionPtr = obj.promote();
     if (extenionPtr == nullptr) {
         HILOGE("Async call js onProcess failed, extenionPtr is empty");
@@ -944,5 +946,49 @@ int BackupExtExtension::User0DoBackup(const BJsonEntityExtensionConfig &usrConfi
     }
     DoUser0Backup(usrConfig);
     return ERR_OK;
+}
+
+std::function<void(ErrCode, std::string)> BackupExtExtension::ReportOnProcessResultCallback(
+    wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
+{
+    return [obj, scenario](ErrCode errCode, const std::string processInfo) {
+        auto extPtr = obj.promote();
+        if (extPtr == nullptr) {
+            HILOGE("Async call js onPreocess callback failed, exPtr is empty");
+            return;
+        }
+        if (extPtr->onProcessTimeout_.load()) {
+            HILOGE("The result of invoking onProcess is timeout.");
+            extPtr->onProcessTimeout_.store(false);
+            return;
+        }
+        extPtr->CloseOnProcessTimeOutTimer();
+        extPtr->isFirstCallOnProcess_.store(false);
+        extPtr->onProcessTimeout_.store(false);
+        if (extPtr->onProcessTimeoutCnt_.load() > 0) {
+            extPtr->onProcessTimeoutCnt_ = 0;
+            HILOGI("onProcess execute success, reset onProcessTimeoutCnt");
+        }
+        if (processInfo.size() == 0) {
+            HILOGE("Current extension has no js method named onProcess.");
+            std::unique_lock<std::mutex> lock(extPtr->onProcessLock_);
+            extPtr->isFirstCallOnProcess_.store(false);
+            extPtr->stopCallJsOnProcess_.store(true);
+            extPtr->execOnProcessCon_.notify_one();
+            lock.unlock();
+            return;
+        }
+        std::string processInfoJsonStr;
+        BJsonUtil::BuildOnProcessRetInfo(processInfoJsonStr, processInfo);
+        auto task = [obj, scenario, processInfoJsonStr]() {
+            auto reportExtPtr = obj.promote();
+            if (reportExtPtr == nullptr) {
+                HILOGE("Report onProcess Result error, reportExtPtr is empty");
+                return;
+            }
+            reportExtPtr->ReportAppProcessInfo(processInfoJsonStr, scenario);
+        };
+        extPtr->reportOnProcessRetPool_.AddTask([task]() { task(); });
+    };
 }
 } // namespace OHOS::FileManagement::Backup

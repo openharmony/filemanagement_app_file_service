@@ -70,6 +70,7 @@ public:
         bundleName_ = bundleName;
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         onProcessTaskPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        reportOnProcessRetPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         SetStagingPathProperties();
     }
     ~BackupExtExtension()
@@ -77,6 +78,7 @@ public:
         onProcessTimeoutTimer_.Shutdown();
         threadPool_.Stop();
         onProcessTaskPool_.Stop();
+        reportOnProcessRetPool_.Stop();
         if (callJsOnProcessThread_.joinable()) {
             callJsOnProcessThread_.join();
         }
@@ -171,7 +173,7 @@ private:
     void DoUser0Backup(const BJsonEntityExtensionConfig &usrConfig);
 
     int User0DoBackup(const BJsonEntityExtensionConfig &usrConfig);
-    
+
     int DoIncrementalBackup(const std::vector<struct ReportFileInfo> &allFiles,
                             const std::vector<struct ReportFileInfo> &smallFiles,
                             const std::vector<struct ReportFileInfo> &bigFiles);
@@ -287,6 +289,8 @@ private:
     ErrCode GetIncreFileHandleForNormalVersion(const std::string &fileName);
     void RestoreOneBigFile(const std::string &path, const ExtManageInfo &item, const bool appendTargetPath);
     int DealIncreRestoreBigAndTarFile();
+    std::function<void(ErrCode, std::string)> ReportOnProcessResultCallback(wptr<BackupExtExtension> obj,
+        BackupRestoreScenario scenario);
 
 private:
     std::shared_mutex lock_;
@@ -320,6 +324,8 @@ private:
     OHOS::ThreadPool onProcessTaskPool_;
     std::atomic<bool> isFirstCallOnProcess_ {false};
     std::atomic<bool> isExecAppDone_ {false};
+    OHOS::ThreadPool reportOnProcessRetPool_;
+
     BackupRestoreScenario curScenario_ { BackupRestoreScenario::FULL_BACKUP };
 };
 } // namespace OHOS::FileManagement::Backup
