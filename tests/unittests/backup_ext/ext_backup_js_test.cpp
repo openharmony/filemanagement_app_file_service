@@ -752,13 +752,13 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_AttachBackupExtensionContext_0100, t
 
         auto value = make_shared<ExtBackupContext>();
         EXPECT_CALL(*extBackupMock, CreateExtBackupJsContext(_, _)).WillOnce(Return(nullptr));
-        ret = AttachBackupExtensionContext(reinterpret_cast<napi_env>(&env), reinterpret_cast<void *>(&value), nullptr);
+        ret = AttachBackupExtensionContext(reinterpret_cast<napi_env>(&env), value.get(), nullptr);
         EXPECT_TRUE(ret == nullptr);
 
         EXPECT_CALL(*extBackupMock, CreateExtBackupJsContext(_, _))
             .WillOnce(Return(reinterpret_cast<napi_value>(&env)));
         EXPECT_CALL(*extBackupMock, LoadSystemModuleByEngine(_, _, _, _)).WillOnce(Return(nullptr));
-        ret = AttachBackupExtensionContext(reinterpret_cast<napi_env>(&env), reinterpret_cast<void *>(&value), nullptr);
+        ret = AttachBackupExtensionContext(reinterpret_cast<napi_env>(&env), value.get(), nullptr);
         EXPECT_TRUE(ret == nullptr);
     } catch (...) {
         EXPECT_TRUE(false);

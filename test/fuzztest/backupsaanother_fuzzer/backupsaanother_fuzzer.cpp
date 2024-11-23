@@ -297,11 +297,6 @@ bool CmdGetIncrementalFileHandleFuzzTest(const uint8_t *data, size_t size)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-
     OHOS::CmdGetFileHandleFuzzTest(data, size);
     OHOS::CmdAppendBundlesBackupSessionFuzzTest(data, size);
     OHOS::CmdReleaseFuzzTest(data, size);

@@ -24,7 +24,6 @@
 #include "token_setproc.h"
 
 namespace OHOS {
-constexpr size_t THRESHOLD = 10;
 constexpr size_t LENGTH = 4;
 constexpr size_t REMAINDER = 3;
 using namespace OHOS::Security::AccessToken;
@@ -118,10 +117,6 @@ void DeactivatePermissionFuzzTest(const uint8_t *data, size_t size)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    if (size < OHOS::THRESHOLD) {
-        return 0;
-    }
-
     /* Run your code on data */
     OHOS::PersistPermissionFuzzTest(data, size);
     OHOS::RevokePermissionFuzzTest(data, size);
