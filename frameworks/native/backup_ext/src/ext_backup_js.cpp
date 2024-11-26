@@ -250,8 +250,11 @@ static bool CallCatchPromise(AbilityRuntime::JsRuntime &jsRuntime, napi_value re
         return false;
     }
     napi_value ret;
-    napi_create_function(env, "promiseCatchCallback", strlen("promiseCatchCallback"), PromiseCatchCallback,
-        callbackInfo, &ret);
+    if (napi_create_function(env, "promiseCatchCallback", strlen("promiseCatchCallback"), PromiseCatchCallback,
+        callbackInfo, &ret) != napi_ok) {
+        HILOGE("napi create function failed");
+        return false;
+    }
     napi_value argv[1] = {ret};
     napi_call_function(env, result, method, 1, argv, nullptr);
     return true;
@@ -276,7 +279,11 @@ static bool CallPromise(AbilityRuntime::JsRuntime &jsRuntime, napi_value result,
         return false;
     }
     napi_value ret;
-    napi_create_function(env, "promiseCallback", strlen("promiseCallback"), PromiseCallback, callbackInfo, &ret);
+    if (napi_create_function(env, "promiseCallback", strlen("promiseCallback"), PromiseCallback, callbackInfo, &ret) !=
+        napi_ok) {
+        HILOGE("napi create function failed");
+        return false;
+    }
     napi_value argv[1] = {ret};
     napi_call_function(env, result, method, 1, argv, nullptr);
     if (!CallCatchPromise(jsRuntime, result, callbackInfo)) {
@@ -306,8 +313,11 @@ static bool CallCatchPromiseEx(AbilityRuntime::JsRuntime &jsRuntime, napi_value 
         return false;
     }
     napi_value ret;
-    napi_create_function(env, "promiseCatchCallbackEx", strlen("promiseCatchCallbackEx"), PromiseCatchCallbackEx,
-        callbackInfoEx, &ret);
+    if (napi_create_function(env, "promiseCatchCallbackEx", strlen("promiseCatchCallbackEx"), PromiseCatchCallbackEx,
+        callbackInfoEx, &ret) != napi_ok) {
+        HILOGE("napi create function failed");
+        return false;
+    }
     napi_value argv[1] = {ret};
     napi_call_function(env, result, method, 1, argv, nullptr);
     return true;
@@ -332,8 +342,11 @@ static bool CallPromiseEx(AbilityRuntime::JsRuntime &jsRuntime, napi_value resul
         return false;
     }
     napi_value ret;
-    napi_create_function(env, "promiseCallbackEx", strlen("promiseCallbackEx"), PromiseCallbackEx, callbackInfoEx,
-        &ret);
+    if (napi_create_function(env, "promiseCallbackEx", strlen("promiseCallbackEx"), PromiseCallbackEx, callbackInfoEx,
+        &ret) != napi_ok) {
+        HILOGE("napi create function failed");
+        return false;
+    }
     napi_value argv[1] = {ret};
     napi_call_function(env, result, method, 1, argv, nullptr);
     if (!CallCatchPromiseEx(jsRuntime, result, callbackInfoEx)) {
@@ -363,8 +376,11 @@ static bool CallPromiseEx(AbilityRuntime::JsRuntime &jsRuntime, napi_value resul
         return false;
     }
     napi_value ret;
-    napi_create_function(env, "promiseCallbackEx", strlen("promiseCallbackEx"), PromiseCallbackEx, callbackInfoBackup,
-        &ret);
+    if (napi_create_function(env, "promiseCallbackEx", strlen("promiseCallbackEx"), PromiseCallbackEx,
+        callbackInfoBackup, &ret) != napi_ok) {
+        HILOGE("napi create function failed");
+        return false;
+    }
     napi_value argv[1] = {ret};
     napi_call_function(env, result, method, 1, argv, nullptr);
     return true;
@@ -775,7 +791,6 @@ static int InvokeJsMethod(CallJsParam *param, AbilityRuntime::HandleEscape& hand
     napi_value value = param->jsObj->GetNapiValue();
     if (value == nullptr) {
         HILOGE("failed to get napi value object.");
-        napi_close_handle_scope(env, scope);
         return EINVAL;
     }
     napi_status status;
@@ -783,7 +798,6 @@ static int InvokeJsMethod(CallJsParam *param, AbilityRuntime::HandleEscape& hand
     status = napi_get_named_property(env, value, param->funcName.c_str(), &method);
     if (status != napi_ok || param->retParser == nullptr) {
         HILOGE("ResultValueParser must not null.");
-        napi_close_handle_scope(env, scope);
         return EINVAL;
     }
     napi_value result;
@@ -791,10 +805,8 @@ static int InvokeJsMethod(CallJsParam *param, AbilityRuntime::HandleEscape& hand
     napi_call_function(env, value, method, argv.size(), argv.data(), &result);
     if (!param->retParser(env, handleEscape.Escape(result))) {
         HILOGE("Parser js result fail.");
-        napi_close_handle_scope(env, scope);
         return EINVAL;
     }
-    napi_close_handle_scope(env, scope);
     return ERR_OK;
 }
 
@@ -827,6 +839,7 @@ static int DoCallJsMethod(CallJsParam *param)
         }
     }
     auto ret = InvokeJsMethod(param, handleEscape, env, scope, argv);
+    napi_close_handle_scope(env, scope);
     HILOGI("End execute DoCallJsMethod");
     return ret;
 }
@@ -890,7 +903,10 @@ std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::Pa
         napi_value backupExtInfoVal = nullptr;
         napi_create_object(env, &backupExtInfoVal);
         HILOGI("backupExtInfo is:%{public}s", GetAnonyString(backupExtInfo).c_str());
-        napi_create_string_utf8(env, backupExtInfo.c_str(), backupExtInfo.size(), &backupExtInfoVal);
+        if (napi_create_string_utf8(env, backupExtInfo.c_str(), backupExtInfo.size(), &backupExtInfoVal) != napi_ok) {
+            HILOGE("create napi string failed");
+            return false;
+        }
         argv.push_back(backupExtInfoVal);
         return true;
     };
@@ -908,7 +924,10 @@ std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::Pa
         napi_create_object(env, &restoreRetValue);
         napi_set_named_property(env, objValue, "code", AbilityRuntime::CreateJsValue(env, appVersionCode));
         napi_set_named_property(env, objValue, "name", AbilityRuntime::CreateJsValue(env, appVersionStr.c_str()));
-        napi_create_string_utf8(env, restoreExtInfo.c_str(), restoreExtInfo.size(), &restoreRetValue);
+        if (napi_create_string_utf8(env, restoreExtInfo.c_str(), restoreExtInfo.size(), &restoreRetValue) != napi_ok) {
+            HILOGE("create napi string failed");
+            return false;
+        }
         argv.push_back(objValue);
         argv.push_back(restoreRetValue);
         return true;

@@ -458,8 +458,14 @@ ErrFileInfo UntarFile::ParseRegularFile(FileStatInfo &info)
             if (remainSize < READ_BUFF_SIZE) {
                 readBuffSize = remainSize;
             }
-            fread(&destStr[0], sizeof(char), readBuffSize, tarFilePtr_);
-            fwrite(&destStr[0], sizeof(char), readBuffSize, destFile);
+            auto readSize = fread(&destStr[0], sizeof(char), readBuffSize, tarFilePtr_);
+            if (readSize != readBuffSize) {
+                readBuffSize = readSize;
+            }
+            size_t writeSize = 0;
+            do {
+                writeSize += fwrite(&destStr[writeSize], sizeof(char), readBuffSize - writeSize, destFile);
+            } while (writeSize < readBuffSize);
             remainSize -= readBuffSize;
         }
         fclose(destFile);

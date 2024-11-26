@@ -53,17 +53,24 @@ int ZipUtil::AddFileInZip(zipFile &zipfile, const std::string &srcFile, int keep
         return ERROR_GET_HANDLE;
     }
     std::string srcFileName = GetDestFilePath(srcFile, destFileName, keepParentPathStatus);
-    zipOpenNewFileInZip(zipfile, srcFileName.c_str(), &zipInfo, nullptr, 0, nullptr, 0, nullptr, Z_DEFLATED,
-        Z_DEFAULT_COMPRESSION);
+    int errcode = zipOpenNewFileInZip(zipfile, srcFileName.c_str(), &zipInfo, nullptr, 0, nullptr, 0, nullptr,
+        Z_DEFLATED, Z_DEFAULT_COMPRESSION);
+    if (errcode != Z_OK) {
+        HILOGE("zipOpenNewFileInZip failed:%{public}s, errno: %{public}d.", srcFile.c_str(), errcode);
+        return errcode;
+    }
 
-    int errcode = 0;
     char buf[READ_MORE_LENGTH] = {0};
     while (!feof(srcFp)) {
         size_t numBytes = fread(buf, 1, sizeof(buf), srcFp);
         if (numBytes == 0) {
             break;
         }
-        zipWriteInFileInZip(zipfile, buf, static_cast<unsigned int>(numBytes));
+        errcode = zipWriteInFileInZip(zipfile, buf, static_cast<unsigned int>(numBytes));
+        if (errcode != Z_OK) {
+            HILOGE("zipOpenNewFileInZip failed:%{public}s, errno: %{public}d.", srcFile.c_str(), errcode);
+            break;
+        }
         if (ferror(srcFp)) {
             HILOGE("zip file failed:%{public}s, errno: %{public}d.", srcFile.c_str(), errno);
             errcode = errno;
