@@ -79,6 +79,7 @@ bool CmdInitRestoreSessionFuzzTest(sptr<Service> service, const uint8_t *data, s
     MessageParcel reply;
 
     try {
+        msg.WriteBuffer(data, size);
         BSessionRestore::Callbacks callbacks;
         msg.WriteRemoteObject(new ServiceReverse(callbacks));
         service->CmdInitRestoreSession(msg, reply);
@@ -94,6 +95,7 @@ bool CmdInitBackupSessionFuzzTest(sptr<Service> service, const uint8_t *data, si
     MessageParcel reply;
 
     try {
+        msg.WriteBuffer(data, size);
         BSessionBackup::Callbacks callbacks;
         msg.WriteRemoteObject(new ServiceReverse(callbacks));
         service->CmdInitBackupSession(msg, reply);
@@ -109,6 +111,7 @@ bool CmdStartFuzzTest(sptr<Service> service, const uint8_t *data, size_t size)
     MessageParcel reply;
 
     try {
+        msg.WriteBuffer(data, size);
         service->CmdStart(msg, reply);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
@@ -122,6 +125,7 @@ bool CmdGetLocalCapabilitiesFuzzTest(sptr<Service> service, const uint8_t *data,
     MessageParcel reply;
 
     try {
+        msg.WriteBuffer(data, size);
         service->CmdGetLocalCapabilities(msg, reply);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
@@ -337,6 +341,7 @@ bool CmdFinishFuzzTest(sptr<Service> service, const uint8_t *data, size_t size)
     MessageParcel msg;
     MessageParcel reply;
     try {
+        msg.WriteBuffer(data, size);
         service->CmdFinish(msg, reply);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
@@ -349,6 +354,7 @@ bool CmdFinishFuzzTest(sptr<Service> service, const uint8_t *data, size_t size)
     MessageParcel msg;
     MessageParcel reply;
     try {
+        msg.WriteBuffer(data, size);
         service->CmdRelease(msg, reply);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
@@ -377,6 +383,7 @@ bool CmdGetAppLocalListAndDoIncrementalBackupFuzzTest(sptr<Service> service, con
     MessageParcel msg;
     MessageParcel reply;
     try {
+        msg.WriteBuffer(data, size);
         service->CmdGetAppLocalListAndDoIncrementalBackup(msg, reply);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
@@ -392,6 +399,7 @@ bool CmdInitIncrementalBackupSessionFuzzTest(sptr<Service> service, const uint8_
     try {
         BIncrementalBackupSession::Callbacks callbacks;
         msg.WriteRemoteObject(new ServiceReverse(callbacks));
+        msg.WriteBuffer(data, size);
         service->CmdInitIncrementalBackupSession(msg, reply);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.

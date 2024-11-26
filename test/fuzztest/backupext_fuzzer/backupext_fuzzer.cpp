@@ -57,6 +57,7 @@ bool OnRemoteRequestFuzzTest(shared_ptr<BackupExtExtension> extension, const uin
 
 bool InitFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
+    (void)data;
     shared_ptr<AbilityRuntime::AbilityLocalRecord> record = nullptr;
     shared_ptr<AbilityRuntime::OHOSApplication> application = nullptr;
     shared_ptr<AbilityRuntime::AbilityHandler> handler = nullptr;
@@ -96,20 +97,22 @@ bool OnConnectFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t
 
 bool CreateFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
-    unique_ptr<AbilityRuntime::Runtime> runtime;
+    (void)data;
+    unique_ptr<AbilityRuntime::Runtime> runtime = nullptr;
     backup->Create(runtime);
     return true;
 }
 
 bool GetExtensionActionFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
+    (void)data;
     backup->GetExtensionAction();
     return true;
 }
 
 bool OnRestoreFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
-    function<void(ErrCode, string)> callback;
+    function<void(ErrCode, string)> callback = [data](ErrCode, string) {};
     function<void(ErrCode, const string)> callbackEx;
     backup->OnRestore(callback, callbackEx);
     return true;
@@ -117,25 +120,28 @@ bool OnRestoreFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t
 
 bool GetBackupInfoFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
-    function<void(ErrCode, string)> callback = nullptr;
+    function<void(ErrCode, string)> callback = [data](ErrCode, string) {};
     backup->GetBackupInfo(callback);
     return true;
 }
 
 bool WasFromSpecialVersionFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
+    (void)data;
     backup->WasFromSpecialVersion();
     return true;
 }
 
 bool SpecialVersionForCloneAndCloudFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
+    (void)data;
     backup->SpecialVersionForCloneAndCloud();
     return true;
 }
 
 bool RestoreDataReadyFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
+    (void)data;
     backup->RestoreDataReady();
     return true;
 }
@@ -149,6 +155,7 @@ bool InvokeAppExtMethodFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *dat
 
 bool SetCreatorFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_t size)
 {
+    (void)data;
     CreatorFunc creator;
     backup->SetCreator(creator);
     return true;
@@ -169,6 +176,7 @@ bool CmdHandleClearFuzzTest(shared_ptr<BackupExtExtension> extension, const uint
     MessageParcel msg;
     MessageParcel reply;
 
+    msg.WriteBuffer(data, size);
     extension->CmdHandleClear(msg, reply);
     return true;
 }
@@ -269,6 +277,7 @@ bool CmdGetIncrementalBackupFileHandleFuzzTest(shared_ptr<BackupExtExtension> ex
     MessageParcel msg;
     MessageParcel reply;
 
+    msg.WriteBuffer(data, size);
     extension->CmdGetIncrementalBackupFileHandle(msg, reply);
     return true;
 }
