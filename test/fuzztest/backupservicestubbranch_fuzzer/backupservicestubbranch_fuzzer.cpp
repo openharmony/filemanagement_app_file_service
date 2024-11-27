@@ -227,6 +227,7 @@ bool CmdInitRestoreSessionFuzzTest(sptr<Service> service, const uint8_t *data, s
     MessageParcel reply;
 
     try {
+        msg.WriteBuffer(data, size);
         service->CmdInitRestoreSession(msg, reply);
 
         BSessionRestore::Callbacks callbacks;
@@ -250,6 +251,7 @@ bool CmdInitBackupSessionFuzzTest(sptr<Service> service, const uint8_t *data, si
     MessageParcel reply;
 
     try {
+        msg.WriteBuffer(data, size);
         service->CmdInitBackupSession(msg, reply);
 
         BSessionBackup::Callbacks callbacks;
@@ -273,6 +275,7 @@ bool CmdStartFuzzTest(sptr<Service> service, const uint8_t *data, size_t size)
     MessageParcel reply;
 
     try {
+        msg.WriteBuffer(data, size);
         ExpectReturn({false});
         service->CmdStart(msg, reply);
 
@@ -290,6 +293,7 @@ bool CmdGetLocalCapabilitiesFuzzTest(sptr<Service> service, const uint8_t *data,
     MessageParcel reply;
 
     try {
+        msg.WriteBuffer(data, size);
         ExpectReturn({false});
         service->CmdGetLocalCapabilities(msg, reply);
 
@@ -622,6 +626,7 @@ bool CmdFinishFuzzTest(sptr<Service> service, const uint8_t *data, size_t size)
     MessageParcel msg;
     MessageParcel reply;
     try {
+        msg.WriteBuffer(data, size);
         ExpectReturn({false});
         service->CmdFinish(msg, reply);
 
@@ -638,6 +643,7 @@ bool CmdFinishFuzzTest(sptr<Service> service, const uint8_t *data, size_t size)
     MessageParcel msg;
     MessageParcel reply;
     try {
+        msg.WriteBuffer(data, size);
         service->CmdRelease(msg, reply);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
@@ -680,6 +686,7 @@ bool CmdGetAppLocalListAndDoIncrementalBackupFuzzTest(sptr<Service> service, con
     MessageParcel msg;
     MessageParcel reply;
     try {
+        msg.WriteBuffer(data, size);
         ExpectReturn({false});
         service->CmdGetAppLocalListAndDoIncrementalBackup(msg, reply);
 
@@ -697,6 +704,7 @@ bool CmdInitIncrementalBackupSessionFuzzTest(sptr<Service> service, const uint8_
     MessageParcel reply;
 
     try {
+        msg.WriteBuffer(data, size);
         service->CmdInitIncrementalBackupSession(msg, reply);
 
         BIncrementalBackupSession::Callbacks callbacks;
