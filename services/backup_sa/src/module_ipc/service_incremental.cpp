@@ -322,11 +322,9 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         vector<string> bundleNames = GetBundleNameByDetails(bundlesToBackup);
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
             session_->GetSessionUserId());
-        std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true);
+        std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
         session_->AppendBundles(supportBackupNames);
-        for (auto &bundleInfo : bundlesToBackup) {
-            session_->SetIncrementalData(bundleInfo);
-        }
+        SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
         SetCurrentBackupSessProperties(supportBackupNames, session_->GetSessionUserId(), backupInfos, true);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -364,10 +362,8 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
             session_->GetSessionUserId(), isClearDataFlags);
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
             session_->GetSessionUserId());
-        std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true);
-        for (auto &bundleInfo : bundlesToBackup) {
-            session_->SetIncrementalData(bundleInfo);
-        }
+        std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
+        SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
         session_->AppendBundles(supportBackupNames);
         HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
         OnStartSched();
@@ -716,5 +712,19 @@ void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, 
         session_->SetIsReadyLaunch(bundleName);
     }
     HILOGI("end SetCurrentBackupSessProperties");
+}
+
+void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>& bundlesToBackup,
+    std::vector<std::string>& supportBundleNames)
+{
+    for (auto &bundleInfo : bundlesToBackup) {
+        std::string bundleName = bundleInfo.bundleName;
+        auto it = std::find(supportBundleNames.begin(), supportBundleNames.end(), bundleName);
+        if (it == supportBundleNames.end()) {
+            HILOGE("Current bundle is not support to backup, bundleName:%{public}s", bundleName.c_str());
+            continue;
+        }
+        session_->SetIncrementalData(bundleInfo);
+    }
 }
 } // namespace OHOS::FileManagement::Backup
