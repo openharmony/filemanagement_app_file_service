@@ -288,6 +288,8 @@ void Service::ExtensionConnectFailRadarReport(const std::string &bundleName, con
 void Service::UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo) {}
 
 void Service::ClearFailedBundles() {}
+
+void Service::StartRunningTimer(const std::string &bundleName) {}
 std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool)
 {
     return {};
