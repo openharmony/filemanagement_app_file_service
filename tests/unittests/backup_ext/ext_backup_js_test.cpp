@@ -822,11 +822,21 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_CallJsMethod_0100, testing::ext::Tes
         auto ret = extBackupJs->CallJsMethod("", *jsRuntime, extBackupJs->jsObj_.get(), nullptr, nullptr);
         EXPECT_EQ(ret, EINVAL);
 
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(Return(1));
         ret = extBackupJs->CallJsMethod("", *jsRuntime, extBackupJs->jsObj_.get(), nullptr, nullptr);
         EXPECT_EQ(ret, EINVAL);
+
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(DoAll(WithArgs<1, 3>(Invoke(
+            [](uv_work_t* req, uv_after_work_cb after_work_cb) {
+                after_work_cb(req, 0);
+        })), Return(0)));
+        EXPECT_CALL(*napiMock, napi_open_handle_scope(_, _)).WillOnce(Return(napi_ok));
+        ret = extBackupJs->CallJsMethod("", *jsRuntime, extBackupJs->jsObj_.get(), nullptr, nullptr);
+        EXPECT_EQ(ret, ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by CallJsMethod.";
@@ -1065,20 +1075,28 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_CallJsOnBackupEx_0100, testing::ext:
         EXPECT_EQ(ret, EINVAL);
 
         extBackupJs->callbackInfoEx_ = std::make_shared<CallbackInfoEx>([](ErrCode, std::string){});
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, nullptr);
+            return -1;
+        })));
         ret = extBackupJs->CallJsOnBackupEx();
         EXPECT_EQ(ret, EINVAL);
 
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _))
             .WillOnce(DoAll(SetArgPointee<ARG_INDEX_FIRST>(true), Return(napi_ok)));
         EXPECT_CALL(*napiMock, napi_get_and_clear_last_exception(_, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, nullptr);
+            return -1;
+        })));
         ret = extBackupJs->CallJsOnBackupEx();
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -1109,7 +1127,12 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_CallJsOnBackupEx_0200, testing::ext:
         EXPECT_CALL(*napiMock, napi_open_handle_scope(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_close_handle_scope(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_named_property(_, _, _, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            int value = 0;
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, reinterpret_cast<napi_value>(&value));
+            return -1;
+        })));
         auto ret = extBackupJs->CallJsOnBackupEx();
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -1138,19 +1161,27 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_CallJsOnBackup_0100, testing::ext::T
         EXPECT_EQ(ret, EINVAL);
 
         extBackupJs->callbackInfo_ = std::make_shared<CallbackInfo>([](ErrCode, std::string){});
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, nullptr);
+            return -1;
+        })));
         ret = extBackupJs->CallJsOnBackup();
         EXPECT_EQ(ret, EINVAL);
 
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _))
             .WillOnce(DoAll(SetArgPointee<ARG_INDEX_FIRST>(true), Return(napi_ok)));
         EXPECT_CALL(*napiMock, napi_get_and_clear_last_exception(_, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, nullptr);
+            return -1;
+        })));
         ret = extBackupJs->CallJsOnBackup();
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -1181,7 +1212,12 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_CallJsOnBackup_0200, testing::ext::T
         EXPECT_CALL(*napiMock, napi_open_handle_scope(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_close_handle_scope(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_named_property(_, _, _, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            int value = 0;
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, reinterpret_cast<napi_value>(&value));
+            return -1;
+        })));
         auto ret = extBackupJs->CallJsOnBackup();
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -1210,20 +1246,28 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_CallJSRestoreEx_0100, testing::ext::
         EXPECT_EQ(ret, EINVAL);
 
         extBackupJs->callbackInfoEx_ = std::make_shared<CallbackInfoEx>([](ErrCode, std::string){});
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, nullptr);
+            return -1;
+        })));
         ret = extBackupJs->CallJSRestoreEx();
         EXPECT_EQ(ret, EINVAL);
 
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _))
             .WillOnce(DoAll(SetArgPointee<ARG_INDEX_FIRST>(true), Return(napi_ok)));
         EXPECT_CALL(*napiMock, napi_get_and_clear_last_exception(_, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, nullptr);
+            return -1;
+        })));
         ret = extBackupJs->CallJSRestoreEx();
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -1254,7 +1298,12 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_CallJSRestoreEx_0200, testing::ext::
         EXPECT_CALL(*napiMock, napi_open_handle_scope(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_close_handle_scope(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_named_property(_, _, _, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            int value = 0;
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, reinterpret_cast<napi_value>(&value));
+            return -1;
+        })));
         auto ret = extBackupJs->CallJSRestoreEx();
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -1283,19 +1332,27 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_CallJSRestore_0100, testing::ext::Te
         EXPECT_EQ(ret, EINVAL);
 
         extBackupJs->callbackInfo_ = std::make_shared<CallbackInfo>([](ErrCode, std::string){});
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, nullptr);
+            return -1;
+        })));
         ret = extBackupJs->CallJSRestore();
         EXPECT_EQ(ret, EINVAL);
 
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _))
             .WillOnce(DoAll(SetArgPointee<ARG_INDEX_FIRST>(true), Return(napi_ok)));
         EXPECT_CALL(*napiMock, napi_get_and_clear_last_exception(_, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, nullptr);
+            return -1;
+        })));
         ret = extBackupJs->CallJSRestore();
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -1326,7 +1383,12 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_CallJSRestore_0200, testing::ext::Te
         EXPECT_CALL(*napiMock, napi_open_handle_scope(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_close_handle_scope(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_named_property(_, _, _, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            int value = 0;
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, reinterpret_cast<napi_value>(&value));
+            return -1;
+        })));
         auto ret = extBackupJs->CallJSRestore();
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -1356,10 +1418,14 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_GetBackupInfo_0100, testing::ext::Te
         EXPECT_EQ(ret, EINVAL);
 
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, nullptr);
+            return -1;
+        })));
         ret = extBackupJs->GetBackupInfo([](ErrCode, std::string){});
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -1384,11 +1450,15 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_GetBackupInfo_0200, testing::ext::Te
     try {
         extBackupJs->jsObj_ = make_unique<NativeReferenceMock>();
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_ok))
             .WillOnce(Return(napi_ok));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, nullptr);
+            return -1;
+        })));
         auto ret = extBackupJs->GetBackupInfo([](ErrCode, std::string){});
         EXPECT_EQ(ret, EINVAL);
 
@@ -1399,7 +1469,12 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_GetBackupInfo_0200, testing::ext::Te
         EXPECT_CALL(*napiMock, napi_open_handle_scope(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_close_handle_scope(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_named_property(_, _, _, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            int value = 0;
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, reinterpret_cast<napi_value>(&value));
+            return -1;
+        })));
         ret = extBackupJs->GetBackupInfo([](ErrCode, std::string){});
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -1428,11 +1503,15 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_OnProcess_0100, testing::ext::TestSi
         auto ret = extBackupJs->OnProcess([](ErrCode, std::string){});
         EXPECT_EQ(ret, EINVAL);
 
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, nullptr);
+            return -1;
+        })));
         ret = extBackupJs->OnProcess([](ErrCode, std::string){});
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
@@ -1455,19 +1534,28 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_OnProcess_0200, testing::ext::TestSi
 {
     GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_OnProcess_0200";
     try {
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_ok))
         .WillOnce(Return(napi_ok));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, nullptr);
+            return -1;
+        })));
         auto ret = extBackupJs->OnProcess([](ErrCode, std::string){});
         EXPECT_EQ(ret, EINVAL);
 
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
         EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
         EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, uv_queue_work(_, _, _, _)).WillOnce(WithArgs<1>(Invoke([](uv_work_t* work) {
+            int value = 0;
+            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+            param->retParser(nullptr, reinterpret_cast<napi_value>(&value));
+            return -1;
+        })));
         ret = extBackupJs->OnProcess([](ErrCode, std::string){});
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
