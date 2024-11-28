@@ -321,8 +321,8 @@ void Service::StopAll(const wptr<IRemoteObject> &obj, bool force)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     std::lock_guard<std::mutex> lock(failedBundlesLock_);
-    int32_t fail_cnt = failedBundles_.size();
-    int32_t totalBundles = fail_cnt + successBundlesNum_.load();
+    uint32_t fail_cnt = failedBundles_.size();
+    uint32_t totalBundles = fail_cnt + successBundlesNum_.load();
     if (totalBundles != 0) {
         int32_t result = 0;
         if (fail_cnt != 0) {
