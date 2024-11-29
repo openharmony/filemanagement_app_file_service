@@ -30,6 +30,7 @@ public:
     ~BackupRestoreCallback();
     void CallJsMethod(InputArgsParser argParser);
     explicit operator bool() const;
+    void CleanRef();
 private:
     napi_env env_;
     LibN::NAsyncContextCallback *ctx_ = nullptr;
@@ -53,7 +54,8 @@ public:
           onBackupServiceDied(env, thisPtr, jsCallbacks.GetProp("onBackupServiceDied")),
           onResultReport(env, thisPtr, jsCallbacks.GetProp("onResultReport")),
           onProcess(env, thisPtr, jsCallbacks.GetProp("onProcess")) {};
-
+public:
+    void RemoveCallbackRef();
 public:
     LibN::NAsyncWorkCallback onFileReady;
     LibN::NAsyncWorkCallback onBundleBegin;
