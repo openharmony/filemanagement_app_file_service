@@ -22,6 +22,32 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+void GeneralCallbacks::RemoveCallbackRef()
+{
+    HILOGI("Called RemoveCallbackRef");
+    onFileReady.CleanRef();
+    onBundleBegin.CleanRef();
+    onBundleEnd.CleanRef();
+    onAllBundlesEnd.CleanRef();
+    onBackupServiceDied.CleanRef();
+    onResultReport.CleanRef();
+    onProcess.CleanRef();
+}
+
+void BackupRestoreCallback::CleanRef()
+{
+    HILOGI("BackupRestoreCallback CleanRef");
+    if (!ctx_) {
+        HILOGE("BackupRestoreCallback ctx is nullptr");
+        return;
+    }
+    if (!bool(ctx_->cb_)) {
+        HILOGE("BackupRestoreCallback ref is nullptr");
+        return;
+    }
+    ctx_->cb_.DeleteJsEnv();
+}
+
 BackupRestoreCallback::BackupRestoreCallback(napi_env env, LibN::NVal thisPtr, LibN::NVal cb) : env_(env)
 {
     ctx_ = new LibN::NAsyncContextCallback(thisPtr, cb);
@@ -29,7 +55,9 @@ BackupRestoreCallback::BackupRestoreCallback(napi_env env, LibN::NVal thisPtr, L
 
 BackupRestoreCallback::~BackupRestoreCallback()
 {
+    HILOGI("BackupRestoreCallback destruct start");
     if (!ctx_) {
+        HILOGE("BackupRestoreCallback ctx is nullptr");
         return;
     }
 
@@ -53,6 +81,7 @@ BackupRestoreCallback::~BackupRestoreCallback()
         loop, work.get(), [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
             LibN::NAsyncContextCallback *ctx = static_cast<LibN::NAsyncContextCallback *>(work->data);
+            HILOGI("BackupRestoreCallback destruct delete ctx");
             delete ctx;
             delete work;
         });
@@ -63,6 +92,7 @@ BackupRestoreCallback::~BackupRestoreCallback()
     ptr.release();
     work.release();
     ctx_ = nullptr;
+    HILOGI("BackupRestoreCallback destruct end");
 }
 
 BackupRestoreCallback::operator bool() const
@@ -96,6 +126,10 @@ static void DoCallJsMethod(napi_env env, void *data, InputArgsParser argParser)
     napi_value global = nullptr;
     napi_get_global(env, &global);
     napi_value callback = ctx->cb_.Deref(env).val_;
+    if (!bool(ctx->cb_)) {
+        HILOGE("Failed to get ref.");
+        return;
+    }
     napi_value result = nullptr;
     napi_status status = napi_call_function(env, global, callback, argv.size(), argv.data(), &result);
     if (status != napi_ok) {
