@@ -129,6 +129,7 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
         lock.unlock();
         //notify AppGallery to start restore
         if (reversePtr_ != nullptr) {
+            reversePtr_->StartRunningTimer(bundleName);
             reversePtr_->SendStartAppGalleryNotify(bundleName);
             reversePtr_->ExtStart(bundleName);
         }
