@@ -79,9 +79,9 @@ bool CmdInitRestoreSessionFuzzTest(sptr<Service> service, const uint8_t *data, s
     MessageParcel reply;
 
     try {
-        msg.WriteBuffer(data, size);
         BSessionRestore::Callbacks callbacks;
         msg.WriteRemoteObject(new ServiceReverse(callbacks));
+        msg.WriteBuffer(data, size);
         service->CmdInitRestoreSession(msg, reply);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
@@ -95,9 +95,9 @@ bool CmdInitBackupSessionFuzzTest(sptr<Service> service, const uint8_t *data, si
     MessageParcel reply;
 
     try {
-        msg.WriteBuffer(data, size);
         BSessionBackup::Callbacks callbacks;
         msg.WriteRemoteObject(new ServiceReverse(callbacks));
+        msg.WriteBuffer(data, size);
         service->CmdInitBackupSession(msg, reply);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
@@ -429,11 +429,12 @@ bool CmdAppendBundlesDetailsIncrementalBackupSessionFuzzTest(sptr<Service> servi
     MessageParcel reply;
 
     try {
-        int len = size >> 1;
+        int len = size >> 2;
         vector<BIncrementalData> bundlesToBackup;
         bundlesToBackup.emplace_back(string(reinterpret_cast<const char*>(data), len), 0);
         std::vector<std::string> infos;
         infos.emplace_back(string(reinterpret_cast<const char*>(data + len), len));
+        infos.emplace_back(string(reinterpret_cast<const char*>(data + len + len), len));
         WriteParcelableVector(bundlesToBackup, msg);
         msg.WriteStringVector(infos);
         service->CmdAppendBundlesDetailsIncrementalBackupSession(msg, reply);
