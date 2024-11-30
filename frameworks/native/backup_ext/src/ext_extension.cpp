@@ -332,29 +332,26 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
     return ERR_OK;
 }
 
-static string GetIncrementalFileHandlePath(const string &fileName, const string &bundleName,
-                                           int32_t &errCode, std::string &errMsg)
+static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string &bundleName, std::string &tarName)
 {
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     if (BFile::EndsWith(bundleName, BConstants::BUNDLE_FILE_MANAGER) && bundleName.size() == BConstants::FM_LEN) {
         if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).data(), S_IRWXU) && errno != EEXIST) {
-            errMsg = string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
-            errCode = BError(BError::Codes::EXT_INVAL_ARG).GetCode();
-            HILOGE("GetIncrementalFileHandlePath failed, %{public}s", errMsg.c_str());
-            return "";
+            string errMsg = string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
+            HILOGE("%{public}s, errno = %{public}d", errMsg.c_str(), errno);
+            return errno;
         }
         path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
         path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     }
     if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
-        errMsg = string("Failed to create restore folder. ").append(std::generic_category().message(errno));
-        errCode = BError(BError::Codes::EXT_INVAL_ARG).GetCode();
-        HILOGE("GetIncrementalFileHandlePath failed, %{public}s", errMsg.c_str());
-        return "";
+        string errMsg = string("Failed to create restore folder. ").append(std::generic_category().message(errno));
+        HILOGE("%{public}s, errno = %{public}d", errMsg.c_str(), errno);
+        return errno;
     }
-    string tarName = path + fileName;
-    return tarName;
+    tarName = path + fileName;
+    return ERR_OK;
 }
 
 ErrCode BackupExtExtension::GetIncreFileHandleForNormalVersion(const std::string &fileName)
@@ -364,20 +361,19 @@ ErrCode BackupExtExtension::GetIncreFileHandleForNormalVersion(const std::string
     if (proxy == nullptr) {
         throw BError(BError::Codes::EXT_BROKEN_IPC, string("Failed to AGetInstance"));
     }
+    std::string tarName;
     int32_t errCode = ERR_OK;
-    std::string errMsg;
     UniqueFd fd(-1);
     UniqueFd reportFd(-1);
     do {
-        string tarName = GetIncrementalFileHandlePath(fileName, bundleName_, errCode, errMsg);
+        errCode = GetIncrementalFileHandlePath(fileName, bundleName_, tarName);
         if (errCode != ERR_OK) {
-            HILOGE("GetIncrementalFileHandlePath failed, %{public}s", errMsg.c_str());
+            HILOGE("GetIncrementalFileHandlePath failed, err = %{public}d", errCode);
             break;
         }
         if (access(tarName.c_str(), F_OK) == 0) {
             HILOGE("The file already exists, tarname = %{public}s, err =%{public}d",
                 GetAnonyPath(tarName).c_str(), errno);
-            errCode = errno;
         }
         fd = UniqueFd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (fd < 0) {
@@ -386,17 +382,18 @@ ErrCode BackupExtExtension::GetIncreFileHandleForNormalVersion(const std::string
             AuditLog auditLog = {false, "Open fd failed", "ADD", "", 1, "FAILED",
                 "GetIncreFileHandleForNormalVersion", "CommonFile", GetAnonyPath(tarName)};
             HiAudit::GetInstance(false).Write(auditLog);
+            break;
         }
         // 对应的简报文件
         string reportName = GetReportFileName(tarName);
         if (access(reportName.c_str(), F_OK) == 0) {
             HILOGE("The report file already exists, Name = %{private}s, err =%{public}d", reportName.c_str(), errno);
-            errCode = errno;
         }
         reportFd = UniqueFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (reportFd < 0) {
             HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
             errCode = errno;
+            break;
         }
     } while (0);
     HILOGI("extension: Will notify AppIncrementalFileReady");
