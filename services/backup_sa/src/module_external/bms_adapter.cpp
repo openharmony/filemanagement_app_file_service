@@ -119,6 +119,10 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
     HILOGI("Start, bundleNames size:%{public}zu", bundleNames.size());
     for (auto const &bundleName : bundleNames) {
         HILOGI("Begin Get bundleName:%{public}s", bundleName.c_str());
+        if (bundleName.empty()) {
+            HILOGE("BundleName is invalid");
+            continue;
+        }
         if (SAUtils::IsSABundleName(bundleName)) {
             GetBundleInfoForSA(bundleName, bundleInfos);
             continue;
