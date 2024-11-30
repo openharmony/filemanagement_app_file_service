@@ -295,6 +295,8 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
     return {};
 }
 
+void Service::StartRunningTimer(const std::string &bundleName) {}
+
 void Service::HandleNotSupportBundleNames(const vector<string>&, vector<string>&, bool) {}
 
 void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>&, std::vector<std::string>&) {}

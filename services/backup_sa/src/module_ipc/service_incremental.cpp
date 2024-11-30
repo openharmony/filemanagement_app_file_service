@@ -363,8 +363,8 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
             session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
-        SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
         session_->AppendBundles(supportBackupNames);
+        SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
         HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
