@@ -163,6 +163,12 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode Cancel(std::string bundleName, int32_t &result) override
+    {
+        result = BError(BError::Codes::OK);
+        return BError(BError::Codes::OK);
+    }
+
     UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) override
     {
         return UniqueFd(-1);

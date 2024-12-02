@@ -52,6 +52,7 @@ public:
                                               const std::vector<std::string> &detailInfos) override;
     ErrCode Finish() override;
     ErrCode Release() override;
+    ErrCode Cancel(std::string bundleName, int32_t &result) override;
     UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) override;
     ErrCode GetAppLocalListAndDoIncrementalBackup() override;
     ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote) override;

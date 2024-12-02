@@ -45,6 +45,7 @@ public:
     MOCK_METHOD1(AppendBundlesBackupSession, ErrCode(const std::vector<BundleName> &bundleNames));
     MOCK_METHOD0(Finish, ErrCode());
     MOCK_METHOD0(Release, ErrCode());
+    MOCK_METHOD2(Cancel, ErrCode(std::string bundleName, int32_t &result));
     MOCK_METHOD1(GetLocalCapabilitiesIncremental, UniqueFd(const std::vector<BIncrementalData> &bundleNames));
     MOCK_METHOD1(InitIncrementalBackupSession, ErrCode(sptr<IServiceReverse> remote));
     MOCK_METHOD1(AppendBundlesIncrementalBackupSession, ErrCode(const std::vector<BIncrementalData> &bundlesToBackup));

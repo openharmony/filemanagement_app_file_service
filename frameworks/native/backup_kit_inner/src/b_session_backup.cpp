@@ -159,4 +159,21 @@ ErrCode BSessionBackup::Release()
 
     return proxy->Release();
 }
+
+ErrCode BSessionBackup::Cancel(std::string bundleName)
+{
+    ErrCode result = BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK;
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Called Cancel, failed to get proxy.");
+        return result;
+    }
+
+    ErrCode errCode = proxy->Cancel(bundleName, result);
+    if (errCode != 0) {
+        HILOGE("proxy->Cancel failed, errCode:%{public}d.", errCode);
+        return result;
+    }
+    return result;
+}
 } // namespace OHOS::FileManagement::Backup

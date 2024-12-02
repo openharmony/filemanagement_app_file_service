@@ -184,6 +184,8 @@ void Service::OnSABackup(const std::string &bundleName,
 
 void Service::OnSARestore(const std::string &bundleName, const std::string &result, const ErrCode &errCode) {}
 
+void Service::NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerName) {}
+
 void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
 {
 }

@@ -117,6 +117,8 @@ public:
         E_UNPACKET = 13500008,
         E_BEF = 13500009,
         E_TASKFAIL = 13500010,
+        E_CANCEL_UNSTARTED_TASK = 13500011,
+        E_CANCEL_NO_TASK = 13500012,
     };
 
 public:
@@ -317,6 +319,8 @@ private:
         {BackupErrorCode::E_EXCEPTION, BackupErrorCode::E_EXCEPTION},
         {BackupErrorCode::E_UNPACKET, BackupErrorCode::E_UNPACKET},
         {BackupErrorCode::E_BEF, BackupErrorCode::E_BEF},
+        {BackupErrorCode::E_CANCEL_UNSTARTED_TASK, BackupErrorCode::E_CANCEL_UNSTARTED_TASK},
+        {BackupErrorCode::E_CANCEL_NO_TASK, BackupErrorCode::E_CANCEL_NO_TASK},
     };
 
     static inline const std::map<int, int> sysErrnoCodeTable_ {
@@ -352,6 +356,8 @@ private:
         {BackupErrorCode::E_EXCEPTION, "Extension throw exception"},
         {BackupErrorCode::E_UNPACKET, "Untar failed"},
         {BackupErrorCode::E_BEF, "SA failed to boot application extension"},
+        {BackupErrorCode::E_CANCEL_UNSTARTED_TASK, "Cancel unstarted backup or restore task "},
+        {BackupErrorCode::E_CANCEL_NO_TASK, "Cancel a backup or restore task that does not exist"},
     };
 
 private:

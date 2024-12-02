@@ -50,6 +50,8 @@ void ServiceStub::ServiceStubSupplement()
         &ServiceStub::CmdStartExtTimer;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START_FWK_TIMER)] =
         &ServiceStub::CmdStartFwkTimer;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_CANCEL_BUNDLE)] =
+        &ServiceStub::CmdCancel;
 }
 
 void ServiceStub::ServiceStubSuppAppendBundles()
@@ -696,5 +698,20 @@ bool ServiceStub::ReadParcelableVector(std::vector<T> &parcelableInfos, MessageP
     }
 
     return true;
+}
+
+int32_t ServiceStub::CmdCancel(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("ServiceStub::CmdCancel Begin.");
+    string bundleName;
+    if (!data.ReadString(bundleName)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleName").GetCode();
+    }
+    int result = BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK;
+    ErrCode res = Cancel(bundleName, result);
+    if (!reply.WriteInt32(result)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
+    }
+    return res;
 }
 } // namespace OHOS::FileManagement::Backup
