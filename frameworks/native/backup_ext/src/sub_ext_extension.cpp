@@ -871,7 +871,7 @@ void BackupExtExtension::AsyncTaskUser0Backup()
             auto cache = cachedEntity.Structuralize();
             auto ret = ptr->User0DoBackup(cache);
             if (ret != ERR_OK) {
-                HILOGE("User0DoBackup, err = %{pubilc}d", ret);
+                HILOGE("User0DoBackup, err = %{public}d", ret);
                 ptr->AppIncrementalDone(BError::GetCodeByErrno(ret));
             }
         } catch (const BError &e) {
@@ -1077,7 +1077,7 @@ void BackupExtExtension::AsyncTaskOnIncrementalBackup()
             ptr->UpdateOnStartTime();
             ErrCode err = ptr->extension_->OnBackup(callBackup, callBackupEx);
             if (err != ERR_OK) {
-                HILOGE("OnBackup done, err = %{pubilc}d", err);
+                HILOGE("OnBackup done, err = %{public}d", err);
                 ptr->AppIncrementalDone(BError::GetCodeByErrno(err));
             }
         } catch (const BError &e) {

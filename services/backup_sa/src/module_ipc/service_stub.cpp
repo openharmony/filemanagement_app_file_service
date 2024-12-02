@@ -50,6 +50,8 @@ void ServiceStub::ServiceStubSupplement()
         &ServiceStub::CmdStartExtTimer;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START_FWK_TIMER)] =
         &ServiceStub::CmdStartFwkTimer;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_STOP_EXT_TIMER)] =
+        &ServiceStub::CmdStopExtTimer;
 }
 
 void ServiceStub::ServiceStubSuppAppendBundles()
@@ -108,6 +110,8 @@ ServiceStub::ServiceStub()
         &ServiceStub::CmdGetIncrementalFileHandle;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_INFO)] =
         &ServiceStub::CmdGetBackupInfo;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_REFRESH_DATA_SIZE)] =
+        &ServiceStub::CmdRefreshDataSize;
     ServiceStubSupplement();
 }
 
@@ -673,6 +677,40 @@ int32_t ServiceStub::CmdReportAppProcessInfo(MessageParcel &data, MessageParcel 
     }
     BackupRestoreScenario secenrioInfo = static_cast<BackupRestoreScenario>(scenario);
     return ReportAppProcessInfo(processInfo, secenrioInfo);
+}
+
+int32_t ServiceStub::CmdStopExtTimer(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("ServiceStub::CmdStopExtTimer Begin.");
+    bool isExtStop;
+    auto ret = StopExtTimer(isExtStop);
+    if (ret != ERR_OK) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to call StopExtTimer"));
+    }
+    if (!reply.WriteBool(isExtStop)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to write result"));
+    }
+    HILOGI("ServiceStub::CmdStopExtTimer end.");
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdRefreshDataSize(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("ServiceStub::CmdRefreshDataSize Begin.");
+    int64_t totalDatasize = 0;
+    if (!data.ReadInt64(totalDatasize)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive totalDatasize").GetCode();
+    }
+    auto ret = RefreshDataSize(totalDatasize);
+    if (ret != ERR_OK) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to receive totalDatasize"));
+    }
+    bool ifRefreshSuccess = true;
+    if (!reply.WriteBool(ifRefreshSuccess)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to write result"));
+    }
+    HILOGI("ServiceStub::CmdRefreshDataSize end.");
+    return BError(BError::Codes::OK);
 }
 
 template <typename T>

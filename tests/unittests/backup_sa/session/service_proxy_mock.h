@@ -60,6 +60,8 @@ public:
     MOCK_METHOD2(GetBackupInfo, ErrCode(BundleName &bundleName, std::string &result));
     MOCK_METHOD3(UpdateTimer, ErrCode(BundleName &bundleName, uint32_t timeout, bool &result));
     MOCK_METHOD0(GetAppLocalListAndDoIncrementalBackup, ErrCode());
+    MOCK_METHOD1(StopExtTimer, ErrCode(bool &isExtStop));
+    MOCK_METHOD1(RefreshDataSize, ErrCode(int64_t totalsize));
 };
 } // End of namespace OHOS::FileManagement::Backup
 #endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H

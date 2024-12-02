@@ -172,6 +172,16 @@ ErrCode ServiceProxy::StartFwkTimer(bool &isFwkStart)
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::StopExtTimer(bool &isExtStop)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::RefreshDataSize(int64_t totalsize)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceProxy::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result)
 {
     return BError(BError::Codes::OK);

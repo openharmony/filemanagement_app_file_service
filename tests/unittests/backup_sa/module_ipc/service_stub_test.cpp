@@ -82,6 +82,8 @@ public:
     MOCK_METHOD3(UpdateTimer, ErrCode(BundleName &bundleName, uint32_t timeout, bool &result));
     MOCK_METHOD1(StartExtTimer, ErrCode(bool &isExtStart));
     MOCK_METHOD1(StartFwkTimer, ErrCode(bool &isFwkStart));
+    MOCK_METHOD1(StopExtTimer, ErrCode(bool &isExtStop));
+    MOCK_METHOD1(RefreshDataSize, ErrCode(int64_t totalsize));
     MOCK_METHOD3(UpdateSendRate, ErrCode(std::string &bundleName, int32_t sendRate, bool &result));
     MOCK_METHOD2(ReportAppProcessInfo, ErrCode(const std::string processInfo, BackupRestoreScenario sennario));
 };

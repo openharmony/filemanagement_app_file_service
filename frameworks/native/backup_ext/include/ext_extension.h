@@ -94,9 +94,12 @@ private:
     /**
      * @brief backup
      *
-     * @param usrConfig user configure
+     * @param bigFileInfo bigfiles to be backup
+     * @param smallFiles smallfiles to be backup
+     * @param includesNum sizeof includes
+     * @param excludesNum sizeof excludes
      */
-    int DoBackup(const BJsonEntityExtensionConfig &usrConfig);
+    int DoBackup(TarMap &bigFileInfo, map<string, size_t> &smallFiles, uint32_t includesNum, uint32_t excludesNum);
 
     /**
      * @brief restore
@@ -217,6 +220,29 @@ private:
      * @param errCode
      */
     void StartFwkTimer(bool &isFwkStart);
+
+    /**
+     * @brief stop ext timer by ipc
+     */
+    bool StopExtTimer();
+
+    /**
+     * @brief refresh datasize
+     *
+     * @param totalSize backup totalSize
+     */
+    bool RefreshDataSize(int64_t totalSize);
+
+    /**
+     * @brief scanning files and calculate datasize
+     *
+     * @param usrConfig usrConfig
+     * @param totalSize totalSize
+     * @param bigFileInfo bigFileInfo
+     * @param smallFiles smallFiles info
+     */
+    tuple<ErrCode, uint32_t, uint32_t> CalculateDataSize(const BJsonEntityExtensionConfig &usrConfig,
+        int64_t &totalSize, TarMap &bigFileInfo, map<string, size_t> &smallFiles);
 
     /**
      * @brief get increCallbackEx for execute onRestore with string param

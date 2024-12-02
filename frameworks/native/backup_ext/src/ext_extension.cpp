@@ -781,7 +781,8 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
     }
 }
 
-int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
+int BackupExtExtension::DoBackup(TarMap &bigFileInfo, map<string, size_t> &smallFiles,
+    uint32_t includesNum, uint32_t excludesNum)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Start Do backup");
@@ -794,26 +795,9 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
         return EPERM;
     }
 
-    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
-    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
-        throw BError(errno);
-    }
-
-    vector<string> includes = usrConfig.GetIncludes();
-    vector<string> excludes = usrConfig.GetExcludes();
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
         throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
-    }
-
-    // 大文件处理
-    HILOGI("Start packet bigfiles and small files");
-    auto [bigFileInfo, smallFiles] = GetFileInfos(includes, excludes);
-    for (const auto &item : bigFileInfo) {
-        auto filePath = std::get<0>(item.second);
-        if (!filePath.empty()) {
-            excludes.push_back(filePath);
-        }
     }
 
     // 回传大文件
@@ -836,9 +820,59 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
     auto end = std::chrono::system_clock::now();
     auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     AppRadar::DoBackupInfo doBackupInfo = {cost, bigFileInfo.size(), smallFiles.size(), tarMap.size(),
-                                           includes.size(), excludes.size()};
+                                           includesNum, excludesNum};
     RecordDoBackupRes(bundleName_, res, doBackupInfo);
     return res;
+}
+
+tuple<ErrCode, uint32_t, uint32_t> BackupExtExtension::CalculateDataSize(const BJsonEntityExtensionConfig &usrConfig,
+    int64_t &totalSize, TarMap &bigFileInfo, map<string, size_t> &smallFiles)
+{
+    HILOGI("Start scanning files and calculate datasize");
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
+        HILOGE("mkdir failed path :%{public}s, err = %{public}d", path.c_str(), errno);
+        return {errno, 0, 0};
+    }
+
+    vector<string> includes = usrConfig.GetIncludes();
+    vector<string> excludes = usrConfig.GetExcludes();
+
+    // 扫描文件计算数据量
+    tie(bigFileInfo, smallFiles) = GetFileInfos(includes, excludes);
+    for (const auto &item : bigFileInfo) {
+        int64_t fileSize = static_cast<int64_t>(std::get<1>(item.second).st_size);
+        HILOGD("bigfile size = %{public}" PRId64 "", fileSize);
+        totalSize += fileSize;
+    }
+    HILOGI("bigfile size = %{public}" PRId64 "", totalSize);
+    for (const auto &item : smallFiles) {
+        totalSize += static_cast<int64_t>(item.second);
+    }
+    HILOGI("scanning end, Datasize = %{public}" PRId64 "", totalSize);
+    return {ERR_OK, static_cast<uint32_t>(includes.size()), static_cast<uint32_t>(excludes.size())};
+}
+
+bool BackupExtExtension::RefreshDataSize(int64_t totalSize)
+{
+    HILOGI("RefreshDataSize start");
+    if (totalSize == 0) {
+        HILOGI("no backup datasize, don't need to refresh");
+        return true;
+    }
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to obtain the ServiceProxy handle");
+        return false;
+    }
+    HILOGI("start RefreshDatasize by ipc");
+    auto ret = proxy->RefreshDataSize(totalSize);
+    if (ret != ERR_OK) {
+        HILOGE("RefreshDataSize failed, ret = %{public}d", ret);
+        return false;
+    }
+    HILOGI("RefreshDataSize end");
+    return true;
 }
 
 int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
@@ -989,31 +1023,37 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         try {
-            HILOGI("Do backup, start fwk timer begin.");
+            if (!ptr->StopExtTimer()) {
+                throw BError(BError::Codes::EXT_TIMER_ERROR, "Failed to stop extTimer");
+            }
+            int64_t totalSize;
+            TarMap bigFileInfo;
+            map<string, size_t> smallFiles;
+            BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
+            auto cache = cachedEntity.Structuralize();
+            auto [err, includeSize, excludeSize] = ptr->CalculateDataSize(cache, totalSize, bigFileInfo, smallFiles);
+            if (err != ERR_OK) {
+                throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to mkdir");
+            }
+            if (!ptr->RefreshDataSize(totalSize)) {
+                throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to RefreshDataSize");
+            }
             bool isFwkStart;
             ptr->StartFwkTimer(isFwkStart);
             if (!isFwkStart) {
                 HILOGE("Do backup, start fwk timer fail.");
-                return;
+                throw BError(BError::Codes::EXT_TIMER_ERROR, "Failed to start fwkTimer");
             }
-            HILOGI("Do backup, start fwk timer end.");
-            BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
-            auto cache = cachedEntity.Structuralize();
-            auto ret = ptr->DoBackup(cache);
-            // REM: 处理返回结果 ret
+            auto ret = ptr->DoBackup(bigFileInfo, smallFiles, includeSize, excludeSize);
             ptr->AppDone(ret);
             HILOGI("backup app done %{public}d", ret);
         } catch (const BError &e) {
             HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
             ptr->AppDone(e.GetCode());
-        } catch (const exception &e) {
-            HILOGE("Catched an unexpected low-level exception %{public}s", e.what());
-            ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         } catch (...) {
             HILOGE("Failed to restore the ext bundle");
             ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         }
-        // 清空备份目录
         ptr->DoClear();
     };
 
@@ -1615,7 +1655,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
             ptr->UpdateOnStartTime();
             ErrCode err = ptr->extension_->OnRestore(callBackup, callBackupEx);
             if (err != ERR_OK) {
-                HILOGE("OnRestore done, err = %{pubilc}d", err);
+                HILOGE("OnRestore done, err = %{public}d", err);
                 ptr->AppIncrementalDone(BError::GetCodeByErrno(err));
                 ptr->DoClear();
             }
@@ -1682,7 +1722,6 @@ void BackupExtExtension::DoClear()
             ForceRemoveDirectory(
                 string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
         }
-        unique_lock<shared_mutex> lock(lock_);
     } catch (...) {
         HILOGE("Failed to clear");
     }
@@ -1729,6 +1768,7 @@ void BackupExtExtension::StartExtTimer(bool &isExtStart)
 
 void BackupExtExtension::StartFwkTimer(bool &isFwkStart)
 {
+    HILOGI("Do backup, start fwk timer begin.");
     auto proxy = ServiceProxy::GetInstance();
     BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
     HILOGI("Start fwk timer by ipc.");
@@ -1736,6 +1776,30 @@ void BackupExtExtension::StartFwkTimer(bool &isFwkStart)
     if (ret != ERR_OK) {
         HILOGE("Start fwk timer failed, errCode: %{public}d", ret);
     }
+    HILOGI("Do backup, start fwk timer end.");
+}
+
+bool BackupExtExtension::StopExtTimer()
+{
+    HILOGI("StopExtTimer start");
+    bool isExtStop;
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to obtain the ServiceProxy handle");
+        return false;
+    }
+    HILOGI("StopExtTimer by ipc");
+    auto ret = proxy->StopExtTimer(isExtStop);
+    if (ret != ERR_OK) {
+        HILOGE("StopExtTimer failed, errcode :%{public}d", ret);
+        return false;
+    }
+    if (!isExtStop) {
+        HILOGE("StopExtTimer failed");
+        return false;
+    }
+    HILOGI("StopExtTimer end");
+    return true;
 }
 
 void BackupExtExtension::UpdateOnStartTime()
@@ -1762,7 +1826,7 @@ void BackupExtExtension::AsyncTaskOnBackup()
             ptr->UpdateOnStartTime();
             ErrCode err = ptr->extension_->OnBackup(callBackup, callBackupEx);
             if (err != ERR_OK) {
-                HILOGE("OnBackup done, err = %{pubilc}d", err);
+                HILOGE("OnBackup done, err = %{public}d", err);
                 ptr->AppDone(BError::GetCodeByErrno(err));
             }
         } catch (const BError &e) {

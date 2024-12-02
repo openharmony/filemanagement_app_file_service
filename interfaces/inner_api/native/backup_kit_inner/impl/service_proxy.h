@@ -71,6 +71,8 @@ public:
     ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario) override;
     ErrCode StartExtTimer(bool &isExtStart) override;
     ErrCode StartFwkTimer(bool &isFwkStart) override;
+    ErrCode StopExtTimer(bool &isExtStop) override;
+    ErrCode RefreshDataSize(int64_t totalSize) override;
 
 public:
     explicit ServiceProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IService>(impl) {}

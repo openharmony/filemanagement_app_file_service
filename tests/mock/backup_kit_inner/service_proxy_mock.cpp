@@ -189,7 +189,18 @@ ErrCode ServiceProxy::StartExtTimer(bool &isExtStart)
 {
     return BError(BError::Codes::OK);
 }
+
 ErrCode ServiceProxy::StartFwkTimer(bool &isFwkStart)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::StopExtTimer(bool &isExtStop)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::RefreshDataSize(int64_t totalSize)
 {
     return BError(BError::Codes::OK);
 }

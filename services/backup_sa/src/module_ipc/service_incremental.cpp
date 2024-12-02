@@ -215,16 +215,16 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
         }
         return;
     }
+    if (!session->StopExtTimer(bundleName)) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "StopExtTimer error");
+    }
     int64_t lastTime = session->GetLastIncrementalTime(bundleName);
     std::vector<BIncrementalData> bundleNames;
     bundleNames.emplace_back(BIncrementalData {bundleName, lastTime});
     auto newBundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session->GetSessionUserId());
     RefreshBundleDataSize(newBundleInfos, bundleName, ptr);
     string path = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId()).
-                    append(bundleName).
-                    append("/").
-                    append(BConstants::BACKUP_STAT_SYMBOL).
-                    append(to_string(lastTime));
+        append(bundleName).append("/").append(BConstants::BACKUP_STAT_SYMBOL).append(to_string(lastTime));
     HILOGD("path = %{public}s,bundleName = %{public}s", path.c_str(), bundleName.c_str());
     UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP));
     if (fdLocal < 0) {
@@ -252,8 +252,9 @@ void Service::RefreshBundleDataSize(const vector<BJsonEntityCaps::BundleInfo> &n
         HILOGE("session is nullptr");
         return;
     }
+    BJsonUtil::BundleDetailInfo bundleInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
     for (auto &info : newBundleInfos) {
-        if (info.name == bundleName) {
+        if (info.name == bundleInfo.bundleName && info.appIndex == bundleInfo.bundleIndex) {
             session->SetBundleDataSize(bundleName, info.increSpaceOccupied);
             HILOGI("RefreshBundleDataSize, bundlename = %{public}s , datasize = %{public}" PRId64 "",
                 bundleName.c_str(), info.increSpaceOccupied);
