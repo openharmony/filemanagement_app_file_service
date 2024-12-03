@@ -70,6 +70,10 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
     HILOGI("Start BuildBundleInfos");
     for (size_t i = 0; i < bundleNames.size(); i++) {
         std::string bundleName = bundleNames[i];
+        if (bundleName.empty()) {
+            HILOGE("BundleName is invalid");
+            continue;
+        }
         std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
         size_t pos = bundleName.find(BUNDLE_INDEX_SPLICE);
         if (pos == 0 || pos == (bundleName.size() - 1)) {
@@ -84,10 +88,9 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
             bundleNamesOnly.emplace_back(bundleName);
         } else {
             std::string bundleNameSplit = bundleName.substr(0, pos);
-            std::string indexSplit = "";
             if (to_string(bundleName.back()) != BUNDLE_INDEX_SPLICE) {
-                indexSplit = bundleName.substr(pos + 1);
-                int index = std::stoi(indexSplit);
+                std::string indexSplit = bundleName.substr(pos + 1);
+                int index = std::atoi(indexSplit.c_str());
                 bundleIndex = index;
             } else {
                 bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
