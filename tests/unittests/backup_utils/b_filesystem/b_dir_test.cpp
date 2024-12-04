@@ -527,4 +527,42 @@ HWTEST_F(BDirTest, b_dir_GetSubDir_0100, testing::ext::TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetSubDir_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_b_dir_PreDealExcludes_0100
+ * @tc.name: b_dir_PreDealExcludes_0100
+ * @tc.desc: Test function of PreDealExcludes interface for SUCCESS
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir__PreDealExcludes_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_PreDealExcludes_0100";
+    try {
+        std::string firstEle = "test";
+        std::string secEle = "";
+        std::string thirdEle = "test/test1";
+        std::string fourthEle = "/test/test1";
+        std::string fifthEle = "/test/test1/";
+        std::vector<std::string> excludes = {
+            firstEle,
+            secEle,
+            thirdEle,
+            fourthEle,
+            fifthEle
+        };
+        PreDealExcludes(excludes);
+        EXPECT_EQ(excludes.size(), 4); // 4: the size of excludes after preDeal
+        EXPECT_EQ(excludes[0], firstEle); // 0: first idx
+        EXPECT_EQ(excludes[1], fourthEle); // 1: second idx
+        EXPECT_EQ(excludes[2], fourthEle); // 2: third idx
+        EXPECT_EQ(excludes[3], fifthEle + "*"); // 3: firth idx
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an PreDealExcludes exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_PreDealExcludes_0100";
+}
 } // namespace OHOS::FileManagement::Backup
