@@ -1435,9 +1435,15 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesClearSession_0000, TestSize.Level
         EXPECT_EQ(ret, EPERM);
 
         vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+        BJsonEntityCaps::BundleInfo info;
+        info.name = "bundleNames";
+        info.appIndex = 0;
+        bundleInfos.push_back(info);
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillOnce(Return(bundleInfos));
         EXPECT_CALL(*session, IsOnOnStartSched()).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"));
         ret = service->AppendBundlesClearSession({ "bundleNames" });
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {

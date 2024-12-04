@@ -1291,6 +1291,7 @@ void Service::ClearSessionAndSchedInfo(const string &bundleName)
         HandleRestoreDepsBundle(bundleName);
         DelClearBundleRecord({bundleName});
         if (isOccupyingSession_.load() && session_->IsOnAllBundlesFinished()) {
+            HILOGI("Cleaning up backup data end.");
             SetOccupySession(false);
             StopAll(nullptr, true);
             return;
@@ -1738,6 +1739,14 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
+        if (backupInfos.empty()) {
+            if (clearRecorder_ != nullptr) {
+                clearRecorder_->DeleteConfigFile();
+            }
+            HILOGE("AppendBundles clear session error, backupInfos is empty");
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return EPERM;
+        }
         std::vector<std::string> supportBundleNames;
         for (auto info : backupInfos) {
             std::string bundleNameIndexStr = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
