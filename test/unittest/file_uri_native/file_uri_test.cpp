@@ -256,6 +256,23 @@ namespace OHOS::AppFileService::ModuleFileUri {
     }
 
     /**
+     * @tc.name: file_uri_test_0005
+     * @tc.desc: Test function of GetPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7LW57
+     */
+    HWTEST_F(FileUriTest, File_uri_GetPath_0005, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0005";
+        string fileStr = "/data/storage/el2/media/Photo/12/IMG_12345_999999/test.jpg";
+        string uri = "file://media/Photo/12/IMG_12345_999999/test.jpg";
+        FileUri fileUri(uri);
+        EXPECT_EQ(fileUri.GetRealPath(), fileStr);
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0005";
+    }
+    /**
      * @tc.name: file_uri_test_0007
      * @tc.desc: Test function of GetFullDirectoryUri() interface for SUCCESS.
      * @tc.size: MEDIUM
