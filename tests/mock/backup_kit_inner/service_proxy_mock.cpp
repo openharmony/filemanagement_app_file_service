@@ -124,6 +124,12 @@ ErrCode ServiceProxy::Release()
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::Cancel(std::string bundleName, int32_t &result)
+{
+    result = BError(BError::Codes::OK);
+    return BError(BError::Codes::OK);
+}
+
 UniqueFd ServiceProxy::GetLocalCapabilitiesIncremental(const vector<BIncrementalData> &bundleNames)
 {
     return UniqueFd(-1);

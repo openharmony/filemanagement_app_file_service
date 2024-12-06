@@ -160,6 +160,12 @@ ErrCode Service::Release()
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::Cancel(std::string bundleName, int32_t &result)
+{
+    result = BError(BError::Codes::OK);
+    return BError(BError::Codes::OK);
+}
+
 UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames)
 {
     return UniqueFd(-1);
@@ -300,4 +306,6 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
 void Service::HandleNotSupportBundleNames(const vector<string>&, vector<string>&, bool) {}
 
 void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>&, std::vector<std::string>&) {}
+
+void Service::CancelTask(std::string bundleName, wptr<Service> ptr) {}
 } // namespace OHOS::FileManagement::Backup
