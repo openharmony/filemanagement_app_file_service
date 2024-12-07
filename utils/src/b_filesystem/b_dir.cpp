@@ -501,8 +501,13 @@ vector<string> BDir::GetDirs(const vector<string_view> &paths)
 
 bool BDir::CheckFilePathInvalid(const std::string &filePath)
 {
-    if (filePath.find("../") != std::string::npos) {
-        return true;
+    size_t pos = filePath.find(BConstants::PATH_ABSOLUTE);
+    while (pos != string::npos) {
+        if (pos == 0 || filePath[pos - 1] == BConstants::FILE_SEPARATOR_CHAR) {
+            HILOGE("Relative path is not allowed, path = %{public}s", GetAnonyPath(filePath).c_str());
+            return true;
+        }
+        pos = filePath.find(BConstants::PATH_ABSOLUTE, pos + BConstants::PATH_ABSOLUTE.size());
     }
     return false;
 }

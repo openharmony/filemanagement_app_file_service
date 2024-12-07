@@ -320,6 +320,47 @@ HWTEST_F(BDirTest, b_dir_GetDirs_0100, testing::ext::TestSize.Level1)
 }
 
 /**
+ * @tc.number: SUB_backup_b_dir_CheckFilePathInvalid_0100
+ * @tc.name: b_dir_CheckFilePathInvalid_0100
+ * @tc.desc: Test function of CheckFilePathInvalid interface for SUCCESS
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_CheckFilePathInvalid_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_CheckFilePathInvalid_0100";
+    try {
+        TestManager tm("b_dir_CheckFilePathInvalid_0100");
+        std::string testPath = "../test../test1";
+        std::string testPath1 = "test../../test";
+        std::string testPath2 = "test../../";
+        std::string testPath3 = "test";
+        std::string testPath4 = "/test/test../test";
+        std::string testPath5 = "/test../test../test";
+        std::string testPath6 = "/test../test../test../";
+        bool isForbid = BDir::CheckFilePathInvalid(testPath);
+        EXPECT_TRUE(isForbid);
+        bool isForbid1 = BDir::CheckFilePathInvalid(testPath1);
+        EXPECT_TRUE(isForbid1);
+        bool isForbid2 = BDir::CheckFilePathInvalid(testPath2);
+        EXPECT_TRUE(isForbid2);
+        bool isForbid3 = BDir::CheckFilePathInvalid(testPath3);
+        EXPECT_FALSE(isForbid3);
+        bool isForbid4 = BDir::CheckFilePathInvalid(testPath4);
+        EXPECT_FALSE(isForbid4);
+        bool isForbid5 = BDir::CheckFilePathInvalid(testPath5);
+        EXPECT_FALSE(isForbid5);
+        bool isForbid6 = BDir::CheckFilePathInvalid(testPath6);
+        EXPECT_FALSE(isForbid6);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_CheckFilePathInvalid_0100";
+}
+
+/**
  * @tc.number: SUB_backup_b_dir_GetFile_0100
  * @tc.name: b_dir_GetFile_0100
  * @tc.desc: Test function of GetFile interface for SUCCESS
