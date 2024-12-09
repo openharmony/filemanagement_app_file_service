@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <unordered_set>
 #ifdef SANDBOX_MANAGER
+#include "uri_permission_manager_client.h"
 #include "accesstoken_kit.h"
 #include "bundle_constants.h"
 #include "hap_token_info.h"
@@ -295,7 +296,8 @@ int32_t FilePermission::ActivatePermission(const vector<UriPolicyInfo> &uriPolic
 #ifdef SANDBOX_MANAGER
     vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
     vector<uint32_t> resultCodes;
-    int32_t sandboxManagerErrorCode = SandboxManagerKit::StartAccessingPolicy(pathPolicies, resultCodes);
+    auto &uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
+    int32_t sandboxManagerErrorCode = uriPermissionClient.Active(pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
     if (resultCodes.size() > MAX_ARRAY_SIZE) {
         LOGE("The number of result codes exceeds the maximum");

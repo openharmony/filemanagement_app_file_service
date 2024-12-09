@@ -115,6 +115,8 @@ void FilePermissionTest::SetUpTestCase()
     #ifdef SANDBOX_MANAGER
     sandboxMock_ = make_shared<SandboxMock>();
     SandboxMock::sandboxManagerKitMock = sandboxMock_;
+    upmsMock_ = make_shared<UpmsMock>();
+    UpmsMock::upmsManagerKitMock = upmsMock_;
     #endif
 }
 void FilePermissionTest::TearDownTestCase()
@@ -123,6 +125,8 @@ void FilePermissionTest::TearDownTestCase()
     #ifdef SANDBOX_MANAGER
     SandboxMock::sandboxManagerKitMock = nullptr;
     sandboxMock_ = nullptr;
+    UpmsMock::upmsManagerKitMock = nullptr;
+    upmsMock_ = nullptr;
     #endif
 }
 
@@ -233,7 +237,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0000, testing::ext::TestSiz
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
-    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
+    EXPECT_CALL(*upmsMock_, Active(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
     EXPECT_EQ(ret, 0);
     GTEST_LOG_(INFO) << "FileShareTest-end ActivatePermission_test_0000";
@@ -258,8 +262,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0001, testing::ext::TestSiz
     deque<struct PolicyErrorResult> errorResults;
     vector<uint32_t> resultCodes;
     resultCodes.push_back(PolicyErrorCode::INVALID_MODE);
-    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _))
-        .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
+    EXPECT_CALL(*upmsMock_, Active(_, _)).WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
     if (CheckFileManagerFullMountEnable()) {
         EXPECT_EQ(ret, EPERM);
@@ -285,7 +288,7 @@ HWTEST_F(FilePermissionTest, ActivatePermission_test_0002, testing::ext::TestSiz
     std::vector<UriPolicyInfo> uriPolicies;
     uriPolicies.emplace_back(infoA);
     deque<struct PolicyErrorResult> errorResults;
-    EXPECT_CALL(*sandboxMock_, StartAccessingPolicy(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
+    EXPECT_CALL(*upmsMock_, Active(_, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
     int32_t ret = FilePermission::ActivatePermission(uriPolicies, errorResults);
     if (CheckFileManagerFullMountEnable()) {
         EXPECT_EQ(ret, EPERM);

@@ -32,6 +32,7 @@ ohos_unittest("file_permission_test") {
   ]
   sources = [
     "${app_file_service_path}/tests/mock/file_permission_native/src/sandbox_mock.cpp",
+    "${app_file_service_path}/tests/mock/file_permission_native/src/upms_mock.cpp",
     "src/file_permission_test.cpp",
   ]
 
@@ -52,8 +53,14 @@ ohos_unittest("file_permission_test") {
   ]
   defines = []
   if (sandbox_manarer) {
-    external_deps += [ "sandbox_manager:libsandbox_manager_sdk" ]
-    defines += [ "SANDBOX_MANAGER" ]
+    external_deps += [
+      "ability_runtime:uri_permission_mgr",
+      "sandbox_manager:libsandbox_manager_sdk",
+    ]
+    defines += [
+      "SANDBOX_MANAGER",
+      "ABILITY_RUNTIME_FEATURE_SANDBOXMANAGER",
+    ]
   }
   deps = [
     "//third_party/googletest:gmock_main",
