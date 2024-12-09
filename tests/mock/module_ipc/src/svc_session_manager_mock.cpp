@@ -15,21 +15,31 @@
 
 #include "module_ipc/svc_session_manager.h"
 
+#include "b_error/b_error.h"
 #include "svc_session_manager_mock.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-void SvcSessionManager::VerifyCallerAndScenario(uint32_t, IServiceReverse::Scenario) const {}
+ErrCode SvcSessionManager::VerifyCallerAndScenario(uint32_t, IServiceReverse::Scenario) const
+{
+    return BError(BError::Codes::OK);
+}
 
 ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
 {
     return BSvcSessionManager::sessionManager->Active(newImpl, force);
 }
 
-void SvcSessionManager::Deactive(const wptr<IRemoteObject> &, bool) {}
+ErrCode SvcSessionManager::Deactive(const wptr<IRemoteObject> &, bool)
+{
+    return BError(BError::Codes::OK);
+}
 
-void SvcSessionManager::VerifyBundleName(string &bundleName) {}
+ErrCode SvcSessionManager::VerifyBundleName(string &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 
 sptr<IServiceReverse> SvcSessionManager::GetServiceReverseProxy()
 {
@@ -65,7 +75,10 @@ sptr<SvcBackupConnection> SvcSessionManager::GetBackupAbilityExt(const string &b
 
 void SvcSessionManager::DumpInfo(const int, const std::vector<std::u16string> &) {}
 
-void SvcSessionManager::InitClient(Impl &) {}
+ErrCode SvcSessionManager::InitClient(Impl &)
+{
+    return BError(BError::Codes::OK);
+}
 
 void SvcSessionManager::SetExtFileNameRequest(const string &bundleName, const string &) {}
 
@@ -117,9 +130,15 @@ sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &
     return BSvcSessionManager::sessionManager->CreateBackupConnection(bundleName);
 }
 
-void SvcSessionManager::Start() {}
+ErrCode SvcSessionManager::Start()
+{
+    return BError(BError::Codes::OK);
+}
 
-void SvcSessionManager::Finish() {}
+ErrCode SvcSessionManager::Finish()
+{
+    return BError(BError::Codes::OK);
+}
 
 bool SvcSessionManager::IsOnAllBundlesFinished()
 {
