@@ -162,7 +162,8 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
         }
         BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
         auto cache = cachedEntity.Structuralize();
-
+        std::string backupVersion = BJsonUtil::ParseBackupVersion();
+        cache.SetBackupVersion(backupVersion);
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
         auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(GetUserIdDefault(), bundleNames);
@@ -653,6 +654,11 @@ bool Service::IncrementalBackup(const string &bundleName)
                session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
         auto ret = proxy->HandleRestore(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(ret, bundleName);
+        std::string oldBackupVersion = session_->GetOldBackupVersion();
+        if (oldBackupVersion.empty()) {
+            HILOGE("Failed to get backupVersion of old device");
+        }
+        HILOGD("backupVersion of old device = %{public}s", oldBackupVersion.c_str());
         BundleBeginRadarReport(bundleName, ret, IServiceReverse::Scenario::RESTORE);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (auto &fileName : fileNameVec) {

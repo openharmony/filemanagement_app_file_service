@@ -292,6 +292,10 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
     string bundleExtInfo = session_->GetBackupExtInfo(bundleName);
     HILOGI("BundleExtInfo is:%{public}s", GetAnonyString(bundleExtInfo).c_str());
+    string oldBackupVersion = session_->GetOldBackupVersion(); /* old device backup version */
+    if (oldBackupVersion.empty()) {
+        HILOGE("Failed to get backupVersion of old device");
+    }
     want.SetElementName(bundleDetail.bundleName, backupExtName);
     want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
     want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<long>(versionCode));
@@ -300,6 +304,7 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     want.SetParam(BConstants::EXTENSION_RESTORE_EXT_INFO_PARA, bundleExtInfo);
     want.SetParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA, bundleExtInfo);
     want.SetParam(BConstants::EXTENSION_APP_CLONE_INDEX_PARA, bundleDetail.bundleIndex);
+    want.SetParam(BConstants::EXTENSION_OLD_BACKUP_VERSION_PARA, oldBackupVersion);
 }
 
 std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &backupInfos,

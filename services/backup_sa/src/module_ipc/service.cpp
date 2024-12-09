@@ -104,6 +104,15 @@ static inline int32_t GetUserIdDefault()
     return multiuser.userId;
 }
 
+void Service::GetOldDeviceBackupVersion()
+{
+    std::string oldBackupVersion = session_->GetOldBackupVersion();
+    if (oldBackupVersion.empty()) {
+        HILOGE("Failed to get backupVersion of old device");
+    }
+    HILOGI("backupVersion of old device = %{public}s", oldBackupVersion.c_str());
+}
+
 void OnStartResRadarReport(const std::vector<std::string> &bundleNameList, int32_t stage)
 {
     std::stringstream ss;
@@ -293,7 +302,8 @@ UniqueFd Service::GetLocalCapabilities()
         BJsonCachedEntity<BJsonEntityCaps> cachedEntity(std::move(fd));
 
         auto cache = cachedEntity.Structuralize();
-
+        std::string backupVersion = BJsonUtil::ParseBackupVersion();
+        cache.SetBackupVersion(backupVersion);
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
         auto bundleInfos = BundleMgrAdapter::GetFullBundleInfos(GetUserIdDefault());
@@ -533,13 +543,18 @@ void Service::OnBundleStarted(BError error, sptr<SvcSessionManager> session, con
 
 static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
                                                                  sptr<SvcSessionManager> session,
-                                                                 const vector<BundleName> &bundleNames)
+                                                                 const vector<BundleName> &bundleNames,
+                                                                 std::string &oldBackupVersion)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     // BundleMgrAdapter::GetBundleInfos可能耗时
     auto restoreInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session->GetSessionUserId());
     BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
+    oldBackupVersion = cache.GetBackupVersion();
+    if (oldBackupVersion.empty()) {
+        HILOGE("backupVersion of old device is empty");
+    }
     auto bundleInfos = cache.GetBundleInfos();
     if (!bundleInfos.size()) {
         throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
@@ -622,7 +637,8 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
                                         session_->GetSessionUserId(), isClearDataFlags);
-        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
+        std::string oldBackupVersion;
+        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames, oldBackupVersion);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         HandleExceptionOnAppendBundles(session_, bundleNames, restoreBundleNames);
         if (restoreBundleNames.empty()) {
@@ -632,7 +648,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
         }
         session_->AppendBundles(restoreBundleNames);
         SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType);
+            isClearDataFlags, restoreType, oldBackupVersion);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("End");
@@ -651,9 +667,10 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
 }
 
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
-    std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType)
+    std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType, std::string &backupVersion)
 {
     HILOGI("Start");
+    session_->SetOldBackupVersion(backupVersion);
     for (auto restoreInfo : restoreBundleInfos) {
         auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(), [&restoreInfo](const auto &bundleName) {
             std::string bundleNameIndex = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
@@ -703,7 +720,8 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             session_->SetSessionUserId(GetUserIdDefault());
         }
         VerifyCaller(IServiceReverse::Scenario::RESTORE);
-        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
+        std::string oldBackupVersion;
+        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames, oldBackupVersion);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         HandleExceptionOnAppendBundles(session_, bundleNames, restoreBundleNames);
         if (restoreBundleNames.empty()) {
@@ -712,7 +730,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             return BError(BError::Codes::OK);
         }
         session_->AppendBundles(restoreBundleNames);
-        SetCurrentSessProperties(restoreInfos, restoreBundleNames, restoreType);
+        SetCurrentSessProperties(restoreInfos, restoreBundleNames, restoreType, oldBackupVersion);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
@@ -732,9 +750,10 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
     std::vector<std::string> &restoreBundleNames,
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-    std::map<std::string, bool> &isClearDataFlags, RestoreTypeEnum restoreType)
+    std::map<std::string, bool> &isClearDataFlags, RestoreTypeEnum restoreType, std::string &backupVersion)
 {
     HILOGI("Start");
+    session_->SetOldBackupVersion(backupVersion);
     for (auto restoreInfo : restoreBundleInfos) {
         auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
             [&restoreInfo](const auto &bundleName) {
@@ -1131,6 +1150,7 @@ void Service::ExtStart(const string &bundleName)
         }
         auto ret = proxy->HandleRestore(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
+        GetOldDeviceBackupVersion();
         BundleBeginRadarReport(bundleName, ret, scenario);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (auto &fileName : fileNameVec) {
