@@ -285,6 +285,8 @@ void Service::UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo 
 
 void Service::ClearFailedBundles() {}
 
+void Service::GetOldDeviceBackupVersion() {}
+
 void Service::CreateDirIfNotExist(const std::string &path)
 {
 }

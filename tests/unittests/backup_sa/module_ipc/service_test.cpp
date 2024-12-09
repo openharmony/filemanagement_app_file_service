@@ -1337,37 +1337,38 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0100, testing::ext::T
         std::vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {aInfo};
         std::vector<std::string> restoreBundleNames {"12345678"};
         RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        std::string backupVersion;
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->session_ = sptr(new SvcSessionManager(servicePtr_));
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
 
         restoreBundleNames.push_back("123456");
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
 
         restoreBundleInfos.clear();
         aInfo.allToBackup = true;
         aInfo.versionName = "0.0.0.0-0.0.0.0";
         aInfo.extensionName = "";
         restoreBundleInfos.push_back(aInfo);
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
 
         restoreBundleInfos.clear();
         aInfo.name = "123456a";
         restoreBundleInfos.push_back(aInfo);
         restoreBundleNames.push_back("123456a");
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
 
         restoreBundleInfos.clear();
         aInfo.allToBackup = false;
         aInfo.extensionName = "";
         restoreBundleInfos.push_back(aInfo);
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
 
         restoreBundleInfos.clear();
         aInfo.allToBackup = false;
         aInfo.extensionName = "";
         restoreBundleInfos.push_back(aInfo);
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
     } catch (...) {
         EXPECT_TRUE(true);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
@@ -1396,20 +1397,21 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0101, testing::ext::T
         std::vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {aInfo};
         std::vector<std::string> restoreBundleNames {"123456"};
         RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        std::string backupVersion;
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->session_ = sptr(new SvcSessionManager(servicePtr_));
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
 
         restoreBundleInfos.clear();
         aInfo.extensionName = "";
         restoreBundleInfos.push_back(aInfo);
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
 
         restoreBundleInfos.clear();
         aInfo.name = "123456a";
         restoreBundleInfos.push_back(aInfo);
         restoreBundleNames.push_back("123456a");
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
@@ -1438,30 +1440,31 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0102, testing::ext::T
         std::vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {aInfo};
         std::vector<std::string> restoreBundleNames {"123456"};
         RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        std::string backupVersion;
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
 
         restoreBundleInfos.clear();
         aInfo.versionName = "1.1.1.1-1.1.1.1";
         aInfo.extensionName = "";
         aInfo.name = "123456";
         restoreBundleInfos.push_back(aInfo);
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
 
         restoreBundleInfos.clear();
         aInfo.name = "123456a";
         restoreBundleInfos.push_back(aInfo);
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
 
         restoreBundleInfos.clear();
         aInfo.extensionName = "abcdef";
         restoreBundleInfos.push_back(aInfo);
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
 
         restoreBundleInfos.clear();
         aInfo.name = "123456";
         restoreBundleInfos.push_back(aInfo);
-        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType);
+        servicePtr_->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, restoreType, backupVersion);
     } catch (...) {
         EXPECT_TRUE(true);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";

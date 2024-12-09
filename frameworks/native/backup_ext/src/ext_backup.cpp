@@ -165,8 +165,10 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         appVersionCode_ = want.GetLongParam(BConstants::EXTENSION_VERSION_CODE_PARA, 0);
         restoreType_ = want.GetIntParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, 0);
         restoreExtInfo_ = want.GetStringParam(BConstants::EXTENSION_RESTORE_EXT_INFO_PARA);
+        oldBackupVersion_ = want.GetStringParam(BConstants::EXTENSION_OLD_BACKUP_VERSION_PARA);
         HILOGI("restoreExtInfo_ is %{public}s", GetAnonyString(restoreExtInfo_).c_str());
         HILOGI("Get version %{public}s type %{public}d from want when restore.", appVersionStr_.c_str(), restoreType_);
+        HILOGI("oldBackupVersion_ is %{public}s", oldBackupVersion_.c_str());
     } else if (extAction_ == BConstants::ExtensionAction::BACKUP) {
         backupExtInfo_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA);
         HILOGI("backupExtInfo_ is %{public}s", backupExtInfo_.c_str());
