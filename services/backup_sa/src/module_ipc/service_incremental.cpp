@@ -658,7 +658,7 @@ bool Service::IncrementalBackup(const string &bundleName)
         if (oldBackupVersion.empty()) {
             HILOGE("Failed to get backupVersion of old device");
         }
-        HILOGI("backupVersion of old device = %{public}s", oldBackupVersion.c_str());
+        HILOGD("backupVersion of old device = %{public}s", oldBackupVersion.c_str());
         BundleBeginRadarReport(bundleName, ret, IServiceReverse::Scenario::RESTORE);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (auto &fileName : fileNameVec) {
