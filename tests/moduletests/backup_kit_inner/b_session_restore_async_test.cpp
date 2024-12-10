@@ -338,4 +338,35 @@ HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0700, test
     }
     GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-end SUB_backup_b_session_restore_async_0700";
 }
+
+/**
+ * @tc.number: SUB_backup_b_session_restore_async_0800
+ * @tc.name: SUB_backup_b_session_restore_async_0800
+ * @tc.desc: 测试Cancel接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7L7A6
+ */
+HWTEST_F(BSessionRestoreAsyncTest, SUB_backup_b_session_restore_async_0800, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-begin SUB_backup_b_session_restore_async_0800";
+    try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_async_0800 restorePtr_ == nullptr";
+            return;
+        }
+        BundleName bundleName;
+        SetMockGetInstance(false);
+        ErrCode ret = restorePtr_->Cancel(bundleName);
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
+        SetMockGetInstance(true);
+        ret = restorePtr_->Cancel(bundleName);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-an exception occurred by Cancel.";
+    }
+    GTEST_LOG_(INFO) << "BSessionRestoreAsyncTest-end SUB_backup_b_session_restore_async_0800";
+}
 } // namespace OHOS::FileManagement::Backup
