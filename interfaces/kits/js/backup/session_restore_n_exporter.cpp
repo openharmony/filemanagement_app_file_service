@@ -423,7 +423,7 @@ static bool VerifyNarg(napi_env env, NVal &callbacks)
 static bool SetSessionRestoreEntity(napi_env env, NFuncArg &funcArg, std::unique_ptr<RestoreEntity> restoreEntity)
 {
     auto finalize = [](napi_env env, void *data, void *hint) {
-        RestoreEntity *entity = static_cast<RestoreEntity *>(data);
+        std::unique_ptr<RestoreEntity> entity = std::unique_ptr<RestoreEntity>(static_cast<RestoreEntity *>(data));
         if (entity == nullptr) {
             HILOGE("Entity is nullptr");
             return;
