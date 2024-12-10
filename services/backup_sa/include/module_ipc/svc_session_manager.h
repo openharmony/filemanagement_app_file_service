@@ -91,6 +91,7 @@ public:
         int32_t userId {100};
         RestoreTypeEnum restoreDataType {RESTORE_DATA_WAIT_SEND};
         bool isIncrementalBackup {false};
+        std::string oldBackupVersion {""};
     };
 
 public:
@@ -498,6 +499,18 @@ public:
      * @param size
      */
     void SetMemParaCurSize(int32_t size);
+
+    /**
+     * @brief Set the old device backup version object
+     *
+     * @param backupVersion
+     */
+    void SetOldBackupVersion(const std::string &backupVersion);
+
+    /**
+     * @brief Get the old device backup version object
+     */
+    std::string GetOldBackupVersion();
 
     bool ValidRestoreDataType(RestoreTypeEnum restoreType);
 

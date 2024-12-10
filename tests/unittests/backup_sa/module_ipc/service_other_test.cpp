@@ -526,57 +526,52 @@ HWTEST_F(ServiceTest, SUB_Service_VerifyCallerAndGetCallerName_0100, TestSize.Le
 HWTEST_F(ServiceTest, SUB_Service_VerifyCaller_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_VerifyCaller_0100";
-    try {
-        ASSERT_TRUE(service != nullptr);
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
-        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
-        EXPECT_CALL(*token, VerifyAccessToken(_, _))
-            .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_DENIED));
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-        ErrCode ret = service->VerifyCaller();
-        EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+    ASSERT_TRUE(service != nullptr);
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+    EXPECT_CALL(*token, VerifyAccessToken(_, _))
+        .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_DENIED));
+    EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+        .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+    ErrCode ret = service->VerifyCaller();
+    EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
-        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
-        EXPECT_CALL(*token, VerifyAccessToken(_, _))
-            .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
-        ret = service->VerifyCaller();
-        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+    EXPECT_CALL(*token, VerifyAccessToken(_, _))
+        .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+    ret = service->VerifyCaller();
+    EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
-        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
-        EXPECT_CALL(*token, VerifyAccessToken(_, _))
-            .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_DENIED));
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-        ret = service->VerifyCaller();
-        EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*token, VerifyAccessToken(_, _))
+        .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_DENIED));
+    EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+        .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
+        .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+    ret = service->VerifyCaller();
+    EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
-        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
-        EXPECT_CALL(*token, VerifyAccessToken(_, _))
-            .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
-        EXPECT_CALL(*token, IsSystemAppByFullTokenID(_)).WillOnce(Return(false));
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-        ret = service->VerifyCaller();
-        EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*token, VerifyAccessToken(_, _))
+        .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(*token, IsSystemAppByFullTokenID(_)).WillOnce(Return(false));
+    EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+        .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
+        .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
+        .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+    ret = service->VerifyCaller();
+    EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
-        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
-        EXPECT_CALL(*token, VerifyAccessToken(_, _))
-            .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
-        EXPECT_CALL(*token, IsSystemAppByFullTokenID(_)).WillOnce(Return(true));
-        ret = service->VerifyCaller();
-        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by VerifyCaller.";
-    }
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*token, VerifyAccessToken(_, _))
+        .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(*token, IsSystemAppByFullTokenID(_)).WillOnce(Return(true));
+    ret = service->VerifyCaller();
+    EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_VerifyCaller_0100";
 }
 
@@ -712,9 +707,10 @@ HWTEST_F(ServiceTest, SUB_Service_GetRestoreBundleNames_0100, TestSize.Level1)
     try {
         vector<BundleName> bundleNames;
         vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+        std::string backupVersion;
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillOnce(Return(bundleInfos));
-        EXPECT_THROW(GetRestoreBundleNames(UniqueFd(-1), service->session_, bundleNames), BError);
+        EXPECT_THROW(GetRestoreBundleNames(UniqueFd(-1), service->session_, bundleNames, backupVersion), BError);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetRestoreBundleNames.";
@@ -878,15 +874,16 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0200, TestSize.Level1
         map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
         map<string, bool> isClearDataFlags;
         RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
+        std::string backupVersion;
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType);
+            isClearDataFlags, restoreType, backupVersion);
 
         restoreBundleNames.emplace_back("bundleName");
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType);
+            isClearDataFlags, restoreType, backupVersion);
         EXPECT_TRUE(true);
 
         restoreBundleInfos[0].allToBackup = true;
@@ -895,7 +892,7 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0200, TestSize.Level1
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType);
+            isClearDataFlags, restoreType, backupVersion);
         EXPECT_TRUE(true);
 
         restoreBundleInfos[0].allToBackup = false;
@@ -905,7 +902,7 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0200, TestSize.Level1
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType);
+            isClearDataFlags, restoreType, backupVersion);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -934,13 +931,14 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0300, TestSize.Level1
         map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
         map<string, bool> isClearDataFlags;
         RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
+        std::string backupVersion;
 
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false)).WillOnce(Return(false));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType);
+            isClearDataFlags, restoreType, backupVersion);
         EXPECT_TRUE(true);
 
         restoreBundleInfos[0].extensionName = "extensionName";
@@ -948,27 +946,27 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0300, TestSize.Level1
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false)).WillOnce(Return(false));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType);
+            isClearDataFlags, restoreType, backupVersion);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false)).WillOnce(Return(false));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType);
+            isClearDataFlags, restoreType, backupVersion);
 
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(true)).WillOnce(Return(false));
         EXPECT_CALL(*notify, NotifyBundleDetail(_)).WillOnce(Return(true));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType);
+            isClearDataFlags, restoreType, backupVersion);
 
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false)).WillOnce(Return(true));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType);
+            isClearDataFlags, restoreType, backupVersion);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

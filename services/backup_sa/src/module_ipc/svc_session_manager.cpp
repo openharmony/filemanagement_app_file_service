@@ -1042,6 +1042,24 @@ void SvcSessionManager::SetPublishFlag(const std::string &bundleName)
     HILOGE("Set PublishFile success, bundleName = %{public}s", bundleName.c_str());
 }
 
+void SvcSessionManager::SetOldBackupVersion(const std::string &backupVersion)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    impl_.oldBackupVersion = backupVersion;
+}
+
+std::string SvcSessionManager::GetOldBackupVersion()
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+    }
+    return impl_.oldBackupVersion;
+}
+
 void SvcSessionManager::SetImplRestoreType(const RestoreTypeEnum restoreType)
 {
     impl_.restoreDataType = restoreType;

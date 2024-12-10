@@ -1280,6 +1280,57 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSessionUserId_0100, tes
 }
 
 /**
+ * @tc.number: SUB_backup_sa_session_SetOldBackupVersion_0100
+ * @tc.name: SUB_backup_sa_session_SetOldBackupVersion_0100
+ * @tc.desc: 测试 SetSessionUserId
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetOldBackupVersion_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_backup_sa_session_SetOldBackupVersion_0100";
+    try {
+        std::string backupVersion = "16.0";
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->SetOldBackupVersion(backupVersion);
+        EXPECT_EQ(sessionManagerPtr_->impl_.oldBackupVersion, backupVersion);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetOldBackupVersion.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_backup_sa_session_SetOldBackupVersion_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetOldBackupVersion_0100
+ * @tc.name: SUB_backup_sa_session_GetOldBackupVersion_0100
+ * @tc.desc: 测试 GetSessionUserId
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetOldBackupVersion_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_backup_sa_session_GetOldBackupVersion_0100";
+    try {
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->GetOldBackupVersion();
+        EXPECT_TRUE(true);
+
+        sessionManagerPtr_->impl_.oldBackupVersion = "16.0";
+        EXPECT_EQ(sessionManagerPtr_->GetOldBackupVersion(), "16.0");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetOldBackupVersion.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_backup_sa_session_GetOldBackupVersion_0100";
+}
+
+/**
  * @tc.number: SUB_backup_sa_session_SetBundleRestoreType_0100
  * @tc.name: SUB_backup_sa_session_SetBundleRestoreType_0100
  * @tc.desc: 测试 SetBundleRestoreType 接口

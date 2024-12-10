@@ -168,7 +168,7 @@ ohos_unittest("backup_service_throw_test") {
     "${path_backup_mock}/module_ipc/src/ipc_skeleton_mock.cpp",
     "${path_backup_mock}/module_ipc/svc_session_manager_throw_mock.cpp",
     "${path_backup_mock}/timer/timer_mock.cpp",
-    "${path_backup_mock}/utils_mock/src/b_jsonutil_mock",
+    "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/sa_backup_connection.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",

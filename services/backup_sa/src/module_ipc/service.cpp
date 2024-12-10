@@ -104,6 +104,15 @@ static inline int32_t GetUserIdDefault()
     return multiuser.userId;
 }
 
+void Service::GetOldDeviceBackupVersion()
+{
+    std::string oldBackupVersion = session_->GetOldBackupVersion();
+    if (oldBackupVersion.empty()) {
+        HILOGE("Failed to get backupVersion of old device");
+    }
+    HILOGI("backupVersion of old device = %{public}s", oldBackupVersion.c_str());
+}
+
 void OnStartResRadarReport(const std::vector<std::string> &bundleNameList, int32_t stage)
 {
     std::stringstream ss;
@@ -298,7 +307,8 @@ UniqueFd Service::GetLocalCapabilities()
         BJsonCachedEntity<BJsonEntityCaps> cachedEntity(std::move(fd));
 
         auto cache = cachedEntity.Structuralize();
-
+        std::string backupVersion = BJsonUtil::ParseBackupVersion();
+        cache.SetBackupVersion(backupVersion);
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
         auto bundleInfos = BundleMgrAdapter::GetFullBundleInfos(GetUserIdDefault());
@@ -565,13 +575,18 @@ void Service::OnBundleStarted(BError error, sptr<SvcSessionManager> session, con
 
 static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
                                                                  sptr<SvcSessionManager> session,
-                                                                 const vector<BundleName> &bundleNames)
+                                                                 const vector<BundleName> &bundleNames,
+                                                                 std::string &oldBackupVersion)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     // BundleMgrAdapter::GetBundleInfos可能耗时
     auto restoreInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session->GetSessionUserId());
     BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
+    oldBackupVersion = cache.GetBackupVersion();
+    if (oldBackupVersion.empty()) {
+        HILOGE("backupVersion of old device is empty");
+    }
     auto bundleInfos = cache.GetBundleInfos();
     if (!bundleInfos.size()) {
         throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
@@ -655,7 +670,8 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
                                         session_->GetSessionUserId(), isClearDataFlags);
-        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
+        std::string oldBackupVersion;
+        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames, oldBackupVersion);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         HandleExceptionOnAppendBundles(session_, bundleNames, restoreBundleNames);
         if (restoreBundleNames.empty()) {
@@ -665,7 +681,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
         }
         session_->AppendBundles(restoreBundleNames);
         SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType);
+            isClearDataFlags, restoreType, oldBackupVersion);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("End");
@@ -684,9 +700,10 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
 }
 
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
-    std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType)
+    std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType, std::string &backupVersion)
 {
     HILOGI("Start");
+    session_->SetOldBackupVersion(backupVersion);
     for (auto restoreInfo : restoreBundleInfos) {
         auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(), [&restoreInfo](const auto &bundleName) {
             std::string bundleNameIndex = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
@@ -739,7 +756,8 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return ret;
         }
-        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames);
+        std::string oldBackupVersion;
+        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames, oldBackupVersion);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         HandleExceptionOnAppendBundles(session_, bundleNames, restoreBundleNames);
         if (restoreBundleNames.empty()) {
@@ -748,7 +766,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             return BError(BError::Codes::OK);
         }
         session_->AppendBundles(restoreBundleNames);
-        SetCurrentSessProperties(restoreInfos, restoreBundleNames, restoreType);
+        SetCurrentSessProperties(restoreInfos, restoreBundleNames, restoreType, oldBackupVersion);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
@@ -768,9 +786,10 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
     std::vector<std::string> &restoreBundleNames,
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-    std::map<std::string, bool> &isClearDataFlags, RestoreTypeEnum restoreType)
+    std::map<std::string, bool> &isClearDataFlags, RestoreTypeEnum restoreType, std::string &backupVersion)
 {
     HILOGI("Start");
+    session_->SetOldBackupVersion(backupVersion);
     for (auto restoreInfo : restoreBundleInfos) {
         auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
             [&restoreInfo](const auto &bundleName) {
@@ -1086,69 +1105,6 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
     }
 }
 
-void Service::OnBackupExtensionDied(const string &&bundleName, bool isCleanCalled)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    if (isCleanCalled) {
-        HILOGE("Backup <%{public}s> Extension Process second Died", bundleName.c_str());
-        ClearSessionAndSchedInfo(bundleName);
-        OnAllBundlesFinished(BError(BError::Codes::OK));
-        return;
-    }
-    try {
-        string callName = move(bundleName);
-        HILOGE("Backup <%{public}s> Extension Process Died", callName.c_str());
-        ErrCode ret = session_->VerifyBundleName(callName);
-        if (ret != ERR_OK) {
-            HILOGE("Backup Extension died error, verify bundleName failed, bundleName:%{public}s, ret:%{public}d",
-                bundleName.c_str(), ret);
-            ExtConnectDied(bundleName);
-            return;
-        }
-        // 重新连接清理缓存
-        HILOGI("Clear backup extension data, bundleName: %{public}s", callName.c_str());
-        ExtConnectDied(callName);
-    } catch (...) {
-        HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
-        ExtConnectDied(bundleName);
-        return;
-    }
-}
-
-void Service::ExtConnectDied(const string &callName)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    try {
-        HILOGI("Begin, bundleName: %{public}s", callName.c_str());
-        std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callName);
-        if (mutexPtr == nullptr) {
-            HILOGE("extension mutex ptr is nullptr");
-            return;
-        }
-        std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
-        /* Clear Timer */
-        session_->StopFwkTimer(callName);
-        session_->StopExtTimer(callName);
-        auto backUpConnection = session_->GetExtConnection(callName);
-        if (backUpConnection != nullptr && backUpConnection->IsExtAbilityConnected()) {
-            backUpConnection->DisconnectBackupExtAbility();
-        }
-        session_->SetServiceSchedAction(callName, BConstants::ServiceSchedAction::CLEAN);
-        auto ret = LaunchBackupExtension(callName);
-        if (ret) {
-            /* Clear Session before notice client finish event */
-            ClearSessionAndSchedInfo(callName);
-        }
-        /* Notice Client Ext Ability Process Died */
-        NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
-    } catch (...) {
-        HILOGE("Unexpected exception, bundleName: %{public}s", callName.c_str());
-        ClearSessionAndSchedInfo(callName);
-        NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
-    }
-    RemoveExtensionMutex(callName);
-}
-
 void Service::ExtStart(const string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -1185,6 +1141,7 @@ void Service::ExtStart(const string &bundleName)
         }
         auto ret = proxy->HandleRestore(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
+        GetOldDeviceBackupVersion();
         BundleBeginRadarReport(bundleName, ret, scenario);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (auto &fileName : fileNameVec) {
@@ -1262,36 +1219,6 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
         HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
         return;
     } catch (...) {
-        HILOGI("Unexpected exception");
-        return;
-    }
-}
-
-void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("begin %{public}s", bundleName.c_str());
-    try {
-        SendEndAppGalleryNotify(bundleName);
-        auto scenario = session_->GetScenario();
-        if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
-            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
-        } else if (scenario == IServiceReverse::Scenario::RESTORE &&
-                BackupPara().GetBackupOverrideIncrementalRestore() &&
-                session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
-            session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
-        } else if (scenario == IServiceReverse::Scenario::BACKUP) {
-            session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
-        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-            session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
-        };
-        BundleEndRadarReport(bundleName, errCode, scenario);
-        /* If all bundle ext process finish, notice client. */
-        OnAllBundlesFinished(BError(BError::Codes::OK));
-    } catch(const BError &e) {
-        ReleaseOnException();
-    } catch (...) {
-        ReleaseOnException();
         HILOGI("Unexpected exception");
         return;
     }
@@ -1402,33 +1329,6 @@ void Service::HandleRestoreDepsBundle(const string &bundleName)
         }
     }
     HILOGI("End");
-}
-
-void Service::OnAllBundlesFinished(ErrCode errCode)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("called begin.");
-    if (session_->IsOnAllBundlesFinished()) {
-        IServiceReverse::Scenario scenario = session_->GetScenario();
-        if (isInRelease_.load() && (scenario == IServiceReverse::Scenario::RESTORE)) {
-            SessionDeactive();
-        }
-        if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
-            session_->GetServiceReverseProxy()->IncrementalBackupOnAllBundlesFinished(errCode);
-        } else if (scenario == IServiceReverse::Scenario::RESTORE &&
-                   BackupPara().GetBackupOverrideIncrementalRestore() &&
-                   session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
-            session_->GetServiceReverseProxy()->IncrementalRestoreOnAllBundlesFinished(errCode);
-        } else if (scenario == IServiceReverse::Scenario::BACKUP) {
-            session_->GetServiceReverseProxy()->BackupOnAllBundlesFinished(errCode);
-        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-            session_->GetServiceReverseProxy()->RestoreOnAllBundlesFinished(errCode);
-        }
-        if (!BackupPara().GetBackupOverrideBackupSARelease()) {
-            sched_->TryUnloadServiceTimer(true);
-        }
-    }
-    HILOGI("called end.");
 }
 
 void Service::OnStartSched()

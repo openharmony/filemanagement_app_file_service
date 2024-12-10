@@ -196,6 +196,7 @@ protected:
     std::string backupExtInfo_;
     int64_t appVersionCode_;
     int restoreType_;
+    std::string oldBackupVersion_;
 
 private:
     BConstants::ExtensionAction VerifyAndGetAction(const AAFwk::Want &want,

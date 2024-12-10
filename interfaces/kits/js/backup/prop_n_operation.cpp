@@ -378,4 +378,28 @@ napi_value PropNOperation::DoUpdateSendRate(napi_env env, napi_callback_info inf
     HILOGI("DoUpdateSendRate success with result: %{public}d", result);
     return nResult;
 }
+
+napi_value PropNOperation::DoGetBackupVersion(napi_env env, napi_callback_info info)
+{
+    HILOGD("called DoGetBackupVersion begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+    std::string result = BConstants::BACKUP_VERSION;
+    napi_value nResult;
+    napi_status status = napi_create_string_utf8(env, result.c_str(), result.size(), &nResult);
+    if (status != napi_ok) {
+        HILOGE("napi_create_string_utf8 faild.");
+        return nullptr;
+    }
+    HILOGI("DoGetBackupVersion success with result: %{public}s", result.c_str());
+    return nResult;
+}
 } // namespace OHOS::FileManagement::Backup

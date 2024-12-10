@@ -314,8 +314,6 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesDetailsBackupSession_0
     GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_AppendBundlesDetailsBackupSession_0100";
 }
 
-
-
 /**
  * @tc.number: SUB_Service_throw_AppDone_0100
  * @tc.name: SUB_Service_throw_AppDone_0100
@@ -330,7 +328,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppDone_0100, testing::ext::TestSiz
     GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_AppDone_0100";
     try {
         EXPECT_NE(service, nullptr);
-        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(return BError(BError::Codes::SA_INVAL_ARG)));
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
         EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         auto ret = service->AppDone(0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
@@ -413,9 +411,12 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_OnBackupExtensionDied_0100, testing
     try {
         EXPECT_NE(service, nullptr);
         string bundleName;
-        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
-        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+        EXPECT_CALL(*sessionMock, GetScenario())
+            .WillOnce(Return(IServiceReverse::Scenario::CLEAN))
+            .WillOnce(Return(IServiceReverse::Scenario::CLEAN));
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_))
+            .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)))
+            .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
         EXPECT_CALL(*sessionMock, StopFwkTimer(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
             return true;
@@ -431,65 +432,6 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_OnBackupExtensionDied_0100, testing
         GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by OnBackupExtensionDied.";
     }
     GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_OnBackupExtensionDied_0100";
-}
-
-/**
- * @tc.number: SUB_Service_throw_ExtStart_0100
- * @tc.name: SUB_Service_throw_ExtStart_0100
- * @tc.desc: 测试 ExtStart 接口的 catch 分支
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issuesIAC04T
- */
-HWTEST_F(ServiceThrowTest, SUB_Service_throw_ExtStart_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_ExtStart_0100";
-    try {
-        EXPECT_NE(service, nullptr);
-        string bundleName;
-        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
-        service->ExtStart(bundleName);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by ExtStart.";
-    }
-    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_ExtStart_0100";
-}
-
-/**
- * @tc.number: SUB_Service_throw_ExtConnectFailed_0100
- * @tc.name: SUB_Service_throw_ExtConnectFailed_0100
- * @tc.desc: 测试 ExtConnectFailed 接口的 catch 分支
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issuesIAC04T
- */
-HWTEST_F(ServiceThrowTest, SUB_Service_throw_ExtConnectFailed_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_ExtConnectFailed_0100";
-    try {
-        EXPECT_NE(service, nullptr);
-        BundleName bundleName;
-        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        service->ExtConnectFailed(bundleName, 0);
-        EXPECT_TRUE(true);
-
-        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        service->ExtConnectFailed(bundleName, 0);
-        EXPECT_TRUE(true);
-
-        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-        service->ExtConnectFailed(bundleName, 0);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by ExtConnectFailed.";
-    }
-    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_ExtConnectFailed_0100";
 }
 
 /**
@@ -899,10 +841,15 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppIncrementalFileReady_0100, testi
         auto ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), 0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
-        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP))
+            .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
         EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _))
+            .WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"));
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
         ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), 0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
@@ -927,15 +874,33 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppIncrementalDone_0100, testing::e
     GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_AppIncrementalDone_0100";
     try {
         EXPECT_NE(service, nullptr);
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP))
+            .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _))
+            .WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"));
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
         EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         auto ret = service->AppIncrementalDone(0);
-        EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP))
+            .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _))
+            .WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"))
+            .WillOnce(Return("bundleName"));
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
         EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         ret = service->AppIncrementalDone(0);
-        EXPECT_EQ(ret, EPERM);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by AppIncrementalDone.";

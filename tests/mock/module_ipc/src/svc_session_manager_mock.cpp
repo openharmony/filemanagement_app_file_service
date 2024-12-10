@@ -276,4 +276,11 @@ SvcSessionManager::Impl SvcSessionManager::GetImpl()
 void SvcSessionManager::SetImplRestoreType(const RestoreTypeEnum restoreType) {}
 
 void SvcSessionManager::SetIsReadyLaunch(const std::string&) {}
+
+void SvcSessionManager::SetOldBackupVersion(const std::string &backupVersion) {}
+
+std::string SvcSessionManager::GetOldBackupVersion()
+{
+    return BSvcSessionManager::sessionManager->GetOldBackupVersion();
+}
 } // namespace OHOS::FileManagement::Backup

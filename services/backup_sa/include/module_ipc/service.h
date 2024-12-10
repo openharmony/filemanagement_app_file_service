@@ -397,11 +397,12 @@ private:
      * @param bundleNameDetailMap bundle和detail的对应关系
      * @param isClearDataFlags 清理数据标志集合
      * @param restoreType 任务类型
+     * @param backupVersion 旧机backupVersion
      */
     void SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
         std::vector<std::string> &restoreBundleNames,
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-        std::map<std::string, bool> &isClearDataFlags, RestoreTypeEnum restoreType);
+        std::map<std::string, bool> &isClearDataFlags, RestoreTypeEnum restoreType, std::string &backupVersion);
 
     /**
      * @brief set session info
@@ -409,9 +410,10 @@ private:
      * @param restoreBundleInfos: bundles to be restored
      * @param restoreBundleNames: bundles info to be restored
      * @param restoreType: retore type
+     * @param backupVersion backupVersion of old device
      */
     void SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
-        std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType);
+        std::vector<std::string> &restoreBundleNames, RestoreTypeEnum restoreType, std::string &backupVersion);
 
     void SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info, std::map<std::string, bool> &isClearDataFlags,
         const std::string &bundleNameIndexInfo);
@@ -548,6 +550,8 @@ private:
 
     void ClearFailedBundles();
     void CreateDirIfNotExist(const std::string &path);
+    
+    void GetOldDeviceBackupVersion();
 
     std::vector<std::string> GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
         bool isIncBackup, const vector<std::string> &srcBundleNames);
