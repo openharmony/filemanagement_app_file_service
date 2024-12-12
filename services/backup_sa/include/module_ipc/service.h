@@ -301,6 +301,8 @@ public:
      */
     void RemoveExtensionMutex(const BundleName &bundleName);
     void StartRunningTimer(const std::string &bundleName);
+    ErrCode AppIncrementalFileReady(const std::string &bundleName, const std::string &fileName, UniqueFd fd,
+        UniqueFd manifestFd, int32_t errCode);
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {

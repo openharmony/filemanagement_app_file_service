@@ -706,7 +706,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy)).WillOnce(Return(srProxy));
-        EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return());
+        EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return()).WillOnce(Return());
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
@@ -754,7 +754,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalDone_0000,
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         errCode = BError(BError::Codes::SA_INVAL_ARG).GetCode();
-        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false))
+            .WillOnce(Return(false)).WillOnce(Return(false));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
         ret = service->AppIncrementalDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
@@ -797,14 +798,19 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetIncrementalFileHandle
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::RUNNING));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_)).WillOnce(Return(0));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_)).WillOnce(Return(make_tuple(0, UniqueFd(-1), UniqueFd(-1))));
         ret = service->GetIncrementalFileHandle(bundleName, fileName);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::RUNNING));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_)).WillOnce(Return(1));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return());
+        EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_)).WillOnce(Return(make_tuple(1, UniqueFd(-1), UniqueFd(-1))));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         ret = service->GetIncrementalFileHandle(bundleName, fileName);
@@ -924,7 +930,13 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_IncrementalBackup_0100, 
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalRestoreOnBundleStarted(_, _)).WillOnce(Return());
         EXPECT_CALL(*session, GetExtFileNameRequest(_)).WillOnce(Return(fileNameVec));
-        EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*svcProxy, IncrementalOnBackup(_)).WillOnce(Return(1));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnBundleStarted(_, _)).WillOnce(Return());
+        EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_))
+            .WillOnce(Return(make_tuple(BError(BError::Codes::OK).GetCode(), UniqueFd(-1), UniqueFd(-1))));
+        EXPECT_CALL(*session, GetIsIncrementalBackup()).WillOnce(Return(true));
         ret = service->IncrementalBackup(bundleName);
         EXPECT_TRUE(ret);
     } catch (...) {
@@ -959,8 +971,13 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_IncrementalBackup_0200, 
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalRestoreOnBundleStarted(_, _)).WillOnce(Return());
         EXPECT_CALL(*session, GetExtFileNameRequest(_)).WillOnce(Return(fileNameVec));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*svcProxy, IncrementalOnBackup(_)).WillOnce(Return(1));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnBundleStarted(_, _)).WillOnce(Return());
         EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_))
-            .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+            .WillOnce(Return(make_tuple(BError(BError::Codes::SA_INVAL_ARG).GetCode(), UniqueFd(-1), UniqueFd(-1))));
+        EXPECT_CALL(*session, GetIsIncrementalBackup()).WillOnce(Return(true));
         auto ret = service->IncrementalBackup(bundleName);
         EXPECT_TRUE(ret);
     } catch (...) {

@@ -25,7 +25,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-ErrCode SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
+std::tuple<ErrCode, UniqueFd, UniqueFd> SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGD("Start");
@@ -35,7 +35,7 @@ ErrCode SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
 
     if (!data.WriteString(fileName)) {
         BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the fileName");
-        return ErrCode(EPERM);
+        return {ErrCode(EPERM), UniqueFd(-1), UniqueFd(-1)};
     }
 
     MessageParcel reply;
@@ -44,11 +44,14 @@ ErrCode SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
                                         data, reply, option);
     if (ret != NO_ERROR) {
         HILOGE("Received error %{public}d when doing IPC", ret);
-        return ErrCode(ret);
+        return {ErrCode(ret), UniqueFd(-1), UniqueFd(-1)};
     }
 
     HILOGD("Successful");
-    return reply.ReadInt32();
+    ErrCode err(reply.ReadInt32());
+    UniqueFd fd(reply.ReadFileDescriptor());
+    UniqueFd reportFd(reply.ReadFileDescriptor());
+    return {err, move(fd), move(reportFd)};
 }
 
 ErrCode SvcExtensionProxy::PublishIncrementalFile(const string &fileName)

@@ -48,9 +48,9 @@ ErrCode SvcExtensionProxy::GetBackupInfo(std::string &result)
     return 0;
 }
 
-ErrCode SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
+std::tuple<ErrCode, UniqueFd, UniqueFd> SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
 {
-    return 0;
+    return {0, UniqueFd(-1), UniqueFd(-1)};
 }
 
 ErrCode SvcExtensionProxy::PublishIncrementalFile(const string &fileName)

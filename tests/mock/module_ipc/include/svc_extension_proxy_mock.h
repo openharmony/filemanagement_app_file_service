@@ -30,7 +30,7 @@ public:
     MOCK_METHOD(ErrCode, HandleBackup, (bool));
     MOCK_METHOD(ErrCode, PublishFile, (const std::string&));
     MOCK_METHOD(ErrCode, HandleRestore, (bool));
-    MOCK_METHOD(ErrCode, GetIncrementalFileHandle, (const std::string&));
+    MOCK_METHOD((std::tuple<ErrCode, UniqueFd, UniqueFd>), GetIncrementalFileHandle, (const std::string&));
     MOCK_METHOD(ErrCode, PublishIncrementalFile, (const std::string&));
     MOCK_METHOD(ErrCode, HandleIncrementalBackup, (UniqueFd, UniqueFd));
     MOCK_METHOD(ErrCode, IncrementalOnBackup, (bool));

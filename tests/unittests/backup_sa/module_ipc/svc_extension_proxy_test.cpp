@@ -368,20 +368,21 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetIncrementalFileHandle
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(false));
         EXPECT_TRUE(proxy_ != nullptr);
-        ErrCode ret = proxy_->GetIncrementalFileHandle(fileName);
+        auto [ret, fd, reportFd] = proxy_->GetIncrementalFileHandle(fileName);
         EXPECT_EQ(ret, ErrCode(EPERM));
 
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
-        ret = proxy_->GetIncrementalFileHandle(fileName);
+        tie(ret, fd, reportFd) = proxy_->GetIncrementalFileHandle(fileName);
         EXPECT_EQ(ret, ErrCode(EPERM));
 
         EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
         EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(NO_ERROR));
         EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(NO_ERROR));
-        ret = proxy_->GetIncrementalFileHandle(fileName);
+        EXPECT_CALL(*messageParcelMock_, ReadFileDescriptor()).WillOnce(Return(-1)).WillOnce(Return(-1));
+        tie(ret, fd, reportFd) = proxy_->GetIncrementalFileHandle(fileName);
         EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);

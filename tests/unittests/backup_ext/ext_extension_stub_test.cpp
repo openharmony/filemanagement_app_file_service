@@ -31,7 +31,7 @@ public:
     MOCK_METHOD(ErrCode, HandleBackup, (bool isClearData));
     MOCK_METHOD(ErrCode, PublishFile, (const std::string &fileName));
     MOCK_METHOD(ErrCode, HandleRestore, (bool isClearData));
-    MOCK_METHOD(ErrCode, GetIncrementalFileHandle, (const std::string &fileName));
+    MOCK_METHOD((std::tuple<ErrCode, UniqueFd, UniqueFd>), GetIncrementalFileHandle, (const std::string &fileName));
     MOCK_METHOD(ErrCode, PublishIncrementalFile, (const std::string &fileName));
     MOCK_METHOD(ErrCode, HandleIncrementalBackup, (UniqueFd incrementalFd, UniqueFd manifestFd));
     MOCK_METHOD(ErrCode, IncrementalOnBackup, (bool isClearData));
@@ -318,14 +318,15 @@ HWTEST_F(ExtExtensionStubTest, SUB_backup_ext_ExtExtensionStub_CmdGetIncremental
         EXPECT_EQ(err, BError(BError::Codes::EXT_INVAL_ARG));
 
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*stub, GetIncrementalFileHandle(_)).WillOnce(Return(0));
+        EXPECT_CALL(*stub, GetIncrementalFileHandle(_)).WillOnce(Return(make_tuple(0, UniqueFd(-1), UniqueFd(-1))));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
         err = stub->CmdGetIncrementalFileHandle(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::EXT_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*stub, GetIncrementalFileHandle(_)).WillOnce(Return(0));
+        EXPECT_CALL(*stub, GetIncrementalFileHandle(_)).WillOnce(Return(make_tuple(0, UniqueFd(-1), UniqueFd(-1))));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        EXPECT_CALL(*messageParcelMock, WriteFileDescriptor(_)).WillOnce(Return(true)).WillOnce(Return(true));
         err = stub->CmdGetIncrementalFileHandle(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::OK));
     } catch (...) {

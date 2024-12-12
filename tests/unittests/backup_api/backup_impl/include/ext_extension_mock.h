@@ -104,9 +104,9 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    ErrCode GetIncrementalFileHandle(const std::string &fileName) override
+    std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncrementalFileHandle(const std::string &fileName) override
     {
-        return BError(BError::Codes::OK);
+        return {BError(BError::Codes::OK), UniqueFd(-1), UniqueFd(-1)};
     };
 
     ErrCode PublishIncrementalFile(const std::string &fileName) override

@@ -293,7 +293,7 @@ static string GetReportFileName(const string &fileName)
     return reportName;
 }
 
-static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
+static tuple<ErrCode, UniqueFd, UniqueFd> GetIncreFileHandleForSpecialVersion(const string &fileName)
 {
     ErrCode errCode = ERR_OK;
     UniqueFd fd = GetFileHandleForSpecialCloneCloud(fileName);
@@ -319,17 +319,7 @@ static ErrCode GetIncreFileHandleForSpecialVersion(const string &fileName)
         HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
         errCode = errno;
     }
-
-    auto proxy = ServiceProxy::GetInstance();
-    if (proxy == nullptr) {
-        HILOGE("Failed to get file handle for special version clone");
-        return BError(BError::Codes::EXT_BROKEN_BACKUP_SA).GetCode();
-    }
-    auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd), errCode);
-    if (ret != ERR_OK) {
-        HILOGE("Failed to AppIncrementalFileReady %{public}d", ret);
-    }
-    return ERR_OK;
+    return {errCode, move(fd), move(reportFd)};
 }
 
 static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string &bundleName, std::string &tarName)
@@ -354,13 +344,9 @@ static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string
     return ERR_OK;
 }
 
-ErrCode BackupExtExtension::GetIncreFileHandleForNormalVersion(const std::string &fileName)
+tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForNormalVersion(const std::string &fileName)
 {
     HILOGI("extension: GetIncrementalFileHandle single to single Name:%{public}s", GetAnonyPath(fileName).c_str());
-    auto proxy = ServiceProxy::GetInstance();
-    if (proxy == nullptr) {
-        throw BError(BError::Codes::EXT_BROKEN_IPC, string("Failed to AGetInstance"));
-    }
     std::string tarName;
     int32_t errCode = ERR_OK;
     UniqueFd fd(-1);
@@ -396,15 +382,10 @@ ErrCode BackupExtExtension::GetIncreFileHandleForNormalVersion(const std::string
             break;
         }
     } while (0);
-    HILOGI("extension: Will notify AppIncrementalFileReady");
-    auto ret = proxy->AppIncrementalFileReady(fileName, move(fd), move(reportFd), errCode);
-    if (ret != ERR_OK) {
-        HILOGE("Failed to AppIncrementalFileReady %{public}d", ret);
-    }
-    return ERR_OK;
+    return {errCode, move(fd), move(reportFd)};
 }
 
-ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
+tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
@@ -428,7 +409,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
             if (ret != ERR_OK) {
                 HILOGE("Failed to notify app incre done. err = %{public}d", ret);
             }
-            return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+            return {BError(BError::Codes::EXT_INVAL_ARG).GetCode(), UniqueFd(-1), UniqueFd(-1)};
         }
         if (extension_->SpecialVersionForCloneAndCloud()) {
             return GetIncreFileHandleForSpecialVersion(fileName);
@@ -437,7 +418,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
     } catch (...) {
         HILOGE("Failed to get incremental file handle");
         DoClear();
-        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
+        return {BError(BError::Codes::EXT_BROKEN_IPC).GetCode(), UniqueFd(-1), UniqueFd(-1)};
     }
 }
 

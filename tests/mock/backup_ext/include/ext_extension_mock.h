@@ -77,7 +77,7 @@ public:
 class ExtExtensionMock : public BExtExtension {
 public:
     MOCK_METHOD(UniqueFd, GetFileHandle, (const string &, int32_t &));
-    MOCK_METHOD(ErrCode, GetIncrementalFileHandle, (const string &));
+    MOCK_METHOD(std::tuple<ErrCode, UniqueFd, UniqueFd>, GetIncrementalFileHandle, (const string &));
     MOCK_METHOD(ErrCode, HandleClear, ());
     MOCK_METHOD(ErrCode, BigFileReady, (sptr<IService>));
     MOCK_METHOD(ErrCode, PublishFile, (const std::string &));
