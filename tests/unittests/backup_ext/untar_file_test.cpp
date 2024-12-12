@@ -487,4 +487,65 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_IncrementalUnPacket_0400, testing::ext::T
     GTEST_LOG_(INFO) << "UntarFileTest-end SUB_Untar_File_IncrementalUnPacket_0400";
 }
 
+
+/**
+ * @tc.number: SUB_Untar_File_IncrementalUnPacket_0500
+ * @tc.name: SUB_Untar_File_IncrementalUnPacket_0500
+ * @tc.desc: 测试 IncrementalUnPacket 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileTest, SUB_Untar_File_IncrementalUnPacket_0500, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileTest-begin SUB_Untar_File_IncrementalUnPacket_0500";
+    try {
+        // 预置文件和目录
+        TestManager tm("SUB_Untar_File_IncrementalUnPacket_0500");
+        string root = tm.GetRootDirCurTest();
+        string testDir = root + "/testdir/";
+        if (mkdir(testDir.data(), S_IRWXU) && errno != EEXIST) {
+            GTEST_LOG_(INFO) << " invoked mkdir failure, errno :" << errno;
+            throw BError(errno);
+        }
+        string aFile = testDir + "a.txt";
+        string bFile = testDir + "b.txt";
+        SaveStringToFile(aFile, "hello");
+        SaveStringToFile(bFile, "world");
+        // 打 tar
+        TarMap tarMap {};
+        vector<string> smallFiles;
+        smallFiles.emplace_back(aFile);
+        smallFiles.emplace_back(bFile);
+        auto reportCb = [](std::string msg, int err) {
+            return;
+        };
+        TarFile::GetInstance().Packet(smallFiles, "test", root, tarMap, reportCb);
+        // 首次恢复
+        string tarFile = root + "/test.0.tar";
+        string rootPath(root);
+        unordered_map<string, struct ReportFileInfo> cloudFiles;
+        cloudFiles.emplace(make_pair(aFile.substr(1), ReportFileInfo())); // 1: the pos of /
+        cloudFiles.emplace(make_pair(bFile.substr(1), ReportFileInfo())); // 1: the pos of /
+        auto result = UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, cloudFiles);
+        EXPECT_EQ(std::get<1>(result).size(), 2); // 1: First ele, 2: 2 files, aFile and bFile
+        EXPECT_EQ(std::get<0>(result), 0);
+        // 增量恢复，aFile 有变化
+        cloudFiles.erase(aFile.substr(1)); // 1: the pos of /
+        result = UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, cloudFiles);
+        EXPECT_EQ(std::get<0>(result), 0);
+        EXPECT_EQ(std::get<1>(result).size(), 1); // 1: the first ele, 1: result size -> bFile
+        // 恢复归一后 clone等其他场景，rp文件没数据
+        cloudFiles.erase(bFile.substr(1)); // 1: the pos of /
+        result = UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, cloudFiles);
+        EXPECT_EQ(std::get<0>(result), 0);
+        EXPECT_EQ(std::get<1>(result).size(), 2); // 1: First ele, 2: 2 files, aFile and bFile
+        ClearCache();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileTest-an exception occurred by UntarFile.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileTest-end SUB_Untar_File_IncrementalUnPacket_0500";
+}
 } // namespace OHOS::FileManagement::Backup

@@ -263,7 +263,7 @@ private:
     void DeleteBackupIncrementalTars(const string &tarName);
     void SetClearDataFlag(bool isClearData);
     std::string GetBundlePath();
-    std::vector<ExtManageInfo> GetExtManageInfo();
+    std::vector<ExtManageInfo> GetExtManageInfo(bool isSpecialVersion = false);
     ErrCode RestoreFilesForSpecialCloneCloud();
     void RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo &item);
     ErrCode RestoreTarForSpecialCloneCloud(const ExtManageInfo &item);
