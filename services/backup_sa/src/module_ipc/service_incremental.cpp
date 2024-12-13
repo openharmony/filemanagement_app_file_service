@@ -662,7 +662,7 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
             auto[errCode, fd, reportFd] = proxy->GetIncrementalFileHandle(fileName);
             auto err = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
             if (err != ERR_OK) {
-                HILOGE("Failed to extension file handle");
+                HILOGE("Failed to send file handle");
                 AppRadar::Info info (bundleName, "", "");
                 AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandle",
                     GetUserIdDefault(), BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
@@ -714,7 +714,7 @@ bool Service::IncrementalBackup(const string &bundleName)
             auto[errCode, fd, reportFd] = proxy->GetIncrementalFileHandle(fileName);
             ret = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
             if (ret) {
-                HILOGE("Failed to extension file handle %{public}s", GetAnonyString(fileName).c_str());
+                HILOGE("Failed to send file handle %{public}s", GetAnonyString(fileName).c_str());
             }
         }
         return true;
