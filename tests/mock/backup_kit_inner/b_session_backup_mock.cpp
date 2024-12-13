@@ -97,4 +97,9 @@ ErrCode BSessionBackup::Release()
 {
     return BError(BError::Codes::OK);
 }
+
+ErrCode BSessionBackup::Cancel(std::string bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

@@ -1080,4 +1080,54 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_SetCurrentBackupSessProp
     }
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_SetCurrentBackupSessProperties_0200";
 }
+
+/**
+ * @tc.number: SUB_ServiceIncremental_Cancel_0000
+ * @tc.name: SUB_ServiceIncremental_Cancel_0000
+ * @tc.desc: 测试 Cancel 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Cancel_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_Cancel_0000";
+    try {
+        string bundleName = "com.example.app2backup";
+        BackupExtInfo info {};
+        info.backupExtName = "com.example.app2backup";
+        SvcSessionManager::Impl impl;
+        impl.backupExtNameMap.insert(make_pair(bundleName, info));
+        int32_t result;
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        service->Cancel(bundleName, result);
+        EXPECT_EQ(result, BError(BError::BackupErrorCode::E_CANCEL_NO_TASK).GetCode());
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetImpl()).WillOnce(Return(impl));
+        EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::CLEAN));
+        service->Cancel(bundleName, result);
+        EXPECT_EQ(result, BError(BError::BackupErrorCode::E_CANCEL_NO_TASK).GetCode());
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetImpl()).WillOnce(Return(impl));
+        EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::START));
+        service->Cancel(bundleName, result);
+        EXPECT_EQ(result, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE))
+            .WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetImpl()).WillOnce(Return(impl));
+        EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::RUNNING));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        service->Cancel(bundleName, result);
+        EXPECT_EQ(result, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by Cancel.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_Cancel_0000";
+}
 }

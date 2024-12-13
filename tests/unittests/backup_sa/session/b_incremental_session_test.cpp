@@ -673,4 +673,94 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2000, testing::e
     }
     GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2000";
 }
+
+/**
+ * @tc.number: SUB_b_incremental_session_test_2100
+ * @tc.name: SUB_b_incremental_session_test_2100
+ * @tc.desc: 测试 Cancel 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2100";
+    try {
+        ServiceProxy::serviceProxy_ = nullptr;
+        std::string bundleName;
+        EXPECT_TRUE(backupSession != nullptr);
+        auto err = backupSession->Cancel(bundleName);
+        EXPECT_EQ(err, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
+
+        EXPECT_CALL(*proxy, Cancel(_, _)).WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
+        ServiceProxy::serviceProxy_ = proxy;
+        err = backupSession->Cancel(bundleName);
+        EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by Cancel.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2100";
+}
+
+/**
+ * @tc.number: SUB_b_incremental_session_test_2200
+ * @tc.name: SUB_b_incremental_session_test_2200
+ * @tc.desc: 测试 Cancel 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2200";
+    try {
+        ServiceProxy::serviceProxy_ = nullptr;
+        std::string bundleName;
+        EXPECT_TRUE(restoreSession != nullptr);
+        auto err = restoreSession->Cancel(bundleName);
+        EXPECT_EQ(err, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
+
+        EXPECT_CALL(*proxy, Cancel(_, _)).WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
+        ServiceProxy::serviceProxy_ = proxy;
+        err = restoreSession->Cancel(bundleName);
+        EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by Cancel.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2200";
+}
+
+/**
+ * @tc.number: SUB_b_incremental_session_test_2300
+ * @tc.name: SUB_b_incremental_session_test_2300
+ * @tc.desc: 测试 Cancel 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2300";
+    try {
+        ServiceProxy::serviceProxy_ = nullptr;
+        std::string bundleName;
+        EXPECT_TRUE(restoreAsyncSession != nullptr);
+        auto err = restoreAsyncSession->Cancel(bundleName);
+        EXPECT_EQ(err, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
+
+        EXPECT_CALL(*proxy, Cancel(_, _)).WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
+        ServiceProxy::serviceProxy_ = proxy;
+        err = restoreAsyncSession->Cancel(bundleName);
+        EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by Cancel.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2300";
+}
 } // namespace OHOS::FileManagement::Backup

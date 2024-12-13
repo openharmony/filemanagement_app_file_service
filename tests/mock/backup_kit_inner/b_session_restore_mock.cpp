@@ -109,4 +109,9 @@ ErrCode BSessionRestore::Release()
 }
 
 void BSessionRestore::RegisterBackupServiceDied(function<void()> functor) {}
+
+ErrCode BSessionRestore::Cancel(std::string bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup
