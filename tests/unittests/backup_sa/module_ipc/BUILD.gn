@@ -165,8 +165,10 @@ ohos_unittest("backup_service_throw_test") {
   sources = [
     "${path_backup_mock}/accesstoken/accesstoken_kit_mock.cpp",
     "${path_backup_mock}/module_ipc/app_gallery_dispose_proxy_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/ipc_skeleton_mock.cpp",
     "${path_backup_mock}/module_ipc/svc_session_manager_throw_mock.cpp",
     "${path_backup_mock}/timer/timer_mock.cpp",
+    "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/sa_backup_connection.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
@@ -183,8 +185,11 @@ ohos_unittest("backup_service_throw_test") {
     "${path_backup}/services/backup_sa/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/tests/unittests/backup_api/backup_impl/include",
+    "${path_backup_mock}/accesstoken/include",
     "${path_backup_mock}/b_process",
     "${path_backup_mock}/module_ipc",
+    "${path_backup_mock}/module_ipc/include",
+    "${path_backup_mock}/utils_mock/include",
   ]
 
   deps = [

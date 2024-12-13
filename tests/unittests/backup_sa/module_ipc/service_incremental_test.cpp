@@ -42,9 +42,9 @@ UniqueFd Service::GetLocalCapabilities()
 
 void Service::StopAll(const wptr<IRemoteObject> &obj, bool force) {}
 
-string Service::VerifyCallerAndGetCallerName()
+ErrCode Service::VerifyCallerAndGetCallerName(std::string &bundleName)
 {
-    return "";
+    return BError(BError::Codes::OK);
 }
 
 ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
@@ -148,9 +148,15 @@ void Service::ExtConnectDone(string bundleName) {}
 
 void Service::ClearSessionAndSchedInfo(const string &bundleName) {}
 
-void Service::VerifyCaller() {}
+ErrCode Service::VerifyCaller()
+{
+    return BError(BError::Codes::OK);
+}
 
-void Service::VerifyCaller(IServiceReverse::Scenario scenario) {}
+ErrCode Service::VerifyCaller(IServiceReverse::Scenario scenario)
+{
+    return BError(BError::Codes::OK);
+}
 
 void Service::OnAllBundlesFinished(ErrCode errCode) {}
 

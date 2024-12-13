@@ -78,8 +78,18 @@ ErrCode Service::Finish()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        VerifyCaller(session_->GetScenario());
-        session_->Finish();
+        ErrCode ret = VerifyCaller(session_->GetScenario());
+        if (ret != ERR_OK) {
+            HILOGE("Failde to Finish, verify caller failed, ret:%{public}d", ret);
+            ReleaseOnException();
+            return ret;
+        }
+        ret = session_->Finish();
+        if (ret != ERR_OK) {
+            HILOGE("Failde to Finish, session finish failed, ret:%{public}d", ret);
+            ReleaseOnException();
+            return ret;
+        }
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
@@ -97,7 +107,11 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
             HILOGE("PublishFile error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        VerifyCaller(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = VerifyCaller(IServiceReverse::Scenario::RESTORE);
+        if (ret != ERR_OK) {
+            HILOGE("PublishFile error, verify caller by scenario failed, ret:%{public}d", ret);
+            return ret;
+        }
         if (!fileInfo.fileName.empty()) {
             HILOGE("Forbit to use publishFile with fileName for App");
             return EPERM;
@@ -119,9 +133,6 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
         return res;
     } catch (const BError &e) {
         return e.GetCode();
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
     } catch (...) {
         HILOGI("Unexpected exception");
         return EPERM;
@@ -136,18 +147,21 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
             HILOGE("AppFileReady error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        string callerName = VerifyCallerAndGetCallerName();
+        string callerName = "";
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        if (ret != ERR_OK) {
+            HILOGE("AppFileReady error, Get bundle name failed, ret:%{public}d", ret);
+            return ret;
+        }
         if (fileName.find('/') != string::npos) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Filename is not valid");
+            HILOGE("AppFileReady error, Filename is not valid, fileName:%{public}s", GetAnonyPath(fileName).c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
         }
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
             fd = session_->OnBundleExtManageInfo(callerName, move(fd));
         }
         session_->GetServiceReverseProxy()->BackupOnFileReady(callerName, fileName, move(fd), errCode);
         FileReadyRadarReport(callerName, fileName, errCode, session_->GetScenario());
-        AuditLog auditLog = { false, "Backup File Ready", "ADD", "", 1, "SUCCESS", "AppFileReady",
-            callerName, GetAnonyPath(fileName) };
-        HiAudit::GetInstance(true).Write(auditLog);
         if (session_->OnBundleFileReady(callerName, fileName)) {
             auto backUpConnection = session_->GetExtConnection(callerName);
             if (backUpConnection == nullptr) {
@@ -175,9 +189,6 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         return e.GetCode(); // 任意异常产生，终止监听该任务
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
     } catch (...) {
         HILOGI("Unexpected exception");
         return EPERM;
@@ -192,7 +203,12 @@ ErrCode Service::AppDone(ErrCode errCode)
             HILOGE("App finish error, session info is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        string callerName = VerifyCallerAndGetCallerName();
+        string callerName = "";
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        if (ret != ERR_OK) {
+            HILOGE("App done failed, Get bundle name failed, ret:%{public}d", ret);
+            return ret;
+        }
         HILOGI("Begin, callerName is: %{public}s, errCode: %{public}d", callerName.c_str(), errCode);
         if (session_->OnBundleFileReady(callerName) || errCode != BError(BError::Codes::OK)) {
             std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
@@ -224,12 +240,9 @@ ErrCode Service::AppDone(ErrCode errCode)
         ReleaseOnException();
         HILOGE("AppDone error, err code is: %{public}d", e.GetCode());
         return e.GetCode(); // 任意异常产生，终止监听该任务
-    } catch (const exception &e) {
-        ReleaseOnException();
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
     } catch (...) {
-        HILOGI("Unexpected exception");
+        HILOGE("Unexpected exception");
+        ReleaseOnException();
         return EPERM;
     }
 }
@@ -246,7 +259,8 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
             action = BConstants::ExtensionAction::RESTORE;
         } else {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Failed to scenario");
+            HILOGE("Get scenario failed, scenario is:%{public}d", scenario);
+            return BError(BError::Codes::SA_INVAL_ARG);
         }
         if (SAUtils::IsSABundleName(bundleName)) {
             return LaunchBackupSAExtension(bundleName);
@@ -273,9 +287,6 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         return e.GetCode();
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
     } catch (...) {
         HILOGI("Unexpected exception");
         return EPERM;
@@ -368,5 +379,125 @@ void Service::HandleNotSupportBundleNames(const std::vector<std::string> &srcBun
                 BError(BError::Codes::SA_BUNDLE_INFO_EMPTY), bundleName);
         }
     }
+}
+
+void Service::ExtConnectDied(const string &callName)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        HILOGI("Begin, bundleName: %{public}s", callName.c_str());
+        std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callName);
+        if (mutexPtr == nullptr) {
+            HILOGE("extension mutex ptr is nullptr");
+            return;
+        }
+        std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
+        /* Clear Timer */
+        session_->StopFwkTimer(callName);
+        session_->StopExtTimer(callName);
+        auto backUpConnection = session_->GetExtConnection(callName);
+        if (backUpConnection != nullptr && backUpConnection->IsExtAbilityConnected()) {
+            backUpConnection->DisconnectBackupExtAbility();
+        }
+        session_->SetServiceSchedAction(callName, BConstants::ServiceSchedAction::CLEAN);
+        auto ret = LaunchBackupExtension(callName);
+        if (ret) {
+            /* Clear Session before notice client finish event */
+            ClearSessionAndSchedInfo(callName);
+        }
+        /* Notice Client Ext Ability Process Died */
+        NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
+    } catch (...) {
+        HILOGE("Unexpected exception, bundleName: %{public}s", callName.c_str());
+        ClearSessionAndSchedInfo(callName);
+        NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
+    }
+    RemoveExtensionMutex(callName);
+}
+
+void Service::OnBackupExtensionDied(const string &&bundleName, bool isCleanCalled)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (isCleanCalled) {
+        HILOGE("Backup <%{public}s> Extension Process second Died", bundleName.c_str());
+        ClearSessionAndSchedInfo(bundleName);
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+        return;
+    }
+    try {
+        string callName = move(bundleName);
+        HILOGE("Backup <%{public}s> Extension Process Died", callName.c_str());
+        ErrCode ret = session_->VerifyBundleName(callName);
+        if (ret != ERR_OK) {
+            HILOGE("Backup Extension died error, verify bundleName failed, bundleName:%{public}s, ret:%{public}d",
+                bundleName.c_str(), ret);
+            ExtConnectDied(bundleName);
+            return;
+        }
+        // 重新连接清理缓存
+        HILOGI("Clear backup extension data, bundleName: %{public}s", callName.c_str());
+        ExtConnectDied(callName);
+    } catch (...) {
+        HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+        ExtConnectDied(bundleName);
+        return;
+    }
+}
+
+void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("begin %{public}s", bundleName.c_str());
+    try {
+        SendEndAppGalleryNotify(bundleName);
+        auto scenario = session_->GetScenario();
+        if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
+            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE &&
+                BackupPara().GetBackupOverrideIncrementalRestore() &&
+                session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
+        } else if (scenario == IServiceReverse::Scenario::BACKUP) {
+            session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+            session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
+        };
+        BundleEndRadarReport(bundleName, errCode, scenario);
+        /* If all bundle ext process finish, notice client. */
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+    } catch(const BError &e) {
+        ReleaseOnException();
+    } catch (...) {
+        ReleaseOnException();
+        HILOGI("Unexpected exception");
+        return;
+    }
+}
+
+void Service::OnAllBundlesFinished(ErrCode errCode)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("called begin.");
+    if (session_->IsOnAllBundlesFinished()) {
+        IServiceReverse::Scenario scenario = session_->GetScenario();
+        if (isInRelease_.load() && (scenario == IServiceReverse::Scenario::RESTORE)) {
+            SessionDeactive();
+        }
+        if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
+            session_->GetServiceReverseProxy()->IncrementalBackupOnAllBundlesFinished(errCode);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE &&
+                   BackupPara().GetBackupOverrideIncrementalRestore() &&
+                   session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnAllBundlesFinished(errCode);
+        } else if (scenario == IServiceReverse::Scenario::BACKUP) {
+            session_->GetServiceReverseProxy()->BackupOnAllBundlesFinished(errCode);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+            session_->GetServiceReverseProxy()->RestoreOnAllBundlesFinished(errCode);
+        }
+        if (!BackupPara().GetBackupOverrideBackupSARelease()) {
+            sched_->TryUnloadServiceTimer(true);
+        }
+    }
+    HILOGI("called end.");
 }
 }

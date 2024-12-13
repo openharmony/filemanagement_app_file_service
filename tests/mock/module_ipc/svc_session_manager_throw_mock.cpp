@@ -19,9 +19,9 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const
+ErrCode SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const
 {
-    BackupSvcSessionManager::session->VerifyCallerAndScenario(clientToken, scenario);
+    return BackupSvcSessionManager::session->VerifyCallerAndScenario(clientToken, scenario);
 }
 
 ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
@@ -29,14 +29,14 @@ ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
     return BackupSvcSessionManager::session->Active(newImpl);
 }
 
-void SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool force)
+ErrCode SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool force)
 {
-    BackupSvcSessionManager::session->Deactive(remoteInAction, force);
+    return BackupSvcSessionManager::session->Deactive(remoteInAction, force);
 }
 
-void SvcSessionManager::VerifyBundleName(string &bundleName)
+ErrCode SvcSessionManager::VerifyBundleName(string &bundleName)
 {
-    BackupSvcSessionManager::session->VerifyBundleName(bundleName);
+    return BackupSvcSessionManager::session->VerifyBundleName(bundleName);
 }
 
 sptr<IServiceReverse> SvcSessionManager::GetServiceReverseProxy()
@@ -79,9 +79,9 @@ void SvcSessionManager::DumpInfo(const int fd, const std::vector<std::u16string>
     BackupSvcSessionManager::session->DumpInfo(fd, args);
 }
 
-void SvcSessionManager::InitClient(Impl &newImpl)
+ErrCode SvcSessionManager::InitClient(Impl &newImpl)
 {
-    BackupSvcSessionManager::session->InitClient(newImpl);
+    return BackupSvcSessionManager::session->InitClient(newImpl);
 }
 
 void SvcSessionManager::SetExtFileNameRequest(const string &bundleName, const string &fileName)
@@ -149,14 +149,14 @@ sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &
     return BackupSvcSessionManager::session->CreateBackupConnection(bundleName);
 }
 
-void SvcSessionManager::Start()
+ErrCode SvcSessionManager::Start()
 {
-    BackupSvcSessionManager::session->Start();
+    return BackupSvcSessionManager::session->Start();
 }
 
-void SvcSessionManager::Finish()
+ErrCode SvcSessionManager::Finish()
 {
-    BackupSvcSessionManager::session->Finish();
+    return BackupSvcSessionManager::session->Finish();
 }
 
 bool SvcSessionManager::IsOnAllBundlesFinished()
