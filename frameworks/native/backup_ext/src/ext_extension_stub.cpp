@@ -155,8 +155,14 @@ ErrCode ExtExtensionStub::CmdGetIncrementalFileHandle(MessageParcel &data, Messa
         return BError(BError::Codes::EXT_INVAL_ARG, "Failed to receive fileName").GetCode();
     }
 
-    ErrCode res = GetIncrementalFileHandle(fileName);
-    if (!reply.WriteInt32(res)) {
+    auto[errCode, fd, reportFd] = GetIncrementalFileHandle(fileName);
+    if (!reply.WriteInt32(errCode)) {
+        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the file").GetCode();
+    }
+    if (!reply.WriteFileDescriptor(fd)) {
+        return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the file").GetCode();
+    }
+    if (!reply.WriteFileDescriptor(reportFd)) {
         return BError(BError::Codes::EXT_BROKEN_IPC, "Failed to send out the file").GetCode();
     }
     return BError(BError::Codes::OK);

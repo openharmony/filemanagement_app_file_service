@@ -33,7 +33,7 @@ public:
     virtual ErrCode HandleBackup(bool isClearData) = 0;
     virtual ErrCode PublishFile(const std::string &fileName) = 0;
     virtual ErrCode HandleRestore(bool isClearData) = 0;
-    virtual ErrCode GetIncrementalFileHandle(const std::string &fileName) = 0;
+    virtual std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncrementalFileHandle(const std::string &fileName) = 0;
     virtual ErrCode PublishIncrementalFile(const std::string &fileName) = 0;
     virtual ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) = 0;
     virtual ErrCode IncrementalOnBackup(bool isClearData) = 0;

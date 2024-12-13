@@ -48,7 +48,7 @@ public:
     ErrCode PublishFile(const std::string &fileName) override;
     ErrCode HandleBackup(bool isClearData) override;
     ErrCode HandleRestore(bool isClearData) override;
-    ErrCode GetIncrementalFileHandle(const std::string &fileName) override;
+    std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncrementalFileHandle(const std::string &fileName) override;
     ErrCode PublishIncrementalFile(const std::string &fileName) override;
     ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) override;
     ErrCode IncrementalOnBackup(bool isClearData) override;
@@ -286,7 +286,7 @@ private:
 
     std::function<void(std::string, int)> ReportErrFileByProc(wptr<BackupExtExtension> obj,
         BackupRestoreScenario scenario);
-    ErrCode GetIncreFileHandleForNormalVersion(const std::string &fileName);
+    std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncreFileHandleForNormalVersion(const std::string &fileName);
     void RestoreOneBigFile(const std::string &path, const ExtManageInfo &item, const bool appendTargetPath);
     int DealIncreRestoreBigAndTarFile();
     ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo, const vector<struct ReportFileInfo> &srcFiles,

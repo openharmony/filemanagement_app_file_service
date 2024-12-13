@@ -482,6 +482,60 @@ ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd
     return saConnection->CallRestoreSA(move(fd));
 }
 
+ErrCode Service::AppIncrementalFileReady(const std::string &bundleName, const std::string &fileName, UniqueFd fd,
+    UniqueFd manifestFd, int32_t errCode)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(bundleName, fileName, move(fd),
+                                                                              move(manifestFd), errCode);
+            FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverse::Scenario::RESTORE);
+            return BError(BError::Codes::OK);
+        }
+        if (fileName == BConstants::EXT_BACKUP_MANAGE) {
+            fd = session_->OnBundleExtManageInfo(bundleName, move(fd));
+        }
+        HILOGD("reverse: Will notify IncrementalBackupOnFileReady");
+        session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName, fileName, move(fd),
+            move(manifestFd), errCode);
+        FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverse::Scenario::BACKUP);
+        AuditLog auditLog = { false, "Backup File Ready", "ADD", "", 1, "SUCCESS", "AppIncrementalFileReady",
+            bundleName, GetAnonyPath(fileName) };
+        HiAudit::GetInstance(true).Write(auditLog);
+        if (session_->OnBundleFileReady(bundleName, fileName)) {
+            auto backUpConnection = session_->GetExtConnection(bundleName);
+            auto proxy = backUpConnection->GetBackupExtProxy();
+            if (!proxy) {
+                throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+            }
+            // 通知extension清空缓存
+            proxy->HandleClear();
+            // 清除Timer
+            session_->StopFwkTimer(bundleName);
+            session_->StopExtTimer(bundleName);
+            // 通知TOOL 备份完成
+            HILOGI("reverse: Will notify IncrementalBackupOnBundleFinished");
+            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK),
+                                                                                  bundleName);
+            BundleEndRadarReport(bundleName, BError(BError::Codes::OK), IServiceReverse::Scenario::BACKUP);
+            // 断开extension
+            backUpConnection->DisconnectBackupExtAbility();
+            ClearSessionAndSchedInfo(bundleName);
+        }
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        return e.GetCode(); // 任意异常产生，终止监听该任务
+    } catch (const exception &e) {
+        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
+        return EPERM;
+    } catch (...) {
+        HILOGI("Unexpected exception");
+        return EPERM;
+    }
+}
+
 ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -605,12 +659,13 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
                 HILOGE("GetIncrementalFileHandle error, Extension backup Proxy is empty");
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
-            ErrCode res = proxy->GetIncrementalFileHandle(fileName);
-            if (res != ERR_OK) {
-                HILOGE("Failed to extension file handle");
+            auto[errCode, fd, reportFd] = proxy->GetIncrementalFileHandle(fileName);
+            auto err = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
+            if (err != ERR_OK) {
+                HILOGE("Failed to send file handle");
                 AppRadar::Info info (bundleName, "", "");
                 AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandle",
-                    GetUserIdDefault(), BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, res);
+                    GetUserIdDefault(), BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
             }
         } else {
             SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);
@@ -656,9 +711,10 @@ bool Service::IncrementalBackup(const string &bundleName)
         BundleBeginRadarReport(bundleName, ret, IServiceReverse::Scenario::RESTORE);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (auto &fileName : fileNameVec) {
-            ret = proxy->GetIncrementalFileHandle(fileName);
+            auto[errCode, fd, reportFd] = proxy->GetIncrementalFileHandle(fileName);
+            ret = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
             if (ret) {
-                HILOGE("Failed to extension file handle %{public}s", GetAnonyString(fileName).c_str());
+                HILOGE("Failed to send file handle %{public}s", GetAnonyString(fileName).c_str());
             }
         }
         return true;
