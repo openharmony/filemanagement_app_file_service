@@ -519,15 +519,15 @@ private:
     void TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string &bundleName);
 
     void CreateDirIfNotExist(const std::string &path);
-    
+
     void OnBundleStarted(BError error, sptr<SvcSessionManager> session, const BundleName &bundleName);
 
     void HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session, const vector<BundleName> &appendBundleNames,
         const vector<BundleName> &restoreBundleNames);
-    
+
     void BundleBeginRadarReport(const std::string &bundleName, const ErrCode errCode,
         const IServiceReverse::Scenario scenario);
-    
+
     void BundleEndRadarReport(const std::string &bundleName, const ErrCode errCode,
         const IServiceReverse::Scenario scenario);
 
@@ -536,12 +536,18 @@ private:
 
     void ExtensionConnectFailRadarReport(const std::string &bundleName, const ErrCode errCode,
         const IServiceReverse::Scenario scenario);
-    
+
     void UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo);
 
     void ClearFailedBundles();
     std::vector<std::string> GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
-        bool isIncBackup);
+        bool isIncBackup, const vector<std::string> &srcBundleNames);
+
+    void HandleNotSupportBundleNames(const std::vector<std::string> &srcBundleNames,
+        std::vector<std::string> &supportBundleNames, bool isIncBackup);
+
+    void SetBundleIncDataInfo(const std::vector<BIncrementalData> &bundlesToBackup,
+        std::vector<std::string> &supportBundleNames);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
