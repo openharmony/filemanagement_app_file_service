@@ -1812,6 +1812,12 @@ ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool 
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(bundleName);
+        if (mutexPtr == nullptr) {
+            HILOGE("extension mutex ptr is nullptr");
+            return BError(BError::Codes::SA_INVAL_ARG, "Extension mutex ptr is null.");
+        }
+        std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
         VerifyCaller();
         IServiceReverse::Scenario scenario = session_ -> GetScenario();
         if (scenario != IServiceReverse::Scenario::BACKUP) {
@@ -1820,7 +1826,8 @@ ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool 
             session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        auto backupConnection  = session_->GetExtConnection(bundleName);
+        auto tempBackupConnection = session_->GetExtConnection(bundleName);
+        auto backupConnection = tempBackupConnection.promote();
         auto proxy = backupConnection->GetBackupExtProxy();
         if (!proxy) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
@@ -1832,10 +1839,12 @@ ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool 
             return BError(BError::Codes::EXT_BROKEN_IPC);
         }
         result = true;
+        RemoveExtensionMutex(bundleName);
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (...) {
         result = false;
+        RemoveExtensionMutex(bundleName);
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("Unexpected exception");
         return EPERM;
