@@ -16,34 +16,62 @@
 #include "library_func_mock.h"
 
 using namespace OHOS::AppFileService;
-int fseeko(FILE *stream, off_t offset, int whence)
+int Fseeko(FILE *stream, off_t offset, int whence)
 {
-    if (LibraryFunc::libraryFunc_ == nullptr) {
-        return -1;
-    }
     return LibraryFunc::libraryFunc_->fseeko(stream, offset, whence);
 }
 
-off_t ftello(FILE *stream)
+off_t Ftello(FILE *stream)
 {
-    if (LibraryFunc::libraryFunc_ == nullptr) {
-        return -1;
-    }
     return LibraryFunc::libraryFunc_->ftello(stream);
 }
 
-int access(const char *pathname, int mode)
+int Access(const char *pathname, int mode)
 {
-    if (LibraryFunc::libraryFunc_ == nullptr) {
-        return -1;
-    }
     return LibraryFunc::libraryFunc_->access(pathname, mode);
 }
 
-int mkdir(const char *pathname, mode_t mode)
+int Mkdir(const char *pathname, mode_t mode)
 {
-    if (LibraryFunc::libraryFunc_ == nullptr) {
-        return -1;
-    }
     return LibraryFunc::libraryFunc_->mkdir(pathname, mode);
+}
+
+size_t Fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
+{
+    return LibraryFunc::libraryFunc_->fread(ptr, size, nmemb, stream);
+}
+
+size_t Fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+{
+    return LibraryFunc::libraryFunc_->fwrite(ptr, size, nmemb, stream);
+}
+
+char *Realpath(const char *path, char *resolved_path)
+{
+    return LibraryFunc::libraryFunc_->realpath(path, resolved_path);
+}
+
+FILE* Fopen(const char *pathname, const char *mode)
+{
+    return LibraryFunc::libraryFunc_->fopen(pathname, mode);
+}
+
+int Fclose(FILE *stream)
+{
+    return LibraryFunc::libraryFunc_->fclose(stream);
+}
+
+int Chmod(const char *pathname, mode_t mode)
+{
+    return LibraryFunc::libraryFunc_->chmod(pathname, mode);
+}
+
+int Stat(const char *pathname, struct stat *statbuf)
+{
+    return LibraryFunc::libraryFunc_->stat(pathname, statbuf);
+}
+
+int Utime(const char *filename, const struct utimbuf *times)
+{
+    return LibraryFunc::libraryFunc_->utime(filename, times);
 }

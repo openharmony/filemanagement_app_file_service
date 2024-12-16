@@ -542,7 +542,7 @@ int TarFile::WriteAll(const vector<uint8_t> &buf, size_t len)
     size_t count = 0;
     while (count < len) {
         auto i = fwrite(&buf[0] + count, sizeof(char), len - count, currentTarFile_);
-        if (i < 1) {
+        if (ferror(currentTarFile_) || i < 1) {
             HILOGE("Failed to fwrite tar file, err = %{public}d", errno);
             return count;
         }

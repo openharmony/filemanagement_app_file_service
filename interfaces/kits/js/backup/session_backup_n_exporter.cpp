@@ -39,10 +39,6 @@ struct BackupEntity {
 
 static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &fileInfo, UniqueFd fd, int sysErrno)
 {
-    if (pCallbacks.expired()) {
-        HILOGI("callbacks is unbound");
-        return;
-    }
     auto callbacks = pCallbacks.lock();
     if (!callbacks) {
         HILOGI("callback function onFileReady has already been released");
@@ -92,10 +88,6 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
 static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, const BundleName name)
 {
     HILOGI("Callback onBundleBegin, bundleName=%{public}s, errCode=%{public}d", name.c_str(), err);
-    if (pCallbacks.expired()) {
-        HILOGI("callbacks is unbound");
-        return;
-    }
     auto callbacks = pCallbacks.lock();
     if (!callbacks) {
         HILOGI("callback function onBundleBegin has already been released");
@@ -138,10 +130,6 @@ static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, co
 static void onBundleEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, const BundleName name)
 {
     HILOGI("Callback onBundleEnd, bundleName=%{public}s, errCode=%{public}d", name.c_str(), err);
-    if (pCallbacks.expired()) {
-        HILOGI("callbacks is unbound");
-        return;
-    }
     auto callbacks = pCallbacks.lock();
     if (!callbacks) {
         HILOGI("callback function onBundleEnd has already been released");
@@ -183,10 +171,6 @@ static void onBundleEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, cons
 
 static void onAllBundlesEnd(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err)
 {
-    if (pCallbacks.expired()) {
-        HILOGI("callbacks is unbound");
-        return;
-    }
     auto callbacks = pCallbacks.lock();
     if (!callbacks) {
         HILOGI("callback function onAllBundlesEnd has already been released");
@@ -225,10 +209,6 @@ static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::str
     const std::string result)
 {
     HILOGI("Callback OnResultReport, bundleName=%{public}s", bundleName.c_str());
-    if (pCallbacks.expired()) {
-        HILOGI("callbacks is unbound");
-        return;
-    }
     auto callbacks = pCallbacks.lock();
     if (!callbacks) {
         HILOGI("callback function onResultReport has already been released");
@@ -240,10 +220,16 @@ static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::str
     }
     auto cbCompl = [bName {bundleName}, res {result}](napi_env env, vector<napi_value> &argv) -> bool {
         napi_value napi_bName = nullptr;
-        napi_create_string_utf8(env, bName.c_str(), bName.size(), &napi_bName);
+        if (napi_create_string_utf8(env, bName.c_str(), bName.size(), &napi_bName) != napi_ok) {
+            HILOGE("create napi string failed");
+            return false;
+        }
         argv.push_back(napi_bName);
         napi_value napi_res = nullptr;
-        napi_create_string_utf8(env, res.c_str(), res.size(), &napi_res);
+        if (napi_create_string_utf8(env, res.c_str(), res.size(), &napi_res) != napi_ok) {
+            HILOGE("create napi string failed");
+            return false;
+        }
         argv.push_back(napi_res);
         return true;
     };
@@ -253,10 +239,6 @@ static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::str
 static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
 {
     HILOGI("Callback OnBackupServiceDied.");
-    if (pCallbacks.expired()) {
-        HILOGI("callbacks is unbound");
-        return;
-    }
     auto callbacks = pCallbacks.lock();
     if (!callbacks) {
         HILOGI("js callback function onBackupServiceDied has already been released");
@@ -270,7 +252,10 @@ static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
     auto cbCompl = [](napi_env env, vector<napi_value> &argv) -> bool {
         argv.push_back(nullptr);
         napi_value napi_res = nullptr;
-        napi_get_undefined(env, &napi_res);
+        if (napi_get_undefined(env, &napi_res) != napi_ok) {
+            HILOGE("create undefined napi object failed");
+            return false;
+        }
         argv.push_back(napi_res);
         return true;
     };
@@ -280,10 +265,6 @@ static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
 static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName name, const std::string processInfo)
 {
     HILOGI("Callback OnProcess, bundleName=%{public}s", name.c_str());
-    if (pCallbacks.expired()) {
-        HILOGI("callbacks is unbound");
-        return;
-    }
     auto callbacks = pCallbacks.lock();
     if (!callbacks) {
         HILOGI("callback function OnProcess has already been released");
@@ -295,10 +276,16 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
     }
     auto cbCompl = [bundleName {name}, process {processInfo}](napi_env env, vector<napi_value> &argv) -> bool {
         napi_value napi_bName = nullptr;
-        napi_create_string_utf8(env, bundleName.c_str(), bundleName.size(), &napi_bName);
+        if (napi_create_string_utf8(env, bundleName.c_str(), bundleName.size(), &napi_bName) != napi_ok) {
+            HILOGE("create napi string failed");
+            return false;
+        }
         argv.push_back(napi_bName);
         napi_value napi_process = nullptr;
-        napi_create_string_utf8(env, process.c_str(), process.size(), &napi_process);
+        if (napi_create_string_utf8(env, process.c_str(), process.size(), &napi_process) != napi_ok) {
+            HILOGE("create napi string failed");
+            return false;
+        }
         argv.push_back(napi_process);
         return true;
     };

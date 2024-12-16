@@ -60,7 +60,10 @@ napi_value ExtBackupContextJS::OnGetBackupDir(napi_env env, [[maybe_unused]]Abil
         return nullptr;
     }
     std::string backupDir = context->GetBackupDir();
-    napi_create_string_utf8(env, backupDir.c_str(), backupDir.size(), &result);
+    if (napi_create_string_utf8(env, backupDir.c_str(), backupDir.size(), &result) != napi_ok) {
+        HILOGE("create napi string failed");
+        return nullptr;
+    }
     return result;
 }
 } // namespace OHOS::FileManagement::Backup
