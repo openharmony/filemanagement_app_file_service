@@ -148,6 +148,8 @@ constexpr int BACKUP_DEFAULT_SA_ID = -1;
 constexpr int BACKUP_SA_RELOAD_MAX = 2;
 static inline std::string EXTENSION_BACKUP = "backup";
 static inline std::string EXTENSION_RESTORE = "restore";
+// 路径校验
+static inline std::string PATH_ABSOLUTE = "../";
 
 // 多用户场景应用备份数据路径
 static inline std::string GetSaBundleBackupDir(int32_t userId)
