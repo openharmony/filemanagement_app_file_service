@@ -128,6 +128,7 @@ static void DoCallJsMethod(napi_env env, void *data, InputArgsParser argParser)
     napi_value callback = ctx->cb_.Deref(env).val_;
     if (!bool(ctx->cb_)) {
         HILOGE("Failed to get ref.");
+        napi_close_handle_scope(env, scope);
         return;
     }
     napi_value result = nullptr;

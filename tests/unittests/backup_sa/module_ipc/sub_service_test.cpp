@@ -1405,3 +1405,106 @@ HWTEST_F(ServiceTest, SUB_Service_SessionDeactive_0200, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SessionDeactive_0200";
 }
+
+/**
+ * @tc.number: SUB_Service_StartExtTimer_0000
+ * @tc.name: SUB_Service_StartExtTimer_0000
+ * @tc.desc: 测试 StartExtTimer 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_StartExtTimer_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StartExtTimer_0000";
+    try {
+        bool isExtStart = false;
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        auto ret = service->StartExtTimer(isExtStart);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        service->session_ = session_;
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
+        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, StartExtTimer(_, _)).WillOnce(Return(true));
+        ret = service->StartExtTimer(isExtStart);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by StartExtTimer.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartExtTimer_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_StartFwkTimer_0000
+ * @tc.name: SUB_Service_StartFwkTimer_0000
+ * @tc.desc: 测试 StartFwkTimer 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_StartFwkTimer_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StartFwkTimer_0000";
+    try {
+        bool isFwkStart = false;
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        auto ret = service->StartFwkTimer(isFwkStart);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        service->session_ = session_;
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
+        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, StartFwkTimer(_, _)).WillOnce(Return(true));
+        ret = service->StartFwkTimer(isFwkStart);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by StartFwkTimer.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartFwkTimer_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_TimeoutRadarReport_0000
+ * @tc.name: SUB_Service_TimeoutRadarReport_0000
+ * @tc.desc: 测试 TimeoutRadarReport 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_TimeoutRadarReport_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TimeoutRadarReport_0000";
+    try {
+        string bundleName;
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        service->TimeoutRadarReport(IServiceReverse::Scenario::BACKUP, bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        service->TimeoutRadarReport(IServiceReverse::Scenario::RESTORE, bundleName);
+        EXPECT_TRUE(true);
+
+        service->TimeoutRadarReport(IServiceReverse::Scenario::UNDEFINED, bundleName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by TimeoutRadarReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_TimeoutRadarReport_0000";
+}

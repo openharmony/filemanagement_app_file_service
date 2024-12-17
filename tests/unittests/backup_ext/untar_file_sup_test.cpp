@@ -241,6 +241,10 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_CreateDir_0100, testing::ext::TestSize
         EXPECT_CALL(*funcMock, access(_, _)).WillOnce(Return(0));
         UntarFile::GetInstance().CreateDir(rootPath, S_IRWXU);
 
+        rootPath = "rootPath/realName/";
+        EXPECT_CALL(*funcMock, access(_, _)).WillOnce(Return(0));
+        UntarFile::GetInstance().CreateDir(rootPath, S_IRWXU);
+
         rootPath = "rootPath/realName";
         EXPECT_CALL(*funcMock, access(_, _)).WillOnce(Return(1)).WillOnce(Return(0))
             .WillOnce(Return(1)).WillOnce(Return(0));
@@ -270,25 +274,260 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_CreateDir_0100, testing::ext::TestSize
 HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseFileByTypeFlag_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_CreateDir_0100";
-    FileStatInfo info;
-    info.fullPath = "realName";
     UntarFile::GetInstance().rootPath_ = "rootPath";
     try {
-        UntarFile::GetInstance().ParseFileByTypeFlag(SYMTYPE, info);
-
-        EXPECT_CALL(*funcMock, access(_, _)).WillOnce(Return(1)).WillOnce(Return(0))
-            .WillOnce(Return(1)).WillOnce(Return(0));
-        EXPECT_CALL(*funcMock, mkdir(_, _)).WillOnce(Return(0));
-        UntarFile::GetInstance().ParseFileByTypeFlag(DIRTYPE, info);
-        EXPECT_EQ(info.fullPath, "rootPath/realName");
-
+        char c = '\0';
+        FileStatInfo info;
+        info.fullPath = "/test.txt";
+        EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr));
         EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
-        UntarFile::GetInstance().ParseFileByTypeFlag('6', info);
+        auto [ret, flag, m] = UntarFile::GetInstance().ParseFileByTypeFlag(REGTYPE, info);
+        EXPECT_EQ(ret, 0);
+        EXPECT_FALSE(flag);
+
+        info.fullPath = "/test/../test.txt";
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseFileByTypeFlag(REGTYPE, info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
+
+        info.fullPath = "/test.txt";
+        EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseFileByTypeFlag(AREGTYPE, info);
+        EXPECT_EQ(ret, 0);
+        EXPECT_FALSE(flag);
+
+        info.fullPath = "/test/../test.txt";
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseFileByTypeFlag(AREGTYPE, info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
+
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseFileByTypeFlag(SYMTYPE, info);
+        EXPECT_EQ(ret, 0);
+        EXPECT_TRUE(flag);
+
+        info.fullPath = "/test/";
+        EXPECT_CALL(*funcMock, access(_, _)).WillOnce(Return(0));
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseFileByTypeFlag(DIRTYPE, info);
+        EXPECT_EQ(ret, 0);
+        EXPECT_FALSE(flag);
+
+        info.fullPath = "/test/../test/";
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseFileByTypeFlag(DIRTYPE, info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by ParseFileByTypeFlag.";
     }
     GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_CreateDir_0100";
+}
+
+/**
+ * @tc.number: SUB_Untar_File_ParseFileByTypeFlag_0200
+ * @tc.name: SUB_Untar_File_ParseFileByTypeFlag_0200
+ * @tc.desc: 测试 ParseFileByTypeFlag 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseFileByTypeFlag_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_CreateDir_0100";
+    UntarFile::GetInstance().rootPath_ = "rootPath";
+    try {
+        FileStatInfo info;
+        UntarFile::GetInstance().tarFileSize_ = PATH_MAX_LEN + 1;
+        info.fullPath = "/test/../test/";
+        auto [ret, flag, m] = UntarFile::GetInstance().ParseFileByTypeFlag(GNUTYPE_LONGNAME, info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
+
+        info.fullPath = "/test";
+        info.longName = "/test/../longName";
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseFileByTypeFlag(GNUTYPE_LONGNAME, info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
+
+        info.fullPath = "/test";
+        info.longName = "longName";
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseFileByTypeFlag(GNUTYPE_LONGNAME, info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
+
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseFileByTypeFlag('6', info);
+        EXPECT_EQ(ret, 0);
+        EXPECT_TRUE(flag);
+
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(-1));
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseFileByTypeFlag('6', info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by ParseFileByTypeFlag.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_CreateDir_0200";
+}
+
+/**
+ * @tc.number: SUB_Untar_File_DealFileTag_0100
+ * @tc.name: SUB_Untar_File_DealFileTag_0100
+ * @tc.desc: 测试 DealFileTag 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileSupTest, SUB_Untar_File_DealFileTag_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_DealFileTag_0100";
+    try {
+        char c = '\0';
+        ErrFileInfo errFileInfo;
+        FileStatInfo info;
+        bool isFilter = false;
+        std::string tmpFullPath;
+        info.fullPath = "/test.txt";
+        UntarFile::GetInstance().includes_.clear();
+        EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        EXPECT_EQ(UntarFile::GetInstance().DealFileTag(errFileInfo, info, isFilter, tmpFullPath), true);
+
+        info.fullPath = "/../test.txt";
+        UntarFile::GetInstance().rootPath_ = "/root/";
+        EXPECT_EQ(UntarFile::GetInstance().DealFileTag(errFileInfo, info, isFilter, tmpFullPath), false);
+
+        ReportFileInfo report;
+        UntarFile::GetInstance().includes_.emplace("/test/", report);
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        EXPECT_EQ(UntarFile::GetInstance().DealFileTag(errFileInfo, info, isFilter, tmpFullPath), true);
+
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(-1));
+        EXPECT_EQ(UntarFile::GetInstance().DealFileTag(errFileInfo, info, isFilter, tmpFullPath), false);
+
+        tmpFullPath = "/test/";
+        info.fullPath = "/test.txt";
+        EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        EXPECT_EQ(UntarFile::GetInstance().DealFileTag(errFileInfo, info, isFilter, tmpFullPath), true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by DealFileTag.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_DealFileTag_0100";
+}
+
+/**
+ * @tc.number: SUB_Untar_File_ParseIncrementalFileByTypeFlag_0100
+ * @tc.name: SUB_Untar_File_ParseIncrementalFileByTypeFlag_0100
+ * @tc.desc: 测试 ParseIncrementalFileByTypeFlag 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseIncrementalFileByTypeFlag_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_CreateDir_0100";
+    UntarFile::GetInstance().rootPath_ = "rootPath";
+    try {
+        char c = '\0';
+        FileStatInfo info;
+        info.fullPath = "/test.txt";
+        UntarFile::GetInstance().includes_.clear();
+        EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        auto [ret, flag, m] = UntarFile::GetInstance().ParseIncrementalFileByTypeFlag(REGTYPE, info);
+        EXPECT_EQ(ret, 0);
+        EXPECT_FALSE(flag);
+
+        info.fullPath = "/test/../test.txt";
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseIncrementalFileByTypeFlag(REGTYPE, info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
+
+        info.fullPath = "/test.txt";
+        EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseIncrementalFileByTypeFlag(AREGTYPE, info);
+        EXPECT_EQ(ret, 0);
+        EXPECT_FALSE(flag);
+
+        info.fullPath = "/test/../test.txt";
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseIncrementalFileByTypeFlag(AREGTYPE, info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
+
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseIncrementalFileByTypeFlag(SYMTYPE, info);
+        EXPECT_EQ(ret, 0);
+        EXPECT_TRUE(flag);
+
+        info.fullPath = "/test/";
+        EXPECT_CALL(*funcMock, access(_, _)).WillOnce(Return(0));
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseIncrementalFileByTypeFlag(DIRTYPE, info);
+        EXPECT_EQ(ret, 0);
+        EXPECT_FALSE(flag);
+
+        info.fullPath = "/test/../test/";
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseIncrementalFileByTypeFlag(DIRTYPE, info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by ParseIncrementalFileByTypeFlag.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_CreateDir_0100";
+}
+
+/**
+ * @tc.number: SUB_Untar_File_ParseIncrementalFileByTypeFlag_0200
+ * @tc.name: SUB_Untar_File_ParseIncrementalFileByTypeFlag_0200
+ * @tc.desc: 测试 ParseIncrementalFileByTypeFlag 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseIncrementalFileByTypeFlag_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_CreateDir_0100";
+    UntarFile::GetInstance().rootPath_ = "rootPath";
+    try {
+        FileStatInfo info;
+        UntarFile::GetInstance().tarFileSize_ = PATH_MAX_LEN + 1;
+        info.fullPath = "/test/../test/";
+        auto [ret, flag, m] = UntarFile::GetInstance().ParseIncrementalFileByTypeFlag(GNUTYPE_LONGNAME, info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
+
+        info.fullPath = "/test";
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseIncrementalFileByTypeFlag(GNUTYPE_LONGNAME, info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
+
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseIncrementalFileByTypeFlag('6', info);
+        EXPECT_EQ(ret, 0);
+        EXPECT_TRUE(flag);
+
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(-1));
+        tie(ret, flag, std::ignore) = UntarFile::GetInstance().ParseIncrementalFileByTypeFlag('6', info);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_TRUE(flag);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by ParseIncrementalFileByTypeFlag.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_CreateDir_0200";
 }
 
 /**
@@ -349,19 +588,50 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_IsValidTarBlock_0200, testing::ext::Te
 HWTEST_F(UntarFileSupTest, SUB_Untar_File_CheckIfTarBlockValid_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_CheckIfTarBlockValid_0100";
-    char buff[BLOCK_SIZE]  = {0};
-    size_t buffLen = 0;
-    TarHeader *header {};
-    int ret = 0;
     try {
-        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, header, ret), false);
-        for (int i = 0; i < BLOCK_SIZE; i++) {
-            buff[i] = 'a' + i % 26;
-        }
-        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, header, ret), false);
+        char buff[BLOCK_SIZE]  = {0};
+        size_t buffLen = 0;
+        TarHeader header;
+        int ret = 0;
+
+        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(nullptr, 0, nullptr, ret), false);
+
+        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, 0, nullptr, ret), false);
+
         buffLen = BLOCK_SIZE;
-        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, header, ret), false);
-        EXPECT_TRUE(true);
+        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, nullptr, ret), false);
+
+        buff[0] = '0';
+        EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0));
+        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, &header, ret), false);
+
+        buff[0] = '\0';
+        header.typeFlag = GNUTYPE_LONGNAME;
+        UntarFile::GetInstance().tarFileSize_ = 0;
+        EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(READ_BUFF_SIZE + 1));
+        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, &header, ret), false);
+
+        header.typeFlag = REGTYPE;
+        EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0));
+        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, &header, ret), false);
+
+        EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(BLOCK_SIZE));
+        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, &header, ret), false);
+
+        EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(WithArgs<0>(Invoke([](void* buff) {
+            (reinterpret_cast<char*>(buff))[0] = '0';
+            return BLOCK_SIZE;
+        })));
+        EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0));
+        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, &header, ret), false);
+
+        string sum = "01647";
+        header.typeFlag = 'x';
+        memcpy_s(&header.magic, sizeof(header.magic), TMAGIC.c_str(), TMAGIC.length());
+        memcpy_s(&header.chksum, sizeof(header.chksum), sum.c_str(), sum.length());
+        buff[0] = '0';
+        EXPECT_EQ(UntarFile::GetInstance().CheckIfTarBlockValid(buff, buffLen, &header, ret), true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by CheckIfTarBlockValid.";

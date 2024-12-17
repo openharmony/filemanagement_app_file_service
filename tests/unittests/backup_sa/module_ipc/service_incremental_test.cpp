@@ -526,22 +526,58 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncremental
         EXPECT_EQ(service->AppendBundlesIncrementalBackupSession({}), BError(BError::Codes::SA_INVAL_ARG).GetCode());
         service->session_ = session_;
 
-        vector<BJsonEntityCaps::BundleInfo> bundleInfos {{ .allToBackup = true }};
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
-        EXPECT_CALL(*bms, GetBundleInfosForAppend(_, _)).WillOnce(Return(bundleInfos));
-        EXPECT_EQ(service->AppendBundlesIncrementalBackupSession({}), BError(BError::Codes::OK).GetCode());
+        service->isOccupyingSession_ = true;
+        EXPECT_EQ(service->AppendBundlesIncrementalBackupSession({}), BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
-        bundleInfos[0].allToBackup = false;
+        service->isOccupyingSession_ = false;
+        vector<BJsonEntityCaps::BundleInfo> bundleInfos;
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*bms, GetBundleInfosForAppend(_, _)).WillOnce(Return(bundleInfos));
-        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
-        EXPECT_CALL(*srProxy, IncrementalBackupOnBundleStarted(_, _)).WillOnce(Return());
         EXPECT_EQ(service->AppendBundlesIncrementalBackupSession({}), BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by AppendBundlesIncrementalBackupSession.";
     }
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0100
+ * @tc.name: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0100
+ * @tc.desc: 测试 AppendBundlesIncrementalBackupSession 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) <<
+        "ServiceIncrementalTest-begin SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0100";
+    try {
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        auto ret = service->AppendBundlesIncrementalBackupSession({}, {});
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = session_;
+
+        service->isOccupyingSession_ = true;
+        ret = service->AppendBundlesIncrementalBackupSession({}, {});
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        service->isOccupyingSession_ = false;
+        map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
+        vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillOnce(Return(bundleNameDetailMap));
+        EXPECT_CALL(*bms, GetBundleInfosForAppend(_, _)).WillOnce(Return(bundleInfos));
+        ret = service->AppendBundlesIncrementalBackupSession({}, {});
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by AppendBundlesIncrementalBackupSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0100";
 }
 
 /**
@@ -1093,5 +1129,78 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_SetCurrentBackupSessProp
         GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by SetCurrentBackupSessProperties.";
     }
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_SetCurrentBackupSessProperties_0200";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_Release_0000
+ * @tc.name: SUB_ServiceIncremental_Release_0000
+ * @tc.desc: 测试 Release 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Release_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_Release_0000";
+    try {
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        auto ret = service->Release();
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        service->session_ = session_;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
+        ret = service->Release();
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
+        ret = service->Release();
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        ret = service->Release();
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by Release.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_Release_0200";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_SetBundleIncDataInfo_0000
+ * @tc.name: SUB_ServiceIncremental_SetBundleIncDataInfo_0000
+ * @tc.desc: 测试 SetBundleIncDataInfo 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_SetBundleIncDataInfo_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_SetBundleIncDataInfo_0000";
+    try {
+        vector<BIncrementalData> bundlesToBackup;
+        vector<string> supportBundleNames;
+        service->SetBundleIncDataInfo(bundlesToBackup, supportBundleNames);
+        EXPECT_TRUE(true);
+
+        BIncrementalData data;
+        data.bundleName = "bundleName";
+        bundlesToBackup.push_back(data);
+        service->SetBundleIncDataInfo(bundlesToBackup, supportBundleNames);
+        EXPECT_TRUE(true);
+
+        supportBundleNames.emplace_back("bundleName");
+        service->SetBundleIncDataInfo(bundlesToBackup, supportBundleNames);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by SetBundleIncDataInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_SetBundleIncDataInfo_0200";
 }
 }
