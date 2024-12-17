@@ -383,8 +383,9 @@ bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
         if (fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET) != 0) {
             HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
             errFileInfo[info.fullPath].push_back(DEFAULT_ERR);
+            return false;
         }
-        return false;
+        return true;
     }
     info.fullPath = GenRealPath(rootPath_, info.fullPath);
     if (BDir::CheckFilePathInvalid(info.fullPath)) {
