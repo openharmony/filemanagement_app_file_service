@@ -420,6 +420,27 @@ static bool VerifyNarg(napi_env env, NVal &callbacks)
     return false;
 }
 
+static bool SetSessionRestoreEntity(napi_env env, NFuncArg &funcArg, std::unique_ptr<RestoreEntity> restoreEntity)
+{
+    auto finalize = [](napi_env env, void *data, void *hint) {
+        std::unique_ptr<RestoreEntity> entity = std::unique_ptr<RestoreEntity>(static_cast<RestoreEntity *>(data));
+        if (entity == nullptr) {
+            HILOGE("Entity is nullptr");
+            return;
+        }
+        if (entity->callbacks == nullptr) {
+            HILOGE("Callbacks is nullptr");
+            return;
+        }
+        entity->callbacks->RemoveCallbackRef();
+    };
+    if (napi_wrap(env, funcArg.GetThisVar(), restoreEntity.release(), finalize, nullptr, nullptr) != napi_ok) {
+        HILOGE("Failed to set restoreEntity entity.");
+        return false;
+    }
+    return true;
+}
+
 napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info cbinfo)
 {
     HILOGI("called SessionRestore::Constructor begin");
@@ -459,11 +480,10 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to init restore").GetCode()).ThrowErr(env);
         return nullptr;
     }
-    if (!NClass::SetEntityFor<RestoreEntity>(env, funcArg.GetThisVar(), move(restoreEntity))) {
+    if (!SetSessionRestoreEntity(env, funcArg, std::move(restoreEntity))) {
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to set SessionRestore entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-
     HILOGI("called SessionRestore::Constructor end");
     return funcArg.GetThisVar();
 }

@@ -309,6 +309,27 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
     callbacks->onProcess.CallJsMethod(cbCompl);
 }
 
+static bool SetIncrementalBackupEntity(napi_env env, NFuncArg &funcArg, std::unique_ptr<BackupEntity> backupEntity)
+{
+    auto finalize = [](napi_env env, void *data, void *hint) {
+        std::unique_ptr<BackupEntity> entity = std::unique_ptr<BackupEntity>(static_cast<BackupEntity *>(data));
+        if (entity == nullptr) {
+            HILOGE("Entity is nullptr");
+            return;
+        }
+        if (entity->callbacks == nullptr) {
+            HILOGE("Callbacks is nullptr");
+            return;
+        }
+        entity->callbacks->RemoveCallbackRef();
+    };
+    if (napi_wrap(env, funcArg.GetThisVar(), backupEntity.release(), finalize, nullptr, nullptr) != napi_ok) {
+        HILOGE("Failed to set BackupEntity entity.");
+        return false;
+    }
+    return true;
+}
+
 napi_value SessionIncrementalBackupNExporter::Constructor(napi_env env, napi_callback_info cbinfo)
 {
     HILOGD("called SessionIncrementalBackup::Constructor begin");
@@ -352,12 +373,10 @@ napi_value SessionIncrementalBackupNExporter::Constructor(napi_env env, napi_cal
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to init backup").GetCode()).ThrowErr(env);
         return nullptr;
     }
-    if (!NClass::SetEntityFor<BackupEntity>(env, funcArg.GetThisVar(), move(backupEntity))) {
-        HILOGE("Failed to set BackupEntity entity.");
+    if (!SetIncrementalBackupEntity(env, funcArg, std::move(backupEntity))) {
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to set BackupEntity entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-
     HILOGD("called SessionIncrementalBackup::Constructor end");
     return funcArg.GetThisVar();
 }
