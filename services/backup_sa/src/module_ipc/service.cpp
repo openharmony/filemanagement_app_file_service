@@ -1812,6 +1812,12 @@ ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool 
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(bundleName);
+        if (mutexPtr == nullptr) {
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return BError(BError::Codes::SA_INVAL_ARG, "Extension mutex ptr is null.");
+        }
+        std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
         VerifyCaller();
         IServiceReverse::Scenario scenario = session_ -> GetScenario();
         if (scenario != IServiceReverse::Scenario::BACKUP) {
@@ -1820,7 +1826,12 @@ ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool 
             session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        auto backupConnection  = session_->GetExtConnection(bundleName);
+        auto backupConnection = session_->GetExtConnection(bundleName);
+        if (backupConnection == nullptr) {
+            HILOGE("backUpConnection is null. bundleName: %{public}s", bundleName.c_str());
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         auto proxy = backupConnection->GetBackupExtProxy();
         if (!proxy) {
             throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
@@ -1833,13 +1844,14 @@ ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool 
         }
         result = true;
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return BError(BError::Codes::OK);
     } catch (...) {
         result = false;
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        HILOGI("Unexpected exception");
+        HILOGE("Unexpected exception");
         return EPERM;
     }
+    RemoveExtensionMutex(bundleName);
+    return BError(BError::Codes::OK);
 }
 
 AAFwk::Want Service::CreateConnectWant (BundleName &bundleName)
