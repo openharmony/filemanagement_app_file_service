@@ -57,16 +57,19 @@ void GetInfo(const uint8_t *data, size_t size, vector<BJsonEntityCaps::BundleInf
         pos += len;
         bundleInfo.supportScene = string(reinterpret_cast<const char*>(data + pos), len) + to_string(i);
 
-        if (size >= sizeof(bool)) {
-            bundleInfo.allToBackup = *(reinterpret_cast<const bool*>(data));
+        pos += len;
+        if (size >= pos + sizeof(bool)) {
+            bundleInfo.allToBackup = *(reinterpret_cast<const bool*>(data + pos));
         }
 
-        if (size >= sizeof(int64_t)) {
-            bundleInfo.versionCode = *(reinterpret_cast<const int64_t*>(data));
+        pos += sizeof(bool);
+        if (size >= pos + sizeof(int64_t)) {
+            bundleInfo.versionCode = *(reinterpret_cast<const int64_t*>(data + pos));
         }
 
-        if (size >= sizeof(int64_t)) {
-            bundleInfo.spaceOccupied = *(reinterpret_cast<const int64_t*>(data));
+        pos += sizeof(int64_t);
+        if (size >= pos + sizeof(int64_t)) {
+            bundleInfo.spaceOccupied = *(reinterpret_cast<const int64_t*>(data + pos));
         }
         info.push_back(bundleInfo);
     }
