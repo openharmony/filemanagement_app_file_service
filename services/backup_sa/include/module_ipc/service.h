@@ -92,6 +92,8 @@ public:
     ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario) override;
     ErrCode StartExtTimer(bool &isExtStart) override;
     ErrCode StartFwkTimer(bool &isFwkStart) override;
+    ErrCode StopExtTimer(bool &isExtStop) override;
+    ErrCode RefreshDataSize(int64_t totalDataSize) override;
 
     ErrCode SAResultReport(const std::string bundleName, const std::string resultInfo,
                            const ErrCode errCode, const BackupRestoreScenario sennario);

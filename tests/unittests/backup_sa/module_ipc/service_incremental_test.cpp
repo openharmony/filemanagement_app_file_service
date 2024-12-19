@@ -207,6 +207,21 @@ ErrCode Service::StartFwkTimer(bool &isFwkStart)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::StopExtTimer(bool &isExtStop)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::RefreshDataSize(int64_t totalsize)
+{
+    return BError(BError::Codes::OK);
+}
+
+std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bundleName)
+{
+    return []() {};
+}
+
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo>&, std::vector<std::string>&,
     RestoreTypeEnum) {}
 

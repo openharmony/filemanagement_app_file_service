@@ -69,6 +69,10 @@ ServiceStub::ServiceStub()
     opToInterfaceMap_[static_cast<uint32_t>(
         IServiceInterfaceCode::SERVICE_CMD_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP)] =
         &ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_STOP_EXT_TIMER)] =
+        &ServiceStub::CmdStopExtTimer;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_REFRESH_DATA_SIZE)] =
+        &ServiceStub::CmdRefreshDataSize;
 }
 
 void ServiceStub::ServiceStubSupplement()
@@ -313,6 +317,16 @@ int32_t ServiceStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessagePar
 }
 
 int32_t ServiceStub::CmdReportAppProcessInfo(MessageParcel &data, MessageParcel &reply)
+{
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdStopExtTimer(MessageParcel &data, MessageParcel &reply)
+{
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdRefreshDataSize(MessageParcel &data, MessageParcel &reply)
 {
     return BError(BError::Codes::OK);
 }

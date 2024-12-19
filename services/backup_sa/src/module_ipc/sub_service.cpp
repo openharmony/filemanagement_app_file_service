@@ -346,6 +346,25 @@ void Service::SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info,
     HILOGI("End");
 }
 
+ErrCode Service::RefreshDataSize(int64_t totalDataSize)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        if (session_ == nullptr) {
+            HILOGE("session is nullptr");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        std::string bundleName = VerifyCallerAndGetCallerName();
+        session_->SetBundleDataSize(bundleName, totalDataSize);
+        HILOGI("RefreshDataSize, bundleName:%{public}s ,datasize = %{public}" PRId64 "",
+            bundleName.c_str(), totalDataSize);
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        return e.GetCode();
+    }
+}
+
+
 void Service::HandleNotSupportBundleNames(const std::vector<std::string> &srcBundleNames,
     std::vector<std::string> &supportBundleNames, bool isIncBackup)
 {
@@ -362,6 +381,28 @@ void Service::HandleNotSupportBundleNames(const std::vector<std::string> &srcBun
             session_->GetServiceReverseProxy()->BackupOnBundleStarted(
                 BError(BError::Codes::SA_BUNDLE_INFO_EMPTY), bundleName);
         }
+    }
+}
+
+ErrCode Service::StopExtTimer(bool &isExtStop)
+{
+    try {
+        HILOGI("Service::StopExtTimer begin.");
+        if (session_ == nullptr) {
+            HILOGE("StopExtTimer error, session_ is nullptr.");
+            isExtStop = false;
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        string bundleName = VerifyCallerAndGetCallerName();
+        isExtStop = session_->StopExtTimer(bundleName);
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return BError(BError::Codes::OK);
+    } catch (...) {
+        isExtStop = false;
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        HILOGI("Unexpected exception");
+        return EPERM;
     }
 }
 }

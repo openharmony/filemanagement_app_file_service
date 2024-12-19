@@ -153,6 +153,16 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode StopExtTimer(bool &isExtStop) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode RefreshDataSize(int64_t totalsize) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) override
     {
         return BError(BError::Codes::OK);

@@ -156,4 +156,14 @@ int32_t ServiceStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessagePar
 {
     return BServiceStub::stub->CmdGetIncrementalFileHandle(data, reply);
 }
+
+int32_t ServiceStub::CmdStopExtTimer(MessageParcel &data, MessageParcel &reply)
+{
+    return BServiceStub::stub->CmdStopExtTimer(data, reply);
+}
+
+int32_t ServiceStub::CmdRefreshDataSize(MessageParcel &data, MessageParcel &reply)
+{
+    return BServiceStub::stub->CmdRefreshDataSize(data, reply);
+}
 } // namespace OHOS::FileManagement::Backup

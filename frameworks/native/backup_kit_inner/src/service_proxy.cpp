@@ -674,4 +674,55 @@ ErrCode ServiceProxy::StartFwkTimer(bool &isFwkStart)
     HILOGI("ServiceProxy StartFwkTimer end. isFwkStart = %d", isFwkStart);
     return BError(BError::Codes::OK, "success");
 }
+
+ErrCode ServiceProxy::StopExtTimer(bool &isExtStop)
+{
+    HILOGI("ServiceProxy StopExtTimer Begin.");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_STOP_EXT_TIMER),
+                                        data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    reply.ReadBool(isExtStop);
+    HILOGI("ServiceProxy StopExtTimer end. isExtStop = %{public}d", isExtStop);
+    return BError(BError::Codes::OK, "success");
+}
+
+ErrCode ServiceProxy::RefreshDataSize(int64_t totalSize)
+{
+    HILOGI("ServiceProxy RefreshDatasize Begin.");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    if (!data.WriteInt64(totalSize)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write totalSize").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_REFRESH_DATA_SIZE),
+                                        data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    bool result = false;
+    reply.ReadBool(result);
+    if (!result) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to Refresh Datasize").GetCode();
+    }
+    return BError(BError::Codes::OK, "success");
+}
+
 } // namespace OHOS::FileManagement::Backup
