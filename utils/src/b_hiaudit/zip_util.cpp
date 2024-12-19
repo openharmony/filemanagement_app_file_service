@@ -57,6 +57,8 @@ int ZipUtil::AddFileInZip(zipFile &zipfile, const std::string &srcFile, int keep
         Z_DEFLATED, Z_DEFAULT_COMPRESSION);
     if (errcode != Z_OK) {
         HILOGE("zipOpenNewFileInZip failed:%{public}s, errno: %{public}d.", srcFile.c_str(), errcode);
+        (void)fclose(srcFp);
+        zipCloseFileInZip(zipfile);
         return errcode;
     }
 

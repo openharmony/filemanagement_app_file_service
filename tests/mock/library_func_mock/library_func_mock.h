@@ -18,12 +18,16 @@
 
 #include <gmock/gmock.h>
 
-#include <fcntl.h>
-#include <memory>
 #include <cstdio>
+#include <fcntl.h>
+#include <grp.h>
+#include <memory>
+#include <pwd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "securec.h"
 
 int Fseeko(FILE*, off_t, int);
 off_t Ftello(FILE*);
@@ -37,6 +41,15 @@ int Fclose(FILE*);
 int Chmod(const char*, mode_t);
 int Stat(const char*, struct stat*);
 int Utime(const char*, const struct utimbuf*);
+int Ferror(FILE*);
+int Fflush(FILE*);
+int Remove(const char*);
+struct passwd* Getpwuid(uid_t);
+struct group* Getgrgid(gid_t);
+int Open(const char*, int, ...);
+ssize_t Read(int, void*, size_t);
+ssize_t Write(int, const void*, size_t);
+int Close(int);
 
 namespace OHOS {
 namespace AppFileService {
@@ -55,6 +68,15 @@ public:
     virtual int chmod(const char*, mode_t) = 0;
     virtual int stat(const char*, struct stat*) = 0;
     virtual int utime(const char*, const struct utimbuf*) = 0;
+    virtual int ferror(FILE*) = 0;
+    virtual int fflush(FILE*) = 0;
+    virtual int remove(const char*) = 0;
+    virtual struct passwd* getpwuid(uid_t) = 0;
+    virtual struct group *getgrgid(gid_t) = 0;
+    virtual int open(const char *, int) = 0;
+    virtual ssize_t read(int, void*, size_t) = 0;
+    virtual ssize_t write(int, const void*, size_t) = 0;
+    virtual int close(int) = 0;
 public:
     static inline std::shared_ptr<LibraryFunc> libraryFunc_ = nullptr;
 };
@@ -73,7 +95,17 @@ public:
     MOCK_METHOD(int, chmod, (const char*, mode_t));
     MOCK_METHOD(int, stat, (const char*, struct stat*));
     MOCK_METHOD(int, utime, (const char*, const struct utimbuf*));
+    MOCK_METHOD(int, ferror, (FILE*));
+    MOCK_METHOD(int, fflush, (FILE*));
+    MOCK_METHOD(int, remove, (const char*));
+    MOCK_METHOD(passwd*, getpwuid, (uid_t));
+    MOCK_METHOD(group*, getgrgid, (gid_t));
+    MOCK_METHOD(int, open, (const char*, int));
+    MOCK_METHOD(ssize_t, read, (int, void*, size_t));
+    MOCK_METHOD(ssize_t, write, (int, const void*, size_t));
+    MOCK_METHOD(int, close, (int));
 };
 } // namespace AppFileService
 } // namespace OHOS
+
 #endif // FILEMANAGEMENT_APP_FILE_SERVICE_LIBRARY_FUNC_MOCK_H

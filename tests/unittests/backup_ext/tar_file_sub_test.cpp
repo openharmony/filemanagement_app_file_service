@@ -67,49 +67,209 @@ void TarFileSubTest::TearDownTestCase()
 }
 
 /**
- * @tc.number: SUB_Tar_File_CopyData_0100
- * @tc.name: SUB_Tar_File_CopyData_0100
- * @tc.desc: 测试 CopyData 接口
+ * @tc.number: SUB_Tar_File_SplitWriteAll_0100
+ * @tc.name: SUB_Tar_File_SplitWriteAll_0100
+ * @tc.desc: 测试 SplitWriteAll 接口
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(TarFileSubTest, SUB_Tar_File_CopyData_0100, testing::ext::TestSize.Level1)
+HWTEST_F(TarFileSubTest, SUB_Tar_File_SplitWriteAll_0100, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "TarFileSubTest-begin SUB_Tar_File_CopyData_0100";
+    GTEST_LOG_(INFO) << "TarFileSubTest-begin SUB_Tar_File_SplitWriteAll_0100";
     try {
-        TarHeader hdr;
-        string mode;
-        string uid;
-        string gid;
-        string size;
+        vector<uint8_t> ioBuffer {0, 0, 0, 0, 0};
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(ioBuffer.size()));
+        auto ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 5);
+        EXPECT_EQ(ret, ioBuffer.size());
 
-        EXPECT_CALL(*funcMock, memcpy_s(_, _, _, _)).WillOnce(Return(-1));
-        auto ret = CopyData(hdr, mode, uid, gid, size);
-        EXPECT_FALSE(ret);
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(ioBuffer.size()));
+        ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 5);
+        EXPECT_EQ(ret, ioBuffer.size());
 
-        EXPECT_CALL(*funcMock, memcpy_s(_, _, _, _)).WillOnce(Return(EOK)).WillOnce(Return(-1));
-        ret = CopyData(hdr, mode, uid, gid, size);
-        EXPECT_FALSE(ret);
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
+        ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 5);
+        EXPECT_EQ(ret, 0);
 
-        EXPECT_CALL(*funcMock, memcpy_s(_, _, _, _)).WillOnce(Return(EOK)).WillOnce(Return(EOK)).WillOnce(Return(-1));
-        ret = CopyData(hdr, mode, uid, gid, size);
-        EXPECT_FALSE(ret);
-
-        EXPECT_CALL(*funcMock, memcpy_s(_, _, _, _)).WillOnce(Return(EOK)).WillOnce(Return(EOK)).WillOnce(Return(EOK))
-            .WillOnce(Return(-1));
-        ret = CopyData(hdr, mode, uid, gid, size);
-        EXPECT_FALSE(ret);
-
-        EXPECT_CALL(*funcMock, memcpy_s(_, _, _, _)).WillOnce(Return(EOK)).WillOnce(Return(EOK)).WillOnce(Return(EOK))
-            .WillOnce(Return(0));
-        ret = CopyData(hdr, mode, uid, gid, size);
-        EXPECT_TRUE(ret);
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(4));
+        ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 4);
+        EXPECT_EQ(ret, 4);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "TarFileSubTest-an exception occurred by TarFile.";
     }
-    GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_CopyData_0100";
+    GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_SplitWriteAll_0100";
+}
+
+/**
+ * @tc.number: SUB_Tar_File_CreateSplitTarFile_0100
+ * @tc.name: SUB_Tar_File_CreateSplitTarFile_0100
+ * @tc.desc: 测试 CreateSplitTarFile 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(TarFileSubTest, SUB_Tar_File_CreateSplitTarFile_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileSubTest-begin SUB_Tar_File_CreateSplitTarFile_0100";
+    try {
+        TarFile::GetInstance().currentTarFile_ = nullptr;
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr));
+        EXPECT_THROW(TarFile::GetInstance().CreateSplitTarFile(), BError);
+
+        int n = 0;
+        TarFile::GetInstance().currentTarFile_ = reinterpret_cast<FILE*>(&n);
+        EXPECT_CALL(*funcMock, fclose(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(reinterpret_cast<FILE*>(&n)));
+        EXPECT_TRUE(TarFile::GetInstance().CreateSplitTarFile());
+        TarFile::GetInstance().currentTarFile_ = nullptr;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TarFileSubTest-an exception occurred by TarFile.";
+    }
+    GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_CreateSplitTarFile_0100";
+}
+
+/**
+ * @tc.number: SUB_Tar_File_FillSplitTailBlocks_0100
+ * @tc.name: SUB_Tar_File_FillSplitTailBlocks_0100
+ * @tc.desc: 测试 FillSplitTailBlocks 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(TarFileSubTest, SUB_Tar_File_FillSplitTailBlocks_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileSubTest-begin SUB_Tar_File_FillSplitTailBlocks_0100";
+    try {
+        TarFile::GetInstance().currentTarFile_ = nullptr;
+        EXPECT_THROW(TarFile::GetInstance().FillSplitTailBlocks(), BError);
+
+        int n = 0;
+        const int END_BLOCK_SIZE = 1024;
+        TarFile::GetInstance().currentTarFile_ = reinterpret_cast<FILE*>(&n);
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(END_BLOCK_SIZE));
+        EXPECT_CALL(*funcMock, ferror(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fflush(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, stat(_, _)).WillOnce(Return(-1));
+        EXPECT_THROW(TarFile::GetInstance().FillSplitTailBlocks(), BError);
+
+        TarFile::GetInstance().tarFileCount_ = 1;
+        TarFile::GetInstance().fileCount_ = 0;
+        TarFile::GetInstance().currentTarFile_ = reinterpret_cast<FILE*>(&n);
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(END_BLOCK_SIZE));
+        EXPECT_CALL(*funcMock, ferror(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fflush(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, stat(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fclose(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, remove(_)).WillOnce(Return(0));
+        EXPECT_TRUE(TarFile::GetInstance().FillSplitTailBlocks());
+
+        TarFile::GetInstance().fileCount_ = 1;
+        TarFile::GetInstance().isReset_ = true;
+        TarFile::GetInstance().currentTarFile_ = reinterpret_cast<FILE*>(&n);
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(END_BLOCK_SIZE));
+        EXPECT_CALL(*funcMock, ferror(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fflush(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, stat(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fclose(_)).WillOnce(Return(0));
+        EXPECT_TRUE(TarFile::GetInstance().FillSplitTailBlocks());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TarFileSubTest-an exception occurred by TarFile.";
+    }
+    GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_FillSplitTailBlocks_0100";
+}
+
+/**
+ * @tc.number: SUB_Tar_File_FillSplitTailBlocks_0200
+ * @tc.name: SUB_Tar_File_FillSplitTailBlocks_0200
+ * @tc.desc: 测试 FillSplitTailBlocks 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(TarFileSubTest, SUB_Tar_File_FillSplitTailBlocks_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileSubTest-begin SUB_Tar_File_FillSplitTailBlocks_0200";
+    try {
+        TarFile::GetInstance().currentTarFile_ = nullptr;
+        EXPECT_THROW(TarFile::GetInstance().FillSplitTailBlocks(), BError);
+
+        int n = 0;
+        const int END_BLOCK_SIZE = 1024;
+        TarFile::GetInstance().fileCount_ = 0;
+        TarFile::GetInstance().tarFileCount_ = 0;
+        TarFile::GetInstance().isReset_ = false;
+        TarFile::GetInstance().currentTarFile_ = reinterpret_cast<FILE*>(&n);
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(END_BLOCK_SIZE));
+        EXPECT_CALL(*funcMock, ferror(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fflush(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, stat(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fclose(_)).WillOnce(Return(0));
+        EXPECT_TRUE(TarFile::GetInstance().FillSplitTailBlocks());
+
+        struct stat sta { .st_size = 1 };
+        TarFile::GetInstance().currentTarFile_ = reinterpret_cast<FILE*>(&n);
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(END_BLOCK_SIZE));
+        EXPECT_CALL(*funcMock, ferror(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fflush(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, stat(_, _)).WillOnce(DoAll(SetArgPointee<1>(sta), Return(0)));
+        EXPECT_CALL(*funcMock, fclose(_)).WillOnce(Return(0));
+        EXPECT_TRUE(TarFile::GetInstance().FillSplitTailBlocks());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TarFileSubTest-an exception occurred by TarFile.";
+    }
+    GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_FillSplitTailBlocks_0200";
+}
+
+/**
+ * @tc.number: SUB_Tar_File_WriteFileContent_0100
+ * @tc.name: SUB_Tar_File_WriteFileContent_0100
+ * @tc.desc: 测试 WriteFileContent 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(TarFileSubTest, SUB_Tar_File_WriteFileContent_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileSubTest-begin SUB_Tar_File_WriteFileContent_0100";
+    try {
+        string fileName = "fileName";
+        off_t size = 0;
+        int err = 0;
+        EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(-1));
+        EXPECT_FALSE(TarFile::GetInstance().WriteFileContent(fileName, size, err));
+
+        TarFile::GetInstance().ioBuffer_.resize(BLOCK_SIZE);
+        EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, read(_, _, _)).WillOnce(Return(BLOCK_SIZE));
+        EXPECT_CALL(*funcMock, close(_)).WillOnce(Return(0));
+        EXPECT_FALSE(TarFile::GetInstance().WriteFileContent(fileName, 1, err));
+
+        TarFile::GetInstance().ioBuffer_.resize(BLOCK_SIZE);
+        EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, read(_, _, _)).WillOnce(Return(BLOCK_SIZE));
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(BLOCK_SIZE + 1));
+        EXPECT_CALL(*funcMock, close(_)).WillOnce(Return(0));
+        EXPECT_FALSE(TarFile::GetInstance().WriteFileContent(fileName, BLOCK_SIZE, err));
+
+        TarFile::GetInstance().ioBuffer_.resize(BLOCK_SIZE);
+        EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, read(_, _, _)).WillOnce(Return(BLOCK_SIZE));
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(BLOCK_SIZE));
+        EXPECT_CALL(*funcMock, close(_)).WillOnce(Return(0));
+        EXPECT_TRUE(TarFile::GetInstance().WriteFileContent(fileName, BLOCK_SIZE, err));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TarFileSubTest-an exception occurred by TarFile.";
+    }
+    GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_WriteFileContent_0100";
 }
 } // namespace OHOS::FileManagement::Backup

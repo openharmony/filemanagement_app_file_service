@@ -36,6 +36,22 @@
 #include "permission_state_full.h"
 #include "token_setproc.h"
 
+int fseeko(FILE *stream, off_t offset, int whence)
+{
+    if (OHOS::AppFileService::LibraryFunc::libraryFunc_ == nullptr) {
+        return -1;
+    }
+    return OHOS::AppFileService::LibraryFunc::libraryFunc_->fseeko(stream, offset, whence);
+}
+
+int access(const char *pathname, int mode)
+{
+    if (OHOS::AppFileService::LibraryFunc::libraryFunc_ == nullptr) {
+        return -1;
+    }
+    return OHOS::AppFileService::LibraryFunc::libraryFunc_->access(pathname, mode);
+}
+
 using namespace testing;
 using namespace testing::ext;
 namespace OHOS {
