@@ -150,9 +150,9 @@ static std::set<std::string> GetIdxFileData(const string &bundleName)
     return cache.GetExtManage();
 }
 
-std::vector<ExtManageInfo> BackupExtExtension::GetExtManageInfo()
+std::vector<ExtManageInfo> BackupExtExtension::GetExtManageInfo(bool isSpecialVersion)
 {
-    string indexFileRestorePath = GetIndexFileRestorePath(bundleName_);
+    string indexFileRestorePath = isSpecialVersion ? INDEX_FILE_RESTORE : GetIndexFileRestorePath(bundleName_);
     string filePath = BExcepUltils::Canonicalize(indexFileRestorePath);
     UniqueFd idxFd(open(filePath.data(), O_RDONLY));
     if (idxFd < 0) {

@@ -385,6 +385,7 @@ bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
             errFileInfo[info.fullPath].push_back(DEFAULT_ERR);
             return false;
         }
+        isFilter = true;
         return true;
     }
     info.fullPath = GenRealPath(rootPath_, info.fullPath);

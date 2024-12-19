@@ -120,7 +120,7 @@ string BackupExtExtension::GetBundlePath()
 std::map<std::string, off_t> BackupExtExtension::GetIdxFileInfos(bool isSpecialVersion)
 {
     string restoreDir = isSpecialVersion ? "" : GetBundlePath();
-    auto extManageInfo = GetExtManageInfo();
+    auto extManageInfo = GetExtManageInfo(isSpecialVersion);
     std::map<std::string, off_t> idxFileInfos;
     for (size_t i = 0; i < extManageInfo.size(); ++i) {
         std::string realPath = restoreDir + extManageInfo[i].hashName;
