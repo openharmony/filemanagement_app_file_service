@@ -63,7 +63,10 @@ ohos_shared_library("fileshare") {
   defines = []
   if (sandbox_manarer) {
     external_deps += [ "sandbox_manager:libsandbox_manager_sdk" ]
-    defines += [ "SANDBOX_MANAGER" ]
+    defines += [
+      "SANDBOX_MANAGER",
+      "ABILITY_RUNTIME_FEATURE_SANDBOXMANAGER",
+    ]
   }
   relative_install_dir = "module"
 

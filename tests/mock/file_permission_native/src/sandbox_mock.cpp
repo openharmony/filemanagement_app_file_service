@@ -19,7 +19,8 @@ namespace OHOS {
 using namespace AppFileService;
 using namespace OHOS::AccessControl::SandboxManager;
 int32_t SandboxManagerKit::CheckPersistPolicy(uint32_t tokenId,
-    const std::vector<PolicyInfo> &policy, std::vector<bool> &result)
+                                              const std::vector<PolicyInfo> &policy,
+                                              std::vector<bool> &result)
 {
     return SandboxManagerKitMock::sandboxManagerKitMock->CheckPersistPolicy(tokenId, policy, result);
 }
@@ -43,5 +44,5 @@ int32_t SandboxManagerKit::StopAccessingPolicy(const std::vector<PolicyInfo> &po
 {
     return SandboxManagerKitMock::sandboxManagerKitMock->StopAccessingPolicy(policy, result);
 }
-}
+} // namespace OHOS
 #endif

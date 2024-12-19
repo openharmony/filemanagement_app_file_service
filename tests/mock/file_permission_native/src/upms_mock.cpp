@@ -12,28 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef FILE_PERMISSION_TEST_H
-#define FILE_PERMISSION_TEST_H
-
-#include <gtest/gtest.h>
-
-#include "sandbox_mock.h"
+#ifdef SANDBOX_MANAGER
 #include "upms_mock.h"
 
 namespace OHOS {
-namespace AppFileService {
-using namespace std;
-class FilePermissionTest : public testing::Test {
-public:
-    static void SetUpTestCase();
-    static void TearDownTestCase();
-    void SetUp() {};
-    void TearDown() {};
-#ifdef SANDBOX_MANAGER
-    static inline shared_ptr<SandboxMock> sandboxMock_ = nullptr;
-    static inline shared_ptr<UpmsMock> upmsMock_ = nullptr;
-#endif
-};
-} // namespace AppFileService
+using namespace AppFileService;
+using namespace OHOS::AAFwk;
+using namespace OHOS::AccessControl::SandboxManager;
+UriPermissionManagerClient &UriPermissionManagerClient::GetInstance()
+{
+    static UriPermissionManagerClient instance;
+    return instance;
+}
+int32_t UriPermissionManagerClient::Active(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result)
+{
+    if (UpmsManagerKitMock::upmsManagerKitMock == nullptr) {
+        return -1;
+    }
+    return UpmsManagerKitMock::upmsManagerKitMock->Active(policy, result);
+}
+
 } // namespace OHOS
-#endif // FILE_PERMISSION_TEST_H
+#endif
