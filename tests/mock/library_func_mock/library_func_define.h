@@ -28,5 +28,14 @@
 #define chmod Chmod
 #define utime Utime
 #define stat(pathname, statbuf) Stat(pathname, statbuf)
+#define ferror Ferror
+#define fflush Fflush
+#define remove Remove
+#define getpwuid Getpwuid
+#define getgrgid Getgrgid
+#define open Open
+#define read Read
+#define write Write
+#define close Close
 
 #endif // FILEMANAGEMENT_APP_FILE_SERVICE_LIBRARY_FUNC_DEFINE_H

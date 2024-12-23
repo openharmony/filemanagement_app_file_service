@@ -51,7 +51,7 @@ char *Realpath(const char *path, char *resolved_path)
     return LibraryFunc::libraryFunc_->realpath(path, resolved_path);
 }
 
-FILE* Fopen(const char *pathname, const char *mode)
+FILE *Fopen(const char *pathname, const char *mode)
 {
     return LibraryFunc::libraryFunc_->fopen(pathname, mode);
 }
@@ -74,4 +74,49 @@ int Stat(const char *pathname, struct stat *statbuf)
 int Utime(const char *filename, const struct utimbuf *times)
 {
     return LibraryFunc::libraryFunc_->utime(filename, times);
+}
+
+int Ferror(FILE *f)
+{
+    return LibraryFunc::libraryFunc_->ferror(f);
+}
+
+int Fflush(FILE *f)
+{
+    return LibraryFunc::libraryFunc_->fflush(f);
+}
+
+int Remove(const char *path)
+{
+    return LibraryFunc::libraryFunc_->remove(path);
+}
+
+struct passwd *Getpwuid(uid_t uid)
+{
+    return LibraryFunc::libraryFunc_->getpwuid(uid);
+}
+
+struct group *Getgrgid(gid_t gid)
+{
+    return LibraryFunc::libraryFunc_->getgrgid(gid);
+}
+
+int Open(const char *filename, int flags, ...)
+{
+    return LibraryFunc::libraryFunc_->open(filename, flags);
+}
+
+ssize_t Read(int fd, void *buf, size_t count)
+{
+    return LibraryFunc::libraryFunc_->read(fd, buf, count);
+}
+
+ssize_t Write(int fd, const void *buf, size_t count)
+{
+    return LibraryFunc::libraryFunc_->write(fd, buf, count);
+}
+
+int Close(int fd)
+{
+    return LibraryFunc::libraryFunc_->close(fd);
 }

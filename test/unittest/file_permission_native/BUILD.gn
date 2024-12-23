@@ -34,7 +34,6 @@ ohos_unittest("file_permission_test") {
   sources = [
     "${app_file_service_path}/tests/mock/file_permission_native/src/sandbox_mock.cpp",
     "${app_file_service_path}/tests/mock/file_permission_native/src/upms_mock.cpp",
-    "${app_file_service_path}/tests/mock/library_func_mock/library_func_mock.cpp",
     "src/file_permission_test.cpp",
   ]
 
