@@ -817,8 +817,11 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
     work->data = reinterpret_cast<void *>(param.get());
     HILOGI("Will execute current js method");
     int ret = uv_queue_work(
-        loop, work.get(), [](uv_work_t *work) {},
+        loop, work.get(), [](uv_work_t *work) {
+            HILOGI("Enter, %{public}zu", (size_t)work);
+        },
         [](uv_work_t *work, int status) {
+            HILOGI("AsyncWork Enter, %{public}zu", (size_t)work);
             CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
             do {
                 if (param == nullptr) {
