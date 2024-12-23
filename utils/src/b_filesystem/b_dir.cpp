@@ -27,6 +27,7 @@
 #include <tuple>
 #include <vector>
 
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_filesystem/b_file_hash.h"
 #include "b_resources/b_constants.h"
@@ -500,8 +501,13 @@ vector<string> BDir::GetDirs(const vector<string_view> &paths)
 
 bool BDir::CheckFilePathInvalid(const std::string &filePath)
 {
-    if (filePath.find("../") != std::string::npos) {
-        return true;
+    size_t pos = filePath.find(BConstants::PATH_ABSOLUTE);
+    while (pos != string::npos) {
+        if (pos == 0 || filePath[pos - 1] == BConstants::FILE_SEPARATOR_CHAR) {
+            HILOGE("Relative path is not allowed, path = %{public}s", GetAnonyPath(filePath).c_str());
+            return true;
+        }
+        pos = filePath.find(BConstants::PATH_ABSOLUTE, pos + BConstants::PATH_ABSOLUTE.size());
     }
     return false;
 }
