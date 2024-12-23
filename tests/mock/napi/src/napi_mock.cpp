@@ -16,9 +16,9 @@
 #include "napi_mock.h"
 #include "uv.h"
 
-int uv_queue_work(uv_loop_t* loop, uv_work_t* req, uv_work_cb work_cb, uv_after_work_cb after_work_cb)
+napi_status napi_send_event(napi_env env, const std::function<void()> cb, napi_event_priority priority)
 {
-    return OHOS::FileManagement::Backup::Napi::napi->uv_queue_work(loop, req, work_cb, after_work_cb);
+    return OHOS::FileManagement::Backup::Napi::napi->napi_send_event(env, cb, priority);
 }
 
 napi_status napi_get_uv_event_loop(napi_env env, struct uv_loop_s** loop)
