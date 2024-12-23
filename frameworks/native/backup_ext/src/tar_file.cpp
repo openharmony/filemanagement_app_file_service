@@ -72,7 +72,7 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
 
     size_t index = 0;
     for (const auto &filePath : srcFiles) {
-        int err = 0;
+        int err = BError::E_PACKET;
         rootPath_ = filePath;
         if (!TraversalFile(rootPath_, err)) {
             HILOGE("ReportErr Failed to traversal file, file path is:%{public}s, err = %{public}d",
@@ -351,7 +351,7 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size, int &err)
         }
 
         // write buffer to tar file
-        if (SplitWriteAll(ioBuffer_, read) != read) {
+        if (SplitWriteAll(ioBuffer_, read, err) != read) {
             HILOGE("Failed to split write all");
             break;
         }
@@ -365,7 +365,7 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size, int &err)
     return false;
 }
 
-off_t TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, off_t read)
+off_t TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, off_t read, int &err)
 {
     off_t len = static_cast<off_t>(ioBuffer.size());
     if (len > read) {
@@ -378,6 +378,7 @@ off_t TarFile::SplitWriteAll(const vector<uint8_t> &ioBuffer, off_t read)
             // 再执行一遍
             writeBytes = fwrite(&ioBuffer[count], sizeof(uint8_t), len - count, currentTarFile_);
             if (writeBytes < 1) {
+                err = errno;
                 HILOGE("Failed to fwrite tar file, err = %{public}d", errno);
                 return count;
             }

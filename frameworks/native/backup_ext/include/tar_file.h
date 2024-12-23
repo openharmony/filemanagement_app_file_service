@@ -134,7 +134,7 @@ private:
      * @param ioBuffer 写入的文件信息
      * @param read 读取文件
      */
-    off_t SplitWriteAll(const std::vector<uint8_t> &ioBuffer, off_t read);
+    off_t SplitWriteAll(const std::vector<uint8_t> &ioBuffer, off_t read, int &err);
 
     /**
      * @brief creaat split tarfile
