@@ -815,4 +815,101 @@ void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>& bundlesT
         session_->SetIncrementalData(bundleInfo);
     }
 }
+
+void Service::CancelTask(std::string bundleName, wptr<Service> ptr)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    auto thisPtr = ptr.promote();
+    if (!thisPtr) {
+        HILOGE("this pointer is null");
+        return;
+    }
+    auto session = thisPtr->session_;
+    if (session == nullptr) {
+        HILOGE("Session is nullptr");
+        return;
+    }
+    HILOGI("Service CancelTask start, bundleName is %{public}s", bundleName.c_str());
+    std::shared_ptr<ExtensionMutexInfo> mutexPtr = thisPtr->GetExtensionMutex(bundleName);
+    if (mutexPtr == nullptr) {
+        HILOGE("Extension mutex ptr is nullptr");
+        return;
+    }
+    do {
+        std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
+        auto tempBackUpConnection = session->GetExtConnection(bundleName);
+        auto backUpConnection = tempBackUpConnection.promote();
+        if (backUpConnection == nullptr) {
+            HILOGE("Promote backUpConnection ptr is null.");
+            break;
+        }
+        auto proxy = backUpConnection->GetBackupExtProxy();
+        if (!proxy) {
+            HILOGE("Extension backup Proxy is empty.");
+            break;
+        }
+        proxy->HandleClear();
+        session->StopFwkTimer(bundleName);
+        session->StopExtTimer(bundleName);
+        backUpConnection->DisconnectBackupExtAbility();
+        thisPtr->ClearSessionAndSchedInfo(bundleName);
+        IServiceReverse::Scenario scenario = session->GetScenario();
+        if ((scenario == IServiceReverse::Scenario::BACKUP && session->GetIsIncrementalBackup()) ||
+            (scenario == IServiceReverse::Scenario::RESTORE &&
+            session->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND))) {
+            thisPtr->NotifyCallerCurAppIncrementDone(BError(BError::Codes::OK), bundleName);
+        } else {
+            thisPtr->NotifyCallerCurAppDone(BError(BError::Codes::OK), bundleName);
+        }
+    } while (0);
+    thisPtr->RemoveExtensionMutex(bundleName);
+    thisPtr->OnAllBundlesFinished(BError(BError::Codes::OK));
+}
+
+ErrCode Service::Cancel(std::string bundleName, int32_t &result)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("Begin, bundle name:%{public}s", bundleName.c_str());
+    try {
+        if (session_ == nullptr) {
+            HILOGE("Cancel error, session is null");
+            return BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK);
+        }
+        IServiceReverse::Scenario scenario = session_->GetScenario();
+        VerifyCaller(scenario);
+        auto impl = session_->GetImpl();
+        auto it = impl.backupExtNameMap.find(bundleName);
+        if (it == impl.backupExtNameMap.end()) {
+            result = BError::BackupErrorCode::E_CANCEL_NO_TASK;
+            return BError(BError::Codes::OK);
+        }
+        auto action = session_->GetServiceSchedAction(bundleName);
+        auto task = [this, bundleName]() {
+            try {
+                CancelTask(bundleName, wptr(this));
+            } catch (const BError &e) {
+                HILOGE("CancelTask failed, errCode = %{public}d", e.GetCode());
+            } catch (...) {
+                HILOGI("Unexpected exception");
+            }
+        };
+        if (action == BConstants::ServiceSchedAction::RUNNING) {
+            threadPool_.AddTask(task);
+            result = BError(BError::Codes::OK);
+            return BError(BError::Codes::OK);
+        }
+        if (action == BConstants::ServiceSchedAction::CLEAN) {
+            result = BError::BackupErrorCode::E_CANCEL_NO_TASK;
+        } else {
+            result = BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK;
+        }
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        HILOGE("Cancel failed, errCode = %{public}d", e.GetCode());
+        return e.GetCode();
+    } catch (...) {
+        HILOGI("Unexpected exception");
+        return EPERM;
+    }
+}
 } // namespace OHOS::FileManagement::Backup

@@ -493,12 +493,58 @@ napi_value SessionBackupNExporter::Release(napi_env env, napi_callback_info cbin
     return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
 }
 
+napi_value SessionBackupNExporter::Cancel(napi_env env, napi_callback_info info)
+{
+    HILOGI("Called SessionBackup::Cancel begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        HILOGE("Number of arguments unmatched.");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    NVal jsBundleStr(env, funcArg[NARG_POS::FIRST]);
+    auto [succStr, bundle, sizeStr] = jsBundleStr.ToUTF8String();
+    if (!succStr) {
+        HILOGE("First argument is not bundleName.");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    std::string bundleName = bundle.get();
+
+    auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
+    if (!(backupEntity && backupEntity->session)) {
+        HILOGE("Failed to get backupSession entity.");
+        return nullptr;
+    }
+
+    int result = backupEntity->session->Cancel(bundleName);
+    napi_value nResult;
+    napi_status status = napi_create_int32(env, result, &nResult);
+    if (status != napi_ok) {
+        HILOGE("napi_create_int32 faild.");
+        return nullptr;
+    }
+    HILOGI("Cancel success with result: %{public}d", result);
+    return nResult;
+}
+
 bool SessionBackupNExporter::Export()
 {
     HILOGD("called SessionBackupNExporter::Export begin");
     vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("appendBundles", AppendBundles),
         NVal::DeclareNapiFunction("release", Release),
+        NVal::DeclareNapiFunction("cancel", Cancel),
     };
 
     auto [succ, classValue] = NClass::DefineClass(exports_.env_, className, Constructor, std::move(props));

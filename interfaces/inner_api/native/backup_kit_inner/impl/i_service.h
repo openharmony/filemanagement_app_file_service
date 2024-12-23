@@ -69,6 +69,7 @@ public:
                                                       const std::vector<std::string> &bundleInfos) = 0;
     virtual ErrCode Finish() = 0;
     virtual ErrCode Release() = 0;
+    virtual ErrCode Cancel(std::string bundleName, int32_t &result) = 0;
     virtual UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) = 0;
     virtual ErrCode GetAppLocalListAndDoIncrementalBackup() = 0;
     virtual ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remotse) = 0;

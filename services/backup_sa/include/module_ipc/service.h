@@ -72,6 +72,7 @@ public:
                                               const std::vector<std::string> &bundleInfos) override;
     ErrCode Finish() override;
     ErrCode Release() override;
+    ErrCode Cancel(std::string bundleName, int32_t &result) override;
 
     UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) override;
     ErrCode GetAppLocalListAndDoIncrementalBackup() override;
@@ -563,6 +564,8 @@ private:
 
     void SetBundleIncDataInfo(const std::vector<BIncrementalData> &bundlesToBackup,
         std::vector<std::string> &supportBundleNames);
+    
+    void CancelTask(std::string bundleName, wptr<Service> ptr);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
