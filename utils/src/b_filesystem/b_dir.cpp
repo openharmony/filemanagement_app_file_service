@@ -38,6 +38,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 const int32_t PATH_MAX_LEN = 4096;
+const size_t TOP_ELE = 0;
 const std::string APP_DATA_DIR = BConstants::PATH_PUBLIC_HOME +
     BConstants::PATH_APP_DATA + BConstants::FILE_SEPARATOR_CHAR;
 
@@ -147,6 +148,25 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFiles
         smallFiles.insert(subSmallFiles.begin(), subSmallFiles.end());
     }
     return {ERR_OK, files, smallFiles};
+}
+
+static void PreDealExcludes(std::vector<std::string> &excludes)
+{
+    size_t lenEx = excludes.size();
+    int j = 0;
+    for (size_t i = 0; i < lenEx; ++i) {
+        if (!excludes[i].empty()) {
+            if (excludes[i].at(excludes[i].size() - 1) == BConstants::FILE_SEPARATOR_CHAR) {
+                excludes[i] += "*";
+            }
+            if (excludes[i].find(BConstants::FILE_SEPARATOR_CHAR) != string::npos &&
+                excludes[i].at(TOP_ELE) != BConstants::FILE_SEPARATOR_CHAR) {
+                excludes[i] = BConstants::FILE_SEPARATOR_CHAR + excludes[i];
+            }
+            excludes[j++] = excludes[i];
+        }
+    }
+    excludes.resize(j);
 }
 
 tuple<ErrCode, vector<string>> BDir::GetDirFiles(const string &path)
@@ -278,20 +298,14 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
             incSmallFiles.insert(smallFiles.begin(), smallFiles.end());
         }
     }
-
+    vector<string> endExcludes = excludes;
+    PreDealExcludes(endExcludes);
     auto isMatch = [](const vector<string> &s, const string &str) -> bool {
         if (str.empty()) {
             return false;
         }
         for (const string &item : s) {
-            if (item.empty()) {
-                continue;
-            }
-            string excludeItem = item;
-            if (excludeItem.at(item.size() - 1) == BConstants::FILE_SEPARATOR_CHAR) {
-                excludeItem += "*";
-            }
-            if (fnmatch(excludeItem.data(), str.data(), FNM_LEADING_DIR) == 0) {
+            if (fnmatch(item.data(), str.data(), FNM_LEADING_DIR) == 0) {
                 return true;
             }
         }
@@ -300,14 +314,14 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
 
     map<string, size_t> resSmallFiles;
     for (const auto &item : incSmallFiles) {
-        if (!isMatch(excludes, item.first)) {
+        if (!isMatch(endExcludes, item.first)) {
             resSmallFiles.insert(make_pair(item.first, item.second));
         }
     }
 
     map<string, struct stat> bigFiles;
     for (const auto &item : incFiles) {
-        if (!isMatch(excludes, item.first)) {
+        if (!isMatch(endExcludes, item.first)) {
             bigFiles[item.first] = item.second;
         }
     }
@@ -454,19 +468,14 @@ tuple<vector<string>, vector<string>> BDir::GetBackupList(const vector<string> &
         smallFiles.insert(smallFiles.end(), smallFile.begin(), smallFile.end());
     }
     HILOGI("end bigfiles = %{public}zu, smallfiles = %{public}zu", bigFiles.size(), smallFiles.size());
+    vector<string> endExcludes = excludes;
+    PreDealExcludes(endExcludes);
     auto isMatch = [](const vector<string> &s, const string &str) -> bool {
         if (str.empty()) {
             return false;
         }
         for (const string &item : s) {
-            if (item.empty()) {
-                continue;
-            }
-            string excludeItem = item;
-            if (excludeItem.at(item.size() - 1) == BConstants::FILE_SEPARATOR_CHAR) {
-                excludeItem += "*";
-            }
-            if (fnmatch(excludeItem.data(), str.data(), FNM_LEADING_DIR) == 0) {
+            if (fnmatch(item.data(), str.data(), FNM_LEADING_DIR) == 0) {
                 return true;
             }
         }
@@ -474,14 +483,14 @@ tuple<vector<string>, vector<string>> BDir::GetBackupList(const vector<string> &
     };
 
     for (auto item = bigFiles.begin(); item != bigFiles.end();) {
-        if (isMatch(excludes, *item)) {
+        if (isMatch(endExcludes, *item)) {
             item = bigFiles.erase(item);
         } else {
             ++item;
         }
     }
     for (auto item = smallFiles.begin(); item != smallFiles.end();) {
-        if (isMatch(excludes, *item)) {
+        if (isMatch(endExcludes, *item)) {
             item = smallFiles.erase(item);
         } else {
             ++item;
