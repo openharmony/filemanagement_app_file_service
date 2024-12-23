@@ -44,6 +44,12 @@ ErrCode Service::Release()
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::Cancel(std::string bundleName, int32_t &result)
+{
+    result = BError(BError::Codes::OK);
+    return BError(BError::Codes::OK);
+}
+
 UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData>&)
 {
     return UniqueFd(-1);

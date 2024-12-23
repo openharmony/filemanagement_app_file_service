@@ -49,6 +49,7 @@ private:
     int32_t CmdAppendBundlesDetailsBackupSession(MessageParcel &data, MessageParcel &reply);
     int32_t CmdFinish(MessageParcel &data, MessageParcel &reply);
     int32_t CmdRelease(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdCancel(MessageParcel &data, MessageParcel &reply);
     int32_t CmdGetLocalCapabilitiesIncremental(MessageParcel &data, MessageParcel &reply);
     int32_t CmdGetAppLocalListAndDoIncrementalBackup(MessageParcel &data, MessageParcel &reply);
     int32_t CmdInitIncrementalBackupSession(MessageParcel &data, MessageParcel &reply);

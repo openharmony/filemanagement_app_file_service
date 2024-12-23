@@ -353,4 +353,33 @@ bool ServiceProxy::WriteParcelableVector(const std::vector<T> &parcelableVector,
 
     return true;
 }
+
+ErrCode ServiceProxy::Cancel(std::string bundleName, int32_t &result)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (!Remote()) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Remote is nullptr").GetCode();
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+
+    if (!data.WriteString(bundleName)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the bundleName").GetCode();
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    int32_t ret = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_CANCEL_BUNDLE), data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    reply.ReadInt32(result);
+    HILOGI("ServiceProxy Cancel end, result:%{public}d", result);
+
+    return BError(BError::Codes::OK, "success");
+}
 } // namespace OHOS::FileManagement::Backup
