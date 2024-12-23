@@ -99,6 +99,31 @@ public:
         }
     }
 
+    void SetBackupVersion(const std::string &backupVersion)
+    {
+        if (obj_.isMember("backupVersion")) {
+            obj_["backupVersion"].clear();
+        }
+        obj_["backupVersion"] = backupVersion;
+    }
+
+    std::string GetBackupVersion()
+    {
+        if (!obj_) {
+            HILOGI("Failed to get field backupVersion");
+            return "";
+        }
+        if (!obj_.isMember("backupVersion")) {
+            HILOGI("Failed to get field backupVersion from early Version, returning the default value");
+            return "";
+        }
+        if (!obj_["backupVersion"].isString()) {
+            HILOGI("Failed to get field backupVersion");
+            return "";
+        }
+        return obj_["backupVersion"].asString();
+    }
+
     std::string GetSystemFullName()
     {
         if (!obj_ || !obj_.isMember("systemFullName") || !obj_["systemFullName"].isString()) {
