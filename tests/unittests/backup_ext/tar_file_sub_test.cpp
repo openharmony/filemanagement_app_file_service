@@ -79,21 +79,22 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_SplitWriteAll_0100, testing::ext::TestSize
 {
     GTEST_LOG_(INFO) << "TarFileSubTest-begin SUB_Tar_File_SplitWriteAll_0100";
     try {
+        int err = 0;
         vector<uint8_t> ioBuffer {0, 0, 0, 0, 0};
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(ioBuffer.size()));
-        auto ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 5);
+        auto ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 5, err);
         EXPECT_EQ(ret, ioBuffer.size());
 
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(ioBuffer.size()));
-        ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 5);
+        ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 5, err);
         EXPECT_EQ(ret, ioBuffer.size());
 
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
-        ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 5);
+        ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 5, err);
         EXPECT_EQ(ret, 0);
 
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(4));
-        ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 4);
+        ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 4, err);
         EXPECT_EQ(ret, 4);
     } catch (...) {
         EXPECT_TRUE(false);
