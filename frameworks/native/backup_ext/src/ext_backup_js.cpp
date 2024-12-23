@@ -864,30 +864,31 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
 
     work->data = reinterpret_cast<void *>(param.get());
     HILOGI("Will execute current js method");
-    int ret = uv_queue_work(
-        loop, work.get(), [](uv_work_t *work) {
-            HILOGI("Enter, %{public}zu", (size_t)work);
-        },
-        [](uv_work_t *work, int status) {
-            HILOGI("AsyncWork Enter, %{public}zu", (size_t)work);
-            CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
-            do {
-                if (param == nullptr) {
-                    HILOGE("failed to get CallJsParam.");
-                    break;
-                }
-                HILOGI("Start call current js method");
-                if (DoCallJsMethod(param) != ERR_OK) {
-                    HILOGE("failed to call DoCallJsMethod.");
-                }
-            } while (false);
-            HILOGI("will notify current thread info");
-            std::unique_lock<std::mutex> lock(param->backupOperateMutex);
-            param->isReady.store(true);
-            param->backupOperateCondition.notify_all();
-        });
-    if (ret != 0) {
-        HILOGE("failed to exec uv_queue_work.");
+    auto task = [work {work.get()}]() {
+        if (work == nullptr) {
+            HILOGE("failed to get work.");
+            return;
+        }
+        HILOGI("AsyncWork Enter, %{public}zu", (size_t)work);
+        CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+        do {
+            if (param == nullptr) {
+                HILOGE("failed to get CallJsParam.");
+                break;
+            }
+            HILOGI("Start call current js method");
+            if (DoCallJsMethod(param) != ERR_OK) {
+                HILOGE("failed to call DoCallJsMethod.");
+            }
+        } while (false);
+        HILOGI("will notify current thread info");
+        std::unique_lock<std::mutex> lock(param->backupOperateMutex);
+        param->isReady.store(true);
+        param->backupOperateCondition.notify_all();
+    };
+    auto ret = napi_send_event(jsRuntime.GetNapiEnv(), task, napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        HILOGE("failed to napi_send_event, ret:%{public}d.", ret);
         return EINVAL;
     }
     HILOGI("Wait execute current js method");
