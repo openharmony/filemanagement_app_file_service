@@ -67,6 +67,7 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
   ]
