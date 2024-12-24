@@ -167,4 +167,21 @@ void BIncrementalSessionRestoreAsync::RegisterBackupServiceDied(std::function<vo
     deathRecipient_ = sptr(new SvcDeathRecipient(callback));
     remoteObj->AddDeathRecipient(deathRecipient_);
 }
+
+ErrCode BIncrementalSessionRestoreAsync::Cancel(std::string bundleName)
+{
+    ErrCode result = BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK;
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Called Cancel, failed to get proxy.");
+        return result;
+    }
+
+    ErrCode errCode = proxy->Cancel(bundleName, result);
+    if (errCode != 0) {
+        HILOGE("proxy->Cancel failed, errCode:%{public}d.", errCode);
+        return result;
+    }
+    return result;
+}
 } // namespace OHOS::FileManagement::Backup
