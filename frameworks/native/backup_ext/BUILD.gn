@@ -74,6 +74,7 @@ ohos_shared_library("backup_extension_ability_native") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "ipc:ipc_napi",
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
