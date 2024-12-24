@@ -110,6 +110,14 @@ public:
      */
     ErrCode Release();
 
+    /**
+     * @brief 用于结束应用的备份恢复任务
+     *
+     * @param bundleName 要取消的应用包名
+     * @return ErrCode 规范错误码
+     */
+    ErrCode Cancel(std::string bundleName);
+
 public:
     explicit BSessionRestoreAsync(Callbacks callbacks) : callbacks_(callbacks) {};
     ~BSessionRestoreAsync();
