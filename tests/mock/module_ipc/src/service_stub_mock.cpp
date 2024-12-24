@@ -117,6 +117,11 @@ int32_t ServiceStub::CmdRelease(MessageParcel &data, MessageParcel &reply)
     return BServiceStub::stub->CmdRelease(data, reply);
 }
 
+int32_t ServiceStub::CmdCancel(MessageParcel &data, MessageParcel &reply)
+{
+    return BServiceStub::stub->CmdCancel(data, reply);
+}
+
 int32_t ServiceStub::CmdGetLocalCapabilitiesIncremental(MessageParcel &data, MessageParcel &reply)
 {
     return BServiceStub::stub->CmdGetLocalCapabilitiesIncremental(data, reply);

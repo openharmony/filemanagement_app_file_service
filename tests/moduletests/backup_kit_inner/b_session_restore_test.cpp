@@ -479,4 +479,38 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_1000, testing::ext::T
     }
     GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_1000";
 }
+
+/**
+ * @tc.number: SUB_backup_b_session_restore_1100
+ * @tc.name: SUB_backup_b_session_restore_1100
+ * @tc.desc: 测试Cancel接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_1100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_1100";
+    try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_1100 restorePtr_ == nullptr";
+        return;
+        }
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        BundleName bundleName;
+        SetMockGetInstance(false);
+        auto ret = restorePtr_->Cancel(bundleName);
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
+
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        SetMockGetInstance(true);
+        ret = restorePtr_->Cancel(bundleName);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionRestoreTest-an exception occurred by Cancel.";
+    }
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_1100";
+}
 } // namespace OHOS::FileManagement::Backup
