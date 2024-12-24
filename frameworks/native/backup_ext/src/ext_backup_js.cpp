@@ -256,7 +256,10 @@ static bool CallCatchPromise(AbilityRuntime::JsRuntime &jsRuntime, napi_value re
         return false;
     }
     napi_value argv[1] = {ret};
-    napi_call_function(env, result, method, 1, argv, nullptr);
+    if (napi_call_function(env, result, method, 1, argv, nullptr) != napi_ok) {
+        HILOGE("napi call function failed");
+        return false;
+    }
     return true;
 }
 
@@ -285,7 +288,10 @@ static bool CallPromise(AbilityRuntime::JsRuntime &jsRuntime, napi_value result,
         return false;
     }
     napi_value argv[1] = {ret};
-    napi_call_function(env, result, method, 1, argv, nullptr);
+    if (napi_call_function(env, result, method, 1, argv, nullptr) != napi_ok) {
+        HILOGE("napi call function failed");
+        return false;
+    }
     if (!CallCatchPromise(jsRuntime, result, callbackInfo)) {
         HILOGE("CallCatchPromise failed.");
         return false;
@@ -319,7 +325,10 @@ static bool CallCatchPromiseEx(AbilityRuntime::JsRuntime &jsRuntime, napi_value 
         return false;
     }
     napi_value argv[1] = {ret};
-    napi_call_function(env, result, method, 1, argv, nullptr);
+    if (napi_call_function(env, result, method, 1, argv, nullptr) != napi_ok) {
+        HILOGE("napi call function failed");
+        return false;
+    }
     return true;
 }
 
@@ -348,7 +357,10 @@ static bool CallPromiseEx(AbilityRuntime::JsRuntime &jsRuntime, napi_value resul
         return false;
     }
     napi_value argv[1] = {ret};
-    napi_call_function(env, result, method, 1, argv, nullptr);
+    if (napi_call_function(env, result, method, 1, argv, nullptr) != napi_ok) {
+        HILOGE("napi call function failed");
+        return false;
+    }
     if (!CallCatchPromiseEx(jsRuntime, result, callbackInfoEx)) {
         HILOGE("CallCatchPromiseEx failed.");
         return false;
@@ -382,7 +394,10 @@ static bool CallPromiseEx(AbilityRuntime::JsRuntime &jsRuntime, napi_value resul
         return false;
     }
     napi_value argv[1] = {ret};
-    napi_call_function(env, result, method, 1, argv, nullptr);
+    if (napi_call_function(env, result, method, 1, argv, nullptr) != napi_ok) {
+        HILOGE("napi call function failed");
+        return false;
+    }
     return true;
 }
 
@@ -802,7 +817,9 @@ static int InvokeJsMethod(CallJsParam *param, AbilityRuntime::HandleEscape& hand
     }
     napi_value result;
     HILOGI("Extension start do call current js method, methodName:%{public}s", param->funcName.c_str());
-    napi_call_function(env, value, method, argv.size(), argv.data(), &result);
+    if (napi_call_function(env, value, method, argv.size(), argv.data(), &result) != napi_ok) {
+        HILOGE("napi call function failed");
+    }
     if (!param->retParser(env, handleEscape.Escape(result))) {
         HILOGE("Parser js result fail.");
         return EINVAL;
