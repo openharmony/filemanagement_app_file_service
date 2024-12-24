@@ -37,6 +37,7 @@ public:
     virtual int32_t CmdAppendBundlesDetailsBackupSession(MessageParcel&, MessageParcel&) = 0;
     virtual int32_t CmdFinish(MessageParcel&, MessageParcel&) = 0;
     virtual int32_t CmdRelease(MessageParcel&, MessageParcel&) = 0;
+    virtual int32_t CmdCancel(MessageParcel&, MessageParcel&) = 0;
     virtual int32_t CmdGetLocalCapabilitiesIncremental(MessageParcel&, MessageParcel&) = 0;
     virtual int32_t CmdGetAppLocalListAndDoIncrementalBackup(MessageParcel&, MessageParcel&) = 0;
     virtual int32_t CmdInitIncrementalBackupSession(MessageParcel&, MessageParcel&) = 0;

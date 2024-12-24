@@ -713,6 +713,50 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Release_0100, testing::ext::
 }
 
 /**
+ * @tc.number: SUB_backup_sa_ServiceStub_Cancel_0100
+ * @tc.name: SUB_backup_sa_ServiceStub_Cancel_0100
+ * @tc.desc: Test function of Cancel interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6URNZ
+ */
+HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Cancel_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceStubTest-begin SUB_backup_sa_ServiceStub_Cancel_0100";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        EXPECT_TRUE(service != nullptr);
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(false));
+        auto err = service->CmdCancel(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, Cancel(_, _)).WillOnce(Return(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        err = service->CmdCancel(data, reply);
+        EXPECT_EQ(err, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, Cancel(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
+        err = service->CmdCancel(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
+
+        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*service, Cancel(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
+        err = service->CmdCancel(data, reply);
+        EXPECT_EQ(err, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceStubTest-an exception occurred by Cancel.";
+    }
+    GTEST_LOG_(INFO) << "ServiceStubTest-end SUB_backup_sa_ServiceStub_Cancel_0100";
+}
+
+/**
  * @tc.number: SUB_backup_sa_ServiceStub_GetBackupInfo_0100
  * @tc.name: SUB_backup_sa_ServiceStub_GetBackupInfo_0100
  * @tc.desc: Test function of GetBackupInfo interface for SUCCESS.

@@ -85,6 +85,8 @@ void ServiceStub::ServiceStubSupplement()
         &ServiceStub::CmdUpdateSendRate;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_REPORT_APP_PROCESS_INFO)] =
         &ServiceStub::CmdReportAppProcessInfo;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_CANCEL_BUNDLE)] =
+        &ServiceStub::CmdCancel;
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -274,6 +276,19 @@ int32_t ServiceStub::CmdRelease(MessageParcel &data, MessageParcel &reply)
     int res = Release();
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdCancel(MessageParcel &data, MessageParcel &reply)
+{
+    int ret = ERR_OK;
+    string bundleName;
+    if (!data.ReadString(bundleName)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleName");
+    }
+    int result = BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK;
+    ret = Cancel(bundleName, result);
+    reply.WriteInt32(result);
+    return ret;
 }
 
 int32_t ServiceStub::CmdGetLocalCapabilitiesIncremental(MessageParcel &data, MessageParcel &reply)

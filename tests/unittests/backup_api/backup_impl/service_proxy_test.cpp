@@ -1326,4 +1326,33 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_StartFwkTimer_0100, testing::ext::T
     EXPECT_NE(ret, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_StartFwkTimer_0100";
 }
+
+/**
+ * @tc.number: SUB_Service_proxy_Cancel_0100
+ * @tc.name: SUB_Service_proxy_Cancel_0100
+ * @tc.desc: 测试 Cancel 调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_Cancel_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_Cancel_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_Cancel_0100 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+    std::string bundleName;
+    int result;
+    ErrCode ret = proxy_->Cancel(bundleName, result);
+    EXPECT_EQ(ret, BError(BError::Codes::OK));
+    ret = proxy_->Cancel(bundleName, result);
+    EXPECT_NE(ret, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_Cancel_0100";
+}
 } // namespace OHOS::FileManagement::Backup
