@@ -90,6 +90,8 @@ public:
     virtual void SetPublishFlag(const std::string &bundleName) = 0;
     virtual void SetImplRestoreType(const RestoreTypeEnum restoreType) = 0;
     virtual void SetIsReadyLaunch(const std::string &bundleName) = 0;
+    virtual void SetOldBackupVersion(const std::string &backupVersion) = 0;
+    virtual std::string GetOldBackupVersion() = 0;
 public:
     static inline std::shared_ptr<BackupSvcSessionManager> session = nullptr;
 };
@@ -159,6 +161,8 @@ public:
     MOCK_METHOD(void, SetPublishFlag, (const std::string &));
     MOCK_METHOD(void, SetImplRestoreType, (const RestoreTypeEnum restoreType));
     MOCK_METHOD(void, SetIsReadyLaunch, (const std::string &));
+    MOCK_METHOD(void, SetOldBackupVersion, (const std::string &));
+    MOCK_METHOD(std::string, GetOldBackupVersion, ());
 };
 
 } // namespace OHOS::FileManagement::Backup

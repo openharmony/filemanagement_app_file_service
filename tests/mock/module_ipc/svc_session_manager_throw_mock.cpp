@@ -325,4 +325,11 @@ void SvcSessionManager::SetPublishFlag(const std::string &bundleName) {}
 void SvcSessionManager::SetImplRestoreType(const RestoreTypeEnum restoreType) {}
 
 void SvcSessionManager::SetIsReadyLaunch(const std::string &bundleName) {}
+
+void SvcSessionManager::SetOldBackupVersion(const std::string &backupVersion) {}
+
+std::string SvcSessionManager::GetOldBackupVersion()
+{
+    return BackupSvcSessionManager::session->GetOldBackupVersion();
+}
 } // namespace OHOS::FileManagement::Backup

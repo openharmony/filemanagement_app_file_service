@@ -441,4 +441,23 @@ bool BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
     free(jsonStr);
     return true;
 }
+
+std::string BJsonUtil::ParseBackupVersion()
+{
+    std::string backupVersion;
+    cJSON *root = cJSON_Parse(BConstants::BACKUP_VERSION.c_str());
+    if (root == nullptr) {
+        HILOGE("Parse json error,root is null");
+        return "";
+    }
+    cJSON *value = cJSON_GetObjectItem(root, "backupVersion");
+    if (value == nullptr || !cJSON_IsString(value) || (value->valuestring == nullptr)) {
+        HILOGE("Parse json backupVersion element error");
+        cJSON_Delete(root);
+        return "";
+    }
+    backupVersion = value->valuestring;
+    cJSON_Delete(root);
+    return backupVersion;
+}
 }

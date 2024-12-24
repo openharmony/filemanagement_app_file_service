@@ -225,10 +225,11 @@ std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bu
 }
 
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo>&, std::vector<std::string>&,
-    RestoreTypeEnum) {}
+    RestoreTypeEnum, std::string &) {}
 
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo>&, std::vector<std::string>&,
-    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>>&, std::map<std::string, bool>&, RestoreTypeEnum) {}
+    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>>&, std::map<std::string, bool>&,
+    RestoreTypeEnum, std::string &) {}
 
 void Service::SetCurrentSessProperties(BJsonEntityCaps::BundleInfo&, std::map<std::string, bool>&,
     const std::string&) {}

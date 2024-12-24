@@ -160,6 +160,14 @@ public:
      *
      */
     static bool HasUnicastInfo(std::string &bundleInfo);
+
+    /**
+     * @brief 解析备份框架版本号字段
+     *
+     * @return 备份恢复框架版本号
+     *
+     */
+    static std::string ParseBackupVersion();
 };
 } // namespace OHOS::FileManagement::Backup
 
