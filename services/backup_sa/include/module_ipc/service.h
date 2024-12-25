@@ -325,21 +325,21 @@ private:
      * @brief 验证调用者
      *
      */
-    void VerifyCaller();
+    ErrCode VerifyCaller();
 
     /**
      * @brief 验证调用者
      *
      * @param scenario Scenario状态
      */
-    void VerifyCaller(IServiceReverse::Scenario scenario);
+    ErrCode VerifyCaller(IServiceReverse::Scenario scenario);
 
     /**
      * @brief 验证调用者并返回名称
      *
-     * @return std::string
+     * @return ErrCode
      */
-    std::string VerifyCallerAndGetCallerName();
+    ErrCode VerifyCallerAndGetCallerName(std::string &bundleName);
 
     /**
      * @brief 清除Session Sched相关资源
@@ -554,7 +554,7 @@ private:
 
     void ClearFailedBundles();
     void CreateDirIfNotExist(const std::string &path);
-    
+
     void GetOldDeviceBackupVersion();
 
     std::vector<std::string> GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
@@ -568,8 +568,12 @@ private:
 
     void SetBundleIncDataInfo(const std::vector<BIncrementalData> &bundlesToBackup,
         std::vector<std::string> &supportBundleNames);
-    
+
     void CancelTask(std::string bundleName, wptr<Service> ptr);
+
+    void SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId);
+
+    ErrCode VerifySendRateParam();
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
