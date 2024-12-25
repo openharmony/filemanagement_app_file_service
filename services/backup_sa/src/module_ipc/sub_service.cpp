@@ -431,4 +431,73 @@ void Service::GetOldDeviceBackupVersion()
     }
     HILOGI("backupVersion of old device = %{public}s", oldBackupVersion.c_str());
 }
+
+bool Service::HandleCurBundleFileReady(const std::string &bundleName, const std::string &fileName, bool isIncBackup)
+{
+    if (session_->OnBundleFileReady(bundleName, fileName)) {
+        auto backUpConnection = session_->GetExtConnection(bundleName);
+        if (backUpConnection == nullptr) {
+            HILOGE("AppFileReady error, backUpConnection is empty, bundleName:%{public}s", bundleName.c_str());
+            return false;
+        }
+        auto proxy = backUpConnection->GetBackupExtProxy();
+        if (!proxy) {
+            HILOGE("AppFileReady error, Extension backup Proxy is empty, bundleName:%{public}s", bundleName.c_str());
+            return false;
+        }
+        // 通知extension清空缓存
+        proxy->HandleClear();
+        // 清除Timer
+        session_->StopFwkTimer(bundleName);
+        session_->StopExtTimer(bundleName);
+        // 通知TOOL 备份完成
+        if (isIncBackup) {
+            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK),
+                bundleName);
+        } else {
+            session_->GetServiceReverseProxy()->BackupOnBundleFinished(BError(BError::Codes::OK), bundleName);
+        }
+        BundleEndRadarReport(bundleName, BError(BError::Codes::OK), session_->GetScenario());
+        // 断开extension
+        backUpConnection->DisconnectBackupExtAbility();
+        ClearSessionAndSchedInfo(bundleName);
+        return true;
+    }
+    return false;
+}
+
+bool Service::HandleCurAppDone(ErrCode errCode, const std::string &bundleName, bool isIncBackup)
+{
+    bool fileReadySucc = session_->OnBundleFileReady(bundleName);
+    if (fileReadySucc || errCode != BError(BError::Codes::OK)) {
+        std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(bundleName);
+        if (mutexPtr == nullptr) {
+            HILOGE("extension mutex ptr is nullptr, bundleName:%{public}s", bundleName.c_str());
+            return false;
+        }
+        std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
+        auto backUpConnection = session_->GetExtConnection(bundleName);
+        if (backUpConnection == nullptr) {
+            HILOGE("App finish error, backUpConnection is empty, bundleName:%{public}s", bundleName.c_str());
+            return false;
+        }
+        auto proxy = backUpConnection->GetBackupExtProxy();
+        if (!proxy) {
+            HILOGE("App finish error, Extension backup Proxy is empty, bundleName:%{public}s", bundleName.c_str());
+            return false;
+        }
+        proxy->HandleClear();
+        session_->StopFwkTimer(bundleName);
+        session_->StopExtTimer(bundleName);
+        backUpConnection->DisconnectBackupExtAbility();
+        ClearSessionAndSchedInfo(bundleName);
+        if (isIncBackup) {
+            NotifyCallerCurAppIncrementDone(errCode, bundleName);
+        } else {
+            NotifyCallerCurAppDone(errCode, bundleName);
+        }
+        return true;
+    }
+    return false;
+}
 }

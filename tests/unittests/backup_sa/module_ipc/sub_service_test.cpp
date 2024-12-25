@@ -31,6 +31,10 @@ HWTEST_F(ServiceTest, SUB_Service_HandleCurGroupBackupInfos_0000, TestSize.Level
         map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
         map<string, bool> isClearDataFlags;
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, BackupOnBundleStarted(_, _)).WillOnce(Return());
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false));
         service->HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
         EXPECT_TRUE(true);

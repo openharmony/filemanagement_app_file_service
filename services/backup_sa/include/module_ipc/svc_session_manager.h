@@ -560,7 +560,7 @@ private:
      * @param bundleName 应用名称
      * @return std::map<BundleName, BackupExtInfo>::iterator
      */
-    std::map<BundleName, BackupExtInfo>::iterator GetBackupExtNameMap(const std::string &bundleName);
+    std::tuple<bool, std::map<BundleName, BackupExtInfo>::iterator> GetBackupExtNameMap(const std::string &bundleName);
 
     /**
      * @brief 计算出应用程序处理数据可能使用的时间

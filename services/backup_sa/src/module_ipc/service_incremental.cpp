@@ -600,32 +600,15 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
             HILOGE("AppIncrementalDone error, session is null");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        string callerName = VerifyCallerAndGetCallerName();
+        string callerName = "";
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        if (ret != ERR_OK) {
+            HILOGE("App incremental done fail, ret:%{public}d", ret);
+            return ret;
+        }
         HILOGI("Service AppIncrementalDone start, callerName is %{public}s, errCode is: %{public}d",
             callerName.c_str(), errCode);
-        if (session_->OnBundleFileReady(callerName) || errCode != BError(BError::Codes::OK)) {
-            std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
-            if (mutexPtr == nullptr) {
-                HILOGE("extension mutex ptr is nullptr");
-                return BError(BError::Codes::SA_INVAL_ARG, "Extension mutex ptr is null.");
-            }
-            std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
-            auto tempBackUpConnection = session_->GetExtConnection(callerName);
-            auto backUpConnection = tempBackUpConnection.promote();
-            if (backUpConnection == nullptr) {
-                return BError(BError::Codes::SA_INVAL_ARG, "Promote backUpConnection ptr is null.");
-            }
-            auto proxy = backUpConnection->GetBackupExtProxy();
-            if (!proxy) {
-                return BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
-            }
-            proxy->HandleClear();
-            session_->StopFwkTimer(callerName);
-            session_->StopExtTimer(callerName);
-            backUpConnection->DisconnectBackupExtAbility();
-            ClearSessionAndSchedInfo(callerName);
-            NotifyCallerCurAppIncrementDone(errCode, callerName);
-        }
+        HandleCurAppDone(errCode, callerName, true);
         RemoveExtensionMutex(callerName);
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);

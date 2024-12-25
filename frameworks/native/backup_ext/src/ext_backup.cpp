@@ -238,6 +238,10 @@ void ExtBackup::OnDisconnect(const AAFwk::Want &want)
 
 bool ExtBackup::WasFromSpecialVersion(void)
 {
+    if (appVersionStr_.empty()) {
+        HILOGE("App version name is empty");
+        return false;
+    }
     std::string appVersionFlag_ =
         appVersionStr_.substr(0, appVersionStr_.find_first_of(BConstants::VERSION_NAME_SEPARATOR_CHAR));
     if (appVersionFlag_ == BConstants::DEFAULT_VERSION_NAME) {
@@ -248,6 +252,10 @@ bool ExtBackup::WasFromSpecialVersion(void)
 
 bool ExtBackup::SpecialVersionForCloneAndCloud(void)
 {
+    if (appVersionStr_.empty()) {
+        HILOGE("App version name is empty");
+        return false;
+    }
     std::string appVersionFlag_ =
         appVersionStr_.substr(0, appVersionStr_.find_first_of(BConstants::VERSION_NAME_SEPARATOR_CHAR));
     auto iter =

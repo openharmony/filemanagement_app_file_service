@@ -1105,28 +1105,51 @@ void Service::ExtStart(const string &bundleName)
         if (IncrementalBackup(bundleName)) {
             return;
         }
-        IServiceReverse::Scenario scenario = session_->GetScenario();
-        auto backUpConnection = session_->GetExtConnection(bundleName);
-        if (backUpConnection == nullptr) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "ExtStart bundle task error, backUpConnection is empty");
-        }
-        auto proxy = backUpConnection->GetBackupExtProxy();
-        if (!proxy) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "ExtStart bundle task error, Extension backup Proxy is empty");
-        }
+        StartCurBundleBackupOrRestore(bundleName);
+    } catch (...) {
+        HILOGI("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+        ClearSessionAndSchedInfo(bundleName);
+        NoticeClientFinish(bundleName, BError(BError::Codes::SA_INVAL_ARG));
+    }
+}
+
+void Service::StartCurBundleBackupOrRestore(const std::string &bundleName)
+{
+    HILOGI("Begin handle current bundle full backup or full restore, bundleName:%{public}s", bundleName.c_str());
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    auto backUpConnection = session_->GetExtConnection(bundleName);
+    if (backUpConnection == nullptr) {
+        HILOGE("Error, backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
         if (scenario == IServiceReverse::Scenario::BACKUP) {
-            auto ret = proxy->HandleBackup(session_->GetClearDataFlag(bundleName));
-            session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
-            BundleBeginRadarReport(bundleName, ret, scenario);
-            if (ret) {
-                ClearSessionAndSchedInfo(bundleName);
-                NoticeClientFinish(bundleName, BError(BError::Codes::SA_INVAL_ARG));
-            }
-            return;
+            session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
+                bundleName);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+            session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
+                bundleName);
         }
-        if (scenario != IServiceReverse::Scenario::RESTORE) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Failed to scenario");
+        return;
+    }
+    auto proxy = backUpConnection->GetBackupExtProxy();
+    if (proxy == nullptr) {
+        HILOGE("Error, Extension backup Proxy is empty, bundle:%{public}s", bundleName.c_str());
+        if (scenario == IServiceReverse::Scenario::BACKUP) {
+            session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
+                bundleName);
+        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+            session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
+                bundleName);
         }
+        return;
+    }
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        auto ret = proxy->HandleBackup(session_->GetClearDataFlag(bundleName));
+        session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
+        BundleBeginRadarReport(bundleName, ret, scenario);
+        if (ret) {
+            ClearSessionAndSchedInfo(bundleName);
+            NoticeClientFinish(bundleName, BError(BError::Codes::SA_INVAL_ARG));
+        }
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
         auto ret = proxy->HandleRestore(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
         GetOldDeviceBackupVersion();
@@ -1138,11 +1161,8 @@ void Service::ExtStart(const string &bundleName)
             session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd), errCode);
             FileReadyRadarReport(bundleName, fileName, errCode, scenario);
         }
-    } catch (...) {
-        HILOGI("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
-        ClearSessionAndSchedInfo(bundleName);
-        NoticeClientFinish(bundleName, BError(BError::Codes::SA_INVAL_ARG));
     }
+    HILOGI("End handle current bundle full backup or full restore, bundleName:%{public}s", bundleName.c_str());
 }
 
 int Service::Dump(int fd, const vector<u16string> &args)
@@ -1260,6 +1280,12 @@ void Service::ExtConnectDone(string bundleName)
         HILOGE("begin %{public}s", bundleName.data());
 
         BConstants::ServiceSchedAction curSchedAction = session_->GetServiceSchedAction(bundleName);
+        if (curSchedAction == BConstants::ServiceSchedAction::UNKNOWN) {
+            HILOGE("Can not find bundle from this session, bundleName:%{public}s", bundleName.c_str());
+            ClearSessionAndSchedInfo(bundleName);
+            NoticeClientFinish(bundleName, BError(BError::Codes::SA_REFUSED_ACT));
+            return;
+        }
         if (curSchedAction == BConstants::ServiceSchedAction::CLEAN) {
             sched_->Sched(bundleName);
             return;

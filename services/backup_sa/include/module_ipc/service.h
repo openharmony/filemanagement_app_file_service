@@ -570,6 +570,9 @@ private:
         std::vector<std::string> &supportBundleNames);
     
     void CancelTask(std::string bundleName, wptr<Service> ptr);
+    bool HandleCurBundleFileReady(const std::string &bundleName, const std::string &fileName, bool isIncBackup);
+    bool HandleCurAppDone(ErrCode errCode, const std::string &bundleName, bool isIncBackup);
+    void StartCurBundleBackupOrRestore(const std::string &bundleName);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
