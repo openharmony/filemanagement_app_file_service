@@ -51,6 +51,7 @@ public:
     virtual ErrCode InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg) = 0;
     virtual ErrCode Start() = 0;
     virtual UniqueFd GetLocalCapabilities() = 0;
+    virtual UniqueFd GetLocalCapabilitiesForBundleInfos() = 0;
     virtual ErrCode PublishFile(const BFileInfo &fileInfo) = 0;
     virtual ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode) = 0;
     virtual ErrCode AppDone(ErrCode errCode) = 0;

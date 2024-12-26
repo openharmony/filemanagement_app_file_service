@@ -58,6 +58,13 @@ public:
     static std::unique_ptr<BSessionRestore> Init(Callbacks callbacks, std::string &errMsg, ErrCode &errCode);
 
     /**
+     * @brief 获取支持备份的应用信息
+     *
+     * @return ErrCode 规范错误码
+     */
+    UniqueFd GetLocalCapabilities();
+
+    /**
      * @brief 通知备份服务文件内容已就绪
      *
      * @param fileInfo 文件描述信息

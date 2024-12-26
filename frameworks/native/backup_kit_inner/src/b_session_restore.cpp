@@ -69,6 +69,22 @@ unique_ptr<BSessionRestore> BSessionRestore::Init(Callbacks callbacks)
     return nullptr;
 }
 
+UniqueFd BSessionRestore::GetLocalCapabilities()
+{
+    HILOGI("GetLocalCapabilities begin");
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return UniqueFd(-EPERM);
+    }
+    UniqueFd fd = proxy->GetLocalCapabilitiesForBundleInfos();
+    if (fd < 0) {
+        HILOGE("Failed to get local capabilities for bundleinfos");
+        return UniqueFd(-EPERM);
+    }
+    return fd;
+}
+
 ErrCode BSessionRestore::PublishFile(BFileInfo fileInfo)
 {
     auto proxy = ServiceProxy::GetInstance();

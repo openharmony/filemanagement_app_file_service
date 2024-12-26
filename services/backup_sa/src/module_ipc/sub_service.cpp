@@ -623,6 +623,7 @@ ErrCode Service::HandleCurAppDone(ErrCode errCode, const std::string &bundleName
     }
     return BError(BError::Codes::OK);
 }
+
 std::string Service::GetCallerName()
 {
     std::string callerName;
@@ -721,5 +722,54 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, std::string &er
     HILOGE("Active backup session error");
     StopAll(nullptr, true);
     return ret;
+}
+
+UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
+{
+    try {
+        HILOGI("start GetLocalCapabilitiesForBundleInfos");
+        if (session_ == nullptr) {
+            HILOGE("GetLocalCapabilitiesForBundleInfos failed, session is nullptr");
+            return UniqueFd(-EPERM);
+        }
+        ErrCode ret = VerifyCaller();
+        if (ret != ERR_OK) {
+            HILOGE("GetLocalCapabilitiesForBundleInfos failed, verify caller failed");
+            return UniqueFd(-EPERM);
+        }
+        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
+        BExcepUltils::VerifyPath(path, false);
+        CreateDirIfNotExist(path);
+        UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
+        if (fd < 0) {
+            HILOGE("Failed to open config file = %{private}s, err = %{public}d", path.c_str(), errno);
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return UniqueFd(-EPERM);
+        }
+        BJsonCachedEntity<BJsonEntityCaps> cachedEntity(std::move(fd));
+        auto cache = cachedEntity.Structuralize();
+        cache.SetSystemFullName(GetOSFullName());
+        cache.SetDeviceType(GetDeviceType());
+        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForLocalCapabilities(GetUserIdDefault());
+        if (bundleInfos.size() == 0) {
+            HILOGE("getBundleInfos failed, size = 0");
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return UniqueFd(-EPERM);
+        }
+        cache.SetBundleInfos(bundleInfos);
+        cachedEntity.Persist();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        HILOGI("End");
+        return move(cachedEntity.GetFd());
+    } catch (const BError &e) {
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        HILOGE("GetLocalCapabilitiesForBundleInfos failed, errCode = %{public}d", e.GetCode());
+        return UniqueFd(-e.GetCode());
+    } catch (...) {
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        HILOGI("Unexpected exception");
+        return UniqueFd(-EPERM);
+    }
 }
 }

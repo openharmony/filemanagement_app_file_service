@@ -277,4 +277,9 @@ void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t sys
 {
     return;
 }
+
+UniqueFd ServiceProxy::GetLocalCapabilitiesForBundleInfos()
+{
+    return UniqueFd(-1);
+}
 } // namespace OHOS::FileManagement::Backup
