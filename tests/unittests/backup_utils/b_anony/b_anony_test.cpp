@@ -61,9 +61,13 @@ HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0100, testing::ext::TestSize.Level0)
         path = "/....../......";
         result = "/.******./******......";
         EXPECT_EQ(GetAnonyPath(path), result);
+        path = "downloads/../&^%&*#/IMGS.tar.lz4";
+        result = "d******s/******/&******#/I******S.tar.lz4";
+        EXPECT_EQ(GetAnonyPath(path), result);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BAnonyTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "BAnonyTest-end b_error_GetAnonyPath_0100";
+}
 }
