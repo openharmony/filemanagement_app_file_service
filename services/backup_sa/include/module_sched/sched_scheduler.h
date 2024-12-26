@@ -74,6 +74,8 @@ public:
 
     void StartTimer();
 
+    void StartExecuteBundleTask(const std::string &bundleName, BConstants::ServiceSchedAction action);
+
 public:
     explicit SchedScheduler(wptr<Service> reversePtr, wptr<SvcSessionManager> sessionPtr)
         : reversePtr_(reversePtr), sessionPtr_(sessionPtr)

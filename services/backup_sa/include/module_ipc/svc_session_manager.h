@@ -100,16 +100,18 @@ public:
      *
      * @param clientToken 调用者TOKEN
      * @param scenario 给定场景
-     * @throw BError::Codes::SA_REFUSED_ACT 调用者不是会话所有者
-     * @throw BError::Codes::SDK_MIXED_SCENARIO 调用者在备份/恢复场景使用了不匹配的函数
+     *
+     * @return ErrCode 错误码
      */
-    void VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const;
+    ErrCode VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const;
 
     /**
      * @brief 激活会话
      *
      * @param impl 客户端信息
      * @param isOccupyingSession 框架是否自占用session
+     *
+     * @return ErrCode 错误码
      */
     ErrCode Active(Impl newImpl, bool isOccupyingSession = false);
 
@@ -118,16 +120,18 @@ public:
      *
      * @param remoteInAction 尝试关闭会话的客户端代理。只有激活会话的客户端代理有权关闭会话
      * @param force 强制关闭
+     *
+     * @return ErrCode 错误码
      */
-    void Deactive(const wptr<IRemoteObject> &remoteInAction, bool force = false);
+    ErrCode Deactive(const wptr<IRemoteObject> &remoteInAction, bool force = false);
 
     /**
      * @brief 检验调用者给定的bundleName是否是有效的
      *
      * @param bundleName 调用者名称
-     * @throw BError::Codes::SA_REFUSED_ACT 调用者不是会话所有者
+     * @return ErrCode 调用者不是会话所有者
      */
-    void VerifyBundleName(std::string &bundleName);
+    ErrCode VerifyBundleName(std::string &bundleName);
 
     /**
      * @brief 获取IServiceReverse
@@ -301,14 +305,14 @@ public:
      *
      * @return ErrCode
      */
-    void Start();
+    ErrCode Start();
 
     /**
      * @brief 结束追加应用
      *
      * @return ErrCode
      */
-    void Finish();
+    ErrCode Finish();
 
     /**
      * @brief 整个备份恢复流程是否结束
@@ -552,7 +556,7 @@ private:
      *
      * @param newImpl
      */
-    void InitClient(Impl &newImpl);
+    ErrCode InitClient(Impl &newImpl);
 
     /**
      * @brief 获取BackupExtNameMap iterator

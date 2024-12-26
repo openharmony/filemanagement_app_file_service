@@ -325,21 +325,21 @@ private:
      * @brief 验证调用者
      *
      */
-    void VerifyCaller();
+    ErrCode VerifyCaller();
 
     /**
      * @brief 验证调用者
      *
      * @param scenario Scenario状态
      */
-    void VerifyCaller(IServiceReverse::Scenario scenario);
+    ErrCode VerifyCaller(IServiceReverse::Scenario scenario);
 
     /**
      * @brief 验证调用者并返回名称
      *
-     * @return std::string
+     * @return ErrCode
      */
-    std::string VerifyCallerAndGetCallerName();
+    ErrCode VerifyCallerAndGetCallerName(std::string &bundleName);
 
     /**
      * @brief 清除Session Sched相关资源
@@ -554,7 +554,7 @@ private:
 
     void ClearFailedBundles();
     void CreateDirIfNotExist(const std::string &path);
-    
+
     void GetOldDeviceBackupVersion();
 
     std::vector<std::string> GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
@@ -568,10 +568,17 @@ private:
 
     void SetBundleIncDataInfo(const std::vector<BIncrementalData> &bundlesToBackup,
         std::vector<std::string> &supportBundleNames);
-    
+
     void CancelTask(std::string bundleName, wptr<Service> ptr);
-    bool HandleCurBundleFileReady(const std::string &bundleName, const std::string &fileName, bool isIncBackup);
-    bool HandleCurAppDone(ErrCode errCode, const std::string &bundleName, bool isIncBackup);
+
+    void SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId);
+
+    ErrCode VerifySendRateParam();
+
+    ErrCode HandleCurBundleFileReady(const std::string &bundleName, const std::string &fileName, bool isIncBackup);
+
+    ErrCode HandleCurAppDone(ErrCode errCode, const std::string &bundleName, bool isIncBackup);
+
     void StartCurBundleBackupOrRestore(const std::string &bundleName);
 private:
     static sptr<Service> instance_;

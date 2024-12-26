@@ -39,25 +39,28 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const
+ErrCode SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const
 {
     shared_lock<shared_mutex> lock(lock_);
     if (impl_.scenario != scenario) {
-        HILOGE("Inconsistent scenario, impl scenario:%{public}d", impl_.scenario);
+        HILOGE("Verify caller failed, Inconsistent scenario, impl scenario:%{public}d", impl_.scenario);
         AppRadar::Info info("", "", "Inconsistent scenario");
         AppRadar::GetInstance().RecordDefaultFuncRes(info, "SvcSessionManager::VerifyCallerAndScenario", impl_.userId,
                                                      BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL,
                                                      BError(BError::Codes::SDK_MIXED_SCENARIO).GetCode());
-        throw BError(BError::Codes::SDK_MIXED_SCENARIO);
+        return BError(BError::Codes::SDK_MIXED_SCENARIO);
     }
     if (impl_.clientToken != clientToken) {
+        HILOGE("Verify caller failed, Caller mismatched");
         AppRadar::Info info2("", "", "Caller mismatched");
         AppRadar::GetInstance().RecordDefaultFuncRes(info2, "SvcSessionManager::VerifyCallerAndScenario", impl_.userId,
                                                      BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL,
                                                      BError(BError::Codes::SDK_MIXED_SCENARIO).GetCode());
-        throw BError(BError::Codes::SA_REFUSED_ACT, "Caller mismatched");
+
+        return BError(BError::Codes::SA_REFUSED_ACT);
     }
     HILOGD("Succeed to verify the caller");
+    return BError(BError::Codes::OK);
 }
 
 SvcSessionManager::Impl SvcSessionManager::GetImpl()
@@ -80,32 +83,40 @@ ErrCode SvcSessionManager::Active(Impl newImpl, bool isOccupyingSession)
     }
 
     if (!isOccupyingSession && !newImpl.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("Active session fail, No caller token was specified");
+        return BError(BError::Codes::SA_INVAL_ARG);
     }
     if (!isOccupyingSession && newImpl.scenario == IServiceReverse::Scenario::UNDEFINED) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No scenario was specified");
+        HILOGE("Active session fail, No scenario was specified");
+        return BError(BError::Codes::SA_INVAL_ARG);
     }
 
     if (!isOccupyingSession) {
-        InitClient(newImpl);
+        ErrCode ret = InitClient(newImpl);
+        if (ret != BError(BError::Codes::OK)) {
+            HILOGE("Active session failed, init client error");
+            return ret;
+        }
     }
     impl_ = newImpl;
     IncreaseSessionCnt(__PRETTY_FUNCTION__);
     return BError(BError::Codes::OK);
 }
 
-void SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool force)
+ErrCode SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool force)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        HILOGI("Empty session");
-        return;
+        HILOGE("Deactive session fail, caller token is invalid");
+        return BError(BError::Codes::SA_INVAL_ARG);
     }
     if (!force && (!impl_.clientToken || !impl_.clientProxy)) {
-        return;
+        HILOGE("Deactive session fail, client proxy is invalid");
+        return BError(BError::Codes::SA_INVAL_ARG);
     }
     if (!force && (remoteInAction != impl_.clientProxy->AsObject())) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Only the client actived the session can deactive it");
+        HILOGE("Deactive session fail, Only the client actived the session can deactive it");
+        return BError(BError::Codes::SA_INVAL_ARG);
     }
 
     deathRecipient_ = nullptr;
@@ -121,21 +132,23 @@ void SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool
     impl_ = {};
     extConnectNum_ = 0;
     DecreaseSessionCnt(__PRETTY_FUNCTION__);
+    return BError(BError::Codes::OK);
 }
 
-void SvcSessionManager::VerifyBundleName(string &bundleName)
+ErrCode SvcSessionManager::VerifyBundleName(string &bundleName)
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("Verify bundle name failed, No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
     }
     auto asVerify = [&bundleName](const auto &it) { return it.first == bundleName; };
     if (none_of(impl_.backupExtNameMap.begin(), impl_.backupExtNameMap.end(), asVerify)) {
-        stringstream ss;
-        ss << "Could not find the " << bundleName << " from current session";
-        throw BError(BError::Codes::SA_REFUSED_ACT, ss.str());
+        HILOGE("Could not find the bundle from current session, bundleName:%{public}s", bundleName.c_str());
+        return BError(BError::Codes::SA_REFUSED_ACT);
     }
     HILOGD("Succeed to verify the bundleName");
+    return BError(BError::Codes::OK);
 }
 
 sptr<IServiceReverse> SvcSessionManager::GetServiceReverseProxy()
@@ -151,7 +164,8 @@ IServiceReverse::Scenario SvcSessionManager::GetScenario()
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("Get scenario failed, No caller token was specified");
+        return IServiceReverse::Scenario::UNDEFINED;
     }
     return impl_.scenario;
 }
@@ -193,7 +207,8 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
             it->second.receExtAppDone = true;
         }
         if (it->second.receExtManageJson && it->second.fileNameInfo.empty() && it->second.receExtAppDone) {
-            HILOGI("The bundle manage json info and file info support current app done");
+            HILOGI("The bundle manage json info and file info support current app done, bundle:%{public}s",
+                bundleName.c_str());
             it->second.isBundleFinished = true;
             return true;
         }
@@ -257,20 +272,18 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
     HILOGD("svcMrg:GetExt, bundleName:%{public}s", bundleName.c_str());
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        HILOGE("GetExt connection failed, No caller token was specified, bundleName:%{public}s", bundleName.c_str());
         return nullptr;
     }
-
-    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
-    if (!findBundleSuc) {
-        HILOGE("BackupExtNameMap can not find current bundle, bundleName:%{public}s", bundleName.c_str());
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        HILOGE("Could not find the bundle from current session, bundleName:%{public}s", bundleName.c_str());
         return nullptr;
     }
     if (!it->second.backUpConnection) {
-        HILOGE("Svc backup connection is empty, bundleName:%{public}s", bundleName.c_str());
+        HILOGE("Current bundle extension connection is empty, bundleName:%{public}s", bundleName.c_str());
         return nullptr;
     }
-
     return wptr(it->second.backUpConnection);
 }
 
@@ -374,14 +387,16 @@ void SvcSessionManager::DumpInfo(const int fd, const std::vector<std::u16string>
     dprintf(fd, "Scenario: %d\n", impl_.scenario);
 }
 
-void SvcSessionManager::InitClient(Impl &newImpl)
+ErrCode SvcSessionManager::InitClient(Impl &newImpl)
 {
     if (!newImpl.clientProxy) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Invalid client");
+        HILOGE("Init client error, Invalid client");
+        return BError(BError::Codes::SA_INVAL_ARG);
     }
     auto remoteObj = newImpl.clientProxy->AsObject();
     if (!remoteObj) {
-        throw BError(BError::Codes::SA_BROKEN_IPC, "Proxy's remote object can't be nullptr");
+        HILOGE("Init client error, Proxy's remote object can't be nullptr");
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
 
     auto callback = [revPtr {reversePtr_}](const wptr<IRemoteObject> &obj) {
@@ -406,6 +421,7 @@ void SvcSessionManager::InitClient(Impl &newImpl)
             BizStageBackup::BIZ_STAGE_ACTIVE_SESSION, ERR_OK);
     }
     HILOGI("Succeed to active a session");
+    return BError(BError::Codes::OK);
 }
 
 void SvcSessionManager::SetExtFileNameRequest(const string &bundleName, const string &fileName)
@@ -499,12 +515,12 @@ void SvcSessionManager::SetServiceSchedAction(const string &bundleName, BConstan
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
-        return;
+        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
     auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
     if (!findBundleSuc) {
         HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
-        return;
+        throw BError(BError::Codes::SA_REFUSED_ACT, "BackupExtNameMap can not find bundle");
     }
     it->second.schedAction = action;
     if (it->second.schedAction == BConstants::ServiceSchedAction::START) {
@@ -589,7 +605,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
         BackupExtInfo info {};
         auto it = impl_.backupExtNameMap.find(bundleName);
         if (it != impl_.backupExtNameMap.end()) {
-            HILOGI("BackupExtNameMap already contain %{public}s", bundleName.c_str());
+            HILOGE("BackupExtNameMap already contain %{public}s", bundleName.c_str());
             info.backUpConnection = impl_.backupExtNameMap[bundleName].backUpConnection;
             info.saBackupConnection = impl_.backupExtNameMap[bundleName].saBackupConnection;
             info.appendNum = impl_.backupExtNameMap[bundleName].appendNum + 1;
@@ -613,22 +629,26 @@ sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &
     return GetBackupAbilityExt(bundleName);
 }
 
-void SvcSessionManager::Start()
+ErrCode SvcSessionManager::Start()
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("Start error, No caller token was specified");
+        return BError(BError::Codes::SA_INVAL_ARG);
     }
     impl_.isBackupStart = true;
+    return BError(BError::Codes::OK);
 }
 
-void SvcSessionManager::Finish()
+ErrCode SvcSessionManager::Finish()
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("Finish error, No caller token was specified");
+        return BError(BError::Codes::SA_INVAL_ARG);
     }
     impl_.isAppendFinish = true;
+    return BError(BError::Codes::OK);
 }
 
 bool SvcSessionManager::IsOnAllBundlesFinished()
@@ -802,12 +822,13 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
     auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
     if (!findBundleSuc) {
         HILOGE("CalAppProcessTime failed, BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
-        timeout = defaultTimeout;
-    } else {
-        int64_t appSize = it->second.dataSize;
-        /* timeout = (AppSize / 3Ms) * 3 + 30 */
-        timeout = defaultTimeout + (appSize / processRate) * multiple;
+        resTimeoutMs = (uint32_t)(minTimeout * invertMillisecond % UINT_MAX);
+        HILOGE("Current app will run timeout=%{public}u(ms), bundleName=%{public}s ", resTimeoutMs, bundleName.c_str());
+        return resTimeoutMs;
     }
+    int64_t appSize = it->second.dataSize;
+    /* timeout = (AppSize / 3Ms) * 3 + 30 */
+    timeout = defaultTimeout + (appSize / processRate) * multiple;
     timeout = timeout < minTimeout ? minTimeout : timeout;
     resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX); /* conver second to millisecond */
     HILOGI("Calculate App extension process run timeout=%{public}u(ms), bundleName=%{public}s ", resTimeoutMs,

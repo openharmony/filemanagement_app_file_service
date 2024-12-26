@@ -94,28 +94,21 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_VerifyCallerAndScenario_01
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_VerifyCallerAndScenario_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
-            sessionManagerPtr_->VerifyCallerAndScenario(CLIENT_TOKEN_ID, IServiceReverse::Scenario::RESTORE);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SDK_MIXED_SCENARIO);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+        ErrCode ret = sessionManagerPtr_->VerifyCallerAndScenario(CLIENT_TOKEN_ID,
+            IServiceReverse::Scenario::RESTORE);
+        EXPECT_TRUE(ret == BError(BError::Codes::SDK_MIXED_SCENARIO).GetCode());
 
-        try {
-            sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->VerifyCallerAndScenario(CLIENT_TOKEN_ID, IServiceReverse::Scenario::BACKUP);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_REFUSED_ACT);
-        }
+        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+        sessionManagerPtr_->impl_.clientToken = 0;
+        ret = sessionManagerPtr_->VerifyCallerAndScenario(CLIENT_TOKEN_ID, IServiceReverse::Scenario::BACKUP);
+        EXPECT_TRUE(ret == BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
         sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->VerifyCallerAndScenario(CLIENT_TOKEN_ID, IServiceReverse::Scenario::BACKUP);
-        EXPECT_TRUE(true);
+        ret = sessionManagerPtr_->VerifyCallerAndScenario(CLIENT_TOKEN_ID, IServiceReverse::Scenario::BACKUP);
+        EXPECT_TRUE(ret == ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by VerifyCallerAndScenario.";
@@ -137,43 +130,27 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Active_0100, testing::ext:
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_Active_0100";
     try {
         SvcSessionManager::Impl newImpl;
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-            auto res = sessionManagerPtr_->Active(newImpl);
-            EXPECT_EQ(res, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
-        } catch (BError &err) {
-            EXPECT_TRUE(false);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        auto res = sessionManagerPtr_->Active(newImpl);
+        EXPECT_EQ(res, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
-        try {
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->Active(newImpl);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        sessionManagerPtr_->impl_.clientToken = 0;
+        res = sessionManagerPtr_->Active(newImpl);
+        EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
-        try {
-            newImpl.clientToken = CLIENT_TOKEN_ID;
-            newImpl.scenario = IServiceReverse::Scenario::UNDEFINED;
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->Active(newImpl);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        newImpl.clientToken = CLIENT_TOKEN_ID;
+        newImpl.scenario = IServiceReverse::Scenario::UNDEFINED;
+        sessionManagerPtr_->impl_.clientToken = 0;
+        res = sessionManagerPtr_->Active(newImpl);
+        EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
-        try {
-            newImpl.clientToken = CLIENT_TOKEN_ID;
-            newImpl.scenario = IServiceReverse::Scenario::BACKUP;
-            newImpl.clientProxy = nullptr;
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->Active(newImpl);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        newImpl.clientToken = CLIENT_TOKEN_ID;
+        newImpl.scenario = IServiceReverse::Scenario::BACKUP;
+        newImpl.clientProxy = nullptr;
+        sessionManagerPtr_->impl_.clientToken = 0;
+        res = sessionManagerPtr_->Active(newImpl);
+        EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by Active.";
@@ -197,27 +174,23 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Deactive_0100, testing::ex
         wptr<IRemoteObject> remoteInAction = nullptr;
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->impl_.clientToken = 0;
-        sessionManagerPtr_->Deactive(remoteInAction, false);
-        EXPECT_TRUE(true);
+        ErrCode ret = sessionManagerPtr_->Deactive(remoteInAction, false);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.clientProxy = nullptr;
-        sessionManagerPtr_->Deactive(remoteInAction, false);
-        EXPECT_TRUE(true);
-
-        try {
-            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-            sessionManagerPtr_->impl_.clientProxy = remote_;
-            sessionManagerPtr_->Deactive(remoteInAction, false);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        ret = sessionManagerPtr_->Deactive(remoteInAction, false);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.clientProxy = remote_;
-        sessionManagerPtr_->Deactive(remoteInAction, true);
-        EXPECT_TRUE(true);
+        ret = sessionManagerPtr_->Deactive(remoteInAction, false);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.clientProxy = remote_;
+        ret = sessionManagerPtr_->Deactive(remoteInAction, true);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by Deactive.";
@@ -239,28 +212,20 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_VerifyBundleName_0100, tes
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_VerifyBundleName_0100";
     try {
         string bundleName = BUNDLE_NAME;
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->VerifyBundleName(bundleName);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        ErrCode ret = sessionManagerPtr_->VerifyBundleName(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
-        try {
-            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-            sessionManagerPtr_->impl_.backupExtNameMap.clear();
-            sessionManagerPtr_->VerifyBundleName(bundleName);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_REFUSED_ACT);
-        }
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        ret = sessionManagerPtr_->VerifyBundleName(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->VerifyBundleName(bundleName);
-        EXPECT_TRUE(true);
+        ret = sessionManagerPtr_->VerifyBundleName(bundleName);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by VerifyBundleName.";
@@ -314,18 +279,14 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_getscenario_0100, testing:
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_getscenario_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetScenario();
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        IServiceReverse::Scenario scenario = sessionManagerPtr_->GetScenario();
+        EXPECT_TRUE(scenario == IServiceReverse::Scenario::UNDEFINED);
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->GetScenario();
-        EXPECT_TRUE(true);
+        scenario = sessionManagerPtr_->GetScenario();
+        EXPECT_TRUE(scenario == IServiceReverse::Scenario::UNDEFINED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by getscenario.";
@@ -542,18 +503,14 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_InitClient_0100, testing::
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_InitClient_0100";
     try {
         SvcSessionManager::Impl newImpl;
-        try {
-            newImpl.clientProxy = nullptr;
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->InitClient(newImpl);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        newImpl.clientProxy = nullptr;
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        ErrCode ret = sessionManagerPtr_->InitClient(newImpl);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         newImpl.clientProxy = remote_;
-        sessionManagerPtr_->InitClient(newImpl);
-        EXPECT_TRUE(true);
+        ret = sessionManagerPtr_->InitClient(newImpl);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by InitClient.";
@@ -665,28 +622,25 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtConnection_0100, tes
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetExtConnection_0100";
     EXPECT_TRUE(sessionManagerPtr_ != nullptr);
     sessionManagerPtr_->impl_.clientToken = 0;
-    auto temConnectPtr = sessionManagerPtr_->GetExtConnection(BUNDLE_NAME);
-    auto backupExtConnPtr = temConnectPtr.promote();
-    EXPECT_TRUE(backupExtConnPtr == nullptr);
+    auto connection = sessionManagerPtr_->GetExtConnection(BUNDLE_NAME);
+    EXPECT_TRUE(connection == nullptr);
 
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
     sessionManagerPtr_->impl_.backupExtNameMap.clear();
-    temConnectPtr = sessionManagerPtr_->GetExtConnection(BUNDLE_NAME);
-    backupExtConnPtr = temConnectPtr.promote();
-    EXPECT_TRUE(backupExtConnPtr == nullptr);
+    connection = sessionManagerPtr_->GetExtConnection(BUNDLE_NAME);
+    EXPECT_TRUE(connection == nullptr);
 
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
     sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-    temConnectPtr = sessionManagerPtr_->GetExtConnection(BUNDLE_NAME);
-    backupExtConnPtr = temConnectPtr.promote();
-    EXPECT_TRUE(backupExtConnPtr == nullptr);
+    connection = sessionManagerPtr_->GetExtConnection(BUNDLE_NAME);
+    EXPECT_TRUE(connection == nullptr);
 
     BackupExtInfo info;
     info.backUpConnection = sptr(new SvcBackupConnection(nullptr, nullptr, BUNDLE_NAME));
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
     sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
-    auto ret = sessionManagerPtr_->GetExtConnection(BUNDLE_NAME);
-    EXPECT_EQ(reinterpret_cast<long long>(ret.GetRefPtr()),
+    connection = sessionManagerPtr_->GetExtConnection(BUNDLE_NAME);
+    EXPECT_EQ(reinterpret_cast<long long>(connection.GetRefPtr()),
         reinterpret_cast<long long>(info.backUpConnection.GetRefPtr()));
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetExtConnection_0100";
 }
@@ -870,18 +824,16 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceSchedAction_0103
     auto action = sessionManagerPtr_->GetServiceSchedAction(bundleName);
     EXPECT_EQ(action, BConstants::ServiceSchedAction::UNKNOWN);
 
-    sessionManagerPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::START);
+    EXPECT_THROW(sessionManagerPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::START), BError);
     action = sessionManagerPtr_->GetServiceSchedAction(bundleName);
-    EXPECT_NE(action, BConstants::ServiceSchedAction::START);
-    GTEST_LOG_(INFO) << "SvcSessionManagerTest-SetServiceSchedAction Branches";
-    sessionManagerPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::FINISH);
+    EXPECT_EQ(action, BConstants::ServiceSchedAction::UNKNOWN);
 
     sessionManagerPtr_->impl_.clientToken = 0;
     action = sessionManagerPtr_->GetServiceSchedAction(bundleName);
     EXPECT_TRUE(action == BConstants::ServiceSchedAction::UNKNOWN);
 
     sessionManagerPtr_->impl_.clientToken = 0;
-    sessionManagerPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::START);
+    EXPECT_THROW(sessionManagerPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::START), BError);
     EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetServiceSchedAction_0103";
 }
@@ -1008,14 +960,10 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_AppendBundles_0100, testin
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_AppendBundles_0100";
     try {
         vector<BundleName> bundleNames;
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->AppendBundles(bundleNames);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->AppendBundles(bundleNames);
+        EXPECT_TRUE(true);
 
         bundleNames.clear();
         bundleNames.emplace_back("app1");
@@ -1436,17 +1384,13 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Finish_0100, testing::ext:
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_Finish_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->Finish();
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        ErrCode ret = sessionManagerPtr_->Finish();
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->Finish();
+        ret = sessionManagerPtr_->Finish();
         EXPECT_TRUE(sessionManagerPtr_->impl_.isAppendFinish);
     } catch (...) {
         EXPECT_TRUE(false);

@@ -150,7 +150,12 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
             return UniqueFd(-ENOENT);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-        VerifyCaller();
+        ErrCode errCode = VerifyCaller();
+        if (errCode != ERR_OK) {
+            HILOGE("Get local abilities info failed, Verify caller failed, errCode:%{public}d", errCode);
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return UniqueFd(-ENOENT);
+        }
         string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
         BExcepUltils::VerifyPath(path, false);
         CreateDirIfNotExist(path);
@@ -177,13 +182,9 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGE("GetLocalCapabilitiesIncremental failed, errCode = %{public}d", e.GetCode());
         return UniqueFd(-e.GetCode());
-    } catch (const exception &e) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return UniqueFd(-EPERM);
     } catch (...) {
+        HILOGE("Unexpected exception");
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        HILOGI("Unexpected exception");
         return UniqueFd(-EPERM);
     }
 }
@@ -273,7 +274,13 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         session_->SetSessionUserId(GetUserIdDefault());
-        std::string bundleName = VerifyCallerAndGetCallerName();
+        std::string bundleName;
+        ErrCode ret = VerifyCallerAndGetCallerName(bundleName);
+        if (ret != ERR_OK) {
+            HILOGE("Get AppLocalList failed, Get bundle failed, ret:%{public}d", ret);
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return ret;
+        }
         auto task = [this, bundleName]() {
             StartGetFdTask(bundleName, wptr(this));
         };
@@ -282,25 +289,19 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
                 task();
             } catch (const BError &e) {
                 HILOGE("GetAppLocalListAndDoIncrementalBackup failed, errCode = %{public}d", e.GetCode());
-            } catch (const exception &e) {
-                HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
             } catch (...) {
-                HILOGI("Unexpected exception");
+                HILOGE("Unexpected exception");
             }
         });
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGE("GetAppLocalListAndDoIncrementalBackup failed, errCode = %{public}d", e.GetCode());
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
-    } catch (const exception &e) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
     } catch (...) {
+        HILOGE("Unexpected exception");
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        HILOGI("Unexpected exception");
         return EPERM;
     }
 }
@@ -308,26 +309,28 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
 ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    try {
-        VerifyCaller();
-        if (session_ == nullptr) {
-            HILOGE("Init Incremental backup session  error, session is empty");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        ErrCode errCode = session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
-                                            .scenario = IServiceReverse::Scenario::BACKUP,
-                                            .clientProxy = remote,
-                                            .userId = GetUserIdDefault(),
-                                            .isIncrementalBackup = true});
-        if (errCode == 0) {
-            ClearFailedBundles();
-            successBundlesNum_ = 0;
-        }
+    ErrCode errCode = VerifyCaller();
+    if (errCode != ERR_OK) {
+        HILOGE("Init incremental backup session fail, Verify caller failed, errCode:%{public}d", errCode);
         return errCode;
-    } catch (const BError &e) {
-        StopAll(nullptr, true);
-        return e.GetCode();
     }
+    if (session_ == nullptr) {
+        HILOGE("Init Incremental backup session  error, session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    errCode = session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
+                                .scenario = IServiceReverse::Scenario::BACKUP,
+                                .clientProxy = remote,
+                                .userId = GetUserIdDefault(),
+                                .isIncrementalBackup = true});
+    if (errCode != ERR_OK) {
+        HILOGE("Active incremental backup session error, Already have a session");
+        StopAll(nullptr, true);
+        return errCode;
+    }
+    ClearFailedBundles();
+    successBundlesNum_ = 0;
+    return BError(BError::Codes::OK);
 }
 
 vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalData> &bundlesToBackup)
@@ -342,14 +345,21 @@ vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalDat
 ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    vector<string> bundleNames;
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session  error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
-        VerifyCaller(IServiceReverse::Scenario::BACKUP);
-        vector<string> bundleNames = GetBundleNameByDetails(bundlesToBackup);
+        bundleNames = GetBundleNameByDetails(bundlesToBackup);
+        ErrCode ret = VerifyCaller(IServiceReverse::Scenario::BACKUP);
+        if (ret != ERR_OK) {
+            HILOGE("Append bundles incremental session failed, verify caller failed, ret:%{public}d", ret);
+            HandleExceptionOnAppendBundles(session_, bundleNames, {});
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return ret;
+        }
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
             session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
@@ -360,12 +370,14 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGE("Failed, errCode = %{public}d", e.GetCode());
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
+        HILOGE("Unexpected exception");
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        HILOGI("Unexpected exception");
         return EPERM;
     }
 }
@@ -374,14 +386,21 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
     const std::vector<std::string> &infos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    vector<string> bundleNames;
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
-        VerifyCaller(IServiceReverse::Scenario::BACKUP);
-        vector<string> bundleNames = GetBundleNameByDetails(bundlesToBackup);
+        bundleNames = GetBundleNameByDetails(bundlesToBackup);
+        ErrCode ret = VerifyCaller(IServiceReverse::Scenario::BACKUP);
+        if (ret != ERR_OK) {
+            HILOGE("Append bundles incremental session with infos failed, verify caller failed, ret:%{public}d", ret);
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            HandleExceptionOnAppendBundles(session_, bundleNames, {});
+            return ret;
+        }
         std::vector<std::string> bundleNamesOnly;
         std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
@@ -397,12 +416,14 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGE("Failed, errCode = %{public}d", e.GetCode());
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
+        HILOGE("Unexpected exception");
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        HILOGI("Unexpected exception");
         return EPERM;
     }
 }
@@ -431,40 +452,37 @@ void Service::HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &
 ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    try {
-        VerifyCaller(IServiceReverse::Scenario::RESTORE);
-        HILOGI("Start get ExtConnection, bundleName:%{public}s", fileInfo.owner.c_str());
-        if (!fileInfo.fileName.empty()) {
-            HILOGE("Forbit to use PublishIncrementalFile with fileName for App");
-            return EPERM;
-        }
-        if (session_ != nullptr) {
-            session_->SetPublishFlag(fileInfo.owner);
-        }
-        auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
-        if (backUpConnection == nullptr) {
-            HILOGE("PublishIncrementalFile error, backUpConnection is empty");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        auto proxy = backUpConnection->GetBackupExtProxy();
-        if (!proxy) {
-            HILOGE("PublishIncrementalFile error, Extension backup Proxy is empty");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        ErrCode res = proxy->PublishIncrementalFile(fileInfo.fileName);
-        if (res) {
-            HILOGE("Failed to publish file for backup extension");
-        }
-        return res;
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
-    } catch (...) {
-        HILOGI("Unexpected exception");
+    ErrCode ret = VerifyCaller(IServiceReverse::Scenario::RESTORE);
+    if (ret != ERR_OK) {
+        HILOGE("Publish incremental file failed, bundleName:%{public}s", fileInfo.owner.c_str());
+        return ret;
+    }
+    HILOGI("Start get ExtConnection, bundleName:%{public}s", fileInfo.owner.c_str());
+    if (!fileInfo.fileName.empty()) {
+        HILOGE("Forbit to use PublishIncrementalFile with fileName for App");
         return EPERM;
     }
+    if (session_ == nullptr) {
+        HILOGE("session is empty, bundleName:%{public}s", fileInfo.owner.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    session_->SetPublishFlag(fileInfo.owner);
+    auto backUpConnection = session_->GetExtConnection(fileInfo.owner);
+    if (backUpConnection == nullptr) {
+        HILOGE("backUpConnection is empty, bundle:%{public}s", fileInfo.owner.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    auto proxy = backUpConnection->GetBackupExtProxy();
+    if (!proxy) {
+        HILOGE("Publish Incremental file failed, bundleName:%{public}s", fileInfo.owner.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    ret = proxy->PublishIncrementalFile(fileInfo.fileName);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to publish file for backup extension, bundleName:%{public}s", fileInfo.owner.c_str());
+        return ret;
+    }
+    return BError(BError::Codes::OK);
 }
 
 ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd)
@@ -498,42 +516,24 @@ ErrCode Service::AppIncrementalFileReady(const std::string &bundleName, const st
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
             fd = session_->OnBundleExtManageInfo(bundleName, move(fd));
         }
-        HILOGD("reverse: Will notify IncrementalBackupOnFileReady");
         session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName, fileName, move(fd),
             move(manifestFd), errCode);
         FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverse::Scenario::BACKUP);
-        AuditLog auditLog = { false, "Backup File Ready", "ADD", "", 1, "SUCCESS", "AppIncrementalFileReady",
-            bundleName, GetAnonyPath(fileName) };
-        HiAudit::GetInstance(true).Write(auditLog);
         if (session_->OnBundleFileReady(bundleName, fileName)) {
-            auto backUpConnection = session_->GetExtConnection(bundleName);
-            auto proxy = backUpConnection->GetBackupExtProxy();
-            if (!proxy) {
-                throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+            ErrCode ret = HandleCurBundleFileReady(bundleName, fileName, true);
+            if (ret != ERR_OK) {
+                HILOGE("Handle current file failed, bundleName:%{public}s, fileName:%{public}s",
+                    bundleName.c_str(), GetAnonyPath(fileName).c_str());
+                return ret;
             }
-            // 通知extension清空缓存
-            proxy->HandleClear();
-            // 清除Timer
-            session_->StopFwkTimer(bundleName);
-            session_->StopExtTimer(bundleName);
-            // 通知TOOL 备份完成
-            HILOGI("reverse: Will notify IncrementalBackupOnBundleFinished");
-            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK),
-                                                                                  bundleName);
-            BundleEndRadarReport(bundleName, BError(BError::Codes::OK), IServiceReverse::Scenario::BACKUP);
-            // 断开extension
-            backUpConnection->DisconnectBackupExtAbility();
-            ClearSessionAndSchedInfo(bundleName);
         }
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        HILOGE("AppIncrementalFileReady exception");
         return e.GetCode(); // 任意异常产生，终止监听该任务
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
     } catch (...) {
-        HILOGI("Unexpected exception");
+        HILOGE("Unexpected exception");
         return EPERM;
     }
 }
@@ -542,7 +542,12 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        string callerName = VerifyCallerAndGetCallerName();
+        string callerName;
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        if (ret != ERR_OK) {
+            HILOGE("Verify caller failed, ret:%{public}d", ret);
+            return ret;
+        }
         if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(callerName, fileName, move(fd),
                                                                               move(manifestFd), errCode);
@@ -552,42 +557,24 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
             fd = session_->OnBundleExtManageInfo(callerName, move(fd));
         }
-        HILOGD("reverse: Will notify IncrementalBackupOnFileReady");
         session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(callerName, fileName, move(fd),
             move(manifestFd), errCode);
         FileReadyRadarReport(callerName, fileName, errCode, IServiceReverse::Scenario::BACKUP);
-        AuditLog auditLog = { false, "Backup File Ready", "ADD", "", 1, "SUCCESS", "AppIncrementalFileReady",
-            callerName, GetAnonyPath(fileName) };
-        HiAudit::GetInstance(true).Write(auditLog);
         if (session_->OnBundleFileReady(callerName, fileName)) {
-            auto backUpConnection = session_->GetExtConnection(callerName);
-            auto proxy = backUpConnection->GetBackupExtProxy();
-            if (!proxy) {
-                throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+            ErrCode ret = HandleCurBundleFileReady(callerName, fileName, true);
+            if (ret != ERR_OK) {
+                HILOGE("Handle current file failed, bundleName:%{public}s, fileName:%{public}s",
+                    callerName.c_str(), GetAnonyPath(fileName).c_str());
+                return ret;
             }
-            // 通知extension清空缓存
-            proxy->HandleClear();
-            // 清除Timer
-            session_->StopFwkTimer(callerName);
-            session_->StopExtTimer(callerName);
-            // 通知TOOL 备份完成
-            HILOGI("reverse: Will notify IncrementalBackupOnBundleFinished");
-            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK),
-                                                                                  callerName);
-            BundleEndRadarReport(callerName, BError(BError::Codes::OK), IServiceReverse::Scenario::BACKUP);
-            // 断开extension
-            backUpConnection->DisconnectBackupExtAbility();
-            ClearSessionAndSchedInfo(callerName);
         }
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        HILOGE("AppIncrementalFileReady exception");
         return e.GetCode(); // 任意异常产生，终止监听该任务
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
     } catch (...) {
-        HILOGI("Unexpected exception");
+        HILOGE("Unexpected exception");
         return EPERM;
     }
 }
@@ -600,7 +587,7 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
             HILOGE("AppIncrementalDone error, session is null");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        string callerName = "";
+        string callerName;
         ErrCode ret = VerifyCallerAndGetCallerName(callerName);
         if (ret != ERR_OK) {
             HILOGE("App incremental done fail, ret:%{public}d", ret);
@@ -608,7 +595,19 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
         }
         HILOGI("Service AppIncrementalDone start, callerName is %{public}s, errCode is: %{public}d",
             callerName.c_str(), errCode);
-        HandleCurAppDone(errCode, callerName, true);
+        if (session_->OnBundleFileReady(callerName) || errCode != BError(BError::Codes::OK)) {
+            std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
+            if (mutexPtr == nullptr) {
+                HILOGE("extension mutex ptr is nullptr, bundleName:%{public}s", callerName.c_str());
+                return BError(BError::Codes::SA_INVAL_ARG);
+            }
+            std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
+            ret = HandleCurAppDone(errCode, callerName, true);
+            if (ret != ERR_OK) {
+                HILOGE("Handle current app done error, bundleName:%{public}s", callerName.c_str());
+                return ret;
+            }
+        }
         RemoveExtensionMutex(callerName);
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
@@ -631,23 +630,33 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
             HILOGE("GetIncrementalFileHandle error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        VerifyCaller(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = VerifyCaller(IServiceReverse::Scenario::RESTORE);
+        if (ret != ERR_OK) {
+            HILOGE("Error, bundleName:%{public}s, fileName:%{public}s", bundleName.c_str(),
+                GetAnonyPath(fileName).c_str());
+            return ret;
+        }
         auto action = session_->GetServiceSchedAction(bundleName);
+        if (action == BConstants::ServiceSchedAction::UNKNOWN) {
+            HILOGE("action is unknown, bundleName:%{public}s", bundleName.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         if (action == BConstants::ServiceSchedAction::RUNNING) {
             auto backUpConnection = session_->GetExtConnection(bundleName);
             if (backUpConnection == nullptr) {
-                HILOGE("GetIncrementalFileHandle error, backUpConnection is empty");
+                HILOGE("backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             auto proxy = backUpConnection->GetBackupExtProxy();
             if (!proxy) {
-                HILOGE("GetIncrementalFileHandle error, Extension backup Proxy is empty");
+                HILOGE("GetIncrementalFileHandle failed, bundleName:%{public}s", bundleName.c_str());
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             auto[errCode, fd, reportFd] = proxy->GetIncrementalFileHandle(fileName);
             auto err = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
             if (err != ERR_OK) {
-                HILOGE("Failed to send file handle");
+                HILOGE("Failed to send file handle, bundleName:%{public}s, fileName:%{public}s",
+                    bundleName.c_str(), GetAnonyPath(fileName).c_str());
                 AppRadar::Info info (bundleName, "", "");
                 AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandle",
                     GetUserIdDefault(), BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
@@ -658,13 +667,8 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
         }
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        HILOGE("GetIncrementalFileHandle exception, bundleName:%{public}s", bundleName.c_str());
         return e.GetCode();
-    } catch (const exception &e) {
-        HILOGI("Catched an unexpected low-level exception %{public}s", e.what());
-        return EPERM;
-    } catch (...) {
-        HILOGI("Unexpected exception");
-        return EPERM;
     }
 }
 
@@ -674,11 +678,15 @@ bool Service::IncrementalBackup(const string &bundleName)
     IServiceReverse::Scenario scenario = session_->GetScenario();
     auto backUpConnection = session_->GetExtConnection(bundleName);
     if (backUpConnection == nullptr) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "backUpConnection is empty");
+        HILOGE("backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
+        NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
+        return true;
     }
     auto proxy = backUpConnection->GetBackupExtProxy();
     if (!proxy) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
+        HILOGE("Increment backup error, extension proxy is empty, bundleName:%{public}s", bundleName.c_str());
+        NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
+        return true;
     }
     if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
         auto ret = proxy->IncrementalOnBackup(session_->GetClearDataFlag(bundleName));
@@ -826,8 +834,7 @@ void Service::CancelTask(std::string bundleName, wptr<Service> ptr)
     }
     do {
         std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
-        auto tempBackUpConnection = session->GetExtConnection(bundleName);
-        auto backUpConnection = tempBackUpConnection.promote();
+        auto backUpConnection = session->GetExtConnection(bundleName);
         if (backUpConnection == nullptr) {
             HILOGE("Promote backUpConnection ptr is null.");
             break;
@@ -859,46 +866,47 @@ ErrCode Service::Cancel(std::string bundleName, int32_t &result)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin, bundle name:%{public}s", bundleName.c_str());
-    try {
-        if (session_ == nullptr) {
-            HILOGE("Cancel error, session is null");
-            return BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK);
-        }
-        IServiceReverse::Scenario scenario = session_->GetScenario();
-        VerifyCaller(scenario);
-        auto impl = session_->GetImpl();
-        auto it = impl.backupExtNameMap.find(bundleName);
-        if (it == impl.backupExtNameMap.end()) {
-            result = BError::BackupErrorCode::E_CANCEL_NO_TASK;
-            return BError(BError::Codes::OK);
-        }
-        auto action = session_->GetServiceSchedAction(bundleName);
-        auto task = [this, bundleName]() {
-            try {
-                CancelTask(bundleName, wptr(this));
-            } catch (const BError &e) {
-                HILOGE("CancelTask failed, errCode = %{public}d", e.GetCode());
-            } catch (...) {
-                HILOGI("Unexpected exception");
-            }
-        };
-        if (action == BConstants::ServiceSchedAction::RUNNING) {
-            threadPool_.AddTask(task);
-            result = BError(BError::Codes::OK);
-            return BError(BError::Codes::OK);
-        }
-        if (action == BConstants::ServiceSchedAction::CLEAN) {
-            result = BError::BackupErrorCode::E_CANCEL_NO_TASK;
-        } else {
-            result = BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK;
-        }
-        return BError(BError::Codes::OK);
-    } catch (const BError &e) {
-        HILOGE("Cancel failed, errCode = %{public}d", e.GetCode());
-        return e.GetCode();
-    } catch (...) {
-        HILOGI("Unexpected exception");
-        return EPERM;
+    if (session_ == nullptr) {
+        HILOGE("Cancel error, session is null");
+        return BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK);
     }
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    ErrCode ret = VerifyCaller(scenario);
+    if (ret != ERR_OK) {
+        HILOGE("Verify caller failed, bundleName:%{public}s, scenario:%{public}d", bundleName.c_str(), scenario);
+        return BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK);
+    }
+    auto impl = session_->GetImpl();
+    auto it = impl.backupExtNameMap.find(bundleName);
+    if (it == impl.backupExtNameMap.end()) {
+        result = BError::BackupErrorCode::E_CANCEL_NO_TASK;
+        return BError(BError::Codes::OK);
+    }
+    auto action = session_->GetServiceSchedAction(bundleName);
+    if (action == BConstants::ServiceSchedAction::UNKNOWN) {
+        HILOGE("action is unknown, bundleName:%{public}s", bundleName.c_str());
+        result = BError::BackupErrorCode::E_CANCEL_NO_TASK;
+        return BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK);
+    }
+    auto task = [this, bundleName]() {
+        try {
+            CancelTask(bundleName, wptr(this));
+        } catch (const BError &e) {
+            HILOGE("CancelTask failed, errCode = %{public}d", e.GetCode());
+        } catch (...) {
+            HILOGE("Unexpected exception");
+        }
+    };
+    if (action == BConstants::ServiceSchedAction::RUNNING) {
+        threadPool_.AddTask(task);
+        result = BError(BError::Codes::OK);
+        return BError(BError::Codes::OK);
+    }
+    if (action == BConstants::ServiceSchedAction::CLEAN) {
+        result = BError::BackupErrorCode::E_CANCEL_NO_TASK;
+    } else {
+        result = BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK;
+    }
+    return BError(BError::Codes::OK);
 }
 } // namespace OHOS::FileManagement::Backup

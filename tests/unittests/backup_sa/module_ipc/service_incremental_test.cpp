@@ -42,9 +42,9 @@ UniqueFd Service::GetLocalCapabilities()
 
 void Service::StopAll(const wptr<IRemoteObject> &obj, bool force) {}
 
-string Service::VerifyCallerAndGetCallerName()
+ErrCode Service::VerifyCallerAndGetCallerName(std::string &bundleName)
 {
-    return "";
+    return BError(BError::Codes::OK);
 }
 
 ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
@@ -148,9 +148,15 @@ void Service::ExtConnectDone(string bundleName) {}
 
 void Service::ClearSessionAndSchedInfo(const string &bundleName) {}
 
-void Service::VerifyCaller() {}
+ErrCode Service::VerifyCaller()
+{
+    return BError(BError::Codes::OK);
+}
 
-void Service::VerifyCaller(IServiceReverse::Scenario scenario) {}
+ErrCode Service::VerifyCaller(IServiceReverse::Scenario scenario)
+{
+    return BError(BError::Codes::OK);
+}
 
 void Service::OnAllBundlesFinished(ErrCode errCode) {}
 
@@ -270,14 +276,14 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
     return {};
 }
 
-bool Service::HandleCurBundleFileReady(const std::string&, const std::string&, bool)
+ErrCode Service::HandleCurBundleFileReady(const std::string&, const std::string&, bool)
 {
-    return true;
+    return BError(BError::Codes::OK);
 }
 
-bool Service::HandleCurAppDone(ErrCode errCode, const std::string&, bool)
+ErrCode Service::HandleCurAppDone(ErrCode errCode, const std::string&, bool)
 {
-    return true;
+    return BError(BError::Codes::OK);
 }
 
 void Service::StartCurBundleBackupOrRestore(const std::string&) {}
@@ -860,18 +866,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetIncrementalFileHandle
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_)).WillOnce(Return(make_tuple(0, UniqueFd(-1), UniqueFd(-1))));
-        ret = service->GetIncrementalFileHandle(bundleName, fileName);
-        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
-
-        EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::RUNNING));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
-        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
-        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return());
-        EXPECT_CALL(*svcProxy, GetIncrementalFileHandle(_)).WillOnce(Return(make_tuple(1, UniqueFd(-1), UniqueFd(-1))));
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         ret = service->GetIncrementalFileHandle(bundleName, fileName);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
@@ -901,12 +897,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_IncrementalBackup_0000, 
         string bundleName;
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-        EXPECT_THROW(service->IncrementalBackup(bundleName), BError);
+        bool res = service->IncrementalBackup(bundleName);
+        EXPECT_TRUE(res);
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
-        EXPECT_THROW(service->IncrementalBackup(bundleName), BError);
+        res = service->IncrementalBackup(bundleName);
+        EXPECT_TRUE(res);
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));

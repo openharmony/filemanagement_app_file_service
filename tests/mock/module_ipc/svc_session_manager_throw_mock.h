@@ -27,10 +27,10 @@ class BackupSvcSessionManager {
 public:
     virtual ~BackupSvcSessionManager() = default;
 public:
-    virtual void VerifyCallerAndScenario(uint32_t, IServiceReverse::Scenario) = 0;
+    virtual ErrCode VerifyCallerAndScenario(uint32_t, IServiceReverse::Scenario) = 0;
     virtual ErrCode Active(SvcSessionManager::Impl) = 0;
-    virtual void Deactive(const wptr<IRemoteObject> &, bool) = 0;
-    virtual void VerifyBundleName(std::string &) = 0;
+    virtual ErrCode Deactive(const wptr<IRemoteObject> &, bool) = 0;
+    virtual ErrCode VerifyBundleName(std::string &) = 0;
     virtual sptr<IServiceReverse> GetServiceReverseProxy() = 0;
     virtual IServiceReverse::Scenario GetScenario() = 0;
     virtual bool OnBundleFileReady(const std::string &, const std::string &) = 0;
@@ -39,7 +39,7 @@ public:
     virtual wptr<SvcBackupConnection> GetExtConnection(const BundleName &) = 0;
     virtual sptr<SvcBackupConnection> GetBackupAbilityExt(const std::string &) = 0;
     virtual void DumpInfo(const int, const std::vector<std::u16string> &) = 0;
-    virtual void InitClient(SvcSessionManager::Impl &) = 0;
+    virtual ErrCode InitClient(SvcSessionManager::Impl &) = 0;
     virtual void SetExtFileNameRequest(const std::string &, const std::string &) = 0;
     virtual std::set<std::string> GetExtFileNameRequest(const std::string &) = 0;
     virtual std::tuple<bool, std::map<BundleName, BackupExtInfo>::iterator> GetBackupExtNameMap(
@@ -54,8 +54,8 @@ public:
     virtual std::weak_ptr<SABackupConnection> GetSAExtConnection(const BundleName &) = 0;
     virtual void AppendBundles(const std::vector<BundleName> &) = 0;
     virtual sptr<SvcBackupConnection> CreateBackupConnection(BundleName &) = 0;
-    virtual void Start() = 0;
-    virtual void Finish() = 0;
+    virtual ErrCode Start() = 0;
+    virtual ErrCode Finish() = 0;
     virtual bool IsOnAllBundlesFinished() = 0;
     virtual bool IsOnOnStartSched() = 0;
     virtual bool NeedToUnloadService() = 0;
@@ -99,10 +99,10 @@ public:
 
 class SvcSessionManagerMock : public BackupSvcSessionManager {
 public:
-    MOCK_METHOD(void, VerifyCallerAndScenario, (uint32_t, IServiceReverse::Scenario));
+    MOCK_METHOD(ErrCode, VerifyCallerAndScenario, (uint32_t, IServiceReverse::Scenario));
     MOCK_METHOD(ErrCode, Active, (SvcSessionManager::Impl));
-    MOCK_METHOD(void, Deactive, (const wptr<IRemoteObject> &, bool));
-    MOCK_METHOD(void, VerifyBundleName, (std::string &));
+    MOCK_METHOD(ErrCode, Deactive, (const wptr<IRemoteObject> &, bool));
+    MOCK_METHOD(ErrCode, VerifyBundleName, (std::string &));
     MOCK_METHOD(sptr<IServiceReverse>, GetServiceReverseProxy, ());
     MOCK_METHOD(IServiceReverse::Scenario, GetScenario, ());
     MOCK_METHOD(bool, OnBundleFileReady, (const std::string &, const std::string &));
@@ -111,7 +111,7 @@ public:
     MOCK_METHOD(wptr<SvcBackupConnection>, GetExtConnection, (const BundleName &));
     MOCK_METHOD(sptr<SvcBackupConnection>, GetBackupAbilityExt, (const std::string &));
     MOCK_METHOD(void, DumpInfo, (const int, const std::vector<std::u16string> &));
-    MOCK_METHOD(void, InitClient, (SvcSessionManager::Impl &));
+    MOCK_METHOD(ErrCode, InitClient, (SvcSessionManager::Impl &));
     MOCK_METHOD(void, SetExtFileNameRequest, (const std::string &, const std::string &));
     MOCK_METHOD(std::set<std::string>, GetExtFileNameRequest, (const std::string &));
     MOCK_METHOD((std::tuple<bool, std::map<BundleName, BackupExtInfo>::iterator>), GetBackupExtNameMap,
@@ -126,8 +126,8 @@ public:
     MOCK_METHOD(std::weak_ptr<SABackupConnection>, GetSAExtConnection, (const BundleName &));
     MOCK_METHOD(void, AppendBundles, (const std::vector<BundleName> &));
     MOCK_METHOD(sptr<SvcBackupConnection>, CreateBackupConnection, (BundleName &));
-    MOCK_METHOD(void, Start, ());
-    MOCK_METHOD(void, Finish, ());
+    MOCK_METHOD(ErrCode, Start, ());
+    MOCK_METHOD(ErrCode, Finish, ());
     MOCK_METHOD(bool, IsOnAllBundlesFinished, ());
     MOCK_METHOD(bool, IsOnOnStartSched, ());
     MOCK_METHOD(bool, NeedToUnloadService, ());

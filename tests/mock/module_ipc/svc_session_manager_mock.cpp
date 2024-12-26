@@ -36,9 +36,10 @@ static int32_t g_nFileReadyNum = 0;
 static int32_t g_nAllBundlesFinished = 0;
 } // namespace
 
-void SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const
+ErrCode SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const
 {
     GTEST_LOG_(INFO) << "VerifyCallerAndScenario";
+    return BError(BError::Codes::OK);
 }
 
 ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
@@ -49,14 +50,16 @@ ErrCode SvcSessionManager::Active(Impl newImpl, bool force)
     return BError(BError::Codes::OK);
 }
 
-void SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool force)
+ErrCode SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool force)
 {
     GTEST_LOG_(INFO) << "Deactive";
+    return BError(BError::Codes::OK);
 }
 
-void SvcSessionManager::VerifyBundleName(string &bundleName)
+ErrCode SvcSessionManager::VerifyBundleName(string &bundleName)
 {
     GTEST_LOG_(INFO) << "VerifyBundleName " << bundleName;
+    return BError(BError::Codes::OK);
 }
 
 sptr<IServiceReverse> SvcSessionManager::GetServiceReverseProxy()
@@ -123,9 +126,10 @@ void SvcSessionManager::DumpInfo(const int fd, const std::vector<std::u16string>
     GTEST_LOG_(INFO) << "DumpInfo";
 }
 
-void SvcSessionManager::InitClient(Impl &newImpl)
+ErrCode SvcSessionManager::InitClient(Impl &newImpl)
 {
     GTEST_LOG_(INFO) << "InitClient";
+    return BError(BError::Codes::OK);
 }
 
 void SvcSessionManager::SetExtFileNameRequest(const string &bundleName, const string &fileName)
@@ -259,9 +263,15 @@ sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &
     return GetBackupAbilityExt(bundleName);
 }
 
-void SvcSessionManager::Start() {}
+ErrCode SvcSessionManager::Start()
+{
+    return BError(BError::Codes::OK);
+}
 
-void SvcSessionManager::Finish() {}
+ErrCode SvcSessionManager::Finish()
+{
+    return BError(BError::Codes::OK);
+}
 
 bool SvcSessionManager::IsOnAllBundlesFinished()
 {
