@@ -68,7 +68,7 @@ using namespace std;
 vector<BIncrementalData> Service::MakeDetailList(const vector<BundleName> &bundleNames)
 {
     vector<BIncrementalData> bundleDetails {};
-    for (auto bundleName : bundleNames) {
+    for (const auto &bundleName : bundleNames) {
         bundleDetails.emplace_back(BIncrementalData {bundleName, 0});
     }
     return bundleDetails;
@@ -291,7 +291,7 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
 {
     HILOGI("Begin");
     std::vector<std::string> supportBackupNames;
-    for (auto info : backupInfos) {
+    for (const auto &info : backupInfos) {
         HILOGI("Current backupInfo bundleName:%{public}s, index:%{public}d, extName:%{public}s", info.name.c_str(),
             info.appIndex, info.extensionName.c_str());
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
@@ -357,7 +357,7 @@ ErrCode Service::RefreshDataSize(int64_t totalDataSize)
 void Service::HandleNotSupportBundleNames(const std::vector<std::string> &srcBundleNames,
     std::vector<std::string> &supportBundleNames, bool isIncBackup)
 {
-    for (auto bundleName : srcBundleNames) {
+    for (const auto &bundleName : srcBundleNames) {
         auto it = std::find(supportBundleNames.begin(), supportBundleNames.end(), bundleName);
         if (it != supportBundleNames.end()) {
             continue;

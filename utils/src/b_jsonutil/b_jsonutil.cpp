@@ -268,7 +268,7 @@ bool BJsonUtil::FindBundleInfoByName(std::map<std::string, std::vector<BundleDet
         return false;
     }
     std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos = iter->second;
-    for (auto &bundleDetailInfo : bundleDetailInfos) {
+    for (const auto &bundleDetailInfo : bundleDetailInfos) {
         if (bundleDetailInfo.type == jobType) {
             bundleDetail = bundleDetailInfo;
             return true;

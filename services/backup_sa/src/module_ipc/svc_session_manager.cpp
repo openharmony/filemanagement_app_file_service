@@ -199,7 +199,7 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
         return true;
     } else if (impl_.scenario == IServiceReverse::Scenario::BACKUP) {
         if (!fileName.empty() && fileName != BConstants::EXT_BACKUP_MANAGE) {
-            auto ret = it->second.fileNameInfo.insert(fileName);
+            auto ret = it->second.fileNameInfo.emplace(fileName);
             if (!ret.second) {
                 it->second.fileNameInfo.erase(fileName);
             }
@@ -232,7 +232,7 @@ UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, Uniq
     auto cache = cachedEntity.Structuralize();
     auto info = cache.GetExtManage();
 
-    for (auto &fileName : info) {
+    for (const auto &fileName : info) {
         HILOGE("fileName %{public}s", GetAnonyPath(fileName).data());
         OnBundleFileReady(bundleName, fileName);
     }
@@ -436,7 +436,7 @@ void SvcSessionManager::SetExtFileNameRequest(const string &bundleName, const st
         HILOGE("BackupExtNameMap can not find current bundle, bundleName:%{public}s", bundleName.c_str());
         return;
     }
-    it->second.fileNameInfo.insert(fileName);
+    it->second.fileNameInfo.emplace(fileName);
 }
 
 std::set<std::string> SvcSessionManager::GetExtFileNameRequest(const std::string &bundleName)
@@ -617,7 +617,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
         } else {
             info.backUpConnection = GetBackupAbilityExt(bundleName);
         }
-        impl_.backupExtNameMap.insert(make_pair(bundleName, info));
+        impl_.backupExtNameMap.emplace(make_pair(bundleName, info));
     }
     impl_.isBackupStart = true;
     impl_.isAppendFinish = true;
@@ -1154,7 +1154,7 @@ bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::s
                 retTmp = proxy->HandleClear();
             }
             if (retTmp == ERR_OK) {
-                bundleNameList.push_back(it->first);
+                bundleNameList.emplace_back(it->first);
             } else {
                 ret = retTmp;
             }

@@ -255,7 +255,7 @@ void Service::RefreshBundleDataSize(const vector<BJsonEntityCaps::BundleInfo> &n
         return;
     }
     BJsonUtil::BundleDetailInfo bundleInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
-    for (auto &info : newBundleInfos) {
+    for (const auto &info : newBundleInfos) {
         if (info.name == bundleInfo.bundleName && info.appIndex == bundleInfo.bundleIndex) {
             session->SetBundleDataSize(bundleName, info.increSpaceOccupied);
             HILOGI("RefreshBundleDataSize, bundlename = %{public}s , datasize = %{public}" PRId64 "",
@@ -336,7 +336,7 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
 vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalData> &bundlesToBackup)
 {
     vector<string> bundleNames {};
-    for (auto bundle : bundlesToBackup) {
+    for (const auto &bundle : bundlesToBackup) {
         bundleNames.emplace_back(bundle.bundleName);
     }
     return bundleNames;
@@ -708,7 +708,7 @@ bool Service::IncrementalBackup(const string &bundleName)
         HILOGD("backupVersion of old device = %{public}s", oldBackupVersion.c_str());
         BundleBeginRadarReport(bundleName, ret, IServiceReverse::Scenario::RESTORE);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
-        for (auto &fileName : fileNameVec) {
+        for (const auto &fileName : fileNameVec) {
             auto[errCode, fd, reportFd] = proxy->GetIncrementalFileHandle(fileName);
             ret = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
             if (ret) {
@@ -770,11 +770,11 @@ void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, 
 {
     HILOGI("start SetCurrentBackupSessProperties");
     std::map<std::string, BJsonEntityCaps::BundleInfo> bundleNameIndexBundleInfoMap;
-    for (auto &bundleInfo : backupBundleInfos) {
+    for (const auto &bundleInfo : backupBundleInfos) {
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(bundleInfo.name, bundleInfo.appIndex);
         bundleNameIndexBundleInfoMap[bundleNameIndexInfo] = bundleInfo;
     }
-    for (auto item : bundleNames) {
+    for (const auto &item : bundleNames) {
         std::string bundleName = item;
         if (BundleMgrAdapter::IsUser0BundleName(bundleName, userId)) {
             HILOGE("bundleName:%{public}s is zero user bundle", bundleName.c_str());
@@ -802,7 +802,7 @@ void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, 
 void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>& bundlesToBackup,
     std::vector<std::string>& supportBundleNames)
 {
-    for (auto &bundleInfo : bundlesToBackup) {
+    for (const auto &bundleInfo : bundlesToBackup) {
         std::string bundleName = bundleInfo.bundleName;
         auto it = std::find(supportBundleNames.begin(), supportBundleNames.end(), bundleName);
         if (it == supportBundleNames.end()) {

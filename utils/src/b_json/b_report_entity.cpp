@@ -32,25 +32,21 @@ namespace {
 const char ATTR_SEP = ';';
 const char LINE_SEP = '\n';
 const char LINE_WRAP = '\r';
-const int64_t HASH_BUFFER_SIZE = 4096; // 每次读取的siz
+const int64_t HASH_BUFFER_SIZE = 4096; // 每次读取的size
 const int INFO_ALIGN_NUM = 2;
-const int BUFFER_LENGTH = 2;
-const string INFO_DIR = "dir";
-const string INFO_HASH = "hash";
-const string INFO_IS_INCREMENTAL = "isIncremental";
-const string INFO_MODE = "mode";
-const string INFO_MTIME = "mtime";
-const string INFO_PATH = "path";
-const string INFO_SIZE = "size";
-const string INFO_ENCODE_FLAG = "encodeFlag";
+const size_t ENCODE_FLAG_VERSION = 7; // 7: "path", "mode", "dir", "size", "mtime", "hash", "isIncremental"
+const std::string DEFAULT_VALUE = "1";
+const std::vector<std::string> Data_Header = {
+    "path", "mode", "dir", "size", "mtime", "hash", "isIncremental", "encodeFlag"
+};
+
 } // namespace
 
-static vector<string> SplitStringByChar(const string &str, const char &sep)
+static void SplitStringByChar(const string &str, const char &sep, vector<string>& splits)
 {
-    vector<string> splits;
     string newStr = str;
-    if (str.empty() ||  str.size() < 1) {
-        return splits;
+    if (str.empty()) {
+        return;
     }
     if (str.rfind(sep) == str.size() - 1) {
         newStr += sep;
@@ -58,71 +54,51 @@ static vector<string> SplitStringByChar(const string &str, const char &sep)
     stringstream ss(newStr);
     string res;
     while (getline(ss, res, sep)) {
-        splits.push_back(res);
-    }
-
-    return splits;
-}
-
-static void ParseSplitsItem(const vector<string> &splits, const unordered_map<string, int> &keys,
-    vector<string> &residue, string &path)
-{
-    size_t splitsLen = splits.size();
-    for (size_t i = 0; i < splitsLen; i++) {
-        if (i <= splitsLen - keys.size()) {
-            path += splits[i] + ";";
-        } else {
-            residue.emplace_back(splits[i]);
-        }
+        splits.emplace_back(res);
     }
 }
 
 static ErrCode ParseReportInfo(struct ReportFileInfo &fileStat,
                                const vector<string> &splits,
-                               const unordered_map<string, int> &keys)
+                               const size_t keyLen)
 {
     // 根据数据拼接结构体
     // 处理path路径
-    string path;
-    vector<string> residue;
     try {
         // 识别path字段与其他字段
-        ParseSplitsItem(splits, keys, residue, path);
-        if (residue.size() != keys.size() - 1) {
-            HILOGE("Error residue size");
+        size_t dataLen = splits.size();
+        if (dataLen != keyLen || dataLen < ENCODE_FLAG_VERSION) {
+            HILOGE("Error data size");
             return EPERM;
         }
-        if (keys.find(INFO_ENCODE_FLAG) != keys.end()) {
-            fileStat.encodeFlag = residue[keys.find(INFO_ENCODE_FLAG)->second] == "1" ? true : false;
+        string path = splits[static_cast<size_t>(KeyType::PATH)] + ATTR_SEP;
+        if (dataLen == ENCODE_FLAG_VERSION) {
+            fileStat.encodeFlag = false;
+        } else {
+            fileStat.encodeFlag = splits[static_cast<size_t>(KeyType::ENCODE_FLAG)] == DEFAULT_VALUE;
         }
         path = (path.length() > 0 && path[0] == '/') ? path.substr(1, path.length() - 1) : path;
         auto fileRawPath = (path.length() > 0) ? path.substr(0, path.length() - 1) : path;
         fileStat.filePath = BReportEntity::DecodeReportItem(fileRawPath, fileStat.encodeFlag);
         HILOGD("Briefings file %{public}s", fileStat.filePath.c_str());
-        if (keys.find(INFO_MODE) != keys.end()) {
-            fileStat.mode = residue[keys.find(INFO_MODE)->second];
+        fileStat.mode = splits[static_cast<size_t>(KeyType::MODE)];
+        fileStat.isDir = splits[static_cast<size_t>(KeyType::DIR)] == DEFAULT_VALUE;
+
+        stringstream sizeStream(splits[static_cast<size_t>(KeyType::SIZE)]);
+        off_t size = 0;
+        if (!(sizeStream >> size)) {
+            HILOGE("Transfer size err");
         }
-        if (keys.find(INFO_DIR) != keys.end()) {
-            fileStat.isDir = residue[keys.find(INFO_DIR)->second] == "1" ? true : false;
+        fileStat.size = size;
+
+        stringstream mtimeStream(splits[static_cast<size_t>(KeyType::MTIME)]);
+        off_t mtime = 0;
+        if (!(mtimeStream >> mtime)) {
+            HILOGE("Transfer mtime err");
         }
-        if (keys.find(INFO_SIZE) != keys.end()) {
-            stringstream sizeStr(residue[keys.find(INFO_SIZE)->second]);
-            off_t size = 0;
-            sizeStr >> size;
-            fileStat.size = size;
-        }
-        if (keys.find(INFO_MTIME) != keys.end()) {
-            stringstream mtimeStr(residue[keys.find(INFO_MTIME)->second]);
-            off_t mtime = 0;
-            mtimeStr >> mtime;
-            fileStat.mtime = mtime;
-        }
-        if (keys.find(INFO_HASH) != keys.end()) {
-            fileStat.hash = residue[keys.find(INFO_HASH)->second];
-        }
-        if (keys.find(INFO_IS_INCREMENTAL) != keys.end()) {
-            fileStat.isIncremental = residue[keys.find(INFO_IS_INCREMENTAL)->second] == "1" ? true : false;
-        }
+        fileStat.mtime = mtime;
+        fileStat.hash = splits[static_cast<size_t>(KeyType::HASH)];
+        fileStat.isIncremental = splits[static_cast<size_t>(KeyType::IS_INCREMENTAL)] == DEFAULT_VALUE;
         return ERR_OK;
     } catch (...) {
         HILOGE("Failed to ParseReportInfo");
@@ -130,7 +106,7 @@ static ErrCode ParseReportInfo(struct ReportFileInfo &fileStat,
     }
 }
 
-static void DealLine(unordered_map<string, int> &keys,
+static void DealLine(vector<std::string> &keys,
                      int &num,
                      const string &line,
                      unordered_map<string, struct ReportFileInfo> &infos)
@@ -143,18 +119,19 @@ static void DealLine(unordered_map<string, int> &keys,
     if (currentLine[currentLine.length() - 1] == LINE_WRAP) {
         currentLine.pop_back();
     }
-
-    vector<string> splits = SplitStringByChar(currentLine, ATTR_SEP);
+    vector<string> splits;
+    SplitStringByChar(currentLine, ATTR_SEP, splits);
     if (num < INFO_ALIGN_NUM) {
         if (num == 1) {
-            for (int j = 0; j < (int)splits.size(); j++) {
-                keys.emplace(splits[j], j - 1);
+            keys = splits;
+            if (keys != Data_Header) {
+                HILOGE("File halder check err");
             }
         }
         num++;
     } else {
         struct ReportFileInfo fileState;
-        auto code = ParseReportInfo(fileState, splits, keys);
+        auto code = ParseReportInfo(fileState, splits, keys.size());
         if (code != ERR_OK) {
             HILOGE("ParseReportInfo err:%{public}d, %{public}s", code, currentLine.c_str());
         } else {
@@ -163,45 +140,12 @@ static void DealLine(unordered_map<string, int> &keys,
     }
 }
 
-static struct ReportFileInfo StorageDealLine(unordered_map<string, int> &keys, int &num, const string &line)
+void BReportEntity::GetReportInfos(unordered_map<string, struct ReportFileInfo> &infos) const
 {
-    if (line.empty()) {
-        return {};
-    }
-
-    string currentLine = line;
-    if (currentLine[currentLine.length() - 1] == LINE_WRAP) {
-        currentLine.pop_back();
-    }
-
-    vector<string> splits = SplitStringByChar(currentLine, ATTR_SEP);
-    if (num < INFO_ALIGN_NUM) {
-        if (num == 1) {
-            for (int j = 0; j < (int)splits.size(); j++) {
-                keys.emplace(splits[j], j - 1);
-            }
-        }
-        num++;
-    } else {
-        struct ReportFileInfo fileState;
-        auto code = ParseReportInfo(fileState, splits, keys);
-        if (code != ERR_OK) {
-            HILOGE("ParseReportInfo err:%{public}d, %{public}s", code, currentLine.c_str());
-        } else {
-            return fileState;
-        }
-    }
-    return {};
-}
-
-unordered_map<string, struct ReportFileInfo> BReportEntity::GetReportInfos() const
-{
-    unordered_map<string, struct ReportFileInfo> infos {};
-
     char buffer[HASH_BUFFER_SIZE];
     ssize_t bytesRead;
     string currentLine;
-    unordered_map<string, int> keys;
+    vector<std::string> keys;
 
     int num = 0;
     while ((bytesRead = read(srcFile_, buffer, sizeof(buffer))) > 0) {
@@ -219,34 +163,29 @@ unordered_map<string, struct ReportFileInfo> BReportEntity::GetReportInfos() con
     if (!currentLine.empty()) {
         DealLine(keys, num, currentLine, infos);
     }
-
-    return infos;
 }
 
-bool BReportEntity::GetStorageReportInfos(struct ReportFileInfo &fileStat)
+bool BReportEntity::GetStorageReportInfos(std::unordered_map<string, struct ReportFileInfo> &infos)
 {
-    char buffer[BUFFER_LENGTH];
-    ssize_t bytesRead;
-    string currentLine;
-    static unordered_map<string, int> keys;
-    static int num = 0;
+    char buffer[HASH_BUFFER_SIZE];
+    ssize_t bytesRead = 0;
 
-    if ((bytesRead = read(srcFile_, buffer, 1)) <= 0) {
-        keys = {};
-        num = 0;
-        return false;
-    }
-    do {
-        if (buffer[0] != LINE_SEP && buffer[0] != '\0') {
-            currentLine += buffer[0];
-        } else {
-            currentLine += LINE_SEP;
-            fileStat = StorageDealLine(keys, num, currentLine);
-            return true;
+    if ((bytesRead = read(srcFile_, buffer, sizeof(buffer))) > 0) {
+        for (ssize_t i = 0; i < bytesRead; i++) {
+            if (buffer[i] == LINE_SEP) {
+                DealLine(keys_, currLineNum_, currLineInfo_, infos);
+                currLineInfo_.clear();
+            } else {
+                currLineInfo_ += buffer[i];
+            }
         }
-    } while ((bytesRead = read(srcFile_, buffer, 1)) > 0);
-    currentLine += LINE_SEP;
-    fileStat = StorageDealLine(keys, num, currentLine);
+    } else {
+        if (currLineInfo_.empty()) {
+            return false;
+        }
+        DealLine(keys_, currLineNum_, currLineInfo_, infos);
+        currLineInfo_.clear();
+    }
     return true;
 }
 
@@ -256,7 +195,8 @@ void BReportEntity::CheckAndUpdateIfReportLineEncoded(std::string &path)
         return;
     }
 
-    unordered_map<string, struct ReportFileInfo> infos = GetReportInfos();
+    unordered_map<string, struct ReportFileInfo> infos;
+    GetReportInfos(infos);
     constexpr int BIG_FILE_REPORT_INFO_NUM = 1;
     if (infos.size() == BIG_FILE_REPORT_INFO_NUM) {
         auto info = infos.begin();

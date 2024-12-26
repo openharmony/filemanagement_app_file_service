@@ -731,7 +731,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
     auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
-    for (auto small : srcFiles) {
+    for (const auto &small : srcFiles) {
         totalSize += small.second;
         fileCount += 1;
         packFiles.emplace_back(small.first);
@@ -904,7 +904,7 @@ int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
     return ERR_OK;
 }
 
-static unordered_map<string, struct ReportFileInfo> GetTarIncludes(const string &tarName)
+static void GetTarIncludes(const string &tarName, unordered_map<string, struct ReportFileInfo> &infos)
 {
     // 获取简报文件内容
     string reportName = GetReportFileName(tarName);
@@ -912,12 +912,12 @@ static unordered_map<string, struct ReportFileInfo> GetTarIncludes(const string 
     UniqueFd fd(open(reportName.data(), O_RDONLY));
     if (fd < 0) {
         HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
-        return {};
+        return;
     }
 
     // 获取简报内容
     BReportEntity rp(move(fd));
-    return rp.GetReportInfos();
+    rp.GetReportInfos(infos);
 }
 
 int BackupExtExtension::DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
@@ -950,10 +950,9 @@ int BackupExtExtension::DoIncrementalRestore()
     }
     auto fileSet = GetIdxFileData(bundleName_);
     auto extManageInfo = GetExtManageInfo();
-    std::tuple<int, EndFileInfo, ErrFileInfo> unPacketRes;
     ErrCode err = ERR_OK;
     auto startTime = std::chrono::system_clock::now();
-    for (auto item : fileSet) { // 处理要解压的tar文件
+    for (const auto &item : fileSet) { // 处理要解压的tar文件
         off_t tarFileSize = 0;
         if (ExtractFileExt(item) == "tar" && !IsUserTar(item, extManageInfo, tarFileSize)) {
             if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
@@ -967,22 +966,20 @@ int BackupExtExtension::DoIncrementalRestore()
             string tarName = path + item;
 
             // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
-            if (BDir::CheckFilePathInvalid(tarName)) {
+            if (BDir::CheckFilePathInvalid(tarName) || BDir::CheckAndRmSoftLink(tarName)) {
                 HILOGE("Check incre tarfile path : %{public}s err, path is forbidden", GetAnonyPath(tarName).c_str());
-                return ERR_INVALID_VALUE;
-            }
-            if (BDir::CheckAndRmSoftLink(tarName)) {
-                HILOGE("File soft links are forbidden");
                 return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
             }
-            unordered_map<string, struct ReportFileInfo> result = GetTarIncludes(tarName);
+            unordered_map<string, struct ReportFileInfo> result;
+            GetTarIncludes(tarName, result);
             if ((!extension_->SpecialVersionForCloneAndCloud()) && (!extension_->UseFullBackupOnly())) {
                 path = "/";
             }
             if (isDebug_) {
                 FillEndFileInfos(path, result);
             }
-            unPacketRes = UntarFile::GetInstance().IncrementalUnPacket(tarName, path, result);
+            std::tuple<int, EndFileInfo, ErrFileInfo> unPacketRes =
+                UntarFile::GetInstance().IncrementalUnPacket(tarName, path, result);
             err = std::get<FIRST_PARAM>(unPacketRes);
             if (int tmpErr = DealIncreUnPacketResult(tarFileSize, item, unPacketRes); tmpErr != ERR_OK) {
                 return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
@@ -1060,7 +1057,7 @@ void BackupExtExtension::RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo
     string fileName = item.hashName;
     if (BDir::CheckFilePathInvalid(fileName)) {
         HILOGE("Check big spec file path : %{public}s err, path is forbidden", GetAnonyPath(fileName).c_str());
-        errFileInfos_[fileName].push_back(DEFAULT_INVAL_VALUE);
+        errFileInfos_[fileName].emplace_back(DEFAULT_INVAL_VALUE);
         if (!RemoveFile(fileName)) {
             HILOGE("Failed to delete the backup bigFile %{public}s", GetAnonyPath(fileName).c_str());
         }
@@ -1075,21 +1072,21 @@ void BackupExtExtension::RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo
         AuditLog auditLog = {false, "chmod file failed", "ADD", "", 1, "FAILED",
             "RestoreBigFilesForSpecialCloneCloud", "CommonFile", GetAnonyPath(fileName)};
         HiAudit::GetInstance(false).Write(auditLog);
-        errFileInfos_[fileName].push_back(errno);
+        errFileInfos_[fileName].emplace_back(errno);
     }
 
     struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
     UniqueFd fd(open(fileName.data(), O_RDONLY));
     if (fd < 0) {
         HILOGE("Failed to open file = %{public}s, err = %{public}d", GetAnonyPath(fileName).c_str(), errno);
-        errFileInfos_[fileName].push_back(errno);
+        errFileInfos_[fileName].emplace_back(errno);
         AuditLog auditLog = {false, "open fd failed", "ADD", "", 1, "FAILED",
             "RestoreBigFilesForSpecialCloneCloud", "CommonFile", GetAnonyPath(fileName)};
         HiAudit::GetInstance(false).Write(auditLog);
         return;
     }
     if (futimens(fd.Get(), tv) != 0) {
-        errFileInfos_[fileName].push_back(errno);
+        errFileInfos_[fileName].emplace_back(errno);
         HILOGE("Failed to change the file time. %{public}s , %{public}d", GetAnonyPath(fileName).c_str(), errno);
     }
 }
@@ -1153,7 +1150,7 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
     auto info = cache.GetExtManageInfo();
     HILOGI("Start do restore for SpecialCloneCloud.");
     auto startTime = std::chrono::system_clock::now();
-    for (auto &item : info) {
+    for (const auto &item : info) {
         if (item.hashName.empty()) {
             HILOGE("Hash name empty");
             continue;
@@ -1169,7 +1166,7 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
             radarRestoreInfo_.tarFileSize += static_cast<uint64_t>(item.sta.st_size);
             int ret = RestoreTarForSpecialCloneCloud(item);
             if (isDebug_ && ret != ERR_OK) {
-                errFileInfos_[item.hashName].push_back(ret);
+                errFileInfos_[item.hashName].emplace_back(ret);
                 endFileInfos_[item.hashName] = item.sta.st_size;
             }
             if (ret != ERR_OK) {
@@ -1213,13 +1210,13 @@ static bool RestoreBigFilePrecheck(string &fileName, const string &path, const s
 void BackupExtExtension::RestoreBigFileAfter(const string &filePath, const struct stat &sta)
 {
     if (chmod(filePath.c_str(), sta.st_mode) != 0) {
-        errFileInfos_[filePath].push_back(errno);
+        errFileInfos_[filePath].emplace_back(errno);
         HILOGE("Failed to chmod filePath, err = %{public}d", errno);
     }
     struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
     UniqueFd fd(open(filePath.data(), O_RDONLY));
     if (fd < 0) {
-        errFileInfos_[filePath].push_back(errno);
+        errFileInfos_[filePath].emplace_back(errno);
         HILOGE("Failed to open file = %{public}s, err = %{public}d", GetAnonyPath(filePath).c_str(), errno);
         AuditLog auditLog = {false, "open fd failed", "ADD", "", 1, "FAILED",
             "RestoreBigFileAfter", "CommonFile", GetAnonyPath(filePath)};
@@ -1227,7 +1224,7 @@ void BackupExtExtension::RestoreBigFileAfter(const string &filePath, const struc
         return;
     }
     if (futimens(fd.Get(), tv) != 0) {
-        errFileInfos_[filePath].push_back(errno);
+        errFileInfos_[filePath].emplace_back(errno);
         HILOGE("failed to change the file time. %{public}s , %{public}d", GetAnonyPath(filePath).c_str(), errno);
     }
 }
@@ -1244,7 +1241,7 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path,
     UniqueFd fd(open(reportPath.data(), O_RDONLY));
     if (fd < 0) {
         HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportPath.c_str(), errno);
-        errFileInfos_[item.hashName].push_back(errno);
+        errFileInfos_[item.hashName].emplace_back(errno);
         AuditLog auditLog = {false, "Open fd failed", "ADD", "", 1, "FAILED", "RestoreOneBigFile",
             "RestoreOneBigFile", GetAnonyPath(reportPath)};
         HiAudit::GetInstance(false).Write(auditLog);
@@ -1274,7 +1271,7 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path,
         return;
     }
     if (!BFile::MoveFile(fileName, filePath)) {
-        errFileInfos_[filePath].push_back(errno);
+        errFileInfos_[filePath].emplace_back(errno);
         HILOGE("failed to move the file. err = %{public}d", errno);
         AuditLog auditLog = {false, "Move file failed", "ADD", "", 1, "FAILED", "MoveFile",
             "RestoreOneBigFile", GetAnonyPath(filePath)};
@@ -1304,7 +1301,7 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
     auto info = cache.GetExtManageInfo();
     HILOGI("Start Restore Big Files");
     auto start = std::chrono::system_clock::now();
-    for (auto &item : info) {
+    for (const auto &item : info) {
         if (item.hashName.empty() || (!item.isUserTar && !item.isBigFile)) {
             continue;
         }
@@ -1403,7 +1400,7 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
                 return;
             }
             // 解压
-            for (auto item : fileSet) { // 处理要解压的tar文件
+            for (const auto &item : fileSet) { // 处理要解压的tar文件
                 off_t tarFileSize = 0;
                 if (ExtractFileExt(item) == "tar" && !IsUserTar(item, extManageInfo, tarFileSize)) {
                     ret = ptr->DoRestore(item, tarFileSize);
@@ -1863,11 +1860,6 @@ ErrCode BackupExtExtension::HandleRestore(bool isClearData)
     }
 }
 
-static bool CheckTar(const string &fileName)
-{
-    return ExtractFileExt(fileName) == "tar";
-}
-
 static bool IfEquality(const ReportFileInfo &info, const ReportFileInfo &infoAd)
 {
     return info.filePath < infoAd.filePath;
@@ -1882,61 +1874,25 @@ static void AdDeduplication(vector<struct ReportFileInfo> &FilesList)
     FilesList.erase(it, FilesList.end());
 }
 
-void BackupExtExtension::CompareFiles(UniqueFd incrementalFd,
-                                      UniqueFd manifestFd,
-                                      vector<struct ReportFileInfo> &allFiles,
-                                      vector<struct ReportFileInfo> &smallFiles,
-                                      vector<struct ReportFileInfo> &bigFiles)
+void BackupExtExtension::FillFileInfos(UniqueFd incrementalFd,
+                                       UniqueFd manifestFd,
+                                       vector<struct ReportFileInfo> &allFiles,
+                                       vector<struct ReportFileInfo> &smallFiles,
+                                       vector<struct ReportFileInfo> &bigFiles)
 {
     HILOGI("Begin Compare");
-    struct ReportFileInfo storageFiles;
     BReportEntity cloudRp(move(manifestFd));
-    unordered_map<string, struct ReportFileInfo> cloudFiles = cloudRp.GetReportInfos();
-    BReportEntity storageRp(move(incrementalFd));
-
-    while (storageRp.GetStorageReportInfos(storageFiles)) {
-        // 进行文件对比
-        const string &path = storageFiles.filePath;
-        if (path.empty()) {
-            HILOGD("GetStorageReportInfos failed");
-            continue;
-        }
-        auto it = cloudFiles.find(path);
-        bool isExist = (it != cloudFiles.end()) ? true : false;
-        if (storageFiles.isIncremental == true && storageFiles.isDir == true && !isExist) {
-            smallFiles.push_back(storageFiles);
-        }
-        bool isChange = (isExist && storageFiles.size == it->second.size &&
-            storageFiles.mtime == it->second.mtime) ? false : true;
-        if (storageFiles.isDir == false && isChange) {
-            auto [res, fileHash] = BackupFileHash::HashWithSHA256(path);
-            if (fileHash.empty()) {
-                continue;
-            }
-            storageFiles.hash = fileHash;
-        } else if (storageFiles.isDir == false) {
-            storageFiles.hash = it->second.hash;
-        }
-
-        if (storageFiles.isDir == false && CheckTar(path)) {
-            storageFiles.userTar = 1;
-        }
-
-        allFiles.push_back(storageFiles);
-        if (storageFiles.isDir == false && storageFiles.isIncremental == true && (!isExist ||
-             cloudFiles.find(path)->second.hash != storageFiles.hash)) {
-            // 在云空间简报里不存在或者hash不一致
-            if (storageFiles.size <= BConstants::BIG_FILE_BOUNDARY) {
-                smallFiles.push_back(storageFiles);
-                continue;
-            }
-            bigFiles.push_back(storageFiles);
-        }
+    unordered_map<string, struct ReportFileInfo> cloudFiles;
+    cloudRp.GetReportInfos(cloudFiles);
+    if (cloudFiles.empty()) {
+        FillFileInfosWithoutCmp(allFiles, smallFiles, bigFiles, move(incrementalFd));
+    } else {
+        FillFileInfosWithCmp(allFiles, smallFiles, bigFiles, cloudFiles, move(incrementalFd));
     }
     AdDeduplication(allFiles);
     AdDeduplication(smallFiles);
     AdDeduplication(bigFiles);
-    HILOGI("End Compare, allfile is %{public}zu, samllfile is %{public}zu, bigfile is %{public}zu",
+    HILOGI("End Compare, allfile is %{public}zu, smallfile is %{public}zu, bigfile is %{public}zu",
         allFiles.size(), smallFiles.size(), bigFiles.size());
 }
 
@@ -1987,7 +1943,7 @@ static void WriteFile(const string &filename, const vector<struct ReportFileInfo
     // 前面2行先填充进去
     f << "version=1.0&attrNum=8" << endl;
     f << "path;mode;dir;size;mtime;hash;usertar;encodeFlag" << endl;
-    for (auto item : srcFiles) {
+    for (const auto &item : srcFiles) {
         string path = BReportEntity::EncodeReportItem(item.filePath, item.encodeFlag);
         string str = path + ";" + item.mode + ";" + to_string(item.isDir) + ";" + to_string(item.size);
         str += ";" + to_string(item.mtime) + ";" + item.hash + ";" + to_string(item.userTar)+ ";";
@@ -2037,7 +1993,7 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
     vector<string> noPermissionFiles;
-    for (auto &item : pkgInfo) {
+    for (const auto &item : pkgInfo) {
         if (item.first.empty()) {
             continue;
         }

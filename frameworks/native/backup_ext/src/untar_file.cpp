@@ -98,12 +98,12 @@ std::tuple<int, ErrFileInfo> UntarFile::ReadLongName(FileStatInfo &info)
     }
     ErrFileInfo errFileInfo;
     if (ret != 0) {
-        errFileInfo[info.fullPath].push_back(ret);
+        errFileInfo[info.fullPath].emplace_back(ret);
         return {-1, errFileInfo};
     }
     if (fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET) != 0) {
         HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
-        errFileInfo[info.fullPath].push_back(errno);
+        errFileInfo[info.fullPath].emplace_back(errno);
         return {-1, errFileInfo};
     }
     return {0, errFileInfo};
@@ -382,7 +382,7 @@ bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
     if (!includes_.empty() && includes_.find(tmpFullPath) == includes_.end()) { // not in includes
         if (fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET) != 0) {
             HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
-            errFileInfo[info.fullPath].push_back(DEFAULT_ERR);
+            errFileInfo[info.fullPath].emplace_back(DEFAULT_ERR);
             return false;
         }
         isFilter = true;
@@ -391,7 +391,7 @@ bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
     info.fullPath = GenRealPath(rootPath_, info.fullPath);
     if (BDir::CheckFilePathInvalid(info.fullPath)) {
         HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
-        errFileInfo[info.fullPath].push_back(DEFAULT_ERR);
+        errFileInfo[info.fullPath].emplace_back(DEFAULT_ERR);
         return false;
     }
     errFileInfo = ParseRegularFile(info);
@@ -473,12 +473,12 @@ ErrFileInfo UntarFile::ParseRegularFile(FileStatInfo &info)
         fclose(destFile);
         if (chmod(info.fullPath.data(), info.mode) != 0) {
             HILOGE("Failed to chmod of %{public}s, err = %{public}d", GetAnonyPath(info.fullPath).c_str(), errno);
-            errFileInfo[info.fullPath].push_back(errno);
+            errFileInfo[info.fullPath].emplace_back(errno);
         }
         struct utimbuf times;
         struct stat attr;
         if (stat(info.fullPath.c_str(), &attr) != 0) {
-            errFileInfo[info.fullPath].push_back(errno);
+            errFileInfo[info.fullPath].emplace_back(errno);
             HILOGE("Failed to get stat of %{public}s, err = %{public}d", GetAnonyPath(info.fullPath).c_str(), errno);
             times.actime = info.mtime;
         } else {
@@ -486,14 +486,14 @@ ErrFileInfo UntarFile::ParseRegularFile(FileStatInfo &info)
         }
         times.modtime = info.mtime;
         if (info.mtime != 0 && utime(info.fullPath.c_str(), &times) != 0) {
-            errFileInfo[info.fullPath].push_back(errno);
+            errFileInfo[info.fullPath].emplace_back(errno);
             HILOGE("Failed to set mtime of %{public}s, err = %{public}d", GetAnonyPath(info.fullPath).c_str(), errno);
         }
         // anyway, go to correct
         fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET);
     } else {
         HILOGE("Failed to create file %{public}s, err = %{public}d", GetAnonyPath(info.fullPath).c_str(), errno);
-        errFileInfo[info.fullPath].push_back(errno);
+        errFileInfo[info.fullPath].emplace_back(errno);
         fseeko(tarFilePtr_, tarFileBlockCnt_ * BLOCK_SIZE, SEEK_CUR);
     }
     return errFileInfo;
@@ -559,7 +559,7 @@ ErrFileInfo UntarFile::CreateDir(string &path, mode_t mode)
         HILOGE("directory does not exist, path:%{public}s, err = %{public}d", path.c_str(), errno);
         if (!ForceCreateDirectoryWithMode(path, mode)) {
             HILOGE("Failed to force create directory %{public}s, err = %{public}d", path.c_str(), errno);
-            errFileInfo[path].push_back(errno);
+            errFileInfo[path].emplace_back(errno);
         }
     }
     return errFileInfo;

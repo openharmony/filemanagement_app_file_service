@@ -908,7 +908,7 @@ std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::Pa
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(backupExtInfoVal);
+        argv.emplace_back(backupExtInfoVal);
         return true;
     };
     return onBackupExFun;
@@ -929,8 +929,8 @@ std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::Pa
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(objValue);
-        argv.push_back(restoreRetValue);
+        argv.emplace_back(objValue);
+        argv.emplace_back(restoreRetValue);
         return true;
     };
     return onRestoreExFun;
@@ -955,7 +955,7 @@ std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::Pa
         }
         napi_set_named_property(env, objValue, "code", AbilityRuntime::CreateJsValue(env, appVersionCodeFlag));
         napi_set_named_property(env, objValue, "name", AbilityRuntime::CreateJsValue(env, appVersionStrFlag.c_str()));
-        argv.push_back(objValue);
+        argv.emplace_back(objValue);
         return true;
     };
     return onRestoreFun;

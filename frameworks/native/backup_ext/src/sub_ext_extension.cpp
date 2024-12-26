@@ -134,11 +134,11 @@ void BackupExtExtension::CheckTmpDirFileInfos(bool isSpecialVersion)
     ErrFileInfo errFiles;
     auto idxFileInfos = GetIdxFileInfos(isSpecialVersion);
     struct stat attr;
-    for (auto it : idxFileInfos) {
+    for (const auto &it : idxFileInfos) {
         if (it.first.size() >= PATH_MAX || stat(it.first.data(), &attr) == -1) {
             HILOGE("(Debug) Failed to get stat of %{public}s, errno = %{public}d", GetAnonyPath(it.first).c_str(),
                 errno);
-            errFiles[it.first].push_back(errno);
+            errFiles[it.first].emplace_back(errno);
         } else if (it.second != attr.st_size) {
             HILOGE("(Debug) RecFile:%{public}s size err, recSize: %{public}" PRId64 ", idxSize: %{public}" PRId64 "",
                 GetAnonyPath(it.first).c_str(), attr.st_size, it.second);
@@ -169,12 +169,12 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
         if (lstat(it.first.c_str(), &curFileStat) != 0) {
             HILOGE("Failed to lstat %{public}s, err = %{public}d", GetAnonyPath(it.first).c_str(), errno);
             errFiles.emplace_back(it.first);
-            errFileInfos_[it.first].push_back(errno);
+            errFileInfos_[it.first].emplace_back(errno);
         } else if (curFileStat.st_size != it.second) {
             HILOGE("File size error, file: %{public}s, idx: %{public}" PRId64 ", act: %{public}" PRId64 "",
                 GetAnonyPath(it.first).c_str(), it.second, curFileStat.st_size);
             errFiles.emplace_back(it.first);
-            errFileInfos_[it.first].push_back(errno);
+            errFileInfos_[it.first].emplace_back(errno);
         }
     }
     for (const auto &it : errFileInfos_) {
@@ -994,7 +994,7 @@ int BackupExtExtension::DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd
     vector<struct ReportFileInfo> allFiles;
     vector<struct ReportFileInfo> smallFiles;
     vector<struct ReportFileInfo> bigFiles;
-    CompareFiles(move(incrementalFd), move(manifestFd), allFiles, smallFiles, bigFiles);
+    FillFileInfos(move(incrementalFd), move(manifestFd), allFiles, smallFiles, bigFiles);
     auto ret = DoIncrementalBackup(allFiles, smallFiles, bigFiles);
     if (ret == ERR_OK) {
         auto end = std::chrono::system_clock::now();
@@ -1123,7 +1123,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
     int fdNum = 0;
     string partName = GetIncrmentPartName();
     auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
-    for (auto small : infos) {
+    for (const auto &small : infos) {
         totalSize += static_cast<uint64_t>(small.size);
         fileCount += 1;
         packFiles.emplace_back(small.filePath);
@@ -1178,7 +1178,7 @@ int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> 
         throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
     }
     // 获取增量文件和全量数据
-    if (smallFiles.size() == 0 && bigFiles.size() == 0) {
+    if (smallFiles.empty() && bigFiles.empty()) {
         // 没有增量，则不需要上传
         TarMap tMap;
         ErrCode err = IncrementalAllFileReady(tMap, allFiles, proxy);
@@ -1243,5 +1243,118 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::ReportOnProcessRes
         };
         extPtr->reportOnProcessRetPool_.AddTask([task]() { task(); });
     };
+}
+
+void BackupExtExtension::FillFileInfosWithoutCmp(vector<struct ReportFileInfo> &allFiles,
+                                                 vector<struct ReportFileInfo> &smallFiles,
+                                                 vector<struct ReportFileInfo> &bigFiles,
+                                                 UniqueFd incrementalFd)
+{
+    HILOGI("Fill file info without cmp begin");
+    BReportEntity storageRp(move(incrementalFd));
+    unordered_map<string, struct ReportFileInfo> localFilesInfo;
+    while (storageRp.GetStorageReportInfos(localFilesInfo)) {
+        for (auto localIter = localFilesInfo.begin(); localIter != localFilesInfo.end(); ++localIter) {
+            const string &path = localIter->second.filePath;
+            if (path.empty()) {
+                HILOGE("GetStorageReportInfos failed");
+                continue;
+            }
+            if (localIter->second.isIncremental && localIter->second.isDir) {
+                smallFiles.emplace_back(localIter->second);
+            }
+            if (localIter->second.isDir) {
+                allFiles.emplace_back(localIter->second);
+                continue;
+            }
+            auto [res, fileHash] = BackupFileHash::HashWithSHA256(path);
+            if (fileHash.empty()) {
+                HILOGE("Do hash err, fileHash is empty, path: %{public}s", GetAnonyPath(path).c_str());
+                continue;
+            }
+            localIter->second.hash = fileHash;
+            if (ExtractFileExt(path) == "tar") {
+                localIter->second.userTar = 1; // 1: default value, means true
+            }
+            allFiles.emplace_back(localIter->second);
+            if (!localIter->second.isIncremental) {
+                HILOGE("It's not incre, no need record %{public}s", GetAnonyPath(path).c_str());
+                continue;
+            }
+            if (localIter->second.size <= BConstants::BIG_FILE_BOUNDARY) {
+                smallFiles.emplace_back(localIter->second);
+                continue;
+            }
+            bigFiles.emplace_back(localIter->second);
+        }
+        localFilesInfo.clear();
+    }
+}
+
+void BackupExtExtension::FillFileInfosWithCmp(vector<struct ReportFileInfo> &allFiles,
+                                              vector<struct ReportFileInfo> &smallFiles,
+                                              vector<struct ReportFileInfo> &bigFiles,
+                                              const unordered_map<string, struct ReportFileInfo> &cloudFiles,
+                                              UniqueFd incrementalFd)
+{
+    HILOGI("Fill file info with cmp begin");
+    BReportEntity storageRp(move(incrementalFd));
+    unordered_map<string, struct ReportFileInfo> localFilesInfo;
+    while (storageRp.GetStorageReportInfos(localFilesInfo)) {
+        CompareFiles(allFiles, smallFiles, bigFiles, cloudFiles, localFilesInfo);
+        localFilesInfo.clear();
+    }
+}
+
+void BackupExtExtension::CompareFiles(vector<struct ReportFileInfo> &allFiles,
+                                      vector<struct ReportFileInfo> &smallFiles,
+                                      vector<struct ReportFileInfo> &bigFiles,
+                                      const unordered_map<string, struct ReportFileInfo> &cloudFiles,
+                                      unordered_map<string, struct ReportFileInfo> &localFilesInfo)
+{
+    for (auto localIter = localFilesInfo.begin(); localIter != localFilesInfo.end(); ++localIter) {
+        // 进行文件对比, 当后续使用 isUserTar 字段时需注意 字段解析函数
+        const string &path = localIter->second.filePath;
+        if (path.empty()) {
+            HILOGE("GetStorageReportInfos failed");
+            continue;
+        }
+        auto it = cloudFiles.find(path);
+        bool isExist = (it != cloudFiles.end());
+        if (localIter->second.isIncremental && !isExist && localIter->second.isDir) {
+            smallFiles.emplace_back(localIter->second);
+        }
+        if (localIter->second.isDir) {
+            allFiles.emplace_back(localIter->second);
+            continue;
+        }
+        bool isChange = !(isExist && localIter->second.size == it->second.size &&
+            localIter->second.mtime == it->second.mtime);
+        if (isChange) {
+            auto [res, fileHash] = BackupFileHash::HashWithSHA256(path);
+            if (fileHash.empty()) {
+                HILOGE("Do hash err, fileHash is empty");
+                continue;
+            }
+            localIter->second.hash = fileHash;
+        } else {
+            localIter->second.hash = it->second.hash;
+        }
+
+        if (ExtractFileExt(path) == "tar") {
+            localIter->second.userTar = 1; // 1: default value, means true
+        }
+
+        allFiles.emplace_back(localIter->second);
+        if (localIter->second.isIncremental && (!isExist ||
+            it->second.hash != localIter->second.hash)) {
+            // 在云空间简报里不存在或者hash不一致
+            if (localIter->second.size <= BConstants::BIG_FILE_BOUNDARY) {
+                smallFiles.emplace_back(localIter->second);
+                continue;
+            }
+            bigFiles.emplace_back(localIter->second);
+        }
+    }
 }
 } // namespace OHOS::FileManagement::Backup

@@ -247,7 +247,7 @@ vector<string> BJsonClearDataConfig::GetAllClearBundleRecords()
         cJSON *item = cJSON_GetArrayItem(configArray, i);
         if (item != nullptr && cJSON_GetObjectItem(item, "bundleName") != nullptr &&
             cJSON_GetObjectItem(item, "bundleName")->type == cJSON_String) {
-            bundleNameList.push_back(cJSON_GetObjectItem(item, "bundleName")->valuestring);
+            bundleNameList.emplace_back(cJSON_GetObjectItem(item, "bundleName")->valuestring);
         }
     }
     cJSON_Delete(jsonObjectDis);
