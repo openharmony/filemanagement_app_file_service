@@ -607,7 +607,7 @@ void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
 void Service::AppendBundles(const std::vector<std::string> &bundleNames)
 {
     std::vector<std::string> failedBundles;
-    session_->AppendBundles(restoreBundleNames, failedBundles);
+    session_->AppendBundles(bundleNames, failedBundles);
     if (!failedBundles.empty()) {
         HILOGE("Handle exception on failed bundles, size = %{public}zu", failedBundles.size());
         HandleExceptionOnAppendBundles(session_, failedBundles, {});
