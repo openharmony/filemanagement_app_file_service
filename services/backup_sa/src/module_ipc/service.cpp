@@ -637,7 +637,9 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
             session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return BError(BError::Codes::OK);
         }
-        session_->AppendBundles(restoreBundleNames);
+        std::vector<std::string> failedBundles;
+        session_->AppendBundles(restoreBundleNames, failedBundles);
+        HandleExceptionOnAppendBundles(session_, failedBundles, {});
         SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap,
             isClearDataFlags, restoreType, oldBackupVersion);
         OnStartSched();
@@ -688,6 +690,7 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         if (BundleMgrAdapter::IsUser0BundleName(bundleNameIndexInfo, session_->GetSessionUserId())) {
             SendUserIdToApp(bundleNameIndexInfo, session_->GetSessionUserId());
         }
+        session_->SetBundleUserId(bundleNameIndexInfo, session_->GetSessionUserId());
         session_->SetBackupExtName(bundleNameIndexInfo, restoreInfo.extensionName);
         session_->SetIsReadyLaunch(bundleNameIndexInfo);
     }
@@ -723,7 +726,9 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             HILOGW("RestoreBundleNames is empty.");
             return BError(BError::Codes::OK);
         }
-        session_->AppendBundles(restoreBundleNames);
+        std::vector<std::string> failedBundles;
+        session_->AppendBundles(restoreBundleNames, failedBundles);
+        HandleExceptionOnAppendBundles(session_, failedBundles, {});
         SetCurrentSessProperties(restoreInfos, restoreBundleNames, restoreType, oldBackupVersion);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -771,6 +776,7 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         session_->SetBundleVersionCode(bundleNameIndexInfo, restoreInfo.versionCode);
         session_->SetBundleVersionName(bundleNameIndexInfo, restoreInfo.versionName);
         session_->SetBundleDataSize(bundleNameIndexInfo, restoreInfo.spaceOccupied);
+        session_->SetBundleUserId(bundleNameIndexInfo, session_->GetSessionUserId());
         auto iter = isClearDataFlags.find(bundleNameIndexInfo);
         if (iter != isClearDataFlags.end()) {
             session_->SetClearDataFlag(bundleNameIndexInfo, iter->second);
@@ -780,8 +786,7 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         bool broadCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, BROADCAST_TYPE,
             broadCastInfo);
         if (broadCastRet) {
-            bool notifyRet =
-                    DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(broadCastInfo);
+            bool notifyRet = DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(broadCastInfo);
             HILOGI("Publish event end, notify result is:%{public}d", notifyRet);
         }
         bool uniCastRet = BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE,
@@ -815,7 +820,9 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
         auto bundleDetails = MakeDetailList(bundleNames);
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundleDetails, session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false, bundleNames);
-        session_->AppendBundles(supportBackupNames);
+        std::vector<std::string> failedBundles;
+        session_->AppendBundles(supportBackupNames, failedBundles);
+        HandleExceptionOnAppendBundles(session_, failedBundles, {});
         SetCurrentBackupSessProperties(supportBackupNames, session_->GetSessionUserId(), backupInfos, false);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -858,7 +865,9 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
         auto bundleDetails = MakeDetailList(bundleNames);
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundleDetails, session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false, bundleNames);
-        session_->AppendBundles(supportBackupNames);
+        std::vector<std::string> failedBundles;
+        session_->AppendBundles(supportBackupNames, failedBundles);
+        HandleExceptionOnAppendBundles(session_, failedBundles, {});
         HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -891,6 +900,7 @@ void Service::HandleCurGroupBackupInfos(std::vector<BJsonEntityCaps::BundleInfo>
                 bundleNameIndexInfo.c_str(), GetAnonyString(uniCastInfo.detail).c_str(), uniCastInfo.detail.size());
             session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }
+        session_->SetBundleUserId(bundleNameIndexInfo, session_->GetSessionUserId());
         session_->SetBackupExtName(bundleNameIndexInfo, info.extensionName);
         session_->SetIsReadyLaunch(bundleNameIndexInfo);
     }
@@ -910,11 +920,13 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
         }
         SendEndAppGalleryNotify(callerName);
         if (sennario == BackupRestoreScenario::FULL_RESTORE) {
+            NotifyCloneBundleFinish(callerName, sennario);
             session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, callerName, errCode);
-            NotifyCloneBundleFinish(callerName, sennario);
+            OnAllBundlesFinished(BError(BError::Codes::OK));
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
-            session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, callerName, errCode);
             NotifyCloneBundleFinish(callerName, sennario);
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, callerName, errCode);
+            OnAllBundlesFinished(BError(BError::Codes::OK));
         } else if (sennario == BackupRestoreScenario::FULL_BACKUP) {
             session_->GetServiceReverseProxy()->BackupOnResultReport(restoreRetInfo, callerName);
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
@@ -923,9 +935,11 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         NotifyCloneBundleFinish(callerName, sennario);
+        OnAllBundlesFinished(BError(BError::Codes::OK));
         return e.GetCode(); // 任意异常产生，终止监听该任务
     } catch (...) {
         NotifyCloneBundleFinish(callerName, sennario);
+        OnAllBundlesFinished(BError(BError::Codes::OK));
         HILOGE("Unexpected exception");
         return EPERM;
     }
@@ -934,6 +948,7 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
 ErrCode Service::SAResultReport(const std::string bundleName, const std::string restoreRetInfo,
     const ErrCode errCode, const BackupRestoreScenario sennario)
 {
+    SADone(errCode, bundleName);
     if (sennario == BackupRestoreScenario::FULL_RESTORE) {
         session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, bundleName);
     } else if (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
@@ -944,13 +959,14 @@ ErrCode Service::SAResultReport(const std::string bundleName, const std::string 
     } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
         session_->GetServiceReverseProxy()->IncrementalBackupOnResultReport(restoreRetInfo, bundleName);
     }
+    OnAllBundlesFinished(BError(BError::Codes::OK));
     if (sennario == BackupRestoreScenario::FULL_RESTORE || sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
         BundleEndRadarReport(bundleName, errCode, IServiceReverse::Scenario::RESTORE);
     } else if (sennario == BackupRestoreScenario::FULL_BACKUP ||
         sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
         BundleEndRadarReport(bundleName, errCode, IServiceReverse::Scenario::BACKUP);
     }
-    return SADone(errCode, bundleName);
+    return BError(BError::Codes::OK);
 }
 
 void Service::NotifyCloneBundleFinish(std::string bundleName, const BackupRestoreScenario sennario)
@@ -984,7 +1000,6 @@ void Service::NotifyCloneBundleFinish(std::string bundleName, const BackupRestor
             ClearSessionAndSchedInfo(bundleName);
         }
         RemoveExtensionMutex(bundleName);
-        OnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
         HILOGI("Unexpected exception");
         ReleaseOnException();
@@ -1137,7 +1152,8 @@ void Service::ReportOnExtConnectFailed(const IServiceReverse::Scenario scenario,
                    session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(ret, bundleName);
             BundleBeginRadarReport(bundleName, ret, scenario);
-            DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
+            DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName,
+                session_->GetSessionUserId());
             HILOGI("ExtConnectFailed EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
                    bundleName.c_str());
         } else if (scenario == IServiceReverse::Scenario::BACKUP) {
@@ -1146,7 +1162,8 @@ void Service::ReportOnExtConnectFailed(const IServiceReverse::Scenario scenario,
         } else if (scenario == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
             BundleBeginRadarReport(bundleName, ret, scenario);
-            DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
+            DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName,
+                session_->GetSessionUserId());
             HILOGI("ExtConnectFailed EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
                    bundleName.c_str());
         }
@@ -1264,7 +1281,9 @@ void Service::HandleRestoreDepsBundle(const string &bundleName)
         HILOGI("Start restore session, bundle: %{public}s", bundle.first.c_str());
         restoreBundleNames.emplace_back(bundle.first);
     }
-    session_->AppendBundles(restoreBundleNames);
+    std::vector<std::string> failedBundles;
+    session_->AppendBundles(restoreBundleNames, failedBundles);
+    HandleExceptionOnAppendBundles(session_, failedBundles, {});
     for (const auto &bundle : restoreBundleMap) {
         for (auto &bundleInfo : SvcRestoreDepsManager::GetInstance().GetAllBundles()) {
             if (bundle.first != bundleInfo.name) {
@@ -1311,7 +1330,8 @@ void Service::SendStartAppGalleryNotify(const BundleName &bundleName)
         return;
     }
     HILOGI("AppendIntoDisposalConfigFile OK, bundleName=%{public}s", bundleName.c_str());
-    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName);
+    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName,
+        session_->GetSessionUserId());
     HILOGI("StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
         bundleName.c_str());
 }
@@ -1327,7 +1347,7 @@ void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
     if (scenario != IServiceReverse::Scenario::RESTORE) {
         return;
     }
-    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
+    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName, session_->GetSessionUserId());
     HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
         bundleName.c_str());
     if (disposeErr != DisposeErr::OK) {
@@ -1346,7 +1366,8 @@ void Service::TryToClearDispose(const BundleName &bundleName)
     int32_t maxAtt = MAX_TRY_CLEAR_DISPOSE_NUM;
     int32_t att = 0;
     while (att < maxAtt) {
-        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName);
+        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName,
+            session_->GetSessionUserId());
         HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr, bundleName.c_str());
         if (disposeErr == DisposeErr::OK) {
             break;
@@ -1675,7 +1696,9 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
             std::string bundleNameIndexStr = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
             supportBundleNames.emplace_back(bundleNameIndexStr);
         }
-        session_->AppendBundles(supportBundleNames);
+        std::vector<std::string> failedBundles;
+        session_->AppendBundles(supportBundleNames, failedBundles);
+        HandleExceptionOnAppendBundles(session_, failedBundles, {});
         for (auto info : backupInfos) {
             std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
             session_->SetBackupExtName(bundleNameIndexInfo, info.extensionName);
@@ -1870,7 +1893,6 @@ ErrCode Service::SADone(ErrCode errCode, std::string bundleName)
             saConnection->DisconnectBackupSAExt();
             ClearSessionAndSchedInfo(bundleName);
         }
-        OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         ReleaseOnException();

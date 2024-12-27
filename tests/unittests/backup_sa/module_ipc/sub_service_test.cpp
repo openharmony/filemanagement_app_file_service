@@ -616,7 +616,7 @@ HWTEST_F(ServiceTest, SUB_Service_ReportOnExtConnectFailed_0000, TestSize.Level1
         EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalRestoreOnBundleStarted(_, _)).WillOnce(Return());
-        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::OK));
         service->ReportOnExtConnectFailed(IServiceReverse::Scenario::RESTORE, bundleName, 0);
         EXPECT_TRUE(true);
 
@@ -624,14 +624,14 @@ HWTEST_F(ServiceTest, SUB_Service_ReportOnExtConnectFailed_0000, TestSize.Level1
         EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, RestoreOnBundleStarted(_, _)).WillOnce(Return());
-        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::OK));
         service->ReportOnExtConnectFailed(IServiceReverse::Scenario::RESTORE, bundleName, 0);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*param, GetBackupOverrideIncrementalRestore()).WillOnce(Return(false));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, RestoreOnBundleStarted(_, _)).WillOnce(Return());
-        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::OK));
         service->ReportOnExtConnectFailed(IServiceReverse::Scenario::RESTORE, bundleName, 0);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1066,7 +1066,7 @@ HWTEST_F(ServiceTest, SUB_Service_SendStartAppGalleryNotify_0000, TestSize.Level
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
         EXPECT_CALL(*jdConfig, IfBundleNameInDisposalConfigFile(_)).WillOnce(Return(true));
-        EXPECT_CALL(*gallery, StartRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*gallery, StartRestore(_, _)).WillOnce(Return(DisposeErr::OK));
         service->SendStartAppGalleryNotify(bundleName);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1101,20 +1101,20 @@ HWTEST_F(ServiceTest, SUB_Service_SendEndAppGalleryNotify_0000, TestSize.Level1)
 
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
-        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::REQUEST_FAIL));
+        EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::REQUEST_FAIL));
         service->SendEndAppGalleryNotify(bundleName);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
-        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::OK));
         EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(false));
         service->SendEndAppGalleryNotify(bundleName);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
-        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::OK));
         EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));
         service->SendEndAppGalleryNotify(bundleName);
         EXPECT_TRUE(true);
@@ -1139,12 +1139,12 @@ HWTEST_F(ServiceTest, SUB_Service_TryToClearDispose_0000, TestSize.Level1)
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TryToClearDispose_0000";
     try {
         BundleName bundleName;
-        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::OK));
         EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));
         service->TryToClearDispose(bundleName);
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::REQUEST_FAIL))
+        EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::REQUEST_FAIL))
             .WillOnce(Return(DisposeErr::OK));
         EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(false));
         service->TryToClearDispose(bundleName);
@@ -1182,7 +1182,7 @@ HWTEST_F(ServiceTest, SUB_Service_SendErrAppGalleryNotify_0000, TestSize.Level1)
         bundleNameList.emplace_back("bundleName");
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
         EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNameList));
-        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::OK));
         EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));
         service->SendErrAppGalleryNotify();
         EXPECT_TRUE(true);
@@ -1213,7 +1213,7 @@ HWTEST_F(ServiceTest, SUB_Service_ClearDisposalOnSaStart_0000, TestSize.Level1)
 
         bundleNameList.emplace_back("bundleName");
         EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNameList));
-        EXPECT_CALL(*gallery, EndRestore(_)).WillOnce(Return(DisposeErr::OK));
+        EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::OK));
         EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));
         service->ClearDisposalOnSaStart();
         EXPECT_TRUE(true);

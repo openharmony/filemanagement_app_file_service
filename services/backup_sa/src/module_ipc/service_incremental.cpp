@@ -365,7 +365,9 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
             session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
-        session_->AppendBundles(supportBackupNames);
+        std::vector<std::string> failedBundles;
+        session_->AppendBundles(supportBackupNames, failedBundles);
+        HandleExceptionOnAppendBundles(session_, failedBundles, {});
         SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
         SetCurrentBackupSessProperties(supportBackupNames, session_->GetSessionUserId(), backupInfos, true);
         OnStartSched();
@@ -411,7 +413,9 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
             session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
-        session_->AppendBundles(supportBackupNames);
+        std::vector<std::string> failedBundles;
+        session_->AppendBundles(supportBackupNames, failedBundles);
+        HandleExceptionOnAppendBundles(session_, failedBundles, {});
         SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
         HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
         OnStartSched();
@@ -823,6 +827,7 @@ void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, 
         } else {
             session_->SetBundleDataSize(bundleName, bundleInfo.spaceOccupied);
         }
+        session_->SetBundleUserId(bundleName, userId);
         session_->SetBackupExtName(bundleName, bundleInfo.extensionName);
         session_->SetIsReadyLaunch(bundleName);
     }

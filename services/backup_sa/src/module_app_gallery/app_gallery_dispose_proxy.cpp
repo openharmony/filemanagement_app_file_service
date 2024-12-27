@@ -15,6 +15,7 @@
 
 #include <string>
 
+#include "b_error/b_error.h"
 #include "b_radar/b_radar.h"
 #include "b_sa/b_sa_utils.h"
 #include "b_jsonutil/b_jsonutil.h"
@@ -32,13 +33,10 @@ namespace {
     const auto APP_FOUNDATION_SERVICE = u"appgalleryservice.openapi.privacymanager.AppFoundationService";
 }
 mutex AppGalleryDisposeProxy::instanceLock_;
-mutex AppGalleryDisposeProxy::conditionMutex_;
+mutex AppGalleryDisposeProxy::appGalleryConnectionLock_;
 
 string AppGalleryDisposeProxy::abilityName = "AppFoundationService";
-sptr<IRemoteObject> AppGalleryDisposeProxy::appRemoteObj_;
-condition_variable AppGalleryDisposeProxy::conditionVal_;
-mutex AppGalleryDisposeProxy::appRemoteObjLock_;
-mutex AppGalleryDisposeProxy::connectMutex;
+std::map<int32_t, sptr<AppGalleryConnection>> AppGalleryDisposeProxy::appGalleryConnectionMap_;
 sptr<AppGalleryDisposeProxy> AppGalleryDisposeProxy::appGalleryDisposeProxyInstance_;
 
 AppGalleryDisposeProxy::AppGalleryDisposeProxy()
@@ -63,81 +61,81 @@ sptr<AppGalleryDisposeProxy> AppGalleryDisposeProxy::GetInstance()
     return appGalleryDisposeProxyInstance_;
 }
 
-DisposeErr AppGalleryDisposeProxy::StartBackup(const std::string &bundleName)
+DisposeErr AppGalleryDisposeProxy::StartBackup(const std::string &bundleName, const int32_t userId)
 {
     HILOGI("StartBackup, app %{public}s", bundleName.c_str());
-    DisposeErr res = DoDispose(bundleName, DisposeOperation::START_BACKUP);
+    DisposeErr res = DoDispose(bundleName, DisposeOperation::START_BACKUP, userId);
     if (res != DisposeErr::REQUEST_FAIL) {
         AppRadar::Info info(bundleName, "", "");
-        AppRadar::GetInstance().RecordBackupFuncRes(info, "StartBackup", AppRadar::GetInstance().GetUserId(),
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "StartBackup", userId,
             BizStageBackup::BIZ_STAGE_START_DISPOSE, static_cast<int32_t>(res));
     }
     return res;
 }
 
-DisposeErr AppGalleryDisposeProxy::EndBackup(const std::string &bundleName)
+DisposeErr AppGalleryDisposeProxy::EndBackup(const std::string &bundleName, const int32_t userId)
 {
     HILOGI("EndBackup, app %{public}s", bundleName.c_str());
-    DisposeErr res = DoDispose(bundleName, DisposeOperation::END_BACKUP);
+    DisposeErr res = DoDispose(bundleName, DisposeOperation::END_BACKUP, userId);
     if (res != DisposeErr::REQUEST_FAIL) {
         AppRadar::Info info(bundleName, "", "");
-        AppRadar::GetInstance().RecordBackupFuncRes(info, "EndBackup", AppRadar::GetInstance().GetUserId(),
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "EndBackup", userId,
             BizStageBackup::BIZ_STAGE_END_DISPOSE, static_cast<int32_t>(res));
     }
     return res;
 }
 
-DisposeErr AppGalleryDisposeProxy::StartRestore(const std::string &bundleName)
+DisposeErr AppGalleryDisposeProxy::StartRestore(const std::string &bundleName, const int32_t userId)
 {
     if (SAUtils::IsSABundleName(bundleName)) {
         HILOGI("SA does not need to StartRestore");
         return DisposeErr::OK;
     }
     HILOGI("StartRestore, app %{public}s", bundleName.c_str());
-    DisposeErr res = DoDispose(bundleName, DisposeOperation::START_RESTORE);
+    DisposeErr res = DoDispose(bundleName, DisposeOperation::START_RESTORE, userId);
     if (res != DisposeErr::REQUEST_FAIL) {
         AppRadar::Info info(bundleName, "", "");
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "StartRestore", AppRadar::GetInstance().GetUserId(),
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "StartRestore", userId,
             BizStageRestore::BIZ_STAGE_START_DISPOSE, static_cast<int32_t>(res));
     }
     return res;
 }
 
-DisposeErr AppGalleryDisposeProxy::EndRestore(const std::string &bundleName)
+DisposeErr AppGalleryDisposeProxy::EndRestore(const std::string &bundleName, const int32_t userId)
 {
     if (SAUtils::IsSABundleName(bundleName)) {
         HILOGI("SA does not need to EndRestore");
         return DisposeErr::OK;
     }
     HILOGI("EndRestore, app %{public}s", bundleName.c_str());
-    DisposeErr res = DoDispose(bundleName, DisposeOperation::END_RESTORE);
+    DisposeErr res = DoDispose(bundleName, DisposeOperation::END_RESTORE, userId);
     if (res != DisposeErr::REQUEST_FAIL) {
         AppRadar::Info info(bundleName, "", "");
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "EndRestore", AppRadar::GetInstance().GetUserId(),
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "EndRestore", userId,
             BizStageRestore::BIZ_STAGE_END_DISPOSE, static_cast<int32_t>(res));
     }
     return res;
 }
 
 void RecordDoDisposeRes(const std::string &bundleName,
-                        AppGalleryDisposeProxy::DisposeOperation disposeOperation, int32_t err)
+                        AppGalleryDisposeProxy::DisposeOperation disposeOperation, int32_t userId, int32_t err)
 {
     AppRadar::Info info (bundleName, "", "REQUEST FAIL");
     switch (disposeOperation) {
         case AppGalleryDisposeProxy::DisposeOperation::START_BACKUP:
-            AppRadar::GetInstance().RecordBackupFuncRes(info, "StartBackup", AppRadar::GetInstance().GetUserId(),
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "StartBackup", userId,
                                                         BizStageBackup::BIZ_STAGE_START_DISPOSE, err);
             break;
         case AppGalleryDisposeProxy::DisposeOperation::END_BACKUP:
-            AppRadar::GetInstance().RecordBackupFuncRes(info, "EndBackup", AppRadar::GetInstance().GetUserId(),
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "EndBackup", userId,
                                                         BizStageBackup::BIZ_STAGE_END_DISPOSE, err);
             break;
         case AppGalleryDisposeProxy::DisposeOperation::START_RESTORE:
-            AppRadar::GetInstance().RecordRestoreFuncRes(info, "StartRestore", AppRadar::GetInstance().GetUserId(),
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "StartRestore", userId,
                                                          BizStageRestore::BIZ_STAGE_START_DISPOSE, err);
             break;
         case AppGalleryDisposeProxy::DisposeOperation::END_RESTORE:
-            AppRadar::GetInstance().RecordRestoreFuncRes(info, "EndRestore", AppRadar::GetInstance().GetUserId(),
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "EndRestore", userId,
                                                          BizStageRestore::BIZ_STAGE_END_DISPOSE, err);
             break;
         default:
@@ -145,12 +143,44 @@ void RecordDoDisposeRes(const std::string &bundleName,
     }
 }
 
-DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, DisposeOperation disposeOperation)
+sptr<AppGalleryConnection> AppGalleryDisposeProxy::GetAppGalleryConnection(const int32_t userId)
+{
+    auto it = appGalleryConnectionMap_.find(userId);
+    if (it == appGalleryConnectionMap_.end()) {
+        HILOGI("appGalleryConnectionMap not contain %{public}d, will register", userId);
+        return nullptr;
+    }
+    HILOGI("appGalleryConnectionMap contain %{public}d", userId);
+    return appGalleryConnectionMap_[userId];
+}
+
+sptr<AppGalleryConnection> AppGalleryDisposeProxy::ConnectAppGallery(const int32_t userId)
+{
+    std::unique_lock<std::mutex> lock(appGalleryConnectionLock_);
+    sptr<AppGalleryConnection> connection = GetAppGalleryConnection(userId);
+    if (connection == nullptr) {
+        connection = sptr(new AppGalleryConnection(userId));
+        appGalleryConnectionMap_[userId] = connection;
+    }
+    if (connection->GetRemoteObj() == nullptr) {
+        HILOGI("AppGalleryConnection try to connect, userId = %{public}d", userId);
+        if (!connection->ConnectExtAbility(abilityName) || connection->GetRemoteObj() == nullptr) {
+            HILOGE("AppGalleryConnection failed to connect, userId = %{public}d", userId);
+            return nullptr;
+        }
+    }
+    return connection;
+}
+
+DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, DisposeOperation disposeOperation,
+    const int32_t userId)
 {
     try {
-        HILOGI("DoDispose, app %{public}s, operation %{public}d", bundleName.c_str(), disposeOperation);
-        if (!ConnectExtAbility<AppGalleryDisposeProxy>() || appRemoteObj_ == nullptr) {
-            HILOGE("Can not connect to %{public}s", bundleName.c_str());
+        HILOGI("DoDispose, app %{public}s, operation %{public}d, userId %{public}d", bundleName.c_str(),
+            disposeOperation, userId);
+        sptr<AppGalleryConnection> connection = ConnectAppGallery(userId);
+        if (connection == nullptr) {
+            HILOGE("Get AppGalleryConnection failed, userId = %{public}d", userId);
             return DisposeErr::CONN_FAIL;
         }
 
@@ -172,16 +202,16 @@ DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, Disp
 
         MessageParcel reply;
         MessageOption option;
-        int32_t ret = appRemoteObj_->SendRequest(static_cast<int>(disposeOperation), data, reply, option);
+        int32_t ret = connection->GetRemoteObj()->SendRequest(static_cast<int>(disposeOperation), data, reply, option);
         if (ret != ERR_NONE) {
-            HILOGE("SendRequest error, code=%{public}d, bundleName=%{public}s , appindex =%{public}d",
-                ret, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
-            RecordDoDisposeRes(bundleName, disposeOperation, ret);
+            HILOGE("SendRequest error, code=%{public}d, bundleName=%{public}s , appindex=%{public}d, userId=%{public}d",
+                ret, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex, userId);
+            RecordDoDisposeRes(bundleName, disposeOperation, userId, ret);
             return DisposeErr::REQUEST_FAIL;
         }
 
-        HILOGI("SendRequest success, dispose=%{public}d, bundleName=%{public}s, appindex =%{public}d",
-            disposeOperation, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex);
+        HILOGI("SendRequest success, dispose=%{public}d, bundleName=%{public}s, appindex=%{public}d, userId=%{public}d",
+            disposeOperation, bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.bundleIndex, userId);
         return DisposeErr::OK;
     } catch (const BError &e) {
         HILOGE("Catch exception, errCode = %{public}d", e.GetCode());

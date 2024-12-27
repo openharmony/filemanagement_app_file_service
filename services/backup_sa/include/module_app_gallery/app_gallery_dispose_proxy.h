@@ -17,10 +17,12 @@
 #define OHOS_FILEMGMT_BACKUP_APP_GALLERY_DISPOSE_PROXY_H
 
 #include <condition_variable>
+#include <map>
 #include <mutex>
 
 #include <iremote_stub.h>
 
+#include "app_gallery_service_connection.h"
 #include "i_appgallery_service.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -39,24 +41,24 @@ public:
 
     static sptr<AppGalleryDisposeProxy> GetInstance();
 
-    DisposeErr StartBackup(const std::string &bundleName);
-    DisposeErr EndBackup(const std::string &bundleName);
-    DisposeErr StartRestore(const std::string &bundleName);
-    DisposeErr EndRestore(const std::string &bundleName);
+    DisposeErr StartBackup(const std::string &bundleName, const int32_t userId);
+    DisposeErr EndBackup(const std::string &bundleName, const int32_t userId);
+    DisposeErr StartRestore(const std::string &bundleName, const int32_t userId);
+    DisposeErr EndRestore(const std::string &bundleName, const int32_t userId);
 
-    static std::condition_variable conditionVal_;
+    sptr<AppGalleryConnection> GetAppGalleryConnection(const int32_t userId);
+    sptr<AppGalleryConnection> ConnectAppGallery(const int32_t userId);
+
     static std::string abilityName;
     static std::string pkgName;
-    static std::mutex appRemoteObjLock_;
-    static std::mutex connectMutex;
-    static sptr<IRemoteObject> appRemoteObj_;
+    static std::map<int32_t, sptr<AppGalleryConnection>> appGalleryConnectionMap_;
 
 private:
-    DisposeErr DoDispose(const std::string &bundleName, DisposeOperation disposeOperation);
+    DisposeErr DoDispose(const std::string &bundleName, DisposeOperation disposeOperation, const int32_t userId);
 
 private:
     static std::mutex instanceLock_;
-    static std::mutex conditionMutex_;
+    static std::mutex appGalleryConnectionLock_;
     static sptr<AppGalleryDisposeProxy> appGalleryDisposeProxyInstance_;
 };
 } // namespace OHOS::FileManagement::Backup

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,67 +18,36 @@
 
 #include <condition_variable>
 #include <mutex>
-#include <chrono>
 
 #include "ability_manager_client.h"
 #include "ability_connect_callback_stub.h"
 #include "want.h"
 
 #include "i_appgallery_service.h"
-#include "module_external/bms_adapter.h"
-#include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace OHOS::AppExecFwk;
-const int32_t CONNECT_TIME = 3;
 
-template <typename T> class AppGralleryConnection : public AbilityConnectionStub {
+class AppGalleryConnection : public AbilityConnectionStub {
 public:
+    AppGalleryConnection(int32_t userId) : userId(userId) {}
+
     void OnAbilityConnectDone(const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject,
-        int resultCode)
-    {
-        std::string uri = element.GetURI();
-        HILOGI("OnAbilityConnectDone, uri = %{public}s", uri.c_str());
-        T::appRemoteObj_ = remoteObject;
-        T::conditionVal_.notify_one();
-    }
+        int resultCode);
 
-    void OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode)
-    {
-        std::string uri = element.GetURI();
-        HILOGI("OnAbilityDisconnectDone, uri = %{public}s", uri.c_str());
-        T::appRemoteObj_ = nullptr;
-    }
-};
+    void OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode);
 
-template <typename T> bool ConnectExtAbility()
-{
-    HILOGI("ConnectExtAbility called");
-    std::lock_guard<std::mutex> autoLock(T::appRemoteObjLock_);
-    if (T::appRemoteObj_ != nullptr) {
-        return true;
-    }
+    bool ConnectExtAbility(std::string abilityName);
 
-    auto appGalleryBundleName = BundleMgrAdapter::GetAppGalleryBundleName();
-    if (appGalleryBundleName.empty()) {
-        HILOGI("ConnectExtAbility GetAppGalleryBundleName failed");
-        return false;
-    }
+    sptr<IRemoteObject> GetRemoteObj();
 
-    Want want;
-    want.SetElementName(appGalleryBundleName.c_str(), T::abilityName);
-    sptr<IAbilityConnection> connect = new AppGralleryConnection<T>();
-    auto ret = AbilityManagerClient::GetInstance()->ConnectAbility(want, connect, -1);
-
-    std::unique_lock<std::mutex> uniqueLock(T::connectMutex);
-    T::conditionVal_.wait_for(uniqueLock, std::chrono::seconds(CONNECT_TIME));
-    if (ret != IAppGalleryService::ERR_OK || T::appRemoteObj_ == nullptr) {
-        HILOGI("ConnectExtAbility failed, ret=%{public}d", ret);
-        T::appRemoteObj_ = nullptr;
-        return false;
-    }
-    HILOGI("ConnectExtAbility success, ret=%{public}d", ret);
-    return true;
+private:
+    int32_t userId;
+    std::mutex conditionMutex_;
+    std::condition_variable conditionVal_;
+    std::mutex connectMutex;
+    std::mutex appRemoteObjLock_;
+    sptr<IRemoteObject> appRemoteObj_;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_APP_GALLERY_SERVICE_CONNECTION_H
