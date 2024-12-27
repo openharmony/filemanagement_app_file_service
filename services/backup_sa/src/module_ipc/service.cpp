@@ -604,6 +604,16 @@ void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
     }
 }
 
+void Service::AppendBundles(const std::vector<std::string> &bundleNames)
+{
+    std::vector<std::string> failedBundles;
+    session_->AppendBundles(restoreBundleNames, failedBundles);
+    if (!failedBundles.empty()) {
+        HILOGE("Handle exception on failed bundles, size = %{public}zu", failedBundles.size());
+        HandleExceptionOnAppendBundles(session_, failedBundles, {});
+    }
+}
+
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames,
     const std::vector<std::string> &bundleInfos, RestoreTypeEnum restoreType, int32_t userId)
 {
@@ -637,9 +647,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleNam
             session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return BError(BError::Codes::OK);
         }
-        std::vector<std::string> failedBundles;
-        session_->AppendBundles(restoreBundleNames, failedBundles);
-        HandleExceptionOnAppendBundles(session_, failedBundles, {});
+        AppendBundles(restoreBundleNames);
         SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap,
             isClearDataFlags, restoreType, oldBackupVersion);
         OnStartSched();
@@ -726,9 +734,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             HILOGW("RestoreBundleNames is empty.");
             return BError(BError::Codes::OK);
         }
-        std::vector<std::string> failedBundles;
-        session_->AppendBundles(restoreBundleNames, failedBundles);
-        HandleExceptionOnAppendBundles(session_, failedBundles, {});
+        AppendBundles(restoreBundleNames);
         SetCurrentSessProperties(restoreInfos, restoreBundleNames, restoreType, oldBackupVersion);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -820,9 +826,7 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
         auto bundleDetails = MakeDetailList(bundleNames);
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundleDetails, session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false, bundleNames);
-        std::vector<std::string> failedBundles;
-        session_->AppendBundles(supportBackupNames, failedBundles);
-        HandleExceptionOnAppendBundles(session_, failedBundles, {});
+        AppendBundles(supportBackupNames);
         SetCurrentBackupSessProperties(supportBackupNames, session_->GetSessionUserId(), backupInfos, false);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -865,9 +869,7 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
         auto bundleDetails = MakeDetailList(bundleNames);
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundleDetails, session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false, bundleNames);
-        std::vector<std::string> failedBundles;
-        session_->AppendBundles(supportBackupNames, failedBundles);
-        HandleExceptionOnAppendBundles(session_, failedBundles, {});
+        AppendBundles(supportBackupNames);
         HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -1281,9 +1283,7 @@ void Service::HandleRestoreDepsBundle(const string &bundleName)
         HILOGI("Start restore session, bundle: %{public}s", bundle.first.c_str());
         restoreBundleNames.emplace_back(bundle.first);
     }
-    std::vector<std::string> failedBundles;
-    session_->AppendBundles(restoreBundleNames, failedBundles);
-    HandleExceptionOnAppendBundles(session_, failedBundles, {});
+    AppendBundles(restoreBundleNames);
     for (const auto &bundle : restoreBundleMap) {
         for (auto &bundleInfo : SvcRestoreDepsManager::GetInstance().GetAllBundles()) {
             if (bundle.first != bundleInfo.name) {
@@ -1696,9 +1696,7 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
             std::string bundleNameIndexStr = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
             supportBundleNames.emplace_back(bundleNameIndexStr);
         }
-        std::vector<std::string> failedBundles;
-        session_->AppendBundles(supportBundleNames, failedBundles);
-        HandleExceptionOnAppendBundles(session_, failedBundles, {});
+        AppendBundles(supportBundleNames);
         for (auto info : backupInfos) {
             std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
             session_->SetBackupExtName(bundleNameIndexInfo, info.extensionName);

@@ -304,6 +304,7 @@ public:
      */
     void RemoveExtensionMutex(const BundleName &bundleName);
     void StartRunningTimer(const std::string &bundleName);
+    void AppendBundles(const std::vector<std::string> &bundleNames);
     ErrCode AppIncrementalFileReady(const std::string &bundleName, const std::string &fileName, UniqueFd fd,
         UniqueFd manifestFd, int32_t errCode);
 public:
