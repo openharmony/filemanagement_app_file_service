@@ -42,7 +42,8 @@ public:
     virtual ErrCode InitClient(SvcSessionManager::Impl &) = 0;
     virtual void SetExtFileNameRequest(const std::string &, const std::string &) = 0;
     virtual std::set<std::string> GetExtFileNameRequest(const std::string &) = 0;
-    virtual std::map<BundleName, BackupExtInfo>::iterator GetBackupExtNameMap(const std::string &) = 0;
+    virtual std::tuple<bool, std::map<BundleName, BackupExtInfo>::iterator> GetBackupExtNameMap(
+        const std::string &) = 0;
     virtual bool GetSchedBundleName(std::string &) = 0;
     virtual BConstants::ServiceSchedAction GetServiceSchedAction(const std::string &) = 0;
     virtual void SetServiceSchedAction(const std::string &, BConstants::ServiceSchedAction) = 0;
@@ -113,7 +114,8 @@ public:
     MOCK_METHOD(ErrCode, InitClient, (SvcSessionManager::Impl &));
     MOCK_METHOD(void, SetExtFileNameRequest, (const std::string &, const std::string &));
     MOCK_METHOD(std::set<std::string>, GetExtFileNameRequest, (const std::string &));
-    MOCK_METHOD((std::map<BundleName, BackupExtInfo>::iterator), GetBackupExtNameMap, (const std::string &));
+    MOCK_METHOD((std::tuple<bool, std::map<BundleName, BackupExtInfo>::iterator>), GetBackupExtNameMap,
+        (const std::string &));
     MOCK_METHOD(bool, GetSchedBundleName, (std::string &));
     MOCK_METHOD(BConstants::ServiceSchedAction, GetServiceSchedAction, (const std::string &));
     MOCK_METHOD(void, SetServiceSchedAction, (const std::string &, BConstants::ServiceSchedAction));

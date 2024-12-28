@@ -574,6 +574,12 @@ private:
     void SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId);
 
     ErrCode VerifySendRateParam();
+
+    ErrCode HandleCurBundleFileReady(const std::string &bundleName, const std::string &fileName, bool isIncBackup);
+
+    ErrCode HandleCurAppDone(ErrCode errCode, const std::string &bundleName, bool isIncBackup);
+
+    void StartCurBundleBackupOrRestore(const std::string &bundleName);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

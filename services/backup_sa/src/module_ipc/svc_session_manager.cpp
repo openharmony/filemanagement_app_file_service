@@ -184,16 +184,15 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("OnBundleFileReady failed, bundleName:%{public}s, fileName:%{public}s", bundleName.c_str(),
+            GetAnonyPath(fileName).c_str());
+        return false;
     }
-    HILOGD("Begin, bundleName name is:%{public}s", bundleName.c_str());
-    auto it = impl_.backupExtNameMap.find(bundleName);
-    if (it == impl_.backupExtNameMap.end()) {
-        stringstream ss;
-        ss << "Could not find the " << bundleName << " from current session";
-        throw BError(BError::Codes::SA_REFUSED_ACT, ss.str());
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find the bundle:%{public}s", bundleName.c_str());
+        return false;
     }
-
     // 判断是否结束 通知EXTENTION清理资源  TOOL应用完成备份
     if (impl_.scenario == IServiceReverse::Scenario::RESTORE || SAUtils::IsSABundleName(bundleName)) {
         it->second.isBundleFinished = true;
@@ -208,7 +207,8 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
             it->second.receExtAppDone = true;
         }
         if (it->second.receExtManageJson && it->second.fileNameInfo.empty() && it->second.receExtAppDone) {
-            HILOGI("The bundle manage json info and file info support current app done");
+            HILOGI("The bundle manage json info and file info support current app done, bundle:%{public}s",
+                bundleName.c_str());
             it->second.isBundleFinished = true;
             return true;
         }
@@ -220,10 +220,12 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
 UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, UniqueFd fd)
 {
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return UniqueFd(-EPERM);
     }
     if (impl_.scenario != IServiceReverse::Scenario::BACKUP) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Invalid Scenario");
+        HILOGE("Invalid Scenario, bundleName:%{public}s", bundleName.c_str());
+        return UniqueFd(-EPERM);
     }
 
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
@@ -231,12 +233,16 @@ UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, Uniq
     auto info = cache.GetExtManage();
 
     for (auto &fileName : info) {
-        HILOGE("fileName %{public}s", GetAnonyString(fileName).data());
+        HILOGE("fileName %{public}s", GetAnonyPath(fileName).data());
         OnBundleFileReady(bundleName, fileName);
     }
 
     unique_lock<shared_mutex> lock(lock_);
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find the bundle:%{public}s", bundleName.c_str());
+        return UniqueFd(-EPERM);
+    }
     it->second.receExtManageJson = true;
     return move(cachedEntity.GetFd());
 }
@@ -247,7 +253,7 @@ void SvcSessionManager::RemoveExtInfo(const string &bundleName)
     unique_lock<shared_mutex> lock(lock_);
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
-        HILOGI("BackupExtNameMap not contain %{public}s", bundleName.c_str());
+        HILOGE("BackupExtNameMap not contain %{public}s", bundleName.c_str());
         return;
     }
     if (extConnectNum_) {
@@ -286,12 +292,18 @@ std::weak_ptr<SABackupConnection> SvcSessionManager::GetSAExtConnection(const Bu
     HILOGD("svcMrg:GetExt, bundleName:%{public}s", bundleName.c_str());
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return std::weak_ptr<SABackupConnection>();
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find current bundle, bundleName:%{public}s", bundleName.c_str());
+        return std::weak_ptr<SABackupConnection>();
+    }
     if (!it->second.saBackupConnection) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "SA backup connection is empty");
+        HILOGE("SA backup connection is empty, bundleName:%{public}s", bundleName.c_str());
+        return std::weak_ptr<SABackupConnection>();
     }
 
     return std::weak_ptr<SABackupConnection>(it->second.saBackupConnection);
@@ -416,10 +428,14 @@ void SvcSessionManager::SetExtFileNameRequest(const string &bundleName, const st
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
     }
-
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find current bundle, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
     it->second.fileNameInfo.insert(fileName);
 }
 
@@ -427,27 +443,33 @@ std::set<std::string> SvcSessionManager::GetExtFileNameRequest(const std::string
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return std::set<std::string>();
     }
 
     if (impl_.scenario != IServiceReverse::Scenario::RESTORE) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Invalid Scenario");
+        HILOGE("Invalid Scenario, bundleName:%{public}s", bundleName.c_str());
+        return std::set<std::string>();
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return std::set<std::string>();
+    }
     set<string> fileNameInfo = it->second.fileNameInfo;
     it->second.fileNameInfo.clear();
     return fileNameInfo;
 }
 
-map<BundleName, BackupExtInfo>::iterator SvcSessionManager::GetBackupExtNameMap(const string &bundleName)
+std::tuple<bool, std::map<BundleName, BackupExtInfo>::iterator> SvcSessionManager::GetBackupExtNameMap(
+    const string &bundleName)
 {
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
-        stringstream ss;
-        ss << "Could not find the " << bundleName << " from current session";
-        throw BError(BError::Codes::SA_REFUSED_ACT, ss.str());
+        HILOGE("Could not find the bundle from current session, bundleName:%{public}s", bundleName.c_str());
+        return {false, impl_.backupExtNameMap.end()};
     }
-    return it;
+    return {true, it};
 }
 
 bool SvcSessionManager::GetSchedBundleName(string &bundleName)
@@ -477,9 +499,14 @@ BConstants::ServiceSchedAction SvcSessionManager::GetServiceSchedAction(const st
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return BConstants::ServiceSchedAction::UNKNOWN;
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return BConstants::ServiceSchedAction::UNKNOWN;
+    }
     return it->second.schedAction;
 }
 
@@ -487,10 +514,14 @@ void SvcSessionManager::SetServiceSchedAction(const string &bundleName, BConstan
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
         throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
     }
-
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        throw BError(BError::Codes::SA_REFUSED_ACT, "BackupExtNameMap can not find bundle");
+    }
     it->second.schedAction = action;
     if (it->second.schedAction == BConstants::ServiceSchedAction::START) {
         extConnectNum_++;
@@ -501,10 +532,15 @@ void SvcSessionManager::SetBackupExtName(const string &bundleName, const string 
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
     it->second.backupExtName = backupExtName;
 }
 
@@ -512,10 +548,15 @@ string SvcSessionManager::GetBackupExtName(const string &bundleName)
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return "";
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return "";
+    }
     return it->second.backupExtName;
 }
 
@@ -523,10 +564,15 @@ void SvcSessionManager::SetBackupExtInfo(const string &bundleName, const string 
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
     it->second.extInfo = extInfo;
 }
 
@@ -534,10 +580,15 @@ std::string SvcSessionManager::GetBackupExtInfo(const string &bundleName)
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return "";
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return "";
+    }
     return it->second.extInfo;
 }
 
@@ -545,7 +596,8 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("AppendBundles error, No caller token was specified");
+        return;
     }
 
     for (auto &&bundleName : bundleNames) {
@@ -553,7 +605,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
         BackupExtInfo info {};
         auto it = impl_.backupExtNameMap.find(bundleName);
         if (it != impl_.backupExtNameMap.end()) {
-            HILOGI("BackupExtNameMap already contain %{public}s", bundleName.c_str());
+            HILOGE("BackupExtNameMap already contain %{public}s", bundleName.c_str());
             info.backUpConnection = impl_.backupExtNameMap[bundleName].backUpConnection;
             info.saBackupConnection = impl_.backupExtNameMap[bundleName].saBackupConnection;
             info.appendNum = impl_.backupExtNameMap[bundleName].appendNum + 1;
@@ -603,7 +655,8 @@ bool SvcSessionManager::IsOnAllBundlesFinished()
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("IsOnAllBundlesFinished error, No caller token was specified");
+        return false;
     }
     bool isAllBundlesFinished = !impl_.backupExtNameMap.size();
     if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
@@ -619,7 +672,8 @@ bool SvcSessionManager::IsOnOnStartSched()
     HILOGI("Begin");
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("IsOnOnStartSched error, No caller token was specified");
+        return false;
     }
     if (impl_.isBackupStart && impl_.backupExtNameMap.size()) {
         return true;
@@ -647,10 +701,15 @@ void SvcSessionManager::SetBundleRestoreType(const std::string &bundleName, Rest
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
     it->second.restoreType = restoreType;
 }
 
@@ -658,10 +717,15 @@ RestoreTypeEnum SvcSessionManager::GetBundleRestoreType(const std::string &bundl
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
+    }
     return it->second.restoreType;
 }
 
@@ -669,10 +733,15 @@ void SvcSessionManager::SetBundleVersionCode(const std::string &bundleName, int6
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
     it->second.versionCode = versionCode;
 }
 
@@ -680,10 +749,15 @@ int64_t SvcSessionManager::GetBundleVersionCode(const std::string &bundleName)
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return 0;
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return 0;
+    }
     return it->second.versionCode;
 }
 
@@ -691,10 +765,15 @@ void SvcSessionManager::SetBundleVersionName(const std::string &bundleName, std:
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
     it->second.versionName = versionName;
 }
 
@@ -702,10 +781,15 @@ std::string SvcSessionManager::GetBundleVersionName(const std::string &bundleNam
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return "";
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return "";
+    }
     return it->second.versionName;
 }
 
@@ -713,10 +797,15 @@ void SvcSessionManager::SetBundleDataSize(const std::string &bundleName, int64_t
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
     it->second.dataSize = dataSize;
 }
 
@@ -730,15 +819,16 @@ uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
     int64_t timeout;
     uint32_t resTimeoutMs;
 
-    try {
-        auto it = GetBackupExtNameMap(bundleName);
-        int64_t appSize = it->second.dataSize;
-        /* timeout = (AppSize / 3Ms) * 3 + 30 */
-        timeout = defaultTimeout + (appSize / processRate) * multiple;
-    } catch (const BError &e) {
-        HILOGE("Failed to get app<%{public}s> dataInfo, err=%{public}d", bundleName.c_str(), e.GetCode());
-        timeout = defaultTimeout;
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("CalAppProcessTime failed, BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        resTimeoutMs = (uint32_t)(minTimeout * invertMillisecond % UINT_MAX);
+        HILOGE("Current app will run timeout=%{public}u(ms), bundleName=%{public}s ", resTimeoutMs, bundleName.c_str());
+        return resTimeoutMs;
     }
+    int64_t appSize = it->second.dataSize;
+    /* timeout = (AppSize / 3Ms) * 3 + 30 */
+    timeout = defaultTimeout + (appSize / processRate) * multiple;
     timeout = timeout < minTimeout ? minTimeout : timeout;
     resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX); /* conver second to millisecond */
     HILOGI("Calculate App extension process run timeout=%{public}u(ms), bundleName=%{public}s ", resTimeoutMs,
@@ -754,7 +844,11 @@ bool SvcSessionManager::StartFwkTimer(const std::string &bundleName, const Utils
         HILOGE("No caller token was specified");
         return false;
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("Start fwk timer failed, BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
     if (it->second.fwkTimerStatus == true) {
         HILOGE("FwkTimer is registered, unregister first.");
         return false;
@@ -775,7 +869,11 @@ bool SvcSessionManager::StopFwkTimer(const std::string &bundleName)
         HILOGE("No caller token was specified");
         return false;
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("Stop fwk timer failed, BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
     if (it->second.fwkTimerStatus == false) {
         HILOGE("FwkTimer is unregistered, register first.");
         return true;
@@ -795,7 +893,11 @@ bool SvcSessionManager::StartExtTimer(const std::string &bundleName, const Utils
         HILOGE("No caller token was specified");
         return false;
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("Start extension timer failed, BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
     if (it->second.extTimerStatus == true) {
         HILOGE("ExtTimer is registered, unregister first.");
         return false;
@@ -816,7 +918,11 @@ bool SvcSessionManager::StopExtTimer(const std::string &bundleName)
         HILOGE("No caller token was specified");
         return false;
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("Stop extension timer failed, BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
     if (it->second.extTimerStatus == false) {
         HILOGE("ExtTimer is unregistered, register first.");
         return true;
@@ -838,7 +944,11 @@ bool SvcSessionManager::UpdateTimer(const std::string &bundleName, uint32_t time
         HILOGE("No caller token was specified");
         return false;
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("Update timer failed, BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
     it->second.timeout = timeout;
     if (it->second.extTimerStatus == false) {
         HILOGI("ExtTimer is unregistered, just store timeout %{public}u(ms)", timeout);
@@ -911,7 +1021,8 @@ bool SvcSessionManager::GetIsIncrementalBackup()
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("GetIsIncrementalBackup error, No caller token was specified");
+        return false;
     }
     return impl_.isIncrementalBackup;
 }
@@ -920,9 +1031,14 @@ void SvcSessionManager::SetIncrementalData(const BIncrementalData &incrementalDa
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("SetIncrementalData error, No caller token was specified");
+        return;
     }
-    auto it = GetBackupExtNameMap(incrementalData.bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(incrementalData.bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", incrementalData.bundleName.c_str());
+        return;
+    }
     it->second.lastIncrementalTime = incrementalData.lastIncrementalTime;
     it->second.manifestFd = incrementalData.manifestFd;
     it->second.backupParameters = incrementalData.backupParameters;
@@ -933,9 +1049,14 @@ int32_t SvcSessionManager::GetIncrementalManifestFd(const string &bundleName)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return BConstants::INVALID_FD_NUM;
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return BConstants::INVALID_FD_NUM;
+    }
     return it->second.manifestFd;
 }
 
@@ -943,9 +1064,14 @@ int64_t SvcSessionManager::GetLastIncrementalTime(const string &bundleName)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return 0;
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return 0;
+    }
     return it->second.lastIncrementalTime;
 }
 
@@ -963,19 +1089,30 @@ void SvcSessionManager::SetClearDataFlag(const std::string &bundleName, bool isC
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
     it->second.isClearData = isClearData;
     HILOGI("bundleName:%{public}s, set clear data flag:%{public}d.", bundleName.c_str(), isClearData);
 }
+
 bool SvcSessionManager::GetClearDataFlag(const std::string &bundleName)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return true;
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return true;
+    }
     return it->second.isClearData;
 }
 
@@ -1039,9 +1176,14 @@ void SvcSessionManager::SetPublishFlag(const std::string &bundleName)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
     it->second.isInPublishFile = true;
     HILOGE("Set PublishFile success, bundleName = %{public}s", bundleName.c_str());
 }
@@ -1050,7 +1192,8 @@ void SvcSessionManager::SetOldBackupVersion(const std::string &backupVersion)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("Error, No caller token was specified");
+        return;
     }
     impl_.oldBackupVersion = backupVersion;
 }
@@ -1059,7 +1202,8 @@ std::string SvcSessionManager::GetOldBackupVersion()
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("Error, No caller token was specified");
+        return "";
     }
     return impl_.oldBackupVersion;
 }
@@ -1073,9 +1217,14 @@ void SvcSessionManager::SetIsReadyLaunch(const std::string &bundleName)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
     }
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
     it->second.isReadyLaunch = true;
     HILOGE("SetIsReadyLaunch success, bundleName = %{public}s", bundleName.c_str());
 }
