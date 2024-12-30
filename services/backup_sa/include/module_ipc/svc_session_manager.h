@@ -102,8 +102,8 @@ public:
      *
      * @param clientToken 调用者TOKEN
      * @param scenario 给定场景
-     * @throw BError::Codes::SA_REFUSED_ACT 调用者不是会话所有者
-     * @throw BError::Codes::SDK_MIXED_SCENARIO 调用者在备份/恢复场景使用了不匹配的函数
+     *
+     * @return ErrCode 错误码
      */
     ErrCode VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const;
 
@@ -112,6 +112,8 @@ public:
      *
      * @param impl 客户端信息
      * @param isOccupyingSession 框架是否自占用session
+     *
+     * @return ErrCode 错误码
      */
     ErrCode Active(Impl newImpl, bool isOccupyingSession = false);
 
@@ -120,6 +122,8 @@ public:
      *
      * @param remoteInAction 尝试关闭会话的客户端代理。只有激活会话的客户端代理有权关闭会话
      * @param force 强制关闭
+     *
+     * @return ErrCode 错误码
      */
     ErrCode Deactive(const wptr<IRemoteObject> &remoteInAction, bool force = false);
 
@@ -127,7 +131,7 @@ public:
      * @brief 检验调用者给定的bundleName是否是有效的
      *
      * @param bundleName 调用者名称
-     * @throw BError::Codes::SA_REFUSED_ACT 调用者不是会话所有者
+     * @return ErrCode 调用者不是会话所有者
      */
     ErrCode VerifyBundleName(std::string &bundleName);
 
@@ -576,7 +580,7 @@ private:
      * @param bundleName 应用名称
      * @return std::map<BundleName, BackupExtInfo>::iterator
      */
-    std::map<BundleName, BackupExtInfo>::iterator GetBackupExtNameMap(const std::string &bundleName);
+    std::tuple<bool, std::map<BundleName, BackupExtInfo>::iterator> GetBackupExtNameMap(const std::string &bundleName);
 
     /**
      * @brief 计算出应用程序处理数据可能使用的时间

@@ -146,11 +146,15 @@ std::set<std::string> SvcSessionManager::GetExtFileNameRequest(const std::string
     return fileNameInfo;
 }
 
-map<BundleName, BackupExtInfo>::iterator SvcSessionManager::GetBackupExtNameMap(const string &bundleName)
+std::tuple<bool, map<BundleName, BackupExtInfo>::iterator> SvcSessionManager::GetBackupExtNameMap(
+    const string &bundleName)
 {
     GTEST_LOG_(INFO) << "GetBackupExtNameMap";
     auto it = impl_.backupExtNameMap.find(bundleName);
-    return it;
+    if (it == impl_.backupExtNameMap.end()) {
+        return {false, impl_.backupExtNameMap.end()};
+    }
+    return {true, it};
 }
 
 bool SvcSessionManager::GetSchedBundleName(string &bundleName)

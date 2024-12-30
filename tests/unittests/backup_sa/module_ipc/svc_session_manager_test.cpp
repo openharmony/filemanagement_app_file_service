@@ -306,49 +306,36 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_getscenario_0100, testing:
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_onBundlefileready_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_onBundlefileready_0100";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    bool fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
+    EXPECT_FALSE(fileReady);
 
-        try {
-            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-            sessionManagerPtr_->impl_.backupExtNameMap.clear();
-            sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_REFUSED_ACT);
-        }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
+    EXPECT_FALSE(fileReady);
 
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
-        auto ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
-        EXPECT_TRUE(ret);
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
+    fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
+    EXPECT_TRUE(fileReady);
 
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap["123"] = {};
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
-        ret = sessionManagerPtr_->OnBundleFileReady("123");
-        EXPECT_TRUE(ret);
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap["123"] = {};
+    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+    fileReady = sessionManagerPtr_->OnBundleFileReady("123");
+    EXPECT_TRUE(fileReady);
 
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::UNDEFINED;
-        ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
-        EXPECT_FALSE(ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by onBundlefileready.";
-    }
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::UNDEFINED;
+    fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
+    EXPECT_FALSE(fileReady);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_onBundlefileready_0100";
 }
 
@@ -364,40 +351,35 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_onBundlefileready_0100, te
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_onBundlefileready_0101, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_onBundlefileready_0101";
-    try {
-        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
-        auto ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, "");
-        EXPECT_FALSE(ret);
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+    bool fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, "");
+    EXPECT_FALSE(fileReady);
 
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
-        ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, "test");
-        EXPECT_FALSE(ret);
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+    fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, "test");
+    EXPECT_FALSE(fileReady);
 
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
-        ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, string(BConstants::EXT_BACKUP_MANAGE));
-        EXPECT_FALSE(ret);
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+    fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, string(BConstants::EXT_BACKUP_MANAGE));
+    EXPECT_FALSE(fileReady);
 
-        BackupExtInfo info;
-        info.receExtManageJson = true;
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
-        ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, "");
-        EXPECT_TRUE(ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by onBundlefileready.";
-    }
+    BackupExtInfo info;
+    info.receExtManageJson = true;
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
+    fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, "");
+    EXPECT_TRUE(fileReady);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_onBundlefileready_0101";
 }
 
@@ -413,42 +395,29 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_onBundlefileready_0101, te
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBundleExtManageInfo_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_OnBundleExtManageInfo_0100";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->OnBundleExtManageInfo(BUNDLE_NAME, UniqueFd(-1));
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    auto ret = sessionManagerPtr_->OnBundleExtManageInfo(BUNDLE_NAME, UniqueFd(-1));
+    EXPECT_TRUE(move(ret) == -1);
 
-        try {
-            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-            sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
-            sessionManagerPtr_->OnBundleExtManageInfo(BUNDLE_NAME, UniqueFd(-1));
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
+    ret = sessionManagerPtr_->OnBundleExtManageInfo(BUNDLE_NAME, UniqueFd(-1));
+    EXPECT_TRUE(move(ret) == -1);
 
-        TestManager tm("SvcSessionManagerTest_GetFd_0100");
-        string filePath = tm.GetRootDirCurTest().append(MANAGE_JSON);
-        SaveStringToFile(filePath, R"({"fileName" : "1.tar"})");
-        UniqueFd fd(open(filePath.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
-        sessionManagerPtr_->OnBundleExtManageInfo(BUNDLE_NAME, move(fd));
-        auto ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
-        EXPECT_FALSE(ret);
-        ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, FILE_NAME);
-        EXPECT_FALSE(ret);
-        ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, MANAGE_JSON);
-        EXPECT_FALSE(ret);
-        ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, FILE_NAME);
-        EXPECT_TRUE(ret);
-    } catch (...) {
-        EXPECT_FALSE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by OnBundleExtManageInfo.";
-    }
+    TestManager tm("SvcSessionManagerTest_GetFd_0100");
+    string filePath = tm.GetRootDirCurTest().append(MANAGE_JSON);
+    SaveStringToFile(filePath, R"({"fileName" : "1.tar"})");
+    UniqueFd fd(open(filePath.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
+    sessionManagerPtr_->OnBundleExtManageInfo(BUNDLE_NAME, move(fd));
+    bool fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
+    EXPECT_TRUE(fileReady);
+    fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, FILE_NAME);
+    EXPECT_TRUE(fileReady);
+    fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, MANAGE_JSON);
+    EXPECT_TRUE(fileReady);
+    fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, FILE_NAME);
+    EXPECT_TRUE(fileReady);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_OnBundleExtManageInfo_0100";
 }
 
@@ -562,14 +531,10 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0100
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetExtFileNameRequest_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->SetExtFileNameRequest(BUNDLE_NAME, FILE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->SetExtFileNameRequest(BUNDLE_NAME, FILE_NAME);
+        EXPECT_TRUE(true);
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
@@ -596,19 +561,10 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0100
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0101, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetExtFileNameRequest_0101";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
-            EXPECT_TRUE(true);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetExtFileNameRequest.";
-    }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    auto fileNameSet = sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
+    EXPECT_TRUE(fileNameSet.empty());
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetExtFileNameRequest_0101";
 }
 
@@ -624,20 +580,11 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0101
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0102, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetExtFileNameRequest_0102";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-            sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::UNDEFINED;
-            sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
-            EXPECT_TRUE(true);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetExtFileNameRequest.";
-    }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::UNDEFINED;
+    auto fileNameSet = sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
+    EXPECT_TRUE(fileNameSet.empty());
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetExtFileNameRequest_0102";
 }
 
@@ -653,20 +600,11 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0102
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0103, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetExtFileNameRequest_0103";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-            sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
-            sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
-            EXPECT_TRUE(true);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetExtFileNameRequest.";
-    }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
+    auto fileNameSet = sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
+    EXPECT_FALSE(fileNameSet.empty());
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetExtFileNameRequest_0103";
 }
 
@@ -719,44 +657,30 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtConnection_0100, tes
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSAExtConnection_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetSAExtConnection_0100";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    auto tempConnPtr = sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME);
+    auto backupConnPtr = tempConnPtr.lock();
+    EXPECT_TRUE(backupConnPtr == nullptr);
 
-        try {
-            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-            sessionManagerPtr_->impl_.backupExtNameMap.clear();
-            sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_REFUSED_ACT);
-        }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    tempConnPtr = sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME);
+    backupConnPtr = tempConnPtr.lock();
+    EXPECT_TRUE(backupConnPtr == nullptr);
 
-        try {
-            sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-            sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-            sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+    tempConnPtr = sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME);
+    backupConnPtr = tempConnPtr.lock();
+    EXPECT_TRUE(backupConnPtr == nullptr);
 
-        BackupExtInfo info;
-        info.saBackupConnection = make_shared<SABackupConnection>(nullptr, nullptr, nullptr, nullptr);
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
-        auto ret = sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME).lock();
-        EXPECT_EQ(reinterpret_cast<long long>(ret.get()), reinterpret_cast<long long>(info.saBackupConnection.get()));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetSAExtConnection.";
-    }
+    BackupExtInfo info;
+    info.saBackupConnection = make_shared<SABackupConnection>(nullptr, nullptr, nullptr, nullptr);
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
+    auto ret = sessionManagerPtr_->GetSAExtConnection(BUNDLE_NAME).lock();
+    EXPECT_EQ(reinterpret_cast<long long>(ret.get()), reinterpret_cast<long long>(info.saBackupConnection.get()));
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetSAExtConnection_0100";
 }
 
@@ -895,37 +819,22 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceSchedAction_0102
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetServiceSchedAction_0103, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetServiceSchedAction_0103";
-    try {
-        string bundleName = "";
-        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-        auto action = sessionManagerPtr_->GetServiceSchedAction(bundleName);
-        EXPECT_EQ(action, BConstants::ServiceSchedAction::WAIT);
+    string bundleName = "";
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    auto action = sessionManagerPtr_->GetServiceSchedAction(bundleName);
+    EXPECT_EQ(action, BConstants::ServiceSchedAction::UNKNOWN);
 
-        sessionManagerPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::START);
-        action = sessionManagerPtr_->GetServiceSchedAction(bundleName);
-        EXPECT_NE(action, BConstants::ServiceSchedAction::START);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-SetServiceSchedAction Branches";
-        sessionManagerPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::FINISH);
+    EXPECT_THROW(sessionManagerPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::START), BError);
+    action = sessionManagerPtr_->GetServiceSchedAction(bundleName);
+    EXPECT_EQ(action, BConstants::ServiceSchedAction::UNKNOWN);
 
-        try {
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetServiceSchedAction(bundleName);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    sessionManagerPtr_->impl_.clientToken = 0;
+    action = sessionManagerPtr_->GetServiceSchedAction(bundleName);
+    EXPECT_TRUE(action == BConstants::ServiceSchedAction::UNKNOWN);
 
-        try {
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::START);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
-    } catch (...) {
-        EXPECT_FALSE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetServiceSchedAction.";
-    }
+    sessionManagerPtr_->impl_.clientToken = 0;
+    EXPECT_THROW(sessionManagerPtr_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::START), BError);
+    EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetServiceSchedAction_0103";
 }
 
@@ -945,7 +854,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupExtName_0100, tes
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->SetBackupExtName(BUNDLE_NAME, BUNDLE_NAME);
         string extName = sessionManagerPtr_->GetBackupExtName(BUNDLE_NAME);
-        EXPECT_EQ(extName, BUNDLE_NAME);
+        EXPECT_EQ(extName, "");
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBackupExtName.";
@@ -965,32 +874,19 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupExtName_0100, tes
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupExtName_0101, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBackupExtName_0101";
-    try {
-        string bundleName = "";
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->SetBackupExtName(bundleName, bundleName);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    string bundleName = "";
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    sessionManagerPtr_->SetBackupExtName(bundleName, bundleName);
+    EXPECT_TRUE(true);
 
-        try {
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetBackupExtName(bundleName);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    sessionManagerPtr_->impl_.clientToken = 0;
+    auto backupExtName = sessionManagerPtr_->GetBackupExtName(bundleName);
+    EXPECT_EQ(backupExtName, "");
 
-        sessionManagerPtr_->SetBackupExtName(bundleName, bundleName);
-        string extName = sessionManagerPtr_->GetBackupExtName(bundleName);
-        EXPECT_NE(extName, bundleName);
-    } catch (...) {
-        EXPECT_FALSE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBackupExtName.";
-    }
+    sessionManagerPtr_->SetBackupExtName(bundleName, bundleName);
+    string extName = sessionManagerPtr_->GetBackupExtName(bundleName);
+    EXPECT_EQ(extName, "");
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetBackupExtName_0101";
 }
 
@@ -1006,27 +902,18 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupExtName_0101, tes
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBackupExtInfo_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetBackupExtInfo_0100";
-    try {
-        string bundleName = BUNDLE_NAME;
-        string extInfo = "test";
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->SetBackupExtInfo(bundleName, extInfo);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    string bundleName = BUNDLE_NAME;
+    string extInfo = "test";
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    sessionManagerPtr_->SetBackupExtInfo(bundleName, extInfo);
+    EXPECT_TRUE(true);
 
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.backupExtNameMap[bundleName] = {};
-        sessionManagerPtr_->SetBackupExtInfo(bundleName, extInfo);
-        EXPECT_EQ(sessionManagerPtr_->impl_.backupExtNameMap.size(), 1);
-    } catch (...) {
-        EXPECT_FALSE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetBackupExtInfo.";
-    }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.backupExtNameMap[bundleName] = {};
+    sessionManagerPtr_->SetBackupExtInfo(bundleName, extInfo);
+    EXPECT_EQ(sessionManagerPtr_->impl_.backupExtNameMap.size(), 1);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetBackupExtInfo_0100";
 }
 
@@ -1042,29 +929,20 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBackupExtInfo_0100, tes
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupExtInfo_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBackupExtInfo_0100";
-    try {
-        string bundleName = BUNDLE_NAME;
-        string extInfo = "test";
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetBackupExtInfo(bundleName);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    string bundleName = BUNDLE_NAME;
+    string extInfo = "test";
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    auto extInfoRet = sessionManagerPtr_->GetBackupExtInfo(bundleName);
+    EXPECT_EQ(extInfoRet, "");
 
-        BackupExtInfo info;
-        info.extInfo = "test";
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.backupExtNameMap[bundleName] = info;
-        auto ret = sessionManagerPtr_->GetBackupExtInfo(bundleName);
-        EXPECT_EQ(ret, "test");
-    } catch (...) {
-        EXPECT_FALSE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBackupExtInfo.";
-    }
+    BackupExtInfo info;
+    info.extInfo = "test";
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.backupExtNameMap[bundleName] = info;
+    auto ret = sessionManagerPtr_->GetBackupExtInfo(bundleName);
+    EXPECT_EQ(ret, "test");
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetBackupExtInfo_0100";
 }
 
@@ -1082,14 +960,10 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_AppendBundles_0100, testin
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_AppendBundles_0100";
     try {
         vector<BundleName> bundleNames;
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->AppendBundles(bundleNames);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->AppendBundles(bundleNames);
+        EXPECT_TRUE(true);
 
         bundleNames.clear();
         bundleNames.emplace_back("app1");
@@ -1204,12 +1078,12 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBundleFileReady_0200, te
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->Deactive(nullptr, true);
         Init(IServiceReverse::Scenario::BACKUP);
-        auto ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, MANAGE_JSON);
-        EXPECT_FALSE(ret);
-        ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, FILE_NAME);
-        EXPECT_FALSE(ret);
-        ret = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, FILE_NAME);
-        EXPECT_FALSE(ret);
+        bool fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, MANAGE_JSON);
+        EXPECT_FALSE(fileReady);
+        fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, FILE_NAME);
+        EXPECT_FALSE(fileReady);
+        fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, FILE_NAME);
+        EXPECT_FALSE(fileReady);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by OnBundleFileReady.";
@@ -1325,25 +1199,16 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetOldBackupVersion_0100, 
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleRestoreType_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetBundleRestoreType_0100";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->SetBundleRestoreType(BUNDLE_NAME, RESTORE_DATA_READDY);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    sessionManagerPtr_->SetBundleRestoreType(BUNDLE_NAME, RESTORE_DATA_READDY);
+    EXPECT_TRUE(true);
 
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->SetBundleRestoreType(BUNDLE_NAME, RESTORE_DATA_READDY);
-        EXPECT_EQ(sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME].restoreType, RESTORE_DATA_READDY);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetBundleRestoreType.";
-    }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+    sessionManagerPtr_->SetBundleRestoreType(BUNDLE_NAME, RESTORE_DATA_READDY);
+    EXPECT_EQ(sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME].restoreType, RESTORE_DATA_READDY);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetBundleRestoreType_0100";
 }
 
@@ -1359,25 +1224,17 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleRestoreType_0100,
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleRestoreType_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleRestoreType_0100";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetBundleRestoreType(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    auto restoreType = sessionManagerPtr_->GetBundleRestoreType(BUNDLE_NAME);
+    EXPECT_TRUE(restoreType == RestoreTypeEnum::RESTORE_DATA_WAIT_SEND);
 
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->GetBundleRestoreType(BUNDLE_NAME);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBundleRestoreType.";
-    }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+    restoreType = sessionManagerPtr_->GetBundleRestoreType(BUNDLE_NAME);
+    EXPECT_TRUE(restoreType == RestoreTypeEnum::RESTORE_DATA_WAIT_SEND);
+    EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetBundleRestoreType_0100";
 }
 
@@ -1393,25 +1250,16 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleRestoreType_0100,
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleVersionCode_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetBundleVersionCode_0100";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->SetBundleVersionCode(BUNDLE_NAME, 0);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    sessionManagerPtr_->SetBundleVersionCode(BUNDLE_NAME, 0);
+    EXPECT_TRUE(true);
 
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->SetBundleVersionCode(BUNDLE_NAME, 0);
-        EXPECT_EQ(sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME].versionCode, 0);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetBundleVersionCode.";
-    }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+    sessionManagerPtr_->SetBundleVersionCode(BUNDLE_NAME, 0);
+    EXPECT_EQ(sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME].versionCode, 0);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetBundleVersionCode_0100";
 }
 
@@ -1427,25 +1275,16 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleVersionCode_0100,
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleVersionCode_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleVersionCode_0100";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetBundleVersionCode(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    auto versionCode = sessionManagerPtr_->GetBundleVersionCode(BUNDLE_NAME);
+    EXPECT_TRUE(versionCode == 0);
 
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->GetBundleVersionCode(BUNDLE_NAME);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBundleVersionCode.";
-    }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+    sessionManagerPtr_->GetBundleVersionCode(BUNDLE_NAME);
+    EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetBundleVersionCode_0100";
 }
 
@@ -1462,14 +1301,10 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleVersionName_0100,
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetBundleVersionName_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->SetBundleVersionName(BUNDLE_NAME, "1.0.0");
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->SetBundleVersionName(BUNDLE_NAME, "1.0.0");
+        EXPECT_TRUE(true);
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
@@ -1495,25 +1330,16 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleVersionName_0100,
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleVersionName_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleVersionName_0100";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetBundleVersionName(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    auto versionStr = sessionManagerPtr_->GetBundleVersionName(BUNDLE_NAME);
+    EXPECT_EQ(versionStr, "");
 
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->GetBundleVersionName(BUNDLE_NAME);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBundleVersionName.";
-    }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+    versionStr = sessionManagerPtr_->GetBundleVersionName(BUNDLE_NAME);
+    EXPECT_EQ(versionStr, "");
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetBundleVersionName_0100";
 }
 
@@ -1585,29 +1411,20 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Finish_0100, testing::ext:
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_IsOnAllBundlesFinished_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_IsOnAllBundlesFinished_0100";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->IsOnAllBundlesFinished();
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    bool ret = sessionManagerPtr_->IsOnAllBundlesFinished();
+    EXPECT_FALSE(ret);
 
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
-        sessionManagerPtr_->IsOnAllBundlesFinished();
-        EXPECT_TRUE(true);
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
+    ret = sessionManagerPtr_->IsOnAllBundlesFinished();
+    EXPECT_FALSE(ret);
 
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::UNDEFINED;
-        sessionManagerPtr_->IsOnAllBundlesFinished();
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by IsOnAllBundlesFinished.";
-    }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::UNDEFINED;
+    ret = sessionManagerPtr_->IsOnAllBundlesFinished();
+    EXPECT_FALSE(ret);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_IsOnAllBundlesFinished_0100";
 }
 
@@ -1624,18 +1441,14 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_IsOnOnStartSched_0100, tes
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_IsOnOnStartSched_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->IsOnOnStartSched();
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        auto ret = sessionManagerPtr_->IsOnOnStartSched();
+        EXPECT_FALSE(ret);
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.isBackupStart = false;
-        auto ret = sessionManagerPtr_->IsOnOnStartSched();
+        ret = sessionManagerPtr_->IsOnOnStartSched();
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.isBackupStart = true;
@@ -1668,14 +1481,10 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleDataSize_0100, te
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetBundleDataSize_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->SetBundleDataSize(BUNDLE_NAME, 0);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->SetBundleDataSize(BUNDLE_NAME, 0);
+        EXPECT_TRUE(true);
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
@@ -1754,7 +1563,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_UpdateTimer_0100, testing:
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        EXPECT_THROW(sessionManagerPtr_->UpdateTimer(BUNDLE_NAME, BConstants::TIMEOUT_INVALID, callback), BError);
+        EXPECT_FALSE(ret);
 
         BackupExtInfo info;
         info.extTimerStatus = false;
@@ -1862,23 +1671,14 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_ClearSessionData_0100, tes
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetIsIncrementalBackup_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetIsIncrementalBackup_0100";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetIsIncrementalBackup();
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    bool ret = sessionManagerPtr_->GetIsIncrementalBackup();
+    EXPECT_FALSE(ret);
 
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->GetIsIncrementalBackup();
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetIsIncrementalBackup.";
-    }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    ret = sessionManagerPtr_->GetIsIncrementalBackup();
+    EXPECT_FALSE(ret);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetIsIncrementalBackup_0100";
 }
 
@@ -1896,14 +1696,10 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetIncrementalData_0100, t
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetIncrementalData_0100";
     try {
         BIncrementalData incrementalData;
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->SetIncrementalData(incrementalData);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->SetIncrementalData(incrementalData);
+        EXPECT_TRUE(true);
 
         incrementalData.bundleName = BUNDLE_NAME;
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
@@ -1930,25 +1726,16 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetIncrementalData_0100, t
 HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetIncrementalManifestFd_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetIncrementalManifestFd_0100";
-    try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetIncrementalManifestFd(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+    EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+    sessionManagerPtr_->impl_.clientToken = 0;
+    auto ret = sessionManagerPtr_->GetIncrementalManifestFd(BUNDLE_NAME);
+    EXPECT_TRUE(ret == -1);
 
-        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->GetIncrementalManifestFd(BUNDLE_NAME);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetIncrementalManifestFd.";
-    }
+    sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+    sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
+    ret = sessionManagerPtr_->GetIncrementalManifestFd(BUNDLE_NAME);
+    EXPECT_TRUE(ret == 0);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetIncrementalManifestFd_0100";
 }
 
@@ -2048,14 +1835,10 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetClearDataFlag_0100, tes
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetClearDataFlag_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->SetClearDataFlag(BUNDLE_NAME, false);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->SetClearDataFlag(BUNDLE_NAME, false);
+        EXPECT_TRUE(true);
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
@@ -2085,14 +1868,10 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetClearDataFlag_0100, tes
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetClearDataFlag_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetClearDataFlag(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        auto ret = sessionManagerPtr_->GetClearDataFlag(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
@@ -2122,14 +1901,10 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetPublishFlag_0100, testi
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetPublishFlag_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->SetPublishFlag(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->SetPublishFlag(BUNDLE_NAME);
+        EXPECT_TRUE(true);
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();

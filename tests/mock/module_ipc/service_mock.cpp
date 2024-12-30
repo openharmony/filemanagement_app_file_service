@@ -345,4 +345,6 @@ void Service::HandleNotSupportBundleNames(const vector<string>&, vector<string>&
 void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>&, std::vector<std::string>&) {}
 
 void Service::CancelTask(std::string bundleName, wptr<Service> ptr) {}
+
+void SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId) {}
 } // namespace OHOS::FileManagement::Backup
