@@ -289,7 +289,7 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
 }
 
 std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &backupInfos,
-    bool isIncBackup)
+    bool isIncBackup, const std::vector<std::string> &srcBundleNames)
 {
     HILOGI("Begin");
     std::vector<std::string> supportBackupNames;
@@ -311,6 +311,7 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
         }
         supportBackupNames.emplace_back(bundleNameIndexInfo);
     }
+    HandleNotSupportBundleNames(srcBundleNames, supportBackupNames, isIncBackup);
     HILOGI("End");
     return supportBackupNames;
 }
@@ -329,5 +330,24 @@ void Service::SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info,
         session_->SetClearDataFlag(bundleNameIndexInfo, iter->second);
     }
     HILOGI("End");
+}
+
+void Service::HandleNotSupportBundleNames(const std::vector<std::string> &srcBundleNames,
+    std::vector<std::string> &supportBundleNames, bool isIncBackup)
+{
+    for (auto bundleName : srcBundleNames) {
+        auto it = std::find(supportBundleNames.begin(), supportBundleNames.end(), bundleName);
+        if (it != supportBundleNames.end()) {
+            continue;
+        }
+        HILOGE("bundleName:%{public}s, can not find from supportBundleNames", bundleName.c_str());
+        if (isIncBackup) {
+            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
+                BError(BError::Codes::SA_BUNDLE_INFO_EMPTY), bundleName);
+        } else {
+            session_->GetServiceReverseProxy()->BackupOnBundleStarted(
+                BError(BError::Codes::SA_BUNDLE_INFO_EMPTY), bundleName);
+        }
+    }
 }
 }
