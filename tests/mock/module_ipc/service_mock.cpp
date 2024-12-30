@@ -290,8 +290,11 @@ void Service::UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo 
 void Service::ClearFailedBundles() {}
 
 void Service::StartRunningTimer(const std::string &bundleName) {}
-std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool)
+std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool,
+    const vector<string>&)
 {
     return {};
 }
+void Service::HandleNotSupportBundleNames(const vector<string>&, vector<string>&, bool) {}
+void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>&, std::vector<std::string>&) {}
 } // namespace OHOS::FileManagement::Backup
