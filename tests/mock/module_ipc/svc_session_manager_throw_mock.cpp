@@ -94,7 +94,8 @@ std::set<std::string> SvcSessionManager::GetExtFileNameRequest(const std::string
     return BackupSvcSessionManager::session->GetExtFileNameRequest(bundleName);
 }
 
-map<BundleName, BackupExtInfo>::iterator SvcSessionManager::GetBackupExtNameMap(const string &bundleName)
+std::tuple<bool, map<BundleName, BackupExtInfo>::iterator> SvcSessionManager::GetBackupExtNameMap(
+    const string &bundleName)
 {
     return BackupSvcSessionManager::session->GetBackupExtNameMap(bundleName);
 }

@@ -343,7 +343,8 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     HILOGI("Begin get bundle infos");
     auto bms = GetBundleManager();
     if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles, userId)) {
-        throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle infos");
+        HILOGE("Failed to get bundle infos from bms");
+        return {};
     }
 
     vector<BIncrementalData> bundleNames;
@@ -387,12 +388,17 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetFullBundleInfos(int32_t
     HILOGI("Begin GetFullBundleInfos");
     auto bms = GetBundleManager();
     if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles, userId)) {
-        throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle infos");
+        HILOGE("Failed to get bundle infos from bms");
+        return {};
     }
     vector<string> bundleNames;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
     for (auto const &installedBundle : installedBundles) {
+        if (installedBundle.name.empty()) {
+            HILOGE("Current bundle name is invalid");
+            continue;
+        }
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());

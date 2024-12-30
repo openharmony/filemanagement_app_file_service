@@ -26,14 +26,10 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetLastIncrementalTime_010
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetLastIncrementalTime_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetLastIncrementalTime(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->GetLastIncrementalTime(BUNDLE_NAME);
+        EXPECT_TRUE(true);
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();

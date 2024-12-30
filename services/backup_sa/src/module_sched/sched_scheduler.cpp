@@ -80,7 +80,7 @@ void SchedScheduler::Sched(string bundleName)
         } catch (const exception &e) {
             HILOGE("%{public}s", e.what());
         } catch (...) {
-            HILOGE("");
+            HILOGE("Unexpected exception");
         }
     };
     threadPool_.AddTask(callStart);
@@ -93,51 +93,16 @@ void SchedScheduler::ExecutingQueueTasks(const string &bundleName)
         return;
     }
     BConstants::ServiceSchedAction action = sessionPtr_->GetServiceSchedAction(bundleName);
-    if (action == BConstants::ServiceSchedAction::START) {
-        // register timer for connect extension
-        auto callStart = [reversePtr {reversePtr_}, bundleName]() {
-            HILOGE("Extension connect failed = %{public}s", bundleName.data());
-            auto ptr = reversePtr.promote();
-            if (ptr) {
-                ptr->ExtConnectFailed(bundleName, BError(BError::Codes::SA_BOOT_EXT_TIMEOUT));
-            }
-        };
-        auto iTime = extTime_.Register(callStart, BConstants::EXT_CONNECT_MAX_TIME, true);
-        unique_lock<shared_mutex> lock(lock_);
-        bundleTimeVec_.emplace_back(make_tuple(bundleName, iTime));
-        lock.unlock();
-        // launch extension
-        if (reversePtr_ != nullptr) {
-            ErrCode errCode = reversePtr_->LaunchBackupExtension(bundleName);
-            if (errCode) {
-                reversePtr_->ExtConnectFailed(bundleName, errCode);
-            }
-        }
-    } else if (action == BConstants::ServiceSchedAction::RUNNING) {
-        HILOGI("Current bundle %{public}s process is running", bundleName.data());
-        unique_lock<shared_mutex> lock(lock_);
-        auto iter = find_if(bundleTimeVec_.begin(), bundleTimeVec_.end(), [&bundleName](auto &obj) {
-            auto &[bName, iTime] = obj;
-            return bName == bundleName;
-        });
-        if (iter == bundleTimeVec_.end()) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Failed to find timer");
-        }
-        auto &[bName, iTime] = *iter;
-        // unregister timer
-        extTime_.Unregister(iTime);
-        lock.unlock();
-        //notify AppGallery to start restore
-        if (reversePtr_ != nullptr) {
-            reversePtr_->StartRunningTimer(bundleName);
-            reversePtr_->SendStartAppGalleryNotify(bundleName);
-            reversePtr_->ExtStart(bundleName);
-        }
-    } else if (action == BConstants::ServiceSchedAction::CLEAN) {
-        HILOGI("Current bundle %{public}s process is cleaning", bundleName.data());
-        ErrCode res = reversePtr_->ClearResidualBundleData(bundleName);
-        IServiceReverse::Scenario scenario = sessionPtr_->GetScenario();
-        ExtDiedClearFailRadarReport(bundleName, scenario, res);
+    if (action == BConstants::ServiceSchedAction::UNKNOWN) {
+        HILOGE("Current action is unknown, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    try {
+        HILOGI("Start current bundle task, bundleName:%{public}s, action:%{public}d", bundleName.c_str(), action);
+        StartExecuteBundleTask(bundleName, action);
+    } catch(...) {
+        HILOGE("Unexpected exception");
+        return;
     }
 }
 
@@ -228,5 +193,55 @@ void SchedScheduler::ClearSchedulerData()
         extTime_.Unregister(iTime);
     }
     bundleTimeVec_.clear();
+}
+
+void SchedScheduler::StartExecuteBundleTask(const std::string &bundleName, BConstants::ServiceSchedAction action)
+{
+    if (action == BConstants::ServiceSchedAction::START) {
+        // register timer for connect extension
+        auto callStart = [reversePtr {reversePtr_}, bundleName]() {
+            HILOGE("Extension connect failed = %{public}s", bundleName.data());
+            auto ptr = reversePtr.promote();
+            if (ptr) {
+                ptr->ExtConnectFailed(bundleName, BError(BError::Codes::SA_BOOT_EXT_TIMEOUT));
+            }
+        };
+        auto iTime = extTime_.Register(callStart, BConstants::EXT_CONNECT_MAX_TIME, true);
+        unique_lock<shared_mutex> lock(lock_);
+        bundleTimeVec_.emplace_back(make_tuple(bundleName, iTime));
+        lock.unlock();
+        // launch extension
+        if (reversePtr_ != nullptr) {
+            ErrCode errCode = reversePtr_->LaunchBackupExtension(bundleName);
+            if (errCode) {
+                reversePtr_->ExtConnectFailed(bundleName, errCode);
+            }
+        }
+    } else if (action == BConstants::ServiceSchedAction::RUNNING) {
+        HILOGI("Current bundle %{public}s process is running", bundleName.data());
+        unique_lock<shared_mutex> lock(lock_);
+        auto iter = find_if(bundleTimeVec_.begin(), bundleTimeVec_.end(), [&bundleName](auto &obj) {
+            auto &[bName, iTime] = obj;
+            return bName == bundleName;
+        });
+        if (iter == bundleTimeVec_.end()) {
+            throw BError(BError::Codes::SA_INVAL_ARG, "Failed to find timer");
+        }
+        auto &[bName, iTime] = *iter;
+        // unregister timer
+        extTime_.Unregister(iTime);
+        lock.unlock();
+        //notify AppGallery to start restore
+        if (reversePtr_ != nullptr) {
+            reversePtr_->StartRunningTimer(bundleName);
+            reversePtr_->SendStartAppGalleryNotify(bundleName);
+            reversePtr_->ExtStart(bundleName);
+        }
+    } else if (action == BConstants::ServiceSchedAction::CLEAN) {
+        HILOGI("Current bundle %{public}s process is cleaning", bundleName.data());
+        ErrCode res = reversePtr_->ClearResidualBundleData(bundleName);
+        IServiceReverse::Scenario scenario = sessionPtr_->GetScenario();
+        ExtDiedClearFailRadarReport(bundleName, scenario, res);
+    }
 }
 }; // namespace OHOS::FileManagement::Backup
