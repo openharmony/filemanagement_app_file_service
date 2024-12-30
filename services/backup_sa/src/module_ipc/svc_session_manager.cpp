@@ -78,8 +78,9 @@ ErrCode SvcSessionManager::Active(Impl newImpl, bool isOccupyingSession)
     unique_lock<shared_mutex> lock(lock_);
     const Impl &oldImpl = impl_;
     if (oldImpl.clientToken) {
-        HILOGE("Already have an active session");
-        return BError(BError::Codes::SA_REFUSED_ACT);
+        HILOGE("Already have an active session, userId=%{public}d, caller=%{public}s, activeTime=%{public}s",
+            impl_.userId, impl_.callerName.c_str(), impl_.activeTime.c_str());
+        return BError(BError::Codes::SA_SESSION_CONFLICT);
     }
 
     if (!isOccupyingSession && !newImpl.clientToken) {
@@ -178,6 +179,26 @@ int32_t SvcSessionManager::GetSessionUserId()
 void SvcSessionManager::SetSessionUserId(int32_t userId)
 {
     impl_.userId = userId;
+}
+
+string SvcSessionManager::GetSessionCallerName()
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("Get scenario failed, No caller token was specified");
+        return "";
+    }
+    return impl_.callerName;
+}
+
+string SvcSessionManager::GetSessionActiveTime()
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("Get scenario failed, No caller token was specified");
+        return "";
+    }
+    return impl_.activeTime;
 }
 
 bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string &fileName)

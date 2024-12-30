@@ -50,6 +50,17 @@ public:
     static std::unique_ptr<BIncrementalRestoreSession> Init(Callbacks callbacks);
 
     /**
+     * @brief 获取一个用于控制恢复流程的会话
+     *
+     * @param callbacks 注册的回调函数
+     * @param errMsg 失败信息
+     * @param errCode 错误码
+     * @return std::unique_ptr<BRestoreSession> 指向BRestoreSession的智能指针。失败时为空指针
+     */
+    static std::unique_ptr<BIncrementalRestoreSession> Init(Callbacks callbacks,
+                                                            std::string &errMsg, ErrCode &errCode);
+
+    /**
      * @brief 通知备份服务文件内容已就绪
      *
      * @param fileInfo 文件描述信息

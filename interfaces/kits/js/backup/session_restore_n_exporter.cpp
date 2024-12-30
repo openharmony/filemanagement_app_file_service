@@ -454,6 +454,8 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
     auto restoreEntity = std::make_unique<RestoreEntity>();
     restoreEntity->callbacks = make_shared<GeneralCallbacks>(env, ptr, callbacks);
     restoreEntity->sessionWhole = nullptr;
+    ErrCode errCode;
+    std::string errMsg;
     restoreEntity->sessionSheet = BIncrementalRestoreSession::Init(BIncrementalRestoreSession::Callbacks {
         .onFileReady = bind(OnFileReadySheet, restoreEntity->callbacks, placeholders::_1, placeholders::_2,
             placeholders::_3, placeholders::_4),
@@ -462,9 +464,12 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
         .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
         .onResultReport = bind(OnResultReport, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBackupServiceDied = bind(OnBackupServiceDied, restoreEntity->callbacks),
-        .onProcess = bind(OnProcess, restoreEntity->callbacks, placeholders::_1, placeholders::_2)});
+        .onProcess = bind(OnProcess, restoreEntity->callbacks, placeholders::_1, placeholders::_2)}, errMsg, errCode);
     if (!restoreEntity->sessionSheet) {
-        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to init restore").GetCode()).ThrowErr(env);
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(errCode, BError::GetBackupMsgByErrno(errCode) + ", " + errMsg);
+        ErrParam errorParam = [ errInfo ]() { return errInfo;};
+        NError(errorParam).ThrowErr(env);
         return nullptr;
     }
     if (!SetSessionRestoreEntity(env, funcArg, std::move(restoreEntity))) {

@@ -29,6 +29,7 @@ namespace OHOS::FileManagement::Backup {
 class ServiceProxy : public IRemoteProxy<IService> {
 public:
     ErrCode InitRestoreSession(sptr<IServiceReverse> remote) override;
+    ErrCode InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg) override;
     ErrCode InitBackupSession(sptr<IServiceReverse> remote) override;
     ErrCode Start() override;
     UniqueFd GetLocalCapabilities() override;

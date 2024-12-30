@@ -25,6 +25,11 @@ int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
     return 0;
 }
 
+int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg)
+{
+    return 0;
+}
+
 int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
 {
     return 0;

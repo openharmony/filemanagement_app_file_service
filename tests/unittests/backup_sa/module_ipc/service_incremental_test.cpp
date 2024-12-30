@@ -52,6 +52,11 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
 {
     return BError(BError::Codes::OK);
@@ -156,6 +161,11 @@ ErrCode Service::VerifyCaller()
 ErrCode Service::VerifyCaller(IServiceReverse::Scenario scenario)
 {
     return BError(BError::Codes::OK);
+}
+
+int32_t Service::GetUserIdDefault()
+{
+    return 0;
 }
 
 void Service::OnAllBundlesFinished(ErrCode errCode) {}
@@ -264,6 +274,15 @@ void Service::FileReadyRadarReport(const std::string &bundleName, const std::str
 void Service::ExtensionConnectFailRadarReport(const std::string &bundleName, const ErrCode errCode,
     const IServiceReverse::Scenario scenario) {}
 
+void Service::PermissionCheckFailRadar(const std::string &info, const std::string &func) {}
+
+void Service::OnStartResRadarReport(const std::vector<std::string> &bundleNameList, int32_t stage) {}
+
+std::string Service::GetCallerName()
+{
+    return "";
+}
+
 void Service::UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo) {}
 
 void Service::ClearFailedBundles() {}
@@ -357,51 +376,6 @@ void ServiceIncrementalTest::TearDownTestCase()
     IPCSkeletonMock::skeleton = nullptr;
     skeleton = nullptr;
     srProxy = nullptr;
-}
-
-/**
- * @tc.number: SUB_ServiceIncremental_GetUserIdDefault_0000
- * @tc.name: SUB_ServiceIncremental_GetUserIdDefault_0000
- * @tc.desc: 测试 GetUserIdDefault 的正常/异常分支
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issueIAKC3I
- */
-HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetUserIdDefault_0000, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_GetUserIdDefault_0000";
-    try {
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-        auto ret = GetUserIdDefault();
-        EXPECT_EQ(ret, DEBUG_ID + 1);
-
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
-        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
-        ret = GetUserIdDefault();
-        EXPECT_EQ(ret, BConstants::DEFAULT_USER_ID);
-
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(true, 0)));
-        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
-        ret = GetUserIdDefault();
-        EXPECT_EQ(ret, BConstants::DEFAULT_USER_ID);
-
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
-        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::XTS_UID));
-        ret = GetUserIdDefault();
-        EXPECT_EQ(ret, BConstants::DEFAULT_USER_ID);
-
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
-        EXPECT_CALL(*skeleton, GetCallingUid())
-            .WillOnce(Return(BConstants::SPAN_USERID_UID + BConstants::SPAN_USERID_UID));
-        ret = GetUserIdDefault();
-        EXPECT_EQ(ret, 2);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by GetUserIdDefault.";
-    }
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_GetUserIdDefault_0000";
 }
 
 /**

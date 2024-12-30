@@ -52,6 +52,8 @@ void ServiceStub::ServiceStubSupplement()
         &ServiceStub::CmdStartFwkTimer;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_CANCEL_BUNDLE)] =
         &ServiceStub::CmdCancel;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_RESTORE_SESSION_MSG)] =
+        &ServiceStub::CmdInitRestoreSessionMsg;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_STOP_EXT_TIMER)] =
         &ServiceStub::CmdStopExtTimer;
 }
@@ -148,6 +150,29 @@ int32_t ServiceStub::CmdInitRestoreSession(MessageParcel &data, MessageParcel &r
     }
 
     int32_t res = InitRestoreSession(iremote);
+    if (!reply.WriteInt32(res)) {
+        stringstream ss;
+        ss << "Failed to send the result " << res;
+        return BError(BError::Codes::SA_BROKEN_IPC, ss.str());
+    }
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdInitRestoreSessionMsg(MessageParcel &data, MessageParcel &reply)
+{
+    auto remote = data.ReadRemoteObject();
+    std::string errMsg;
+    if (!remote) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the stub");
+    }
+    auto iremote = iface_cast<IServiceReverse>(remote);
+    if (!iremote) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive the reverse stub");
+    }
+    int32_t res = InitRestoreSession(iremote, errMsg);
+    if (!reply.WriteString(errMsg)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, "Failed to send the errMsg");
+    }
     if (!reply.WriteInt32(res)) {
         stringstream ss;
         ss << "Failed to send the result " << res;

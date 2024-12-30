@@ -27,6 +27,7 @@ public:
     ~ServiceProxyMock() override {}
 public:
     MOCK_METHOD1(InitRestoreSession, ErrCode(sptr<IServiceReverse> remote));
+    MOCK_METHOD2(InitRestoreSession, ErrCode(sptr<IServiceReverse> remote, std::string &errMsg));
     MOCK_METHOD1(InitBackupSession, ErrCode(sptr<IServiceReverse> remote));
     MOCK_METHOD0(Start, ErrCode());
     MOCK_METHOD0(AsObject, sptr<IRemoteObject>());

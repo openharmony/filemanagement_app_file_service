@@ -140,8 +140,9 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0100, testing::e
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
-    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
-    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL))
+        .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
@@ -150,8 +151,9 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0100, testing::e
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
-    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
-    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL))
+        .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
@@ -181,8 +183,9 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0100, testing::ex
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
-    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
-    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL))
+        .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
@@ -191,8 +194,9 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0100, testing::ex
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
-    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
-    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL))
+        .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
@@ -915,8 +919,9 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0100, 
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
-    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
-    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL))
+        .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
@@ -926,8 +931,9 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0100, 
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
-    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
-    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL))
+        .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
