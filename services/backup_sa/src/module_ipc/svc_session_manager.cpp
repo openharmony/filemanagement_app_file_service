@@ -596,10 +596,15 @@ void SvcSessionManager::SetBundleUserId(const string &bundleName, const int32_t 
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
     it->second.userId = userId;
 }
 
@@ -607,10 +612,15 @@ int32_t SvcSessionManager::GetBundleUserId(const string &bundleName)
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "No caller token was specified");
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return 0;
     }
 
-    auto it = GetBackupExtNameMap(bundleName);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return 0;
+    }
     return it->second.userId;
 }
 
