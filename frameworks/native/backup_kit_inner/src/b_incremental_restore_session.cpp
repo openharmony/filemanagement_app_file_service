@@ -69,6 +69,38 @@ unique_ptr<BIncrementalRestoreSession> BIncrementalRestoreSession::Init(Callback
     return nullptr;
 }
 
+unique_ptr<BIncrementalRestoreSession> BIncrementalRestoreSession::Init(Callbacks callbacks,
+                                                                        std::string &errMsg, ErrCode &errCode)
+{
+    try {
+        HILOGI("Init IncrementalRestoreSession Begin");
+        auto restore = make_unique<BIncrementalRestoreSession>();
+        ServiceProxy::InvaildInstance();
+        auto proxy = ServiceProxy::GetInstance();
+        if (proxy == nullptr) {
+            errMsg = "Failed to get backup service";
+            errCode = BError(BError::Codes::SDK_BROKEN_IPC);
+            HILOGE("Init IncrementalRestoreSession failed, %{public}s", errMsg.c_str());
+            return nullptr;
+        }
+        errCode = proxy->InitRestoreSession(sptr(new ServiceReverse(callbacks)), errMsg);
+        if (errCode != ERR_OK) {
+            HILOGE("Failed to Restore because of %{public}d", errCode);
+            AppRadar::Info info ("", "", "create restore session failed");
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "BIncrementalRestoreSession::Init",
+                AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_CREATE_RESTORE_SESSION_FAIL, errCode);
+            return nullptr;
+        }
+
+        restore->RegisterBackupServiceDied(callbacks.onBackupServiceDied);
+        return restore;
+    } catch (const exception &e) {
+        HILOGE("Failed to Restore because of %{public}s", e.what());
+        errCode = BError(BError::Codes::SDK_INVAL_ARG);
+    }
+    return nullptr;
+}
+
 ErrCode BIncrementalRestoreSession::PublishFile(BFileInfo fileInfo)
 {
     auto proxy = ServiceProxy::GetInstance();

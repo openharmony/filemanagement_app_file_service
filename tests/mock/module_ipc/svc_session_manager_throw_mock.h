@@ -60,6 +60,8 @@ public:
     virtual bool NeedToUnloadService() = 0;
     virtual int32_t GetSessionUserId() = 0;
     virtual void SetSessionUserId(int32_t) = 0;
+    virtual std::string GetSessionCallerName() = 0;
+    virtual std::string GetSessionActiveTime() = 0;
     virtual void SetBundleRestoreType(const std::string &, RestoreTypeEnum) = 0;
     virtual RestoreTypeEnum GetBundleRestoreType(const std::string &) = 0;
     virtual void SetBundleVersionCode(const std::string &, int64_t) = 0;
@@ -131,6 +133,8 @@ public:
     MOCK_METHOD(bool, NeedToUnloadService, ());
     MOCK_METHOD(int32_t, GetSessionUserId, ());
     MOCK_METHOD(void, SetSessionUserId, (int32_t));
+    MOCK_METHOD(std::string, GetSessionCallerName, ());
+    MOCK_METHOD(std::string, GetSessionActiveTime, ());
     MOCK_METHOD(void, SetBundleRestoreType, (const std::string &, RestoreTypeEnum));
     MOCK_METHOD(RestoreTypeEnum, GetBundleRestoreType, (const std::string &));
     MOCK_METHOD(void, SetBundleVersionCode, (const std::string &, int64_t));

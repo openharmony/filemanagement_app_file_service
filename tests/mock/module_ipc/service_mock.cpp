@@ -26,6 +26,11 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+int32_t Service::GetUserIdDefault()
+{
+    return 0;
+}
+
 void Service::OnStart() {}
 
 void Service::OnStop() {}
@@ -43,6 +48,11 @@ ErrCode Service::VerifyCallerAndGetCallerName(std::string &bundleName)
 }
 
 ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg)
 {
     return BError(BError::Codes::OK);
 }
@@ -302,6 +312,15 @@ void Service::FileReadyRadarReport(const std::string &bundleName, const std::str
 
 void Service::ExtensionConnectFailRadarReport(const std::string &bundleName, const ErrCode errCode,
     const IServiceReverse::Scenario scenario) {}
+
+void Service::PermissionCheckFailRadar(const std::string &info, const std::string &func) {}
+
+void Service::OnStartResRadarReport(const std::vector<std::string> &bundleNameList, int32_t stage) {}
+
+std::string Service::GetCallerName()
+{
+    return "";
+}
 
 void Service::UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo) {}
 

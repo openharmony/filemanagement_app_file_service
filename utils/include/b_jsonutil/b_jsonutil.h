@@ -168,6 +168,17 @@ public:
      *
      */
     static std::string ParseBackupVersion();
+
+    /**
+     * @brief 拼接session冲突时报错信息
+     *
+     * @param userId 用户id
+     * @param callerName session创建方
+     * @param activeTime session创建时间
+     *
+     * @return 拼接结果
+     */
+    static std::string BuildInitSessionErrInfo(int32_t userId, std::string callerName, std::string activeTime);
 };
 } // namespace OHOS::FileManagement::Backup
 

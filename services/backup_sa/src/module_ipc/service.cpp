@@ -90,7 +90,7 @@ const int32_t MAX_TRY_CLEAR_DISPOSE_NUM = 3;
 } // namespace
 
 /* Shell/Xts user id equal to 0/1, we need set default 100 */
-static inline int32_t GetUserIdDefault()
+int32_t Service::GetUserIdDefault()
 {
     auto [isDebug, debugId] = BackupPara().GetBackupDebugOverrideAccount();
     if (isDebug && debugId > DEBUG_ID) {
@@ -104,7 +104,7 @@ static inline int32_t GetUserIdDefault()
     return multiuser.userId;
 }
 
-void OnStartResRadarReport(const std::vector<std::string> &bundleNameList, int32_t stage)
+void Service::OnStartResRadarReport(const std::vector<std::string> &bundleNameList, int32_t stage)
 {
     std::stringstream ss;
     ss << "failedBundles:{";
@@ -220,6 +220,8 @@ void Service::OnStart()
                 .scenario = IServiceReverse::Scenario::CLEAN,
                 .clientProxy = nullptr,
                 .userId = GetUserIdDefault(),
+                .callerName = "BackupSA",
+                .activeTime = TimeUtils::GetCurrentTime(),
             },
             isOccupyingSession_.load());
         HILOGE("SA OnStart, cleaning up backup data");
@@ -337,7 +339,7 @@ void Service::StopAll(const wptr<IRemoteObject> &obj, bool force)
     session_->Deactive(obj, force);
 }
 
-static inline void PermissionCheckFailRadar(const std::string &info, const std::string &func)
+void Service::PermissionCheckFailRadar(const std::string &info, const std::string &func)
 {
     std::string funcPos = "Service::";
     AppRadar::Info resInfo("", "", info);
@@ -453,6 +455,8 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
         .scenario = IServiceReverse::Scenario::RESTORE,
         .clientProxy = remote,
         .userId = GetUserIdDefault(),
+        .callerName = GetCallerName(),
+        .activeTime = TimeUtils::GetCurrentTime(),
     });
     if (ret != ERR_OK) {
         HILOGE("Active restore session error, Already have a session");
@@ -480,6 +484,8 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
         .scenario = IServiceReverse::Scenario::BACKUP,
         .clientProxy = remote,
         .userId = GetUserIdDefault(),
+        .callerName = GetCallerName(),
+        .activeTime = TimeUtils::GetCurrentTime(),
     });
     if (ret != ERR_OK) {
         HILOGE("Active backup session error, Already have a session");

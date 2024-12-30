@@ -39,6 +39,14 @@ int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
     return 0;
 }
 
+int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg)
+{
+    if (!GetMockInitBackupOrRestoreSession()) {
+        return 1;
+    }
+    return 0;
+}
+
 int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
 {
     if (!GetMockInitBackupOrRestoreSession()) {

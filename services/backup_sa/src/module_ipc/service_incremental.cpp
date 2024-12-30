@@ -43,6 +43,7 @@
 #include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
+#include "b_utils/b_time.h"
 #include "filemgmt_libhilog.h"
 #include "hisysevent.h"
 #include "ipc_skeleton.h"
@@ -58,25 +59,10 @@ using namespace std;
 const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 
 namespace {
-constexpr int32_t DEBUG_ID = 100;
 constexpr int32_t INDEX = 3;
 constexpr int32_t MS_1000 = 1000;
 const static string UNICAST_TYPE = "unicast";
 } // namespace
-
-static inline int32_t GetUserIdDefault()
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    auto [isDebug, debugId] = BackupPara().GetBackupDebugOverrideAccount();
-    if (isDebug && debugId > DEBUG_ID) {
-        return debugId;
-    }
-    auto multiuser = BMultiuser::ParseUid(IPCSkeleton::GetCallingUid());
-    if ((multiuser.userId == BConstants::SYSTEM_UID) || (multiuser.userId == BConstants::XTS_UID)) {
-        return BConstants::DEFAULT_USER_ID;
-    }
-    return multiuser.userId;
-}
 
 ErrCode Service::Release()
 {
@@ -324,7 +310,9 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
                                 .scenario = IServiceReverse::Scenario::BACKUP,
                                 .clientProxy = remote,
                                 .userId = GetUserIdDefault(),
-                                .isIncrementalBackup = true});
+                                .isIncrementalBackup = true,
+                                .callerName = GetCallerName(),
+                                .activeTime = TimeUtils::GetCurrentTime()});
     if (errCode != ERR_OK) {
         HILOGE("Active incremental backup session error, Already have a session");
         StopAll(nullptr, true);

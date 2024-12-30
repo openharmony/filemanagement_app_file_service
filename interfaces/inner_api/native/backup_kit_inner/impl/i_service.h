@@ -46,6 +46,7 @@ class IService : public IRemoteBroker {
 public:
     virtual ~IService() = default;
     virtual ErrCode InitRestoreSession(sptr<IServiceReverse> remote) = 0;
+    virtual ErrCode InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg) = 0;
     virtual ErrCode InitBackupSession(sptr<IServiceReverse> remote) = 0;
     virtual ErrCode Start() = 0;
     virtual UniqueFd GetLocalCapabilities() = 0;

@@ -85,6 +85,8 @@ void ServiceStub::ServiceStubSupplement()
         &ServiceStub::CmdUpdateSendRate;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_REPORT_APP_PROCESS_INFO)] =
         &ServiceStub::CmdReportAppProcessInfo;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_RESTORE_SESSION_MSG)] =
+        &ServiceStub::CmdInitRestoreSessionMsg;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_CANCEL_BUNDLE)] =
         &ServiceStub::CmdCancel;
 }
@@ -110,6 +112,17 @@ int32_t ServiceStub::CmdInitRestoreSession(MessageParcel &data, MessageParcel &r
     auto iremote = iface_cast<IServiceReverse>(remote);
 
     int32_t res = InitRestoreSession(iremote);
+    reply.WriteInt32(res);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdInitRestoreSessionMsg(MessageParcel &data, MessageParcel &reply)
+{
+    auto remote = data.ReadRemoteObject();
+    auto iremote = iface_cast<IServiceReverse>(remote);
+    std::string errMsg;
+    int32_t res = InitRestoreSession(iremote, errMsg);
+    reply.WriteString(errMsg);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }

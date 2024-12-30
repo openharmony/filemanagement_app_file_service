@@ -460,4 +460,40 @@ std::string BJsonUtil::ParseBackupVersion()
     cJSON_Delete(root);
     return backupVersion;
 }
+
+std::string BJsonUtil::BuildInitSessionErrInfo(int32_t userId, std::string callerName, std::string activeTime)
+{
+    cJSON *info = cJSON_CreateObject();
+    if (info == nullptr) {
+        HILOGE("Failed to create cJSON object info, update errMsg failed");
+        return "";
+    }
+    cJSON *sessionInfoArray = cJSON_CreateArray();
+    if (sessionInfoArray == nullptr) {
+        HILOGE("Failed to create cJSON array sessionInfoArray, update errMsg failed");
+        cJSON_Delete(info);
+        return "";
+    }
+    cJSON_AddItemToObject(info, "sessionInfo", sessionInfoArray);
+    cJSON *sessionInfoObject = cJSON_CreateObject();
+    if (sessionInfoObject == nullptr) {
+        HILOGE("Failed to create cJSON object sessionInfoObject, update errMsg failed");
+        cJSON_Delete(info);
+        return "";
+    }
+    cJSON_AddItemToArray(sessionInfoArray, sessionInfoObject);
+    cJSON_AddStringToObject(sessionInfoObject, "userId", to_string(userId).c_str());
+    cJSON_AddStringToObject(sessionInfoObject, "name", callerName.c_str());
+    cJSON_AddStringToObject(sessionInfoObject, "activeTime", activeTime.c_str());
+    char *jsonStr = cJSON_Print(info);
+    if (jsonStr == nullptr) {
+        HILOGE("update errMsg failed");
+        cJSON_Delete(info);
+        return "";
+    }
+    std::string errMsg = jsonStr;
+    cJSON_Delete(info);
+    cJSON_free(jsonStr);
+    return errMsg;
+}
 }

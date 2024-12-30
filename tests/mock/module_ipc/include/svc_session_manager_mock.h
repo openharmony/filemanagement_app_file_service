@@ -27,6 +27,8 @@ public:
     virtual sptr<IServiceReverse> GetServiceReverseProxy() = 0;
     virtual IServiceReverse::Scenario GetScenario() = 0;
     virtual int32_t GetSessionUserId() = 0;
+    virtual std::string GetSessionCallerName() = 0;
+    virtual std::string GetSessionActiveTime() = 0;
     virtual bool OnBundleFileReady(const std::string&, const std::string&) = 0;
     virtual UniqueFd OnBundleExtManageInfo(const std::string&, UniqueFd) = 0;
     virtual wptr<SvcBackupConnection> GetExtConnection(const BundleName&) = 0;
@@ -72,6 +74,8 @@ public:
     MOCK_METHOD((sptr<IServiceReverse>), GetServiceReverseProxy, ());
     MOCK_METHOD(IServiceReverse::Scenario, GetScenario, ());
     MOCK_METHOD(int32_t, GetSessionUserId, ());
+    MOCK_METHOD(std::string, GetSessionCallerName, ());
+    MOCK_METHOD(std::string, GetSessionActiveTime, ());
     MOCK_METHOD(bool, OnBundleFileReady, (const std::string&, const std::string&));
     MOCK_METHOD(UniqueFd, OnBundleExtManageInfo, (const std::string&, UniqueFd));
     MOCK_METHOD((wptr<SvcBackupConnection>), GetExtConnection, (const BundleName&));

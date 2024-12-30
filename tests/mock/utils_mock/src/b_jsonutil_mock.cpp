@@ -72,4 +72,9 @@ bool BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
 {
     return BBJsonUtil::jsonUtil->BuildBundleInfoJson(userId, detailInfo);
 }
+
+std::string BJsonUtil::BuildInitSessionErrInfo(int32_t userId, string callerName, string activeTime)
+{
+    return BBJsonUtil::jsonUtil->BuildInitSessionErrInfo(userId, callerName, activeTime);
+}
 }
