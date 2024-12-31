@@ -458,14 +458,18 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
         .callerName = GetCallerName(),
         .activeTime = TimeUtils::GetCurrentTime(),
     });
-    if (ret != ERR_OK) {
-        HILOGE("Active restore session error, Already have a session");
-        StopAll(nullptr, true);
+    if (ret == ERR_OK) {
+        ClearFailedBundles();
+        successBundlesNum_ = 0;
         return ret;
     }
-    ClearFailedBundles();
-    successBundlesNum_ = 0;
-    return BError(BError::Codes::OK);
+    if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
+        HILOGE("Active restore session error, Already have a session");
+        return ret;
+    }
+    HILOGE("Active restore session error");
+    StopAll(nullptr, true);
+    return ret;
 }
 
 ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
@@ -487,14 +491,18 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
         .callerName = GetCallerName(),
         .activeTime = TimeUtils::GetCurrentTime(),
     });
-    if (ret != ERR_OK) {
-        HILOGE("Active backup session error, Already have a session");
-        StopAll(nullptr, true);
+    if (ret == ERR_OK) {
+        ClearFailedBundles();
+        successBundlesNum_ = 0;
         return ret;
     }
-    ClearFailedBundles();
-    successBundlesNum_ = 0;
-    return BError(BError::Codes::OK);
+    if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
+        HILOGE("Active backup session error, Already have a session");
+        return ret;
+    }
+    HILOGE("Active backup session error");
+    StopAll(nullptr, true);
+    return ret;
 }
 
 ErrCode Service::Start()

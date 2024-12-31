@@ -680,7 +680,6 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, std::string &e
                                                     session_->GetSessionCallerName(),
                                                     session_->GetSessionActiveTime());
         HILOGE("Active restore session error, Already have a session");
-        StopAll(nullptr, true);
         return ret;
     }
     HILOGE("Active restore session error");

@@ -311,14 +311,18 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
                                 .isIncrementalBackup = true,
                                 .callerName = GetCallerName(),
                                 .activeTime = TimeUtils::GetCurrentTime()});
-    if (errCode != ERR_OK) {
-        HILOGE("Active incremental backup session error, Already have a session");
-        StopAll(nullptr, true);
+    if (errCode == ERR_OK) {
+        ClearFailedBundles();
+        successBundlesNum_ = 0;
         return errCode;
     }
-    ClearFailedBundles();
-    successBundlesNum_ = 0;
-    return BError(BError::Codes::OK);
+    if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
+        HILOGE("Active restore session error, Already have a session");
+        return errCode;
+    }
+    HILOGE("Active restore session error");
+    StopAll(nullptr, true);
+    return errCode;
 }
 
 vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalData> &bundlesToBackup)
