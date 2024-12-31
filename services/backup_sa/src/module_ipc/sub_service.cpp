@@ -686,4 +686,40 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, std::string &e
     StopAll(nullptr, true);
     return ret;
 }
+
+ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    ErrCode ret = VerifyCaller();
+    if (ret != ERR_OK) {
+        HILOGE("Init full backup session fail, verify caller failed");
+        return ret;
+    }
+    int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
+    HILOGI("InitBackupSession oldSize %{public}d", oldSize);
+    session_->SetMemParaCurSize(oldSize);
+    ret = session_->Active({
+        .clientToken = IPCSkeleton::GetCallingTokenID(),
+        .scenario = IServiceReverse::Scenario::BACKUP,
+        .clientProxy = remote,
+        .userId = GetUserIdDefault(),
+        .callerName = GetCallerName(),
+        .activeTime = TimeUtils::GetCurrentTime(),
+    });
+    if (ret == ERR_OK) {
+        ClearFailedBundles();
+        successBundlesNum_ = 0;
+        return ret;
+    }
+    if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
+        errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
+                                                    session_->GetSessionCallerName(),
+                                                    session_->GetSessionActiveTime());
+        HILOGE("Active backup session error, Already have a session");
+        return ret;
+    }
+    HILOGE("Active backup session error");
+    StopAll(nullptr, true);
+    return ret;
+}
 }

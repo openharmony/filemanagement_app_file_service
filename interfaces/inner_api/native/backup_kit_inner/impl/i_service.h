@@ -48,6 +48,7 @@ public:
     virtual ErrCode InitRestoreSession(sptr<IServiceReverse> remote) = 0;
     virtual ErrCode InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg) = 0;
     virtual ErrCode InitBackupSession(sptr<IServiceReverse> remote) = 0;
+    virtual ErrCode InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg) = 0;
     virtual ErrCode Start() = 0;
     virtual UniqueFd GetLocalCapabilities() = 0;
     virtual ErrCode PublishFile(const BFileInfo &fileInfo) = 0;
@@ -74,6 +75,7 @@ public:
     virtual UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) = 0;
     virtual ErrCode GetAppLocalListAndDoIncrementalBackup() = 0;
     virtual ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remotse) = 0;
+    virtual ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remotse, std::string &errMsg) = 0;
     virtual ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) = 0;
     virtual ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
         const std::vector<std::string> &bundleInfos) = 0;

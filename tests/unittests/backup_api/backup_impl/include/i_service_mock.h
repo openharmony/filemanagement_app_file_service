@@ -77,6 +77,11 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode Start() override
     {
         return BError(BError::Codes::OK);
@@ -203,6 +208,11 @@ public:
     }
 
     ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote, std::string &errMsg) override
     {
         return BError(BError::Codes::OK);
     }

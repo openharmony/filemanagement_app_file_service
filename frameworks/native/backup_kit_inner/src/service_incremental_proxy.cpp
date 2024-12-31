@@ -132,6 +132,38 @@ ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
     return reply.ReadInt32();
 }
 
+ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        HILOGE("Failed to write descriptor");
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+    if (!remote) {
+        HILOGE("Empty reverse stub");
+        return BError(BError::Codes::SDK_INVAL_ARG, "Empty reverse stub").GetCode();
+    }
+    if (!data.WriteRemoteObject(remote->AsObject().GetRefPtr())) {
+        HILOGE("Failed to send the reverse stub");
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the reverse stub").GetCode();
+    }
+    int32_t ret = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_INCREMENTAL_BACKUP_SESSION_MSG),
+        data, reply, option);
+    if (ret != NO_ERROR) {
+        HILOGE("Received error %{public}d when doing IPC", ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, "Received error when doing IPC").GetCode();
+    }
+    if (!reply.ReadString(errMsg)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to receive the errMsg").GetCode();
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrementalData> &bundlesToBackup)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
