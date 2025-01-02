@@ -111,16 +111,10 @@ bool TarFile::ToAddFile(std::string &path, int &err)
     if (lstat(path.c_str(), &curFileStat) != 0) {
         err = errno;
         HILOGE("Failed to lstat, err = %{public}d", errno);
-        AuditLog auditLog = {false, "lstat file failed", "ADD", "", 1, "FAILED", "TraversalFile",
-            "Packet File", GetAnonyPath(path)};
-        HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
     if (!AddFile(path, curFileStat, err)) {
         HILOGE("Failed to add file to tar package, file path is:%{public}s", GetAnonyPath(path).c_str());
-        AuditLog auditLog = {false, "AddFile failed", "ADD", "", 1, "FAILED", "TraversalFile",
-            "Packet File", GetAnonyPath(path)};
-        HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
     return true;
@@ -131,9 +125,6 @@ bool TarFile::TraversalFile(string &filePath, int &err)
     if (access(filePath.c_str(), F_OK) != 0) {
         err = errno;
         HILOGE("File path does not exists, err = %{public}d", errno);
-        AuditLog auditLog = {false, "access file failed", "ADD", "", 1, "FAILED", "TraversalFile",
-            "Packet File", GetAnonyPath(filePath)};
-        HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
     int fd = open(filePath.c_str(), O_RDONLY);

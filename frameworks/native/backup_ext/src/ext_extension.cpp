@@ -521,11 +521,9 @@ ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
     HILOGI("Begin publish file. fileName is %{public}s", GetAnonyPath(fileName).c_str());
     try {
         if (extension_ == nullptr) {
-            HILOGE("Failed to publish file, extension is nullptr");
             throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
         }
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
-            HILOGE("Failed to publish file, action is invalid");
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
         VerifyCaller();
@@ -555,11 +553,9 @@ ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
     HILOGI("begin publish incremental file. fileName is %{private}s", fileName.data());
     try {
         if (extension_ == nullptr) {
-            HILOGE("Failed to publish incremental file, extension is nullptr");
             throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
         }
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
-            HILOGE("Failed to publish incremental file, action is invalid");
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
         VerifyCaller();
@@ -750,7 +746,6 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
     HILOGI("Start Do backup");
     auto start = std::chrono::system_clock::now();
     if (extension_ == nullptr) {
-        HILOGE("Failed to do backup, extension is nullptr");
         throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
     }
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
@@ -809,7 +804,6 @@ int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Do restore");
     if (extension_ == nullptr) {
-        HILOGE("Failed to do restore, extension is nullptr");
         throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
     }
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
@@ -1938,7 +1932,7 @@ static ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo,
 /**
  * 增量大文件和简报信息回传
  */
-ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
+ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
     const vector<struct ReportFileInfo> &bigInfos, sptr<IService> proxy)
 {
     ErrCode ret {ERR_OK};
