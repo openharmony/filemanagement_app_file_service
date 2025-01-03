@@ -98,6 +98,8 @@ ErrCode ServiceTest::Init(IServiceReverse::Scenario scenario)
     } else if (scenario == IServiceReverse::Scenario::BACKUP) {
         ret = servicePtr_->InitBackupSession(remote_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
+        ret = servicePtr_->InitBackupSession(remote_, errMsg);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->AppendBundlesBackupSession(bundleNames);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->Finish();

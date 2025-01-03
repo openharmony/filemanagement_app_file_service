@@ -29,6 +29,7 @@ public:
     MOCK_METHOD1(InitRestoreSession, ErrCode(sptr<IServiceReverse> remote));
     MOCK_METHOD2(InitRestoreSession, ErrCode(sptr<IServiceReverse> remote, std::string &errMsg));
     MOCK_METHOD1(InitBackupSession, ErrCode(sptr<IServiceReverse> remote));
+    MOCK_METHOD2(InitBackupSession, ErrCode(sptr<IServiceReverse> remote, std::string &errMsg));
     MOCK_METHOD0(Start, ErrCode());
     MOCK_METHOD0(AsObject, sptr<IRemoteObject>());
     MOCK_METHOD0(GetLocalCapabilities, UniqueFd());
@@ -49,6 +50,7 @@ public:
     MOCK_METHOD2(Cancel, ErrCode(std::string bundleName, int32_t &result));
     MOCK_METHOD1(GetLocalCapabilitiesIncremental, UniqueFd(const std::vector<BIncrementalData> &bundleNames));
     MOCK_METHOD1(InitIncrementalBackupSession, ErrCode(sptr<IServiceReverse> remote));
+    MOCK_METHOD2(InitIncrementalBackupSession, ErrCode(sptr<IServiceReverse> remote, std::string &errMsg));
     MOCK_METHOD1(AppendBundlesIncrementalBackupSession, ErrCode(const std::vector<BIncrementalData> &bundlesToBackup));
     MOCK_METHOD2(AppendBundlesIncrementalBackupSession,
         ErrCode(const std::vector<BIncrementalData> &bundlesToBackup, const std::vector<std::string> &infos));
