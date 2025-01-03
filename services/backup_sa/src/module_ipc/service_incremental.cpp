@@ -311,14 +311,54 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
                                 .isIncrementalBackup = true,
                                 .callerName = GetCallerName(),
                                 .activeTime = TimeUtils::GetCurrentTime()});
-    if (errCode != ERR_OK) {
-        HILOGE("Active incremental backup session error, Already have a session");
-        StopAll(nullptr, true);
+    if (errCode == ERR_OK) {
+        ClearFailedBundles();
+        successBundlesNum_ = 0;
         return errCode;
     }
-    ClearFailedBundles();
-    successBundlesNum_ = 0;
-    return BError(BError::Codes::OK);
+    if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
+        HILOGE("Active restore session error, Already have a session");
+        return errCode;
+    }
+    HILOGE("Active restore session error");
+    StopAll(nullptr, true);
+    return errCode;
+}
+
+ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    ErrCode errCode = VerifyCaller();
+    if (errCode != ERR_OK) {
+        HILOGE("Init incremental backup session fail, Verify caller failed, errCode:%{public}d", errCode);
+        return errCode;
+    }
+    if (session_ == nullptr) {
+        HILOGE("Init Incremental backup session  error, session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    errCode = session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
+                                .scenario = IServiceReverse::Scenario::BACKUP,
+                                .clientProxy = remote,
+                                .userId = GetUserIdDefault(),
+                                .isIncrementalBackup = true,
+                                .callerName = GetCallerName(),
+                                .activeTime = TimeUtils::GetCurrentTime()});
+    if (errCode == ERR_OK) {
+        ClearFailedBundles();
+        successBundlesNum_ = 0;
+        return errCode;
+    }
+    if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
+        errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
+                                                    session_->GetSessionCallerName(),
+                                                    session_->GetSessionActiveTime());
+        HILOGE("Active incremental backup session error, Already have a session");
+        return errCode;
+    }
+    HILOGE("Active incremental backup session error");
+    StopAll(nullptr, true);
+    return errCode;
 }
 
 vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalData> &bundlesToBackup)

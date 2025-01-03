@@ -113,6 +113,35 @@ ErrCode ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
     return reply.ReadInt32();
 }
 
+ErrCode ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+    if (!remote) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Empty reverse stub").GetCode();
+    }
+    if (!data.WriteRemoteObject(remote->AsObject().GetRefPtr())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to send the reverse stub").GetCode();
+    }
+
+    int32_t ret = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_BACKUP_SESSION_MSG), data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    if (!reply.ReadString(errMsg)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to receive the errMsg").GetCode();
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode ServiceProxy::Start()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);

@@ -317,12 +317,10 @@ napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info 
 {
     HILOGD("called SessionBackup::Constructor begin");
     if (!SAUtils::CheckBackupPermission()) {
-        HILOGE("Has not permission!");
         NError(E_PERMISSION).ThrowErr(env);
         return nullptr;
     }
     if (!SAUtils::IsSystemApp()) {
-        HILOGE("System App check fail!");
         NError(E_PERMISSION_SYS).ThrowErr(env);
         return nullptr;
     }
@@ -332,17 +330,17 @@ napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info 
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-
     NVal callbacks(env, funcArg[NARG_POS::FIRST]);
     if (!callbacks.TypeIs(napi_object)) {
         HILOGE("First argument is not an object.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not an object.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-
     NVal ptr(env, funcArg.GetThisVar());
     auto backupEntity = std::make_unique<BackupEntity>();
     backupEntity->callbacks = make_shared<GeneralCallbacks>(env, ptr, callbacks);
+    ErrCode errCode;
+    std::string errMsg;
     backupEntity->session = BSessionBackup::Init(BSessionBackup::Callbacks {
         .onFileReady = bind(OnFileReady, backupEntity->callbacks, placeholders::_1, placeholders::_2, placeholders::_3),
         .onBundleStarted = bind(onBundleBegin, backupEntity->callbacks, placeholders::_1, placeholders::_2),
@@ -350,9 +348,12 @@ napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info 
         .onAllBundlesFinished = bind(onAllBundlesEnd, backupEntity->callbacks, placeholders::_1),
         .onResultReport = bind(OnResultReport, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBackupServiceDied = bind(OnBackupServiceDied, backupEntity->callbacks),
-        .onProcess = bind(OnProcess, backupEntity->callbacks, placeholders::_1, placeholders::_2)});
+        .onProcess = bind(OnProcess, backupEntity->callbacks, placeholders::_1, placeholders::_2)}, errMsg, errCode);
     if (!backupEntity->session) {
-        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to init backup").GetCode()).ThrowErr(env);
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(errCode, BError::GetBackupMsgByErrno(errCode) + ", " + errMsg);
+        ErrParam errorParam = [ errInfo ]() { return errInfo;};
+        NError(errorParam).ThrowErr(env);
         return nullptr;
     }
     if (!SetSessionBackupEntity(env, funcArg, std::move(backupEntity))) {

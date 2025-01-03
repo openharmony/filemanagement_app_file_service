@@ -67,6 +67,11 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse>)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse>, std::string &)
+{
+    return BError(BError::Codes::OK);
+}
+
 vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalData>&)
 {
     return {};

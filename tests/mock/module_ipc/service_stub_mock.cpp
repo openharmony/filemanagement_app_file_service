@@ -87,6 +87,10 @@ void ServiceStub::ServiceStubSupplement()
         &ServiceStub::CmdReportAppProcessInfo;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_RESTORE_SESSION_MSG)] =
         &ServiceStub::CmdInitRestoreSessionMsg;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_BACKUP_SESSION_MSG)] =
+        &ServiceStub::CmdInitBackupSessionMsg;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_INCREMENTAL_BACKUP_SESSION_MSG)] =
+        &ServiceStub::CmdInitIncrementalBackupSessionMsg;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_CANCEL_BUNDLE)] =
         &ServiceStub::CmdCancel;
 }
@@ -133,6 +137,17 @@ int32_t ServiceStub::CmdInitBackupSession(MessageParcel &data, MessageParcel &re
     auto iremote = iface_cast<IServiceReverse>(remote);
 
     int res = InitBackupSession(iremote);
+    reply.WriteInt32(res);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdInitBackupSessionMsg(MessageParcel &data, MessageParcel &reply)
+{
+    auto remote = data.ReadRemoteObject();
+    auto iremote = iface_cast<IServiceReverse>(remote);
+    std::string errMsg;
+    int res = InitBackupSession(iremote, errMsg);
+    reply.WriteString(errMsg);
     reply.WriteInt32(res);
     return BError(BError::Codes::OK);
 }
@@ -315,6 +330,11 @@ int32_t ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup(MessageParcel &dat
 }
 
 int32_t ServiceStub::CmdInitIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
+{
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdInitIncrementalBackupSessionMsg(MessageParcel &data, MessageParcel &reply)
 {
     return BError(BError::Codes::OK);
 }

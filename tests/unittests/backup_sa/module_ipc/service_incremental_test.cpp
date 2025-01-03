@@ -62,6 +62,11 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::Start()
 {
     return BError(BError::Codes::OK);
