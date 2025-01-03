@@ -100,6 +100,26 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
     return true;
 }
 
+bool TarFile::ToAddFile(std::string &path, int &err)
+{
+    struct stat curFileStat {};
+    auto ret = memset_s(&curFileStat, sizeof(curFileStat), 0, sizeof(curFileStat));
+    if (ret != EOK) {
+        HILOGE("Failed to call memset_s, err = %{public}d", ret);
+        return false;
+    }
+    if (lstat(path.c_str(), &curFileStat) != 0) {
+        err = errno;
+        HILOGE("Failed to lstat, err = %{public}d", errno);
+        return false;
+    }
+    if (!AddFile(path, curFileStat, err)) {
+        HILOGE("Failed to add file to tar package, file path is:%{public}s", GetAnonyPath(path).c_str());
+        return false;
+    }
+    return true;
+}
+
 bool TarFile::TraversalFile(string &filePath, int &err)
 {
     if (access(filePath.c_str(), F_OK) != 0) {
@@ -107,23 +127,17 @@ bool TarFile::TraversalFile(string &filePath, int &err)
         HILOGE("File path does not exists, err = %{public}d", errno);
         return false;
     }
-
-    struct stat curFileStat {};
-    auto ret = memset_s(&curFileStat, sizeof(curFileStat), 0, sizeof(curFileStat));
-    if (ret != EOK) {
-        HILOGE("Failed to call memset_s, err = %{public}d", ret);
+    int fd = open(filePath.c_str(), O_RDONLY);
+    if (fd < 0 && errno == ERR_NO_PERMISSION) {
+        HILOGI("noPermissionFlie, don't need to backup, path = %{public}s, err = %{public}d",
+            GetAnonyString(filePath).c_str(), errno);
+        return true;
+    } else if (fd > 0) {
+        close(fd);
+    }
+    if (!ToAddFile(filePath, err)) {
         return false;
     }
-    if (lstat(filePath.c_str(), &curFileStat) != 0) {
-        err = errno;
-        HILOGE("Failed to lstat, err = %{public}d", errno);
-        return false;
-    }
-    if (!AddFile(filePath, curFileStat, err)) {
-        HILOGE("Failed to add file to tar package, file path is:%{public}s", GetAnonyPath(filePath).c_str());
-        return false;
-    }
-
     if (isReset_) {
         return true;
     }

@@ -467,13 +467,27 @@ static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
     return ret;
 }
 
-ErrCode BackupExtExtension::BigFileReady(const TarMap &bigFileInfo, sptr<IService> proxy)
+void BackupExtExtension::ClearNoPermissionFiles(TarMap &pkgInfo, vector<std::string> &noPermissionFiles)
+{
+    HILOGI("start ClearNoPermissionFiles;");
+    for (const auto &item : noPermissionFiles) {
+        auto it = pkgInfo.find(item);
+        if (it != pkgInfo.end()) {
+            HILOGI("noPermissionFile, don't need to backup, path = %{public}s",
+                GetAnonyString(std::get<0>(it->second)).c_str());
+            pkgInfo.erase(it);
+        }
+    }
+}
+
+ErrCode BackupExtExtension::BigFileReady(TarMap &bigFileInfo, sptr<IService> proxy)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("BigFileReady Begin: bigFileInfo file size is: %{public}zu", bigFileInfo.size());
     ErrCode ret {ERR_OK};
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
+    vector<string> noPermissionFiles;
     for (auto &item : bigFileInfo) {
         WaitToSendFd(startTime, fdNum);
         int32_t errCode = ERR_OK;
@@ -482,8 +496,11 @@ ErrCode BackupExtExtension::BigFileReady(const TarMap &bigFileInfo, sptr<IServic
         if (fd < 0) {
             HILOGE("open file failed, file name is %{public}s, err = %{public}d", fllePath.c_str(), errno);
             errCode = errno;
+            if (errCode == ERR_NO_PERMISSION) {
+                noPermissionFiles.emplace_back(item.first.c_str());
+                continue;
+            }
         }
-
         ret = proxy->AppFileReady(item.first, std::move(fd), errCode);
         if (SUCCEEDED(ret)) {
             HILOGI("The application is packaged successfully, package name is %{public}s", item.first.c_str());
@@ -493,6 +510,7 @@ ErrCode BackupExtExtension::BigFileReady(const TarMap &bigFileInfo, sptr<IServic
         fdNum++;
         RefreshTimeInfo(startTime, fdNum);
     }
+    ClearNoPermissionFiles(bigFileInfo, noPermissionFiles);
     HILOGI("BigFileReady End");
     return ret;
 }
@@ -503,11 +521,9 @@ ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
     HILOGI("Begin publish file. fileName is %{public}s", GetAnonyPath(fileName).c_str());
     try {
         if (extension_ == nullptr) {
-            HILOGE("Failed to publish file, extension is nullptr");
             throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
         }
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
-            HILOGE("Failed to publish file, action is invalid");
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
         VerifyCaller();
@@ -537,11 +553,9 @@ ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
     HILOGI("begin publish incremental file. fileName is %{private}s", fileName.data());
     try {
         if (extension_ == nullptr) {
-            HILOGE("Failed to publish incremental file, extension is nullptr");
             throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
         }
         if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
-            HILOGE("Failed to publish incremental file, action is invalid");
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
         VerifyCaller();
@@ -732,7 +746,6 @@ int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
     HILOGI("Start Do backup");
     auto start = std::chrono::system_clock::now();
     if (extension_ == nullptr) {
-        HILOGE("Failed to do backup, extension is nullptr");
         throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
     }
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
@@ -791,7 +804,6 @@ int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Do restore");
     if (extension_ == nullptr) {
-        HILOGE("Failed to do restore, extension is nullptr");
         throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
     }
     if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
@@ -1920,13 +1932,14 @@ static ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo,
 /**
  * 增量大文件和简报信息回传
  */
-ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
+ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
     const vector<struct ReportFileInfo> &bigInfos, sptr<IService> proxy)
 {
     ErrCode ret {ERR_OK};
     HILOGI("IncrementalBigFileReady Begin, pkgInfo size:%{public}zu", pkgInfo.size());
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
+    vector<string> noPermissionFiles;
     for (auto &item : pkgInfo) {
         if (item.first.empty()) {
             continue;
@@ -1939,6 +1952,10 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
             HILOGE("IncrementalBigFileReady open file failed, file name is %{public}s, err = %{public}d", path.c_str(),
                    errno);
             errCode = errno;
+            if (errCode == ERR_NO_PERMISSION) {
+                noPermissionFiles.emplace_back(item.first.c_str());
+                continue;
+            }
         }
         vector<struct ReportFileInfo> bigInfo;
         for (const auto &tempFile : bigInfos) {
@@ -1960,6 +1977,7 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
         fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
         RefreshTimeInfo(startTime, fdNum);
     }
+    ClearNoPermissionFiles(pkgInfo, noPermissionFiles);
     HILOGI("IncrementalBigFileReady End");
     return ret;
 }
