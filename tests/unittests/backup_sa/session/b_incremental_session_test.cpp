@@ -60,7 +60,7 @@ void IncrementalSessionTest::TearDownTestCase()
 /**
  * @tc.number: SUB_b_incremental_session_test_0100
  * @tc.name: SUB_b_incremental_session_test_0100
- * @tc.desc: 测试 InitRestoreSession 接口
+ * @tc.desc: 测试 InitIncrementalBackupSession 接口
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -762,5 +762,73 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2300, testing::e
         GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by Cancel.";
     }
     GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2300";
+}
+
+/**
+ * @tc.number: SUB_b_incremental_session_test_2400
+ * @tc.name: SUB_b_incremental_session_test_2400
+ * @tc.desc: 测试 InitIncrementalBackupSession 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2400";
+    try {
+        std::string errMsg;
+        ErrCode errCode;
+        ServiceProxy::serviceProxy_ = nullptr;
+        BIncrementalBackupSession::Callbacks callbacks;
+        EXPECT_TRUE(backupSession != nullptr);
+        auto err = backupSession->Init(callbacks, errMsg, errCode);
+        EXPECT_EQ(err, nullptr);
+
+        EXPECT_CALL(*proxy, InitIncrementalBackupSession(_, _)).WillOnce(Return(-1)).WillOnce(Return(0));
+        ServiceProxy::serviceProxy_ = proxy;
+        err = backupSession->Init(callbacks, errMsg, errCode);
+        EXPECT_EQ(err, nullptr);
+        err = backupSession->Init(callbacks, errMsg, errCode);
+        EXPECT_NE(err, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by RemoveExtConn.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2400";
+}
+
+/**
+ * @tc.number: SUB_b_incremental_session_test_2500
+ * @tc.name: SUB_b_incremental_session_test_2500
+ * @tc.desc: 测试 Init 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2500, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2500";
+    try {
+        std::string errMsg;
+        ErrCode errCode;
+        ServiceProxy::serviceProxy_ = nullptr;
+        BIncrementalRestoreSession::Callbacks callbacks;
+        EXPECT_TRUE(restoreSession != nullptr);
+        auto err = restoreSession->Init(callbacks, errMsg, errCode);
+        EXPECT_EQ(err, nullptr);
+
+        EXPECT_CALL(*proxy, InitRestoreSession(_, _)).WillOnce(Return(-1)).WillOnce(Return(0));
+        ServiceProxy::serviceProxy_ = proxy;
+        err = restoreSession->Init(callbacks, errMsg, errCode);
+        EXPECT_EQ(err, nullptr);
+        err = restoreSession->Init(callbacks, errMsg, errCode);
+        EXPECT_NE(err, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by RemoveExtConn.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2500";
 }
 } // namespace OHOS::FileManagement::Backup

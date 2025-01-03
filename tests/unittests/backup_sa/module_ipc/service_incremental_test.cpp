@@ -523,6 +523,37 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
 }
 
 /**
+ * @tc.number: SUB_ServiceIncremental_InitIncrementalBackupSession_0100
+ * @tc.name: SUB_ServiceIncremental_InitIncrementalBackupSession_0100
+ * @tc.desc: 测试 InitIncrementalBackupSession with errMsg的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSession_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_InitIncrementalBackupSession_0100";
+    try {
+        std::string errMsg;
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr, errMsg),
+            BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = session_;
+
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr, errMsg), BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by InitIncrementalBackupSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_InitIncrementalBackupSession_0100";
+}
+
+/**
  * @tc.number: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000
  * @tc.name: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000
  * @tc.desc: 测试 AppendBundlesIncrementalBackupSession 的正常/异常分支

@@ -91,6 +91,34 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitRestoreSession_0100, testing::e
 }
 
 /**
+ * @tc.number: SUB_Service_proxy_InitRestoreSession_0200
+ * @tc.name: SUB_Service_proxy_InitRestoreSession_0200
+ * @tc.desc: 测试 InitRestoreSession 注册restore Session with errMsg接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitRestoreSession_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_InitRestoreSession_0200";
+    std::string errMsg;
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_InitRestoreSession_0200 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(1)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeMsgSendRequest));
+    int32_t result = proxy_->InitRestoreSession(remote_, errMsg);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->InitRestoreSession(nullptr, errMsg);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_InitRestoreSession_0200";
+}
+
+/**
  * @tc.number: SUB_Service_proxy_InitBackupSession_0100
  * @tc.name: SUB_Service_proxy_InitBackupSession_0100
  * @tc.desc: 测试 InitBackupSession 注册backup Session接口调用成功和失败
@@ -114,6 +142,35 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitBackupSession_0100, testing::ex
     EXPECT_EQ(result, BError(BError::Codes::OK));
 
     result = proxy_->InitBackupSession(nullptr);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_InitBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_InitBackupSession_0200
+ * @tc.name: SUB_Service_proxy_InitBackupSession_0200
+ * @tc.desc: 测试 InitBackupSession 注册backup Session with errMsg接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitBackupSession_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_InitBackupSession_0200";
+    std::string errMsg;
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_InitBackupSession_0200 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(1)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeMsgSendRequest));
+
+    int32_t result = proxy_->InitBackupSession(remote_, errMsg);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->InitBackupSession(nullptr, errMsg);
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_InitBackupSession_0100";
 }
@@ -595,6 +652,35 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitIncrementalBackupSession_0100, 
     result = proxy_->InitIncrementalBackupSession(nullptr);
     EXPECT_NE(result, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_InitIncrementalBackupSession_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_InitIncrementalBackupSession_0200
+ * @tc.name: SUB_Service_proxy_InitIncrementalBackupSession_0200
+ * @tc.desc: 测试 InitIncrementalBackupSession with errMsg接口调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_InitIncrementalBackupSession_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_InitIncrementalBackupSession_0200";
+    std::string errMsg;
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_InitIncrementalBackupSession_0200 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(1)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeMsgSendRequest));
+
+    int32_t result = proxy_->InitIncrementalBackupSession(remote_, errMsg);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    result = proxy_->InitIncrementalBackupSession(nullptr, errMsg);
+    EXPECT_NE(result, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_InitIncrementalBackupSession_0200";
 }
 
 /**

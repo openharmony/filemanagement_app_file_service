@@ -46,6 +46,18 @@ unique_ptr<BSessionBackup> BSessionBackup::Init(Callbacks callbacks)
     return nullptr;
 }
 
+unique_ptr<BSessionBackup> BSessionBackup::Init(Callbacks callbacks, std::string &errMsg, ErrCode &errCode)
+{
+    try {
+        callbacks_ = callbacks;
+        auto backup = make_unique<BSessionBackup>();
+        return backup;
+    } catch (const exception &e) {
+        return nullptr;
+    }
+    return nullptr;
+}
+
 void BSessionBackup::RegisterBackupServiceDied(function<void()> functor) {}
 
 ErrCode BSessionBackup::Start()
