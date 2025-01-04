@@ -919,16 +919,20 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
         ErrCode ret = VerifyCallerAndGetCallerName(callerName);
         if (ret != ERR_OK) {
             HILOGE("Result report fail, bundleName:%{public}s, ret:%{public}d", callerName.c_str(), ret);
-            NotifyCloneBundleFinish(callerName, sennario);
+            HandleCurBundleEndWork(callerName, sennario);
+            CallOnBundleEndByScenario(callerName, sennario, ret);
+            OnAllBundlesFinished(BError(BError::Codes::OK));
             return ret;
         }
         SendEndAppGalleryNotify(callerName);
         if (sennario == BackupRestoreScenario::FULL_RESTORE) {
+            HandleCurBundleEndWork(callerName, sennario);
             session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, callerName, errCode);
-            NotifyCloneBundleFinish(callerName, sennario);
+            OnAllBundlesFinished(BError(BError::Codes::OK));
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
+            HandleCurBundleEndWork(callerName, sennario);
             session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, callerName, errCode);
-            NotifyCloneBundleFinish(callerName, sennario);
+            OnAllBundlesFinished(BError(BError::Codes::OK));
         } else if (sennario == BackupRestoreScenario::FULL_BACKUP) {
             session_->GetServiceReverseProxy()->BackupOnResultReport(restoreRetInfo, callerName);
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
@@ -936,12 +940,10 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
         }
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        NotifyCloneBundleFinish(callerName, sennario);
+        HandleCurBundleEndWork(callerName, sennario);
+        CallOnBundleEndByScenario(callerName, sennario, e.GetCode());
+        OnAllBundlesFinished(BError(BError::Codes::OK));
         return e.GetCode(); // 任意异常产生，终止监听该任务
-    } catch (...) {
-        NotifyCloneBundleFinish(callerName, sennario);
-        HILOGE("Unexpected exception");
-        return EPERM;
     }
 }
 
@@ -967,7 +969,7 @@ ErrCode Service::SAResultReport(const std::string bundleName, const std::string 
     return SADone(errCode, bundleName);
 }
 
-void Service::NotifyCloneBundleFinish(std::string bundleName, const BackupRestoreScenario sennario)
+void Service::HandleCurBundleEndWork(std::string bundleName, const BackupRestoreScenario sennario)
 {
     try {
         if (sennario != BackupRestoreScenario::FULL_RESTORE &&
@@ -998,10 +1000,8 @@ void Service::NotifyCloneBundleFinish(std::string bundleName, const BackupRestor
             ClearSessionAndSchedInfo(bundleName);
         }
         RemoveExtensionMutex(bundleName);
-        OnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
         HILOGE("Unexpected exception");
-        ReleaseOnException();
     }
 }
 

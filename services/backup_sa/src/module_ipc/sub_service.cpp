@@ -722,4 +722,21 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, std::string &er
     StopAll(nullptr, true);
     return ret;
 }
+
+void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRestoreScenario scenario, ErrCode errCode)
+{
+    if (session_ == nullptr) {
+        HILOGE("Session is empty, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    if (scenario == BackupRestoreScenario::FULL_RESTORE) {
+        session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
+    } else if (scenario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
+        session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
+    } else if (scenario == BackupRestoreScenario::FULL_BACKUP) {
+        session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
+    } else if (scenario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
+        session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
+    }
+}
 }
