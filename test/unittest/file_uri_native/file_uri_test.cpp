@@ -272,6 +272,79 @@ namespace OHOS::AppFileService::ModuleFileUri {
         EXPECT_EQ(fileUri.GetRealPath(), fileStr);
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0005";
     }
+
+    /**
+     * @tc.name: File_uri_GetPathBySA_0001
+     * @tc.desc: Test function of GetPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7LW57
+     */
+    HWTEST_F(FileUriTest, File_uri_GetPathBySA_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0001";
+        string fileStr = "";
+        string uri = "file://com.example.demoa/data/storage/el2/base%()test.jpg";
+        FileUri fileUri(uri);
+        EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0001";
+    }
+
+    /**
+     * @tc.name: File_uri_GetPathBySA_0002
+     * @tc.desc: Test function of GetPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7LW57
+     */
+    HWTEST_F(FileUriTest, File_uri_GetPathBySA_0002, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0002";
+        string fileStr = "";
+        string uri = "file://com.example.demoa/data/storage/el2/base/files/%你好test.jpg";
+        FileUri fileUri(uri);
+        EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0002";
+    }
+    
+    /**
+     * @tc.name: File_uri_GetPathBySA_0003
+     * @tc.desc: Test function of GetPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7LW57
+     */
+    HWTEST_F(FileUriTest, File_uri_GetPathBySA_0003, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0003";
+        string fileStr = "";
+        string uri = "file://com.example.demoa/data/storage/el2%/base/files/test.jpg";
+        FileUri fileUri(uri);
+        EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0003";
+    }
+    
+    /**
+     * @tc.name: File_uri_GetPathBySA_0004
+     * @tc.desc: Test function of GetPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7LW57
+     */
+    HWTEST_F(FileUriTest, File_uri_GetPathBySA_0004, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0004";
+        string fileStr = "";
+        string uri = "file://com.example.demoa/data/storage/el2/base%#files/test.jpg";
+        FileUri fileUri(uri);
+        EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0004";
+    }
+
     /**
      * @tc.name: file_uri_test_0007
      * @tc.desc: Test function of GetFullDirectoryUri() interface for SUCCESS.
