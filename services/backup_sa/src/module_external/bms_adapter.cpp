@@ -117,7 +117,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     auto bms = GetBundleManager();
     HILOGI("Start, bundleNames size:%{public}zu", bundleNames.size());
-    for (auto const &bundleName : bundleNames) {
+    for (const auto &bundleName : bundleNames) {
         HILOGI("Begin Get bundleName:%{public}s", bundleName.c_str());
         if (bundleName.empty()) {
             HILOGE("BundleName is invalid");
@@ -292,7 +292,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     vector<int64_t> incrementalBackTimes;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     auto bms = GetBundleManager();
-    for (auto const &bundleNameTime : incrementalDataList) {
+    for (const auto &bundleNameTime : incrementalDataList) {
         auto bundleName = bundleNameTime.bundleName;
         AppExecFwk::BundleInfo installedBundle;
         std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos;
@@ -350,7 +350,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     vector<BIncrementalData> bundleNames;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
-    for (auto const &installedBundle : installedBundles) {
+    for (const auto &installedBundle : installedBundles) {
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
@@ -394,7 +394,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetFullBundleInfos(int32_t
     vector<string> bundleNames;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
-    for (auto const &installedBundle : installedBundles) {
+    for (const auto &installedBundle : installedBundles) {
         if (installedBundle.name.empty()) {
             HILOGE("Current bundle name is invalid");
             continue;
@@ -437,13 +437,13 @@ string BundleMgrAdapter::GetExtName(string bundleName, int32_t userId)
     if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles, userId)) {
         throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle infos");
     }
-    for (auto const &installedBundle : installedBundles) {
+    for (const auto &installedBundle : installedBundles) {
         if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
         }
-        for (auto ext : installedBundle.extensionInfos) {
+        for (const auto &ext : installedBundle.extensionInfos) {
             if (ext.bundleName != bundleName) {
                 continue;
             }
@@ -469,7 +469,7 @@ std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForSA()
     }
     int32_t ret = samgrProxy->GetExtensionSaIds(BConstants::EXTENSION_BACKUP, saIds);
     HILOGI("GetExtensionSaIds ret: %{public}d", ret);
-    for (auto saId : saIds) {
+    for (const auto &saId : saIds) {
         saBundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {std::to_string(saId), 0, 0, "", 0, 0, true, false,
             "", "", "", ""});
     }
@@ -525,7 +525,7 @@ bool BundleMgrAdapter::GetCurBundleExtenionInfo(AppExecFwk::BundleInfo &installe
         return false;
     }
     std::vector<AppExecFwk::HapModuleInfo> hapModuleInfos = installedBundle.hapModuleInfos;
-    for (auto &hapModuleInfo : hapModuleInfos) {
+    for (const auto &hapModuleInfo : hapModuleInfos) {
         extensionInfos.insert(extensionInfos.end(), hapModuleInfo.extensionInfos.begin(),
             hapModuleInfo.extensionInfos.end());
     }
@@ -560,7 +560,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppend(co
     int32_t userId)
 {
     auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(list, userId);
-    for (auto const &info : list) {
+    for (const auto &info : list) {
         if (SAUtils::IsSABundleName(info.bundleName)) {
             GetBundleInfoForSA(info.bundleName, bundleInfos);
         }

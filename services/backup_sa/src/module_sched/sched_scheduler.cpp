@@ -188,7 +188,7 @@ void SchedScheduler::TryUnloadService()
 void SchedScheduler::ClearSchedulerData()
 {
     unique_lock<shared_mutex> lock(lock_);
-    for (auto &bundleTime : bundleTimeVec_) {
+    for (const auto &bundleTime : bundleTimeVec_) {
         auto &[bName, iTime] = bundleTime;
         extTime_.Unregister(iTime);
     }

@@ -236,9 +236,9 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0400, testing::ext::TestSize.Level
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0400";
     try {
         string tarName = " ";
-        auto ret = GetTarIncludes(tarName);
-        size_t size = ret.size();
-        EXPECT_EQ(size, 0);
+        unordered_map<string, struct ReportFileInfo> infos;
+        GetTarIncludes(tarName, infos);
+        EXPECT_EQ(infos.size(), 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";

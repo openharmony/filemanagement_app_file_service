@@ -31,13 +31,6 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-const int MODE_KEY = 0;
-const int DIR_KEY = 1;
-const int SIZE_KEY = 2;
-const int MTIME_KEY = 3;
-const int HASH_KEY = 4;
-const int IS_INCREMENTAL_KEY = 5;
-
 class BReportEntityTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
@@ -80,14 +73,16 @@ HWTEST_F(BReportEntityTest, b_report_entity_GetReportInfos_0100, testing::ext::T
         string size = "1";
         string mtime = "1501927260";
         string hash = "ASDasadSDASDA";
+        string isIncremental = "1";
 
-        string content = "version=1.0&attrNum=6\r\npath;mode;dir;size;mtime;hash\r\n";
-        content += fileName + ";" + mode + ";" + isDir + ";" + size + ";" + mtime + ";" + hash;
+        string content = "version=1.0&attrNum=6\r\npath;mode;dir;size;mtime;hash;isIncremetal\r\n";
+        content += fileName + ";" + mode + ";" + isDir + ";" + size + ";" + mtime + ";" + hash + ";" + isIncremental;
         TestManager tm(__func__);
         const auto [filePath, res] = GetTestFile(tm, content);
 
         BReportEntity cloudRp(UniqueFd(open(filePath.data(), O_RDONLY, 0)));
-        unordered_map<string, struct ReportFileInfo> cloudFiles = cloudRp.GetReportInfos();
+        unordered_map<string, struct ReportFileInfo> cloudFiles;
+        cloudRp.GetReportInfos(cloudFiles);
 
         bool flag = false;
         fileName = fileName.substr(1, fileName.length() - 1);
@@ -100,6 +95,7 @@ HWTEST_F(BReportEntityTest, b_report_entity_GetReportInfos_0100, testing::ext::T
                 EXPECT_EQ(to_string(item.second.size), size);
                 EXPECT_EQ(to_string(item.second.mtime), mtime);
                 EXPECT_EQ(item.second.hash, hash);
+                EXPECT_EQ(to_string(item.second.isIncremental), isIncremental);
 
                 flag = true;
                 break;
@@ -128,15 +124,17 @@ HWTEST_F(BReportEntityTest, b_report_entity_SplitStringByChar_0100, testing::ext
     try {
         string str = "";
         char sep = ATTR_SEP;
-        auto splits = SplitStringByChar(str, sep);
+        vector<string> splits;
+        SplitStringByChar(str, sep, splits);
         EXPECT_EQ(splits.size(), 0);
 
         str = "test;";
-        splits = SplitStringByChar(str, sep);
+        SplitStringByChar(str, sep, splits);
         EXPECT_EQ(splits.size(), 2);
 
         str = "test";
-        splits = SplitStringByChar(str, sep);
+        splits.clear();
+        SplitStringByChar(str, sep, splits);
         EXPECT_EQ(splits.size(), 1);
     } catch (const exception &e) {
         GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by SplitStringByChar. " << e.what();
@@ -159,31 +157,27 @@ HWTEST_F(BReportEntityTest, b_report_entity_ParseReportInfo_0100, testing::ext::
     try {
         struct ReportFileInfo fileStat;
         vector<string> splits;
-        unordered_map<string, int> keys;
-        auto err = ParseReportInfo(fileStat, splits, keys);
+        std::vector<std::string> keys;
+        int testLen = 1;
+        auto err = ParseReportInfo(fileStat, splits, testLen);
+        EXPECT_EQ(err, EPERM);
+
+        splits.emplace_back("test");
+        testLen = 1;
+        err = ParseReportInfo(fileStat, splits, testLen);
         EXPECT_EQ(err, EPERM);
 
         fileStat = {};
         splits = {"/test", "0", "0", "0", "0", "0", "0"};
-        keys.emplace(INFO_MODE, 0);
-        keys.emplace(INFO_DIR, 1);
-        keys.emplace(INFO_SIZE, 2);
-        keys.emplace(INFO_MTIME, 3);
-        keys.emplace(INFO_HASH, 4);
-        keys.emplace(INFO_IS_INCREMENTAL, 5);
-        err = ParseReportInfo(fileStat, splits, keys);
+        err = ParseReportInfo(fileStat, splits, splits.size());
         EXPECT_EQ(err, ERR_OK);
 
-        fileStat = {};
-        splits = {"test", "0", "1", "0", "0", "0", "1"};
-        keys.clear();
-        keys.emplace(INFO_MODE, 0);
-        keys.emplace(INFO_DIR, 1);
-        keys.emplace(INFO_SIZE, 2);
-        keys.emplace(INFO_MTIME, 3);
-        keys.emplace(INFO_HASH, 4);
-        keys.emplace(INFO_IS_INCREMENTAL, 5);
-        err = ParseReportInfo(fileStat, splits, keys);
+        splits = {"test", "0", "1", "0", "0", "0", "1", "1"};
+        err = ParseReportInfo(fileStat, splits, splits.size());
+        EXPECT_EQ(err, ERR_OK);
+
+        splits = {"test", "0", "1", "test", "test", "0", "1", "1"};
+        err = ParseReportInfo(fileStat, splits, splits.size());
         EXPECT_EQ(err, ERR_OK);
     } catch (const exception &e) {
         GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by ParseReportInfo." << e.what();
@@ -204,7 +198,7 @@ HWTEST_F(BReportEntityTest, b_report_entity_DealLine_0100, testing::ext::TestSiz
 {
     GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_DealLine_0100";
     try {
-        unordered_map<string, int> keys;
+        std::vector<string> keys;
         int num = 1;
         string line = "test\r";
         unordered_map<string, struct ReportFileInfo> infos;
@@ -217,14 +211,13 @@ HWTEST_F(BReportEntityTest, b_report_entity_DealLine_0100, testing::ext::TestSiz
         DealLine(keys, num, line, infos);
         EXPECT_EQ(infos.size(), 0);
 
+        line = "/test;0;0;0;0;0;0;0\r";
+        keys = Data_Header;
+        DealLine(keys, num, line, infos);
+        EXPECT_EQ(infos.size(), 1);
+
         line = "/test;0;0;0;0;0;0\r";
-        keys.clear();
-        keys.emplace(INFO_MODE, 0);
-        keys.emplace(INFO_DIR, 1);
-        keys.emplace(INFO_SIZE, 2);
-        keys.emplace(INFO_MTIME, 3);
-        keys.emplace(INFO_HASH, 4);
-        keys.emplace(INFO_IS_INCREMENTAL, 5);
+        keys.resize(keys.size() - 1);
         DealLine(keys, num, line, infos);
         EXPECT_EQ(infos.size(), 1);
     } catch (const exception &e) {
@@ -246,113 +239,35 @@ HWTEST_F(BReportEntityTest, b_report_entity_DealLine_0101, testing::ext::TestSiz
 {
     GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_DealLine_0101";
     try {
-        unordered_map<string, int> keys;
-        int num = 1;
+        std::vector<string> keys;
+        int num = 0;
         string line = "";
         unordered_map<string, struct ReportFileInfo> infos;
         DealLine(keys, num, line, infos);
         EXPECT_EQ(infos.size(), 0);
+        EXPECT_EQ(keys.size(), 0);
+
+        num = 1;
+        DealLine(keys, num, line, infos);
+        EXPECT_EQ(infos.size(), 0);
+        EXPECT_EQ(keys.size(), 0);
+
+        num = 2;
+        line = "";
+        DealLine(keys, num, line, infos);
+        EXPECT_EQ(infos.size(), 0);
+        EXPECT_EQ(keys.size(), 0);
+
+        num = 2;
+        line = "test";
+        DealLine(keys, num, line, infos);
+        EXPECT_EQ(infos.size(), 0);
+        EXPECT_EQ(keys.size(), 0);
     } catch (const exception &e) {
         GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by DealLine. " << e.what();
         EXPECT_TRUE(false);
     }
     GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_DealLine_0101";
-}
-
-/**
- * @tc.number: SUB_backup_b_report_entity_StorageDealLine_0100
- * @tc.name: b_report_entity_StorageDealLine_0100
- * @tc.desc: Test function of DealLine interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- */
-HWTEST_F(BReportEntityTest, b_report_entity_StorageDealLine_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_StorageDealLine_0100";
-    try {
-        unordered_map<string, int> keys;
-        int num = 1;
-        string line = "";
-        StorageDealLine(keys, num, line);
-        EXPECT_TRUE(true);
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by DealLine. " << e.what();
-        EXPECT_TRUE(false);
-    }
-    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_StorageDealLine_0100";
-}
-
-/**
- * @tc.number: SUB_backup_b_report_entity_StorageDealLine_0101
- * @tc.name: b_report_entity_StorageDealLine_0101
- * @tc.desc: Test function of DealLine interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- */
-HWTEST_F(BReportEntityTest, b_report_entity_StorageDealLine_0101, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_StorageDealLine_0101";
-    try {
-        unordered_map<string, int> keys;
-        int num = 0;
-        string line = "test\r";
-        StorageDealLine(keys, num, line);
-        EXPECT_TRUE(true);
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by DealLine. " << e.what();
-        EXPECT_TRUE(false);
-    }
-    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_StorageDealLine_0101";
-}
-
-/**
- * @tc.number: SUB_backup_b_report_entity_StorageDealLine_0102
- * @tc.name: b_report_entity_StorageDealLine_0102
- * @tc.desc: Test function of DealLine interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- */
-HWTEST_F(BReportEntityTest, b_report_entity_StorageDealLine_0102, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_StorageDealLine_0102";
-    try {
-        unordered_map<string, int> keys;
-        int num = 1;
-        string line = "key1;key2;key3";
-        StorageDealLine(keys, num, line);
-        EXPECT_TRUE(true);
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by DealLine. " << e.what();
-        EXPECT_TRUE(false);
-    }
-    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_StorageDealLine_0102";
-}
-
-/**
- * @tc.number: SUB_backup_b_report_entity_StorageDealLine_0103
- * @tc.name: b_report_entity_StorageDealLine_0103
- * @tc.desc: Test function of DealLine interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- */
-HWTEST_F(BReportEntityTest, b_report_entity_StorageDealLine_0103, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_StorageDealLine_0103";
-    try {
-        unordered_map<string, int> keys;
-        int num = INFO_ALIGN_NUM;
-        string line = "key1;key2;key3";
-        StorageDealLine(keys, num, line);
-        EXPECT_TRUE(true);
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by DealLine. " << e.what();
-        EXPECT_TRUE(false);
-    }
-    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_StorageDealLine_0103";
 }
 
 /**
@@ -373,25 +288,16 @@ HWTEST_F(BReportEntityTest, b_report_entity_GetStorageReportInfos_0100, testing:
         string size = "1";
         string mtime = "1501927260";
         string hash = "ASDasadSDASDA";
+        string isIncremental = "1";
 
-        string content = "version=1.0&attrNum=6\r\npath;mode;dir;size;mtime;hash\r\n";
-        content += fileName + ";" + mode + ";" + isDir + ";" + size + ";" + mtime + ";" + hash;
+        string content = "version=1.0&attrNum=6\r\npath;mode;dir;size;mtime;hash;isIncremental\r\n";
+        content += fileName + ";" + mode + ";" + isDir + ";" + size + ";" + mtime + ";" + hash + ";" + isIncremental;
         TestManager tm(__func__);
         const auto [filePath, res] = GetTestFile(tm, content);
         BReportEntity cloudRp(UniqueFd(open(filePath.data(), O_RDONLY, 0)));
 
-        struct ReportFileInfo fileStat = {};
-        vector<string> splits = {"/test", "0", "0", "0", "0", "0", "0"};
-        unordered_map<string, int> keys;
-        keys.emplace(INFO_MODE, MODE_KEY);
-        keys.emplace(INFO_DIR, DIR_KEY);
-        keys.emplace(INFO_SIZE, SIZE_KEY);
-        keys.emplace(INFO_MTIME, MTIME_KEY);
-        keys.emplace(INFO_HASH, HASH_KEY);
-        keys.emplace(INFO_IS_INCREMENTAL, IS_INCREMENTAL_KEY);
-        auto err = ParseReportInfo(fileStat, splits, keys);
-        EXPECT_EQ(err, ERR_OK);
-        bool ret = cloudRp.GetStorageReportInfos(fileStat);
+        unordered_map<string, struct ReportFileInfo> localFilesInfo;
+        bool ret = cloudRp.GetStorageReportInfos(localFilesInfo);
         EXPECT_TRUE(ret);
     } catch (const exception &e) {
         GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by GetStorageReportInfos.";

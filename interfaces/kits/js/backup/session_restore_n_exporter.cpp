@@ -225,13 +225,13 @@ static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
     }
 
     auto cbCompl = [](napi_env env, vector<napi_value> &argv) -> bool {
-        argv.push_back(nullptr);
+        argv.emplace_back(nullptr);
         napi_value napi_res = nullptr;
         if (napi_get_undefined(env, &napi_res) != napi_ok) {
             HILOGE("create undefined napi object failed");
             return false;
         }
-        argv.push_back(napi_res);
+        argv.emplace_back(napi_res);
         return true;
     };
     callbacks->onBackupServiceDied.CallJsMethod(cbCompl);
@@ -256,13 +256,13 @@ static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::str
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(napi_bName);
+        argv.emplace_back(napi_bName);
         napi_value napi_res = nullptr;
         if (napi_create_string_utf8(env, res.c_str(), res.size(), &napi_res) != napi_ok) {
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(napi_res);
+        argv.emplace_back(napi_res);
         return true;
     };
     callbacks->onResultReport.CallJsMethod(cbCompl);
@@ -286,13 +286,13 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(napi_bName);
+        argv.emplace_back(napi_bName);
         napi_value napi_process = nullptr;
         if (napi_create_string_utf8(env, process.c_str(), process.size(), &napi_process) != napi_ok) {
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(napi_process);
+        argv.emplace_back(napi_process);
         return true;
     };
     callbacks->onProcess.CallJsMethod(cbCompl);

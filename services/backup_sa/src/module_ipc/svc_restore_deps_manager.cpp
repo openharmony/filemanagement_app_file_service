@@ -51,10 +51,10 @@ map<string, SvcRestoreDepsManager::RestoreInfo> SvcRestoreDepsManager::GetRestor
         string bundleName = it->first;
         if (IsAllDepsRestored(bundleName)) {
             RestoreInfo restoreInfo = it->second;
-            restoreBundleMap.insert(make_pair(bundleName, restoreInfo));
-            toRestoreBundleMap_.erase(it++);
+            restoreBundleMap.emplace(make_pair(bundleName, restoreInfo));
+            it = toRestoreBundleMap_.erase(it);
         } else {
-            it++;
+            ++it;
         }
     }
     return restoreBundleMap;
@@ -95,7 +95,7 @@ void SvcRestoreDepsManager::BuildDepsMap(const vector<BJsonEntityCaps::BundleInf
             }
         }
 
-        depsMap_.insert(make_pair(bundleNameIndexInfo, depsList));
+        depsMap_.emplace(make_pair(bundleNameIndexInfo, depsList));
     }
 }
 
@@ -114,7 +114,7 @@ vector<string> SvcRestoreDepsManager::SplitString(const string &srcStr, const st
             tempStr.erase(0, tempStr.find_first_not_of(" "));
             tempStr.erase(tempStr.find_last_not_of(" ") + 1);
             tempStr.erase(tempStr.find_last_not_of("\r") + 1);
-            dst.push_back(tempStr);
+            dst.emplace_back(tempStr);
         }
         start = index + 1;
         index = srcStr.find_first_of(separator, start);
@@ -125,7 +125,7 @@ vector<string> SvcRestoreDepsManager::SplitString(const string &srcStr, const st
         tempStr.erase(0, tempStr.find_first_not_of(" "));
         tempStr.erase(tempStr.find_last_not_of(" ") + 1);
         tempStr.erase(tempStr.find_last_not_of("\r") + 1);
-        dst.push_back(tempStr);
+        dst.emplace_back(tempStr);
     }
     return dst;
 }
@@ -133,7 +133,7 @@ vector<string> SvcRestoreDepsManager::SplitString(const string &srcStr, const st
 void SvcRestoreDepsManager::AddRestoredBundles(const string &bundleName)
 {
     unique_lock<shared_mutex> lock(lock_);
-    restoredBundles_.insert(bundleName);
+    restoredBundles_.emplace(bundleName);
 }
 
 vector<BJsonEntityCaps::BundleInfo> SvcRestoreDepsManager::GetAllBundles() const
@@ -151,7 +151,7 @@ bool SvcRestoreDepsManager::UpdateToRestoreBundleMap(const string &bundleName, c
     unique_lock<shared_mutex> lock(lock_);
     auto it = toRestoreBundleMap_.find(bundleName);
     if (it != toRestoreBundleMap_.end()) {
-        it->second.fileNames_.insert(fileName);
+        it->second.fileNames_.emplace(fileName);
         return true;
     }
     return false;

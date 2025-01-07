@@ -36,21 +36,30 @@ struct ReportFileInfo {
     bool encodeFlag {false};
 };
 
+enum class KeyType {
+    PATH,
+    MODE,
+    DIR,
+    SIZE,
+    MTIME,
+    HASH,
+    IS_INCREMENTAL,
+    ENCODE_FLAG
+};
+
 class BReportEntity {
 public:
     /**
      * @brief 获取Report信息
-     *
-     * @return std::map<string, ReportFileInfo>
      */
-    std::unordered_map<std::string, struct ReportFileInfo> GetReportInfos() const;
+    void GetReportInfos(std::unordered_map<std::string, struct ReportFileInfo> &infos) const;
 
     /**
      * @brief 获取本地Report信息
      *
      * @return bool
      */
-    bool GetStorageReportInfos(struct ReportFileInfo &fileStat);
+    bool GetStorageReportInfos(std::unordered_map<std::string, struct ReportFileInfo> &infos);
 
     /**
      * @brief Check if line is encode
@@ -84,6 +93,10 @@ public:
 
 protected:
     UniqueFd srcFile_;
+private:
+    std::string currLineInfo_;
+    int currLineNum_ = 0;
+    std::vector<std::string> keys_;
 };
 } // namespace OHOS::FileManagement::Backup
 
