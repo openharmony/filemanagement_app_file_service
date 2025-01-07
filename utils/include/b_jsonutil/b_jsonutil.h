@@ -30,6 +30,12 @@ public:
         int32_t userId;
     }BundleDetailInfo;
 
+    typedef struct BundleDataSize {
+        std::string bundleName;
+        int64_t dataSize = -1;
+        int64_t incDataSize = -1;
+    }BundleDataSize;
+
     /**
      * @brief 带有拼接字符的bundleName按照拼接字符进行分割
      *
@@ -179,6 +185,21 @@ public:
      * @return 拼接结果
      */
     static std::string BuildInitSessionErrInfo(int32_t userId, std::string callerName, std::string activeTime);
+
+    /**
+     * @brief 将已经扫描的结果转换成json串
+     *
+     * @param bundleDataList 存储扫描结果的结构体列表
+     * @param listSize 当前需要返回的数量
+     * @param scanning 当前正在扫描的包名
+     * @param jsonStr 需要返回的结果
+     *
+     * @return 是否成功
+     */
+    static bool WriteToStr(std::vector<BundleDataSize> &bundleDataList,
+                           size_t listSize,
+                           std::string scanning,
+                           std::string &jsonStr);
 };
 } // namespace OHOS::FileManagement::Backup
 

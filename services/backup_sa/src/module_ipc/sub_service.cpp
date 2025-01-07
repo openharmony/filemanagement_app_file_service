@@ -66,6 +66,11 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+namespace {
+const int32_t WAIT_SCANNING_INFO_SEND_TIME = 5;
+const int ERR_SIZE = -1;
+} // namespace
+
 vector<BIncrementalData> Service::MakeDetailList(const vector<BundleName> &bundleNames)
 {
     vector<BIncrementalData> bundleDetails {};
@@ -796,5 +801,236 @@ void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRes
     } else if (scenario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
     }
+}
+
+ErrCode Service::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
+{
+    try {
+        HILOGI("start GetBackupDataSize");
+        if (session_ == nullptr || onScanning_.load()) {
+            HILOGE("GetBackupDataSize error 1.session is nullptr 2.onScanning_ = %{public}d", onScanning_.load());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        onScanning_.store(true);
+        ErrCode ret = VerifyCaller();
+        if (ret != ERR_OK) {
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return BError(BError::Codes::SA_INVAL_ARG, "verify caller failed");
+        }
+        BundleMgrAdapter::CreatBackupEnv(bundleNameList, GetUserIdDefault());
+        CyclicSendScannedInfo(isPreciseScan, bundleNameList);
+        return BError(BError::Codes::OK);
+    } catch (...) {
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+}
+
+void Service::CyclicSendScannedInfo(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
+{
+    auto task = [isPreciseScan {isPreciseScan}, bundleNameList {move(bundleNameList)},
+        obj {wptr<Service>(this)}, session {session_}]() {
+        auto ptr = obj.promote();
+        if (ptr == nullptr) {
+            HILOGE("ptr is nullptr");
+            session->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return;
+        }
+        size_t listSize = bundleNameList.size();
+        HILOGI("need scanf num = %{public}zu", listSize);
+        string scanning;
+        size_t allScannedSize = 0;
+        ptr->GetDataSizeStepByStep(isPreciseScan, bundleNameList, scanning);
+        while (!ptr->isScannedEnd_.load()) {
+            std::unique_lock<mutex> lock(ptr->getDataSizeLock_);
+            ptr->getDataSizeCon_.wait_for(lock, std::chrono::seconds(WAIT_SCANNING_INFO_SEND_TIME),
+                [ptr] { return ptr->isScannedEnd_.load(); });
+            auto scannedSize = ptr->bundleDataSizeList_.size();
+            allScannedSize += scannedSize;
+            HILOGI("ScannedSize = %{public}zu, allScannedSize = %{public}zu", scannedSize, allScannedSize);
+            if (!ptr->GetScanningInfo(obj, scannedSize, scanning)) {
+                ptr->SendScannedInfo("", session);
+                continue;
+            }
+            ptr->DeleteFromList(scannedSize);
+            ptr->SendScannedInfo(ptr->scannedInfo_, session);
+        }
+        ptr->isScannedEnd_.store(false);
+        session->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+    };
+
+    callbackScannedInfoThreadPool_.AddTask([task, session {session_}]() {
+        try {
+            task();
+        } catch (...) {
+            session->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+void Service::GetDataSizeStepByStep(bool isPreciseScan, vector<BIncrementalData> bundleNameList, string &scanning)
+{
+    auto task = [isPreciseScan {isPreciseScan}, bundleNameList {move(bundleNameList)},
+        &scanning, obj {wptr<Service>(this)}]() {
+        auto ptr = obj.promote();
+        if (ptr == nullptr) {
+            HILOGE("ptr is nullptr");
+            return;
+        }
+        if (!isPreciseScan) {
+            HILOGI("start GetPresumablySize");
+            ptr->GetPresumablySize(bundleNameList, scanning);
+        } else {
+            HILOGI("start GetPrecisesSize");
+            ptr->GetPrecisesSize(bundleNameList, scanning);
+        }
+        std::lock_guard lock(ptr->getDataSizeLock_);
+        ptr->isScannedEnd_.store(true);
+        ptr->getDataSizeCon_.notify_all();
+        ptr->onScanning_.store(false);
+    };
+
+    getDataSizeThreadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
+
+void Service::GetPresumablySize(vector<BIncrementalData> bundleNameList, string &scanning)
+{
+    int32_t userId = GetUserIdDefault();
+    for (const auto &bundleData : bundleNameList) {
+        string name = bundleData.bundleName;
+        SetScanningInfo(scanning, name);
+        if (SAUtils::IsSABundleName(name)) {
+            WriteScannedInfoToList(name, 0, ERR_SIZE);
+            continue;
+        }
+        int64_t dataSize = BundleMgrAdapter::GetBundleDataSize(name, userId);
+        if (dataSize == 0) {
+            WriteScannedInfoToList(name, ERR_SIZE, ERR_SIZE);
+            continue;
+        }
+        WriteScannedInfoToList(name, dataSize, ERR_SIZE);
+    }
+    SetScanningInfo(scanning, "");
+    HILOGI("GetPresumablySize end");
+}
+
+void Service::GetPrecisesSize(vector<BIncrementalData> bundleNameList, string &scanning)
+{
+    for (const auto &bundleData : bundleNameList) {
+        vector<string> bundleNames;
+        vector<int64_t> lastBackTimes;
+        string name = bundleData.bundleName;
+        SetScanningInfo(scanning, name);
+        BJsonUtil::BundleDetailInfo bundleDetail = BJsonUtil::ParseBundleNameIndexStr(name);
+        if (bundleDetail.bundleIndex > 0) {
+            std::string bundleNameIndex  = "+clone-" + std::to_string(bundleDetail.bundleIndex) + "+" +
+            bundleDetail.bundleName;
+            bundleNames.push_back(bundleNameIndex);
+        } else {
+            bundleNames.push_back(name);
+        }
+        int64_t lastTime = bundleData.lastIncrementalTime;
+        lastBackTimes.push_back(lastTime);
+        vector<int64_t> pkgFileSizes {};
+        vector<int64_t> incPkgFileSizes {};
+        int32_t err = StorageMgrAdapter::GetBundleStatsForIncrease(GetUserIdDefault(), bundleNames, lastBackTimes,
+            pkgFileSizes, incPkgFileSizes);
+        if (err != 0) {
+            HILOGE("filed to get datasize from storage, err =%{public}d, bundlename = %{public}s, index = %{public}d",
+                err, name.c_str(), bundleDetail.bundleIndex);
+            WriteScannedInfoToList(name, ERR_SIZE, ERR_SIZE);
+            continue;
+        }
+        if (lastTime == 0 && pkgFileSizes.size() > 0) {
+            WriteScannedInfoToList(name, pkgFileSizes[0], ERR_SIZE);
+        } else if (pkgFileSizes.size() > 0 && incPkgFileSizes.size() > 0) {
+            WriteScannedInfoToList(name, pkgFileSizes[0], incPkgFileSizes[0]);
+        } else {
+            HILOGE ("pkgFileSizes or incPkgFileSizes error, %{public}zu, %{public}zu",
+                pkgFileSizes.size(), incPkgFileSizes.size());
+        }
+    }
+    SetScanningInfo(scanning, "");
+    HILOGI("GetPrecisesSize end");
+}
+
+void Service::WriteToList(BJsonUtil::BundleDataSize bundleDataSize)
+{
+    std::lock_guard<std::mutex> lock(scannedListLock_);
+    bundleDataSizeList_.push_back(bundleDataSize);
+}
+
+void Service::DeleteFromList(size_t scannedSize)
+{
+    std::lock_guard<std::mutex> lock(scannedListLock_);
+    bundleDataSizeList_.erase(bundleDataSizeList_.begin(), bundleDataSizeList_.begin() + scannedSize);
+}
+
+bool Service::GetScanningInfo(wptr<Service> obj, size_t scannedSize, string &scanning)
+{
+    auto ptr = obj.promote();
+    if (ptr == nullptr) {
+        HILOGE("ptr is nullptr");
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(scannedListLock_);
+    if (!BJsonUtil::WriteToStr(ptr->bundleDataSizeList_, scannedSize, scanning, ptr->scannedInfo_)) {
+        return false;
+    }
+    return true;
+}
+
+void Service::SetScanningInfo(string &scanning, string name)
+{
+    std::lock_guard<std::mutex> lock(scannedListLock_);
+    scanning = name;
+}
+
+void Service::WriteScannedInfoToList(const string &bundleName, int64_t dataSize, int64_t incDataSize)
+{
+    BJsonUtil::BundleDataSize bundleDataSize;
+    bundleDataSize.bundleName = bundleName;
+    bundleDataSize.dataSize = dataSize;
+    bundleDataSize.incDataSize = incDataSize;
+    HILOGI("name = %{public}s, size = %{public}" PRId64 ", incSize = %{public}" PRId64 "",
+        bundleName.c_str(), dataSize, incDataSize);
+    WriteToList(bundleDataSize);
+}
+
+void Service::SendScannedInfo(const string&scannendInfos, sptr<SvcSessionManager> session)
+{
+    if (scannendInfos.empty()) {
+        HILOGE("write json failed , info is null");
+    }
+    if (session == nullptr) {
+        HILOGE("session is nullptr");
+        return;
+    }
+    HILOGI("start send scanned info");
+    auto task = [session {session}, scannendInfos {scannendInfos}]() {
+        if (session->GetScenario() == IServiceReverse::Scenario::BACKUP && session->GetIsIncrementalBackup()) {
+            HILOGI("this is incremental backup sending info");
+            session->GetServiceReverseProxy()->IncrementalBackupOnScanningInfo(scannendInfos);
+            return;
+        }
+        HILOGI("this is full backup sending info");
+        session->GetServiceReverseProxy()->BackupOnScanningInfo(scannendInfos);
+    };
+
+    sendScannendResultThreadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
 }
 }

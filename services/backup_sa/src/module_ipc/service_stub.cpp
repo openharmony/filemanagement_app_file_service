@@ -36,6 +36,8 @@ const int INVALID_FD = -1;
 
 void ServiceStub::ServiceStubSupplement()
 {
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_DATA_SIZE)] =
+        &ServiceStub::CmdGetBackupDataSize;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER)] =
         &ServiceStub::CmdUpdateTimer;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_SENDRATE)] =
@@ -838,5 +840,19 @@ int32_t ServiceStub::CmdGetLocalCapabilitiesForBdInfos(MessageParcel &data, Mess
         return BError(BError::Codes::SA_BROKEN_IPC, "Failed to send out the file");
     }
     return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdGetBackupDataSize(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("ServiceStub CmdGetBackupDataSize Begin.");
+    bool isPreciseScan = true;
+    isPreciseScan = data.ReadBool();
+    vector<BIncrementalData> bundleNameList;
+    if (!ReadParcelableVector(bundleNameList, data)) {
+        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleNames");
+    }
+    auto ret = GetBackupDataSize(isPreciseScan, bundleNameList);
+    HILOGI("ServiceStub GetBackupDataSize End ret = %{public}d", ret);
+    return ret;
 }
 } // namespace OHOS::FileManagement::Backup

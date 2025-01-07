@@ -67,6 +67,7 @@ public:
     MOCK_METHOD0(GetAppLocalListAndDoIncrementalBackup, ErrCode());
     MOCK_METHOD1(StopExtTimer, ErrCode(bool &isExtStop));
     MOCK_METHOD1(RefreshDataSize, ErrCode(int64_t totalsize));
+    MOCK_METHOD2(GetBackupDataSize, ErrCode(bool isPreciseScan, std::vector<BIncrementalData> bundleNameList));
 };
 } // End of namespace OHOS::FileManagement::Backup
 #endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H

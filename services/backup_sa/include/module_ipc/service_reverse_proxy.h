@@ -28,6 +28,7 @@ public:
     void BackupOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void BackupOnAllBundlesFinished(int32_t errCode) override;
     void BackupOnProcessInfo(std::string bundleName, std::string processInfo) override;
+    void BackupOnScanningInfo(std::string scannedInfo) override;
 
     void RestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
     void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override;
@@ -44,6 +45,7 @@ public:
     void IncrementalBackupOnBundleFinished(int32_t errCode, std::string bundleName) override;
     void IncrementalBackupOnAllBundlesFinished(int32_t errCode) override;
     void IncrementalBackupOnProcessInfo(std::string bundleName, std::string processInfo) override;
+    void IncrementalBackupOnScanningInfo(std::string scannedInfo) override;
 
     void IncrementalRestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
     void IncrementalRestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,

@@ -95,6 +95,7 @@ public:
     virtual ErrCode StartFwkTimer(bool &isFwkStart) = 0;
     virtual ErrCode StopExtTimer(bool &isExtStop) = 0;
     virtual ErrCode RefreshDataSize(int64_t totalSize) = 0;
+    virtual ErrCode GetBackupDataSize(bool isPreciseScan, std::vector<BIncrementalData> bundleNameList) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Backup.IService")
 };

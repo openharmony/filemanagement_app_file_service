@@ -96,6 +96,8 @@ void ServiceStub::ServiceStubSupplement()
     opToInterfaceMap_[static_cast<uint32_t>(
         IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES_FOR_BUNDLE_INFOS)] =
         &ServiceStub::CmdGetLocalCapabilitiesForBdInfos;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_DATA_SIZE)] =
+        &ServiceStub::CmdGetBackupDataSize;
 }
 
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -383,6 +385,11 @@ int32_t ServiceStub::CmdRefreshDataSize(MessageParcel &data, MessageParcel &repl
 }
 
 int32_t ServiceStub::CmdGetLocalCapabilitiesForBdInfos(MessageParcel &data, MessageParcel &reply)
+{
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceStub::CmdGetBackupDataSize(MessageParcel &data, MessageParcel &reply)
 {
     return BError(BError::Codes::OK);
 }
