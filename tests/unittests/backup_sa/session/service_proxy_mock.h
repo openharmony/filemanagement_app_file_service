@@ -33,6 +33,7 @@ public:
     MOCK_METHOD0(Start, ErrCode());
     MOCK_METHOD0(AsObject, sptr<IRemoteObject>());
     MOCK_METHOD0(GetLocalCapabilities, UniqueFd());
+    MOCK_METHOD0(GetLocalCapabilitiesForBundleInfos, UniqueFd());
     MOCK_METHOD1(PublishFile, ErrCode(const BFileInfo &fileInfo));
     MOCK_METHOD2(AppFileReady, ErrCode(const std::string &fileName, UniqueFd fd));
     MOCK_METHOD3(AppFileReady, ErrCode(const std::string &fileName, UniqueFd fd, int32_t errCode));

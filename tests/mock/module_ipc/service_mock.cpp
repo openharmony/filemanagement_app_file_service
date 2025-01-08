@@ -40,6 +40,11 @@ UniqueFd Service::GetLocalCapabilities()
     return UniqueFd(-1);
 }
 
+UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
+{
+    return UniqueFd(-1);
+}
+
 void Service::StopAll(const wptr<IRemoteObject> &obj, bool force) {}
 
 ErrCode Service::VerifyCallerAndGetCallerName(std::string &bundleName)

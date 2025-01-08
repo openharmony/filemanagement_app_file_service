@@ -91,4 +91,23 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppend(
             "com.example.app2backup"});
     return bundleInfos;
 }
+
+std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForLocalCapabilities(int32_t userId)
+{
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    bundleInfos.emplace_back(
+        BJsonEntityCaps::BundleInfo {"com.example.app2backup", 0, {}, {}, 0, 0, true, false,
+            "com.example.app2backup"});
+    return bundleInfos;
+}
+
+std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIndex(
+    const vector<string> &bundleNames, int32_t userId)
+{
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    bundleInfos.emplace_back(
+        BJsonEntityCaps::BundleInfo {"com.example.app2backup", 0, {}, {}, 0, 0, true, false,
+            "com.example.app2backup"});
+    return bundleInfos;
+}
 } // namespace OHOS::FileManagement::Backup

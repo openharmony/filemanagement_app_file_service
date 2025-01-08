@@ -58,6 +58,13 @@ public:
     static std::unique_ptr<BSessionBackup> Init(Callbacks callbacks, std::string &errMsg, ErrCode &errCode);
 
     /**
+     * @brief 获取支持备份的应用信息
+     *
+     * @return ErrCode 规范错误码
+     */
+    UniqueFd GetLocalCapabilities();
+
+    /**
      * @brief 用于追加应用，现阶段仅支持在Start之前调用
      *
      * @param bundlesToBackup 待备份的应用清单
