@@ -73,6 +73,7 @@ public:
         SA_BOOT_EXT_TIMEOUT = 0x3005,
         SA_BUNDLE_INFO_EMPTY = 0x3006,
         SA_BOOT_EXT_FAIL = 0x3007,
+        SA_SESSION_CONFLICT = 0x3008,
 
         // 0x4000~0x4999 backup_SDK错误
         SDK_INVAL_ARG = 0x4000,
@@ -120,6 +121,7 @@ public:
         E_TASKFAIL = 13500010,
         E_CANCEL_UNSTARTED_TASK = 13500011,
         E_CANCEL_NO_TASK = 13500012,
+        E_CONFLICT = 13500013,
     };
 
 public:
@@ -268,6 +270,7 @@ private:
         {Codes::SA_EXT_ERR_CALL, "SA Extension received invalid arguments"},
         {Codes::SA_EXT_ERR_SAMGR, "SA Extension get samgr failed"},
         {Codes::SA_EXT_RELOAD_FAIL, "SA Extension reload failed"},
+        {Codes::SA_SESSION_CONFLICT, "Session Conflict"},
     };
 
     static inline const std::map<int, int> errCodeTable_ {
@@ -303,6 +306,7 @@ private:
         {static_cast<int>(Codes::SA_EXT_ERR_CALL), BackupErrorCode::E_INVAL},
         {static_cast<int>(Codes::SA_EXT_ERR_SAMGR), BackupErrorCode::E_IPCSS},
         {static_cast<int>(Codes::SA_EXT_RELOAD_FAIL), BackupErrorCode::E_BEF},
+        {static_cast<int>(Codes::SA_SESSION_CONFLICT), BackupErrorCode::E_CONFLICT},
         {BackupErrorCode::E_IPCSS, BackupErrorCode::E_IPCSS},
         {BackupErrorCode::E_INVAL, BackupErrorCode::E_INVAL},
         {BackupErrorCode::E_NOTEXIST, BackupErrorCode::E_NOTEXIST},
@@ -322,6 +326,7 @@ private:
         {BackupErrorCode::E_BEF, BackupErrorCode::E_BEF},
         {BackupErrorCode::E_CANCEL_UNSTARTED_TASK, BackupErrorCode::E_CANCEL_UNSTARTED_TASK},
         {BackupErrorCode::E_CANCEL_NO_TASK, BackupErrorCode::E_CANCEL_NO_TASK},
+        {BackupErrorCode::E_CONFLICT, BackupErrorCode::E_CONFLICT},
     };
 
     static inline const std::map<int, int> sysErrnoCodeTable_ {
@@ -359,6 +364,7 @@ private:
         {BackupErrorCode::E_BEF, "SA failed to boot application extension"},
         {BackupErrorCode::E_CANCEL_UNSTARTED_TASK, "Cancel unstarted backup or restore task "},
         {BackupErrorCode::E_CANCEL_NO_TASK, "Cancel a backup or restore task that does not exist"},
+        {BackupErrorCode::E_CONFLICT, "Session Conflict"},
     };
 
 private:

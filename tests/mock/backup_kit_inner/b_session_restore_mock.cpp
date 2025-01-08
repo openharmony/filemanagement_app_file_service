@@ -47,6 +47,18 @@ unique_ptr<BSessionRestore> BSessionRestore::Init(Callbacks callbacks)
     return nullptr;
 }
 
+unique_ptr<BSessionRestore> BSessionRestore::Init(Callbacks callbacks, std::string &errMsg, ErrCode &errCode)
+{
+    try {
+        callbacks_ = move(callbacks);
+        auto restore = make_unique<BSessionRestore>();
+        return restore;
+    } catch (const exception &e) {
+        return nullptr;
+    }
+    return nullptr;
+}
+
 ErrCode BSessionRestore::PublishFile(BFileInfo fileInfo)
 {
     return BError(BError::Codes::OK);

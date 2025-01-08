@@ -225,13 +225,13 @@ static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
     }
 
     auto cbCompl = [](napi_env env, vector<napi_value> &argv) -> bool {
-        argv.push_back(nullptr);
+        argv.emplace_back(nullptr);
         napi_value napi_res = nullptr;
         if (napi_get_undefined(env, &napi_res) != napi_ok) {
             HILOGE("create undefined napi object failed");
             return false;
         }
-        argv.push_back(napi_res);
+        argv.emplace_back(napi_res);
         return true;
     };
     callbacks->onBackupServiceDied.CallJsMethod(cbCompl);
@@ -256,13 +256,13 @@ static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::str
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(napi_bName);
+        argv.emplace_back(napi_bName);
         napi_value napi_res = nullptr;
         if (napi_create_string_utf8(env, res.c_str(), res.size(), &napi_res) != napi_ok) {
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(napi_res);
+        argv.emplace_back(napi_res);
         return true;
     };
     callbacks->onResultReport.CallJsMethod(cbCompl);
@@ -286,13 +286,13 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(napi_bName);
+        argv.emplace_back(napi_bName);
         napi_value napi_process = nullptr;
         if (napi_create_string_utf8(env, process.c_str(), process.size(), &napi_process) != napi_ok) {
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(napi_process);
+        argv.emplace_back(napi_process);
         return true;
     };
     callbacks->onProcess.CallJsMethod(cbCompl);
@@ -454,6 +454,8 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
     auto restoreEntity = std::make_unique<RestoreEntity>();
     restoreEntity->callbacks = make_shared<GeneralCallbacks>(env, ptr, callbacks);
     restoreEntity->sessionWhole = nullptr;
+    ErrCode errCode;
+    std::string errMsg;
     restoreEntity->sessionSheet = BIncrementalRestoreSession::Init(BIncrementalRestoreSession::Callbacks {
         .onFileReady = bind(OnFileReadySheet, restoreEntity->callbacks, placeholders::_1, placeholders::_2,
             placeholders::_3, placeholders::_4),
@@ -462,9 +464,12 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
         .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
         .onResultReport = bind(OnResultReport, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBackupServiceDied = bind(OnBackupServiceDied, restoreEntity->callbacks),
-        .onProcess = bind(OnProcess, restoreEntity->callbacks, placeholders::_1, placeholders::_2)});
+        .onProcess = bind(OnProcess, restoreEntity->callbacks, placeholders::_1, placeholders::_2)}, errMsg, errCode);
     if (!restoreEntity->sessionSheet) {
-        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to init restore").GetCode()).ThrowErr(env);
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(errCode, BError::GetBackupMsgByErrno(errCode) + ", " + errMsg);
+        ErrParam errorParam = [ errInfo ]() { return errInfo;};
+        NError(errorParam).ThrowErr(env);
         return nullptr;
     }
     if (!SetSessionRestoreEntity(env, funcArg, std::move(restoreEntity))) {

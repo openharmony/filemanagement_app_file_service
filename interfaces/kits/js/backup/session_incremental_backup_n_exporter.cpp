@@ -228,13 +228,13 @@ static void OnResultReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::str
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(napi_bName);
+        argv.emplace_back(napi_bName);
         napi_value napi_res = nullptr;
         if (napi_create_string_utf8(env, res.c_str(), res.size(), &napi_res) != napi_ok) {
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(napi_res);
+        argv.emplace_back(napi_res);
         return true;
     };
     callbacks->onResultReport.CallJsMethod(cbCompl);
@@ -254,13 +254,13 @@ static void OnBackupServiceDied(weak_ptr<GeneralCallbacks> pCallbacks)
     }
 
     auto cbCompl = [](napi_env env, vector<napi_value> &argv) -> bool {
-        argv.push_back(nullptr);
+        argv.emplace_back(nullptr);
         napi_value napi_res = nullptr;
         if (napi_get_undefined(env, &napi_res) != napi_ok) {
             HILOGE("create undefined napi object failed");
             return false;
         }
-        argv.push_back(napi_res);
+        argv.emplace_back(napi_res);
         return true;
     };
     callbacks->onBackupServiceDied.CallJsMethod(cbCompl);
@@ -284,13 +284,13 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(napi_bName);
+        argv.emplace_back(napi_bName);
         napi_value napi_process = nullptr;
         if (napi_create_string_utf8(env, process.c_str(), process.size(), &napi_process) != napi_ok) {
             HILOGE("create napi string failed");
             return false;
         }
-        argv.push_back(napi_process);
+        argv.emplace_back(napi_process);
         return true;
     };
     callbacks->onProcess.CallJsMethod(cbCompl);
@@ -321,12 +321,10 @@ napi_value SessionIncrementalBackupNExporter::Constructor(napi_env env, napi_cal
 {
     HILOGD("called SessionIncrementalBackup::Constructor begin");
     if (!SAUtils::CheckBackupPermission()) {
-        HILOGE("Has not permission!");
         NError(E_PERMISSION).ThrowErr(env);
         return nullptr;
     }
     if (!SAUtils::IsSystemApp()) {
-        HILOGE("System App check fail!");
         NError(E_PERMISSION_SYS).ThrowErr(env);
         return nullptr;
     }
@@ -336,17 +334,17 @@ napi_value SessionIncrementalBackupNExporter::Constructor(napi_env env, napi_cal
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-
     NVal callbacks(env, funcArg[NARG_POS::FIRST]);
     if (!callbacks.TypeIs(napi_object)) {
         HILOGE("First argument is not an object.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not an object.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-
     NVal ptr(env, funcArg.GetThisVar());
     auto backupEntity = std::make_unique<BackupEntity>();
     backupEntity->callbacks = make_shared<GeneralCallbacks>(env, ptr, callbacks);
+    ErrCode errCode;
+    std::string errMsg;
     backupEntity->session = BIncrementalBackupSession::Init(BIncrementalBackupSession::Callbacks {
         .onFileReady = bind(OnFileReady, backupEntity->callbacks, placeholders::_1, placeholders::_2, placeholders::_3,
             placeholders::_4),
@@ -355,9 +353,12 @@ napi_value SessionIncrementalBackupNExporter::Constructor(napi_env env, napi_cal
         .onAllBundlesFinished = bind(onAllBundlesEnd, backupEntity->callbacks, placeholders::_1),
         .onResultReport = bind(OnResultReport, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBackupServiceDied = bind(OnBackupServiceDied, backupEntity->callbacks),
-        .onProcess = bind(OnProcess, backupEntity->callbacks, placeholders::_1, placeholders::_2)});
+        .onProcess = bind(OnProcess, backupEntity->callbacks, placeholders::_1, placeholders::_2)}, errMsg, errCode);
     if (!backupEntity->session) {
-        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to init backup").GetCode()).ThrowErr(env);
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(errCode, BError::GetBackupMsgByErrno(errCode) + ", " + errMsg);
+        ErrParam errorParam = [ errInfo ]() { return errInfo;};
+        NError(errorParam).ThrowErr(env);
         return nullptr;
     }
     if (!SetIncrementalBackupEntity(env, funcArg, std::move(backupEntity))) {

@@ -48,6 +48,16 @@ public:
     static std::unique_ptr<BSessionBackup> Init(Callbacks callbacks);
 
     /**
+     * @brief 获取一个用于控制备份流程的会话
+     *
+     * @param callbacks 注册回调
+     * @param errMsg 失败信息
+     * @param errCode 错误码
+     * @return std::unique_ptr<BSessionBackup> 指向会话的智能指针。失败时为空指针
+     */
+    static std::unique_ptr<BSessionBackup> Init(Callbacks callbacks, std::string &errMsg, ErrCode &errCode);
+
+    /**
      * @brief 用于追加应用，现阶段仅支持在Start之前调用
      *
      * @param bundlesToBackup 待备份的应用清单

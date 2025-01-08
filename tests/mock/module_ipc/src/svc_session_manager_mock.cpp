@@ -169,6 +169,17 @@ int32_t SvcSessionManager::GetSessionUserId()
 
 void SvcSessionManager::SetSessionUserId(int32_t) {}
 
+std::string SvcSessionManager::GetSessionCallerName()
+{
+    return BSvcSessionManager::sessionManager->GetSessionCallerName();
+}
+
+std::string SvcSessionManager::GetSessionActiveTime()
+{
+    return BSvcSessionManager::sessionManager->GetSessionActiveTime();
+}
+
+
 void SvcSessionManager::SetBundleRestoreType(const std::string &, RestoreTypeEnum) {}
 
 RestoreTypeEnum SvcSessionManager::GetBundleRestoreType(const std::string &bundleName)

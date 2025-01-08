@@ -43,6 +43,7 @@
 #include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
+#include "b_utils/b_time.h"
 #include "filemgmt_libhilog.h"
 #include "hisysevent.h"
 #include "ipc_skeleton.h"
@@ -58,25 +59,10 @@ using namespace std;
 const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 
 namespace {
-constexpr int32_t DEBUG_ID = 100;
 constexpr int32_t INDEX = 3;
 constexpr int32_t MS_1000 = 1000;
 const static string UNICAST_TYPE = "unicast";
 } // namespace
-
-static inline int32_t GetUserIdDefault()
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    auto [isDebug, debugId] = BackupPara().GetBackupDebugOverrideAccount();
-    if (isDebug && debugId > DEBUG_ID) {
-        return debugId;
-    }
-    auto multiuser = BMultiuser::ParseUid(IPCSkeleton::GetCallingUid());
-    if ((multiuser.userId == BConstants::SYSTEM_UID) || (multiuser.userId == BConstants::XTS_UID)) {
-        return BConstants::DEFAULT_USER_ID;
-    }
-    return multiuser.userId;
-}
 
 ErrCode Service::Release()
 {
@@ -255,7 +241,7 @@ void Service::RefreshBundleDataSize(const vector<BJsonEntityCaps::BundleInfo> &n
         return;
     }
     BJsonUtil::BundleDetailInfo bundleInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
-    for (auto &info : newBundleInfos) {
+    for (const auto &info : newBundleInfos) {
         if (info.name == bundleInfo.bundleName && info.appIndex == bundleInfo.bundleIndex) {
             session->SetBundleDataSize(bundleName, info.increSpaceOccupied);
             HILOGI("RefreshBundleDataSize, bundlename = %{public}s , datasize = %{public}" PRId64 "",
@@ -322,21 +308,63 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
                                 .scenario = IServiceReverse::Scenario::BACKUP,
                                 .clientProxy = remote,
                                 .userId = GetUserIdDefault(),
-                                .isIncrementalBackup = true});
-    if (errCode != ERR_OK) {
-        HILOGE("Active incremental backup session error, Already have a session");
-        StopAll(nullptr, true);
+                                .isIncrementalBackup = true,
+                                .callerName = GetCallerName(),
+                                .activeTime = TimeUtils::GetCurrentTime()});
+    if (errCode == ERR_OK) {
+        ClearFailedBundles();
+        successBundlesNum_ = 0;
         return errCode;
     }
-    ClearFailedBundles();
-    successBundlesNum_ = 0;
-    return BError(BError::Codes::OK);
+    if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
+        HILOGE("Active restore session error, Already have a session");
+        return errCode;
+    }
+    HILOGE("Active restore session error");
+    StopAll(nullptr, true);
+    return errCode;
+}
+
+ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    ErrCode errCode = VerifyCaller();
+    if (errCode != ERR_OK) {
+        HILOGE("Init incremental backup session fail, Verify caller failed, errCode:%{public}d", errCode);
+        return errCode;
+    }
+    if (session_ == nullptr) {
+        HILOGE("Init Incremental backup session  error, session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    errCode = session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
+                                .scenario = IServiceReverse::Scenario::BACKUP,
+                                .clientProxy = remote,
+                                .userId = GetUserIdDefault(),
+                                .isIncrementalBackup = true,
+                                .callerName = GetCallerName(),
+                                .activeTime = TimeUtils::GetCurrentTime()});
+    if (errCode == ERR_OK) {
+        ClearFailedBundles();
+        successBundlesNum_ = 0;
+        return errCode;
+    }
+    if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
+        errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
+                                                    session_->GetSessionCallerName(),
+                                                    session_->GetSessionActiveTime());
+        HILOGE("Active incremental backup session error, Already have a session");
+        return errCode;
+    }
+    HILOGE("Active incremental backup session error");
+    StopAll(nullptr, true);
+    return errCode;
 }
 
 vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalData> &bundlesToBackup)
 {
     vector<string> bundleNames {};
-    for (auto bundle : bundlesToBackup) {
+    for (const auto &bundle : bundlesToBackup) {
         bundleNames.emplace_back(bundle.bundleName);
     }
     return bundleNames;
@@ -712,7 +740,7 @@ bool Service::IncrementalBackup(const string &bundleName)
         HILOGD("backupVersion of old device = %{public}s", oldBackupVersion.c_str());
         BundleBeginRadarReport(bundleName, ret, IServiceReverse::Scenario::RESTORE);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
-        for (auto &fileName : fileNameVec) {
+        for (const auto &fileName : fileNameVec) {
             auto[errCode, fd, reportFd] = proxy->GetIncrementalFileHandle(fileName);
             ret = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
             if (ret) {
@@ -774,11 +802,11 @@ void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, 
 {
     HILOGI("start SetCurrentBackupSessProperties");
     std::map<std::string, BJsonEntityCaps::BundleInfo> bundleNameIndexBundleInfoMap;
-    for (auto &bundleInfo : backupBundleInfos) {
+    for (const auto &bundleInfo : backupBundleInfos) {
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(bundleInfo.name, bundleInfo.appIndex);
         bundleNameIndexBundleInfoMap[bundleNameIndexInfo] = bundleInfo;
     }
-    for (auto item : bundleNames) {
+    for (const auto &item : bundleNames) {
         std::string bundleName = item;
         if (BundleMgrAdapter::IsUser0BundleName(bundleName, userId)) {
             HILOGE("bundleName:%{public}s is zero user bundle", bundleName.c_str());
@@ -807,7 +835,7 @@ void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, 
 void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>& bundlesToBackup,
     std::vector<std::string>& supportBundleNames)
 {
-    for (auto &bundleInfo : bundlesToBackup) {
+    for (const auto &bundleInfo : bundlesToBackup) {
         std::string bundleName = bundleInfo.bundleName;
         auto it = std::find(supportBundleNames.begin(), supportBundleNames.end(), bundleName);
         if (it == supportBundleNames.end()) {

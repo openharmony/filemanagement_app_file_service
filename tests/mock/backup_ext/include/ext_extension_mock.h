@@ -45,7 +45,7 @@ public:
     virtual void AppResultReport(const std::string, BackupRestoreScenario, ErrCode) = 0;
     virtual void AsyncTaskOnBackup() = 0;
     virtual ErrCode HandleRestore() = 0;
-    virtual void CompareFiles(UniqueFd, UniqueFd, std::vector<struct ReportFileInfo>&,
+    virtual void PreparaBackupFiles(UniqueFd, UniqueFd, std::vector<struct ReportFileInfo>&,
         std::vector<struct ReportFileInfo>&, std::vector<struct ReportFileInfo>&) = 0;
     virtual ErrCode HandleIncrementalBackup(UniqueFd, UniqueFd) = 0;
     virtual ErrCode IncrementalOnBackup() = 0;
@@ -98,7 +98,7 @@ public:
     MOCK_METHOD(void, AppResultReport, (const std::string, BackupRestoreScenario, ErrCode));
     MOCK_METHOD(void, AsyncTaskOnBackup, ());
     MOCK_METHOD(ErrCode, HandleRestore, ());
-    MOCK_METHOD(void, CompareFiles, (UniqueFd, UniqueFd, (std::vector<struct ReportFileInfo>&),
+    MOCK_METHOD(void, FillFileInfos, (UniqueFd, UniqueFd, (std::vector<struct ReportFileInfo>&),
         (std::vector<struct ReportFileInfo>&), (std::vector<struct ReportFileInfo>&)));
     MOCK_METHOD(ErrCode, HandleIncrementalBackup, (UniqueFd, UniqueFd));
     MOCK_METHOD(ErrCode, IncrementalOnBackup, ());

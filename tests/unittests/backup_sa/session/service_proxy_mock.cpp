@@ -25,7 +25,17 @@ int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
     return 0;
 }
 
+int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg)
+{
+    return 0;
+}
+
 int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
+{
+    return 0;
+}
+
+int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
 {
     return 0;
 }
@@ -118,6 +128,11 @@ ErrCode ServiceProxy::GetAppLocalListAndDoIncrementalBackup()
 }
 
 ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
 {
     return BError(BError::Codes::OK);
 }

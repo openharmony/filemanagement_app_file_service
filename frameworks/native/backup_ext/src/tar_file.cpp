@@ -308,7 +308,7 @@ bool TarFile::AddFile(string &fileName, const struct stat &st, int &err)
             HILOGE("Failed to write all");
             return false;
         }
-        currentFileName_ = "";
+        currentFileName_.clear();
         return true;
     }
 
@@ -322,7 +322,7 @@ bool TarFile::AddFile(string &fileName, const struct stat &st, int &err)
         HILOGE("Failed to write file content");
         return false;
     }
-    currentFileName_ = "";
+    currentFileName_.clear();
     return true;
 }
 

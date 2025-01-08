@@ -45,6 +45,7 @@
 #include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
+#include "b_utils/b_time.h"
 #include "bundle_mgr_client.h"
 #include "filemgmt_libhilog.h"
 #include "hisysevent.h"
@@ -68,7 +69,7 @@ using namespace std;
 vector<BIncrementalData> Service::MakeDetailList(const vector<BundleName> &bundleNames)
 {
     vector<BIncrementalData> bundleDetails {};
-    for (auto bundleName : bundleNames) {
+    for (const auto &bundleName : bundleNames) {
         bundleDetails.emplace_back(BIncrementalData {bundleName, 0});
     }
     return bundleDetails;
@@ -291,7 +292,7 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
 {
     HILOGI("Begin");
     std::vector<std::string> supportBackupNames;
-    for (auto info : backupInfos) {
+    for (const auto &info : backupInfos) {
         HILOGI("Current backupInfo bundleName:%{public}s, index:%{public}d, extName:%{public}s", info.name.c_str(),
             info.appIndex, info.extensionName.c_str());
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
@@ -357,7 +358,7 @@ ErrCode Service::RefreshDataSize(int64_t totalDataSize)
 void Service::HandleNotSupportBundleNames(const std::vector<std::string> &srcBundleNames,
     std::vector<std::string> &supportBundleNames, bool isIncBackup)
 {
-    for (auto bundleName : srcBundleNames) {
+    for (const auto &bundleName : srcBundleNames) {
         auto it = std::find(supportBundleNames.begin(), supportBundleNames.end(), bundleName);
         if (it != supportBundleNames.end()) {
             continue;
@@ -621,5 +622,104 @@ ErrCode Service::HandleCurAppDone(ErrCode errCode, const std::string &bundleName
         NotifyCallerCurAppDone(errCode, bundleName);
     }
     return BError(BError::Codes::OK);
+}
+std::string Service::GetCallerName()
+{
+    std::string callerName;
+    uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
+    int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
+    switch (tokenType) {
+        case Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE: { /* Update Service */
+            Security::AccessToken::NativeTokenInfo nativeTokenInfo;
+            if (Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(tokenCaller, nativeTokenInfo) != 0) {
+                HILOGE("Failed to get native token info");
+                break;
+            }
+            callerName = nativeTokenInfo.processName;
+            break;
+        }
+        case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP: {
+            Security::AccessToken::HapTokenInfo hapTokenInfo;
+            if (Security::AccessToken::AccessTokenKit::GetHapTokenInfo(tokenCaller, hapTokenInfo) != 0) {
+                HILOGE("Failed to get hap token info");
+                break;
+            }
+            callerName = hapTokenInfo.bundleName;
+            break;
+        }
+        default:
+            HILOGE("Invalid token type, %{public}s", to_string(tokenType).c_str());
+            break;
+    }
+    return callerName;
+}
+
+ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    ErrCode ret = VerifyCaller();
+    if (ret != ERR_OK) {
+        HILOGE("Init restore session failed, verify caller failed");
+        return ret;
+    }
+    ret = session_->Active({
+        .clientToken = IPCSkeleton::GetCallingTokenID(),
+        .scenario = IServiceReverse::Scenario::RESTORE,
+        .clientProxy = remote,
+        .userId = GetUserIdDefault(),
+        .callerName = GetCallerName(),
+        .activeTime = TimeUtils::GetCurrentTime(),
+    });
+    if (ret == ERR_OK) {
+        ClearFailedBundles();
+        successBundlesNum_ = 0;
+        return ret;
+    }
+    if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
+        errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
+                                                    session_->GetSessionCallerName(),
+                                                    session_->GetSessionActiveTime());
+        HILOGE("Active restore session error, Already have a session");
+        return ret;
+    }
+    HILOGE("Active restore session error");
+    StopAll(nullptr, true);
+    return ret;
+}
+
+ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    ErrCode ret = VerifyCaller();
+    if (ret != ERR_OK) {
+        HILOGE("Init full backup session fail, verify caller failed");
+        return ret;
+    }
+    int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
+    HILOGI("InitBackupSession oldSize %{public}d", oldSize);
+    session_->SetMemParaCurSize(oldSize);
+    ret = session_->Active({
+        .clientToken = IPCSkeleton::GetCallingTokenID(),
+        .scenario = IServiceReverse::Scenario::BACKUP,
+        .clientProxy = remote,
+        .userId = GetUserIdDefault(),
+        .callerName = GetCallerName(),
+        .activeTime = TimeUtils::GetCurrentTime(),
+    });
+    if (ret == ERR_OK) {
+        ClearFailedBundles();
+        successBundlesNum_ = 0;
+        return ret;
+    }
+    if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
+        errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
+                                                    session_->GetSessionCallerName(),
+                                                    session_->GetSessionActiveTime());
+        HILOGE("Active backup session error, Already have a session");
+        return ret;
+    }
+    HILOGE("Active backup session error");
+    StopAll(nullptr, true);
+    return ret;
 }
 }

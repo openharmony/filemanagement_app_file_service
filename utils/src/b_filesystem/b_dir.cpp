@@ -74,7 +74,7 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetFile(con
         return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
     }
     if (sta.st_size <= size) {
-        smallFiles.insert(make_pair(path, sta.st_size));
+        smallFiles.emplace(make_pair(path, sta.st_size));
     } else {
         files.try_emplace(path, sta);
     }
@@ -104,7 +104,7 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFiles
         if (path.at(path.size()-1) != BConstants::FILE_SEPARATOR_CHAR) {
             newPath += BConstants::FILE_SEPARATOR_CHAR;
         }
-        smallFiles.insert(make_pair(newPath, 0));
+        smallFiles.emplace(make_pair(newPath, 0));
         return {ERR_OK, files, smallFiles};
     }
 
@@ -125,7 +125,7 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFiles
                 continue;
             }
             if (sta.st_size <= size) {
-                smallFiles.insert(make_pair(fileName, sta.st_size));
+                smallFiles.emplace(make_pair(fileName, sta.st_size));
                 continue;
             }
 
@@ -186,7 +186,7 @@ tuple<ErrCode, vector<string>> BDir::GetDirFiles(const string &path)
         } else if (ptr->d_type == DT_DIR) {
             continue;
         } else {
-            files.push_back(IncludeTrailingPathDelimiter(path) + string(ptr->d_name));
+            files.emplace_back(IncludeTrailingPathDelimiter(path) + string(ptr->d_name));
         }
     }
 
@@ -268,7 +268,7 @@ static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
     }
     RmForceExcludePath(expandPath);
     for (auto it = expandPath.begin(); it != expandPath.end(); ++it) {
-        filteredPath.insert(*it);
+        filteredPath.emplace(*it);
         if (onlyPath && *it->rbegin() != BConstants::FILE_SEPARATOR_CHAR) {
             continue;
         }
@@ -295,11 +295,14 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
         if (errCode == 0) {
             incFiles.merge(move(files));
             HILOGW("big files: %{public}zu; small files: %{public}zu", files.size(), smallFiles.size());
-            incSmallFiles.insert(smallFiles.begin(), smallFiles.end());
+            incSmallFiles.merge(move(smallFiles));
         }
     }
     vector<string> endExcludes = excludes;
     PreDealExcludes(endExcludes);
+    if (excludes.empty()) {
+        return {ERR_OK, move(incFiles), move(incSmallFiles)};
+    }
     auto isMatch = [](const vector<string> &s, const string &str) -> bool {
         if (str.empty()) {
             return false;
@@ -315,14 +318,14 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
     map<string, size_t> resSmallFiles;
     for (const auto &item : incSmallFiles) {
         if (!isMatch(endExcludes, item.first)) {
-            resSmallFiles.insert(make_pair(item.first, item.second));
+            resSmallFiles.emplace(item);
         }
     }
 
     map<string, struct stat> bigFiles;
     for (const auto &item : incFiles) {
         if (!isMatch(endExcludes, item.first)) {
-            bigFiles[item.first] = item.second;
+            bigFiles.emplace(item);
         }
     }
     HILOGW("total number of big files is %{public}zu", bigFiles.size());
@@ -359,8 +362,8 @@ void BDir::GetUser0FileStat(vector<string> bigFile,
         storageFiles.mode = to_string(static_cast<int32_t>(sta.st_mode));
         int64_t lastUpdateTime = static_cast<int64_t>(sta.st_mtime);
         storageFiles.mtime = lastUpdateTime;
-        allFiles.push_back(storageFiles);
-        smallFiles.push_back(storageFiles);
+        allFiles.emplace_back(storageFiles);
+        smallFiles.emplace_back(storageFiles);
     }
     for (const auto &item : bigFile) {
         struct ReportFileInfo storageFiles;
@@ -379,8 +382,8 @@ void BDir::GetUser0FileStat(vector<string> bigFile,
         int64_t lastUpdateTime = static_cast<int64_t>(sta.st_mtime);
         storageFiles.mtime = lastUpdateTime;
         storageFiles.userTar = 1;
-        allFiles.push_back(storageFiles);
-        bigFiles.push_back(storageFiles);
+        allFiles.emplace_back(storageFiles);
+        bigFiles.emplace_back(storageFiles);
     }
     HILOGI("get FileStat end, bigfiles = %{public}zu, smallFiles = %{public}zu, allFiles = %{public}zu,",
         bigFiles.size(), smallFiles.size(), allFiles.size());
@@ -394,11 +397,11 @@ static tuple<vector<string>, vector<string>> IsNotPath(const string &path, vecto
         return {};
     }
     if (sta.st_size <= size) {
-        smallFiles.push_back(path);
+        smallFiles.emplace_back(path);
         HILOGI("bigfiles = %{public}zu, smallfiles = %{public}zu", bigFiles.size(), smallFiles.size());
         return {bigFiles, smallFiles};
     }
-    bigFiles.push_back(path);
+    bigFiles.emplace_back(path);
     HILOGI("bigfiles = %{public}zu, smallfiles = %{public}zu", bigFiles.size(), smallFiles.size());
     return {bigFiles, smallFiles};
 }
@@ -412,7 +415,7 @@ static tuple<vector<string>, vector<string>> GetUser0DirFilesDetail(const string
         if (path.at(path.size()-1) != BConstants::FILE_SEPARATOR_CHAR) {
             newPath += BConstants::FILE_SEPARATOR_CHAR;
         }
-        smallFiles.push_back(newPath);
+        smallFiles.emplace_back(newPath);
         return {bigFiles, smallFiles};
     }
     if (filesystem::is_regular_file(path)) {
@@ -435,11 +438,11 @@ static tuple<vector<string>, vector<string>> GetUser0DirFilesDetail(const string
                 continue;
             }
             if (sta.st_size <= size) {
-                smallFiles.push_back(fileName);
+                smallFiles.emplace_back(fileName);
                 continue;
             }
 
-            bigFiles.push_back(fileName);
+            bigFiles.emplace_back(fileName);
             continue;
         } else if (ptr->d_type != DT_DIR) {
             HILOGE("Not support file type");

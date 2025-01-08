@@ -123,11 +123,11 @@ ErrCode BackupExtExtension::HandleRestore()
     return BExtExtension::extExtension->HandleRestore();
 }
 
-void BackupExtExtension::CompareFiles(UniqueFd incrementalFd,
-                                      UniqueFd manifestFd,
-                                      vector<struct ReportFileInfo> &allFiles,
-                                      vector<struct ReportFileInfo> &smallFiles,
-                                      vector<struct ReportFileInfo> &bigFiles)
+void BackupExtExtension::PreparaBackupFiles(UniqueFd incrementalFd,
+                                            UniqueFd manifestFd,
+                                            vector<struct ReportFileInfo> &allFiles,
+                                            vector<struct ReportFileInfo> &smallFiles,
+                                            vector<struct ReportFileInfo> &bigFiles)
 {
 }
 

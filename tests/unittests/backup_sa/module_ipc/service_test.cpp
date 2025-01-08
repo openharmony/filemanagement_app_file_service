@@ -80,6 +80,7 @@ ErrCode ServiceTest::Init(IServiceReverse::Scenario scenario)
                 "}]";
     bundleNames.emplace_back(BUNDLE_NAME);
     detailInfos.emplace_back(json);
+    string errMsg;
     ErrCode ret = 0;
     if (scenario == IServiceReverse::Scenario::RESTORE) {
         EXPECT_TRUE(servicePtr_ != nullptr);
@@ -88,12 +89,16 @@ ErrCode ServiceTest::Init(IServiceReverse::Scenario scenario)
         EXPECT_GE(fd, BError(BError::Codes::OK));
         ret = servicePtr_->InitRestoreSession(remote_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
+        ret = servicePtr_->InitRestoreSession(remote_, errMsg);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->Finish();
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } else if (scenario == IServiceReverse::Scenario::BACKUP) {
         ret = servicePtr_->InitBackupSession(remote_);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        ret = servicePtr_->InitBackupSession(remote_, errMsg);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->AppendBundlesBackupSession(bundleNames);
         EXPECT_EQ(ret, BError(BError::Codes::OK));

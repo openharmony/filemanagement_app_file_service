@@ -67,6 +67,11 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse>)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse>, std::string &)
+{
+    return BError(BError::Codes::OK);
+}
+
 vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalData>&)
 {
     return {};
@@ -258,28 +263,28 @@ HWTEST_F(ServiceTest, SUB_Service_GetUserIdDefault_0000, TestSize.Level1)
     try {
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-        auto ret = GetUserIdDefault();
+        auto ret = service->GetUserIdDefault();
         EXPECT_EQ(ret, DEBUG_ID + 1);
 
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
         EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
-        ret = GetUserIdDefault();
+        ret = service->GetUserIdDefault();
         EXPECT_EQ(ret, BConstants::DEFAULT_USER_ID);
 
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(true, 0)));
         EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
-        ret = GetUserIdDefault();
+        ret = service->GetUserIdDefault();
         EXPECT_EQ(ret, BConstants::DEFAULT_USER_ID);
 
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
         EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::XTS_UID));
-        ret = GetUserIdDefault();
+        ret = service->GetUserIdDefault();
         EXPECT_EQ(ret, BConstants::DEFAULT_USER_ID);
 
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
         EXPECT_CALL(*skeleton, GetCallingUid())
             .WillOnce(Return(BConstants::SPAN_USERID_UID + BConstants::SPAN_USERID_UID));
-        ret = GetUserIdDefault();
+        ret = service->GetUserIdDefault();
         EXPECT_EQ(ret, 2);
     } catch (...) {
         EXPECT_TRUE(false);

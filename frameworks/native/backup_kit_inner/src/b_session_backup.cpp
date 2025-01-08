@@ -70,6 +70,35 @@ unique_ptr<BSessionBackup> BSessionBackup::Init(Callbacks callbacks)
     return nullptr;
 }
 
+unique_ptr<BSessionBackup> BSessionBackup::Init(Callbacks callbacks,
+                                                std::string &errMsg, ErrCode &errCode)
+{
+    try {
+        HILOGI("Init BackupSession Begin");
+        auto backup = make_unique<BSessionBackup>();
+        ServiceProxy::InvaildInstance();
+        auto proxy = ServiceProxy::GetInstance();
+        if (proxy == nullptr) {
+            HILOGI("Failed to get backup service");
+            return nullptr;
+        }
+        errCode = proxy->InitBackupSession(sptr(new ServiceReverse(callbacks)), errMsg);
+        if (errCode != ERR_OK) {
+            HILOGE("Failed to Backup because of %{public}d", errCode);
+            AppRadar::Info info("", "", "");
+            AppRadar::GetInstance().RecordBackupFuncRes(info, "BSessionBackup::Init",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_CREATE_BACKUP_SESSION_FAIL, errCode);
+            return nullptr;
+        }
+        backup->RegisterBackupServiceDied(callbacks.onBackupServiceDied);
+        return backup;
+    } catch (const exception &e) {
+        HILOGE("Failed to Backup because of %{public}s", e.what());
+        errCode = BError(BError::Codes::SDK_INVAL_ARG);
+    }
+    return nullptr;
+}
+
 void BSessionBackup::RegisterBackupServiceDied(std::function<void()> functor)
 {
     auto proxy = ServiceProxy::GetInstance();

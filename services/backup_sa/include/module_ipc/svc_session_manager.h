@@ -93,6 +93,8 @@ public:
         RestoreTypeEnum restoreDataType {RESTORE_DATA_WAIT_SEND};
         bool isIncrementalBackup {false};
         std::string oldBackupVersion {""};
+        std::string callerName {};
+        std::string activeTime {};
     };
 
 public:
@@ -163,6 +165,20 @@ public:
      * @param userid 相关会话对应的userId
      */
     void SetSessionUserId(int32_t userId);
+
+    /**
+     * @brief 获取当前处理事务会话对应的callerName
+     *
+     * @return string
+     */
+    std::string GetSessionCallerName();
+
+    /**
+     * @brief 获取当前处理事务会话对应的激活时间
+     *
+     * @return string
+     */
+    std::string GetSessionActiveTime();
 
     /**
      * @brief 更新backupExtNameMap并判断是否完成分发

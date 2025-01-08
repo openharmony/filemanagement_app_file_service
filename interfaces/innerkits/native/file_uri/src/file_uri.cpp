@@ -41,6 +41,8 @@ const std::string MEDIA_AUTHORITY = "media";
 const std::string NETWORK_PARA = "?networkid=";
 const std::string BACKFLASH = "/";
 const std::string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
+const int DECODE_FORMAT_NUM = 16;
+const int DECODE_LEN = 2;
 std::string BUNDLE_NAME = "";
 std::mutex g_globalMutex;
 static bool CheckFileManagerFullMountEnable()
@@ -68,6 +70,28 @@ string FileUri::GetName()
     }
 
     return sandboxPath.substr(posLast + 1);
+}
+
+static string DecodeBySA(const string &uri)
+{
+    std::string outPutStr;
+    size_t index = 0;
+    while (index < uri.length()) {
+        if (uri[index] == '%') {
+            std::string inputStr(uri.substr(index + 1, DECODE_LEN));
+            auto ret = strtol(inputStr.c_str(), nullptr, DECODE_FORMAT_NUM);
+            if (ret == 0 || errno != 0) {
+                LOGE("strtol Failed! ret: %{public}lu, %{public}d", ret, errno);
+                return "";
+            }
+            outPutStr += static_cast<char>(ret);
+            index += DECODE_LEN + 1;
+        } else {
+            outPutStr += uri[index];
+            index++;
+        }
+    }
+    return outPutStr;
 }
 
 string FileUri::GetPath()
@@ -117,7 +141,10 @@ string FileUri::GetRealPath()
 
 string FileUri::GetRealPathBySA(const std::string &targetBundleName)
 {
-    string sandboxPath = SandboxHelper::Decode(uri_.GetPath());
+    string sandboxPath = DecodeBySA(uri_.GetPath());
+    if (sandboxPath.empty()) {
+        return "";
+    }
     string realPath = sandboxPath;
     string bundleName = uri_.GetAuthority();
     if (bundleName == FILE_MANAGER_AUTHORITY &&

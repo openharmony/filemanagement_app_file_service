@@ -305,6 +305,16 @@ void SvcSessionManager::SetSessionUserId(int32_t userId)
     impl_.userId = userId;
 }
 
+string SvcSessionManager::GetSessionCallerName()
+{
+    return impl_.callerName;
+}
+
+string SvcSessionManager::GetSessionActiveTime()
+{
+    return impl_.activeTime;
+}
+
 void SvcSessionManager::SetBundleRestoreType(const std::string &bundleName, RestoreTypeEnum restoreType)
 {
     auto it = impl_.backupExtNameMap.find(bundleName);

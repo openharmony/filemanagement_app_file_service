@@ -43,6 +43,14 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    int32_t InvokeMsgSendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+    {
+        code_ = code;
+        reply.WriteString("");
+        reply.WriteInt32(BError(BError::Codes::OK));
+        return BError(BError::Codes::OK);
+    }
+
     int32_t InvokeGetLocalSendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
     {
         code_ = code;
@@ -59,7 +67,17 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode InitBackupSession(sptr<IServiceReverse> remote) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg) override
     {
         return BError(BError::Codes::OK);
     }
@@ -190,6 +208,11 @@ public:
     }
 
     ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote, std::string &errMsg) override
     {
         return BError(BError::Codes::OK);
     }

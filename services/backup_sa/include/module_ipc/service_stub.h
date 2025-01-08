@@ -35,7 +35,9 @@ private:
     std::map<uint32_t, ServiceInterface> opToInterfaceMap_;
 
     int32_t CmdInitRestoreSession(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdInitRestoreSessionMsg(MessageParcel &data, MessageParcel &reply);
     int32_t CmdInitBackupSession(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdInitBackupSessionMsg(MessageParcel &data, MessageParcel &reply);
     int32_t CmdStart(MessageParcel &data, MessageParcel &reply);
     int32_t CmdGetLocalCapabilities(MessageParcel &data, MessageParcel &reply);
     int32_t CmdPublishFile(MessageParcel &data, MessageParcel &reply);
@@ -53,6 +55,7 @@ private:
     int32_t CmdGetLocalCapabilitiesIncremental(MessageParcel &data, MessageParcel &reply);
     int32_t CmdGetAppLocalListAndDoIncrementalBackup(MessageParcel &data, MessageParcel &reply);
     int32_t CmdInitIncrementalBackupSession(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdInitIncrementalBackupSessionMsg(MessageParcel &data, MessageParcel &reply);
     int32_t CmdAppendBundlesIncrementalBackupSession(MessageParcel &data, MessageParcel &reply);
     int32_t CmdAppendBundlesDetailsIncrementalBackupSession(MessageParcel &data, MessageParcel &reply);
     int32_t CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply);
