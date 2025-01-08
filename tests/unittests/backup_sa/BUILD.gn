@@ -18,6 +18,7 @@ group("backup_sa_test") {
   testonly = true
 
   deps = [
+    "module_external:adapter_test",
     "module_ipc:backup_sa_ipc_test",
     "session:session_test",
   ]

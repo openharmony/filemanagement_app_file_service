@@ -171,4 +171,9 @@ int32_t ServiceStub::CmdRefreshDataSize(MessageParcel &data, MessageParcel &repl
 {
     return BServiceStub::stub->CmdRefreshDataSize(data, reply);
 }
+
+int32_t ServiceStub::CmdGetLocalCapabilitiesForBdInfos(MessageParcel &data, MessageParcel &reply)
+{
+    return BServiceStub::stub->CmdGetLocalCapabilitiesForBdInfos(data, reply);
+}
 } // namespace OHOS::FileManagement::Backup

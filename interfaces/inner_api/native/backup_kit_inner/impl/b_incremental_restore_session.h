@@ -61,6 +61,13 @@ public:
                                                             std::string &errMsg, ErrCode &errCode);
 
     /**
+     * @brief 获取支持备份的应用信息（不包含数据量大小）
+     *
+     * @return UniqueFd 包含应用信息的文件描述符
+     */
+    UniqueFd GetLocalCapabilities();
+
+    /**
      * @brief 通知备份服务文件内容已就绪
      *
      * @param fileInfo 文件描述信息

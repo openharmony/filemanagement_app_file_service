@@ -29,6 +29,7 @@ public:
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info cbinfo);
+    static napi_value GetLocalCapabilities(napi_env env, napi_callback_info cbinfo);
     static napi_value AppendBundles(napi_env env, napi_callback_info cbinfo);
     static napi_value PublishFile(napi_env env, napi_callback_info cbinfo);
     static napi_value GetFileHandle(napi_env env, napi_callback_info cbinfo);

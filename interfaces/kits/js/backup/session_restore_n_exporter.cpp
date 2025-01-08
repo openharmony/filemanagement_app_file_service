@@ -480,6 +480,53 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
     return funcArg.GetThisVar();
 }
 
+napi_value SessionRestoreNExporter::GetLocalCapabilities(napi_env env, napi_callback_info cbinfo)
+{
+    HILOGI("called SessionBackup, GetLocalCapabilities Begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+    NFuncArg funcArg(env, cbinfo);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
+    if (!(restoreEntity && (restoreEntity->sessionWhole || restoreEntity->sessionSheet))) {
+        HILOGE("Failed to get restoreSession entity.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get restoreSession entity.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    UniqueFd fd;
+    auto cbExec = [session {restoreEntity}, &fd]() -> NError {
+        if (!session && (session->sessionWhole || session->sessionSheet)) {
+            return NError(BError(BError::Codes::SDK_INVAL_ARG, "backup session is nullptr").GetCode());
+        }
+        if (session->sessionWhole) {
+            fd = session->sessionWhole->GetLocalCapabilities();
+        } else if (session->sessionSheet) {
+            fd = session->sessionSheet->GetLocalCapabilities();
+        }
+        return fd < 0 ? NError(BError(BError::Codes::SA_INVAL_ARG, "Failed to get local capabilities.").GetCode()) :
+            NError(BError(BError::Codes::OK, "Success to get local capabilities.").GetCode());
+    };
+    auto cbCompl = [&fd](napi_env env, NError err) -> NVal {
+        NVal obj = NVal::CreateObject(env);
+        obj.AddProp({NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd.Release()).val_)});
+        return err ? NVal {env, err.GetNapiErr(env)} : obj;
+    };
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+}
+
 static NContextCBExec GetAppendBundlesCBExec(napi_env env, NFuncArg &funcArg, const int32_t fdRestore,
     const std::vector<std::string> &bundleNames, const std::vector<std::string> &bundleInfos)
 {
@@ -796,6 +843,7 @@ bool SessionRestoreNExporter::Export()
 {
     HILOGD("called SessionRestoreNExporter::Export begin");
     vector<napi_property_descriptor> props = {
+        NVal::DeclareNapiFunction("getLocalCapabilities", GetLocalCapabilities),
         NVal::DeclareNapiFunction("appendBundles", AppendBundles),
         NVal::DeclareNapiFunction("publishFile", PublishFile),
         NVal::DeclareNapiFunction("getFileHandle", GetFileHandle),
