@@ -181,11 +181,25 @@ private:
                             const std::vector<struct ReportFileInfo> &smallFiles,
                             const std::vector<struct ReportFileInfo> &bigFiles);
 
-    void CompareFiles(UniqueFd incrementalFd,
-                      UniqueFd manifestFd,
-                      vector<struct ReportFileInfo> &allFiles,
+    void FillFileInfos(UniqueFd incrementalFd,
+                       UniqueFd manifestFd,
+                       vector<struct ReportFileInfo> &allFiles,
+                       vector<struct ReportFileInfo> &smallFiles,
+                       vector<struct ReportFileInfo> &bigFiles);
+    void FillFileInfosWithoutCmp(vector<struct ReportFileInfo> &allFiles,
+                                 vector<struct ReportFileInfo> &smallFiles,
+                                 vector<struct ReportFileInfo> &bigFiles,
+                                 UniqueFd incrementalFd);
+    void FillFileInfosWithCmp(vector<struct ReportFileInfo> &allFiles,
+                              vector<struct ReportFileInfo> &smallFiles,
+                              vector<struct ReportFileInfo> &bigFiles,
+                              const unordered_map<string, struct ReportFileInfo> &cloudFiles,
+                              UniqueFd incrementalFd);
+    void CompareFiles(vector<struct ReportFileInfo> &allFiles,
                       vector<struct ReportFileInfo> &smallFiles,
-                      vector<struct ReportFileInfo> &bigFiles);
+                      vector<struct ReportFileInfo> &bigFiles,
+                      const unordered_map<string, struct ReportFileInfo> &cloudFiles,
+                      unordered_map<string, struct ReportFileInfo> &localFilesInfo);
 
     void AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     void AsyncTaskOnIncrementalBackup();

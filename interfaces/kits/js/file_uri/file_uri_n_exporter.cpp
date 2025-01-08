@@ -195,23 +195,23 @@ static std::string NormalizeUri(Uri &uri)
     size_t pos = 0;
     size_t left = 0;
     while ((pos = uri.GetPath().find('/', left)) != std::string::npos) {
-        temp.push_back(uri.GetPath().substr(left, pos - left));
+        temp.emplace_back(uri.GetPath().substr(left, pos - left));
         left = pos + 1;
     }
     if (left != pathLen) {
-        temp.push_back(uri.GetPath().substr(left));
+        temp.emplace_back(uri.GetPath().substr(left));
     }
     size_t tempLen = temp.size();
     std::vector<std::string> normalizeTemp;
     for (size_t i = 0; i < tempLen; ++i) {
         if (!temp[i].empty() && !(temp[i] == ".") && !(temp[i] == "..")) {
-            normalizeTemp.push_back(temp[i]);
+            normalizeTemp.emplace_back(temp[i]);
         }
         if (temp[i] == "..") {
             if (!normalizeTemp.empty() && normalizeTemp.back() != "..") {
                 normalizeTemp.pop_back();
             } else {
-                normalizeTemp.push_back(temp[i]);
+                normalizeTemp.emplace_back(temp[i]);
             }
         }
     }

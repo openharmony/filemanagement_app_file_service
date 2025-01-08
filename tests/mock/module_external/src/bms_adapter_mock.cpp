@@ -70,4 +70,15 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetFullBundleInfos(int32_t
 {
     return BBundleMgrAdapter::bms->GetFullBundleInfos(userId);
 }
+
+std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForLocalCapabilities(int32_t userId)
+{
+    return BBundleMgrAdapter::bms->GetBundleInfosForLocalCapabilities(userId);
+}
+
+std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIndex(
+    const vector<string> &bundleNames, int32_t userId)
+{
+    return BBundleMgrAdapter::bms->GetBundleInfosForIndex(bundleNames, userId);
+}
 } // namespace OHOS::FileManagement::Backup

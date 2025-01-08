@@ -69,7 +69,7 @@ using namespace std;
 vector<BIncrementalData> Service::MakeDetailList(const vector<BundleName> &bundleNames)
 {
     vector<BIncrementalData> bundleDetails {};
-    for (auto bundleName : bundleNames) {
+    for (const auto &bundleName : bundleNames) {
         bundleDetails.emplace_back(BIncrementalData {bundleName, 0});
     }
     return bundleDetails;
@@ -292,7 +292,7 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
 {
     HILOGI("Begin");
     std::vector<std::string> supportBackupNames;
-    for (auto info : backupInfos) {
+    for (const auto &info : backupInfos) {
         HILOGI("Current backupInfo bundleName:%{public}s, index:%{public}d, extName:%{public}s", info.name.c_str(),
             info.appIndex, info.extensionName.c_str());
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
@@ -358,7 +358,7 @@ ErrCode Service::RefreshDataSize(int64_t totalDataSize)
 void Service::HandleNotSupportBundleNames(const std::vector<std::string> &srcBundleNames,
     std::vector<std::string> &supportBundleNames, bool isIncBackup)
 {
-    for (auto bundleName : srcBundleNames) {
+    for (const auto &bundleName : srcBundleNames) {
         auto it = std::find(supportBundleNames.begin(), supportBundleNames.end(), bundleName);
         if (it != supportBundleNames.end()) {
             continue;
@@ -442,10 +442,18 @@ void Service::ExtConnectDied(const string &callName)
         if (backUpConnection != nullptr && backUpConnection->IsExtAbilityConnected()) {
             backUpConnection->DisconnectBackupExtAbility();
         }
+        bool needCleanData = session_->GetClearDataFlag(callName);
+        if (!needCleanData) {
+            HILOGE("Current extension is died, but not need clean data, bundleName:%{public}s", callName.c_str());
+            ClearSessionAndSchedInfo(callName);
+            NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
+            return;
+        }
         session_->SetServiceSchedAction(callName, BConstants::ServiceSchedAction::CLEAN);
         auto ret = LaunchBackupExtension(callName);
         if (ret) {
             /* Clear Session before notice client finish event */
+            HILOGE("Current bundle launch extension failed, bundleName:%{public}s", callName.c_str());
             ClearSessionAndSchedInfo(callName);
         }
         /* Notice Client Ext Ability Process Died */
@@ -623,6 +631,7 @@ ErrCode Service::HandleCurAppDone(ErrCode errCode, const std::string &bundleName
     }
     return BError(BError::Codes::OK);
 }
+
 std::string Service::GetCallerName()
 {
     std::string callerName;
@@ -721,5 +730,54 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, std::string &er
     HILOGE("Active backup session error");
     StopAll(nullptr, true);
     return ret;
+}
+
+UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
+{
+    try {
+        HILOGI("start GetLocalCapabilitiesForBundleInfos");
+        if (session_ == nullptr) {
+            HILOGE("GetLocalCapabilitiesForBundleInfos failed, session is nullptr");
+            return UniqueFd(-EPERM);
+        }
+        ErrCode ret = VerifyCaller();
+        if (ret != ERR_OK) {
+            HILOGE("GetLocalCapabilitiesForBundleInfos failed, verify caller failed");
+            return UniqueFd(-EPERM);
+        }
+        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
+        BExcepUltils::VerifyPath(path, false);
+        CreateDirIfNotExist(path);
+        UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
+        if (fd < 0) {
+            HILOGE("Failed to open config file = %{private}s, err = %{public}d", path.c_str(), errno);
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return UniqueFd(-EPERM);
+        }
+        BJsonCachedEntity<BJsonEntityCaps> cachedEntity(std::move(fd));
+        auto cache = cachedEntity.Structuralize();
+        cache.SetSystemFullName(GetOSFullName());
+        cache.SetDeviceType(GetDeviceType());
+        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForLocalCapabilities(GetUserIdDefault());
+        if (bundleInfos.size() == 0) {
+            HILOGE("getBundleInfos failed, size = 0");
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return UniqueFd(-EPERM);
+        }
+        cache.SetBundleInfos(bundleInfos);
+        cachedEntity.Persist();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        HILOGI("End");
+        return move(cachedEntity.GetFd());
+    } catch (const BError &e) {
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        HILOGE("GetLocalCapabilitiesForBundleInfos failed, errCode = %{public}d", e.GetCode());
+        return UniqueFd(-e.GetCode());
+    } catch (...) {
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        HILOGI("Unexpected exception");
+        return UniqueFd(-EPERM);
+    }
 }
 }

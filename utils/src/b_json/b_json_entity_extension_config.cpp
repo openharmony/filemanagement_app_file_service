@@ -51,7 +51,7 @@ vector<string> BJsonEntityExtensionConfig::GetIncludes() const
             HILOGE("Each item of array 'includes' must be of the type string");
             continue;
         }
-        dirs.push_back(item.asString());
+        dirs.emplace_back(item.asString());
     }
 
     if (dirs.empty()) {
@@ -81,7 +81,7 @@ vector<string> BJsonEntityExtensionConfig::GetExcludes() const
             HILOGE("Each item of array 'excludes' must be of the type string");
             continue;
         }
-        dirs.push_back(item.asString());
+        dirs.emplace_back(item.asString());
     }
     return dirs;
 }

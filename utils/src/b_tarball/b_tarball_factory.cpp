@@ -94,7 +94,7 @@ static tuple<vector<string>, vector<string>> TarFilter(string_view tarballDir,
     for (auto &item : excludes) {
         string str = removeBackSlash(item);
         if (!str.empty()) {
-            newExcludes.push_back(str);
+            newExcludes.emplace_back(str);
         }
     }
 
