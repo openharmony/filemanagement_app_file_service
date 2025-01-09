@@ -54,6 +54,7 @@ public:
     ErrCode InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg) override;
     ErrCode Start() override;
     UniqueFd GetLocalCapabilities() override;
+    UniqueFd GetLocalCapabilitiesForBundleInfos() override;
     ErrCode PublishFile(const BFileInfo &fileInfo) override;
     ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode) override;
     ErrCode AppDone(ErrCode errCode) override;

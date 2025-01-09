@@ -311,6 +311,11 @@ ErrCode Service::HandleCurAppDone(ErrCode errCode, const std::string&, bool)
 }
 
 void Service::StartCurBundleBackupOrRestore(const std::string&) {}
+
+UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
+{
+    return UniqueFd(-1);
+}
 } // namespace OHOS::FileManagement::Backup
 
 namespace OHOS::FileManagement::Backup {

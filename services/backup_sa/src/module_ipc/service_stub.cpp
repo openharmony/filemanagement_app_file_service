@@ -60,6 +60,9 @@ void ServiceStub::ServiceStubSupplement()
         &ServiceStub::CmdInitRestoreSessionMsg;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_STOP_EXT_TIMER)] =
         &ServiceStub::CmdStopExtTimer;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES_FOR_BUNDLE_INFOS)] =
+        &ServiceStub::CmdGetLocalCapabilitiesForBdInfos;
 }
 
 void ServiceStub::ServiceStubSuppAppendBundles()
@@ -826,5 +829,14 @@ int32_t ServiceStub::CmdCancel(MessageParcel &data, MessageParcel &reply)
         return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to send the result ") + to_string(res));
     }
     return res;
+}
+
+int32_t ServiceStub::CmdGetLocalCapabilitiesForBdInfos(MessageParcel &data, MessageParcel &reply)
+{
+    UniqueFd fd(GetLocalCapabilitiesForBundleInfos());
+    if (!reply.WriteFileDescriptor(fd)) {
+        return BError(BError::Codes::SA_BROKEN_IPC, "Failed to send out the file");
+    }
+    return BError(BError::Codes::OK);
 }
 } // namespace OHOS::FileManagement::Backup

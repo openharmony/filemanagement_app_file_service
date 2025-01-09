@@ -26,6 +26,7 @@ public:
     virtual int32_t CmdInitBackupSession(MessageParcel&, MessageParcel&) = 0;
     virtual int32_t CmdStart(MessageParcel&, MessageParcel&) = 0;
     virtual int32_t CmdGetLocalCapabilities(MessageParcel&, MessageParcel&) = 0;
+    virtual int32_t CmdGetLocalCapabilitiesForBdInfos(MessageParcel&, MessageParcel&) = 0;
     virtual int32_t CmdPublishFile(MessageParcel&, MessageParcel&) = 0;
     virtual int32_t CmdAppFileReady(MessageParcel&, MessageParcel&) = 0;
     virtual int32_t CmdAppDone(MessageParcel&, MessageParcel&) = 0;
@@ -70,6 +71,7 @@ public:
     MOCK_METHOD(int32_t, CmdInitBackupSession, (MessageParcel&, MessageParcel&));
     MOCK_METHOD(int32_t, CmdStart, (MessageParcel&, MessageParcel&));
     MOCK_METHOD(int32_t, CmdGetLocalCapabilities, (MessageParcel&, MessageParcel&));
+    MOCK_METHOD(int32_t, CmdGetLocalCapabilitiesForBdInfos, (MessageParcel&, MessageParcel&));
     MOCK_METHOD(int32_t, CmdPublishFile, (MessageParcel&, MessageParcel&));
     MOCK_METHOD(int32_t, CmdAppFileReady, (MessageParcel&, MessageParcel&));
     MOCK_METHOD(int32_t, CmdAppDone, (MessageParcel&, MessageParcel&));

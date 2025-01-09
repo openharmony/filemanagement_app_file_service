@@ -119,6 +119,22 @@ void BIncrementalBackupSession::RegisterBackupServiceDied(function<void()> funct
     remoteObj->AddDeathRecipient(deathRecipient_);
 }
 
+UniqueFd BIncrementalBackupSession::GetLocalCapabilities()
+{
+    HILOGI("GetLocalCapabilities begin");
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return UniqueFd(-EPERM);
+    }
+    UniqueFd fd = proxy->GetLocalCapabilitiesForBundleInfos();
+    if (fd < 0) {
+        HILOGE("Failed to get local capabilities for bundleinfos");
+        return UniqueFd(-EPERM);
+    }
+    return fd;
+}
+
 ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundlesToBackup)
 {
     auto proxy = ServiceProxy::GetInstance();
