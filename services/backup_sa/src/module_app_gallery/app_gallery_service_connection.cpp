@@ -50,7 +50,7 @@ bool AppGalleryConnection::ConnectExtAbility(std::string abilityName)
 
     auto appGalleryBundleName = BundleMgrAdapter::GetAppGalleryBundleName();
     if (appGalleryBundleName.empty()) {
-        HILOGI("ConnectExtAbility GetAppGalleryBundleName failed, userId = %{public}d", userId);
+        HILOGE("ConnectExtAbility GetAppGalleryBundleName failed, userId = %{public}d", userId);
         return false;
     }
 
@@ -61,7 +61,7 @@ bool AppGalleryConnection::ConnectExtAbility(std::string abilityName)
     std::unique_lock<std::mutex> uniqueLock(connectMutex);
     conditionVal_.wait_for(uniqueLock, std::chrono::seconds(CONNECT_TIME));
     if (ret != IAppGalleryService::ERR_OK || appRemoteObj_ == nullptr) {
-        HILOGI("ConnectExtAbility failed, ret=%{public}d, userId = %{public}d", ret, userId);
+        HILOGE("ConnectExtAbility failed, ret=%{public}d, userId = %{public}d", ret, userId);
         appRemoteObj_ = nullptr;
         return false;
     }

@@ -1512,3 +1512,35 @@ HWTEST_F(ServiceTest, SUB_Service_TimeoutRadarReport_0000, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_TimeoutRadarReport_0000";
 }
+
+/**
+ * @tc.number: SUB_Service_GetLocalCapabilitiesForBdInfos_0000
+ * @tc.name: SUB_Service_GetLocalCapabilitiesForBdInfos_0000
+ * @tc.desc: 测试 GetLocalCapabilitiesForBundleInfos 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetLocalCapabilitiesForBdInfos_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetLocalCapabilitiesForBdInfos_0000";
+    try {
+        ASSERT_TRUE(service != nullptr);
+        auto session_  = service->session_;
+        service->session_ = nullptr;
+        EXPECT_EQ(-EPERM, service->GetLocalCapabilitiesForBundleInfos());
+
+        service->session_ = session_;
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_EQ(-EPERM, service->GetLocalCapabilitiesForBundleInfos());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetLocalCapabilitiesForBundleInfos.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetLocalCapabilitiesForBdInfos_0000";
+}

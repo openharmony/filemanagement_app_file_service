@@ -1193,7 +1193,7 @@ void Service::ReportOnExtConnectFailed(const IServiceReverse::Scenario scenario,
             session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(ret, bundleName);
             BundleBeginRadarReport(bundleName, ret, scenario);
             DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName,
-                session_->GetSessionUserId());
+                session_->GetBundleUserId(bundleName));
             HILOGI("ExtConnectFailed EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
                    bundleName.c_str());
         } else if (scenario == IServiceReverse::Scenario::BACKUP) {
@@ -1203,7 +1203,7 @@ void Service::ReportOnExtConnectFailed(const IServiceReverse::Scenario scenario,
             session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
             BundleBeginRadarReport(bundleName, ret, scenario);
             DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName,
-                session_->GetSessionUserId());
+                session_->GetBundleUserId(bundleName));
             HILOGI("ExtConnectFailed EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
                    bundleName.c_str());
         }
@@ -1370,7 +1370,7 @@ void Service::SendStartAppGalleryNotify(const BundleName &bundleName)
     }
     HILOGI("AppendIntoDisposalConfigFile OK, bundleName=%{public}s", bundleName.c_str());
     DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName,
-        session_->GetSessionUserId());
+        session_->GetBundleUserId(bundleName));
     HILOGI("StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
         bundleName.c_str());
 }
@@ -1386,9 +1386,9 @@ void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
     if (scenario != IServiceReverse::Scenario::RESTORE) {
         return;
     }
-    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName, session_->GetSessionUserId());
-    HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
-        bundleName.c_str());
+    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName,
+        session_->GetBundleUserId(bundleName));
+    HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr, bundleName.c_str());
     if (disposeErr != DisposeErr::OK) {
         HILOGE("Error code=%{public}d, disposal will be clear in the end", disposeErr);
         return;
@@ -1406,7 +1406,7 @@ void Service::TryToClearDispose(const BundleName &bundleName)
     int32_t att = 0;
     while (att < maxAtt) {
         DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName,
-            session_->GetSessionUserId());
+            session_->GetBundleUserId(bundleName));
         HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr, bundleName.c_str());
         if (disposeErr == DisposeErr::OK) {
             break;

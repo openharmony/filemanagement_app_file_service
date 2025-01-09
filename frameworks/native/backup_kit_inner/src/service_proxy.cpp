@@ -784,4 +784,30 @@ ErrCode ServiceProxy::RefreshDataSize(int64_t totalSize)
     return BError(BError::Codes::OK, "success");
 }
 
+UniqueFd ServiceProxy::GetLocalCapabilitiesForBundleInfos()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("ServiceProxy, start GetLocalCapabilitiesForBundleInfos");
+    if (Remote() == nullptr) {
+        HILOGE("Remote is nullptr");
+        return UniqueFd(-EPERM);
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        HILOGE("Failed to write descriptor");
+        return UniqueFd(-EPERM);
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(
+        IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES_FOR_BUNDLE_INFOS), data, reply, option);
+    if (ret != NO_ERROR) {
+        HILOGE("Received error %{public}d when doing IPC", ret);
+    }
+    UniqueFd fd(reply.ReadFileDescriptor());
+    HILOGI("ServiceProxy, end GetLocalCapabilitiesForBundleInfos");
+    return fd;
+}
 } // namespace OHOS::FileManagement::Backup

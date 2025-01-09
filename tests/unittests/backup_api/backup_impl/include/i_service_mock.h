@@ -92,6 +92,11 @@ public:
         return UniqueFd(-1);
     }
 
+    UniqueFd GetLocalCapabilitiesForBundleInfos() override
+    {
+        return UniqueFd(-1);
+    }
+
     ErrCode PublishFile(const BFileInfo &fileInfo) override
     {
         return BError(BError::Codes::OK);

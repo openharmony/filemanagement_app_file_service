@@ -49,6 +49,7 @@ public:
     MOCK_METHOD2(InitBackupSession, ErrCode(sptr<IServiceReverse> remote, std::string &errMsg));
     MOCK_METHOD0(Start, ErrCode());
     MOCK_METHOD0(GetLocalCapabilities, UniqueFd());
+    MOCK_METHOD0(GetLocalCapabilitiesForBundleInfos, UniqueFd());
     MOCK_METHOD1(PublishFile, ErrCode(const BFileInfo &fileInfo));
     MOCK_METHOD3(AppFileReady, ErrCode(const string &fileName, UniqueFd fd, int32_t errCode));
     MOCK_METHOD1(AppDone, ErrCode(ErrCode errCode));

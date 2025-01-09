@@ -567,4 +567,82 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppend(co
     }
     return bundleInfos;
 }
+
+std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForLocalCapabilities(int32_t userId)
+{
+    HILOGI("start GetBundleInfosForLocalCapabilities");
+    vector<AppExecFwk::BundleInfo> installedBundles;
+    auto bms = GetBundleManager();
+    if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles, userId)) {
+        HILOGI("Failed to get bundle infos");
+        return {};
+    }
+    vector<string> bundleNames;
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
+    for (auto const &installedBundle : installedBundles) {
+        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+            installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
+            HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
+            continue;
+        }
+        if (installedBundle.appIndex > 0) {
+            HILOGI("Current bundle %{public}s is a twin application, index = %{public}d",
+                installedBundle.name.c_str(), installedBundle.appIndex);
+            std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(installedBundle.name,
+                installedBundle.appIndex);
+            bundleNames.emplace_back(bundleNameIndexInfo);
+            continue;
+        }
+        auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo] =
+            GetAllowAndExtName(installedBundle.extensionInfos);
+        if (!allToBackup) {
+            HILOGI("Not allToBackup, bundleName = %{public}s, appIndex = %{public}d",
+                installedBundle.name.c_str(), installedBundle.appIndex);
+            continue;
+        }
+        bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {
+                                 installedBundle.name, installedBundle.appIndex,
+                                 installedBundle.versionCode, installedBundle.versionName,
+                                 0, 0, allToBackup, fullBackupOnly,
+                                 extName, restoreDeps, supportScene, extraInfo});
+    }
+    auto bundleInfosIndex = GetBundleInfosForIndex(bundleNames, userId);
+    auto bundleInfosSA = BundleMgrAdapter::GetBundleInfosForSA();
+    copy(bundleInfosIndex.begin(), bundleInfosIndex.end(), back_inserter(bundleInfos));
+    copy(bundleInfosSA.begin(), bundleInfosSA.end(), back_inserter(bundleInfos));
+    HILOGI("End GetBundleInfosForLocalCapabilities, allow to backup bundle count is : %{public}zu", bundleInfos.size());
+    return bundleInfos;
+}
+
+std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIndex(
+    const vector<string> &bundleNames, int32_t userId)
+{
+    HILOGI("start GetFullBundleInfosForIndex");
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    auto bms = GetBundleManager();
+    for (auto const &bundleName : bundleNames) {
+        AppExecFwk::BundleInfo installedBundle;
+        std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos;
+        bool getBundleSuccess = GetCurBundleExtenionInfo(installedBundle, bundleName, extensionInfos, bms, userId);
+        if (!getBundleSuccess) {
+            HILOGE("Get current extension failed, bundleName:%{public}s", bundleName.c_str());
+            continue;
+        }
+        auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo] =
+            GetAllowAndExtName(extensionInfos);
+        if (!allToBackup) {
+            HILOGI("Not allToBackup, bundleName = %{public}s, appIndex = %{public}d",
+                installedBundle.name.c_str(), installedBundle.appIndex);
+            continue;
+        }
+        bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {
+            installedBundle.name, installedBundle.appIndex,
+            installedBundle.versionCode, installedBundle.versionName,
+            0, 0, allToBackup, fullBackupOnly,
+            extName, restoreDeps, supportScene, extraInfo});
+    }
+    HILOGI("End, bundleInfos size:%{public}zu", bundleInfos.size());
+    return bundleInfos;
+}
 } // namespace OHOS::FileManagement::Backup

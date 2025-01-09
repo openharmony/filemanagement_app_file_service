@@ -228,4 +228,9 @@ void ServiceProxy::InvaildInstance() {}
 void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t, const OHOS::sptr<IRemoteObject>&) {}
 
 void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId) {}
+
+UniqueFd ServiceProxy::GetLocalCapabilitiesForBundleInfos()
+{
+    return UniqueFd(-1);
+}
 } // namespace OHOS::FileManagement::Backup

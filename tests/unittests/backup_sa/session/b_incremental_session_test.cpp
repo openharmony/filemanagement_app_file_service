@@ -1,4 +1,4 @@
-/*)
+/*
  * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -830,5 +830,71 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2500, testing::e
         GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by RemoveExtConn.";
     }
     GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2500";
+}
+
+/**
+ * @tc.number: SUB_b_incremental_session_test_2600
+ * @tc.name: SUB_b_incremental_session_test_2600
+ * @tc.desc: 测试 GetLocalCapabilities 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2600, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2600";
+    try {
+        ServiceProxy::serviceProxy_ = nullptr;
+        EXPECT_TRUE(backupSession != nullptr);
+        auto err = backupSession->GetLocalCapabilities();
+        EXPECT_EQ(err.Get(), -EPERM);
+
+        ServiceProxy::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, GetLocalCapabilitiesForBundleInfos()).WillOnce(Return(UniqueFd(-1)));
+        err = backupSession->GetLocalCapabilities();
+        EXPECT_EQ(err.Get(), -EPERM);
+
+        EXPECT_CALL(*proxy, GetLocalCapabilitiesForBundleInfos()).WillOnce(Return(UniqueFd(0)));
+        err = backupSession->GetLocalCapabilities();
+        EXPECT_EQ(err.Get(), 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by GetLocalCapabilities.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2600";
+}
+
+/**
+ * @tc.number: SUB_b_incremental_session_test_2700
+ * @tc.name: SUB_b_incremental_session_test_2700
+ * @tc.desc: 测试 GetLocalCapabilities 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2700, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2700";
+    try {
+        ServiceProxy::serviceProxy_ = nullptr;
+        EXPECT_TRUE(restoreSession != nullptr);
+        auto err = restoreSession->GetLocalCapabilities();
+        EXPECT_EQ(err.Get(), -EPERM);
+
+        ServiceProxy::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, GetLocalCapabilitiesForBundleInfos()).WillOnce(Return(UniqueFd(-1)));
+        err = restoreSession->GetLocalCapabilities();
+        EXPECT_EQ(err.Get(), -EPERM);
+
+        EXPECT_CALL(*proxy, GetLocalCapabilitiesForBundleInfos()).WillOnce(Return(UniqueFd(0)));
+        err = restoreSession->GetLocalCapabilities();
+        EXPECT_EQ(err.Get(), 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by GetLocalCapabilities.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2700";
 }
 } // namespace OHOS::FileManagement::Backup
