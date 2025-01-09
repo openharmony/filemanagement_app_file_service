@@ -442,10 +442,18 @@ void Service::ExtConnectDied(const string &callName)
         if (backUpConnection != nullptr && backUpConnection->IsExtAbilityConnected()) {
             backUpConnection->DisconnectBackupExtAbility();
         }
+        bool needCleanData = session_->GetClearDataFlag(callName);
+        if (!needCleanData) {
+            HILOGE("Current extension is died, but not need clean data, bundleName:%{public}s", callName.c_str());
+            ClearSessionAndSchedInfo(callName);
+            NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
+            return;
+        }
         session_->SetServiceSchedAction(callName, BConstants::ServiceSchedAction::CLEAN);
         auto ret = LaunchBackupExtension(callName);
         if (ret) {
             /* Clear Session before notice client finish event */
+            HILOGE("Current bundle launch extension failed, bundleName:%{public}s", callName.c_str());
             ClearSessionAndSchedInfo(callName);
         }
         /* Notice Client Ext Ability Process Died */
