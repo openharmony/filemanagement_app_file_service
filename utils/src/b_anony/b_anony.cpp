@@ -48,16 +48,26 @@ std::string GetAnonyString(const std::string &value)
 std::string GetAnonyPath(const std::string &value)
 {
     std::string res;
-    std::string sub;
-    size_t found = value.find_last_of('/');
-    if (found == std::string::npos) {
-        sub = value;
-    } else {
-        sub = value.substr(found + 1);
-        res = value.substr(0, found + 1);
+    size_t pos = 0;
+    size_t found = value.find('/');
+    while (found != std::string::npos) {
+        if (pos != found) {
+            res += GetAnonyString(value.substr(pos, found - pos));
+        }
+        res += '/';
+        pos = found + 1;
+        found = value.find('/', pos);
     }
-    res += GetAnonyString(sub);
-
+    //处理文件名
+    if (pos < value.length()) {
+        found = value.find('.', pos);
+        if (found != std::string::npos) {
+            res += GetAnonyString(value.substr(pos, found - pos));
+            res += value.substr(found);
+        } else {
+            res += GetAnonyString(value.substr(pos));
+        }
+    }
     return res;
 }
 }
