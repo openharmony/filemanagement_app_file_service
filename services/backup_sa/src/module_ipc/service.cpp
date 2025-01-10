@@ -1364,15 +1364,21 @@ void Service::SendStartAppGalleryNotify(const BundleName &bundleName)
     if (scenario != IServiceReverse::Scenario::RESTORE) {
         return;
     }
-    if (!disposal_->IfBundleNameInDisposalConfigFile(bundleName)) {
+    int32_t userId = session_->GetBundleUserId(bundleName);
+    std::string bundleNameWithUserId = BundleNameWithUserId(bundleName, userId);
+    if (!disposal_->IfBundleNameInDisposalConfigFile(bundleNameWithUserId)) {
         HILOGE("WriteDisposalConfigFile Failed");
         return;
     }
-    HILOGI("AppendIntoDisposalConfigFile OK, bundleName=%{public}s", bundleName.c_str());
-    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName,
-        session_->GetBundleUserId(bundleName));
-    HILOGI("StartRestore, code=%{public}d, bundleName=%{public}s", disposeErr,
-        bundleName.c_str());
+    HILOGI("AppendIntoDisposalConfigFile OK, bundleName=%{public}s", bundleNameWithUserId.c_str());
+    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->StartRestore(bundleName, userId);
+    HILOGI("StartRestore, code=%{public}d, bundleName=%{public}s, userId=%{public}d", disposeErr, bundleName.c_str(),
+        userId);
+}
+
+static string BundleNameWithUserId(const string& bundleName, const int32_t userId)
+{
+    return to_string(userId) + "-" + bundleName;
 }
 
 void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
@@ -1386,28 +1392,42 @@ void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
     if (scenario != IServiceReverse::Scenario::RESTORE) {
         return;
     }
-    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName,
-        session_->GetBundleUserId(bundleName));
-    HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr, bundleName.c_str());
+    int32_t userId = session_->GetBundleUserId(bundleName);
+    DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName, userId);
+    HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s, userId=%{public}d", disposeErr, bundleName.c_str(),
+        userId);
     if (disposeErr != DisposeErr::OK) {
         HILOGE("Error code=%{public}d, disposal will be clear in the end", disposeErr);
         return;
     }
-    if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
-        HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
+    std::string bundleNameWithUserId = BundleNameWithUserId(bundleName, userId);
+    if (!disposal_->DeleteFromDisposalConfigFile(bundleNameWithUserId)) {
+        HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleNameWithUserId.c_str());
         return;
     }
-    HILOGI("DeleteFromDisposalConfigFile OK, bundleName=%{public}s", bundleName.c_str());
+    HILOGI("DeleteFromDisposalConfigFile OK, bundleName=%{public}s", bundleNameWithUserId.c_str());
+}
+
+static std::tuple<std::string, int32_t> SplitBundleName(const string& bundleNameWithId)
+{
+    size_t found = bundleNameWithId.find('-');
+    if (found == std::string::npos) {
+        return { bundleNameWithId, GetUserIdDefault() };
+    }
+    std::string bundleName = bundleNameWithId.substr(found + 1, bundleNameWithId.length());
+    int32_t userId = std::atoi(bundleNameWithId.substr(0, found));
+    return { bundleName, userId};
 }
 
 void Service::TryToClearDispose(const BundleName &bundleName)
 {
+    auto [bundle, userId] = SplitBundleName(bundleName);
     int32_t maxAtt = MAX_TRY_CLEAR_DISPOSE_NUM;
     int32_t att = 0;
     while (att < maxAtt) {
-        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundleName,
-            session_->GetBundleUserId(bundleName));
-        HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s", disposeErr, bundleName.c_str());
+        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundle, userId);
+        HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s, userId=%{public}d", disposeErr, bundle.c_str(),
+            userId);
         if (disposeErr == DisposeErr::OK) {
             break;
         }
@@ -1959,7 +1979,6 @@ void Service::NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerN
         );
     } else if (scenario == IServiceReverse::Scenario::RESTORE) {
         HILOGI("will notify clone data, scenario is Restore");
-        SendEndAppGalleryNotify(callerName);
         session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, callerName);
     }
     BundleEndRadarReport(callerName, errCode, scenario);

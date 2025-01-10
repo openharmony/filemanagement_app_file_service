@@ -774,7 +774,6 @@ void Service::NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string
         );
     } else if (scenario == IServiceReverse::Scenario::RESTORE) {
         HILOGI("will notify clone data, scenario is Restore");
-        SendEndAppGalleryNotify(callerName);
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, callerName);
         BundleEndRadarReport(callerName, errCode, scenario);
     }

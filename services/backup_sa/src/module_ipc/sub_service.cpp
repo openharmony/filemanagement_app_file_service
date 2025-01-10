@@ -610,6 +610,7 @@ ErrCode Service::HandleCurAppDone(ErrCode errCode, const std::string &bundleName
     proxy->HandleClear();
     session_->StopFwkTimer(bundleName);
     session_->StopExtTimer(bundleName);
+    SendEndAppGalleryNotify(callerName);
     backUpConnection->DisconnectBackupExtAbility();
     ClearSessionAndSchedInfo(bundleName);
     if (isIncBackup) {
