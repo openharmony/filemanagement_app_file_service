@@ -362,4 +362,7 @@ void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>&, std::ve
 void Service::CancelTask(std::string bundleName, wptr<Service> ptr) {}
 
 void SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId) {}
+
+void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRestoreScenario scenario,
+    ErrCode errCode) {}
 } // namespace OHOS::FileManagement::Backup

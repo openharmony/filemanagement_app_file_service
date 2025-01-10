@@ -468,7 +468,7 @@ private:
      * @param bundleName 包名称
      *
     */
-    void NotifyCloneBundleFinish(std::string bundleName, const BackupRestoreScenario sennario);
+    void HandleCurBundleEndWork(std::string bundleName, const BackupRestoreScenario sennario);
 
     /**
      * @brief SA 备份恢复结束
@@ -603,6 +603,8 @@ private:
     ErrCode HandleCurAppDone(ErrCode errCode, const std::string &bundleName, bool isIncBackup);
 
     void StartCurBundleBackupOrRestore(const std::string &bundleName);
+
+    void CallOnBundleEndByScenario(const std::string &bundleName, BackupRestoreScenario scenario, ErrCode errCode);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

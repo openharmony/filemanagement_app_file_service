@@ -33,12 +33,12 @@ zipFile ZipUtil::CreateZipFile(const std::string &zipPath, int32_t zipMode)
     return zipOpen(zipPath.c_str(), zipMode);
 }
 
-void ZipUtil::CloseZipFile(zipFile &zipfile)
+void ZipUtil::CloseZipFile(zipFile zipfile)
 {
     zipClose(zipfile, nullptr);
 }
 
-int ZipUtil::AddFileInZip(zipFile &zipfile, const std::string &srcFile, int keepParentPathStatus,
+int ZipUtil::AddFileInZip(zipFile zipfile, const std::string &srcFile, int keepParentPathStatus,
     const std::string &destFileName)
 {
     zip_fileinfo zipInfo;
