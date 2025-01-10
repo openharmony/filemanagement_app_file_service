@@ -53,14 +53,16 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
     }
     ErrCode errCode = BError::GetCodeByErrno(sysErrno);
     std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, "system errno: " + to_string(sysErrno));
-    HILOGI("callback function incremental backup onFileReady cbCompl begin errcode: %{public}d", std::get<0>(errInfo));
+    HILOGI("callback function incre backup onFileReady begin errCode: %{public}d, bundle: %{public}s, file: %{public}s",
+        std::get<0>(errInfo), fileInfo.owner.c_str(), GetAnonyPath(fileInfo.fileName).c_str());
     auto cbCompl = [bundleName {fileInfo.owner}, fileName {fileInfo.fileName},
                     fd {make_shared<UniqueFd>(fd.Release())}, manifestFd {make_shared<UniqueFd>(manifestFd.Release())},
                     errInfo](napi_env env, NError err) -> NVal {
         if (err) {
             return {env, err.GetNapiErr(env)};
         }
-        HILOGI("callback function incremental backup onFileReady cbCompl errcode: %{public}d", std::get<0>(errInfo));
+        HILOGI("callback function incre backup onFileReady errCode: %{public}d, bundle: %{public}s, file: %{public}s",
+            std::get<0>(errInfo), bundleName.c_str(), GetAnonyPath(fileName).c_str());
         NVal obj;
         ErrParam errorParam = [ errInfo ]() {
             return errInfo;
@@ -82,7 +84,8 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
                 NVal::DeclareNapiProperty(BConstants::MANIFEST_FD.c_str(),
                     NVal::CreateInt32(env, manifestFd->Release()).val_)});
         }
-        HILOGI("callback function incremental backup onFileReady end errcode: %{public}d", std::get<0>(errInfo));
+        HILOGI("callback function incre backup onFileReady end errCode:%{public}d, bundle:%{public}s, file:%{public}s",
+            std::get<0>(errInfo), bundleName.c_str(), GetAnonyPath(fileName).c_str());
         return {obj};
     };
 
