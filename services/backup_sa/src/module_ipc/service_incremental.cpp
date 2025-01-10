@@ -198,6 +198,7 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
     if (BundleMgrAdapter::IsUser0BundleName(bundleName, session_->GetSessionUserId())) {
         auto ret = proxy->User0OnBackup();
         if (ret) {
+            SendEndAppGalleryNotify(bundleName);
             thisPtr->ClearSessionAndSchedInfo(bundleName);
             thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         }
@@ -222,6 +223,7 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
     UniqueFd lastManifestFd(session->GetIncrementalManifestFd(bundleName));
     auto ret = proxy->HandleIncrementalBackup(move(fdLocal), move(lastManifestFd));
     if (ret) {
+        SendEndAppGalleryNotify(bundleName);
         thisPtr->ClearSessionAndSchedInfo(bundleName);
         thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
     }
@@ -711,12 +713,14 @@ bool Service::IncrementalBackup(const string &bundleName)
     auto backUpConnection = session_->GetExtConnection(bundleName);
     if (backUpConnection == nullptr) {
         HILOGE("backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
+        SendEndAppGalleryNotify(bundleName);
         NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         return true;
     }
     auto proxy = backUpConnection->GetBackupExtProxy();
     if (!proxy) {
         HILOGE("Increment backup error, extension proxy is empty, bundleName:%{public}s", bundleName.c_str());
+        SendEndAppGalleryNotify(bundleName);
         NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         return true;
     }
@@ -725,6 +729,7 @@ bool Service::IncrementalBackup(const string &bundleName)
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
         BundleBeginRadarReport(bundleName, ret, IServiceReverse::Scenario::BACKUP);
         if (ret) {
+            SendEndAppGalleryNotify(bundleName);
             ClearSessionAndSchedInfo(bundleName);
             NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         }

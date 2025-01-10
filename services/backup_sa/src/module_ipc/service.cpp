@@ -1105,6 +1105,7 @@ void Service::ExtStart(const string &bundleName)
         StartCurBundleBackupOrRestore(bundleName);
     } catch (...) {
         HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+        SendEndAppGalleryNotify(bundleName);
         ClearSessionAndSchedInfo(bundleName);
         NoticeClientFinish(bundleName, BError(BError::Codes::SA_INVAL_ARG));
     }
@@ -1143,6 +1144,7 @@ void Service::StartCurBundleBackupOrRestore(const std::string &bundleName)
         session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
         BundleBeginRadarReport(bundleName, ret, scenario);
         if (ret) {
+            SendEndAppGalleryNotify(bundleName);
             ClearSessionAndSchedInfo(bundleName);
             NoticeClientFinish(bundleName, BError(BError::Codes::SA_INVAL_ARG));
         }
@@ -1217,6 +1219,7 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
         HILOGE("begin %{public}s", bundleName.data());
         scenario = session_->GetScenario();
         ReportOnExtConnectFailed(scenario, bundleName, ret);
+        SendEndAppGalleryNotify(bundleName);
         ClearSessionAndSchedInfo(bundleName);
         NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         return;
@@ -1248,6 +1251,7 @@ void Service::ExtConnectDone(string bundleName)
         BConstants::ServiceSchedAction curSchedAction = session_->GetServiceSchedAction(bundleName);
         if (curSchedAction == BConstants::ServiceSchedAction::UNKNOWN) {
             HILOGE("Can not find bundle from this session, bundleName:%{public}s", bundleName.c_str());
+            SendEndAppGalleryNotify(bundleName);
             ClearSessionAndSchedInfo(bundleName);
             NoticeClientFinish(bundleName, BError(BError::Codes::SA_REFUSED_ACT));
             return;
@@ -1271,6 +1275,7 @@ void Service::ExtConnectDone(string bundleName)
         sched_->Sched(bundleName);
     } catch (...) {
         HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+        SendEndAppGalleryNotify(bundleName);
         ClearSessionAndSchedInfo(bundleName);
         NoticeClientFinish(bundleName, BError(BError::Codes::SDK_INVAL_ARG));
         return;
@@ -1418,7 +1423,7 @@ static std::tuple<std::string, int32_t> SplitBundleName(const string& bundleName
     }
     std::string bundleName = bundleNameWithId.substr(found + 1, bundleNameWithId.length());
     int32_t userId = std::atoi(bundleNameWithId.substr(0, found));
-    return { bundleName, userId};
+    return { bundleName, userId };
 }
 
 void Service::TryToClearDispose(const BundleName &bundleName)
@@ -1887,6 +1892,7 @@ ErrCode Service::BackupSA(std::string bundleName)
         BundleBeginRadarReport(bundleName, ret, scenario);
         if (ret) {
             HILOGI("BackupSA ret is %{public}d", ret);
+            SendEndAppGalleryNotify(bundleName);
             ClearSessionAndSchedInfo(bundleName);
             NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
             return BError(ret);
@@ -2029,6 +2035,7 @@ std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bu
             DoTimeout(thisPtr, bundleName);
         } catch (...) {
             HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+            SendEndAppGalleryNotify(bundleName);
             thisPtr->ClearSessionAndSchedInfo(bundleName);
             thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
         }
@@ -2088,10 +2095,12 @@ void Service::DoTimeout(wptr<Service> ptr, std::string bundleName)
         }
         sessionPtr->StopFwkTimer(bundleName);
         sessionPtr->StopExtTimer(bundleName);
+        SendEndAppGalleryNotify(bundleName);
         thisPtr->ClearSessionAndSchedInfo(bundleName);
         thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
     } catch (...) {
         HILOGE("Unexpected exception, bundleName: %{public}s", bundleName.c_str());
+        SendEndAppGalleryNotify(bundleName);
         thisPtr->ClearSessionAndSchedInfo(bundleName);
         thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_TIMEOUT));
     }
