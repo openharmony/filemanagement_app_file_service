@@ -442,10 +442,18 @@ void Service::ExtConnectDied(const string &callName)
         if (backUpConnection != nullptr && backUpConnection->IsExtAbilityConnected()) {
             backUpConnection->DisconnectBackupExtAbility();
         }
+        bool needCleanData = session_->GetClearDataFlag(callName);
+        if (!needCleanData) {
+            HILOGE("Current extension is died, but not need clean data, bundleName:%{public}s", callName.c_str());
+            ClearSessionAndSchedInfo(callName);
+            NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
+            return;
+        }
         session_->SetServiceSchedAction(callName, BConstants::ServiceSchedAction::CLEAN);
         auto ret = LaunchBackupExtension(callName);
         if (ret) {
             /* Clear Session before notice client finish event */
+            HILOGE("Current bundle launch extension failed, bundleName:%{public}s", callName.c_str());
             ClearSessionAndSchedInfo(callName);
         }
         /* Notice Client Ext Ability Process Died */
@@ -771,6 +779,23 @@ UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("Unexpected exception");
         return UniqueFd(-EPERM);
+    }
+}
+
+void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRestoreScenario scenario, ErrCode errCode)
+{
+    if (session_ == nullptr) {
+        HILOGE("Session is empty, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    if (scenario == BackupRestoreScenario::FULL_RESTORE) {
+        session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
+    } else if (scenario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
+        session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
+    } else if (scenario == BackupRestoreScenario::FULL_BACKUP) {
+        session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
+    } else if (scenario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
+        session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
     }
 }
 }

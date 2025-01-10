@@ -1236,47 +1236,47 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0200, TestSize.Level1)
 }
 
 /**
- * @tc.number: SUB_Service_NotifyCloneBundleFinish_0100
- * @tc.name: SUB_Service_NotifyCloneBundleFinish_0100
- * @tc.desc: 测试 NotifyCloneBundleFinish
+ * @tc.number: SUB_Service_HandleCurBundleEndWork_0100
+ * @tc.name: SUB_Service_HandleCurBundleEndWork_0100
+ * @tc.desc: 测试 HandleCurBundleEndWork
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: issueIAKC3I
  */
-HWTEST_F(ServiceTest, SUB_Service_NotifyCloneBundleFinish_0100, TestSize.Level1)
+HWTEST_F(ServiceTest, SUB_Service_HandleCurBundleEndWork_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_NotifyCloneBundleFinish_0100";
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_HandleCurBundleEndWork_0100";
     try {
         ASSERT_TRUE(service != nullptr);
         std::string bundleName = BUNDLE_NAME;
         BackupRestoreScenario senario = BackupRestoreScenario::INCREMENTAL_BACKUP;
-        service->NotifyCloneBundleFinish(bundleName, senario);
+        service->HandleCurBundleEndWork(bundleName, senario);
         EXPECT_TRUE(true);
 
         senario = BackupRestoreScenario::FULL_RESTORE;
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
-        service->NotifyCloneBundleFinish(bundleName, senario);
+        service->HandleCurBundleEndWork(bundleName, senario);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
-        service->NotifyCloneBundleFinish(bundleName, senario);
+        service->HandleCurBundleEndWork(bundleName, senario);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
-        service->NotifyCloneBundleFinish(bundleName, senario);
+        service->HandleCurBundleEndWork(bundleName, senario);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by NotifyCloneBundleFinish.";
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleCurBundleEndWork.";
     }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_NotifyCloneBundleFinish_0100";
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleCurBundleEndWork_0100";
 }
 
 /**

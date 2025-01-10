@@ -28,8 +28,8 @@ enum {
 class ZipUtil {
 public:
     static zipFile CreateZipFile(const std::string &zipPath, int32_t zipMode = APPEND_STATUS_CREATE);
-    static void CloseZipFile(zipFile &zipfile);
-    static int AddFileInZip(zipFile &zipfile, const std::string &srcFile, int keepParentPathStatus,
+    static void CloseZipFile(zipFile zipfile);
+    static int AddFileInZip(zipFile zipfile, const std::string &srcFile, int keepParentPathStatus,
         const std::string &dstFileName = "");
     static std::string GetDestFilePath(const std::string &srcFile, const std::string &destFilePath,
         int keepParentPathStatus);

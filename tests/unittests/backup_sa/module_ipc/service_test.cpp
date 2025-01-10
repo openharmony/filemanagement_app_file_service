@@ -1507,17 +1507,17 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0100, testing::ext
 }
 
 /**
- * @tc.number: SUB_Service_NotifyCloneBundleFinish_0100
- * @tc.name: SUB_Service_NotifyCloneBundleFinish_0100
- * @tc.desc: 测试 NotifyCloneBundleFinish 接口
+ * @tc.number: SUB_Service_HandleCurBundleEndWork_0100
+ * @tc.name: SUB_Service_HandleCurBundleEndWork_0100
+ * @tc.desc: 测试 HandleCurBundleEndWork 接口
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I8ZIMJ
  */
-HWTEST_F(ServiceTest, SUB_Service_NotifyCloneBundleFinish_0100, testing::ext::TestSize.Level1)
+HWTEST_F(ServiceTest, SUB_Service_HandleCurBundleEndWork_0100, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_NotifyCloneBundleFinish_0100";
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_HandleCurBundleEndWork_0100";
     try {
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
@@ -1526,12 +1526,12 @@ HWTEST_F(ServiceTest, SUB_Service_NotifyCloneBundleFinish_0100, testing::ext::Te
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
         impl_.scenario = IServiceReverse::Scenario::RESTORE;
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->NotifyCloneBundleFinish(BUNDLE_NAME, BackupRestoreScenario::FULL_RESTORE);
+        servicePtr_->HandleCurBundleEndWork(BUNDLE_NAME, BackupRestoreScenario::FULL_RESTORE);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by NotifyCloneBundleFinish.";
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleCurBundleEndWork.";
     }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_NotifyCloneBundleFinish_0100";
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleCurBundleEndWork_0100";
 }
 
 /**

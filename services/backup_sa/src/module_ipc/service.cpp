@@ -931,16 +931,18 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
         ErrCode ret = VerifyCallerAndGetCallerName(callerName);
         if (ret != ERR_OK) {
             HILOGE("Result report fail, bundleName:%{public}s, ret:%{public}d", callerName.c_str(), ret);
-            NotifyCloneBundleFinish(callerName, sennario);
+            HandleCurBundleEndWork(callerName, sennario);
+            CallOnBundleEndByScenario(callerName, sennario, ret);
+            OnAllBundlesFinished(BError(BError::Codes::OK));
             return ret;
         }
         SendEndAppGalleryNotify(callerName);
         if (sennario == BackupRestoreScenario::FULL_RESTORE) {
-            NotifyCloneBundleFinish(callerName, sennario);
+            HandleCurBundleEndWork(callerName, sennario);
             session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, callerName, errCode);
             OnAllBundlesFinished(BError(BError::Codes::OK));
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
-            NotifyCloneBundleFinish(callerName, sennario);
+            HandleCurBundleEndWork(callerName, sennario);
             session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, callerName, errCode);
             OnAllBundlesFinished(BError(BError::Codes::OK));
         } else if (sennario == BackupRestoreScenario::FULL_BACKUP) {
@@ -950,14 +952,10 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
         }
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        NotifyCloneBundleFinish(callerName, sennario);
+        HandleCurBundleEndWork(callerName, sennario);
+        CallOnBundleEndByScenario(callerName, sennario, e.GetCode());
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return e.GetCode(); // 任意异常产生，终止监听该任务
-    } catch (...) {
-        NotifyCloneBundleFinish(callerName, sennario);
-        OnAllBundlesFinished(BError(BError::Codes::OK));
-        HILOGE("Unexpected exception");
-        return EPERM;
     }
 }
 
@@ -985,7 +983,7 @@ ErrCode Service::SAResultReport(const std::string bundleName, const std::string 
     return BError(BError::Codes::OK);
 }
 
-void Service::NotifyCloneBundleFinish(std::string bundleName, const BackupRestoreScenario sennario)
+void Service::HandleCurBundleEndWork(std::string bundleName, const BackupRestoreScenario sennario)
 {
     try {
         if (sennario != BackupRestoreScenario::FULL_RESTORE &&
@@ -1018,7 +1016,6 @@ void Service::NotifyCloneBundleFinish(std::string bundleName, const BackupRestor
         RemoveExtensionMutex(bundleName);
     } catch (...) {
         HILOGE("Unexpected exception");
-        ReleaseOnException();
     }
 }
 
@@ -1256,6 +1253,7 @@ void Service::ExtConnectDone(string bundleName)
             return;
         }
         if (curSchedAction == BConstants::ServiceSchedAction::CLEAN) {
+            HILOGI("Current bundle will execute clean task, bundleName:%{public}s", bundleName.c_str());
             sched_->Sched(bundleName);
             return;
         }
@@ -1264,7 +1262,11 @@ void Service::ExtConnectDone(string bundleName)
             session_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::CLEAN);
         } else {
             session_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::RUNNING);
-            AddClearBundleRecord(bundleName);
+            bool needCleanData = session_->GetClearDataFlag(bundleName);
+            if (needCleanData) {
+                HILOGI("Current bundle need clean data, bundleName:%{public}s", bundleName.c_str());
+                AddClearBundleRecord(bundleName);
+            }
         }
         sched_->Sched(bundleName);
     } catch (...) {
@@ -1588,6 +1590,7 @@ ErrCode Service::ClearResidualBundleData(const std::string &bundleName)
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     // 通知ext清理
+    HILOGI("Current bundle will clean extension data, bundleName:%{public}s", bundleName.c_str());
     ErrCode res = proxy->HandleClear();
     if (backUpConnection->IsExtAbilityConnected()) {
         backUpConnection->DisconnectBackupExtAbility();
