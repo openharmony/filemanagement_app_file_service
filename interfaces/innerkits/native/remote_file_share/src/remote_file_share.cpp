@@ -442,7 +442,7 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
     for (auto &uriStr : uriList) {
         Uri uri(uriStr);
         std::string bundleName = uri.GetAuthority();
-        LOGD("GetDfsUriFromLocal begin");
+        LOGD("GetDfsUriFromLocal begin, uri: %{private}s", uriStr.c_str());
         std::string physicalPath = GetPhysicalPath(uri, std::to_string(userId));
         if (physicalPath == "") {
             LOGE("Failed to get physical path");
