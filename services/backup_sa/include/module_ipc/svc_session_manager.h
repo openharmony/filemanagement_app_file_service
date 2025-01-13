@@ -68,7 +68,7 @@ struct BackupExtInfo {
     std::string backupParameters;
     int32_t backupPriority;
     std::string extInfo;
-    int32_t userId {0};
+    int32_t userId {100};
     int32_t appendNum {1};
     bool isClearData {true};
     bool isInPublishFile {false};

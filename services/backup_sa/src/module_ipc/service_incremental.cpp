@@ -196,8 +196,7 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
     }
     // distinguish whether it is 0 user
     if (BundleMgrAdapter::IsUser0BundleName(bundleName, session_->GetSessionUserId())) {
-        auto ret = proxy->User0OnBackup();
-        if (ret) {
+        if (proxy->User0OnBackup()) {
             SendEndAppGalleryNotify(bundleName);
             thisPtr->ClearSessionAndSchedInfo(bundleName);
             thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));

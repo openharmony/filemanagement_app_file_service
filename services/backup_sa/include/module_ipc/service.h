@@ -311,6 +311,7 @@ public:
     string BundleNameWithUserId(const string& bundleName, const int32_t userId);
     std::tuple<std::string, int32_t> SplitBundleName(const string& bundleNameWithId);
     void AppendBundles(const std::vector<std::string> &bundleNames);
+    void ReportOnBundleStarted(IServiceReverse::Scenario, const std::string &bundleName);
     ErrCode AppIncrementalFileReady(const std::string &bundleName, const std::string &fileName, UniqueFd fd,
         UniqueFd manifestFd, int32_t errCode);
 public:

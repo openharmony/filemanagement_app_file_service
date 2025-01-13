@@ -618,16 +618,6 @@ void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
     }
 }
 
-void Service::AppendBundles(const std::vector<std::string> &bundleNames)
-{
-    std::vector<std::string> failedBundles;
-    session_->AppendBundles(bundleNames, failedBundles);
-    if (!failedBundles.empty()) {
-        HILOGE("Handle exception on failed bundles, size = %{public}zu", failedBundles.size());
-        HandleExceptionOnAppendBundles(session_, failedBundles, {});
-    }
-}
-
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames,
     const std::vector<std::string> &bundleInfos, RestoreTypeEnum restoreType, int32_t userId)
 {
@@ -1111,6 +1101,17 @@ void Service::ExtStart(const string &bundleName)
     }
 }
 
+void Service::ReportOnBundleStarted(IServiceReverse::Scenario, const std::string &bundleName)
+{
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
+                                                                  bundleName);
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
+                                                                   bundleName);
+    }
+}
+
 void Service::StartCurBundleBackupOrRestore(const std::string &bundleName)
 {
     HILOGI("Begin handle current bundle full backup or full restore, bundleName:%{public}s", bundleName.c_str());
@@ -1118,25 +1119,13 @@ void Service::StartCurBundleBackupOrRestore(const std::string &bundleName)
     auto backUpConnection = session_->GetExtConnection(bundleName);
     if (backUpConnection == nullptr) {
         HILOGE("Error, backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
-        if (scenario == IServiceReverse::Scenario::BACKUP) {
-            session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
-                bundleName);
-        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-            session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
-                bundleName);
-        }
+        ReportOnBundleStarted(scenario, bundleName);
         return;
     }
     auto proxy = backUpConnection->GetBackupExtProxy();
     if (proxy == nullptr) {
         HILOGE("Error, Extension backup Proxy is empty, bundle:%{public}s", bundleName.c_str());
-        if (scenario == IServiceReverse::Scenario::BACKUP) {
-            session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
-                bundleName);
-        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-            session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
-                bundleName);
-        }
+        ReportOnBundleStarted(scenario, bundleName);
         return;
     }
     if (scenario == IServiceReverse::Scenario::BACKUP) {
@@ -1383,11 +1372,6 @@ void Service::SendStartAppGalleryNotify(const BundleName &bundleName)
         userId);
 }
 
-string Service::BundleNameWithUserId(const string& bundleName, const int32_t userId)
-{
-    return to_string(userId) + "-" + bundleName;
-}
-
 void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -1415,20 +1399,16 @@ void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
     HILOGI("DeleteFromDisposalConfigFile OK, bundleName=%{public}s", bundleNameWithUserId.c_str());
 }
 
-std::tuple<std::string, int32_t> Service::SplitBundleName(const string& bundleNameWithId)
-{
-    size_t found = bundleNameWithId.find('-');
-    if (found == std::string::npos) {
-        return { bundleNameWithId, GetUserIdDefault() };
-    }
-    std::string bundleName = bundleNameWithId.substr(found + 1, bundleNameWithId.length());
-    int32_t userId = std::atoi(bundleNameWithId.substr(0, found).c_str());
-    return { bundleName, userId };
-}
-
 void Service::TryToClearDispose(const BundleName &bundleName)
 {
     auto [bundle, userId] = SplitBundleName(bundleName);
+    if (bundle.empty() || userId == -1) {
+        HILOGE("BundleName from disposal config is invalid, bundleName = %{public}s", bundleName.c_str());
+        if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
+            HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
+        }
+        return;
+    }
     int32_t maxAtt = MAX_TRY_CLEAR_DISPOSE_NUM;
     int32_t att = 0;
     while (att < maxAtt) {
@@ -1892,7 +1872,6 @@ ErrCode Service::BackupSA(std::string bundleName)
         BundleBeginRadarReport(bundleName, ret, scenario);
         if (ret) {
             HILOGI("BackupSA ret is %{public}d", ret);
-            SendEndAppGalleryNotify(bundleName);
             ClearSessionAndSchedInfo(bundleName);
             NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
             return BError(ret);

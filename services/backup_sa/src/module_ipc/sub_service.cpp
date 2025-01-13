@@ -66,6 +66,33 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+void Service::AppendBundles(const std::vector<std::string> &bundleNames)
+{
+    std::vector<std::string> failedBundles;
+    session_->AppendBundles(bundleNames, failedBundles);
+    if (!failedBundles.empty()) {
+        HILOGE("Handle exception on failed bundles, size = %{public}zu", failedBundles.size());
+        HandleExceptionOnAppendBundles(session_, failedBundles, {});
+    }
+}
+
+string Service::BundleNameWithUserId(const string& bundleName, const int32_t userId)
+{
+    return to_string(userId) + "-" + bundleName;
+}
+
+std::tuple<std::string, int32_t> Service::SplitBundleName(const string& bundleNameWithId)
+{
+    size_t found = bundleNameWithId.find('-');
+    if (found == std::string::npos) {
+        HILOGE("Can not split bundleName = %{public}s", bundleNameWithId.c_str());
+        return { "", -1 };
+    }
+    std::string bundleName = bundleNameWithId.substr(found + 1, bundleNameWithId.length());
+    int32_t userId = std::atoi(bundleNameWithId.substr(0, found).c_str());
+    return { bundleName, userId };
+}
+
 vector<BIncrementalData> Service::MakeDetailList(const vector<BundleName> &bundleNames)
 {
     vector<BIncrementalData> bundleDetails {};
