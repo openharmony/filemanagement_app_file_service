@@ -1101,17 +1101,6 @@ void Service::ExtStart(const string &bundleName)
     }
 }
 
-void Service::ReportOnBundleStarted(IServiceReverse::Scenario, const std::string &bundleName)
-{
-    if (scenario == IServiceReverse::Scenario::BACKUP) {
-        session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
-                                                                  bundleName);
-    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-        session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG),
-                                                                   bundleName);
-    }
-}
-
 void Service::StartCurBundleBackupOrRestore(const std::string &bundleName)
 {
     HILOGI("Begin handle current bundle full backup or full restore, bundleName:%{public}s", bundleName.c_str());

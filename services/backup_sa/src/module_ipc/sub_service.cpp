@@ -76,6 +76,15 @@ void Service::AppendBundles(const std::vector<std::string> &bundleNames)
     }
 }
 
+void Service::ReportOnBundleStarted(IServiceReverse::Scenario scenario, const std::string &bundleName)
+{
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), bundleName);
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), bundleName);
+    }
+}
+
 string Service::BundleNameWithUserId(const string& bundleName, const int32_t userId)
 {
     return to_string(userId) + "-" + bundleName;
