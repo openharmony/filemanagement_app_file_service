@@ -634,13 +634,13 @@ int32_t SvcSessionManager::GetBundleUserId(const string &bundleName)
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
-        return 0;
+        return BConstants::DEFAULT_USER_ID;
     }
 
     auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
     if (!findBundleSuc) {
         HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
-        return 0;
+        return GetSessionUserId();
     }
     return it->second.userId;
 }

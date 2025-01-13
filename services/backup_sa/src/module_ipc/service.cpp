@@ -1383,7 +1383,7 @@ void Service::SendStartAppGalleryNotify(const BundleName &bundleName)
         userId);
 }
 
-static string BundleNameWithUserId(const string& bundleName, const int32_t userId)
+string Service::BundleNameWithUserId(const string& bundleName, const int32_t userId)
 {
     return to_string(userId) + "-" + bundleName;
 }
@@ -1415,14 +1415,14 @@ void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
     HILOGI("DeleteFromDisposalConfigFile OK, bundleName=%{public}s", bundleNameWithUserId.c_str());
 }
 
-static std::tuple<std::string, int32_t> SplitBundleName(const string& bundleNameWithId)
+std::tuple<std::string, int32_t> Service::SplitBundleName(const string& bundleNameWithId)
 {
     size_t found = bundleNameWithId.find('-');
     if (found == std::string::npos) {
         return { bundleNameWithId, GetUserIdDefault() };
     }
     std::string bundleName = bundleNameWithId.substr(found + 1, bundleNameWithId.length());
-    int32_t userId = std::atoi(bundleNameWithId.substr(0, found));
+    int32_t userId = std::atoi(bundleNameWithId.substr(0, found).c_str());
     return { bundleName, userId };
 }
 

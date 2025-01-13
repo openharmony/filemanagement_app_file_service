@@ -445,7 +445,7 @@ void Service::ExtConnectDied(const string &callName)
         bool needCleanData = session_->GetClearDataFlag(callName);
         if (!needCleanData) {
             HILOGE("Current extension is died, but not need clean data, bundleName:%{public}s", callName.c_str());
-            SendEndAppGalleryNotify(bundleName);
+            SendEndAppGalleryNotify(callName);
             ClearSessionAndSchedInfo(callName);
             NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
             return;
@@ -455,14 +455,14 @@ void Service::ExtConnectDied(const string &callName)
         if (ret) {
             /* Clear Session before notice client finish event */
             HILOGE("Current bundle launch extension failed, bundleName:%{public}s", callName.c_str());
-            SendEndAppGalleryNotify(bundleName);
+            SendEndAppGalleryNotify(callName);
             ClearSessionAndSchedInfo(callName);
         }
         /* Notice Client Ext Ability Process Died */
         NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
     } catch (...) {
         HILOGE("Unexpected exception, bundleName: %{public}s", callName.c_str());
-        SendEndAppGalleryNotify(bundleName);
+        SendEndAppGalleryNotify(callName);
         ClearSessionAndSchedInfo(callName);
         NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
     }
@@ -620,7 +620,7 @@ ErrCode Service::HandleCurAppDone(ErrCode errCode, const std::string &bundleName
     proxy->HandleClear();
     session_->StopFwkTimer(bundleName);
     session_->StopExtTimer(bundleName);
-    SendEndAppGalleryNotify(callerName);
+    SendEndAppGalleryNotify(bundleName);
     backUpConnection->DisconnectBackupExtAbility();
     ClearSessionAndSchedInfo(bundleName);
     if (isIncBackup) {
