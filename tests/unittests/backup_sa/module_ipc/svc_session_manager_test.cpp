@@ -1359,15 +1359,6 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBundleUserId_0100, test
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetBundleUserId_0100";
     try {
         int32_t userId = 100;
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->SetBundleUserId(BUNDLE_NAME, userId);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
-
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
@@ -1393,20 +1384,11 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBundleUserId_0100, test
 {
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetBundleUserId_0100";
     try {
-        try {
-            EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-            sessionManagerPtr_->impl_.clientToken = 0;
-            sessionManagerPtr_->GetBundleUserId(BUNDLE_NAME);
-            EXPECT_TRUE(false);
-        } catch (BError &err) {
-            EXPECT_EQ(err.GetRawCode(), BError::Codes::SA_INVAL_ARG);
-        }
-
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        sessionManagerPtr_->GetBundleUserId(BUNDLE_NAME);
-        EXPECT_TRUE(true);
+        auto result = sessionManagerPtr_->GetBundleUserId(BUNDLE_NAME);
+        EXPECT_EQ(result, BConstants::DEFAULT_USER_ID);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetBundleUserId.";

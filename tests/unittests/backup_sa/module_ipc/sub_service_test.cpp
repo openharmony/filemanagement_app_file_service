@@ -747,6 +747,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDone_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtConnectDone_0000";
     try {
+        EXPECT_CALL(*session, GetClearDataFlag(_)).WillOnce(Return(false)).WillOnce(Return(false));
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::WAIT));
         EXPECT_CALL(*cdConfig, InsertClearBundleRecord(_)).WillOnce(Return(true));
         service->ExtConnectDone("");
