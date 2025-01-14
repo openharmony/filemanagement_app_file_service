@@ -1892,6 +1892,7 @@ static TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files)
     for (const auto &item : files) {
         struct stat sta = {};
         if (stat(item.filePath.c_str(), &sta) != 0) {
+            HILOGE("Failed to stat file %{public}s, err = %{public}d", item.filePath.c_str(), errno);
             throw BError(BError::Codes::EXT_INVAL_ARG, "Get file stat failed");
         }
         string md5Name = getStringHash(bigFiles, item.filePath);
