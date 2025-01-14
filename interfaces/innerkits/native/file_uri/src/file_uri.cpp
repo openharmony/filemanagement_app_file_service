@@ -79,6 +79,7 @@ static string DecodeBySA(const string &uri)
     while (index < uri.length()) {
         if (uri[index] == '%') {
             std::string inputStr(uri.substr(index + 1, DECODE_LEN));
+            errno = 0;
             auto ret = strtol(inputStr.c_str(), nullptr, DECODE_FORMAT_NUM);
             if (ret == 0 || errno != 0) {
                 LOGE("strtol Failed! ret: %{public}lu, %{public}d", ret, errno);
