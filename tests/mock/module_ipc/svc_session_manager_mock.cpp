@@ -430,6 +430,11 @@ bool SvcSessionManager::ValidRestoreDataType(RestoreTypeEnum restoreDataType)
     return impl_.restoreDataType == restoreDataType;
 }
 
+uint32_t SvcSessionManager::GetTimeoutValue(const std::string &bundleName)
+{
+    return 0;
+}
+
 SvcSessionManager::Impl SvcSessionManager::GetImpl()
 {
     return impl_;

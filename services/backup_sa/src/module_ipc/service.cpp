@@ -123,6 +123,10 @@ void Service::BundleBeginRadarReport(const std::string &bundleName, const ErrCod
     if (errCode == ERR_OK || errCode == BError(BError::Codes::SA_BOOT_EXT_FAIL).GetCode()) {
         return;
     }
+    if (!IsReportBundleExecFail(bundleName)) {
+        return;
+    }
+    UpdateBundleRadarReport(bundleName);
     BundleTaskInfo taskInfo;
     taskInfo.reportTime = TimeUtils::GetCurrentTime();
     taskInfo.errCode = errCode;
@@ -137,13 +141,20 @@ void Service::BundleBeginRadarReport(const std::string &bundleName, const ErrCod
     }
 }
 
-void Service::BundleEndRadarReport(const std::string &bundleName, const ErrCode errCode,
+void Service::BundleEndRadarReport(const std::string &bundleName, ErrCode errCode,
     const IServiceReverse::Scenario scenario)
 {
     if (errCode == ERR_OK) {
         successBundlesNum_++;
         return;
     }
+    if (!IsReportBundleExecFail(bundleName)) {
+        return;
+    }
+    if (session_->GetTimeoutValue(bundleName) == 0) {
+        errCode = BError::BackupErrorCode::E_FORCE_TIMEOUT;
+    }
+    UpdateBundleRadarReport(bundleName);
     BundleTaskInfo taskInfo;
     taskInfo.reportTime = TimeUtils::GetCurrentTime();
     taskInfo.errCode = errCode;
@@ -164,6 +175,9 @@ void Service::FileReadyRadarReport(const std::string &bundleName, const std::str
     if (errCode == ERR_OK) {
         return;
     }
+    if (!IsReportFileReadyFail(bundleName)) {
+        return;
+    }
     std::string fileNameReport = std::string("fileName:\"") + GetAnonyPath(fileName) + "\"";
     AppRadar::Info info(bundleName, "", fileNameReport);
     if (scenario == IServiceReverse::Scenario::RESTORE) {
@@ -178,6 +192,10 @@ void Service::FileReadyRadarReport(const std::string &bundleName, const std::str
 void Service::ExtensionConnectFailRadarReport(const std::string &bundleName, const ErrCode errCode,
     const IServiceReverse::Scenario scenario)
 {
+    if (!IsReportBundleExecFail(bundleName)) {
+        return;
+    }
+    UpdateBundleRadarReport(bundleName);
     std::stringstream ss;
     ss << "errCode:" << errCode;
     AppRadar::Info info(bundleName, "", ss.str());
@@ -461,6 +479,8 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
     if (ret == ERR_OK) {
         ClearFailedBundles();
         successBundlesNum_ = 0;
+        ClearBundleRadarReport();
+        ClearFileReadyRadarReport();
         return ret;
     }
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
@@ -494,6 +514,8 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
     if (ret == ERR_OK) {
         ClearFailedBundles();
         successBundlesNum_ = 0;
+        ClearBundleRadarReport();
+        ClearFileReadyRadarReport();
         return ret;
     }
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
@@ -1993,20 +2015,6 @@ std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bu
     };
 }
 
-void Service::TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string &bundleName)
-{
-    int32_t errCode = BError(BError::Codes::EXT_ABILITY_TIMEOUT).GetCode();
-    if (scenario == IServiceReverse::Scenario::BACKUP) {
-        AppRadar::Info info(bundleName, "", "on backup timeout");
-        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
-            BizStageBackup::BIZ_STAGE_ON_BACKUP, errCode);
-    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
-        AppRadar::Info info(bundleName, "", "on restore timeout");
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
-            BizStageRestore::BIZ_STAGE_ON_RESTORE, errCode);
-    }
-}
-
 void Service::DoTimeout(wptr<Service> ptr, std::string bundleName)
 {
     auto thisPtr = ptr.promote();
@@ -2020,7 +2028,6 @@ void Service::DoTimeout(wptr<Service> ptr, std::string bundleName)
         return;
     }
     IServiceReverse::Scenario scenario = sessionPtr->GetScenario();
-    TimeoutRadarReport(scenario, bundleName);
     try {
         std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(bundleName);
         if (mutexPtr == nullptr) {
@@ -2044,6 +2051,7 @@ void Service::DoTimeout(wptr<Service> ptr, std::string bundleName)
             }
             sessionConnection->DisconnectBackupExtAbility();
         }
+        TimeoutRadarReport(scenario, bundleName);
         sessionPtr->StopFwkTimer(bundleName);
         sessionPtr->StopExtTimer(bundleName);
         thisPtr->ClearSessionAndSchedInfo(bundleName);

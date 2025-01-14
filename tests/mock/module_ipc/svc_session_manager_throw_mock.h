@@ -82,6 +82,7 @@ public:
     virtual ErrCode ClearSessionData() = 0;
     virtual bool GetIsIncrementalBackup() = 0;
     virtual bool ValidRestoreDataType(RestoreTypeEnum) = 0;
+    virtual uint32_t GetTimeoutValue(const std::string &) = 0;
     virtual SvcSessionManager::Impl GetImpl() = 0;
     virtual int GetSessionCnt() = 0;
     virtual void SetClearDataFlag(const std::string &bundleName, bool isNotClear) = 0;
@@ -156,6 +157,7 @@ public:
     MOCK_METHOD(ErrCode, ClearSessionData, ());
     MOCK_METHOD(bool, GetIsIncrementalBackup, ());
     MOCK_METHOD(bool, ValidRestoreDataType, (RestoreTypeEnum));
+    MOCK_METHOD(uint32_t, GetTimeoutValue, (const std::string &));
     MOCK_METHOD(SvcSessionManager::Impl, GetImpl, ());
     MOCK_METHOD(int, GetSessionCnt, ());
     MOCK_METHOD(void, SetClearDataFlag, (const std::string &, bool));

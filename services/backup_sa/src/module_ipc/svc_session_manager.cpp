@@ -1137,6 +1137,17 @@ bool SvcSessionManager::GetClearDataFlag(const std::string &bundleName)
     return it->second.isClearData;
 }
 
+uint32_t SvcSessionManager::GetTimeoutValue(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return BConstants::TIMEOUT_INVALID;
+    }
+    return it->second.timeout;
+}
+
 bool SvcSessionManager::ValidRestoreDataType(RestoreTypeEnum restoreDataType)
 {
     return impl_.restoreDataType == restoreDataType;

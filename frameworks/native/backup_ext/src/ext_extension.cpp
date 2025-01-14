@@ -1143,7 +1143,7 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
     UniqueFd fd(open(INDEX_FILE_RESTORE.data(), O_RDONLY));
     if (fd < 0) {
         HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_RESTORE.c_str(), errno);
-        return BError::GetCodeByErrno(errno);
+        return errno;
     }
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();

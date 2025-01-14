@@ -66,6 +66,10 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+namespace {
+const int32_t MAX_FILE_READY_REPORT_TIME = 2;
+} // namespace
+
 vector<BIncrementalData> Service::MakeDetailList(const vector<BundleName> &bundleNames)
 {
     vector<BIncrementalData> bundleDetails {};
@@ -73,6 +77,73 @@ vector<BIncrementalData> Service::MakeDetailList(const vector<BundleName> &bundl
         bundleDetails.emplace_back(BIncrementalData {bundleName, 0});
     }
     return bundleDetails;
+}
+
+void Service::UpdateBundleRadarReport(const std::string &bundleName)
+{
+    std::unique_lock<std::mutex> lock(bundleExecRadarLock_);
+    bundleExecRadarSet_.insert(bundleName);
+}
+
+void Service::ClearBundleRadarReport()
+{
+    std::unique_lock<std::mutex> lock(bundleExecRadarLock_);
+    bundleExecRadarSet_.clear();
+}
+
+bool Service::IsReportBundleExecFail(const std::string &bundleName)
+{
+    std::unique_lock<std::mutex> lock(bundleExecRadarLock_);
+    auto it = bundleExecRadarSet_.find(bundleName);
+    if (it != bundleExecRadarSet_.end()) {
+        HILOGI("BundleName %{public}s has already been reported", bundleName.c_str());
+        return false;
+    }
+    return true;
+}
+
+void Service::ClearFileReadyRadarReport()
+{
+    std::unique_lock<std::mutex> lock(fileReadyRadarLock_);
+    fileReadyRadarMap_.clear();
+}
+
+bool Service::IsReportFileReadyFail(const std::string &bundleName)
+{
+    std::unique_lock<std::mutex> lock(fileReadyRadarLock_);
+    auto it = fileReadyRadarMap_.find(bundleName);
+    if (it != fileReadyRadarMap_.end()) {
+        it->second++;
+    } else {
+        fileReadyRadarMap_[bundleName] = 1;
+    }
+    if (it->second > MAX_FILE_READY_REPORT_TIME) {
+        HILOGI("FileReady radar report more than %{public}d times, bundleName = %{public}s",
+            MAX_FILE_READY_REPORT_TIME, bundleName.c_str());
+        return false;
+    }
+    return true;
+}
+
+void Service::TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string &bundleName)
+{
+    if (!IsReportBundleExecFail(bundleName)) {
+        return;
+    }
+    UpdateBundleRadarReport(bundleName);
+    int32_t errCode = BError::BackupErrorCode::E_ETO;
+    if (session_->GetTimeoutValue(bundleName) == 0) {
+        errCode = BError::BackupErrorCode::E_FORCE_TIMEOUT;
+    }
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        AppRadar::Info info(bundleName, "", "on backup timeout");
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
+            BizStageBackup::BIZ_STAGE_ON_BACKUP, errCode);
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        AppRadar::Info info(bundleName, "", "on restore timeout");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
+            BizStageRestore::BIZ_STAGE_ON_RESTORE, errCode);
+    }
 }
 
 ErrCode Service::Finish()
@@ -674,6 +745,8 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, std::string &e
     if (ret == ERR_OK) {
         ClearFailedBundles();
         successBundlesNum_ = 0;
+        ClearBundleRadarReport();
+        ClearFileReadyRadarReport();
         return ret;
     }
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
@@ -710,6 +783,8 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, std::string &er
     if (ret == ERR_OK) {
         ClearFailedBundles();
         successBundlesNum_ = 0;
+        ClearBundleRadarReport();
+        ClearFileReadyRadarReport();
         return ret;
     }
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {

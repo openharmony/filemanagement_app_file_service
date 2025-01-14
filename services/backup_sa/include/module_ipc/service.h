@@ -559,7 +559,7 @@ private:
     void BundleBeginRadarReport(const std::string &bundleName, const ErrCode errCode,
         const IServiceReverse::Scenario scenario);
 
-    void BundleEndRadarReport(const std::string &bundleName, const ErrCode errCode,
+    void BundleEndRadarReport(const std::string &bundleName, ErrCode errCode,
         const IServiceReverse::Scenario scenario);
 
     void FileReadyRadarReport(const std::string &bundleName, const std::string &fileName, const ErrCode errCode,
@@ -571,6 +571,16 @@ private:
     void OnStartResRadarReport(const std::vector<std::string> &bundleNameList, int32_t stage);
 
     void PermissionCheckFailRadar(const std::string &info, const std::string &func);
+
+    bool IsReportBundleExecFail(const std::string &bundleName);
+
+    void ClearBundleRadarReport();
+
+    void UpdateBundleRadarReport(const std::string &bundleName);
+
+    bool IsReportFileReadyFail(const std::string &bundleName);
+
+    void ClearFileReadyRadarReport();
 
     void UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo);
 
@@ -623,6 +633,10 @@ private:
     friend class ServiceTest;
 
     OHOS::ThreadPool threadPool_;
+    std::mutex bundleExecRadarLock_;
+    std::set<std::string> bundleExecRadarSet_;
+    std::mutex fileReadyRadarLock_;
+    std::map<BundleName, int> fileReadyRadarMap_;
     std::mutex extensionMutexLock_;
     std::mutex failedBundlesLock_;
 public:
