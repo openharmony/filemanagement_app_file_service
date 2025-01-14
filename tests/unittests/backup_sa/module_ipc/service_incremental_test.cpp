@@ -316,6 +316,8 @@ UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
 {
     return UniqueFd(-1);
 }
+
+void Service::AppendBundles(const std::vector<std::string> &bundleNames) {}
 } // namespace OHOS::FileManagement::Backup
 
 namespace OHOS::FileManagement::Backup {
