@@ -381,4 +381,34 @@ void SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId) {}
 
 void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRestoreScenario scenario,
     ErrCode errCode) {}
+
+void Service::SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId) {}
+
+ErrCode Service::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
+{
+    return BError(BError::Codes::OK);
+}
+
+void Service::GetDataSizeStepByStep(bool isPreciseScan, vector<BIncrementalData> bundleNameList, string &scanning) {}
+
+void Service::GetPresumablySize(vector<BIncrementalData> bundleNameList, string &scanning) {}
+
+void Service::GetPrecisesSize(vector<BIncrementalData> bundleNameList, string &scanning) {}
+
+void Service::WriteToList(BJsonUtil::BundleDataSize bundleDataSize) {}
+
+void Service::DeleteFromList(size_t scannedSize) {}
+
+void Service::WriteScannedInfoToList(const string &bundleName, int64_t dataSize, int64_t incDataSize) {}
+
+void Service::SendScannedInfo(const string&scannendInfos, sptr<SvcSessionManager> session) {}
+
+void Service::CyclicSendScannedInfo(bool isPreciseScan, vector<BIncrementalData> bundleNameList) {}
+
+bool Service::GetScanningInfo(wptr<Service> obj, size_t scannedSize, string &scanning)
+{
+    return true;
+}
+
+void Service::SetScanningInfo(string &scanning, string name) {}
 } // namespace OHOS::FileManagement::Backup

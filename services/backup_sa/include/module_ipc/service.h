@@ -104,6 +104,8 @@ public:
                            const ErrCode errCode, const BackupRestoreScenario sennario);
     void StartGetFdTask(std::string bundleName, wptr<Service> ptr);
 
+    ErrCode GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList) override;
+
     // 以下都是非IPC接口
 public:
     void OnStart() override;
@@ -314,6 +316,9 @@ public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        sendScannendResultThreadPool_.Start(BConstants::SA_THREAD_POOL_COUNT);
+        getDataSizeThreadPool_.Start(BConstants::SA_THREAD_POOL_COUNT);
+        callbackScannedInfoThreadPool_.Start(BConstants::SA_THREAD_POOL_COUNT);
         session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(this)));
         disposal_ = make_shared<BJsonDisposalConfig>();
         clearRecorder_ = make_shared<BJsonClearDataConfig>();
@@ -322,6 +327,9 @@ public:
     ~Service() override
     {
         threadPool_.Stop();
+        sendScannendResultThreadPool_.Stop();
+        getDataSizeThreadPool_.Stop();
+        callbackScannedInfoThreadPool_.Stop();
     };
 
 private:
@@ -614,6 +622,26 @@ private:
     void StartCurBundleBackupOrRestore(const std::string &bundleName);
 
     void CallOnBundleEndByScenario(const std::string &bundleName, BackupRestoreScenario scenario, ErrCode errCode);
+
+    void GetDataSizeStepByStep(bool isPreciseScan, vector<BIncrementalData> bundleNameList, string &scanning);
+
+    void GetPresumablySize(vector<BIncrementalData> bundleNameList, string &scanning);
+
+    void GetPrecisesSize(vector<BIncrementalData> bundleNameList, string &scanning);
+
+    void WriteToList(BJsonUtil::BundleDataSize bundleDataSize);
+
+    void DeleteFromList(size_t scannedSize);
+
+    void WriteScannedInfoToList(const string &bundleName, int64_t dataSize, int64_t incDataSize);
+
+    void SendScannedInfo(const string &scannendInfos, sptr<SvcSessionManager> session);
+
+    void CyclicSendScannedInfo(bool isPreciseScan, vector<BIncrementalData> bundleNameList);
+
+    bool GetScanningInfo(wptr<Service> obj, size_t scannedSize, string &scanning);
+
+    void SetScanningInfo(string &scanning, string name);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -639,10 +667,21 @@ private:
     std::map<BundleName, int> fileReadyRadarMap_;
     std::mutex extensionMutexLock_;
     std::mutex failedBundlesLock_;
+
+    std::mutex scannedListLock_;
+    std::mutex getDataSizeLock_;
+    OHOS::ThreadPool callbackScannedInfoThreadPool_;
+    OHOS::ThreadPool getDataSizeThreadPool_;
+    OHOS::ThreadPool sendScannendResultThreadPool_;
+    std::condition_variable getDataSizeCon_;
+    std::atomic<bool> isScannedEnd_ {false};
+    std::atomic<bool> onScanning_ {false};
 public:
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
     std::map<BundleName, BundleTaskInfo> failedBundles_;
     std::atomic<uint32_t> successBundlesNum_ {0};
+    std::vector<BJsonUtil::BundleDataSize> bundleDataSizeList_;
+    std::string scannedInfo_;
 };
 } // namespace OHOS::FileManagement::Backup
 

@@ -81,6 +81,15 @@ void ServiceReverse::IncrementalBackupOnProcessInfo(std::string bundleName, std:
     callbacksIncrementalBackup_.onProcess(bundleName, processInfo);
 }
 
+void ServiceReverse::IncrementalBackupOnScanningInfo(std::string scannedInfo)
+{
+    if (scenario_ != Scenario::BACKUP || !callbacksIncrementalBackup_.onBackupSizeReport) {
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
+        return;
+    }
+    callbacksIncrementalBackup_.onBackupSizeReport(scannedInfo);
+}
+
 void ServiceReverse::IncrementalRestoreOnBundleStarted(int32_t errCode, string bundleName)
 {
     if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onBundleStarted) {

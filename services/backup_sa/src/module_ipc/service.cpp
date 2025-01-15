@@ -1259,6 +1259,7 @@ void Service::ExtConnectDone(string bundleName)
             return;
         }
         if (curSchedAction == BConstants::ServiceSchedAction::CLEAN) {
+            HILOGI("Current bundle will execute clean task, bundleName:%{public}s", bundleName.c_str());
             sched_->Sched(bundleName);
             return;
         }
@@ -1267,7 +1268,11 @@ void Service::ExtConnectDone(string bundleName)
             session_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::CLEAN);
         } else {
             session_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::RUNNING);
-            AddClearBundleRecord(bundleName);
+            bool needCleanData = session_->GetClearDataFlag(bundleName);
+            if (needCleanData) {
+                HILOGI("Current bundle need clean data, bundleName:%{public}s", bundleName.c_str());
+                AddClearBundleRecord(bundleName);
+            }
         }
         sched_->Sched(bundleName);
     } catch (...) {
@@ -1569,6 +1574,7 @@ ErrCode Service::ClearResidualBundleData(const std::string &bundleName)
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     // 通知ext清理
+    HILOGI("Current bundle will clean extension data, bundleName:%{public}s", bundleName.c_str());
     ErrCode res = proxy->HandleClear();
     if (backUpConnection->IsExtAbilityConnected()) {
         backUpConnection->DisconnectBackupExtAbility();

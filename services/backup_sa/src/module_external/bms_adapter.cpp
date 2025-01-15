@@ -645,4 +645,40 @@ std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForInde
     HILOGI("End, bundleInfos size:%{public}zu", bundleInfos.size());
     return bundleInfos;
 }
+
+int64_t BundleMgrAdapter::GetBundleDataSize(const std::string &bundleName, int32_t userId)
+{
+    return GetBundleStats(bundleName, userId);
+}
+
+void BundleMgrAdapter::CreatBackupEnv(const std::vector<BIncrementalData> &bundleNameList, int32_t userId)
+{
+    HILOGI("CreatBackupEnv start");
+    auto bms = GetBundleManager();
+    for (auto const &bundleNameTime : bundleNameList) {
+        auto bundleName = bundleNameTime.bundleName;
+        if (SAUtils::IsSABundleName(bundleName)) {
+            HILOGI("SA don't need creat env");
+            continue;
+        }
+        AppExecFwk::BundleInfo installedBundle;
+        std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos;
+        bool getBundleSuccess = GetCurBundleExtenionInfo(installedBundle, bundleName, extensionInfos, bms, userId);
+        if (!getBundleSuccess) {
+            HILOGE("Failed to get bundle info from bms, bundleName:%{public}s", bundleName.c_str());
+            continue;
+        }
+        struct BJsonEntityCaps::BundleBackupConfigPara backupPara;
+        if (!GetBackupExtConfig(extensionInfos, backupPara)) {
+            HILOGE("No backup extension ability found, bundleName:%{public}s", bundleName.c_str());
+            continue;
+        }
+        if (!CreateIPCInteractionFiles(userId, bundleName, bundleNameTime.lastIncrementalTime, backupPara.includes,
+            backupPara.excludes)) {
+            HILOGE("Create bundleInteraction dir failed, bundleName:%{public}s", bundleName.c_str());
+            continue;
+        }
+    }
+    HILOGI("CreatBackupEnv end");
+}
 } // namespace OHOS::FileManagement::Backup

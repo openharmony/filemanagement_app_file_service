@@ -332,6 +332,11 @@ UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
 {
     return UniqueFd(-1);
 }
+
+ErrCode Service::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup
 
 namespace OHOS::FileManagement::Backup {

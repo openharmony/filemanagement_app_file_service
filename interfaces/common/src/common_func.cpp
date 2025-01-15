@@ -108,9 +108,11 @@ static void NormalizePath(string &path)
 
 string CommonFunc::GetUriFromPath(const string &path)
 {
+    if (path.find(FILE_SCHEME_PREFIX) == 0) {
+        return path;
+    }
     string realPath = path;
     NormalizePath(realPath);
-
     {
         std::lock_guard<std::mutex> lock(g_globalMutex);
         if (g_bundleName == "") {

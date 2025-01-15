@@ -75,6 +75,11 @@ public:
 
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForIndex(
         const vector<string> &bundleNames, int32_t userId);
+
+    static int64_t GetBundleDataSize(const std::string &bundleName, int32_t userId);
+
+    static void CreatBackupEnv(const std::vector<BIncrementalData> &bundleNameList, int32_t userId);
+
 private:
     static bool GetCurBundleExtenionInfo(AppExecFwk::BundleInfo &installedBundle, const std::string &bundleName,
         std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos, sptr<AppExecFwk::IBundleMgr> bms,

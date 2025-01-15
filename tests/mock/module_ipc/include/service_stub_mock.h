@@ -54,6 +54,7 @@ public:
     virtual int32_t CmdUpdateSendRate(MessageParcel&, MessageParcel&) = 0;
     virtual int32_t CmdStopExtTimer(MessageParcel&, MessageParcel&) = 0;
     virtual int32_t CmdRefreshDataSize(MessageParcel&, MessageParcel&) = 0;
+    virtual int32_t CmdGetBackupDataSize(MessageParcel&, MessageParcel&) = 0;
     virtual void ServiceStubSupplement() = 0;
     virtual void ServiceStubSuppAppendBundles() = 0;
 
@@ -98,6 +99,7 @@ public:
     MOCK_METHOD(int32_t, CmdUpdateSendRate, (MessageParcel&, MessageParcel&));
     MOCK_METHOD(int32_t, CmdStopExtTimer, (MessageParcel&, MessageParcel&));
     MOCK_METHOD(int32_t, CmdRefreshDataSize, (MessageParcel&, MessageParcel&));
+    MOCK_METHOD(int32_t, CmdGetBackupDataSize, (MessageParcel&, MessageParcel&));
     MOCK_METHOD(void, ServiceStubSupplement, ());
     MOCK_METHOD(void, ServiceStubSuppAppendBundles, ());
 };

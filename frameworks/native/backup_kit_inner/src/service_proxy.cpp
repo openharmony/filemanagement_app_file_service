@@ -810,4 +810,30 @@ UniqueFd ServiceProxy::GetLocalCapabilitiesForBundleInfos()
     HILOGI("ServiceProxy, end GetLocalCapabilitiesForBundleInfos");
     return fd;
 }
+
+ErrCode ServiceProxy::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
+{
+    HILOGI("ServiceProxy GetBackupDataSize Begin.");
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write descriptor").GetCode();
+    }
+    if (!data.WriteBool(isPreciseScan)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write isPreciseScan").GetCode();
+    }
+    if (!WriteParcelableVector(bundleNameList, data)) {
+        return BError(BError::Codes::SDK_INVAL_ARG, "Failed to write bundleNameList").GetCode();
+    }
+    MessageParcel reply;
+    MessageOption option;
+    option.SetWaitTime(BConstants::IPC_MAX_WAIT_TIME);
+    int32_t ret = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_DATA_SIZE), data, reply, option);
+    if (ret != NO_ERROR) {
+        string str = "Failed to send out the request because of " + to_string(ret);
+        return BError(BError::Codes::SDK_INVAL_ARG, str.data()).GetCode();
+    }
+    return BError(BError::Codes::OK, "success");
+}
 } // namespace OHOS::FileManagement::Backup

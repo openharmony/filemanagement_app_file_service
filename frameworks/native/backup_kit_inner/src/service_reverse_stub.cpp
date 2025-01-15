@@ -45,6 +45,9 @@ int32_t ServiceReverseStub::OnRemoteRequest(uint32_t code,
 }
 void ServiceReverseStub::ServiceReverseStubSupplement()
 {
+    opToInterfaceMap_[static_cast<uint32_t>(
+        IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_SCANNED_INFO)] =
+        &ServiceReverseStub::CmdIncrementalBackupOnScanningInfo;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_RESTORE_ON_FILE_READY)] =
         &ServiceReverseStub::CmdIncrementalRestoreOnFileReady;
     opToInterfaceMap_[static_cast<uint32_t>(
@@ -78,6 +81,8 @@ ServiceReverseStub::ServiceReverseStub()
         &ServiceReverseStub::CmdBackupOnAllBundlesFinished;
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_PROCESS_INFO)] =
         &ServiceReverseStub::CmdBackupOnProcessInfo;
+    opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_SCANNED_INFO)] =
+        &ServiceReverseStub::CmdBackupOnScanningInfo;
 
     opToInterfaceMap_[static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_RESTORE_ON_FILE_READY)] =
         &ServiceReverseStub::CmdRestoreOnFileReady;
@@ -161,6 +166,13 @@ int32_t ServiceReverseStub::CmdBackupOnProcessInfo(MessageParcel &data, MessageP
     std::string bundleName = data.ReadString();
     std::string processInfo = data.ReadString();
     BackupOnProcessInfo(bundleName, processInfo);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceReverseStub::CmdBackupOnScanningInfo(MessageParcel &data, MessageParcel &reply)
+{
+    std::string scannedInfo = data.ReadString();
+    BackupOnScanningInfo(scannedInfo);
     return BError(BError::Codes::OK);
 }
 
@@ -279,6 +291,13 @@ int32_t ServiceReverseStub::CmdIncrementalBackupOnProcessInfo(MessageParcel &dat
     std::string bundleName = data.ReadString();
     std::string processInfo = data.ReadString();
     IncrementalBackupOnProcessInfo(bundleName, processInfo);
+    return BError(BError::Codes::OK);
+}
+
+int32_t ServiceReverseStub::CmdIncrementalBackupOnScanningInfo(MessageParcel &data, MessageParcel &reply)
+{
+    std::string scannedInfo = data.ReadString();
+    IncrementalBackupOnScanningInfo(scannedInfo);
     return BError(BError::Codes::OK);
 }
 
