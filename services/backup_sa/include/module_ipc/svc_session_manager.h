@@ -68,6 +68,7 @@ struct BackupExtInfo {
     std::string backupParameters;
     int32_t backupPriority;
     std::string extInfo;
+    int32_t userId {BConstants::DEFAULT_USER_ID};
     int32_t appendNum {1};
     bool isClearData {true};
     bool isInPublishFile {false};
@@ -303,11 +304,28 @@ public:
     std::string GetBackupExtInfo(const std::string &bundleName);
 
     /**
+    * @brief 暂存应用用户id
+    *
+    * @param bundleName 应用名称
+    * @param userId 用户id
+    */
+    void SetBundleUserId(const std::string &bundleName, const int32_t userId);
+
+    /**
+     * @brief 获取应用用户id
+     *
+     * @param bundleName 应用名称
+     * @return int32_t userId
+     */
+    int32_t GetBundleUserId(const std::string &bundleName);
+
+    /**
      * @brief 追加应用
      *
      * @param bundleNames 应用名称
+     * @param failedBundles 返回失败应用名称
      */
-    void AppendBundles(const std::vector<std::string> &bundleNames);
+    void AppendBundles(const std::vector<std::string> &bundleNames, std::vector<std::string> &failedBundles);
 
     /**
      * @brief 添加指定应用

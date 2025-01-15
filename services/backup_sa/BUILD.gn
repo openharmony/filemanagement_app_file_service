@@ -28,6 +28,7 @@ ohos_shared_library("backup_sa") {
 
   sources = [
     "src/module_app_gallery/app_gallery_dispose_proxy.cpp",
+    "src/module_app_gallery/app_gallery_service_connection.cpp",
     "src/module_external/bms_adapter.cpp",
     "src/module_external/sms_adapter.cpp",
     "src/module_ipc/sa_backup_connection.cpp",

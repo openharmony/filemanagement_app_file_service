@@ -196,8 +196,8 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
     }
     // distinguish whether it is 0 user
     if (BundleMgrAdapter::IsUser0BundleName(bundleName, session_->GetSessionUserId())) {
-        auto ret = proxy->User0OnBackup();
-        if (ret) {
+        if (proxy->User0OnBackup()) {
+            SendEndAppGalleryNotify(bundleName);
             thisPtr->ClearSessionAndSchedInfo(bundleName);
             thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         }
@@ -222,6 +222,7 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
     UniqueFd lastManifestFd(session->GetIncrementalManifestFd(bundleName));
     auto ret = proxy->HandleIncrementalBackup(move(fdLocal), move(lastManifestFd));
     if (ret) {
+        SendEndAppGalleryNotify(bundleName);
         thisPtr->ClearSessionAndSchedInfo(bundleName);
         thisPtr->NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
     }
@@ -391,7 +392,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
             session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
-        session_->AppendBundles(supportBackupNames);
+        AppendBundles(supportBackupNames);
         SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
         SetCurrentBackupSessProperties(supportBackupNames, session_->GetSessionUserId(), backupInfos, true);
         OnStartSched();
@@ -437,7 +438,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
             session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
-        session_->AppendBundles(supportBackupNames);
+        AppendBundles(supportBackupNames);
         SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
         HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
         OnStartSched();
@@ -707,12 +708,14 @@ bool Service::IncrementalBackup(const string &bundleName)
     auto backUpConnection = session_->GetExtConnection(bundleName);
     if (backUpConnection == nullptr) {
         HILOGE("backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
+        SendEndAppGalleryNotify(bundleName);
         NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         return true;
     }
     auto proxy = backUpConnection->GetBackupExtProxy();
     if (!proxy) {
         HILOGE("Increment backup error, extension proxy is empty, bundleName:%{public}s", bundleName.c_str());
+        SendEndAppGalleryNotify(bundleName);
         NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         return true;
     }
@@ -721,6 +724,7 @@ bool Service::IncrementalBackup(const string &bundleName)
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
         BundleBeginRadarReport(bundleName, ret, IServiceReverse::Scenario::BACKUP);
         if (ret) {
+            SendEndAppGalleryNotify(bundleName);
             ClearSessionAndSchedInfo(bundleName);
             NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         }
@@ -770,7 +774,6 @@ void Service::NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string
         );
     } else if (scenario == IServiceReverse::Scenario::RESTORE) {
         HILOGI("will notify clone data, scenario is Restore");
-        SendEndAppGalleryNotify(callerName);
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, callerName);
         BundleEndRadarReport(callerName, errCode, scenario);
     }
@@ -820,6 +823,7 @@ void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, 
         } else {
             session_->SetBundleDataSize(bundleName, bundleInfo.spaceOccupied);
         }
+        session_->SetBundleUserId(bundleName, userId);
         session_->SetBackupExtName(bundleName, bundleInfo.extensionName);
         session_->SetIsReadyLaunch(bundleName);
     }

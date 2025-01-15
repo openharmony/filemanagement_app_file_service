@@ -41,27 +41,28 @@ sptr<AppGalleryDisposeProxy> AppGalleryDisposeProxy::GetInstance()
     return new AppGalleryDisposeProxy;
 }
 
-DisposeErr AppGalleryDisposeProxy::StartBackup(const std::string &bundleName)
+DisposeErr AppGalleryDisposeProxy::StartBackup(const std::string &bundleName, const int32_t userId)
 {
-    return DoDispose(bundleName, DisposeOperation::START_BACKUP);
+    return DoDispose(bundleName, DisposeOperation::START_BACKUP, userId);
 }
 
-DisposeErr AppGalleryDisposeProxy::EndBackup(const std::string &bundleName)
+DisposeErr AppGalleryDisposeProxy::EndBackup(const std::string &bundleName, const int32_t userId)
 {
-    return DoDispose(bundleName, DisposeOperation::END_BACKUP);
+    return DoDispose(bundleName, DisposeOperation::END_BACKUP, userId);
 }
 
-DisposeErr AppGalleryDisposeProxy::StartRestore(const std::string &bundleName)
+DisposeErr AppGalleryDisposeProxy::StartRestore(const std::string &bundleName, const int32_t userId)
 {
-    return DoDispose(bundleName, DisposeOperation::START_RESTORE);
+    return DoDispose(bundleName, DisposeOperation::START_RESTORE, userId);
 }
 
-DisposeErr AppGalleryDisposeProxy::EndRestore(const std::string &bundleName)
+DisposeErr AppGalleryDisposeProxy::EndRestore(const std::string &bundleName, const int32_t userId)
 {
-    return DoDispose(bundleName, DisposeOperation::END_RESTORE);
+    return DoDispose(bundleName, DisposeOperation::END_RESTORE, userId);
 }
 
-DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, DisposeOperation disposeOperation)
+DisposeErr AppGalleryDisposeProxy::DoDispose(const std::string &bundleName, DisposeOperation disposeOperation,
+    const int32_t userId)
 {
     return DisposeErr::OK;
 }

@@ -317,6 +317,7 @@ UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
     return UniqueFd(-1);
 }
 
+void Service::AppendBundles(const std::vector<std::string> &bundleNames) {}
 ErrCode Service::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
 {
     return BError(BError::Codes::OK);

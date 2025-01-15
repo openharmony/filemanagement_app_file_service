@@ -42,23 +42,23 @@ sptr<AppGalleryDisposeProxy> AppGalleryDisposeProxy::GetInstance()
     return appGalleryDisposeProxyInstance_;
 }
 
-DisposeErr AppGalleryDisposeProxy::StartBackup(const string &bundleName)
+DisposeErr AppGalleryDisposeProxy::StartBackup(const string &bundleName, int32_t userId)
 {
-    return BAppGalleryDisposeProxy::proxy->StartBackup(bundleName);
+    return BAppGalleryDisposeProxy::proxy->StartBackup(bundleName, userId);
 }
 
-DisposeErr AppGalleryDisposeProxy::EndBackup(const string &bundleName)
+DisposeErr AppGalleryDisposeProxy::EndBackup(const string &bundleName, int32_t userId)
 {
-    return BAppGalleryDisposeProxy::proxy->EndBackup(bundleName);
+    return BAppGalleryDisposeProxy::proxy->EndBackup(bundleName, userId);
 }
 
-DisposeErr AppGalleryDisposeProxy::StartRestore(const string &bundleName)
+DisposeErr AppGalleryDisposeProxy::StartRestore(const string &bundleName, int32_t userId)
 {
-    return BAppGalleryDisposeProxy::proxy->StartRestore(bundleName);
+    return BAppGalleryDisposeProxy::proxy->StartRestore(bundleName, userId);
 }
 
-DisposeErr AppGalleryDisposeProxy::EndRestore(const string &bundleName)
+DisposeErr AppGalleryDisposeProxy::EndRestore(const string &bundleName, int32_t userId)
 {
-    return BAppGalleryDisposeProxy::proxy->EndRestore(bundleName);
+    return BAppGalleryDisposeProxy::proxy->EndRestore(bundleName, userId);
 }
 } // namespace OHOS::FileManagement::Backup

@@ -249,7 +249,7 @@ std::weak_ptr<SABackupConnection> SvcSessionManager::GetSAExtConnection(const Bu
     return std::weak_ptr<SABackupConnection>(it->second.saBackupConnection);
 }
 
-void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
+void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames, vector<BundleName> &failedBundles)
 {
     GTEST_LOG_(INFO) << "AppendBundles";
     BackupExtInfo info {};
@@ -367,6 +367,24 @@ std::string SvcSessionManager::GetBundleVersionName(const std::string &bundleNam
         return "";
     }
     return it->second.versionName;
+}
+
+void SvcSessionManager::SetBundleUserId(const std::string &bundleName, const int32_t userId)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return;
+    }
+    it->second.userId = userId;
+}
+
+int32_t SvcSessionManager::GetBundleUserId(const std::string &bundleName)
+{
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return 0;
+    }
+    return it->second.userId;
 }
 
 void SvcSessionManager::SetBundleDataSize(const std::string &bundleName, int64_t dataSize)

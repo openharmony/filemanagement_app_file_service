@@ -52,7 +52,7 @@ public:
     virtual std::string GetBackupExtInfo(const std::string &) = 0;
     virtual void SetBackupExtName(const std::string &, const std::string &) = 0;
     virtual std::weak_ptr<SABackupConnection> GetSAExtConnection(const BundleName &) = 0;
-    virtual void AppendBundles(const std::vector<BundleName> &) = 0;
+    virtual void AppendBundles(const std::vector<BundleName> &, std::vector<BundleName> &) = 0;
     virtual sptr<SvcBackupConnection> CreateBackupConnection(BundleName &) = 0;
     virtual ErrCode Start() = 0;
     virtual ErrCode Finish() = 0;
@@ -69,6 +69,8 @@ public:
     virtual int64_t GetBundleVersionCode(const std::string &) = 0;
     virtual void SetBundleVersionName(const std::string &, std::string) = 0;
     virtual std::string GetBundleVersionName(const std::string &) = 0;
+    virtual void SetBundleUserId(const std::string &, const int32_t) = 0;
+    virtual int32_t GetBundleUserId(const std::string &) = 0;
     virtual void SetBundleDataSize(const std::string &, int64_t) = 0;
     virtual bool StartFwkTimer(const std::string &, const Utils::Timer::TimerCallback &) = 0;
     virtual bool StopFwkTimer(const std::string &) = 0;
@@ -126,7 +128,7 @@ public:
     MOCK_METHOD(std::string, GetBackupExtInfo, (const std::string &));
     MOCK_METHOD(void, SetBackupExtName, (const std::string &, const std::string &));
     MOCK_METHOD(std::weak_ptr<SABackupConnection>, GetSAExtConnection, (const BundleName &));
-    MOCK_METHOD(void, AppendBundles, (const std::vector<BundleName> &));
+    MOCK_METHOD(void, AppendBundles, (const std::vector<BundleName> &, std::vector<BundleName> &));
     MOCK_METHOD(sptr<SvcBackupConnection>, CreateBackupConnection, (BundleName &));
     MOCK_METHOD(ErrCode, Start, ());
     MOCK_METHOD(ErrCode, Finish, ());
@@ -143,6 +145,8 @@ public:
     MOCK_METHOD(int64_t, GetBundleVersionCode, (const std::string &));
     MOCK_METHOD(void, SetBundleVersionName, (const std::string &, std::string));
     MOCK_METHOD(std::string, GetBundleVersionName, (const std::string &));
+    MOCK_METHOD(void, SetBundleUserId, (const std::string &, const int32_t));
+    MOCK_METHOD(int32_t, GetBundleUserId, (const std::string &));
     MOCK_METHOD(void, SetBundleDataSize, (const std::string &, int64_t));
     MOCK_METHOD(bool, StartFwkTimer, (const std::string &, const Utils::Timer::TimerCallback &));
     MOCK_METHOD(bool, StopFwkTimer, (const std::string &));

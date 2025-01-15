@@ -123,7 +123,14 @@ std::weak_ptr<SABackupConnection> SvcSessionManager::GetSAExtConnection(const Bu
     return BSvcSessionManager::sessionManager->GetSAExtConnection(bundleName);
 }
 
-void SvcSessionManager::AppendBundles(const vector<BundleName> &) {}
+int32_t SvcSessionManager::GetBundleUserId(const string &bundleName)
+{
+    return 0;
+}
+
+void SvcSessionManager::SetBundleUserId(const string &bundleName, const int32_t userId) {}
+
+void SvcSessionManager::AppendBundles(const vector<BundleName> &, vector<BundleName> &) {}
 
 sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &bundleName)
 {

@@ -23,10 +23,10 @@
 namespace OHOS::FileManagement::Backup {
 class BAppGalleryDisposeProxy {
 public:
-    virtual DisposeErr StartBackup(const std::string&) = 0;
-    virtual DisposeErr EndBackup(const std::string&) = 0;
-    virtual DisposeErr StartRestore(const std::string&) = 0;
-    virtual DisposeErr EndRestore(const std::string&) = 0;
+    virtual DisposeErr StartBackup(const std::string&, const int32_t) = 0;
+    virtual DisposeErr EndBackup(const std::string&, const int32_t) = 0;
+    virtual DisposeErr StartRestore(const std::string&, const int32_t) = 0;
+    virtual DisposeErr EndRestore(const std::string&, const int32_t) = 0;
 public:
     BAppGalleryDisposeProxy() = default;
     virtual ~BAppGalleryDisposeProxy() = default;
@@ -36,10 +36,10 @@ public:
 
 class AppGalleryDisposeProxyMock : public BAppGalleryDisposeProxy {
 public:
-    MOCK_METHOD(DisposeErr, StartBackup, (const std::string&));
-    MOCK_METHOD(DisposeErr, EndBackup, (const std::string&));
-    MOCK_METHOD(DisposeErr, StartRestore, (const std::string&));
-    MOCK_METHOD(DisposeErr, EndRestore, (const std::string&));
+    MOCK_METHOD(DisposeErr, StartBackup, (const std::string&, const int32_t));
+    MOCK_METHOD(DisposeErr, EndBackup, (const std::string&, const int32_t));
+    MOCK_METHOD(DisposeErr, StartRestore, (const std::string&, const int32_t));
+    MOCK_METHOD(DisposeErr, EndRestore, (const std::string&, const int32_t));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_APP_GALLERY_DISPOSE_PROXY_MOCK_H

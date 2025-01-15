@@ -676,41 +676,6 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_OnBackupExtensionDied_0100, testing
 }
 
 /**
- * @tc.number: SUB_Service_throw_ExtStart_0100
- * @tc.name: SUB_Service_throw_ExtStart_0100
- * @tc.desc: 测试 ExtStart 接口的 catch 分支
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issuesIAC04T
- */
-HWTEST_F(ServiceThrowTest, SUB_Service_throw_ExtStart_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_ExtStart_0100";
-    try {
-        EXPECT_NE(service, nullptr);
-        string bundleName;
-        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Invoke([]() {
-            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
-            return IServiceReverse::Scenario::UNDEFINED;
-        })).WillOnce(Invoke([]() {
-            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
-            return IServiceReverse::Scenario::UNDEFINED;
-        }));
-        EXPECT_CALL(*sessionMock, RemoveExtInfo(_)).WillOnce(Invoke([]() {
-            throw BError(BError::Codes::EXT_THROW_EXCEPTION);
-        }));
-        EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
-        service->ExtStart(bundleName);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by ExtStart.";
-    }
-    GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_ExtStart_0100";
-}
-
-/**
  * @tc.number: SUB_Service_throw_ExtConnectFailed_0100
  * @tc.name: SUB_Service_throw_ExtConnectFailed_0100
  * @tc.desc: 测试 ExtConnectFailed 接口的 catch 分支

@@ -71,6 +71,42 @@ const int32_t WAIT_SCANNING_INFO_SEND_TIME = 5;
 const int ERR_SIZE = -1;
 } // namespace
 
+void Service::AppendBundles(const std::vector<std::string> &bundleNames)
+{
+    std::vector<std::string> failedBundles;
+    session_->AppendBundles(bundleNames, failedBundles);
+    if (!failedBundles.empty()) {
+        HILOGE("Handle exception on failed bundles, size = %{public}zu", failedBundles.size());
+        HandleExceptionOnAppendBundles(session_, failedBundles, {});
+    }
+}
+
+void Service::ReportOnBundleStarted(IServiceReverse::Scenario scenario, const std::string &bundleName)
+{
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), bundleName);
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), bundleName);
+    }
+}
+
+string Service::BundleNameWithUserId(const string& bundleName, const int32_t userId)
+{
+    return to_string(userId) + "-" + bundleName;
+}
+
+std::tuple<std::string, int32_t> Service::SplitBundleName(const string& bundleNameWithId)
+{
+    size_t found = bundleNameWithId.find('-');
+    if (found == std::string::npos) {
+        HILOGE("Can not split bundleName = %{public}s", bundleNameWithId.c_str());
+        return { "", -1 };
+    }
+    std::string bundleName = bundleNameWithId.substr(found + 1, bundleNameWithId.length());
+    int32_t userId = std::atoi(bundleNameWithId.substr(0, found).c_str());
+    return { bundleName, userId };
+}
+
 vector<BIncrementalData> Service::MakeDetailList(const vector<BundleName> &bundleNames)
 {
     vector<BIncrementalData> bundleDetails {};
@@ -450,6 +486,7 @@ void Service::ExtConnectDied(const string &callName)
         bool needCleanData = session_->GetClearDataFlag(callName);
         if (!needCleanData) {
             HILOGE("Current extension is died, but not need clean data, bundleName:%{public}s", callName.c_str());
+            SendEndAppGalleryNotify(callName);
             ClearSessionAndSchedInfo(callName);
             NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
             return;
@@ -459,12 +496,14 @@ void Service::ExtConnectDied(const string &callName)
         if (ret) {
             /* Clear Session before notice client finish event */
             HILOGE("Current bundle launch extension failed, bundleName:%{public}s", callName.c_str());
+            SendEndAppGalleryNotify(callName);
             ClearSessionAndSchedInfo(callName);
         }
         /* Notice Client Ext Ability Process Died */
         NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
     } catch (...) {
         HILOGE("Unexpected exception, bundleName: %{public}s", callName.c_str());
+        SendEndAppGalleryNotify(callName);
         ClearSessionAndSchedInfo(callName);
         NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
     }
@@ -505,7 +544,6 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("begin %{public}s", bundleName.c_str());
     try {
-        SendEndAppGalleryNotify(bundleName);
         auto scenario = session_->GetScenario();
         if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
@@ -623,6 +661,7 @@ ErrCode Service::HandleCurAppDone(ErrCode errCode, const std::string &bundleName
     proxy->HandleClear();
     session_->StopFwkTimer(bundleName);
     session_->StopExtTimer(bundleName);
+    SendEndAppGalleryNotify(bundleName);
     backUpConnection->DisconnectBackupExtAbility();
     ClearSessionAndSchedInfo(bundleName);
     if (isIncBackup) {

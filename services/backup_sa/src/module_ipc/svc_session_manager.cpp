@@ -613,7 +613,39 @@ std::string SvcSessionManager::GetBackupExtInfo(const string &bundleName)
     return it->second.extInfo;
 }
 
-void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
+void SvcSessionManager::SetBundleUserId(const string &bundleName, const int32_t userId)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+    it->second.userId = userId;
+}
+
+int32_t SvcSessionManager::GetBundleUserId(const string &bundleName)
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return BConstants::DEFAULT_USER_ID;
+    }
+
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return GetSessionUserId();
+    }
+    return it->second.userId;
+}
+
+void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames, vector<BundleName> &failedBundles)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
@@ -626,11 +658,15 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames)
         BackupExtInfo info {};
         auto it = impl_.backupExtNameMap.find(bundleName);
         if (it != impl_.backupExtNameMap.end()) {
-            HILOGE("BackupExtNameMap already contain %{public}s", bundleName.c_str());
-            info.backUpConnection = impl_.backupExtNameMap[bundleName].backUpConnection;
-            info.saBackupConnection = impl_.backupExtNameMap[bundleName].saBackupConnection;
-            info.appendNum = impl_.backupExtNameMap[bundleName].appendNum + 1;
-            impl_.backupExtNameMap[bundleName] = info;
+            if (impl_.backupExtNameMap[bundleName].userId == GetSessionUserId()) {
+                HILOGE("BackupExtNameMap already contain %{public}s", bundleName.c_str());
+                info.backUpConnection = impl_.backupExtNameMap[bundleName].backUpConnection;
+                info.saBackupConnection = impl_.backupExtNameMap[bundleName].saBackupConnection;
+                info.appendNum = impl_.backupExtNameMap[bundleName].appendNum + 1;
+                impl_.backupExtNameMap[bundleName] = info;
+            } else {
+                failedBundles.push_back(bundleName);
+            }
             continue;
         }
         if (SAUtils::IsSABundleName(bundleName)) {
