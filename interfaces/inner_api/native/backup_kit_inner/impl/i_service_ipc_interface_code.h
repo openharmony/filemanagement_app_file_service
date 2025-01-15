@@ -57,6 +57,7 @@ enum class IServiceInterfaceCode {
     SERVICE_CMD_CANCEL_BUNDLE,
     SERVICE_CMD_STOP_EXT_TIMER,
     SERVICE_CMD_REFRESH_DATA_SIZE,
+    SERVICE_CMD_GET_BACKUP_DATA_SIZE,
 };
 } // namespace OHOS::FileManagement::Backup
 

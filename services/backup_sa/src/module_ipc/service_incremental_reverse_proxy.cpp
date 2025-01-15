@@ -139,6 +139,24 @@ void ServiceReverseProxy::IncrementalBackupOnProcessInfo(std::string bundleName,
     }
 }
 
+void ServiceReverseProxy::IncrementalBackupOnScanningInfo(std::string scannedInfo)
+{
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(scannedInfo)) {
+        throw BError(BError::Codes::SA_BROKEN_IPC);
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    if (int err = Remote()->SendRequest(
+        static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_SCANNED_INFO), data,
+        reply, option);
+        err != ERR_OK) {
+        throw BError(BError::Codes::SA_BROKEN_IPC, to_string(err));
+    }
+}
+
 void ServiceReverseProxy::IncrementalRestoreOnBundleStarted(int32_t errCode, string bundleName)
 {
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");

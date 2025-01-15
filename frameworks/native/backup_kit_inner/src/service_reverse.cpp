@@ -79,6 +79,15 @@ void ServiceReverse::BackupOnProcessInfo(std::string bundleName, std::string pro
     callbacksBackup_.onProcess(bundleName, processInfo);
 }
 
+void ServiceReverse::BackupOnScanningInfo(std::string scannedInfo)
+{
+    if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onBackupSizeReport) {
+        HILOGE("Error scenario or callback is nullptr");
+        return;
+    }
+    callbacksBackup_.onBackupSizeReport(scannedInfo);
+}
+
 void ServiceReverse::RestoreOnBundleStarted(int32_t errCode, string bundleName)
 {
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onBundleStarted) {

@@ -91,6 +91,7 @@ public:
     MOCK_METHOD1(RefreshDataSize, ErrCode(int64_t totalsize));
     MOCK_METHOD3(UpdateSendRate, ErrCode(std::string &bundleName, int32_t sendRate, bool &result));
     MOCK_METHOD2(ReportAppProcessInfo, ErrCode(const std::string processInfo, BackupRestoreScenario sennario));
+    MOCK_METHOD2(GetBackupDataSize, ErrCode(bool isPreciseScan, vector<BIncrementalData> bundleNameList));
 };
 
 class ServiceStubTest : public testing::Test {

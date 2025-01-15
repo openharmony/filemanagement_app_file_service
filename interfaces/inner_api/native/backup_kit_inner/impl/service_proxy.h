@@ -78,7 +78,7 @@ public:
     ErrCode StartFwkTimer(bool &isFwkStart) override;
     ErrCode StopExtTimer(bool &isExtStop) override;
     ErrCode RefreshDataSize(int64_t totalSize) override;
-
+    ErrCode GetBackupDataSize(bool isPreciseScan, std::vector<BIncrementalData> bundleNameList) override;
 public:
     explicit ServiceProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IService>(impl) {}
     ~ServiceProxy() override {}

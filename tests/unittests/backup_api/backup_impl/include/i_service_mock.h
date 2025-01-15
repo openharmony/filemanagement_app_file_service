@@ -262,6 +262,11 @@ public:
     {
         return BError(BError::Codes::OK);
     }
+
+    ErrCode GetBackupDataSize(bool isPreciseScan, std::vector<BIncrementalData> bundleNameList)
+    {
+        return BError(BError::Codes::OK);
+    }
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // MOCK_I_SERVICE_MOCK_H

@@ -32,6 +32,8 @@ void ServiceReverseProxy::BackupOnAllBundlesFinished(int32_t errCode) {}
 
 void ServiceReverseProxy::BackupOnProcessInfo(std::string bundleName, std::string processInfo) {}
 
+void ServiceReverseProxy::BackupOnScanningInfo(std::string scannedInfo) {}
+
 void ServiceReverseProxy::RestoreOnBundleStarted(int32_t errCode, string bundleName) {}
 
 void ServiceReverseProxy::RestoreOnBundleFinished(int32_t errCode, string bundleName) {}
@@ -56,6 +58,8 @@ void ServiceReverseProxy::IncrementalBackupOnBundleFinished(int32_t errCode, str
 void ServiceReverseProxy::IncrementalBackupOnAllBundlesFinished(int32_t errCode) {}
 
 void ServiceReverseProxy::IncrementalBackupOnProcessInfo(std::string bundleName, std::string processInfo) {}
+
+void ServiceReverseProxy::IncrementalBackupOnScanningInfo(std::string scannedInfo) {}
 
 void ServiceReverseProxy::IncrementalRestoreOnBundleStarted(int32_t errCode, string bundleName) {}
 

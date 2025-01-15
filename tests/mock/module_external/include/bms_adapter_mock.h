@@ -38,6 +38,8 @@ public:
     virtual std::vector<BJsonEntityCaps::BundleInfo> GetFullBundleInfos(int32_t) = 0;
     virtual std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForLocalCapabilities(int32_t) = 0;
     virtual std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForIndex(const vector<string>&, int32_t) = 0;
+    virtual int64_t GetBundleDataSize(const std::string&, int32_t) = 0;
+    virtual void CreatBackupEnv(const std::vector<BIncrementalData>&, int32_t) = 0;
 public:
     BBundleMgrAdapter() = default;
     virtual ~BBundleMgrAdapter() = default;
@@ -63,6 +65,8 @@ public:
     MOCK_METHOD((std::vector<BJsonEntityCaps::BundleInfo>), GetFullBundleInfos, (int32_t));
     MOCK_METHOD((std::vector<BJsonEntityCaps::BundleInfo>), GetBundleInfosForLocalCapabilities, (int32_t));
     MOCK_METHOD((std::vector<BJsonEntityCaps::BundleInfo>), GetBundleInfosForIndex, (const vector<string>&, int32_t));
+    MOCK_METHOD(int64_t, GetBundleDataSize, (const std::string&, int32_t));
+    MOCK_METHOD(void, CreatBackupEnv, (const std::vector<BIncrementalData>&, int32_t));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_BMS_ADAPTER_MOCK_H

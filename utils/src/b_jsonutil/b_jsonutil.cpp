@@ -496,4 +496,47 @@ std::string BJsonUtil::BuildInitSessionErrInfo(int32_t userId, std::string calle
     cJSON_free(jsonStr);
     return errMsg;
 }
+
+bool BJsonUtil::WriteToStr(std::vector<BundleDataSize> &bundleDataList,
+                           size_t listSize,
+                           std::string scanning,
+                           std::string &jsonStr)
+{
+    cJSON *root = cJSON_CreateObject();
+    if (root == nullptr) {
+        HILOGE("CreateObject failed");
+        return false;
+    }
+    cJSON *scannedArray = cJSON_CreateArray();
+    if (scannedArray == nullptr) {
+        HILOGE("CreateArray failed");
+        cJSON_Delete(root);
+        return false;
+    }
+    cJSON_AddItemToObject(root, "scaned", scannedArray);
+    for (size_t i = 0; i < listSize; i++) {
+        cJSON *item = cJSON_CreateObject();
+        if (item == nullptr) {
+            HILOGE("cJSON_CreateObject failed");
+            continue;
+        }
+        cJSON_AddStringToObject(item, "bundleName", bundleDataList[i].bundleName.c_str());
+        cJSON_AddNumberToObject(item, "dataSize", bundleDataList[i].dataSize);
+        cJSON_AddNumberToObject(item, "incDataSize", bundleDataList[i].incDataSize);
+        cJSON_AddItemToArray(scannedArray, item);
+    }
+    cJSON_AddStringToObject(root, "scanning", scanning.c_str());
+    HILOGI("end to add item");
+    char *jsonString = cJSON_Print(root);
+    if (jsonString == nullptr) {
+        HILOGE("cJSON_Print failed");
+        cJSON_Delete(root);
+        return false;
+    }
+    jsonStr = string(jsonString);
+    cJSON_Delete(root);
+    free(jsonString);
+    HILOGI("write json str ok, scanned size is %{public}zu", listSize);
+    return true;
+}
 }

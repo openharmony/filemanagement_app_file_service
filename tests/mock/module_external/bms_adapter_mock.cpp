@@ -110,4 +110,11 @@ std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForInde
             "com.example.app2backup"});
     return bundleInfos;
 }
+
+int64_t BundleMgrAdapter::GetBundleDataSize(const std::string &bundleName, int32_t userId)
+{
+    return 0;
+}
+
+void BundleMgrAdapter::CreatBackupEnv(const std::vector<BIncrementalData> &bundleNameList, int32_t userId) {}
 } // namespace OHOS::FileManagement::Backup

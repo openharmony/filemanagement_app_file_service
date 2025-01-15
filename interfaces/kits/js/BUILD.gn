@@ -149,6 +149,7 @@ ohos_shared_library("backup") {
   sources = [
     "${path_backup_js}/backup/general_callbacks.cpp",
     "${path_backup_js}/backup/module.cpp",
+    "${path_backup_js}/backup/parse_inc_info_from_js.cpp",
     "${path_backup_js}/backup/prop_n_exporter.cpp",
     "${path_backup_js}/backup/prop_n_operation.cpp",
     "${path_backup_js}/backup/session_backup_n_exporter.cpp",
