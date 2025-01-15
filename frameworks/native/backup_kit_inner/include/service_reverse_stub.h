@@ -40,6 +40,7 @@ private:
     int32_t CmdBackupOnBundleFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdBackupOnAllBundlesFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdBackupOnProcessInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdBackupOnScanningInfo(MessageParcel &data, MessageParcel &reply);
 
     int32_t CmdRestoreOnBundleStarted(MessageParcel &data, MessageParcel &reply);
     int32_t CmdRestoreOnBundleFinished(MessageParcel &data, MessageParcel &reply);
@@ -54,6 +55,7 @@ private:
     int32_t CmdIncrementalBackupOnBundleFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalBackupOnAllBundlesFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalBackupOnProcessInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdIncrementalBackupOnScanningInfo(MessageParcel &data, MessageParcel &reply);
 
     int32_t CmdIncrementalRestoreOnBundleStarted(MessageParcel &data, MessageParcel &reply);
     int32_t CmdIncrementalRestoreOnBundleFinished(MessageParcel &data, MessageParcel &reply);

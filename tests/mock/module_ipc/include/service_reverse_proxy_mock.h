@@ -31,24 +31,30 @@ public:
     MOCK_METHOD(void, BackupOnBundleFinished, (int32_t, std::string));
     MOCK_METHOD(void, BackupOnAllBundlesFinished, (int32_t));
     MOCK_METHOD(void, BackupOnProcessInfo, (std::string, std::string));
+    MOCK_METHOD(void, BackupOnScanningInfo, (std::string));
+
     MOCK_METHOD(void, RestoreOnBundleStarted, (int32_t, std::string));
     MOCK_METHOD(void, RestoreOnBundleFinished, (int32_t, std::string));
     MOCK_METHOD(void, RestoreOnAllBundlesFinished, (int32_t));
     MOCK_METHOD(void, RestoreOnFileReady, (std::string, std::string, int, int32_t));
     MOCK_METHOD(void, RestoreOnResultReport, (std::string, std::string, ErrCode));
     MOCK_METHOD(void, RestoreOnProcessInfo, (std::string, std::string));
+
     MOCK_METHOD(void, IncrementalBackupOnFileReady, (std::string, std::string, int, int, int32_t));
     MOCK_METHOD(void, IncrementalBackupOnBundleStarted, (int32_t, std::string));
     MOCK_METHOD(void, IncrementalBackupOnResultReport, (std::string, std::string));
     MOCK_METHOD(void, IncrementalBackupOnBundleFinished, (int32_t, std::string));
     MOCK_METHOD(void, IncrementalBackupOnAllBundlesFinished, (int32_t));
     MOCK_METHOD(void, IncrementalBackupOnProcessInfo, (std::string, std::string));
+    MOCK_METHOD(void, IncrementalBackupOnScanningInfo, (std::string));
+
     MOCK_METHOD(void, IncrementalRestoreOnBundleStarted, (int32_t, std::string));
     MOCK_METHOD(void, IncrementalRestoreOnBundleFinished, (int32_t, std::string));
     MOCK_METHOD(void, IncrementalRestoreOnAllBundlesFinished, (int32_t));
     MOCK_METHOD(void, IncrementalRestoreOnFileReady, (std::string, std::string, int, int, int32_t));
     MOCK_METHOD(void, IncrementalRestoreOnResultReport, (std::string, std::string, ErrCode));;
     MOCK_METHOD(void, IncrementalRestoreOnProcessInfo, (std::string, std::string));
+
 public:
     ServiceReverseProxyMock() : IRemoteProxy<IServiceReverse>(nullptr) {}
     virtual ~ServiceReverseProxyMock() = default;

@@ -145,6 +145,22 @@ UniqueFd BSessionBackup::GetLocalCapabilities()
     return fd;
 }
 
+ErrCode BSessionBackup::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
+{
+    HILOGI("GetBackupDataSize Begin");
+    auto proxy = ServiceProxy::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+    ErrCode err = proxy->GetBackupDataSize(isPreciseScan, bundleNameList);
+    if (err != ERR_OK) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to GetBackupDataSize").GetCode();
+    }
+    HILOGI("GetBackupDataSize end");
+    return ERR_OK;
+}
+
 ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup)
 {
     auto proxy = ServiceProxy::GetInstance();

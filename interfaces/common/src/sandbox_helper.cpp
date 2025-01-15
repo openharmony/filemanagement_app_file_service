@@ -429,7 +429,7 @@ bool SandboxHelper::CheckValidPath(const std::string &filePath)
 
     char realPath[PATH_MAX]{'\0'};
     if (realpath(filePath.c_str(), realPath) == nullptr) {
-        LOGE("realpath failed with %{public}d", errno);
+        LOGE("realpath failed with errno = %{public}d, filePath = %{private}s", errno, filePath.c_str());
         return false;
     }
 

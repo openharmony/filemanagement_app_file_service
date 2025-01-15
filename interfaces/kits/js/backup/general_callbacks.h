@@ -53,7 +53,8 @@ public:
           onAllBundlesEnd(env, thisPtr, jsCallbacks.GetProp("onAllBundlesEnd")),
           onBackupServiceDied(env, thisPtr, jsCallbacks.GetProp("onBackupServiceDied")),
           onResultReport(env, thisPtr, jsCallbacks.GetProp("onResultReport")),
-          onProcess(env, thisPtr, jsCallbacks.GetProp("onProcess")) {};
+          onProcess(env, thisPtr, jsCallbacks.GetProp("onProcess")),
+          onBackupSizeReport(env, thisPtr, jsCallbacks.GetProp("onBackupSizeReport")) {};
 public:
     void RemoveCallbackRef();
 public:
@@ -64,6 +65,7 @@ public:
     BackupRestoreCallback onBackupServiceDied;
     BackupRestoreCallback onResultReport;
     BackupRestoreCallback onProcess;
+    BackupRestoreCallback onBackupSizeReport;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // INTERFACES_KITS_JS_SRC_MOD_BACKUP_PROPERTIES_GENERAL_CALLBACKS_H

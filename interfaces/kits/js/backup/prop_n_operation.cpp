@@ -21,6 +21,7 @@
 #include "filemgmt_libhilog.h"
 #include "filemgmt_libn.h"
 #include "incremental_backup_data.h"
+#include "parse_inc_info_from_js.h"
 #include "service_proxy.h"
 #include "access_token.h"
 #include "accesstoken_kit.h"
@@ -69,70 +70,10 @@ static napi_value AsyncCallback(napi_env env, const NFuncArg& funcArg)
     }
 }
 
-static bool CheckDataList(const LibN::NVal &data)
-{
-    LibN::NVal name = data.GetProp(BConstants::BUNDLE_NAME);
-    if (name.val_ == nullptr) {
-        return false;
-    }
-    auto [succ, str, ignore] = name.ToUTF8String();
-    if (!succ) {
-        return false;
-    }
-
-    LibN::NVal time = data.GetProp(BConstants::LAST_INCREMENTAL_TIME);
-    if (time.val_ == nullptr) {
-        return false;
-    }
-    tie(succ, ignore) = time.ToInt64();
-    if (!succ) {
-        return false;
-    }
-    return true;
-}
-
-static std::tuple<bool, std::vector<BIncrementalData>> ParseDataList(napi_env env, const napi_value& value)
-{
-    uint32_t size = 0;
-    napi_status status = napi_get_array_length(env, value, &size);
-    if (status != napi_ok) {
-        HILOGE("Get array length failed!");
-        return {false, {}};
-    }
-    if (size == 0) {
-        HILOGI("array length is zero!");
-        return {true, {}};
-    }
-
-    napi_value result;
-    std::vector<BIncrementalData> backupData;
-    for (uint32_t i = 0; i < size; i++) {
-        status = napi_get_element(env, value, i, &result);
-        if (status != napi_ok) {
-            HILOGE("Get element failed! index is :%{public}u", i);
-            return {false, {}};
-        } else {
-            NVal element(env, result);
-            if (!CheckDataList(element)) {
-                HILOGE("bundles are invalid!");
-                return {false, {}};
-            }
-            IncrementalBackupData data(element);
-            backupData.emplace_back(data.bundleName,
-                                    data.lastIncrementalTime,
-                                    data.manifestFd,
-                                    data.parameters,
-                                    data.priority);
-        }
-    }
-    return {true, backupData};
-}
-
 static napi_value AsyncDataList(napi_env env, const NFuncArg& funcArg)
 {
     HILOGD("called LocalCapabilities::AsyncDataList begin");
-
-    auto [succ, bundles] = ParseDataList(env, funcArg[NARG_POS::FIRST]);
+    auto [succ, bundles] = Parse::ParseDataList(env, funcArg[NARG_POS::FIRST]);
     if (!succ) {
         HILOGE("bundles array invalid.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "bundles array invalid.").GetCode()).ThrowErr(env);

@@ -39,6 +39,7 @@ public:
     virtual void BackupOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
     virtual void BackupOnAllBundlesFinished(int32_t errCode) = 0;
     virtual void BackupOnProcessInfo(std::string bundleName, std::string processInfo) = 0;
+    virtual void BackupOnScanningInfo(std::string scannedInfo) = 0;
 
     virtual void RestoreOnBundleStarted(int32_t errCode, std::string bundleName) = 0;
     virtual void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) = 0;
@@ -55,6 +56,7 @@ public:
     virtual void IncrementalBackupOnBundleFinished(int32_t errCode, std::string bundleName) = 0;
     virtual void IncrementalBackupOnAllBundlesFinished(int32_t errCode) = 0;
     virtual void IncrementalBackupOnProcessInfo(std::string bundleName, std::string processInfo) = 0;
+    virtual void IncrementalBackupOnScanningInfo(std::string scannedInfo) = 0;
 
     virtual void IncrementalRestoreOnBundleStarted(int32_t errCode, std::string bundleName) = 0;
     virtual void IncrementalRestoreOnFileReady(std::string bundleName,

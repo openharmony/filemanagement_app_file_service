@@ -39,6 +39,7 @@ public:
     virtual bool BuildBundleInfoJson(int32_t, std::string&) = 0;
     virtual bool HasUnicastInfo(std::string&) = 0;
     virtual std::string BuildInitSessionErrInfo(int32_t, std::string, std::string) = 0;
+    virtual bool WriteToStr(std::vector<BJsonUtil::BundleDataSize>&, size_t, std::string, std::string&) = 0;
 public:
     BBJsonUtil() = default;
     virtual ~BBJsonUtil() = default;
@@ -64,6 +65,7 @@ public:
     MOCK_METHOD(bool, BuildBundleInfoJson, (int32_t, std::string&));
     MOCK_METHOD(bool, HasUnicastInfo, (std::string&));
     MOCK_METHOD(std::string, BuildInitSessionErrInfo, (int32_t, std::string, std::string));
+    MOCK_METHOD(bool, WriteToStr, (std::vector<BJsonUtil::BundleDataSize>&, size_t, std::string, std::string&));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_B_JSONUTIL_MOCK_MOCK_H

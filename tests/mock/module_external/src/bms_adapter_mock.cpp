@@ -81,4 +81,12 @@ std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForInde
 {
     return BBundleMgrAdapter::bms->GetBundleInfosForIndex(bundleNames, userId);
 }
+
+int64_t BundleMgrAdapter::GetBundleDataSize(const std::string &bundleName, int32_t userId)
+{
+    return BBundleMgrAdapter::bms->GetBundleDataSize(bundleName, userId);
+}
+
+void BundleMgrAdapter::CreatBackupEnv(const std::vector<BIncrementalData> &bundleNameList, int32_t userId) {}
+
 } // namespace OHOS::FileManagement::Backup

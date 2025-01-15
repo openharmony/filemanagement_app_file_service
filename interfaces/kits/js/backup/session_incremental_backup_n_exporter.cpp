@@ -28,6 +28,7 @@
 #include "filemgmt_libhilog.h"
 #include "general_callbacks.h"
 #include "incremental_backup_data.h"
+#include "parse_inc_info_from_js.h"
 #include "service_proxy.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -53,14 +54,16 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
     }
     ErrCode errCode = BError::GetCodeByErrno(sysErrno);
     std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, "system errno: " + to_string(sysErrno));
-    HILOGI("callback function incremental backup onFileReady cbCompl begin errcode: %{public}d", std::get<0>(errInfo));
+    HILOGI("callback function incre backup onFileReady begin errCode: %{public}d, bundle: %{public}s, file: %{public}s",
+        std::get<0>(errInfo), fileInfo.owner.c_str(), GetAnonyPath(fileInfo.fileName).c_str());
     auto cbCompl = [bundleName {fileInfo.owner}, fileName {fileInfo.fileName},
                     fd {make_shared<UniqueFd>(fd.Release())}, manifestFd {make_shared<UniqueFd>(manifestFd.Release())},
                     errInfo](napi_env env, NError err) -> NVal {
         if (err) {
             return {env, err.GetNapiErr(env)};
         }
-        HILOGI("callback function incremental backup onFileReady cbCompl errcode: %{public}d", std::get<0>(errInfo));
+        HILOGI("callback function incre backup onFileReady errCode: %{public}d, bundle: %{public}s, file: %{public}s",
+            std::get<0>(errInfo), bundleName.c_str(), GetAnonyPath(fileName).c_str());
         NVal obj;
         ErrParam errorParam = [ errInfo ]() {
             return errInfo;
@@ -82,7 +85,8 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
                 NVal::DeclareNapiProperty(BConstants::MANIFEST_FD.c_str(),
                     NVal::CreateInt32(env, manifestFd->Release()).val_)});
         }
-        HILOGI("callback function incremental backup onFileReady end errcode: %{public}d", std::get<0>(errInfo));
+        HILOGI("callback function incre backup onFileReady end errCode:%{public}d, bundle:%{public}s, file:%{public}s",
+            std::get<0>(errInfo), bundleName.c_str(), GetAnonyPath(fileName).c_str());
         return {obj};
     };
 
@@ -317,6 +321,30 @@ static bool SetIncrementalBackupEntity(napi_env env, NFuncArg &funcArg, std::uni
     return true;
 }
 
+static void OnBackupSizeReport(weak_ptr<GeneralCallbacks> pCallbacks, const std::string scannedResult)
+{
+    HILOGI("Callback OnBackupSizeReport...");
+    auto callbacks = pCallbacks.lock();
+    if (!callbacks) {
+        HILOGE("callback function OnScanning has already been released");
+        return;
+    }
+    if (!bool(callbacks->onBackupSizeReport)) {
+        HILOGE("callback function OnScanning is undefined");
+        return;
+    }
+    auto cbCompl = [scannedInfo {scannedResult}](napi_env env, vector<napi_value> &argv) -> bool {
+        napi_value napi_scanned = nullptr;
+        if (napi_create_string_utf8(env, scannedInfo.c_str(), scannedInfo.size(), &napi_scanned) != napi_ok) {
+            HILOGE("create napi string failed");
+            return false;
+        }
+        argv.push_back(napi_scanned);
+        return true;
+    };
+    callbacks->onBackupSizeReport.CallJsMethod(cbCompl);
+}
+
 napi_value SessionIncrementalBackupNExporter::Constructor(napi_env env, napi_callback_info cbinfo)
 {
     HILOGD("called SessionIncrementalBackup::Constructor begin");
@@ -330,13 +358,11 @@ napi_value SessionIncrementalBackupNExporter::Constructor(napi_env env, napi_cal
     }
     NFuncArg funcArg(env, cbinfo);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
-        HILOGE("Number of arguments unmatched");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
         return nullptr;
     }
     NVal callbacks(env, funcArg[NARG_POS::FIRST]);
     if (!callbacks.TypeIs(napi_object)) {
-        HILOGE("First argument is not an object.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not an object.").GetCode()).ThrowErr(env);
         return nullptr;
     }
@@ -353,7 +379,8 @@ napi_value SessionIncrementalBackupNExporter::Constructor(napi_env env, napi_cal
         .onAllBundlesFinished = bind(onAllBundlesEnd, backupEntity->callbacks, placeholders::_1),
         .onResultReport = bind(OnResultReport, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBackupServiceDied = bind(OnBackupServiceDied, backupEntity->callbacks),
-        .onProcess = bind(OnProcess, backupEntity->callbacks, placeholders::_1, placeholders::_2)}, errMsg, errCode);
+        .onProcess = bind(OnProcess, backupEntity->callbacks, placeholders::_1, placeholders::_2),
+        .onBackupSizeReport = bind(OnBackupSizeReport, backupEntity->callbacks, placeholders::_1)}, errMsg, errCode);
     if (!backupEntity->session) {
         std::tuple<uint32_t, std::string> errInfo =
             std::make_tuple(errCode, BError::GetBackupMsgByErrno(errCode) + ", " + errMsg);
@@ -412,63 +439,49 @@ napi_value SessionIncrementalBackupNExporter::GetLocalCapabilities(napi_env env,
     return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
 }
 
-static bool CheckDataList(const LibN::NVal &data)
+napi_value SessionIncrementalBackupNExporter::GetBackupDataSize(napi_env env, napi_callback_info cbinfo)
 {
-    LibN::NVal name = data.GetProp(BConstants::BUNDLE_NAME);
-    if (name.val_ == nullptr) {
-        return false;
+    HILOGI("called GetBackupDataSize Begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has no permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
     }
-    auto [succ, str, ignore] = name.ToUTF8String();
-    if (!succ) {
-        return false;
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System app check failed!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
     }
-
-    LibN::NVal time = data.GetProp(BConstants::LAST_INCREMENTAL_TIME);
-    if (time.val_ == nullptr) {
-        return false;
+    NFuncArg funcArg(env, cbinfo);
+    std::vector<BIncrementalData> bundleNames;
+    bool isPreciseScan;
+    if (!Parse::VerifyAndParseParams(env, funcArg, isPreciseScan, bundleNames)) {
+        HILOGE("VerifyAndParseParams failed");
+        return nullptr;
     }
-    tie(succ, ignore) = time.ToInt64();
-    if (!succ) {
-        return false;
+    auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
+    if (!(backupEntity && backupEntity->session)) {
+        HILOGE("Failed to get backupSession entity.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get backupSession entity.").GetCode()).ThrowErr(env);
+        return nullptr;
     }
-    return true;
-}
-
-static std::tuple<bool, std::vector<BIncrementalData>> ParseDataList(napi_env env, const napi_value& value)
-{
-    uint32_t size = 0;
-    napi_status status = napi_get_array_length(env, value, &size);
-    if (status != napi_ok) {
-        HILOGE("Get array length failed!");
-        return {false, {}};
-    }
-    if (size == 0) {
-        HILOGI("array length is zero!");
-        return {true, {}};
-    }
-
-    napi_value result;
-    std::vector<BIncrementalData> backupData;
-    for (uint32_t i = 0; i < size; i++) {
-        status = napi_get_element(env, value, i, &result);
-        if (status != napi_ok) {
-            HILOGE("Get element failed! index is :%{public}u", i);
-            return {false, {}};
-        } else {
-            NVal element(env, result);
-            if (!CheckDataList(element)) {
-                HILOGE("bundles are invalid!");
-                return {false, {}};
-            }
-            IncrementalBackupData data(element);
-            backupData.emplace_back(data.bundleName,
-                                    data.lastIncrementalTime,
-                                    data.manifestFd,
-                                    data.parameters,
-                                    data.priority);
+    auto cbExec = [session {backupEntity->session.get()}, isPreciseScan {isPreciseScan},
+        bundleNames {move(bundleNames)}]() -> NError {
+        if (!session) {
+            return NError(BError(BError::Codes::SDK_INVAL_ARG, "backup session is nullptr").GetCode());
         }
-    }
-    return {true, backupData};
+        auto ret = session->GetBackupDataSize(isPreciseScan, bundleNames);
+        if (ret != ERR_OK) {
+            return NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to GetBackupDataSize").GetCode());
+        }
+        HILOGI("GetBackupDataSize end");
+        return NError(ERRNO_NOERR);
+    };
+    auto cbCompl = [](napi_env env, NError err) -> NVal {
+        return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
+    };
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
 }
 
 static bool VerifyParamSuccess(NFuncArg &funcArg, std::vector<BIncrementalData> &backupBundles,
@@ -479,7 +492,7 @@ static bool VerifyParamSuccess(NFuncArg &funcArg, std::vector<BIncrementalData> 
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
         return false;
     }
-    auto [succ, bundles] = ParseDataList(env, funcArg[NARG_POS::FIRST]);
+    auto [succ, bundles] = Parse::ParseDataList(env, funcArg[NARG_POS::FIRST]);
     if (!succ) {
         HILOGE("bundles array invalid.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "bundles array invalid.").GetCode()).ThrowErr(env);
@@ -647,6 +660,7 @@ bool SessionIncrementalBackupNExporter::Export()
     HILOGD("called SessionIncrementalBackupNExporter::Export begin");
     vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("getLocalCapabilities", GetLocalCapabilities),
+        NVal::DeclareNapiFunction("getBackupDataSize", GetBackupDataSize),
         NVal::DeclareNapiFunction("appendBundles", AppendBundles),
         NVal::DeclareNapiFunction("release", Release),
         NVal::DeclareNapiFunction("cancel", Cancel),

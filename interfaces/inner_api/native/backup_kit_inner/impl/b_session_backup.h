@@ -21,6 +21,8 @@
 #include <vector>
 
 #include "b_file_info.h"
+#include "b_incremental_data.h"
+#include "errors.h"
 #include "errors.h"
 #include "svc_death_recipient.h"
 #include "unique_fd.h"
@@ -36,6 +38,7 @@ public:
         std::function<void(const std::string, const std::string)> onResultReport; // 某个应用备份流程中自定义错误信息的上报的回调函数
         std::function<void()> onBackupServiceDied;                       // 当备份服务意外死亡时执行的回调函数
         std::function<void(const std::string, const std::string)> onProcess; // 上报备份恢复过程中的进度和异常
+        std::function<void(const std::string)> onBackupSizeReport; // 返回已获取待备份数据量的信息
     };
 
 public:
@@ -63,6 +66,14 @@ public:
      * @return ErrCode 规范错误码
      */
     UniqueFd GetLocalCapabilities();
+
+    /**
+     * @brief 获取需要备份的应用数据量大小
+     * @param isPreciseScan 是否获取精确大小
+     * @param bundleNameList 需要获取数据量大小的包名列表，包含时间戳信息
+     * @return ErrCode 规范错误码
+     */
+    ErrCode GetBackupDataSize(bool isPreciseScan, std::vector<BIncrementalData> bundleNameList);
 
     /**
      * @brief 用于追加应用，现阶段仅支持在Start之前调用

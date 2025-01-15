@@ -243,6 +243,7 @@ int32_t FilePermission::CheckUriPersistentPermission(uint32_t tokenId,
     }
 
     vector<bool> resultCodes;
+    LOGI("CheckUriPersistentPermission pathPolicies size: %{public}zu", pathPolicies.size());
     int32_t sandboxManagerErrorCode = SandboxManagerKit::CheckPersistPolicy(tokenId, pathPolicies, resultCodes);
     for (size_t i = resultCodes.size(); i < pathPolicies.size(); i++) {
         resultCodes.emplace_back(false);
@@ -273,6 +274,7 @@ int32_t FilePermission::PersistPermission(const vector<UriPolicyInfo> &uriPolici
         return EPERM;
     }
     vector<uint32_t> resultCodes;
+    LOGI("PersistPermission pathPolicies size: %{public}zu", pathPolicies.size());
     int32_t sandboxManagerErrorCode = SandboxManagerKit::PersistPolicy(pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
     if (errorCode == EPERM) {
@@ -296,6 +298,7 @@ int32_t FilePermission::RevokePermission(const vector<UriPolicyInfo> &uriPolicie
         return EPERM;
     }
     vector<uint32_t> resultCodes;
+    LOGI("RevokePermission pathPolicies size: %{public}zu", pathPolicies.size());
     int32_t sandboxManagerErrorCode = SandboxManagerKit::UnPersistPolicy(pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
     if (errorCode == EPERM) {
@@ -319,6 +322,7 @@ int32_t FilePermission::ActivatePermission(const vector<UriPolicyInfo> &uriPolic
         return EPERM;
     }
     vector<uint32_t> resultCodes;
+    LOGI("ActivatePermission pathPolicies size: %{public}zu", pathPolicies.size());
     auto &uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
     int32_t sandboxManagerErrorCode = uriPermissionClient.Active(pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
@@ -343,6 +347,7 @@ int32_t FilePermission::DeactivatePermission(const vector<UriPolicyInfo> &uriPol
         return EPERM;
     }
     vector<uint32_t> resultCodes;
+    LOGI("DeactivatePermission pathPolicies size: %{public}zu", pathPolicies.size());
     int32_t sandboxManagerErrorCode = SandboxManagerKit::StopAccessingPolicy(pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
     if (errorCode == EPERM) {
