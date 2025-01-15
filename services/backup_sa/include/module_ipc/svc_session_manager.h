@@ -539,6 +539,14 @@ public:
     void SetMemParaCurSize(int32_t size);
 
     /**
+     * @brief 获取超时时间
+     *
+     * @param bundleName 应用名称
+     * @return uint32_t
+     */
+    uint32_t GetTimeoutValue(const std::string &bundleName);
+
+    /**
      * @brief Set the old device backup version object
      *
      * @param backupVersion

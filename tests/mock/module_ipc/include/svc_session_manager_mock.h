@@ -55,6 +55,7 @@ public:
     virtual int64_t GetLastIncrementalTime(const std::string&) = 0;
     virtual int32_t GetMemParaCurSize() = 0;
     virtual bool ValidRestoreDataType(RestoreTypeEnum) = 0;
+    virtual uint32_t GetTimeoutValue(const std::string &) = 0;
     virtual bool GetClearDataFlag(const std::string&) = 0;
     virtual bool CleanAndCheckIfNeedWait(ErrCode &, std::vector<std::string> &) = 0;
     virtual ErrCode ClearSessionData() = 0;
@@ -102,6 +103,7 @@ public:
     MOCK_METHOD(int64_t, GetLastIncrementalTime, (const std::string&));
     MOCK_METHOD(int32_t, GetMemParaCurSize, ());
     MOCK_METHOD(bool, ValidRestoreDataType, (RestoreTypeEnum));
+    MOCK_METHOD(uint32_t, GetTimeoutValue, (const std::string &));
     MOCK_METHOD(bool, GetClearDataFlag, (const std::string&));
     MOCK_METHOD(bool, CleanAndCheckIfNeedWait, (ErrCode &, std::vector<std::string> &));
     MOCK_METHOD(ErrCode, ClearSessionData, ());

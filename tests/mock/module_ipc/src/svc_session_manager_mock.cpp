@@ -246,6 +246,11 @@ bool SvcSessionManager::ValidRestoreDataType(RestoreTypeEnum restoreDataType)
     return BSvcSessionManager::sessionManager->ValidRestoreDataType(restoreDataType);
 }
 
+uint32_t SvcSessionManager::GetTimeoutValue(const std::string &bundleName)
+{
+    return BSvcSessionManager::sessionManager->GetTimeoutValue(bundleName);
+}
+
 void SvcSessionManager::SetIncrementalData(const BIncrementalData &) {}
 
 int32_t SvcSessionManager::GetIncrementalManifestFd(const string &bundleName)

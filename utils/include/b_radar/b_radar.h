@@ -40,7 +40,7 @@ enum class BizStageBackup : int32_t {
     BIZ_STAGE_DEACTIVE_SESSION,
     BIZ_STAGE_RELEASE,
     BIZ_STAGE_ONSTART_DISPOSE,
-    BIZ_STAGE_ONSTART_RESIDUAL
+    BIZ_STAGE_ONSTART_RESIDUAL,
 };
 
 enum class BizStageRestore : int32_t {
@@ -63,7 +63,7 @@ enum class BizStageRestore : int32_t {
     BIZ_STAGE_DEACTIVE_SESSION,
     BIZ_STAGE_RELEASE,
     BIZ_STAGE_ONSTART_DISPOSE,
-    BIZ_STAGE_ONSTART_RESIDUAL
+    BIZ_STAGE_ONSTART_RESIDUAL,
 };
 
 class AppRadar {

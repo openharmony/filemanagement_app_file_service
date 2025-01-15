@@ -319,7 +319,7 @@ void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
 void Service::BundleBeginRadarReport(const std::string &bundleName, const ErrCode errCode,
     const IServiceReverse::Scenario scenario) {}
 
-void Service::BundleEndRadarReport(const std::string &bundleName, const ErrCode errCode,
+void Service::BundleEndRadarReport(const std::string &bundleName, ErrCode errCode,
     const IServiceReverse::Scenario scenario) {}
 
 void Service::FileReadyRadarReport(const std::string &bundleName, const std::string &fileName, const ErrCode errCode,
@@ -336,6 +336,22 @@ std::string Service::GetCallerName()
 {
     return "";
 }
+
+bool Service::IsReportBundleExecFail(const std::string &bundleName)
+{
+    return true;
+}
+
+void Service::ClearBundleRadarReport() {}
+
+void Service::UpdateBundleRadarReport(const std::string &bundleName) {}
+
+bool Service::IsReportFileReadyFail(const std::string &bundleName)
+{
+    return true;
+}
+
+void Service::ClearFileReadyRadarReport() {}
 
 void Service::UpdateFailedBundles(const std::string &bundleName, BundleTaskInfo taskInfo) {}
 

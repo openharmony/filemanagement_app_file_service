@@ -315,6 +315,8 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
     if (errCode == ERR_OK) {
         ClearFailedBundles();
         successBundlesNum_ = 0;
+        ClearBundleRadarReport();
+        ClearFileReadyRadarReport();
         return errCode;
     }
     if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
@@ -348,6 +350,8 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote, std:
     if (errCode == ERR_OK) {
         ClearFailedBundles();
         successBundlesNum_ = 0;
+        ClearBundleRadarReport();
+        ClearFileReadyRadarReport();
         return errCode;
     }
     if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {

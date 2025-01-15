@@ -122,6 +122,8 @@ public:
         E_CANCEL_UNSTARTED_TASK = 13500011,
         E_CANCEL_NO_TASK = 13500012,
         E_CONFLICT = 13500013,
+        E_INCOMPATIBLE = 13500014,
+        E_FORCE_TIMEOUT = 13500015,
     };
 
 public:
@@ -327,6 +329,8 @@ private:
         {BackupErrorCode::E_CANCEL_UNSTARTED_TASK, BackupErrorCode::E_CANCEL_UNSTARTED_TASK},
         {BackupErrorCode::E_CANCEL_NO_TASK, BackupErrorCode::E_CANCEL_NO_TASK},
         {BackupErrorCode::E_CONFLICT, BackupErrorCode::E_CONFLICT},
+        {BackupErrorCode::E_FORCE_TIMEOUT, BackupErrorCode::E_FORCE_TIMEOUT},
+        {BackupErrorCode::E_INCOMPATIBLE, BackupErrorCode::E_INCOMPATIBLE},
     };
 
     static inline const std::map<int, int> sysErrnoCodeTable_ {
@@ -365,6 +369,8 @@ private:
         {BackupErrorCode::E_CANCEL_UNSTARTED_TASK, "Cancel unstarted backup or restore task "},
         {BackupErrorCode::E_CANCEL_NO_TASK, "Cancel a backup or restore task that does not exist"},
         {BackupErrorCode::E_CONFLICT, "Session Conflict"},
+        {BackupErrorCode::E_INCOMPATIBLE, "Not compatible"},
+        {BackupErrorCode::E_FORCE_TIMEOUT, "Exit actively"}
     };
 
 private:
