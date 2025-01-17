@@ -1545,3 +1545,368 @@ HWTEST_F(ServiceTest, SUB_Service_GetLocalCapabilitiesForBdInfos_0000, TestSize.
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetLocalCapabilitiesForBdInfos_0000";
 }
+
+/**
+ * @tc.number: SUB_Service_GetBackupDataSize_0000
+ * @tc.name: SUB_Service_GetBackupDataSize_0000
+ * @tc.desc: 测试 GetBackupDataSize 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetBackupDataSize_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetBackupDataSize_0000";
+    try {
+        bool isPreciseScan = true;
+        vector<BIncrementalData> bundleNameList;
+        BIncrementalData data;
+        data.bundleName = BUNDLE_NAME;
+        data.lastIncrementalTime = 0;
+        bundleNameList.push_back(data);
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        auto ret = service->GetBackupDataSize(isPreciseScan, bundleNameList);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        service->session_ = session_;
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_DENIED));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        ret = service->GetBackupDataSize(isPreciseScan, bundleNameList);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        ret = service->GetBackupDataSize(isPreciseScan, bundleNameList);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetBackupDataSize.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetBackupDataSize_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_GetScanningInfo_0000
+ * @tc.name: SUB_Service_GetScanningInfo_0000
+ * @tc.desc: 测试 GetScanningInfo 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetScanningInfo_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetScanningInfo_0000";
+    try {
+        size_t size = 1;
+        string scanning = BUNDLE_NAME;
+        bool ret = service->GetScanningInfo(nullptr, size, scanning);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetScanningInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetScanningInfo_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_WriteToList_0000
+ * @tc.name: SUB_Service_WriteToList_0000
+ * @tc.desc: 测试 WriteToList 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_WriteToList_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_WriteToList_0000";
+    try {
+        ASSERT_TRUE(service != nullptr);
+        BJsonUtil::BundleDataSize bundleDataSize;
+        bundleDataSize.bundleName = BUNDLE_NAME;
+        bundleDataSize.dataSize = 1;
+        bundleDataSize.incDataSize = 1;
+        service->WriteToList(bundleDataSize);
+        ASSERT_TRUE(service->bundleDataSizeList_.back().bundleName == bundleDataSize.bundleName);
+        service->bundleDataSizeList_.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by WriteToList.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_WriteToList_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_DeleteFromList_0000
+ * @tc.name: SUB_Service_DeleteFromList_0000
+ * @tc.desc: 测试 DeleteFromList 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_DeleteFromList_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_DeleteFromList_0000";
+    try {
+        ASSERT_TRUE(service != nullptr);
+        auto ret = service->bundleDataSizeList_.size();
+        BJsonUtil::BundleDataSize bundleDataSize;
+        bundleDataSize.bundleName = BUNDLE_NAME;
+        bundleDataSize.dataSize = 1;
+        bundleDataSize.incDataSize = 1;
+        service->bundleDataSizeList_.push_back(bundleDataSize);
+        service->DeleteFromList(1);
+        EXPECT_EQ(service->bundleDataSizeList_.size(), ret);
+        service->bundleDataSizeList_.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by DeleteFromList.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DeleteFromList_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_SetScanningInfo_0000
+ * @tc.name: SUB_Service_SetScanningInfo_0000
+ * @tc.desc: 测试 SetScanningInfo 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_SetScanningInfo_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetScanningInfo_0000";
+    try {
+        ASSERT_TRUE(service != nullptr);
+        string scanning = "";
+        string name = BUNDLE_NAME;
+        service->SetScanningInfo(scanning, name);
+        EXPECT_EQ(scanning, name);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetScanningInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetScanningInfo_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_WriteScannedInfoToList_0000
+ * @tc.name: SUB_Service_WriteScannedInfoToList_0000
+ * @tc.desc: 测试 WriteScannedInfoToList 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_WriteScannedInfoToList_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_WriteScannedInfoToList_0000";
+    try {
+        ASSERT_TRUE(service != nullptr);
+        auto ret = service->bundleDataSizeList_.size();
+        string bundleName = BUNDLE_NAME;
+        int64_t dataSize = 1;
+        int64_t incDataSize = 1;
+        service->WriteScannedInfoToList(bundleName, dataSize, incDataSize);
+        EXPECT_EQ(service->bundleDataSizeList_.size(), ret + 1);
+        service->bundleDataSizeList_.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by WriteScannedInfoToList.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_WriteScannedInfoToList_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_GetPrecisesSize_0000
+ * @tc.name: SUB_Service_GetPrecisesSize_0000
+ * @tc.desc: 测试 GetPrecisesSize 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetPrecisesSize_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetPrecisesSize_0000";
+    try {
+        vector<BIncrementalData> bundleNameList;
+        BIncrementalData data;
+        data.bundleName = BUNDLE_NAME;
+        data.lastIncrementalTime = 0;
+        bundleNameList.push_back(data);
+        string scanning = "";
+        BJsonUtil::BundleDetailInfo info;
+        info.bundleIndex = 1;
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(info));
+        EXPECT_CALL(*sms, GetBundleStatsForIncrease(_, _, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        service->GetPrecisesSize(bundleNameList, scanning);
+        EXPECT_EQ(service->bundleDataSizeList_.size(), 0);
+        service->bundleDataSizeList_.clear();
+
+        vector<BIncrementalData> bundleNameListTwo;
+        BIncrementalData dataTwo;
+        dataTwo.bundleName = BUNDLE_NAME;
+        dataTwo.lastIncrementalTime = 1;
+        bundleNameListTwo.push_back(dataTwo);
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(info));
+        EXPECT_CALL(*sms, GetBundleStatsForIncrease(_, _, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        service->GetPrecisesSize(bundleNameListTwo, scanning);
+        EXPECT_EQ(service->bundleDataSizeList_.size(), 0);
+        service->bundleDataSizeList_.clear();
+
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(info));
+        EXPECT_CALL(*sms, GetBundleStatsForIncrease(_, _, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        service->GetPrecisesSize(bundleNameListTwo, scanning);
+        EXPECT_EQ(service->bundleDataSizeList_.size(), 1);
+        service->bundleDataSizeList_.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetPrecisesSize.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetPrecisesSize_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_GetPrecisesSize_0100
+ * @tc.name: SUB_Service_GetPrecisesSize_0100
+ * @tc.desc: 测试 GetPrecisesSize 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetPrecisesSize_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetPrecisesSize_0100";
+    try {
+        string scanning = "";
+        BJsonUtil::BundleDetailInfo info;
+        info.bundleIndex = 0;
+        vector<BIncrementalData> bundleNameListTwo;
+        BIncrementalData dataTwo;
+        dataTwo.bundleName = BUNDLE_NAME;
+        dataTwo.lastIncrementalTime = 1;
+        bundleNameListTwo.push_back(dataTwo);
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(info))
+            .WillOnce(Return(info)).WillOnce(Return(info));
+        EXPECT_CALL(*sms, GetBundleStatsForIncrease(_, _, _, _, _)).WillOnce(Return(0))
+            .WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        service->GetPrecisesSize(bundleNameListTwo, scanning);
+        EXPECT_EQ(service->bundleDataSizeList_.size(), 0);
+        service->bundleDataSizeList_.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetPrecisesSize.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetPrecisesSize_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_GetPresumablySize_0000
+ * @tc.name: SUB_Service_GetPresumablySize_0000
+ * @tc.desc: 测试 GetPresumablySize 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetPresumablySize_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetPresumablySize_0000";
+    try {
+        auto ret = service->bundleDataSizeList_.size();
+        vector<BIncrementalData> bundleNameList;
+        BIncrementalData data;
+        data.bundleName = BUNDLE_NAME;
+        data.lastIncrementalTime = 0;
+        bundleNameList.push_back(data);
+        string scanning = "";
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        service->GetPresumablySize(bundleNameList, scanning);
+        EXPECT_EQ(service->bundleDataSizeList_.size(), ret + 1);
+        service->bundleDataSizeList_.clear();
+
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*bms, GetBundleDataSize(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        service->GetPresumablySize(bundleNameList, scanning);
+        EXPECT_EQ(service->bundleDataSizeList_.size(), 1);
+        service->bundleDataSizeList_.clear();
+
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*bms, GetBundleDataSize(_, _)).WillOnce(Return(1));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        service->GetPresumablySize(bundleNameList, scanning);
+        EXPECT_EQ(service->bundleDataSizeList_.size(), 1);
+        service->bundleDataSizeList_.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetPresumablySize.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetPresumablySize_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_GetDataSizeStepByStep_0000
+ * @tc.name: SUB_Service_GetDataSizeStepByStep_0000
+ * @tc.desc: 测试 GetDataSizeStepByStep 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetDataSizeStepByStep_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetDataSizeStepByStep_0000";
+    try {
+        bool isPreciseScan = false;
+        vector<BIncrementalData> bundleNameList;
+        string scanning = "";
+        EXPECT_CALL(*task, AddTask(_)).WillOnce(WithArgs<0>(Invoke([](const ThreadPool::Task &f) {
+            f();
+        })));
+        service->GetDataSizeStepByStep(isPreciseScan, bundleNameList, scanning);
+        EXPECT_TRUE(true);
+
+        isPreciseScan = true;
+                EXPECT_CALL(*task, AddTask(_)).WillOnce(WithArgs<0>(Invoke([](const ThreadPool::Task &f) {
+            f();
+        })));
+        service->GetDataSizeStepByStep(isPreciseScan, bundleNameList, scanning);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetDataSizeStepByStep.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetDataSizeStepByStep_0000";
+}

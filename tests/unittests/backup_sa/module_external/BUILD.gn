@@ -22,6 +22,7 @@ ohos_unittest("bms_adapter_test") {
     "${path_backup}/services/backup_sa/include",
     "${path_backup}/utils/include",
     "${path_backup}/utils/include/b_hilog",
+    "${path_backup_mock}/utils_mock/include",
   ]
 
   sources = [ "bms_adapter_test.cpp" ]
