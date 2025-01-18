@@ -17,6 +17,7 @@
 
 #include <vector>
 
+#include "b_sa_utils_mock.h"
 #include "if_system_ability_manager.h"
 #include "iremote_stub.h"
 #include "iservice_registry.h"
@@ -29,6 +30,8 @@ using namespace FileManagement::Backup;
 
 const string HMOS_HAP_CODE_PATH = "1";
 const string LINUX_HAP_CODE_PATH = "2";
+const string BUNDLE_NAME = "com.example.app2backup";
+const int32_t USER_ID = 100;
 
 class SystemAbilityManagerMock : public ISystemAbilityManager {
 public:
@@ -83,18 +86,23 @@ public:
 public:
     static inline sptr<BundleMgrMock> bms = nullptr;
     static inline sptr<SystemAbilityManagerMock> sam = nullptr;
+    static inline shared_ptr<SAUtilsMock> saUtils = nullptr;
 };
 
 void BmsAdapterTest::SetUpTestCase()
 {
     sam = sptr<SystemAbilityManagerMock>(new SystemAbilityManagerMock());
     bms = sptr<BundleMgrMock>(new BundleMgrMock());
+    saUtils = make_shared<SAUtilsMock>();
+    SAUtilsMock::utils = saUtils;
 }
 
 void BmsAdapterTest::TearDownTestCase()
 {
     bms = nullptr;
     sam = nullptr;
+    SAUtilsMock::utils = nullptr;
+    saUtils = nullptr;
 }
 
 sptr<ISystemAbilityManager> SystemAbilityManagerClient::GetSystemAbilityManager()
@@ -183,5 +191,34 @@ HWTEST_F(BmsAdapterTest, SUB_bms_adapter_GetBundleInfosForIndex_test_0100, testi
         GTEST_LOG_(INFO) << "BmsAdapterTest-an exception occurred by GetBundleInfosForIndex.";
     }
     GTEST_LOG_(INFO) << "BmsAdapterTest-end SUB_bms_adapter_GetBundleInfosForIndex_test_0100";
+}
+
+/**
+ * @tc.number: SUB_bms_adapter_CreatBackupEnv_test_0000
+ * @tc.name: SUB_bms_adapter_CreatBackupEnv_test_0000
+ * @tc.desc: 测试 CreatBackupEnv 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(BmsAdapterTest, SUB_bms_adapter_CreatBackupEnv_test_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsAdapterTest-begin SUB_bms_adapter_CreatBackupEnv_test_0000";
+    try {
+        std::vector<BIncrementalData> bundleNameList;
+        EXPECT_CALL(*sam, GetSystemAbility(_)).WillOnce(Return(bms)).WillOnce(Return(bms));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
+        BundleMgrAdapter::CreatBackupEnv(bundleNameList, USER_ID);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        BundleMgrAdapter::CreatBackupEnv(bundleNameList, USER_ID);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BmsAdapterTest-an exception occurred by CreatBackupEnv.";
+    }
+    GTEST_LOG_(INFO) << "BmsAdapterTest-end SUB_bms_adapter_CreatBackupEnv_test_0000";
 }
 } // namespace OHOS

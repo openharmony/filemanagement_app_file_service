@@ -29,6 +29,7 @@
 #include "notify_work_service_mock.h"
 #include "sa_backup_connection_mock.h"
 #include "service_reverse_proxy_mock.h"
+#include "sms_adapter_mock.h"
 #include "svc_backup_connection_mock.h"
 #include "svc_extension_proxy_mock.h"
 #include "svc_restore_deps_manager_mock.h"
@@ -135,6 +136,26 @@ void Service::RemoveExtensionMutex(const BundleName&) {}
 void Service::CreateDirIfNotExist(const std::string&) {}
 }
 
+class BThreadPool {
+public:
+    virtual void AddTask(const OHOS::ThreadPool::Task&) = 0;
+public:
+    BThreadPool() = default;
+    virtual ~BThreadPool() = default;
+public:
+    static inline std::shared_ptr<BThreadPool> task = nullptr;
+};
+
+class ThreadPoolMock : public BThreadPool {
+public:
+    MOCK_METHOD(void, AddTask, (const OHOS::ThreadPool::Task&));
+};
+
+void OHOS::ThreadPool::AddTask(const OHOS::ThreadPool::Task &f)
+{
+    BThreadPool::task->AddTask(f);
+}
+
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
@@ -168,6 +189,8 @@ public:
     static inline shared_ptr<SvcRestoreDepsManagerMock> depManager = nullptr;
     static inline shared_ptr<NotifyWorkServiceMock> notify = nullptr;
     static inline shared_ptr<AppGalleryDisposeProxyMock> gallery = nullptr;
+    static inline shared_ptr<StorageMgrAdapterMock> sms = nullptr;
+    static inline shared_ptr<ThreadPoolMock> task = nullptr;
 };
 
 void ServiceTest::SetUpTestCase(void)
@@ -206,6 +229,10 @@ void ServiceTest::SetUpTestCase(void)
     NotifyWorkServiceMock::notify = notify;
     gallery = make_shared<AppGalleryDisposeProxyMock>();
     AppGalleryDisposeProxyMock::proxy = gallery;
+    sms = make_shared<StorageMgrAdapterMock>();
+    StorageMgrAdapterMock::sms = sms;
+    task = make_shared<ThreadPoolMock>();
+    ThreadPoolMock::task = task;
 }
 
 void ServiceTest::TearDownTestCase()
@@ -244,6 +271,10 @@ void ServiceTest::TearDownTestCase()
     notify = nullptr;
     AppGalleryDisposeProxyMock::proxy = nullptr;
     gallery = nullptr;
+    StorageMgrAdapterMock::sms = nullptr;
+    sms = nullptr;
+    ThreadPoolMock::task = nullptr;
+    task = nullptr;
 }
 
 #include "sub_service_test.cpp"
