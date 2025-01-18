@@ -212,6 +212,16 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
     return pathPolicies;
 }
 
+vector<PolicyInfo> FilePermission::GetSandboxPolicyInfo(const vector<PathPolicyInfo> &pathPolicies)
+{
+    vector<PolicyInfo> policies;
+    for (const auto &policy: pathPolicies) {
+        PolicyInfo policyInfo = {policy.path, policy.mode};
+        policies.emplace_back(policyInfo);
+    }
+    return policies;
+}
+
 static bool CheckPermission(uint32_t tokenCaller, const string &permission)
 {
     return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
@@ -256,6 +266,39 @@ int32_t FilePermission::CheckUriPersistentPermission(uint32_t tokenId,
 
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode);
     ParseErrorResults(resultCodes, errorResults);
+#endif
+    return errorCode;
+}
+
+int32_t FilePermission::CheckPathPermission(uint32_t tokenId, const vector<PathPolicyInfo> &pathPolicies,
+    int32_t policyType, vector<bool> &errorResults)
+{
+    LOGI("CheckPathPermission pathPolicies size:%{public}zu policyType:%{public}d", pathPolicies.size(), policyType);
+    int errorCode = 0;
+#ifdef SANDBOX_MANAGER
+    if (tokenId == 0) {
+        LOGE("tokenId is invalid");
+        return FileManagement::LibN::E_PARAMS;
+    }
+    if (pathPolicies.size() == 0 || pathPolicies.size() > MAX_ARRAY_SIZE) {
+        LOGE("The number of policy is invalid");
+        return FileManagement::LibN::E_PARAMS;
+    }
+    if (policyType < 0 || policyType > PERSISTENT_TYPE) {
+        LOGE("The policyType is invalid type:%{public}d", policyType);
+        return FileManagement::LibN::E_PARAMS;
+    }
+
+    int32_t sandboxManagerErrorCode = 0;
+    vector<PolicyInfo> policies = GetSandboxPolicyInfo(pathPolicies);
+    if (policyType == TEMPORARY_TYPE) {
+        sandboxManagerErrorCode = SandboxManagerKit::CheckPolicy(tokenId, policies, errorResults);
+    } else if (policyType == PERSISTENT_TYPE) {
+        sandboxManagerErrorCode = SandboxManagerKit::CheckPersistPolicy(tokenId, policies, errorResults);
+    } else {
+        LOGE("invalid policy type %{public}d", policyType);
+    }
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode);
 #endif
     return errorCode;
 }

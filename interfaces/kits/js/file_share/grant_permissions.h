@@ -29,6 +29,7 @@ napi_value RevokePermission(napi_env env, napi_callback_info info);
 napi_value ActivatePermission(napi_env env, napi_callback_info info);
 napi_value DeactivatePermission(napi_env env, napi_callback_info info);
 napi_value CheckPersistentPermission(napi_env env, napi_callback_info info);
+napi_value CheckPathPermission(napi_env env, napi_callback_info info);
 
 struct PolicyErrorArgs {
     deque<PolicyErrorResult> errorResults;

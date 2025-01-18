@@ -127,6 +127,64 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
     return napi_ok;
 }
 
+static napi_status GetPathPoliciesArg(napi_env env, napi_value agrv, std::vector<PathPolicyInfo> &pathPolicies)
+{
+    uint32_t count;
+    napi_status status = napi_get_array_length(env, agrv, &count);
+    if (status != napi_ok) {
+        LOGE("get array length failed");
+        return status;
+    }
+    if (count > MAX_ARRAY_SIZE) {
+        LOGE("The length of the array is extra-long");
+        return napi_invalid_arg;
+    }
+    for (uint32_t i = 0; i < count; i++) {
+        napi_handle_scope scope;
+        status = napi_open_handle_scope(env, &scope);
+        if (status != napi_ok) {
+            return status;
+        }
+        napi_value object;
+        status = napi_get_element(env, agrv, i, &object);
+        if (status != napi_ok) {
+            LOGE("get element failed");
+            return status;
+        }
+        napi_value pathValue;
+        napi_value modeValue;
+        status = napi_get_named_property(env, object, "path", &pathValue);
+        if (status != napi_ok) {
+            LOGE("get named property failed");
+            return status;
+        }
+        status = napi_get_named_property(env, object, "operationMode", &modeValue);
+        if (status != napi_ok) {
+            LOGE("get named property failed");
+            return status;
+        }
+        auto [succStr, str, ignore] = NVal(env, pathValue).ToUTF8String();
+        auto [succMode, mode] = NVal(env, modeValue).ToUint32();
+        if (!succStr || !succMode) {
+            LOGE("the argument error");
+            return napi_invalid_arg;
+        }
+        PathPolicyInfo pathPolicy {.path = str.get(), .mode = mode};
+        pathPolicies.emplace_back(pathPolicy);
+        status = napi_close_handle_scope(env, scope);
+        if (status != napi_ok) {
+            return status;
+        }
+    }
+    return napi_ok;
+}
+
+static bool IsSystemApp()
+{
+    uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
+}
+
 napi_value PersistPermission(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
@@ -313,6 +371,64 @@ napi_value CheckPersistentPermission(napi_env env, napi_callback_info info)
         return {env, GetResultData(env, arg->resultData)};
     };
     const string procedureName = "check_persist_permission";
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
+}
+
+napi_value CheckPathPermission(napi_env env, napi_callback_info info)
+{
+    if (!IsSystemApp()) {
+        LOGE("FileShare::CheckPathPermission is not System App!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::THREE)) {
+        LOGE("ActivatePermission Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToInt32();
+    if (!succTokenId) {
+        LOGE("Failed to get tokenid");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    std::vector<PathPolicyInfo> pathPolicies;
+    if (GetPathPoliciesArg(env, funcArg[NARG_POS::SECOND], pathPolicies) != napi_ok) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto [succPolicyType, policyType] = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
+    if (!succPolicyType) {
+        LOGE("Failed to get policy type");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    LOGI("check permission target:%{public}d type:%{public}d", tokenId, policyType);
+
+    shared_ptr<PolicyInfoResultArgs> arg = make_shared<PolicyInfoResultArgs>();
+    if (arg == nullptr) {
+        LOGE("PolicyInfoResultArgs make_shared is failed");
+        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        return nullptr;
+    }
+    auto cbExec = [tokenId { move(tokenId)}, pathPolicies, policyType { move(policyType)}, arg]() -> NError {
+        arg->errNo = FilePermission::CheckPathPermission(tokenId, pathPolicies, policyType, arg->resultData);
+        return NError(arg->errNo);
+    };
+    auto cbCompl = [arg](napi_env env, NError err) -> NVal {
+        if (arg->errNo != 0) {
+            return {env, err.GetNapiErr(env)};
+        }
+        return {env, GetResultData(env, arg->resultData)};
+    };
+    const string procedureName = "check_path_permission";
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
 }
