@@ -1004,7 +1004,7 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
             if (!ptr->StopExtTimer()) {
                 throw BError(BError::Codes::EXT_TIMER_ERROR, "Failed to stop extTimer");
             }
-            int64_t totalSize;
+            int64_t totalSize = 0;
             TarMap bigFileInfo;
             map<string, size_t> smallFiles;
             BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
