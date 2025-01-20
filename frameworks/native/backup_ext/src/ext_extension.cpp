@@ -1671,33 +1671,33 @@ void BackupExtExtension::DoClear()
         string restoreCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         string specialRestoreCache = GetRestoreTempPath(bundleName_);
 
-        if (!ForceRemoveDirectory(backupCache)) {
-            HILOGI("Failed to delete the backup cache %{public}s", backupCache.c_str());
+        if (!ForceRemoveDirectoryBMS(backupCache)) {
+            HILOGE("Failed to delete the backup cache %{public}s", backupCache.c_str());
         }
 
-        if (!ForceRemoveDirectory(restoreCache)) {
-            HILOGI("Failed to delete the restore cache %{public}s", restoreCache.c_str());
+        if (!ForceRemoveDirectoryBMS(restoreCache)) {
+            HILOGE("Failed to delete the restore cache %{public}s", restoreCache.c_str());
         }
 
-        if (!ForceRemoveDirectory(specialRestoreCache)) {
-            HILOGI("Failed to delete cache for filemanager or medialibrary %{public}s", specialRestoreCache.c_str());
+        if (!ForceRemoveDirectoryBMS(specialRestoreCache)) {
+            HILOGE("Failed to delete cache for filemanager or medialibrary %{public}s", specialRestoreCache.c_str());
         }
         // delete el1 backup/restore
-        ForceRemoveDirectory(
+        ForceRemoveDirectoryBMS(
             string(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1).append(BConstants::SA_BUNDLE_BACKUP_BACKUP));
-        ForceRemoveDirectory(
+        ForceRemoveDirectoryBMS(
             string(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
         // delete special directory
         if (bundleName_.compare(MEDIA_LIBRARY_BUNDLE_NAME) == 0) {
-            ForceRemoveDirectory(
+            ForceRemoveDirectoryBMS(
                 string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP));
-            ForceRemoveDirectory(
+            ForceRemoveDirectoryBMS(
                 string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
         }
         if (bundleName_.compare(FILE_MANAGER_BUNDLE_NAME) == 0) {
-            ForceRemoveDirectory(
+            ForceRemoveDirectoryBMS(
                 string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP));
-            ForceRemoveDirectory(
+            ForceRemoveDirectoryBMS(
                 string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
         }
     } catch (...) {

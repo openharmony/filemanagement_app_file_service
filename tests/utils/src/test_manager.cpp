@@ -38,7 +38,7 @@ TestManager::TestManager(std::string functionName, MakeDirType dirType)
 
 TestManager::~TestManager()
 {
-    ForceRemoveDirectory(rootDirCurTest_);
+    ForceRemoveDirectoryBMS(rootDirCurTest_);
 }
 
 string TestManager::GetRootDirCurTest() const

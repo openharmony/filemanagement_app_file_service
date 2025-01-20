@@ -169,12 +169,12 @@ HWTEST_F(ToolsOpTest, SUB_backup_tools_op_0500, testing::ext::TestSize.Level1)
         std::string wholePath = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + bundleName;
         std::string incrementalpath = string(BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR) + bundleName;
         if (access(incrementalpath.c_str(), F_OK) == 0) {
-            ForceRemoveDirectory(incrementalpath.data());
+            ForceRemoveDirectoryBMS(incrementalpath.data());
         }
         int result = ToolsOp::GetFIleNums(bundleName, false);
         EXPECT_TRUE(result == DEFAULT_ERR_NUMBER);
         if (access(wholePath.c_str(), F_OK) == 0) {
-            ForceRemoveDirectory(wholePath.data());
+            ForceRemoveDirectoryBMS(wholePath.data());
         }
         result = ToolsOp::GetFIleNums(bundleName, true);
         EXPECT_TRUE(result == DEFAULT_ERR_NUMBER);
@@ -191,7 +191,7 @@ HWTEST_F(ToolsOpTest, SUB_backup_tools_op_0500, testing::ext::TestSize.Level1)
         result = ToolsOp::GetFIleNums(bundleName, true);
         EXPECT_TRUE(result == 0);
         if (access(incrementalpath.c_str(), F_OK) == 0) {
-            ForceRemoveDirectory(incrementalpath.data());
+            ForceRemoveDirectoryBMS(incrementalpath.data());
         }
         if (access(wholePath.c_str(), F_OK) != 0) {
             ForceCreateDirectory(wholePath.data());

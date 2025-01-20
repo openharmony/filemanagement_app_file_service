@@ -242,7 +242,7 @@ static void BackupToolDirSoftlinkToBackupDir()
             return;
         }
         // 非软连接删除重新创建
-        if (!ForceRemoveDirectory(BConstants::BACKUP_TOOL_LINK_DIR.data())) {
+        if (!ForceRemoveDirectoryBMS(BConstants::BACKUP_TOOL_LINK_DIR.data())) {
             throw BError(BError::Codes::TOOL_INVAL_ARG, generic_category().message(errno));
         }
     }
