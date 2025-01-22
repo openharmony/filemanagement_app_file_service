@@ -29,6 +29,7 @@ namespace OHOS {
 namespace AppFileService {
 namespace ModuleFileShare {
 using namespace OHOS::FileManagement::LibN;
+using namespace OHOS::Security::AccessToken;
 using namespace std;
 
 static napi_value GetErrData(napi_env env, deque<struct PolicyErrorResult> &errorResults)
@@ -127,22 +128,32 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
     return napi_ok;
 }
 
-static napi_status GetPathPoliciesArg(napi_env env, napi_value agrv, std::vector<PathPolicyInfo> &pathPolicies)
+static napi_status CheckPathArray(napi_env env, napi_value agrv, uint32_t &count)
 {
-    uint32_t count;
     napi_status status = napi_get_array_length(env, agrv, &count);
     if (status != napi_ok) {
         LOGE("get array length failed");
         return status;
     }
-    if (count > MAX_ARRAY_SIZE) {
-        LOGE("The length of the array is extra-long");
+    if (count == 0 || count > MAX_ARRAY_SIZE) {
+        LOGE("The length of the array is extra-long or length is 0");
         return napi_invalid_arg;
+    }
+    return napi_ok;
+}
+
+static napi_status GetPathPoliciesArg(napi_env env, napi_value agrv, std::vector<PathPolicyInfo> &pathPolicies)
+{
+    uint32_t count;
+    napi_status status = CheckPathArray(env, agrv, count);
+    if (status != napi_ok) {
+        return status;
     }
     for (uint32_t i = 0; i < count; i++) {
         napi_handle_scope scope;
         status = napi_open_handle_scope(env, &scope);
         if (status != napi_ok) {
+            LOGE("open handle scope failed");
             return status;
         }
         napi_value object;
@@ -182,7 +193,7 @@ static napi_status GetPathPoliciesArg(napi_env env, napi_value agrv, std::vector
 static bool IsSystemApp()
 {
     uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
-    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
+    return TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
 }
 
 napi_value PersistPermission(napi_env env, napi_callback_info info)
@@ -375,6 +386,33 @@ napi_value CheckPersistentPermission(napi_env env, napi_callback_info info)
     return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
+static bool CheckTokenIdPermission(uint32_t tokenCaller, const string &permission)
+{
+    return AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
+           PermissionState::PERMISSION_GRANTED;
+}
+
+static bool CheckArgs(napi_env env, napi_callback_info info, NFuncArg& funcArg)
+{
+    if (!funcArg.InitArgs(NARG_CNT::THREE)) {
+        LOGE("ActivatePermission Number of arguments unmatched");
+        return false;
+    }
+
+    auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToInt32();
+    if (!succTokenId  || succTokenId == 0) {
+        LOGE("Failed to get tokenid or tokenid is 0");
+        return false;
+    }
+
+    auto [succPolicyType, policyType] = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
+    if (!succPolicyType || succPolicyType < TEMPORARY_TYPE || succPolicyType > PERSISTENT_TYPE) {
+        LOGE("Failed to get policy type or policy type is invalid");
+        return false;
+    }
+    return true;
+}
+
 napi_value CheckPathPermission(napi_env env, napi_callback_info info)
 {
     if (!IsSystemApp()) {
@@ -384,17 +422,19 @@ napi_value CheckPathPermission(napi_env env, napi_callback_info info)
     }
 
     NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(NARG_CNT::THREE)) {
-        LOGE("ActivatePermission Number of arguments unmatched");
+    if (!CheckArgs(env, info, funcArg)) {
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
     auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToInt32();
-    if (!succTokenId) {
-        LOGE("Failed to get tokenid");
-        NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
+
+    uint64_t callerTokenId = OHOS::IPCSkeleton::GetCallingTokenID();
+    if (tokenId != callerTokenId) {
+        if (!CheckTokenIdPermission(callerTokenId, "ohos.permission.CHECK_SANDBOX_POLICY")) {
+            NError(E_PERMISSION).ThrowErr(env);
+            return nullptr;
+        }
     }
 
     std::vector<PathPolicyInfo> pathPolicies;
@@ -404,11 +444,6 @@ napi_value CheckPathPermission(napi_env env, napi_callback_info info)
     }
 
     auto [succPolicyType, policyType] = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
-    if (!succPolicyType) {
-        LOGE("Failed to get policy type");
-        NError(E_PARAMS).ThrowErr(env);
-        return nullptr;
-    }
 
     LOGI("check permission target:%{public}d type:%{public}d", tokenId, policyType);
 
