@@ -1221,7 +1221,7 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
         ReportOnExtConnectFailed(scenario, bundleName, ret);
         SendEndAppGalleryNotify(bundleName);
         ClearSessionAndSchedInfo(bundleName);
-        NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
+        OnAllBundlesFinished(BError(BError::Codes::OK));
         return;
     } catch (const BError &e) {
         HILOGE("ExtConnectFailed exception, bundleName:%{public}s", bundleName.c_str());

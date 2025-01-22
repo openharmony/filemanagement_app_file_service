@@ -31,6 +31,7 @@ const string MEDIA_LIBRARY_HAP = "com.ohos.medialibrary.medialibrarydata";
 const string EXTERNAL_FILE_HAP = "com.ohos.UserFile.ExternalFileManager";
 const string MEDIA_TYPE = "media";
 const string FILE_TYPE = "file";
+const int64_t ERR_SIZE = -1;
 } // namespace
 
 static sptr<StorageManager::IStorageManager> GetStorageManager()
@@ -64,12 +65,14 @@ int64_t StorageMgrAdapter::GetUserStorageStats(const std::string &bundleName, in
     auto storageMgr = GetStorageManager();
     if (bundleName == MEDIA_LIBRARY_HAP) {
         if (storageMgr->GetUserStorageStatsByType(userId, bundleStats, MEDIA_TYPE)) {
-            throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get user media storage stats");
+            HILOGE("Failed to get user media storage stats");
+            return ERR_SIZE;
         }
         return bundleStats.image_ + bundleStats.video_;
     } else if (bundleName == EXTERNAL_FILE_HAP) {
         if (storageMgr->GetUserStorageStatsByType(userId, bundleStats, FILE_TYPE)) {
-            throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get user file storage stats");
+            HILOGE("Failed to get user file storage stats");
+            return ERR_SIZE;
         }
         return bundleStats.file_;
     }
