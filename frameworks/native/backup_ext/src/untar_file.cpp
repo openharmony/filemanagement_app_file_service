@@ -578,7 +578,7 @@ FILE *UntarFile::CreateFile(string &filePath)
     }
 
     uint32_t len = filePath.length();
-    HILOGE("Failed to open file %{public}d, %{public}s, err = %{public}d", len,
+    HILOGW("Failed to open file %{public}d, %{public}s, err = %{public}d, Will create dir", len,
         GetAnonyPath(filePath).c_str(), errno);
     size_t pos = filePath.rfind('/');
     if (pos == string::npos) {

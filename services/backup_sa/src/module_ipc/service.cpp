@@ -330,6 +330,7 @@ UniqueFd Service::GetLocalCapabilities()
 void Service::StopAll(const wptr<IRemoteObject> &obj, bool force)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("Begin Stop session");
     std::lock_guard<std::mutex> lock(failedBundlesLock_);
     uint32_t fail_cnt = failedBundles_.size();
     uint32_t totalBundles = fail_cnt + successBundlesNum_.load();
@@ -964,6 +965,7 @@ ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
         }
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
+        HILOGE("Service result report error");
         HandleCurBundleEndWork(callerName, sennario);
         CallOnBundleEndByScenario(callerName, sennario, e.GetCode());
         OnAllBundlesFinished(BError(BError::Codes::OK));
@@ -997,6 +999,7 @@ ErrCode Service::SAResultReport(const std::string bundleName, const std::string 
 
 void Service::HandleCurBundleEndWork(std::string bundleName, const BackupRestoreScenario sennario)
 {
+    HILOGI("Begin");
     try {
         if (sennario != BackupRestoreScenario::FULL_RESTORE &&
             sennario != BackupRestoreScenario::INCREMENTAL_RESTORE) {
@@ -1664,68 +1667,6 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
         return ret;
     } catch (...) {
         HILOGE("Unexpected exception");
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return EPERM;
-    }
-}
-
-ErrCode Service::StartExtTimer(bool &isExtStart)
-{
-    try {
-        HILOGI("Service::StartExtTimer begin.");
-        if (session_ == nullptr) {
-            HILOGE("StartExtTimer error, session_ is nullptr.");
-            isExtStart = false;
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-        string bundleName;
-        ErrCode ret = VerifyCallerAndGetCallerName(bundleName);
-        if (ret != ERR_OK) {
-            HILOGE("Start extension timer fail, get bundleName failed, ret:%{public}d", ret);
-            isExtStart = false;
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-            return ret;
-        }
-        auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
-        session_->StopFwkTimer(bundleName);
-        isExtStart = session_->StartExtTimer(bundleName, timeoutCallback);
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return BError(BError::Codes::OK);
-    } catch (...) {
-        HILOGE("Unexpected exception");
-        isExtStart = false;
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return EPERM;
-    }
-}
-
-ErrCode Service::StartFwkTimer(bool &isFwkStart)
-{
-    try {
-        HILOGI("Service::StartFwkTimer begin.");
-        if (session_ == nullptr) {
-            HILOGE("StartFwkTimer error, session_ is nullptr.");
-            isFwkStart = false;
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-        std::string bundleName;
-        ErrCode ret = VerifyCallerAndGetCallerName(bundleName);
-        if (ret != ERR_OK) {
-            HILOGE("Start fwk timer fail, get bundleName failed, ret:%{public}d", ret);
-            isFwkStart = false;
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-            return ret;
-        }
-        auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
-        session_->StopExtTimer(bundleName);
-        isFwkStart = session_->StartFwkTimer(bundleName, timeoutCallback);
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return BError(BError::Codes::OK);
-    } catch (...) {
-        HILOGE("Unexpected exception");
-        isFwkStart = false;
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
