@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,7 +60,7 @@ struct BackupExtInfo {
     /* Timer Status: true is start & false is stop */
     bool extTimerStatus {false};
     bool fwkTimerStatus {false};
-    uint32_t timeout;
+    uint32_t timeout = BConstants::TIMEOUT_INVALID;
     uint32_t startTime;
     int64_t dataSize;
     int64_t lastIncrementalTime;
