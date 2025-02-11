@@ -400,13 +400,13 @@ static bool CheckArgs(napi_env env, napi_callback_info info, NFuncArg& funcArg)
     }
 
     auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToInt32();
-    if (!succTokenId  || succTokenId == 0) {
+    if (!succTokenId  || tokenId == 0) {
         LOGE("Failed to get tokenid or tokenid is 0");
         return false;
     }
 
     auto [succPolicyType, policyType] = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
-    if (!succPolicyType || succPolicyType < TEMPORARY_TYPE || succPolicyType > PERSISTENT_TYPE) {
+    if (!succPolicyType || policyType < TEMPORARY_TYPE || policyType > PERSISTENT_TYPE) {
         LOGE("Failed to get policy type or policy type is invalid");
         return false;
     }
@@ -430,7 +430,7 @@ napi_value CheckPathPermission(napi_env env, napi_callback_info info)
     auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToInt32();
 
     uint64_t callerTokenId = OHOS::IPCSkeleton::GetCallingTokenID();
-    if (tokenId != callerTokenId) {
+    if (tokenId != static_cast<int32_t>(callerTokenId)) {
         if (!CheckTokenIdPermission(callerTokenId, "ohos.permission.CHECK_SANDBOX_POLICY")) {
             NError(E_PERMISSION).ThrowErr(env);
             return nullptr;
