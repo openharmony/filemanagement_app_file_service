@@ -429,7 +429,7 @@ napi_value CheckPathPermission(napi_env env, napi_callback_info info)
 
     auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToInt32();
 
-    uint64_t callerTokenId = OHOS::IPCSkeleton::GetCallingTokenID();
+    uint32_t callerTokenId = OHOS::IPCSkeleton::GetCallingTokenID();
     if (tokenId != static_cast<int32_t>(callerTokenId)) {
         if (!CheckTokenIdPermission(callerTokenId, "ohos.permission.CHECK_SANDBOX_POLICY")) {
             NError(E_PERMISSION).ThrowErr(env);
