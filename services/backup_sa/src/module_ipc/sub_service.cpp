@@ -903,14 +903,20 @@ void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRes
         HILOGE("Session is empty, bundleName:%{public}s", bundleName.c_str());
         return;
     }
-    if (scenario == BackupRestoreScenario::FULL_RESTORE) {
-        session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
-    } else if (scenario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
-        session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
-    } else if (scenario == BackupRestoreScenario::FULL_BACKUP) {
-        session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
-    } else if (scenario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
-        session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
+    HILOGI("Begin");
+    try {
+        if (scenario == BackupRestoreScenario::FULL_RESTORE) {
+            session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
+        } else if (scenario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
+        } else if (scenario == BackupRestoreScenario::FULL_BACKUP) {
+            session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
+        } else if (scenario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
+            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
+        }
+    } catch (const BError &e) {
+        HILOGE("Call onBundleFinished error, client is died");
+        return;
     }
 }
 
@@ -1143,5 +1149,67 @@ void Service::SendScannedInfo(const string&scannendInfos, sptr<SvcSessionManager
             HILOGE("Failed to add task to thread pool");
         }
     });
+}
+
+ErrCode Service::StartExtTimer(bool &isExtStart)
+{
+    try {
+        HILOGI("Service::StartExtTimer begin.");
+        if (session_ == nullptr) {
+            HILOGE("StartExtTimer error, session_ is nullptr.");
+            isExtStart = false;
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        string bundleName;
+        ErrCode ret = VerifyCallerAndGetCallerName(bundleName);
+        if (ret != ERR_OK) {
+            HILOGE("Start extension timer fail, get bundleName failed, ret:%{public}d", ret);
+            isExtStart = false;
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return ret;
+        }
+        auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
+        session_->StopFwkTimer(bundleName);
+        isExtStart = session_->StartExtTimer(bundleName, timeoutCallback);
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return BError(BError::Codes::OK);
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        isExtStart = false;
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return EPERM;
+    }
+}
+
+ErrCode Service::StartFwkTimer(bool &isFwkStart)
+{
+    try {
+        HILOGI("Service::StartFwkTimer begin.");
+        if (session_ == nullptr) {
+            HILOGE("StartFwkTimer error, session_ is nullptr.");
+            isFwkStart = false;
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        std::string bundleName;
+        ErrCode ret = VerifyCallerAndGetCallerName(bundleName);
+        if (ret != ERR_OK) {
+            HILOGE("Start fwk timer fail, get bundleName failed, ret:%{public}d", ret);
+            isFwkStart = false;
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return ret;
+        }
+        auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
+        session_->StopExtTimer(bundleName);
+        isFwkStart = session_->StartFwkTimer(bundleName, timeoutCallback);
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return BError(BError::Codes::OK);
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        isFwkStart = false;
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return EPERM;
+    }
 }
 }

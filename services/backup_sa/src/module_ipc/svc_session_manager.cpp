@@ -107,6 +107,7 @@ ErrCode SvcSessionManager::Active(Impl newImpl, bool isOccupyingSession)
 ErrCode SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, bool force)
 {
     unique_lock<shared_mutex> lock(lock_);
+    HILOGI("Begin Deactive session");
     if (!impl_.clientToken) {
         HILOGE("Deactive session fail, caller token is invalid");
         return BError(BError::Codes::SA_INVAL_ARG);
