@@ -603,6 +603,32 @@ HWTEST_F(FilePermissionTest, CheckPersistentPermission_test_0003, testing::ext::
     };
     GTEST_LOG_(INFO) << "FileShareTest-end CheckPersistentPermission_test_0003";
 }
+/**
+ * @tc.name: CheckPathPermission_test_1000
+ * @tc.desc: Test function of CheckPathPermission() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, CheckPathPermission_test_1000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin CheckPathPermission_test_1000";
+    PathPolicyInfo infoTestA = {.path = "/storage/Users/currentUser/Documents/1.txt",
+                            .mode = OperationMode::READ_MODE | OperationMode::WRITE_MODE};
+    std::vector<PathPolicyInfo> pathPolicies;
+    pathPolicies.emplace_back(infoTestA);
+    vector<bool> errorResults;
+    EXPECT_CALL(*sandboxMock_, CheckPersistPolicy(_, _, _)).WillOnce(Return(SANDBOX_MANAGER_OK));
+    uint32_t tokenId = 537688848;
+    int32_t policyType = PERSISTENT_TYPE;
+    int32_t ret = FilePermission::CheckPathPermission(tokenId, pathPolicies, policyType, errorResults);
+    EXPECT_EQ(ret, 0);
+
+    ret = FilePermission::CheckPathPermission(tokenId, pathPolicies, 2, errorResults);
+    EXPECT_EQ(ret, 401);
+    GTEST_LOG_(INFO) << "FileShareTest-end CheckPathPermission_test_1000";
+}
 #endif
 } // namespace AppFileService
 } // namespace OHOS

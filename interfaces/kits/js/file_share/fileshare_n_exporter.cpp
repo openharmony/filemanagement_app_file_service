@@ -30,7 +30,9 @@ using namespace FileManagement::LibN;
 napi_value FileShareExport(napi_env env, napi_value exports)
 {
     InitOperationMode(env, exports);
+    InitPolicyType(env, exports);
     InitPolicyInfo(env, exports);
+    InitPathPolicyInfo(env, exports);
     InitPolicyErrorCode(env, exports);
     InitPolicyErrorResult(env, exports);
     static napi_property_descriptor desc[] = {
@@ -40,6 +42,7 @@ napi_value FileShareExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("activatePermission", ActivatePermission),
         DECLARE_NAPI_FUNCTION("deactivatePermission", DeactivatePermission),
         DECLARE_NAPI_FUNCTION("checkPersistentPermission", CheckPersistentPermission),
+        DECLARE_NAPI_FUNCTION("checkPathPermission", CheckPathPermission),
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;
@@ -82,6 +85,33 @@ void InitOperationMode(napi_env env, napi_value exports)
     status = napi_set_named_property(env, exports, propertyName, obj);
     if (status != napi_ok) {
         HILOGE("Failed to set direction property at initializing OperationMode");
+        return;
+    }
+}
+
+void InitPolicyType(napi_env env, napi_value exports)
+{
+    char propertyName[] = "PolicyType";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("TEMPORARY_TYPE",
+                                     NVal::CreateUint32(env, static_cast<uint32_t>(TEMPORARY_TYPE)).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("PERSISTENT_TYPE",
+                                     NVal::CreateUint32(env, static_cast<uint32_t>(PERSISTENT_TYPE)).val_),
+    };
+    napi_value obj = nullptr;
+    napi_status status = napi_create_object(env, &obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to create object at initializing PolicyType");
+        return;
+    }
+    status = napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    if (status != napi_ok) {
+        HILOGE("Failed to set properties of character at initializing PolicyType");
+        return;
+    }
+    status = napi_set_named_property(env, exports, propertyName, obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to set direction property at initializing PolicyType");
         return;
     }
 }
@@ -159,6 +189,29 @@ void InitPolicyInfo(napi_env env, napi_value exports)
     status = napi_set_named_property(env, exports, className, obj);
     if (status != napi_ok) {
         HILOGE("Failed to set direction property at initializing PolicyFlag");
+        return;
+    }
+}
+
+void InitPathPolicyInfo(napi_env env, napi_value exports)
+{
+    char className[] = "PathPolicyInfo";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("path", NVal::CreateUTF8String(env, "path").val_),
+        DECLARE_NAPI_STATIC_PROPERTY("operationMode",
+                                     NVal::CreateUint32(env, static_cast<uint32_t>(OperationMode::READ_MODE)).val_),
+    };
+    napi_value obj = nullptr;
+    napi_status status = napi_define_class(env, className, NAPI_AUTO_LENGTH, InitPolicyConstructor, nullptr,
+                                           sizeof(desc) / sizeof(desc[0]), desc, &obj);
+    napi_create_object(env, &obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to define class at initializing PathPolicyInfo");
+        return;
+    }
+    status = napi_set_named_property(env, exports, className, obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to set direction property at initializing PathPolicyInfo");
         return;
     }
 }

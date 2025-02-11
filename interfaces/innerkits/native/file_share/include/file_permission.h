@@ -47,6 +47,11 @@ enum PolicyErrorCode {
     PERMISSION_NOT_PERSISTED = 4,
 };
 
+enum PolicyType {
+    TEMPORARY_TYPE = 0,
+    PERSISTENT_TYPE = 1,
+};
+
 struct UriPolicyInfo {
     string uri = "";
     uint32_t mode = OperationMode::READ_MODE;
@@ -75,6 +80,10 @@ public:
                                         deque<struct PolicyErrorResult> &errorResults);
     static int32_t CheckPersistentPermission(const vector<UriPolicyInfo> &uriPolicies, vector<bool> &errorResults);
     static string GetPathByPermission(const std::string &permission);
+    static int32_t CheckPathPermission(uint32_t tokenId,
+                                            const vector<PathPolicyInfo> &uriPolicies,
+                                            int32_t policyType,
+                                            vector<bool> &errorResults);
 #ifdef SANDBOX_MANAGER
 private:
     static void ParseErrorResults(const vector<uint32_t> &resultCodes,
@@ -88,6 +97,7 @@ private:
     static int32_t CheckUriPersistentPermission(uint32_t tokenId,
                                                 const vector<UriPolicyInfo> &uriPolicies,
                                                 vector<bool> &errorResults);
+    static vector<PolicyInfo> GetSandboxPolicyInfo(const vector<PathPolicyInfo> &pathPolicies);
 #endif
 };
 } // namespace AppFileService
