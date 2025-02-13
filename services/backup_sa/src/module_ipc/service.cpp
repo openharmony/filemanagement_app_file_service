@@ -851,7 +851,8 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
             return ret;
         }
         auto bundleDetails = MakeDetailList(bundleNames);
-        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundleDetails, session_->GetSessionUserId());
+        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundleDetails,
+            session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false, bundleNames);
         AppendBundles(supportBackupNames);
         SetCurrentBackupSessProperties(supportBackupNames, session_->GetSessionUserId(), backupInfos, false);
@@ -894,7 +895,8 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
             BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
             session_->GetSessionUserId(), isClearDataFlags);
         auto bundleDetails = MakeDetailList(bundleNames);
-        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundleDetails, session_->GetSessionUserId());
+        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundleDetails,
+            session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false, bundleNames);
         AppendBundles(supportBackupNames);
         HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);

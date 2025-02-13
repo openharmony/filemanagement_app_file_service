@@ -89,4 +89,10 @@ int64_t BundleMgrAdapter::GetBundleDataSize(const std::string &bundleName, int32
 
 void BundleMgrAdapter::CreatBackupEnv(const std::vector<BIncrementalData> &bundleNameList, int32_t userId) {}
 
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppendBundles(
+    const vector<BIncrementalData> &incrementalDataList, int32_t userId)
+{
+    return BBundleMgrAdapter::bms->GetBundleInfosForAppendBundles(incrementalDataList, userId);
+}
+
 } // namespace OHOS::FileManagement::Backup

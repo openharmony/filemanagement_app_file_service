@@ -393,7 +393,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
             session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return ret;
         }
-        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
+        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundlesToBackup,
             session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
         AppendBundles(supportBackupNames);
@@ -439,7 +439,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, infos, bundleNamesOnly,
             session_->GetSessionUserId(), isClearDataFlags);
-        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppend(bundlesToBackup,
+        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundlesToBackup,
             session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
         AppendBundles(supportBackupNames);
@@ -836,7 +836,7 @@ void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, 
 
 
 void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>& bundlesToBackup,
-    std::vector<std::string>& supportBundleNames)
+    std::vector<std::string> &supportBundleNames)
 {
     for (const auto &bundleInfo : bundlesToBackup) {
         std::string bundleName = bundleInfo.bundleName;

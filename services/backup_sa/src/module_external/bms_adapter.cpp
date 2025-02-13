@@ -681,4 +681,41 @@ void BundleMgrAdapter::CreatBackupEnv(const std::vector<BIncrementalData> &bundl
     }
     HILOGI("CreatBackupEnv end");
 }
+
+std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppendBundles(
+    const std::vector<BIncrementalData> &incrementalDataList, int32_t userId)
+{
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    auto bms = GetBundleManager();
+    for (const auto &bundleIncData : incrementalDataList) {
+        auto bundleName = bundleIncData.bundleName;
+        HILOGE("Current bundle name is:%{public}s", bundleName.c_str());
+        AppExecFwk::BundleInfo installedBundle;
+        std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos;
+        bool getBundleSuccess = GetCurBundleExtenionInfo(installedBundle, bundleName, extensionInfos, bms, userId);
+        if (!getBundleSuccess) {
+            HILOGE("Failed to get bundle info from bms, bundleName:%{public}s", bundleName.c_str());
+            continue;
+        }
+        struct BJsonEntityCaps::BundleBackupConfigPara backupPara;
+        if (!GetBackupExtConfig(extensionInfos, backupPara)) {
+            HILOGE("No backup extension ability found, bundleName:%{public}s", bundleName.c_str());
+            continue;
+        }
+        bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.appIndex,
+                                                              installedBundle.versionCode,
+                                                              installedBundle.versionName, 0, 0,
+                                                              backupPara.allToBackup, backupPara.fullBackupOnly,
+                                                              backupPara.extensionName,
+                                                              backupPara.restoreDeps, backupPara.supportScene,
+                                                              backupPara.extraInfo});
+    }
+    for (const auto &info : incrementalDataList) {
+        if (SAUtils::IsSABundleName(info.bundleName)) {
+            HILOGE("Current SA name is:%{public}s", info.bundleName.c_str());
+            GetBundleInfoForSA(info.bundleName, bundleInfos);
+        }
+    }
+    return bundleInfos;
+}
 } // namespace OHOS::FileManagement::Backup

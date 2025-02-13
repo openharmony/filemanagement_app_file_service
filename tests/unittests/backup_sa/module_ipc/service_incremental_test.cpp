@@ -605,7 +605,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncremental
         service->isOccupyingSession_ = false;
         vector<BJsonEntityCaps::BundleInfo> bundleInfos;
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
-        EXPECT_CALL(*bms, GetBundleInfosForAppend(_, _)).WillOnce(Return(bundleInfos));
+        EXPECT_CALL(*bms, GetBundleInfosForAppendBundles(_, _)).WillOnce(Return(bundleInfos));
         EXPECT_EQ(service->AppendBundlesIncrementalBackupSession({}), BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -643,7 +643,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncremental
         vector<BJsonEntityCaps::BundleInfo> bundleInfos;
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillOnce(Return(bundleNameDetailMap));
-        EXPECT_CALL(*bms, GetBundleInfosForAppend(_, _)).WillOnce(Return(bundleInfos));
+        EXPECT_CALL(*bms, GetBundleInfosForAppendBundles(_, _)).WillOnce(Return(bundleInfos));
         ret = service->AppendBundlesIncrementalBackupSession({}, {});
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
