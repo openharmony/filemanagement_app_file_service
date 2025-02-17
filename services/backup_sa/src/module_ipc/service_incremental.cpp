@@ -520,6 +520,11 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
 
 ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd)
 {
+    ErrCode errCode = VerifyCaller();
+    if (errCode != ERR_OK) {
+        HILOGE("PublishSAIncrementalFile failed, verify caller failed, errCode:%{public}d", errCode);
+        return errCode;
+    }
     std::string bundleName = fileInfo.owner;
     if (!SAUtils::IsSABundleName(bundleName)) {
         HILOGE("Bundle name %{public}s is not sa", bundleName.c_str());

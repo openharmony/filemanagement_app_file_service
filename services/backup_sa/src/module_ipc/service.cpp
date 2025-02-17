@@ -1650,6 +1650,11 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
 
 ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
 {
+    ErrCode errCode = VerifyCaller();
+    if (errCode != ERR_OK) {
+        HILOGE("GetBackupInfo failed, verify caller failed, errCode:%{public}d", errCode);
+        return errCode;
+    }
     try {
         std::lock_guard<std::mutex> lock(getBackupInfoProcLock_);
         HILOGI("Service::GetBackupInfo begin.");
