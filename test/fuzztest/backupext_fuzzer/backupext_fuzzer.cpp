@@ -181,6 +181,16 @@ bool CmdHandleClearFuzzTest(shared_ptr<BackupExtExtension> extension, const uint
     return true;
 }
 
+bool CmdHandleUser0BackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
+{
+    MessageParcel msg;
+    MessageParcel reply;
+
+    msg.WriteBuffer(data, size);
+    extension->CmdHandleUser0Backup(msg, reply);
+    return true;
+}
+
 bool CmdHandleBackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(bool)) {
@@ -307,6 +317,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     try {
         OHOS::CmdGetFileHandleFuzzTest(extension, data, size);
         OHOS::CmdHandleClearFuzzTest(extension, data, size);
+        OHOS::CmdHandleUser0BackupFuzzTest(extension, data, size);
         OHOS::CmdHandleBackupFuzzTest(extension, data, size);
         OHOS::CmdPublishFileFuzzTest(extension, data, size);
         OHOS::CmdHandleRestoreFuzzTest(extension, data, size);
