@@ -1652,7 +1652,8 @@ ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
 {
     ErrCode errCode = VerifyCaller();
     if (errCode != ERR_OK) {
-        HILOGE("GetBackupInfo failed, verify caller failed, errCode:%{public}d", errCode);
+        HILOGE("GetBackupInfo failed, verify caller failed, bundleName:%{public}s, errCode:%{public}d",
+            bundleName.c_str(), errCode);
         return errCode;
     }
     try {
