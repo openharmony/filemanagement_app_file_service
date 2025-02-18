@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -521,6 +521,12 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
 ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd)
 {
     std::string bundleName = fileInfo.owner;
+    ErrCode errCode = VerifyCaller();
+    if (errCode != ERR_OK) {
+        HILOGE("PublishSAIncrementalFile failed, verify caller failed, bundleName:%{public}s, errCode:%{public}d",
+            bundleName.c_str(), errCode);
+        return errCode;
+    }
     if (!SAUtils::IsSABundleName(bundleName)) {
         HILOGE("Bundle name %{public}s is not sa", bundleName.c_str());
         return BError(BError::Codes::SA_EXT_ERR_CALL);

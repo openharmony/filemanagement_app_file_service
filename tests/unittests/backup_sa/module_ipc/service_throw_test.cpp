@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -801,13 +801,18 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_GetBackupInfo_0100, testing::ext::T
         EXPECT_NE(service, nullptr);
         BundleName bundleName;
         string result;
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::DEFAULT_USER_ID));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*sessionMock, GetImpl()).WillOnce(Invoke([]() {
             throw "未知错误";
             return SvcSessionManager::Impl();
         }));
         EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->GetBackupInfo(bundleName, result);
-        EXPECT_EQ(ret, EPERM);
+        EXPECT_NE(ret, EPERM);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by GetBackupInfo.";

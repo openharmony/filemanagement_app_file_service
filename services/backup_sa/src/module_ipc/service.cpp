@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1650,6 +1650,12 @@ ErrCode Service::GetBackupInfoCmdHandle(BundleName &bundleName, std::string &res
 
 ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
 {
+    ErrCode errCode = VerifyCaller();
+    if (errCode != ERR_OK) {
+        HILOGE("GetBackupInfo failed, verify caller failed, bundleName:%{public}s, errCode:%{public}d",
+            bundleName.c_str(), errCode);
+        return errCode;
+    }
     try {
         std::lock_guard<std::mutex> lock(getBackupInfoProcLock_);
         HILOGI("Service::GetBackupInfo begin.");
