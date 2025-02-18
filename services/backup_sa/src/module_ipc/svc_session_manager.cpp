@@ -16,6 +16,7 @@
 #include "module_ipc/svc_session_manager.h"
 
 #include <algorithm>
+#include <cinttypes>
 #include <cstdint>
 #include <memory>
 #include <regex>
@@ -865,6 +866,8 @@ void SvcSessionManager::SetBundleDataSize(const std::string &bundleName, int64_t
         return;
     }
     it->second.dataSize = dataSize;
+    HILOGI("Set bundle data size end, bundlename = %{public}s , datasize = %{public}" PRId64 "",
+        bundleName.c_str(), dataSize);
 }
 
 uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
