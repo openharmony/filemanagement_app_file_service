@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +15,7 @@
 
 #include "backupservicestubbranch_fuzzer.h"
 
-#include <cstring>
+#include <string>
 #include <queue>
 
 #include "b_incremental_data.h"
@@ -28,6 +28,7 @@
 
 namespace OHOS {
 using namespace FileManagement::Backup;
+using namespace std;
 
 using FAFVariant = std::variant<bool, int32_t, int64_t, uint32_t, std::string, std::vector<std::string>>;
 
@@ -192,7 +193,6 @@ bool Parcel::ReadUint32(uint32_t &value)
     return GetBoolResult();
 }
 
-constexpr int32_t SERVICE_ID = 5203;
 
 template<class T>
 T TypeCast(const uint8_t *data, int *pos = nullptr)
@@ -965,20 +965,18 @@ bool CmdGetBackupInfoFuzzTest(sptr<Service> service, const uint8_t *data, size_t
     MessageParcel reply;
 
     try {
-        int pos = 0;
-        int32_t scenario = TypeCast<int32_t>(data, &pos);
-        string processInfo(reinterpret_cast<const char*>(data + pos), size - pos);
+        string bundleName(reinterpret_cast<const char*>(data), size);
 
         ExpectReturn({false});
-        ExpectArgReturn({processInfo});
+        ExpectArgReturn({bundleName});
         service->CmdGetBackupInfo(msg, reply);
 
         ExpectReturn({true, false});
-        ExpectArgReturn({processInfo, scenario});
+        ExpectArgReturn({bundleName});
         service->CmdGetBackupInfo(msg, reply);
 
         ExpectReturn({true, true});
-        ExpectArgReturn({processInfo, scenario});
+        ExpectArgReturn({bundleName});
         service->CmdGetBackupInfo(msg, reply);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
@@ -1060,7 +1058,7 @@ bool CmdUpdateSendRateFuzzTest(sptr<Service> service, const uint8_t *data, size_
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    OHOS::sptr service(new OHOS::FileManagement::Backup::Service(OHOS::SERVICE_ID));
+    OHOS::sptr service(new OHOS::FileManagement::Backup::Service());
     if (service == nullptr) {
         return 0;
     }
