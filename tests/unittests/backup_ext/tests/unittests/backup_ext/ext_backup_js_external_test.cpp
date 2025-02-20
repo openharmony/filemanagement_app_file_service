@@ -56,7 +56,7 @@ public:
     MOCK_METHOD(void, DestroyHeapProfiler, ());
     MOCK_METHOD(void, ForceFullGC, ());
     MOCK_METHOD(void, ForceFullGC, (uint32_t tid));
-    MOCK_METHOD(void, DumpHeapSnapshot, (uint32_t tid, bool isFullGC));
+    MOCK_METHOD(void, DumpHeapSnapshot, (uint32_t tid, bool isFullGC, bool isBinary));
     MOCK_METHOD(void, AllowCrossThreadExecution, ());
     MOCK_METHOD(void, GetHeapPrepare, ());
     MOCK_METHOD(void, NotifyApplicationState, (bool isBackground));
