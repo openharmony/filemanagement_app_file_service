@@ -42,7 +42,7 @@ public:
     sptr<IRemoteObject> GetRemoteObj();
 
 private:
-    int32_t userId;
+    int32_t userId = 0;
     std::mutex conditionMutex_;
     std::condition_variable conditionVal_;
     std::mutex connectMutex;
