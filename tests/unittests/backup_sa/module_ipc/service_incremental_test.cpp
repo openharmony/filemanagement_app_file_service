@@ -1,17 +1,17 @@
 /*
-* Copyright (c) 2024-2025 Huawei Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <gtest/gtest.h>
 
@@ -502,14 +502,14 @@ void ServiceIncrementalTest::TearDownTestCase()
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_GetLocalCapabilitiesIncremental_0000
-* @tc.name: SUB_ServiceIncremental_GetLocalCapabilitiesIncremental_0000
-* @tc.desc: 测试 GetLocalCapabilitiesIncremental 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_GetLocalCapabilitiesIncremental_0000
+ * @tc.name: SUB_ServiceIncremental_GetLocalCapabilitiesIncremental_0000
+ * @tc.desc: 测试 GetLocalCapabilitiesIncremental 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetLocalCapabilitiesIncremental_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_GetLocalCapabilitiesIncremental_0000";
@@ -544,14 +544,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetLocalCapabilitiesIncr
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_StartGetFdTask_0000
-* @tc.name: SUB_ServiceIncremental_StartGetFdTask_0000
-* @tc.desc: 测试 StartGetFdTask 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_StartGetFdTask_0000
+ * @tc.name: SUB_ServiceIncremental_StartGetFdTask_0000
+ * @tc.desc: 测试 StartGetFdTask 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartGetFdTask_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_StartGetFdTask_0000";
@@ -594,14 +594,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartGetFdTask_0000, Tes
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_StartGetFdTask_0100
-* @tc.name: SUB_ServiceIncremental_StartGetFdTask_0100
-* @tc.desc: 测试 StartGetFdTask 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_StartGetFdTask_0100
+ * @tc.name: SUB_ServiceIncremental_StartGetFdTask_0100
+ * @tc.desc: 测试 StartGetFdTask 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartGetFdTask_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_StartGetFdTask_0100";
@@ -633,14 +633,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartGetFdTask_0100, Tes
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_RefreshBundleDataSize_0000
-* @tc.name: SUB_ServiceIncremental_RefreshBundleDataSize_0000
-* @tc.desc: 测试 RefreshBundleDataSize 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_RefreshBundleDataSize_0000
+ * @tc.name: SUB_ServiceIncremental_RefreshBundleDataSize_0000
+ * @tc.desc: 测试 RefreshBundleDataSize 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_RefreshBundleDataSize_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_RefreshBundleDataSize_0000";
@@ -684,14 +684,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_RefreshBundleDataSize_00
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_GetAppLocalListAndDoIncrementalBackup_0000
-* @tc.name: SUB_ServiceIncremental_GetAppLocalListAndDoIncrementalBackup_0000
-* @tc.desc: 测试 GetAppLocalListAndDoIncrementalBackup 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_GetAppLocalListAndDoIncrementalBackup_0000
+ * @tc.name: SUB_ServiceIncremental_GetAppLocalListAndDoIncrementalBackup_0000
+ * @tc.desc: 测试 GetAppLocalListAndDoIncrementalBackup 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetAppLocalListAndDoIncrementalBackup_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) <<
@@ -723,14 +723,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetAppLocalListAndDoIncr
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_InitIncrementalBackupSession_0000
-* @tc.name: SUB_ServiceIncremental_InitIncrementalBackupSession_0000
-* @tc.desc: 测试 InitIncrementalBackupSession 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_InitIncrementalBackupSession_0000
+ * @tc.name: SUB_ServiceIncremental_InitIncrementalBackupSession_0000
+ * @tc.desc: 测试 InitIncrementalBackupSession 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSession_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_InitIncrementalBackupSession_0000";
@@ -773,14 +773,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_InitIncrementalBackupSession_0100
-* @tc.name: SUB_ServiceIncremental_InitIncrementalBackupSession_0100
-* @tc.desc: 测试 InitIncrementalBackupSession with errMsg的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_InitIncrementalBackupSession_0100
+ * @tc.name: SUB_ServiceIncremental_InitIncrementalBackupSession_0100
+ * @tc.desc: 测试 InitIncrementalBackupSession with errMsg的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSession_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_InitIncrementalBackupSession_0100";
@@ -831,14 +831,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000
-* @tc.name: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000
-* @tc.desc: 测试 AppendBundlesIncrementalBackupSession 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000
+ * @tc.name: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000
+ * @tc.desc: 测试 AppendBundlesIncrementalBackupSession 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) <<
@@ -871,14 +871,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncremental
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0100
-* @tc.name: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0100
-* @tc.desc: 测试 AppendBundlesIncrementalBackupSession 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0100
+ * @tc.name: SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0100
+ * @tc.desc: 测试 AppendBundlesIncrementalBackupSession 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncrementalBackupSession_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) <<
@@ -917,14 +917,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncremental
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_PublishIncrementalFile_0000
-* @tc.name: SUB_ServiceIncremental_PublishIncrementalFile_0000
-* @tc.desc: 测试 PublishIncrementalFile 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_PublishIncrementalFile_0000
+ * @tc.name: SUB_ServiceIncremental_PublishIncrementalFile_0000
+ * @tc.desc: 测试 PublishIncrementalFile 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_PublishIncrementalFile_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_PublishIncrementalFile_0000";
@@ -980,14 +980,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_PublishIncrementalFile_0
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_PublishSAIncrementalFile_0000
-* @tc.name: SUB_ServiceIncremental_PublishSAIncrementalFile_0000
-* @tc.desc: 测试 PublishSAIncrementalFile 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_PublishSAIncrementalFile_0000
+ * @tc.name: SUB_ServiceIncremental_PublishSAIncrementalFile_0000
+ * @tc.desc: 测试 PublishSAIncrementalFile 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_PublishSAIncrementalFile_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_PublishSAIncrementalFile_0000";
@@ -1027,14 +1027,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_PublishSAIncrementalFile
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_AppIncrementalFileReady_0000
-* @tc.name: SUB_ServiceIncremental_AppIncrementalFileReady_0000
-* @tc.desc: 测试 AppIncrementalFileReady 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_AppIncrementalFileReady_0000
+ * @tc.name: SUB_ServiceIncremental_AppIncrementalFileReady_0000
+ * @tc.desc: 测试 AppIncrementalFileReady 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_AppIncrementalFileReady_0000";
@@ -1071,14 +1071,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_AppIncrementalFileReady_0100
-* @tc.name: SUB_ServiceIncremental_AppIncrementalFileReady_0100
-* @tc.desc: 测试 AppIncrementalFileReady 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_AppIncrementalFileReady_0100
+ * @tc.name: SUB_ServiceIncremental_AppIncrementalFileReady_0100
+ * @tc.desc: 测试 AppIncrementalFileReady 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_AppIncrementalFileReady_0100";
@@ -1112,14 +1112,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_AppIncrementalFileReady_0200
-* @tc.name: SUB_ServiceIncremental_AppIncrementalFileReady_0200
-* @tc.desc: 测试 AppIncrementalFileReady 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_AppIncrementalFileReady_0200
+ * @tc.name: SUB_ServiceIncremental_AppIncrementalFileReady_0200
+ * @tc.desc: 测试 AppIncrementalFileReady 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_0200, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_AppIncrementalFileReady_0200";
@@ -1205,14 +1205,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_AppIncrementalDone_0000
-* @tc.name: SUB_ServiceIncremental_AppIncrementalDone_0000
-* @tc.desc: 测试 AppIncrementalDone 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_AppIncrementalDone_0000
+ * @tc.name: SUB_ServiceIncremental_AppIncrementalDone_0000
+ * @tc.desc: 测试 AppIncrementalDone 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalDone_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_AppIncrementalDone_0000";
@@ -1262,14 +1262,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalDone_0000,
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_GetIncrementalFileHandle_0000
-* @tc.name: SUB_ServiceIncremental_GetIncrementalFileHandle_0000
-* @tc.desc: 测试 GetIncrementalFileHandle 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_GetIncrementalFileHandle_0000
+ * @tc.name: SUB_ServiceIncremental_GetIncrementalFileHandle_0000
+ * @tc.desc: 测试 GetIncrementalFileHandle 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetIncrementalFileHandle_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_GetIncrementalFileHandle_0000";
@@ -1311,14 +1311,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetIncrementalFileHandle
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_GetIncrementalFileHandle_0100
-* @tc.name: SUB_ServiceIncremental_GetIncrementalFileHandle_0100
-* @tc.desc: 测试 GetIncrementalFileHandle 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_GetIncrementalFileHandle_0100
+ * @tc.name: SUB_ServiceIncremental_GetIncrementalFileHandle_0100
+ * @tc.desc: 测试 GetIncrementalFileHandle 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetIncrementalFileHandle_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_GetIncrementalFileHandle_0100";
@@ -1364,14 +1364,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetIncrementalFileHandle
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_IncrementalBackup_0000
-* @tc.name: SUB_ServiceIncremental_IncrementalBackup_0000
-* @tc.desc: 测试 IncrementalBackup 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_IncrementalBackup_0000
+ * @tc.name: SUB_ServiceIncremental_IncrementalBackup_0000
+ * @tc.desc: 测试 IncrementalBackup 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_IncrementalBackup_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_IncrementalBackup_0000";
@@ -1424,14 +1424,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_IncrementalBackup_0000, 
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_IncrementalBackup_0100
-* @tc.name: SUB_ServiceIncremental_IncrementalBackup_0100
-* @tc.desc: 测试 IncrementalBackup 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_IncrementalBackup_0100
+ * @tc.name: SUB_ServiceIncremental_IncrementalBackup_0100
+ * @tc.desc: 测试 IncrementalBackup 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_IncrementalBackup_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_IncrementalBackup_0100";
@@ -1475,14 +1475,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_IncrementalBackup_0100, 
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_IncrementalBackup_0200
-* @tc.name: SUB_ServiceIncremental_IncrementalBackup_0200
-* @tc.desc: 测试 IncrementalBackup 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_IncrementalBackup_0200
+ * @tc.name: SUB_ServiceIncremental_IncrementalBackup_0200
+ * @tc.desc: 测试 IncrementalBackup 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_IncrementalBackup_0200, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_IncrementalBackup_0200";
@@ -1518,14 +1518,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_IncrementalBackup_0200, 
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_NotifyCallerCurAppIncrementDone_0000
-* @tc.name: SUB_ServiceIncremental_NotifyCallerCurAppIncrementDone_0000
-* @tc.desc: 测试 NotifyCallerCurAppIncrementDone 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_NotifyCallerCurAppIncrementDone_0000
+ * @tc.name: SUB_ServiceIncremental_NotifyCallerCurAppIncrementDone_0000
+ * @tc.desc: 测试 NotifyCallerCurAppIncrementDone 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_NotifyCallerCurAppIncrementDone_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_NotifyCallerCurAppIncrementDone_0000";
@@ -1555,14 +1555,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_NotifyCallerCurAppIncrem
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_SendUserIdToApp_0000
-* @tc.name: SUB_ServiceIncremental_SendUserIdToApp_0000
-* @tc.desc: 测试 SendUserIdToApp 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_SendUserIdToApp_0000
+ * @tc.name: SUB_ServiceIncremental_SendUserIdToApp_0000
+ * @tc.desc: 测试 SendUserIdToApp 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_SendUserIdToApp_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_SendUserIdToApp_0000";
@@ -1590,14 +1590,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_SendUserIdToApp_0000, Te
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_SetCurrentBackupSessProperties_0000
-* @tc.name: SUB_ServiceIncremental_SetCurrentBackupSessProperties_0000
-* @tc.desc: 测试 SetCurrentBackupSessProperties 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_SetCurrentBackupSessProperties_0000
+ * @tc.name: SUB_ServiceIncremental_SetCurrentBackupSessProperties_0000
+ * @tc.desc: 测试 SetCurrentBackupSessProperties 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_SetCurrentBackupSessProperties_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_SetCurrentBackupSessProperties_0000";
@@ -1640,14 +1640,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_SetCurrentBackupSessProp
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_Release_0000
-* @tc.name: SUB_ServiceIncremental_Release_0000
-* @tc.desc: 测试 Release 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_Release_0000
+ * @tc.name: SUB_ServiceIncremental_Release_0000
+ * @tc.desc: 测试 Release 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Release_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_Release_0000";
@@ -1682,14 +1682,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Release_0000, TestSize.L
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_SetBundleIncDataInfo_0000
-* @tc.name: SUB_ServiceIncremental_SetBundleIncDataInfo_0000
-* @tc.desc: 测试 SetBundleIncDataInfo 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_SetBundleIncDataInfo_0000
+ * @tc.name: SUB_ServiceIncremental_SetBundleIncDataInfo_0000
+ * @tc.desc: 测试 SetBundleIncDataInfo 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_SetBundleIncDataInfo_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_SetBundleIncDataInfo_0000";
@@ -1716,14 +1716,126 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_SetBundleIncDataInfo_000
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_Cancel_0000
-* @tc.name: SUB_ServiceIncremental_Cancel_0000
-* @tc.desc: 测试 Cancel 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_CancelTask_0000
+ * @tc.name: SUB_ServiceIncremental_CancelTask_0000
+ * @tc.desc: 测试 CancelTask 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_CancelTask_0000";
+    try {
+        service->CancelTask("", nullptr);
+        EXPECT_TRUE(true);
+
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        service->CancelTask("", service);
+        service->session_ = session_;
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        service->CancelTask("", service);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
+        service->CancelTask("", service);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        service->CancelTask("", service);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetIsIncrementalBackup()).WillOnce(Return(false));
+        service->CancelTask("", service);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by CancelTask.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_CancelTask_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_CancelTask_0100
+ * @tc.name: SUB_ServiceIncremental_CancelTask_0100
+ * @tc.desc: 测试 CancelTask 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_CancelTask_0100";
+    try {
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetIsIncrementalBackup()).WillOnce(Return(true));
+        service->CancelTask("", service);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
+        EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(false));
+        service->CancelTask("", service);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
+        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE))
+            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(true));
+        service->CancelTask("", service);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by CancelTask.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_CancelTask_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_Cancel_0000
+ * @tc.name: SUB_ServiceIncremental_Cancel_0000
+ * @tc.desc: 测试 Cancel 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Cancel_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_Cancel_0000";
@@ -1811,5 +1923,62 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Cancel_0100, TestSize.Le
         GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by Cancel.";
     }
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_Cancel_0100";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_GetExtensionMutex_0000
+ * @tc.name: SUB_ServiceIncremental_GetExtensionMutex_0000
+ * @tc.desc: 测试 GetExtensionMutex 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetExtensionMutex_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_GetExtensionMutex_0000";
+    try {
+        BundleName bundleName = "bundleName";
+        service->backupExtMutexMap_.clear();
+        auto ret = service->GetExtensionMutex(bundleName);
+        EXPECT_TRUE(ret != nullptr);
+
+        ret = service->GetExtensionMutex(bundleName);
+        EXPECT_TRUE(ret != nullptr);
+        service->backupExtMutexMap_.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by GetExtensionMutex.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_GetExtensionMutex_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_RemoveExtensionMutex_0000
+ * @tc.name: SUB_ServiceIncremental_RemoveExtensionMutex_0000
+ * @tc.desc: 测试 RemoveExtensionMutex 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_RemoveExtensionMutex_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_RemoveExtensionMutex_0000";
+    try {
+        BundleName bundleName = "bundleName";
+        service->backupExtMutexMap_.clear();
+        service->RemoveExtensionMutex(bundleName);
+        EXPECT_TRUE(true);
+
+        service->backupExtMutexMap_[bundleName] = nullptr;
+        service->RemoveExtensionMutex(bundleName);
+        EXPECT_TRUE(true);
+        service->backupExtMutexMap_.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by RemoveExtensionMutex.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_RemoveExtensionMutex_0000";
 }
 }
