@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
+int32_t ServiceProxy::InitRestoreSession(const sptr<IServiceReverse>& remote)
 {
     if (!GetMockInitBackupOrRestoreSession()) {
         return 1;
@@ -39,7 +39,7 @@ int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote)
     return 0;
 }
 
-int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg)
+int32_t ServiceProxy::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     if (!GetMockInitBackupOrRestoreSession()) {
         return 1;
@@ -47,7 +47,7 @@ int32_t ServiceProxy::InitRestoreSession(sptr<IServiceReverse> remote, std::stri
     return 0;
 }
 
-int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
+int32_t ServiceProxy::InitBackupSession(const sptr<IServiceReverse>& remote)
 {
     if (!GetMockInitBackupOrRestoreSession()) {
         return 1;
@@ -55,7 +55,7 @@ int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote)
     return 0;
 }
 
-int32_t ServiceProxy::InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+int32_t ServiceProxy::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     if (!GetMockInitBackupOrRestoreSession()) {
         return 1;
@@ -68,12 +68,13 @@ ErrCode ServiceProxy::Start()
     return BError(BError::Codes::OK);
 }
 
-UniqueFd ServiceProxy::GetLocalCapabilities()
+ErrCode ServiceProxy::GetLocalCapabilities(int &fd)
 {
     TestManager tm("ServiceProxyMock_GetFd_0100");
     string filePath = tm.GetRootDirCurTest().append("tmp");
-    UniqueFd fd(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
-    return fd;
+    UniqueFd fd_OpenData(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+    fd = fd_OpenData.Release();
+    return BError(BError::Codes::OK);
 }
 
 ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
@@ -81,7 +82,7 @@ ErrCode ServiceProxy::PublishFile(const BFileInfo &fileInfo)
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCode)
+ErrCode ServiceProxy::AppFileReady(const string &fileName, int fd, int32_t errCode)
 {
     return BError(BError::Codes::OK);
 }
@@ -91,7 +92,7 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::ServiceResultReport(const std::string restoreRetInfo,
+ErrCode ServiceProxy::ServiceResultReport(const std::string& restoreRetInfo,
     BackupRestoreScenario scenario, ErrCode errCode)
 {
     return BError(BError::Codes::OK);
@@ -102,19 +103,19 @@ ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &file
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
-                                                  const vector<BundleName> &bundleNames,
-                                                  RestoreTypeEnum restoreType,
-                                                  int32_t userId)
+ErrCode ServiceProxy::AppendBundlesRestoreSessionDataByDetail(int fd,
+                                                              const std::vector<std::string> &bundleNames,
+                                                              const std::vector<std::string> &detailInfos,
+                                                              int32_t restoreType,
+                                                              int32_t userId)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
-                                                  const vector<BundleName> &bundleNames,
-                                                  const vector<std::string> &detailInfos,
-                                                  RestoreTypeEnum restoreType,
-                                                  int32_t userId)
+ErrCode ServiceProxy::AppendBundlesRestoreSessionData(int fd,
+                                                      const std::vector<std::string> &bundleNames,
+                                                      int32_t restoreType,
+                                                      int32_t userId)
 {
     return BError(BError::Codes::OK);
 }
@@ -125,7 +126,7 @@ ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundl
 }
 
 ErrCode ServiceProxy::AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
-    const std::vector<std::string> &detailInfos)
+                                                        const std::vector<std::string> &detailInfos)
 {
     return BError(BError::Codes::OK);
 }
@@ -140,15 +141,16 @@ ErrCode ServiceProxy::Release()
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::Cancel(std::string bundleName, int32_t &result)
+ErrCode ServiceProxy::Cancel(const std::string &bundleName, int32_t &result)
 {
     result = BError(BError::Codes::OK);
     return BError(BError::Codes::OK);
 }
 
-UniqueFd ServiceProxy::GetLocalCapabilitiesIncremental(const vector<BIncrementalData> &bundleNames)
+ErrCode ServiceProxy::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames, int &fd)
 {
-    return UniqueFd(-1);
+    fd = UniqueFd(-1).Get();
+    return BError(BError::Codes::OK);
 }
 
 ErrCode ServiceProxy::GetAppLocalListAndDoIncrementalBackup()
@@ -156,23 +158,24 @@ ErrCode ServiceProxy::GetAppLocalListAndDoIncrementalBackup()
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
+ErrCode ServiceProxy::InitIncrementalBackupSession(const sptr<IServiceReverse>& remote)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::InitIncrementalBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+ErrCode ServiceProxy::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrementalData> &bundlesToBackup)
+ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrementalData> &bundlesToBackup,
-    const vector<std::string> &infos)
+ErrCode ServiceProxy::AppendBundlesIncrementalBackupSessionWithBundleInfos(
+    const std::vector<BIncrementalData> &bundlesToBackup,
+    const std::vector<std::string> &bundleInfos)
 {
     return BError(BError::Codes::OK);
 }
@@ -182,12 +185,12 @@ ErrCode ServiceProxy::PublishIncrementalFile(const BFileInfo &fileInfo)
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd)
+ErrCode ServiceProxy::PublishSAIncrementalFile(const BFileInfo &fileInfo, int fd)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppIncrementalFileReady(const string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)
+ErrCode ServiceProxy::AppIncrementalFileReady(const string &fileName, int fd, int manifestFd, int32_t errCode)
 {
     return BError(BError::Codes::OK);
 }
@@ -202,12 +205,12 @@ ErrCode ServiceProxy::GetIncrementalFileHandle(const std::string &bundleName, co
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::GetBackupInfo(std::string &bundleName, std::string &result)
+ErrCode ServiceProxy::GetBackupInfo(const std::string &bundleName, std::string &result)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result)
+ErrCode ServiceProxy::UpdateTimer(const BundleName &bundleName, uint32_t timeout, bool &result)
 {
     return BError(BError::Codes::OK);
 }
@@ -232,58 +235,23 @@ ErrCode ServiceProxy::RefreshDataSize(int64_t totalSize)
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result)
+ErrCode ServiceProxy::UpdateSendRate(const std::string &bundleName, int32_t sendRate, bool &result)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario)
+ErrCode ServiceProxy::ReportAppProcessInfo(const std::string& processInfo, BackupRestoreScenario scenario)
 {
     return BError(BError::Codes::OK);
 }
 
-sptr<IService> ServiceProxy::GetServiceProxyPointer()
+ErrCode ServiceProxy::GetLocalCapabilitiesForBundleInfos(int& fd)
 {
-    return serviceProxy_;
+    fd=-1;
+    return fd;
 }
 
-sptr<IService> ServiceProxy::GetInstance()
-{
-    if (!GetMockGetInstance()) {
-        return nullptr;
-    }
-
-    if (!GetMockLoadSystemAbility()) {
-        serviceProxy_ = sptr(new ServiceProxy(nullptr));
-    } else {
-        sptr<IRemoteObject> object = new MockIRemoteObject();
-        serviceProxy_ = sptr(new ServiceProxy(object));
-    }
-    return serviceProxy_;
-}
-
-void ServiceProxy::InvaildInstance()
-{
-    serviceProxy_ = nullptr;
-}
-
-void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
-                                                                        const OHOS::sptr<IRemoteObject> &remoteObject)
-{
-    return;
-}
-
-void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
-{
-    return;
-}
-
-UniqueFd ServiceProxy::GetLocalCapabilitiesForBundleInfos()
-{
-    return UniqueFd(-1);
-}
-
-ErrCode ServiceProxy::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
+ErrCode ServiceProxy::GetBackupDataSize(bool isPreciseScan, const vector<BIncrementalData>& bundleNameList)
 {
     return BError(BError::Codes::OK);
 }

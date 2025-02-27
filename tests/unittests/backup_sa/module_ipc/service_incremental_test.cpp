@@ -35,6 +35,15 @@ void Service::OnStart() {}
 
 void Service::OnStop() {}
 
+ErrCode Service::GetLocalCapabilitiesForBundleInfos(int &fd)
+{
+    return BError(BError::Codes::OK);
+}
+ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
+{
+    return BError(BError::Codes::OK);
+}
+
 UniqueFd Service::GetLocalCapabilities()
 {
     return UniqueFd(-1);
@@ -47,22 +56,17 @@ ErrCode Service::VerifyCallerAndGetCallerName(std::string &bundleName)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
+ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg)
+ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
-{
-    return BError(BError::Codes::OK);
-}
-
-ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
 {
     return BError(BError::Codes::OK);
 }
@@ -77,32 +81,35 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCode)
+ErrCode Service::AppFileReady(const std::string &fileName, int fd, int32_t appFileReadyErrCode)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppDone(ErrCode errCode)
+ErrCode Service::AppDone(int32_t appDoneErrCode)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
+ErrCode Service::ServiceResultReport(const std::string& restoreRetInfo,
     BackupRestoreScenario sennario, ErrCode errCode)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames,
-    const std::vector<std::string> &detailInfos, RestoreTypeEnum restoreType, int32_t userId)
+ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd,
+                                                         const std::vector<std::string> &bundleNames,
+                                                         const std::vector<std::string> &detailInfos,
+                                                         int32_t restoreType,
+                                                         int32_t userId)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
-                                             const std::vector<BundleName> &bundleNames,
-                                             RestoreTypeEnum restoreType,
-                                             int32_t userId)
+ErrCode Service::AppendBundlesRestoreSessionData(int fd,
+                                                 const std::vector<std::string> &bundleNames,
+                                                 int32_t restoreType,
+                                                 int32_t userId)
 {
     return BError(BError::Codes::OK);
 }
@@ -113,7 +120,7 @@ ErrCode Service::AppendBundlesBackupSession(const std::vector<BundleName> &bundl
 }
 
 ErrCode Service::AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
-    const std::vector<std::string> &bundleInfos)
+                                                   const std::vector<std::string> &bundleInfos)
 {
     return BError(BError::Codes::OK);
 }
@@ -122,7 +129,10 @@ ErrCode Service::Finish()
 {
     return BError(BError::Codes::OK);
 }
-
+ErrCode Service::GetLocalCapabilities(int &fd)
+{
+    return BError(BError::Codes::OK);
+}
 ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
 {
     return BError(BError::Codes::OK);
@@ -181,17 +191,17 @@ void Service::SendStartAppGalleryNotify(const BundleName &bundleName) {}
 
 void Service::SessionDeactive() {}
 
-ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
+ErrCode Service::GetBackupInfo(const BundleName &bundleName, std::string &result)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+ErrCode Service::UpdateTimer(const BundleName &bundleName, uint32_t timeOut, bool &result)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result)
+ErrCode Service::UpdateSendRate(const std::string &bundleName, int32_t sendRate, bool &result)
 {
     return BError(BError::Codes::OK);
 }
@@ -207,15 +217,11 @@ void Service::OnSARestore(const std::string &bundleName, const std::string &resu
 
 void Service::NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerName) {}
 
-void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
-{
-}
+void Service::SendEndAppGalleryNotify(const BundleName &bundleName) {}
 
-void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
-{
-}
+void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode) {}
 
-ErrCode Service::ReportAppProcessInfo(const std::string processInfo, BackupRestoreScenario sennario)
+ErrCode Service::ReportAppProcessInfo(const std::string &processInfo, BackupRestoreScenario sennario)
 {
     return BError(BError::Codes::OK);
 }
@@ -334,7 +340,7 @@ UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
 }
 
 void Service::AppendBundles(const std::vector<std::string> &bundleNames) {}
-ErrCode Service::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
+ErrCode Service::GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList)
 {
     return BError(BError::Codes::OK);
 }
@@ -425,7 +431,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetLocalCapabilitiesIncr
     try {
         auto session_ = service->session_;
         service->session_ = nullptr;
-        auto fd = service->GetLocalCapabilitiesIncremental({});
+        int fd = -1;
+        service->GetLocalCapabilitiesIncremental({}, fd);
         service->session_ = session_;
         EXPECT_EQ(static_cast<int>(fd), -ENOENT);
     } catch (...) {
@@ -535,13 +542,15 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
     try {
         auto session_ = service->session_;
         service->session_ = nullptr;
-        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr), BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        sptr<IServiceReverse> srPrt = static_cast<sptr<IServiceReverse>>(srProxy);
+        srPrt = nullptr;
+        EXPECT_EQ(service->InitIncrementalBackupSession(srPrt), BError(BError::Codes::SA_INVAL_ARG).GetCode());
         service->session_ = session_;
 
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
         EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
-        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr), BError(BError::Codes::OK).GetCode());
+        EXPECT_EQ(service->InitIncrementalBackupSession(srPrt), BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by InitIncrementalBackupSession.";
@@ -565,14 +574,16 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         std::string errMsg;
         auto session_ = service->session_;
         service->session_ = nullptr;
-        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr, errMsg),
-            BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        sptr<IServiceReverse> reverseNUll = nullptr;
+        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
+                  BError(BError::Codes::SA_INVAL_ARG).GetCode());
         service->session_ = session_;
 
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, 0)));
         EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
-        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr, errMsg), BError(BError::Codes::OK).GetCode());
+        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
+                  BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by InitIncrementalBackupSession.";
@@ -764,14 +775,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalRestoreOnFileReady(_, _, _, _, _)).WillOnce(Return());
-        auto ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        auto ret = service->AppIncrementalFileReady(fileName, 1, 1, errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return());
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
-        ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        ret = service->AppIncrementalFileReady(fileName, 1, 1, errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         fileName = BConstants::EXT_BACKUP_MANAGE;
@@ -780,7 +791,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return());
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
-        ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        ret = service->AppIncrementalFileReady(fileName, 1, 1, errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -810,7 +821,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        auto ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        auto ret = service->AppIncrementalFileReady(fileName, 1, 1, errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::BACKUP));
@@ -824,7 +835,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_
         EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
         EXPECT_CALL(*srProxy, IncrementalBackupOnBundleFinished(_, _)).WillOnce(Return());
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        ret = service->AppIncrementalFileReady(fileName, 1, 1, errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);

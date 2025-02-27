@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "module_ipc/service_stub.h"
+#include "service_stub.h"
 #include "service_stub_mock.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -23,162 +23,246 @@ ServiceStub::ServiceStub()
 {
 }
 
-void ServiceStub::ServiceStubSupplement()
-{
-}
-
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    return BServiceStub::stub->OnRemoteRequest(code, data, reply, option);
+    std::u16string localDescriptor = GetDescriptor();
+    std::u16string remoteDescriptor = data.ReadInterfaceToken();
+    if (localDescriptor != remoteDescriptor) {
+        return ERR_TRANSACTION_FAILED;
+    }
+    switch (static_cast<IServiceReverseIpcCode>(code)) {
+        case IServiceReverseIpcCode::COMMAND_BACKUP_ON_BUNDLE_STARTED: {
+            int32_t backupOnBundleStartedErrCode = data.ReadInt32();
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = BackupOnBundleStarted(backupOnBundleStartedErrCode, bundleName);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_BACKUP_ON_FILE_READY: {
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            std::string fileName = Str16ToStr8(data.ReadString16());
+            int fd = data.ReadFileDescriptor();
+            int32_t backupOnFileReadyErrCode = data.ReadInt32();
+            ErrCode errCode = BackupOnFileReady(bundleName, fileName, fd, backupOnFileReadyErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_BACKUP_ON_RESULT_REPORT: {
+            std::string myResult = Str16ToStr8(data.ReadString16());
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = BackupOnResultReport(myResult, bundleName);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_BACKUP_ON_BUNDLE_FINISHED: {
+            int32_t backupOnBundleFinishedErrCode = data.ReadInt32();
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = BackupOnBundleFinished(backupOnBundleFinishedErrCode, bundleName);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_BACKUP_ON_ALL_BUNDLES_FINISHED: {
+            int32_t backupOnAllBundlesFinishedErrCode = data.ReadInt32();
+            ErrCode errCode = BackupOnAllBundlesFinished(backupOnAllBundlesFinishedErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_BACKUP_ON_PROCESS_INFO: {
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            std::string processInfo = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = BackupOnProcessInfo(bundleName, processInfo);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_RESTORE_ON_BUNDLE_STARTED: {
+            int32_t restoreOnBundleStartedErrCode = data.ReadInt32();
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = RestoreOnBundleStarted(restoreOnBundleStartedErrCode, bundleName);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_RESTORE_ON_FILE_READY: {
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            std::string fileName = Str16ToStr8(data.ReadString16());
+            int fd = data.ReadFileDescriptor();
+            int32_t restoreOnFileReadyErrCode = data.ReadInt32();
+            ErrCode errCode = RestoreOnFileReady(bundleName, fileName, fd, restoreOnFileReadyErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_RESTORE_ON_RESULT_REPORT: {
+            std::string myResult = Str16ToStr8(data.ReadString16());
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            int32_t restoreOnResultReportErrCode = data.ReadInt32();
+            ErrCode errCode = RestoreOnResultReport(myResult, bundleName, restoreOnResultReportErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_RESTORE_ON_BUNDLE_FINISHED: {
+            int32_t restoreOnBundleFinishedErrCode = data.ReadInt32();
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = RestoreOnBundleFinished(restoreOnBundleFinishedErrCode, bundleName);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_RESTORE_ON_ALL_BUNDLES_FINISHED: {
+            int32_t restoreOnAllBundlesFinishedErrCode = data.ReadInt32();
+            ErrCode errCode = RestoreOnAllBundlesFinished(restoreOnAllBundlesFinishedErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_RESTORE_ON_PROCESS_INFO: {
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            std::string processInfo = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = RestoreOnProcessInfo(bundleName, processInfo);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_INCREMENTAL_BACKUP_ON_BUNDLE_STARTED: {
+            int32_t incrementalBackupOnBundleStartedErrCode = data.ReadInt32();
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = IncrementalBackupOnBundleStarted(incrementalBackupOnBundleStartedErrCode, bundleName);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_INCREMENTAL_BACKUP_ON_FILE_READY: {
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            std::string fileName = Str16ToStr8(data.ReadString16());
+            int fd = data.ReadFileDescriptor();
+            int manifestFd = data.ReadFileDescriptor();
+            int32_t incrementalBackupOnFileReadyErrCode = data.ReadInt32();
+            ErrCode errCode =
+                IncrementalBackupOnFileReady(bundleName, fileName, fd, manifestFd, incrementalBackupOnFileReadyErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_INCREMENTAL_BACKUP_ON_RESULT_REPORT: {
+            std::string myResult = Str16ToStr8(data.ReadString16());
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = IncrementalBackupOnResultReport(myResult, bundleName);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_INCREMENTAL_BACKUP_ON_BUNDLE_FINISHED: {
+            int32_t incrementalBackupOnBundleFinishedErrCode = data.ReadInt32();
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = IncrementalBackupOnBundleFinished(incrementalBackupOnBundleFinishedErrCode, bundleName);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_INCREMENTAL_BACKUP_ON_ALL_BUNDLES_FINISHED: {
+            int32_t incrementalBackupOnAllBundlesFinishedErrCode = data.ReadInt32();
+            ErrCode errCode = IncrementalBackupOnAllBundlesFinished(incrementalBackupOnAllBundlesFinishedErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_INCREMENTAL_BACKUP_ON_PROCESS_INFO: {
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            std::string processInfo = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = IncrementalBackupOnProcessInfo(bundleName, processInfo);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_INCREMENTAL_RESTORE_ON_BUNDLE_STARTED: {
+            int32_t incrementalRestoreOnBundleStartedErrCode = data.ReadInt32();
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = IncrementalRestoreOnBundleStarted(incrementalRestoreOnBundleStartedErrCode, bundleName);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_INCREMENTAL_RESTORE_ON_FILE_READY: {
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            std::string fileName = Str16ToStr8(data.ReadString16());
+            int fd = data.ReadFileDescriptor();
+            int manifestFd = data.ReadFileDescriptor();
+            int32_t incrementalRestoreOnFileReadyErrCode = data.ReadInt32();
+            ErrCode errCode = IncrementalRestoreOnFileReady(bundleName, fileName, fd, manifestFd,
+                                                            incrementalRestoreOnFileReadyErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_INCREMENTAL_RESTORE_ON_RESULT_REPORT: {
+            std::string myResult = Str16ToStr8(data.ReadString16());
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            int32_t incrementalRestoreOnResultReportErrCode = data.ReadInt32();
+            ErrCode errCode =
+                IncrementalRestoreOnResultReport(myResult, bundleName, incrementalRestoreOnResultReportErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_INCREMENTAL_RESTORE_ON_BUNDLE_FINISHED: {
+            int32_t incrementalRestoreOnBundleFinishedErrCode = data.ReadInt32();
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = IncrementalRestoreOnBundleFinished(incrementalRestoreOnBundleFinishedErrCode, bundleName);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_INCREMENTAL_RESTORE_ON_ALL_BUNDLES_FINISHED: {
+            int32_t incrementalRestoreOnAllBundlesFinishedErrCode = data.ReadInt32();
+            ErrCode errCode = IncrementalRestoreOnAllBundlesFinished(incrementalRestoreOnAllBundlesFinishedErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceReverseIpcCode::COMMAND_INCREMENTAL_RESTORE_ON_PROCESS_INFO: {
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            std::string processInfo = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = IncrementalRestoreOnProcessInfo(bundleName, processInfo);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        default:
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
+
+    return ERR_TRANSACTION_FAILED;
 }
 
-int32_t ServiceStub::CmdInitRestoreSession(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdInitRestoreSession(data, reply);
-}
-
-int32_t ServiceStub::CmdInitBackupSession(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdInitBackupSession(data, reply);
-}
-
-int32_t ServiceStub::CmdStart(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdStart(data, reply);
-}
-
-int32_t ServiceStub::CmdGetLocalCapabilities(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdGetLocalCapabilities(data, reply);
-}
-
-int32_t ServiceStub::CmdPublishFile(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdPublishFile(data, reply);
-}
-
-int32_t ServiceStub::CmdAppFileReady(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdAppFileReady(data, reply);
-}
-
-int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdAppDone(data, reply);
-}
-
-int32_t ServiceStub::CmdResultReport(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdResultReport(data, reply);
-}
-
-int32_t ServiceStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdGetFileHandle(data, reply);
-}
-
-int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdAppendBundlesRestoreSession(data, reply);
-}
-
-int32_t ServiceStub::CmdAppendBundlesDetailsRestoreSession(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdAppendBundlesDetailsRestoreSession(data, reply);
-}
-
-int32_t ServiceStub::CmdAppendBundlesBackupSession(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdAppendBundlesBackupSession(data, reply);
-}
-
-int32_t ServiceStub::CmdFinish(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdFinish(data, reply);
-}
-
-int32_t ServiceStub::CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdGetBackupInfo(data, reply);
-}
-
-int32_t ServiceStub::CmdUpdateTimer(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdUpdateTimer(data, reply);
-}
-
-int32_t ServiceStub::CmdUpdateSendRate(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdUpdateSendRate(data, reply);
-}
-
-int32_t ServiceStub::CmdRelease(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdRelease(data, reply);
-}
-
-int32_t ServiceStub::CmdCancel(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdCancel(data, reply);
-}
-
-int32_t ServiceStub::CmdGetLocalCapabilitiesIncremental(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdGetLocalCapabilitiesIncremental(data, reply);
-}
-
-int32_t ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdGetAppLocalListAndDoIncrementalBackup(data, reply);
-}
-
-int32_t ServiceStub::CmdInitIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdInitIncrementalBackupSession(data, reply);
-}
-
-int32_t ServiceStub::CmdAppendBundlesIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdAppendBundlesIncrementalBackupSession(data, reply);
-}
-
-int32_t ServiceStub::CmdAppendBundlesDetailsIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdAppendBundlesDetailsIncrementalBackupSession(data, reply);
-}
-
-int32_t ServiceStub::CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdPublishIncrementalFile(data, reply);
-}
-
-int32_t ServiceStub::CmdAppIncrementalFileReady(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdAppIncrementalFileReady(data, reply);
-}
-
-int32_t ServiceStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdGetIncrementalFileHandle(data, reply);
-}
-
-int32_t ServiceStub::CmdStopExtTimer(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdStopExtTimer(data, reply);
-}
-
-int32_t ServiceStub::CmdRefreshDataSize(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdRefreshDataSize(data, reply);
-}
-
-int32_t ServiceStub::CmdGetLocalCapabilitiesForBdInfos(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdGetLocalCapabilitiesForBdInfos(data, reply);
-}
-
-int32_t ServiceStub::CmdGetBackupDataSize(MessageParcel &data, MessageParcel &reply)
-{
-    return BServiceStub::stub->CmdGetBackupDataSize(data, reply);
-}
 } // namespace OHOS::FileManagement::Backup

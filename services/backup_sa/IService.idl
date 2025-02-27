@@ -1,0 +1,72 @@
+/*
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package OHOS.FileManagement.Backup;
+import ServiceType;
+interface OHOS.FileManagement.Backup.IServiceReverse;
+sequenceable BackupFileInfo..OHOS.FileManagement.Backup.BFileInfo;
+sequenceable BackupIncrementalData..OHOS.FileManagement.Backup.BIncrementalData;
+interface OHOS.FileManagement.Backup.IService{
+    [ipccode 39] void InitRestoreSession([in] IServiceReverse reverseIpcRemoteObject);
+    [ipccode 1] void InitRestoreSessionWithErrMsg([in] IServiceReverse reverseIpcRemoteObject, [out] String errMsg);
+    [ipccode 2] void InitBackupSession([in] IServiceReverse reverseIpcRemoteObject);
+    [ipccode 3] void InitBackupSessionWithErrMsg([in] IServiceReverse reverseIpcRemoteObject, [out] String errMsg);
+    [ipccode 4] void Start();
+    [ipccode 5] void GetLocalCapabilities([out] FileDescriptor fd);
+    [ipccode 6] void GetLocalCapabilitiesForBundleInfos([out] FileDescriptor fd);
+    [ipccode 7] void PublishFile([in] BFileInfo fileInfo);
+    [oneway, ipccode 8] void GetFileHandle([in] String bundleName, [in] String fileName);
+    [ipccode 9] void AppendBundlesRestoreSessionDataByDetail([in] FileDescriptor fd,
+                                                 [in] String[] bundleNames,
+                                                 [in] String[]  detailInfos,
+                                                 [in] int restoreType,
+                                                 [in] int userId);
+    [ipccode 10] void AppendBundlesRestoreSessionData([in] FileDescriptor fd,
+                                                 [in] String[] bundleNames,
+                                                 [in] int restoreType,
+                                                 [in] int userId);
+    [ipccode 11] void AppendBundlesBackupSession([in] String[] bundleNames);
+    [ipccode 12] void AppendBundlesDetailsBackupSession([in] String[] bundleNames, [in] String[] bundleInfos);
+    [ipccode 13] void Finish();
+    [ipccode 14] void Release();
+    [ipccode 15] void Cancel([in] String bundleName, [out] int cancelResult);
+    [ipccode 16] void GetAppLocalListAndDoIncrementalBackup();
+    [ipccode 17] void GetIncrementalFileHandle([in] String bundleName, [in] String fileName);
+    [ipccode 18] void GetBackupInfo([in] String bundleName, [out] String getBackupInfoResult);
+    [ipccode 19] void UpdateTimer([in] String bundleName, [in] unsigned int timeout, [out] boolean updateTimerResult);
+    [ipccode 20] void UpdateSendRate([in] String bundleName, [in] int sendRate, [out] boolean updateSendRateResult);
+    [ipccode 21] void StartExtTimer([out] boolean isExtStart);
+    [ipccode 22] void StartFwkTimer([out] boolean isFwkStart);
+    [ipccode 23] void StopExtTimer([out] boolean isExtStop);
+    [ipccode 24] void GetLocalCapabilitiesIncremental([in] BIncrementalData[] bundleNames, [out] FileDescriptor fd);
+    [ipccode 25] void InitIncrementalBackupSession([in] IServiceReverse reverseIpcRemoteObject);
+    [ipccode 26] void InitIncrementalBackupSessionWithErrMsg([in] IServiceReverse reverseIpcRemoteObject,
+        [out] String errMsg);
+    [ipccode 27] void AppendBundlesIncrementalBackupSession([in] BIncrementalData[] bundlesToBackup);
+    [ipccode 28] void AppendBundlesIncrementalBackupSessionWithBundleInfos([in] BIncrementalData[] bundlesToBackup,
+        [in]String[] bundleInfos);
+    [ipccode 29] void PublishIncrementalFile([in] BFileInfo fileInfo);
+    [ipccode 30] void PublishSAIncrementalFile([in] BFileInfo fileInfo, [in] FileDescriptor fd);
+    [ipccode 31] void AppIncrementalFileReady([in] String fileName, [in] FileDescriptor fd, [in] FileDescriptor manifestFd,
+        [in] int appIncrementalFileReadyErrCode);
+    [ipccode 32] void AppIncrementalDone([in] int appIncrementalDoneErrCode);
+    [ipccode 33] void ReportAppProcessInfo([in] String processInfo, [in] BackupRestoreScenario scenario);
+    [ipccode 34] void RefreshDataSize([in] long totalDataSize);
+    [ipccode 35] void AppDone([in] int appDoneErrCode);
+    [ipccode 36] void AppFileReady([in]String fileName, [in] FileDescriptor fd, [in] int appFileReadyErrCode);
+    [ipccode 37] void ServiceResultReport([in]String restoreRetInfo, [in] BackupRestoreScenario sennario,
+        [in] int serviceResultReportErrCode);
+    [ipccode 38] void GetBackupDataSize([in] boolean isPreciseScan,[in] BIncrementalData[] bundleNameList);
+ }

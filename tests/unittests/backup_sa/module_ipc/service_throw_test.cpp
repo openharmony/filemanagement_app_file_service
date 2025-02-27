@@ -136,7 +136,8 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0100, testing::e
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-    auto ret = service->InitRestoreSession(nullptr);
+    sptr<IServiceReverse> reverse = nullptr;
+    auto ret = service->InitRestoreSession(reverse);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -147,7 +148,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0100, testing::e
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
     EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-    ret = service->InitRestoreSession(nullptr);
+    ret = service->InitRestoreSession(reverse);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -157,7 +158,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0100, testing::e
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
-    ret = service->InitRestoreSession(nullptr);
+    ret = service->InitRestoreSession(reverse);
     EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_InitRestoreSession_0100";
 }
@@ -180,7 +181,8 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0200, testing::e
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-    auto ret = service->InitRestoreSession(nullptr, errMsg);
+    sptr<IServiceReverse> reverseNUll = nullptr;
+    auto ret = service->InitRestoreSessionWithErrMsg(reverseNUll, errMsg);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -191,7 +193,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0200, testing::e
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
     EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-    ret = service->InitRestoreSession(nullptr, errMsg);
+    ret = service->InitRestoreSessionWithErrMsg(reverseNUll, errMsg);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -202,7 +204,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0200, testing::e
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_SESSION_CONFLICT)));
     EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-    ret = service->InitRestoreSession(nullptr, errMsg);
+    ret = service->InitRestoreSessionWithErrMsg(reverseNUll, errMsg);
     EXPECT_EQ(ret, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -212,7 +214,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0200, testing::e
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
-    ret = service->InitRestoreSession(nullptr, errMsg);
+    ret = service->InitRestoreSessionWithErrMsg(reverseNUll, errMsg);
     EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_InitRestoreSession_0200";
 }
@@ -234,7 +236,8 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0100, testing::ex
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-    auto ret = service->InitBackupSession(nullptr);
+    sptr<IServiceReverse> reverse = nullptr;
+    auto ret = service->InitBackupSession(reverse);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -245,7 +248,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0100, testing::ex
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
     EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-    ret = service->InitBackupSession(nullptr);
+    ret = service->InitBackupSession(reverse);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -255,7 +258,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0100, testing::ex
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
-    ret = service->InitBackupSession(nullptr);
+    ret = service->InitBackupSession(reverse);
     EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_InitBackupSession_0100";
 }
@@ -278,7 +281,8 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0200, testing::ex
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-    auto ret = service->InitBackupSession(nullptr, errMsg);
+    sptr<IServiceReverse> reverseNUll = nullptr;
+    auto ret = service->InitBackupSessionWithErrMsg(reverseNUll, errMsg);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -289,7 +293,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0200, testing::ex
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
     EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-    ret = service->InitBackupSession(nullptr, errMsg);
+    ret = service->InitBackupSessionWithErrMsg(reverseNUll, errMsg);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -300,7 +304,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0200, testing::ex
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_SESSION_CONFLICT)));
     EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-    ret = service->InitBackupSession(nullptr, errMsg);
+    ret = service->InitBackupSessionWithErrMsg(reverseNUll, errMsg);
     EXPECT_EQ(ret, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -310,7 +314,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0200, testing::ex
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
-    ret = service->InitBackupSession(nullptr, errMsg);
+    ret = service->InitBackupSessionWithErrMsg(reverseNUll, errMsg);
     EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_InitBackupSession_0200";
 }
@@ -527,7 +531,8 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppFileReady_0100, testing::ext::Te
         EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
-        auto ret = service->AppFileReady(fileName, UniqueFd(-1), 0);
+        int fd = 1;
+        auto ret = service->AppFileReady(fileName, fd, 0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
@@ -540,7 +545,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppFileReady_0100, testing::ext::Te
             .WillOnce(Return("bundleName"))
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
-        ret = service->AppFileReady(fileName, UniqueFd(-1), 0);
+        ret = service->AppFileReady(fileName, fd, 0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -914,22 +919,23 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_GetLocalCapabilitiesIncremental_010
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
         EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
-        auto ret = service->GetLocalCapabilitiesIncremental(bundleNames);
-        EXPECT_EQ(-ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+        int fd = -1;
+        ErrCode ret = service->GetLocalCapabilitiesIncremental(bundleNames, fd);
+        EXPECT_EQ(-fd, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
         EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw runtime_error("运行时错误");
         }));
         EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
-        ret = service->GetLocalCapabilitiesIncremental(bundleNames);
-        EXPECT_EQ(-ret, EPERM);
+        ret = service->GetLocalCapabilitiesIncremental(bundleNames, fd);
+        EXPECT_EQ(-fd, EPERM);
 
         EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
         EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
-        ret = service->GetLocalCapabilitiesIncremental(bundleNames);
-        EXPECT_EQ(-ret, EPERM);
+        ret = service->GetLocalCapabilitiesIncremental(bundleNames, fd);
+        EXPECT_EQ(-fd, EPERM);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceThrowTest-an exception occurred by GetLocalCapabilitiesIncremental.";
@@ -995,7 +1001,8 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0100, 
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-    auto ret = service->InitIncrementalBackupSession(nullptr);
+    sptr<IServiceReverse> reverse = nullptr;
+    auto ret = service->InitIncrementalBackupSession(reverse);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -1007,7 +1014,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0100, 
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
     EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-    ret = service->InitIncrementalBackupSession(nullptr);
+    ret = service->InitIncrementalBackupSession(reverse);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -1019,7 +1026,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0100, 
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
-    ret = service->InitIncrementalBackupSession(nullptr);
+    ret = service->InitIncrementalBackupSession(reverse);
     EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_InitIncrementalBackupSession_0100";
 }
@@ -1042,7 +1049,8 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0200, 
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-    auto ret = service->InitIncrementalBackupSession(nullptr, errMsg);
+    sptr<IServiceReverse> reverseNUll = nullptr;
+    auto ret = service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -1054,7 +1062,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0200, 
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
     EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-    ret = service->InitIncrementalBackupSession(nullptr, errMsg);
+    ret = service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -1066,7 +1074,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0200, 
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_SESSION_CONFLICT)));
     EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
-    ret = service->InitIncrementalBackupSession(nullptr, errMsg);
+    ret = service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg);
     EXPECT_EQ(ret, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
@@ -1078,7 +1086,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0200, 
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
-    ret = service->InitIncrementalBackupSession(nullptr, errMsg);
+    ret = service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg);
     EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_InitIncrementalBackupSession_0200";
 }
@@ -1138,14 +1146,14 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesIncrementalBackupSessi
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
         EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
-        auto ret = service->AppendBundlesIncrementalBackupSession(bundlesToBackup, infos);
+        auto ret = service->AppendBundlesIncrementalBackupSessionWithBundleInfos(bundlesToBackup, infos);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
         EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
         EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
-        ret = service->AppendBundlesIncrementalBackupSession(bundlesToBackup, infos);
+        ret = service->AppendBundlesIncrementalBackupSessionWithBundleInfos(bundlesToBackup, infos);
         EXPECT_EQ(ret, EPERM);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1207,7 +1215,8 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppIncrementalFileReady_0100, testi
         EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
-        auto ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), 0);
+        int fd = 1;
+        auto ret = service->AppIncrementalFileReady(fileName, fd, fd, 0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
@@ -1220,7 +1229,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppIncrementalFileReady_0100, testi
             .WillOnce(Return("bundleName"))
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
-        ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), 0);
+        ret = service->AppIncrementalFileReady(fileName, fd, fd, 0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,9 +25,9 @@
 #include "b_error/b_error.h"
 #include "b_resources/b_constants.h"
 #include "ipc_types.h"
-#include "i_service.h"
+#include "iservice.h"
 #include "message_parcel_mock.h"
-#include "module_ipc/service_stub.h"
+#include "service_stub.h"
 #include "service_reverse_mock.h"
 #include "test_manager.h"
 #include "unique_fd.h"
