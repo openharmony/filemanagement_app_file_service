@@ -163,3 +163,8 @@ napi_status napi_is_exception_pending(napi_env env, bool* result)
 {
     return OHOS::FileManagement::Backup::Napi::napi->napi_is_exception_pending(env, result);
 }
+
+napi_status napi_fatal_exception(napi_env env, napi_value err)
+{
+    return OHOS::FileManagement::Backup::Napi::napi->napi_fatal_exception(env, err);
+}
