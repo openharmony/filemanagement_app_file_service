@@ -84,7 +84,10 @@ ohos_shared_library("backup_utils") {
     "src/b_utils/b_time.cpp",
   ]
 
-  configs = [ ":utils_private_config" ]
+  configs = [
+    ":utils_private_config",
+    "${path_backup}/services/backup_sa:public_idl_config",
+  ]
   public_configs = [ ":utils_public_config" ]
 
   external_deps = [
@@ -110,6 +113,7 @@ ohos_shared_library("backup_utils") {
   deps = [
     ":backup_cxx_cppdeps",
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_type",
     "${path_jsoncpp}:jsoncpp",
     "//third_party/openssl:libcrypto_shared",
   ]

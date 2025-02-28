@@ -26,6 +26,7 @@ ohos_unittest("b_session_test") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",
+    "${path_backup}/tests/mock/backup_kit_inner/service_client_mock.cpp",
     "b_session_backup_test.cpp",
     "b_session_restore_async_test.cpp",
     "b_session_restore_test.cpp",
@@ -40,6 +41,7 @@ ohos_unittest("b_session_test") {
   include_dirs += backup_mock_utils_include
 
   deps = [
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
   ]

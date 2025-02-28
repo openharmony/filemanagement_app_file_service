@@ -27,12 +27,10 @@ ohos_unittest("module_ipc_test") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental_reverse_proxy.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_reverse_proxy.cpp",
-    "${path_backup}/services/backup_sa/src/module_ipc/service_stub.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_backup_connection.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_incremental_proxy.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_proxy.cpp",
     "service_reverse_proxy_test.cpp",
-    "service_stub_test.cpp",
     "svc_backup_connection_test.cpp",
     "svc_extension_proxy_test.cpp",
   ]
@@ -49,6 +47,7 @@ ohos_unittest("module_ipc_test") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "//third_party/googletest:gmock_main",
@@ -114,6 +113,7 @@ ohos_unittest("backup_service_test") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -195,6 +195,7 @@ ohos_unittest("backup_service_throw_test") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -264,6 +265,7 @@ ohos_unittest("backup_service_session_test") {
   deps = [
     "${app_file_service_path}/services/backup_sa:backup_sa",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -317,6 +319,7 @@ ohos_unittest("backup_service_scheduler_test") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -381,6 +384,7 @@ ohos_unittest("backup_restore_deps_manager_test") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -414,14 +418,15 @@ ohos_unittest("backup_service_incremental_test") {
     "${path_backup_mock}/accesstoken/accesstoken_kit_mock.cpp",
     "${path_backup_mock}/module_external/src/bms_adapter_mock.cpp",
     "${path_backup_mock}/module_external/src/sms_adapter_mock.cpp",
+    "${path_backup_mock}/module_ipc/service_stub_mock.cpp",
     "${path_backup_mock}/module_ipc/src/ipc_skeleton_mock.cpp",
     "${path_backup_mock}/module_ipc/src/sa_backup_connection_mock.cpp",
-    "${path_backup_mock}/module_ipc/src/service_stub_mock.cpp",
     "${path_backup_mock}/module_ipc/src/svc_backup_connection_mock.cpp",
     "${path_backup_mock}/module_ipc/src/svc_session_manager_mock.cpp",
     "${path_backup_mock}/module_sched/sched_scheduler_mock.cpp",
     "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
     "${path_backup_mock}/utils_mock/src/backup_para_mock.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_client.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_incremental_proxy.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_proxy.cpp",
     "service_incremental_test.cpp",
@@ -441,6 +446,7 @@ ohos_unittest("backup_service_incremental_test") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -475,11 +481,11 @@ ohos_unittest("backup_service_other_test") {
     "${path_backup_mock}/accesstoken/src/accesstoken_kit_mock.cpp",
     "${path_backup_mock}/module_external/src/bms_adapter_mock.cpp",
     "${path_backup_mock}/module_external/src/sms_adapter_mock.cpp",
+    "${path_backup_mock}/module_ipc/service_stub_mock.cpp",
     "${path_backup_mock}/module_ipc/src/app_gallery_dispose_proxy_mock.cpp",
     "${path_backup_mock}/module_ipc/src/ipc_skeleton_mock.cpp",
     "${path_backup_mock}/module_ipc/src/notify_work_service_mock.cpp",
     "${path_backup_mock}/module_ipc/src/sa_backup_connection_mock.cpp",
-    "${path_backup_mock}/module_ipc/src/service_stub_mock.cpp",
     "${path_backup_mock}/module_ipc/src/svc_backup_connection_mock.cpp",
     "${path_backup_mock}/module_ipc/src/svc_restore_deps_manager_mock.cpp",
     "${path_backup_mock}/module_ipc/src/svc_session_manager_mock.cpp",
@@ -512,6 +518,7 @@ ohos_unittest("backup_service_other_test") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",

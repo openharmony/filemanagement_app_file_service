@@ -12,6 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "backup_incremental_data.h"
 
-namespace OHOS::FileManagement::Backup {}
+package OHOS.FileManagement.Backup.ExtensionType;
+
+struct UniqueFdGroup {
+    FileDescriptor fd;
+    FileDescriptor reportFd;
+    int errCode;
+};

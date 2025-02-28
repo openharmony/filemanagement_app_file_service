@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,7 @@
 #include "b_error/b_error.h"
 #include "b_radar/b_radar.h"
 #include "filemgmt_libhilog.h"
-#include "service_proxy.h"
+#include "service_client.h"
 #include "service_reverse.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -30,7 +30,7 @@ BSessionRestore::~BSessionRestore()
         HILOGI("Death Recipient is nullptr");
         return;
     }
-    auto proxy = ServiceProxy::GetServiceProxyPointer();
+    auto proxy = ServiceClient::GetServiceProxyPointer();
     if (proxy == nullptr) {
         return;
     }
@@ -46,8 +46,8 @@ unique_ptr<BSessionRestore> BSessionRestore::Init(Callbacks callbacks)
     try {
         HILOGI("Init RestoreSession Begin");
         auto restore = make_unique<BSessionRestore>();
-        ServiceProxy::InvaildInstance();
-        auto proxy = ServiceProxy::GetInstance();
+        ServiceClient::InvaildInstance();
+        auto proxy = ServiceClient::GetInstance();
         if (proxy == nullptr) {
             HILOGI("Failed to get backup service");
             return nullptr;
@@ -72,12 +72,14 @@ unique_ptr<BSessionRestore> BSessionRestore::Init(Callbacks callbacks)
 UniqueFd BSessionRestore::GetLocalCapabilities()
 {
     HILOGI("GetLocalCapabilities begin");
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to get backup service");
         return UniqueFd(-EPERM);
     }
-    UniqueFd fd = proxy->GetLocalCapabilitiesForBundleInfos();
+    int fdvalue = -1;
+    proxy->GetLocalCapabilitiesForBundleInfos(fdvalue);
+    UniqueFd fd(fdvalue);
     if (fd < 0) {
         HILOGE("Failed to get local capabilities for bundleinfos");
         return UniqueFd(-EPERM);
@@ -87,7 +89,7 @@ UniqueFd BSessionRestore::GetLocalCapabilities()
 
 ErrCode BSessionRestore::PublishFile(BFileInfo fileInfo)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -96,7 +98,7 @@ ErrCode BSessionRestore::PublishFile(BFileInfo fileInfo)
 
 ErrCode BSessionRestore::Start()
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -106,7 +108,7 @@ ErrCode BSessionRestore::Start()
 
 ErrCode BSessionRestore::GetFileHandle(const string &bundleName, const string &fileName)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -114,14 +116,17 @@ ErrCode BSessionRestore::GetFileHandle(const string &bundleName, const string &f
     return proxy->GetFileHandle(bundleName, fileName);
 }
 
-ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore,
-    std::vector<std::string> detailInfos)
+ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap,
+                                       vector<BundleName> bundlesToRestore,
+                                       std::vector<std::string> detailInfos)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-    ErrCode res = proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos);
+    int32_t remoteCapInt = remoteCap.Get();
+    ErrCode res =
+        proxy->AppendBundlesRestoreSessionDataByDetail(remoteCapInt, bundlesToRestore, detailInfos, 0, -1);
     if (res != ERR_OK) {
         std::string ss;
         for (const auto &bundle : bundlesToRestore) {
@@ -129,18 +134,20 @@ ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bu
         }
         AppRadar::Info info(ss.c_str(), "", "AppendBundles with infos");
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BSessionRestore::AppendBundles",
-            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
+                                                     AppRadar::GetInstance().GetUserId(),
+                                                     BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
     return res;
 }
 
 ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-    ErrCode res = proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore);
+    int32_t remoteCapInt = remoteCap.Get();
+    ErrCode res = proxy->AppendBundlesRestoreSessionData(remoteCapInt, bundlesToRestore, 0, -1);
     if (res != ERR_OK) {
         std::string ss;
         for (const auto &bundle : bundlesToRestore) {
@@ -148,14 +155,15 @@ ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap, vector<BundleName> bu
         }
         AppRadar::Info info(ss.c_str(), "", "");
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BSessionRestore::AppendBundles",
-            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
+                                                     AppRadar::GetInstance().GetUserId(),
+                                                     BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
     return res;
 }
 
 ErrCode BSessionRestore::Finish()
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -165,7 +173,7 @@ ErrCode BSessionRestore::Finish()
 
 ErrCode BSessionRestore::Release()
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -175,7 +183,7 @@ ErrCode BSessionRestore::Release()
 
 void BSessionRestore::RegisterBackupServiceDied(std::function<void()> functor)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr || !functor) {
         return;
     }
@@ -186,7 +194,7 @@ void BSessionRestore::RegisterBackupServiceDied(std::function<void()> functor)
 
     auto callback = [functor](const wptr<IRemoteObject> &obj) {
         HILOGI("Backup service died");
-        ServiceProxy::InvaildInstance();
+        ServiceClient::InvaildInstance();
         functor();
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(callback));
@@ -196,7 +204,7 @@ void BSessionRestore::RegisterBackupServiceDied(std::function<void()> functor)
 ErrCode BSessionRestore::Cancel(std::string bundleName)
 {
     ErrCode result = BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK;
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Called Cancel, failed to get proxy.");
         return result;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -241,6 +241,17 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
         return ret;
     }
     return BError(BError::Codes::OK);
+}
+
+ErrCode Service::AppFileReady(const std::string &fileName, int fd, int32_t errCode)
+{
+    HILOGI("fileName =%{public}s, fd = %{public}d, errCode = %{public}d", fileName.c_str(), fd, errCode);
+    UniqueFd fdUnique(fd);
+    if (fd < 0) {
+        HILOGE("Error fd, fd = %{public}d", fd);
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    return AppFileReady(fileName, std::move(fdUnique), errCode);
 }
 
 ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCode)
@@ -775,7 +786,13 @@ std::string Service::GetCallerName()
     return callerName;
 }
 
-ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg)
+ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
+{
+    HILOGI("Start InitRestoreSessionWithErrMsg,Msg :%{public}s", errMsg.c_str());
+    return InitRestoreSession(remote, errMsg);
+}
+
+ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     ErrCode ret = VerifyCaller();
@@ -810,7 +827,7 @@ ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, std::string &e
     return ret;
 }
 
-ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     ErrCode ret = VerifyCaller();
@@ -846,6 +863,14 @@ ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, std::string &er
     HILOGE("Active backup session error");
     StopAll(nullptr, true);
     return ret;
+}
+
+ErrCode Service::GetLocalCapabilitiesForBundleInfos(int &fd)
+{
+    UniqueFd uniqueFd(GetLocalCapabilitiesForBundleInfos());
+    HILOGI("get GetLocalCapabilitiesForBundleInfos value");
+    fd = uniqueFd.Release();
+    return ErrCode(BError::Codes::OK);
 }
 
 UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
@@ -920,7 +945,7 @@ void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRes
     }
 }
 
-ErrCode Service::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
+ErrCode Service::GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList)
 {
     try {
         HILOGI("start GetBackupDataSize");

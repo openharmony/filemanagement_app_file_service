@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,7 @@
 #include "b_error/b_error.h"
 #include "b_radar/b_radar.h"
 #include "filemgmt_libhilog.h"
-#include "service_proxy.h"
+#include "service_client.h"
 #include "service_reverse.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -30,7 +30,7 @@ BSessionBackup::~BSessionBackup()
         HILOGI("Death Recipient is nullptr");
         return;
     }
-    auto proxy = ServiceProxy::GetServiceProxyPointer();
+    auto proxy = ServiceClient::GetServiceProxyPointer();
     if (proxy == nullptr) {
         return;
     }
@@ -46,8 +46,8 @@ unique_ptr<BSessionBackup> BSessionBackup::Init(Callbacks callbacks)
     try {
         HILOGI("Init BackupSession Begin");
         auto backup = make_unique<BSessionBackup>();
-        ServiceProxy::InvaildInstance();
-        auto proxy = ServiceProxy::GetInstance();
+        ServiceClient::InvaildInstance();
+        auto proxy = ServiceClient::GetInstance();
         if (proxy == nullptr) {
             HILOGI("Failed to get backup service");
             return nullptr;
@@ -76,13 +76,13 @@ unique_ptr<BSessionBackup> BSessionBackup::Init(Callbacks callbacks,
     try {
         HILOGI("Init BackupSession Begin");
         auto backup = make_unique<BSessionBackup>();
-        ServiceProxy::InvaildInstance();
-        auto proxy = ServiceProxy::GetInstance();
+        ServiceClient::InvaildInstance();
+        auto proxy = ServiceClient::GetInstance();
         if (proxy == nullptr) {
             HILOGI("Failed to get backup service");
             return nullptr;
         }
-        errCode = proxy->InitBackupSession(sptr(new ServiceReverse(callbacks)), errMsg);
+        errCode = proxy->InitBackupSessionWithErrMsg(sptr(new ServiceReverse(callbacks)), errMsg);
         if (errCode != ERR_OK) {
             HILOGE("Failed to Backup because of %{public}d", errCode);
             AppRadar::Info info("", "", "");
@@ -101,7 +101,7 @@ unique_ptr<BSessionBackup> BSessionBackup::Init(Callbacks callbacks,
 
 void BSessionBackup::RegisterBackupServiceDied(std::function<void()> functor)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr || !functor) {
         return;
     }
@@ -111,7 +111,7 @@ void BSessionBackup::RegisterBackupServiceDied(std::function<void()> functor)
     }
 
     auto callback = [functor](const wptr<IRemoteObject> &obj) {
-        ServiceProxy::InvaildInstance();
+        ServiceClient::InvaildInstance();
         HILOGI("Backup service died");
         functor();
     };
@@ -121,7 +121,7 @@ void BSessionBackup::RegisterBackupServiceDied(std::function<void()> functor)
 
 ErrCode BSessionBackup::Start()
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -132,12 +132,14 @@ ErrCode BSessionBackup::Start()
 UniqueFd BSessionBackup::GetLocalCapabilities()
 {
     HILOGI("GetLocalCapabilities begin");
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to get backup service");
         return UniqueFd(-EPERM);
     }
-    UniqueFd fd = proxy->GetLocalCapabilitiesForBundleInfos();
+    int fdvalue = -1;
+    proxy->GetLocalCapabilitiesForBundleInfos(fdvalue);
+    UniqueFd fd(fdvalue);
     if (fd < 0) {
         HILOGE("Failed to get local capabilities for bundleinfos");
         return UniqueFd(-EPERM);
@@ -148,7 +150,7 @@ UniqueFd BSessionBackup::GetLocalCapabilities()
 ErrCode BSessionBackup::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
 {
     HILOGI("GetBackupDataSize Begin");
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to get backup service");
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
@@ -163,7 +165,7 @@ ErrCode BSessionBackup::GetBackupDataSize(bool isPreciseScan, vector<BIncrementa
 
 ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -183,7 +185,7 @@ ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup)
 
 ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup, vector<std::string> detailInfos)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -203,7 +205,7 @@ ErrCode BSessionBackup::AppendBundles(vector<BundleName> bundlesToBackup, vector
 
 ErrCode BSessionBackup::Finish()
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -213,7 +215,7 @@ ErrCode BSessionBackup::Finish()
 
 ErrCode BSessionBackup::Release()
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -224,7 +226,7 @@ ErrCode BSessionBackup::Release()
 ErrCode BSessionBackup::Cancel(std::string bundleName)
 {
     ErrCode result = BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK;
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Called Cancel, failed to get proxy.");
         return result;

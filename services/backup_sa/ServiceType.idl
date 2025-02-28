@@ -12,6 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "backup_incremental_data.h"
 
-namespace OHOS::FileManagement::Backup {}
+package OHOS.FileManagement.Backup;
+
+enum BackupRestoreScenario {
+    FULL_BACKUP = 0,
+    INCREMENTAL_BACKUP = 1,
+    FULL_RESTORE = 2,
+    INCREMENTAL_RESTORE = 3,
+};

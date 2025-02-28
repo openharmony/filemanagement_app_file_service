@@ -13,384 +13,519 @@
  * limitations under the License.
  */
 
-#include "module_ipc/service_stub.h"
-
-#include <sstream>
-
-#include "b_error/b_error.h"
-#include "b_resources/b_constants.h"
-#include "module_ipc/service_reverse_proxy.h"
-
+#include "service_stub.h"
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-ServiceStub::ServiceStub()
-{
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_FINISH)] = &ServiceStub::CmdFinish;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RELSEASE_SESSION)] =
-        &ServiceStub::CmdRelease;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_RESTORE_SESSION)] =
-        &ServiceStub::CmdInitRestoreSession;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_BACKUP_SESSION)] =
-        &ServiceStub::CmdInitBackupSession;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES)] =
-        &ServiceStub::CmdGetLocalCapabilities;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY)] =
-        &ServiceStub::CmdAppFileReady;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_FILE)] =
-        &ServiceStub::CmdPublishFile;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_DONE)] = &ServiceStub::CmdAppDone;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START)] = &ServiceStub::CmdStart;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_FILE_NAME)] =
-        &ServiceStub::CmdGetFileHandle;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION)] =
-        &ServiceStub::CmdAppendBundlesRestoreSession;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION_DETAIL)] =
-        &ServiceStub::CmdAppendBundlesDetailsRestoreSession;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION)] =
-        &ServiceStub::CmdAppendBundlesBackupSession;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES_INCREMENTAL)] =
-        &ServiceStub::CmdGetLocalCapabilitiesIncremental;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_INCREMENTAL_BACKUP_SESSION)] =
-        &ServiceStub::CmdInitIncrementalBackupSession;
-    opToInterfaceMap_[static_cast<uint32_t>(
-        IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION_DETAILS)] =
-        &ServiceStub::CmdAppendBundlesDetailsIncrementalBackupSession;
-    opToInterfaceMap_[static_cast<uint32_t>(
-        IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION)] =
-        &ServiceStub::CmdAppendBundlesIncrementalBackupSession;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_INCREMENTAL_FILE)] =
-        &ServiceStub::CmdPublishIncrementalFile;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_INCREMENTAL_FILE_READY)] =
-        &ServiceStub::CmdAppIncrementalFileReady;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_INCREMENTAL_FILE_NAME)] =
-        &ServiceStub::CmdGetIncrementalFileHandle;
-    ServiceStubSupplement();
-    opToInterfaceMap_[static_cast<uint32_t>(
-        IServiceInterfaceCode::SERVICE_CMD_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP)] =
-        &ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_STOP_EXT_TIMER)] =
-        &ServiceStub::CmdStopExtTimer;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_REFRESH_DATA_SIZE)] =
-        &ServiceStub::CmdRefreshDataSize;
-}
-
-void ServiceStub::ServiceStubSupplement()
-{
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_INFO)] =
-        &ServiceStub::CmdGetBackupInfo;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_TIMER)] =
-        &ServiceStub::CmdUpdateTimer;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_UPDATE_SENDRATE)] =
-        &ServiceStub::CmdUpdateSendRate;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_REPORT_APP_PROCESS_INFO)] =
-        &ServiceStub::CmdReportAppProcessInfo;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_RESTORE_SESSION_MSG)] =
-        &ServiceStub::CmdInitRestoreSessionMsg;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_BACKUP_SESSION_MSG)] =
-        &ServiceStub::CmdInitBackupSessionMsg;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_INCREMENTAL_BACKUP_SESSION_MSG)] =
-        &ServiceStub::CmdInitIncrementalBackupSessionMsg;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_CANCEL_BUNDLE)] =
-        &ServiceStub::CmdCancel;
-    opToInterfaceMap_[static_cast<uint32_t>(
-        IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES_FOR_BUNDLE_INFOS)] =
-        &ServiceStub::CmdGetLocalCapabilitiesForBdInfos;
-    opToInterfaceMap_[static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_BACKUP_DATA_SIZE)] =
-        &ServiceStub::CmdGetBackupDataSize;
-}
-
 int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    auto interfaceIndex = opToInterfaceMap_.find(code);
-    if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {
-        return BError(BError::Codes::OK);
+    std::u16string localDescriptor = GetDescriptor();
+    std::u16string remoteDescriptor = data.ReadInterfaceToken();
+    if (localDescriptor != remoteDescriptor) {
+        return ERR_TRANSACTION_FAILED;
+    }
+    switch (static_cast<IServiceIpcCode>(code)) {
+        case IServiceIpcCode::COMMAND_INIT_RESTORE_SESSION: {
+            sptr<IServiceReverse> reverseIpcRemoteObject;
+            ErrCode errCode = InitRestoreSession(reverseIpcRemoteObject);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (reverseIpcRemoteObject == nullptr) {
+                    return ERR_INVALID_DATA;
+                }
+                if (!reply.WriteRemoteObject(reverseIpcRemoteObject->AsObject())) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_INIT_BACKUP_SESSION: {
+            sptr<IServiceReverse> reverseIpcRemoteObject;
+            ErrCode errCode = InitBackupSession(reverseIpcRemoteObject);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (reverseIpcRemoteObject == nullptr) {
+                    return ERR_INVALID_DATA;
+                }
+                if (!reply.WriteRemoteObject(reverseIpcRemoteObject->AsObject())) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_START: {
+            ErrCode errCode = Start();
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_GET_LOCAL_CAPABILITIES: {
+            int fd;
+            ErrCode errCode = GetLocalCapabilities(fd);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (!reply.WriteInt32(fd)) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_PUBLISH_FILE: {
+            std::unique_ptr<BFileInfo> fileInfo(data.ReadParcelable<BFileInfo>());
+            if (!fileInfo) {
+                return ERR_INVALID_DATA;
+            }
+
+            ErrCode errCode = PublishFile(*fileInfo);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_GET_FILE_HANDLE: {
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            std::string fileName = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = GetFileHandle(bundleName, fileName);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_APPEND_BUNDLES_RESTORE_SESSION_DATA_BY_DETAIL: {
+            int fd = data.ReadFileDescriptor();
+            std::vector<std::string> bundleNames;
+            int32_t bundleNamesSize = data.ReadInt32();
+            if (bundleNamesSize > static_cast<int32_t>(VECTOR_MAX_SIZE)) {
+                return ERR_INVALID_DATA;
+            }
+            for (int32_t i1 = 0; i1 < bundleNamesSize; ++i1) {
+                std::string value1 = Str16ToStr8(data.ReadString16());
+                bundleNames.push_back(value1);
+            }
+            std::vector<std::string> detailInfos;
+            int32_t detailInfosSize = data.ReadInt32();
+            if (detailInfosSize > static_cast<int32_t>(VECTOR_MAX_SIZE)) {
+                return ERR_INVALID_DATA;
+            }
+            for (int32_t i2 = 0; i2 < detailInfosSize; ++i2) {
+                std::string value2 = Str16ToStr8(data.ReadString16());
+                detailInfos.push_back(value2);
+            }
+            int32_t restoreType = data.ReadInt32();
+            int32_t userId = data.ReadInt32();
+            ErrCode errCode =
+                AppendBundlesRestoreSessionDataByDetail(fd, bundleNames, detailInfos, restoreType, userId);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_APPEND_BUNDLES_RESTORE_SESSION_DATA: {
+            int fd = data.ReadFileDescriptor();
+            std::vector<std::string> bundleNames;
+            int32_t bundleNamesSize = data.ReadInt32();
+            if (bundleNamesSize > static_cast<int32_t>(VECTOR_MAX_SIZE)) {
+                return ERR_INVALID_DATA;
+            }
+            for (int32_t i3 = 0; i3 < bundleNamesSize; ++i3) {
+                std::string value3 = Str16ToStr8(data.ReadString16());
+                bundleNames.push_back(value3);
+            }
+            int32_t restoreType = data.ReadInt32();
+            int32_t userId = data.ReadInt32();
+            ErrCode errCode = AppendBundlesRestoreSessionData(fd, bundleNames, restoreType, userId);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_APPEND_BUNDLES_BACKUP_SESSION: {
+            std::vector<std::string> bundleNames;
+            int32_t bundleNamesSize = data.ReadInt32();
+            if (bundleNamesSize > static_cast<int32_t>(VECTOR_MAX_SIZE)) {
+                return ERR_INVALID_DATA;
+            }
+            for (int32_t i4 = 0; i4 < bundleNamesSize; ++i4) {
+                std::string value4 = Str16ToStr8(data.ReadString16());
+                bundleNames.push_back(value4);
+            }
+            ErrCode errCode = AppendBundlesBackupSession(bundleNames);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_APPEND_BUNDLES_DETAILS_BACKUP_SESSION: {
+            std::vector<std::string> bundleNames;
+            int32_t bundleNamesSize = data.ReadInt32();
+            if (bundleNamesSize > static_cast<int32_t>(VECTOR_MAX_SIZE)) {
+                return ERR_INVALID_DATA;
+            }
+            for (int32_t i5 = 0; i5 < bundleNamesSize; ++i5) {
+                std::string value5 = Str16ToStr8(data.ReadString16());
+                bundleNames.push_back(value5);
+            }
+            std::vector<std::string> bundleInfos;
+            int32_t bundleInfosSize = data.ReadInt32();
+            if (bundleInfosSize > static_cast<int32_t>(VECTOR_MAX_SIZE)) {
+                return ERR_INVALID_DATA;
+            }
+            for (int32_t i6 = 0; i6 < bundleInfosSize; ++i6) {
+                std::string value6 = Str16ToStr8(data.ReadString16());
+                bundleInfos.push_back(value6);
+            }
+            ErrCode errCode = AppendBundlesDetailsBackupSession(bundleNames, bundleInfos);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_FINISH: {
+            ErrCode errCode = Finish();
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_RELEASE: {
+            ErrCode errCode = Release();
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_CANCEL: {
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            int32_t cancelResult;
+            ErrCode errCode = Cancel(bundleName, cancelResult);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (!reply.WriteInt32(cancelResult)) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP: {
+            ErrCode errCode = GetAppLocalListAndDoIncrementalBackup();
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_GET_INCREMENTAL_FILE_HANDLE: {
+            std::string bundleName = Str16ToStr8(data.ReadString16());
+            std::string fileName = Str16ToStr8(data.ReadString16());
+            ErrCode errCode = GetIncrementalFileHandle(bundleName, fileName);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_GET_BACKUP_INFO: {
+            std::string bundleName;
+            std::string getBackupInfoResult;
+            ErrCode errCode = GetBackupInfo(bundleName, getBackupInfoResult);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (!reply.WriteString16(Str8ToStr16(bundleName))) {
+                    return ERR_INVALID_DATA;
+                }
+                if (!reply.WriteString16(Str8ToStr16(getBackupInfoResult))) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_UPDATE_TIMER: {
+            std::string bundleName;
+            uint32_t timeout = data.ReadUint32();
+            bool updateTimerResult;
+            ErrCode errCode = UpdateTimer(bundleName, timeout, updateTimerResult);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (!reply.WriteString16(Str8ToStr16(bundleName))) {
+                    return ERR_INVALID_DATA;
+                }
+                if (!reply.WriteInt32(updateTimerResult ? 1 : 0)) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_UPDATE_SEND_RATE: {
+            std::string bundleName;
+            int32_t sendRate = data.ReadInt32();
+            bool updateSendRateResult;
+            ErrCode errCode = UpdateSendRate(bundleName, sendRate, updateSendRateResult);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (!reply.WriteString16(Str8ToStr16(bundleName))) {
+                    return ERR_INVALID_DATA;
+                }
+                if (!reply.WriteInt32(updateSendRateResult ? 1 : 0)) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_START_EXT_TIMER: {
+            bool isExtStart;
+            ErrCode errCode = StartExtTimer(isExtStart);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (!reply.WriteInt32(isExtStart ? 1 : 0)) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_START_FWK_TIMER: {
+            bool isFwkStart;
+            ErrCode errCode = StartFwkTimer(isFwkStart);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (!reply.WriteInt32(isFwkStart ? 1 : 0)) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_STOP_EXT_TIMER: {
+            bool isExtStop;
+            ErrCode errCode = StopExtTimer(isExtStop);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (!reply.WriteInt32(isExtStop ? 1 : 0)) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_GET_LOCAL_CAPABILITIES_INCREMENTAL: {
+            std::vector<BIncrementalData> bundleNames;
+            int32_t bundleNamesSize = data.ReadInt32();
+            if (bundleNamesSize > static_cast<int32_t>(VECTOR_MAX_SIZE)) {
+                return ERR_INVALID_DATA;
+            }
+            for (int32_t i7 = 0; i7 < bundleNamesSize; ++i7) {
+                std::unique_ptr<BIncrementalData> value7(data.ReadParcelable<BIncrementalData>());
+                if (!value7) {
+                    return ERR_INVALID_DATA;
+                }
+
+                bundleNames.push_back(*value7);
+            }
+            int fd;
+            ErrCode errCode = GetLocalCapabilitiesIncremental(bundleNames, fd);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (!reply.WriteInt32(fd)) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_INIT_INCREMENTAL_BACKUP_SESSION: {
+            sptr<IServiceReverse> reverseIpcRemoteObject;
+            ErrCode errCode = InitIncrementalBackupSession(reverseIpcRemoteObject);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (reverseIpcRemoteObject == nullptr) {
+                    return ERR_INVALID_DATA;
+                }
+                if (!reply.WriteRemoteObject(reverseIpcRemoteObject->AsObject())) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION: {
+            std::vector<BIncrementalData> bundlesToBackup;
+            int32_t bundlesToBackupSize = data.ReadInt32();
+            if (bundlesToBackupSize > static_cast<int32_t>(VECTOR_MAX_SIZE)) {
+                return ERR_INVALID_DATA;
+            }
+            for (int32_t i8 = 0; i8 < bundlesToBackupSize; ++i8) {
+                std::unique_ptr<BIncrementalData> value8(data.ReadParcelable<BIncrementalData>());
+                if (!value8) {
+                    return ERR_INVALID_DATA;
+                }
+
+                bundlesToBackup.push_back(*value8);
+            }
+            ErrCode errCode = AppendBundlesIncrementalBackupSession(bundlesToBackup);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION_WITH_BUNDLE_INFOS: {
+            std::vector<BIncrementalData> bundlesToBackup;
+            int32_t bundlesToBackupSize = data.ReadInt32();
+            if (bundlesToBackupSize > static_cast<int32_t>(VECTOR_MAX_SIZE)) {
+                return ERR_INVALID_DATA;
+            }
+            for (int32_t i9 = 0; i9 < bundlesToBackupSize; ++i9) {
+                std::unique_ptr<BIncrementalData> value9(data.ReadParcelable<BIncrementalData>());
+                if (!value9) {
+                    return ERR_INVALID_DATA;
+                }
+
+                bundlesToBackup.push_back(*value9);
+            }
+            std::vector<std::string> bundleInfos;
+            int32_t bundleInfosSize = data.ReadInt32();
+            if (bundleInfosSize > static_cast<int32_t>(VECTOR_MAX_SIZE)) {
+                return ERR_INVALID_DATA;
+            }
+            for (int32_t i10 = 0; i10 < bundleInfosSize; ++i10) {
+                std::string value10 = Str16ToStr8(data.ReadString16());
+                bundleInfos.push_back(value10);
+            }
+            ErrCode errCode = AppendBundlesIncrementalBackupSessionWithBundleInfos(bundlesToBackup, bundleInfos);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_PUBLISH_INCREMENTAL_FILE: {
+            std::unique_ptr<BFileInfo> fileInfo(data.ReadParcelable<BFileInfo>());
+            if (!fileInfo) {
+                return ERR_INVALID_DATA;
+            }
+
+            ErrCode errCode = PublishIncrementalFile(*fileInfo);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_PUBLISH_S_A_INCREMENTAL_FILE: {
+            std::unique_ptr<BFileInfo> fileInfo(data.ReadParcelable<BFileInfo>());
+            if (!fileInfo) {
+                return ERR_INVALID_DATA;
+            }
+
+            int fd = data.ReadFileDescriptor();
+            ErrCode errCode = PublishSAIncrementalFile(*fileInfo, fd);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_APP_INCREMENTAL_FILE_READY: {
+            std::string fileName = Str16ToStr8(data.ReadString16());
+            int fd = data.ReadFileDescriptor();
+            int manifestFd = data.ReadFileDescriptor();
+            int32_t appIncrementalFileReadyErrCode = data.ReadInt32();
+            ErrCode errCode = AppIncrementalFileReady(fileName, fd, manifestFd, appIncrementalFileReadyErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_APP_INCREMENTAL_DONE: {
+            int32_t appIncrementalDoneErrCode = data.ReadInt32();
+            ErrCode errCode = AppIncrementalDone(appIncrementalDoneErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_REPORT_APP_PROCESS_INFO: {
+            std::string processInfo = Str16ToStr8(data.ReadString16());
+            BackupRestoreScenario scenario;
+            {
+                uint64_t enumTmp = 0;
+                if (!data.ReadUint64(enumTmp)) {
+                    return ERR_INVALID_DATA;
+                }
+                scenario = static_cast<BackupRestoreScenario>(enumTmp);
+            }
+            ErrCode errCode = ReportAppProcessInfo(processInfo, scenario);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_REFRESH_DATA_SIZE: {
+            int64_t totalDataSize = data.ReadInt64();
+            ErrCode errCode = RefreshDataSize(totalDataSize);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_APP_DONE: {
+            int32_t appDoneErrCode = data.ReadInt32();
+            ErrCode errCode = AppDone(appDoneErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_SERVICE_RESULT_REPORT: {
+            std::string restoreRetInfo;
+            BackupRestoreScenario scenario;
+            {
+                uint64_t enumTmp = 0;
+                if (!data.ReadUint64(enumTmp)) {
+                    return ERR_INVALID_DATA;
+                }
+                scenario = static_cast<BackupRestoreScenario>(enumTmp);
+            }
+            int32_t serviceResultReportErrCode = data.ReadInt32();
+            ErrCode errCode = ServiceResultReport(restoreRetInfo, scenario, serviceResultReportErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            if (SUCCEEDED(errCode)) {
+                if (!reply.WriteString16(Str8ToStr16(restoreRetInfo))) {
+                    return ERR_INVALID_DATA;
+                }
+            }
+            return ERR_NONE;
+        }
+        case IServiceIpcCode::COMMAND_APP_FILE_READY: {
+            std::string fileName = Str16ToStr8(data.ReadString16());
+            int fd = data.ReadFileDescriptor();
+            int32_t appFileReadyErrCode = data.ReadInt32();
+            ErrCode errCode = AppFileReady(fileName, fd, appFileReadyErrCode);
+            if (!reply.WriteInt32(errCode)) {
+                return ERR_INVALID_VALUE;
+            }
+            return ERR_NONE;
+        }
+        default:
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
 
-    const std::u16string descriptor = ServiceStub::GetDescriptor();
-    const std::u16string remoteDescriptor = data.ReadInterfaceToken();
-    if (descriptor != remoteDescriptor) {
-        return BError(BError::Codes::OK);
-    }
-    return (this->*(interfaceIndex->second))(data, reply);
-}
-
-int32_t ServiceStub::CmdInitRestoreSession(MessageParcel &data, MessageParcel &reply)
-{
-    auto remote = data.ReadRemoteObject();
-    auto iremote = iface_cast<IServiceReverse>(remote);
-
-    int32_t res = InitRestoreSession(iremote);
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdInitRestoreSessionMsg(MessageParcel &data, MessageParcel &reply)
-{
-    auto remote = data.ReadRemoteObject();
-    auto iremote = iface_cast<IServiceReverse>(remote);
-    std::string errMsg;
-    int32_t res = InitRestoreSession(iremote, errMsg);
-    reply.WriteString(errMsg);
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdInitBackupSession(MessageParcel &data, MessageParcel &reply)
-{
-    auto remote = data.ReadRemoteObject();
-    auto iremote = iface_cast<IServiceReverse>(remote);
-
-    int res = InitBackupSession(iremote);
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdInitBackupSessionMsg(MessageParcel &data, MessageParcel &reply)
-{
-    auto remote = data.ReadRemoteObject();
-    auto iremote = iface_cast<IServiceReverse>(remote);
-    std::string errMsg;
-    int res = InitBackupSession(iremote, errMsg);
-    reply.WriteString(errMsg);
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdStart(MessageParcel &data, MessageParcel &reply)
-{
-    int res = Start();
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdGetLocalCapabilities(MessageParcel &data, MessageParcel &reply)
-{
-    UniqueFd fd(GetLocalCapabilities());
-    reply.WriteFileDescriptor(fd);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdPublishFile(MessageParcel &data, MessageParcel &reply)
-{
-    unique_ptr<BFileInfo> fileInfo(data.ReadParcelable<BFileInfo>());
-    int res = PublishFile(*fileInfo);
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdAppFileReady(MessageParcel &data, MessageParcel &reply)
-{
-    string fileName;
-    data.ReadString(fileName);
-    UniqueFd fd(data.ReadFileDescriptor());
-    int res = AppFileReady(fileName, move(fd), 0);
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdAppDone(MessageParcel &data, MessageParcel &reply)
-{
-    ErrCode errCode;
-    data.ReadInt32(errCode);
-    int res = AppDone(errCode);
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdResultReport(MessageParcel &data, MessageParcel &reply)
-{
-    std::string restoreRetInfo;
-    data.ReadString(restoreRetInfo);
-    int32_t scenario;
-    data.ReadInt32(scenario);
-    ErrCode errCode;
-    data.ReadInt32(errCode);
-    BackupRestoreScenario type = static_cast<BackupRestoreScenario>(scenario);
-    int res = ServiceResultReport(restoreRetInfo, type, errCode);
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdGetFileHandle(MessageParcel &data, MessageParcel &reply)
-{
-    string bundleName;
-    data.ReadString(bundleName);
-    string fileName;
-    data.ReadString(fileName);
-
-    return GetFileHandle(bundleName, fileName);
-}
-
-int32_t ServiceStub::CmdAppendBundlesRestoreSession(MessageParcel &data, MessageParcel &reply)
-{
-    UniqueFd fd(data.ReadFileDescriptor());
-    std::vector<string> bundleNames;
-    data.ReadStringVector(&bundleNames);
-    int res = AppendBundlesRestoreSession(move(fd), bundleNames);
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdAppendBundlesDetailsRestoreSession(MessageParcel &data, MessageParcel &reply)
-{
-    UniqueFd fd(data.ReadFileDescriptor());
-    std::vector<string> bundleNames;
-    data.ReadStringVector(&bundleNames);
-    std::vector<string> detailInfos;
-    data.ReadStringVector(&detailInfos);
-    int res = AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos);
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdAppendBundlesBackupSession(MessageParcel &data, MessageParcel &reply)
-{
-    std::vector<string> bundleNames;
-    data.ReadStringVector(&bundleNames);
-    int res = AppendBundlesBackupSession(bundleNames);
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdFinish(MessageParcel &data, MessageParcel &reply)
-{
-    int res = Finish();
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdGetBackupInfo(MessageParcel &data, MessageParcel &reply)
-{
-    int ret = ERR_OK;
-    string bundleName;
-    if (!data.ReadString(bundleName)) {
-        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive bundleName"));
-    }
-    std::string result;
-    ret = GetBackupInfo(bundleName, result);
-    return ret;
-}
-
-int32_t ServiceStub::CmdUpdateTimer(MessageParcel &data, MessageParcel &reply)
-{
-    int ret = ERR_OK;
-    string bundleName;
-    if (!data.ReadString(bundleName)) {
-        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive bundleName"));
-    }
-    uint32_t timeout;
-    if (!data.ReadUint32(timeout)) {
-        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive timeout"));
-    }
-    bool result;
-    ret = UpdateTimer(bundleName, timeout, result);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdUpdateSendRate(MessageParcel &data, MessageParcel &reply)
-{
-    int ret = ERR_OK;
-    string bundleName;
-    if (!data.ReadString(bundleName)) {
-        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive bundleName"));
-    }
-    int32_t sendRate;
-    if (!data.ReadInt32(sendRate)) {
-        return BError(BError::Codes::SA_BROKEN_IPC, string("Failed to recive sendRate"));
-    }
-    bool result;
-    ret = UpdateSendRate(bundleName, sendRate, result);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdRelease(MessageParcel &data, MessageParcel &reply)
-{
-    int res = Release();
-    reply.WriteInt32(res);
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdCancel(MessageParcel &data, MessageParcel &reply)
-{
-    int ret = ERR_OK;
-    string bundleName;
-    if (!data.ReadString(bundleName)) {
-        return BError(BError::Codes::SA_INVAL_ARG, "Failed to receive bundleName");
-    }
-    int result = BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK;
-    ret = Cancel(bundleName, result);
-    reply.WriteInt32(result);
-    return ret;
-}
-
-int32_t ServiceStub::CmdGetLocalCapabilitiesIncremental(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdGetAppLocalListAndDoIncrementalBackup(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdInitIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdInitIncrementalBackupSessionMsg(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdAppendBundlesIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdAppendBundlesDetailsIncrementalBackupSession(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdPublishIncrementalFile(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdAppIncrementalFileReady(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdGetIncrementalFileHandle(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdReportAppProcessInfo(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdStopExtTimer(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdRefreshDataSize(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdGetLocalCapabilitiesForBdInfos(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
-}
-
-int32_t ServiceStub::CmdGetBackupDataSize(MessageParcel &data, MessageParcel &reply)
-{
-    return BError(BError::Codes::OK);
+    return ERR_TRANSACTION_FAILED;
 }
 } // namespace OHOS::FileManagement::Backup
