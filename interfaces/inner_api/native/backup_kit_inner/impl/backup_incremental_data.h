@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_BACKUP_B_INCREMENTAL_DATA_H
-#define OHOS_FILEMGMT_BACKUP_B_INCREMENTAL_DATA_H
+#ifndef OHOS_FILEMGMT_BACKUP_BACKUP_INCREMENTAL_DATA_H
+#define OHOS_FILEMGMT_BACKUP_BACKUP_INCREMENTAL_DATA_H
 
 #include <memory>
 #include <string>
@@ -44,4 +44,4 @@ struct BIncrementalData : public Parcelable {
 };
 } // namespace OHOS::FileManagement::Backup
 
-#endif // OHOS_FILEMGMT_BACKUP_B_INCREMENTAL_DATA_H
+#endif // OHOS_FILEMGMT_BACKUP_BACKUP_INCREMENTAL_DATA_H

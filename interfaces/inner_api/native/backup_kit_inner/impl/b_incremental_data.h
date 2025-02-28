@@ -12,6 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+ 
+#ifndef OHOS_FILEMGMT_BACKUP_B_INCREMENTAL_DATA_H
+#define OHOS_FILEMGMT_BACKUP_B_INCREMENTAL_DATA_H
+
 #include "backup_incremental_data.h"
 
-namespace OHOS::FileManagement::Backup {}
+namespace OHOS::FileManagement::Backup {} // namespace OHOS::FileManagement::Backup
+#endif // OHOS_FILEMGMT_BACKUP_B_INCREMENTAL_DATA_H

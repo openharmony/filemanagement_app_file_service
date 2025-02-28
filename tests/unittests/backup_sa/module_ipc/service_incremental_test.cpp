@@ -205,7 +205,8 @@ ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd,
                                                          int32_t restoreType,
                                                          int32_t userId)
 {
-    return BService::serviceMock->AppendBundlesRestoreSessionDataByDetail(fd, bundleNames, detailInfos, restoreType, userId);
+    return BService::serviceMock->AppendBundlesRestoreSessionDataByDetail(fd, bundleNames, detailInfos,
+                                                                          restoreType, userId);
 }
 
 ErrCode Service::AppendBundlesRestoreSessionData(int fd,
@@ -814,8 +815,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
-        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg), BError(BError::Codes::OK).GetCode());
-
+        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
+            BError(BError::Codes::OK).GetCode());
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
