@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_BACKUP_B_FILE_INFO_H
-#define OHOS_FILEMGMT_BACKUP_B_FILE_INFO_H
+#ifndef OHOS_FILEMGMT_BACKUP_BACKUP_FILE_INFO_H
+#define OHOS_FILEMGMT_BACKUP_BACKUP_FILE_INFO_H
 
 #include <memory>
 #include <string>
@@ -41,4 +41,4 @@ struct BFileInfo : public Parcelable {
 };
 } // namespace OHOS::FileManagement::Backup
 
-#endif // OHOS_FILEMGMT_BACKUP_B_FILE_INFO_H
+#endif // OHOS_FILEMGMT_BACKUP_BACKUP_FILE_INFO_H

@@ -93,8 +93,6 @@ public:
     ErrCode AppendBundlesIncrementalBackupSessionWithBundleInfos(
         const std::vector<BIncrementalData>& bundlesToBackup,
         const std::vector<std::string>& bundleInfos) override;
-    
-
     ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) override;
     ErrCode PublishSAIncrementalFile(
            const BFileInfo& fileInfo,
