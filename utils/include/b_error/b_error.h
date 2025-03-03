@@ -93,6 +93,7 @@ public:
         EXT_THROW_EXCEPTION = 0x5009,
         EXT_BACKUP_UNPACKET_ERROR = 0x5010,
         EXT_TIMER_ERROR = 0x5011,
+        EXT_CREATE_DIR_ERROR = 0x5012,
 
         // 0x6000~0x6999 sa_ext错误
         SA_EXT_ERR_CALL = 0x6000,

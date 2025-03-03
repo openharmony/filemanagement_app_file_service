@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1647,5 +1647,41 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_OnProcess_0200, testing::ext::TestSi
         GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by OnProcess.";
     }
     GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_OnProcess_0200";
+}
+
+/**
+ * @tc.number: SUB_backup_ext_js_InitTempPath_0100
+ * @tc.name: SUB_backup_ext_js_InitTempPath_0100
+ * @tc.desc: 测试 InitTempPath 各个分支成功与失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAFBOS
+ */
+HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_InitTempPath_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_InitTempPath_0100";
+    try {
+        std::string el2BackupDir(BConstants::PATH_BUNDLE_BACKUP_HOME);
+        int ret = access(el2BackupDir.c_str(), F_OK);
+        EXPECT_TRUE(ret != F_OK);
+        std::string el1BackupDir(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1);
+        ret = access(el1BackupDir.c_str(), F_OK);
+        EXPECT_TRUE(ret != F_OK);
+        std::string bundleName = "testBundleName";
+        extBackupJs->InitTempPath(bundleName);
+        ret = access(el2BackupDir.c_str(), F_OK);
+        EXPECT_EQ(ret, F_OK);
+        ret = access(el1BackupDir.c_str(), F_OK);
+        EXPECT_EQ(ret, F_OK);
+        std::string el2RootPath = BConstants::BACKUP_DIR_PRE + BConstants::CONTEXT_ELS[0]; // 0: {"el1", "el2"}中的el1
+        std::string el1RootPath = BConstants::BACKUP_DIR_PRE + BConstants::CONTEXT_ELS[1]; // 1: {"el1", "el2"}中的el2
+        ForceRemoveDirectoryBMS(el2RootPath);
+        ForceRemoveDirectoryBMS(el1RootPath);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by OnProcess.";
+    }
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_InitTempPath_0100";
 }
 } // namespace OHOS::FileManagement::Backup

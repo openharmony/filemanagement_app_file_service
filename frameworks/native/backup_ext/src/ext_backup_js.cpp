@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,7 +40,9 @@
 #include "b_error/b_excep_utils.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_extension_config.h"
+#include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
+#include "directory_ex.h"
 #include "ext_extension.h"
 #include "filemgmt_libhilog.h"
 
@@ -413,6 +415,7 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
         // 获取应用扩展的 BackupExtensionAbility 的路径
         const AppExecFwk::AbilityInfo &info = *abilityInfo_;
         string bundleName = info.bundleName;
+        InitTempPath(bundleName);
         string moduleName(info.moduleName + "::" + info.name);
         string modulePath = GetSrcPath(info);
         int moduleType = static_cast<int>(info.type);
@@ -1025,5 +1028,31 @@ ErrCode ExtBackupJs::OnProcess(std::function<void(ErrCode, const std::string)> c
     }
     HILOGI("BackupExtensionAbulity(JS) OnProcess end.");
     return errCode;
+}
+
+void ExtBackupJs::InitTempPath(const std::string &bundleName)
+{
+    std::string el2BackupDir(BConstants::PATH_BUNDLE_BACKUP_HOME);
+    if (access(el2BackupDir.c_str(), F_OK) != 0) {
+        HILOGW("backup home el2 dir not exits, try to create");
+        if (!ForceCreateDirectory(el2BackupDir.data())) {
+            HILOGE("Failed to create directory, err = %{public}d", errno);
+            AppRadar::Info info(bundleName, "", "Create backup home el2 dir failed");
+            AppRadar::GetInstance().RecordDefaultFuncRes(info, "ExtBackupJs::InitTempPath",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
+                static_cast<int32_t>(BError::Codes::EXT_CREATE_DIR_ERROR));
+        }
+    }
+    std::string el1BackupDir(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1);
+    if (access(el1BackupDir.c_str(), F_OK) != 0) {
+        HILOGW("backup home el1 dir not exits, try to create");
+        if (!ForceCreateDirectory(el1BackupDir.data())) {
+            HILOGE("Failed to create home el1 dir, err = %{public}d", errno);
+            AppRadar::Info info(bundleName, "", "Create backup home el1 dir failed");
+            AppRadar::GetInstance().RecordDefaultFuncRes(info, "ExtBackupJs::InitTempPath",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
+                static_cast<int32_t>(BError::Codes::EXT_CREATE_DIR_ERROR));
+        }
+    }
 }
 } // namespace OHOS::FileManagement::Backup
