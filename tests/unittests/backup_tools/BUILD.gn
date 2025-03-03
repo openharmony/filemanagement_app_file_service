@@ -27,6 +27,7 @@ ohos_unittest("backup_tool_test") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",
     "${path_backup}/tests/mock/backup_kit_inner/b_session_backup_mock.cpp",
+    "${path_backup}/tests/mock/backup_kit_inner/service_client_mock.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_backup.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_check_sa.cpp",
