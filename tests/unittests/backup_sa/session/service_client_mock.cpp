@@ -17,7 +17,6 @@
 #include "service_client.h"
 #include "iservice.h"
 #include "service_proxy.h"
-#include "utils_mock_global_variable.h"
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
@@ -38,9 +37,6 @@ sptr<IService> ServiceClient::GetServiceProxyPointer()
 
 sptr<IService> ServiceClient::GetInstance()
 {
-    if (!GetMockGetInstance()) {
-        return nullptr;
-    }
     return serviceProxy_;
 }
 
