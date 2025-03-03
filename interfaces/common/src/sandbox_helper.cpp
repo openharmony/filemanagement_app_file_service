@@ -38,8 +38,8 @@ namespace {
     const string MOUNT_PATH_MAP_KEY = "mount-path-map";
     const string SANDBOX_JSON_FILE_PATH = "/etc/app_file_service/file_share_sandbox.json";
     const string BACKUP_SANDBOX_JSON_FILE_PATH = "/etc/app_file_service/backup_sandbox.json";
-    const std::string SHAER_PATH_HEAD = "/mnt/hmdfs/";
-    const std::string SHAER_PATH_MID = "/account/cloud_merge_view/files/";
+    const std::string SHARE_PATH_HEAD = "/mnt/hmdfs/";
+    const std::string SHARE_PATH_MID = "/account/cloud_merge_view/files/";
     const string FILE_MANAGER_URI_HEAD = "/storage/";
     const string FILE_MANAGER_AUTHORITY = "docs";
     const string DLP_MANAGER_BUNDLE_NAME = "com.ohos.dlpmanager";
@@ -54,6 +54,8 @@ namespace {
     const std::string PATH_INVALID_FLAG1 = "../";
     const std::string PATH_INVALID_FLAG2 = "/..";
     const uint32_t PATH_INVALID_FLAG_LEN = 3;
+    const std::string NETWORK_PARA = "?networkid=";
+    const std::string AMPERSAND = "&";
 }
 
 struct MediaUriInfo {
@@ -307,7 +309,7 @@ static int32_t GetMediaPhysicalPath(const std::string &sandboxPath, const std::s
         return -EINVAL;
     }
 
-    physicalPath = SHAER_PATH_HEAD + userId + SHAER_PATH_MID + mediaUriInfo.mediaType +
+    physicalPath = SHARE_PATH_HEAD + userId + SHARE_PATH_MID + mediaUriInfo.mediaType +
                    BACKSLASH + to_string(bucketNum) + BACKSLASH + mediaUriInfo.realName + mediaSuffix;
     return 0;
 }
@@ -336,19 +338,20 @@ int32_t SandboxHelper::GetMediaSharePath(const std::vector<std::string> &fileUri
     return 0;
 }
 
-static void GetNetworkIdFromUri(const std::string &fileUri, string &networkId)
+void SandboxHelper::GetNetworkIdFromUri(const std::string &fileUri, std::string &networkId)
 {
-    Uri uri(fileUri);
-    std::string networkIdInfo = uri.GetQuery();
-    if (networkIdInfo.empty()) {
-        return;
+    std::string uri = fileUri;
+    size_t pos = uri.find(NETWORK_PARA);
+    if (pos != string::npos && pos > 0 && pos < uri.size() - NETWORK_PARA.size()) {
+        if (uri.substr(pos + NETWORK_PARA.size()).find(BACKSLASH) == string::npos) {
+            size_t endPos = uri.substr(pos + NETWORK_PARA.size()).find(AMPERSAND);
+            if (endPos != string::npos) {
+                networkId = uri.substr(pos + NETWORK_PARA.size(), endPos);
+            } else {
+                networkId = uri.substr(pos + NETWORK_PARA.size());
+            }
+        }
     }
-
-    size_t posIndex = networkIdInfo.find('=');
-    if (posIndex == string::npos || posIndex == (networkIdInfo.size() - 1)) {
-        return;
-    }
-    networkId = networkIdInfo.substr(posIndex + 1);
 }
 
 static void DoGetPhysicalPath(string &lowerPathTail, string &lowerPathHead, const string &sandboxPath,

@@ -39,7 +39,7 @@ const std::string FILE_SCHEME_PREFIX = "file://";
 const std::string FILE_MANAGER_AUTHORITY = "docs";
 const std::string MEDIA_AUTHORITY = "media";
 const std::string NETWORK_PARA = "?networkid=";
-const std::string BACKFLASH = "/";
+const std::string BACKSLASH = "/";
 const std::string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
 const int DECODE_FORMAT_NUM = 16;
 const int DECODE_LEN = 2;
@@ -132,9 +132,15 @@ string FileUri::GetRealPath()
     }
     if (((!bundleName.empty()) && (bundleName != BUNDLE_NAME)) ||
         uri_.ToString().find(NETWORK_PARA) != string::npos) {
-        realPath = PATH_SHARE + MODE_RW + bundleName + sandboxPath;
+        string networkId = "";
+        SandboxHelper::GetNetworkIdFromUri(uri_.ToString(), networkId);
+        string pathShare = PATH_SHARE;
+        if (!networkId.empty()) {
+            pathShare = PATH_SHARE + BACKSLASH + networkId;
+        }
+        realPath = pathShare + MODE_RW + bundleName + sandboxPath;
         if (access(realPath.c_str(), F_OK) != 0) {
-            realPath = PATH_SHARE + MODE_R + bundleName + sandboxPath;
+            realPath = pathShare + MODE_R + bundleName + sandboxPath;
         }
     }
     return realPath;
@@ -192,7 +198,7 @@ bool FileUri::IsRemoteUri()
 {
     size_t pos = uri_.ToString().find(NETWORK_PARA);
     if (pos != string::npos && pos > 0 && pos < uri_.ToString().size() - NETWORK_PARA.size()) {
-        if (uri_.ToString().substr(pos + NETWORK_PARA.size()).find(BACKFLASH) == string::npos) {
+        if (uri_.ToString().substr(pos + NETWORK_PARA.size()).find(BACKSLASH) == string::npos) {
             return true;
         }
     }

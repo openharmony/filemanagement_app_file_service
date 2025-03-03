@@ -35,7 +35,7 @@ namespace AppFileService {
 using namespace OHOS::AppExecFwk;
 namespace {
 const std::string FILE_SCHEME_PREFIX = "file://";
-const char BACKFLASH = '/';
+const char BACKSLASH = '/';
 const std::string FILE_MANAGER_URI_HEAD = "/storage/";
 const std::string FILE_MANAGER_AUTHORITY = "docs";
 const std::string MEDIA_FUSE_PATH_HEAD = "/data/storage/el2/media";
@@ -103,8 +103,8 @@ static void NormalizePath(string &path)
         return;
     }
 
-    if (path[0] != BACKFLASH) {
-        path.insert(0, 1, BACKFLASH);
+    if (path[0] != BACKSLASH) {
+        path.insert(0, 1, BACKSLASH);
     }
 }
 

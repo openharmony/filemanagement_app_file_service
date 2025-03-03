@@ -736,4 +736,99 @@ HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0007, testing::ext::Tes
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetBackupPhysicalPath_0007";
 }
 
+/**
+ * @tc.name: File_share_GetNetworkIdFromUri_001
+ * @tc.desc: Test function of GetNetworkIdFromUri() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetNetworkIdFromUri_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetNetworkIdFromUri_001";
+    std::string fileUri = "file://docs/storage/Users/currentUser/test.jpg?networkid=***";
+    std::string result = "***";
+    std::string networkId;
+    SandboxHelper::GetNetworkIdFromUri(fileUri, networkId);
+    EXPECT_EQ(result, networkId);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetNetworkIdFromUri_001";
+}
+
+/**
+ * @tc.name: File_share_GetNetworkIdFromUri_002
+ * @tc.desc: Test function of GetNetworkIdFromUri() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetNetworkIdFromUri_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetNetworkIdFromUri_002";
+    std::string fileUri = "file://docs/storage/Users/currentUser/test.jpg?networkid=";
+    std::string result = "";
+    std::string networkId;
+    SandboxHelper::GetNetworkIdFromUri(fileUri, networkId);
+    EXPECT_EQ(result, networkId);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetNetworkIdFromUri_002";
+}
+
+/**
+ * @tc.name: File_share_GetNetworkIdFromUri_003
+ * @tc.desc: Test function of GetNetworkIdFromUri() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetNetworkIdFromUri_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetNetworkIdFromUri_003";
+    std::string fileUri = "file://docs/storage/Users/currentUser/test.jpg?networkid=123456&789";
+    std::string result = "123456";
+    std::string networkId;
+    SandboxHelper::GetNetworkIdFromUri(fileUri, networkId);
+    EXPECT_EQ(result, networkId);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetNetworkIdFromUri_003";
+}
+
+/**
+ * @tc.name: File_share_GetNetworkIdFromUri_004
+ * @tc.desc: Test function of GetNetworkIdFromUri() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetNetworkIdFromUri_004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetNetworkIdFromUri_004";
+    std::string fileUri = "file://docs/storage/Users/currentUser/test.jpg?networkid=123456/test/1.txt";
+    std::string result = "";
+    std::string networkId;
+    SandboxHelper::GetNetworkIdFromUri(fileUri, networkId);
+    EXPECT_EQ(result, networkId);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetNetworkIdFromUri_004";
+}
+
+/**
+ * @tc.name: File_share_GetNetworkIdFromUri_005
+ * @tc.desc: Test function of GetNetworkIdFromUri() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetNetworkIdFromUri_005, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetNetworkIdFromUri_005";
+    std::string fileUri = "file://docs/storage/Users/currentUser/test.jpg?query=123456789&?networkid=123456";
+    std::string result = "123456";
+    std::string networkId;
+    SandboxHelper::GetNetworkIdFromUri(fileUri, networkId);
+    EXPECT_EQ(result, networkId);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetNetworkIdFromUri_005";
+}
+
 } // namespace

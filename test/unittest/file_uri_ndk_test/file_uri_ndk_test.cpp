@@ -153,7 +153,8 @@ HWTEST_F(NDKFileUriTest, get_path_from_uri_test_004, TestSize.Level1)
     fileUriStr += "?networkid=64799ecdf70788e396f454ff4a6e6ae4b09e20227c39c21f6e67a2aacbcef7b9";
     const char *fileUri = fileUriStr.c_str();
     std::string filePathStr =
-        "/data/storage/el2/share/r/" + BUNDLE_A + "/data/storage/el2/distributedfiles/.remote_share/";
+        "/data/storage/el2/share/64799ecdf70788e396f454ff4a6e6ae4b09e20227c39c21f6e67a2aacbcef7b9/r/" + BUNDLE_A +
+        "/data/storage/el2/distributedfiles/.remote_share/";
     filePathStr += "data/storage/el2/base/haps/entry/files/GetPathFromUri004.txt";
     const char *filePath = filePathStr.c_str();
     char *result = nullptr;
@@ -180,7 +181,9 @@ HWTEST_F(NDKFileUriTest, get_path_from_uri_test_005, TestSize.Level1)
     std::string fileUriStr = "file://docs/storage/Users/currentUser/Documents/GetPathFromUri005.txt";
     fileUriStr += "?networkid=64799ecdf70788e396f454ff4a6e6ae4b09e20227c39c21f6e67a2aacbcef7b9";
     const char *fileUri = fileUriStr.c_str();
-    const char filePath[] = "/data/storage/el2/share/r/docs/storage/Users/currentUser/Documents/GetPathFromUri005.txt";
+    const char filePath[] =
+        "/data/storage/el2/share/64799ecdf70788e396f454ff4a6e6ae4b09e20227c39c21f6e67a2aacbcef7b9/r/docs/storage/Users/"
+        "currentUser/Documents/GetPathFromUri005.txt";
     char *result = nullptr;
     unsigned int length = fileUriStr.size();
     FileManagement_ErrCode ret = OH_FileUri_GetPathFromUri(fileUri, length, &result);
@@ -207,7 +210,8 @@ HWTEST_F(NDKFileUriTest, get_path_from_uri_test_006, TestSize.Level1)
     fileUriStr += "data/storage/el2/base/haps/entry/files/GetPathFromUri006.txt";
     fileUriStr += "?networkid=64799ecdf70788e396f454ff4a6e6ae4b09e20227c39c21f6e67a2aacbcef7b9";
     const char *fileUri = fileUriStr.c_str();
-    std::string filePathUri = "/data/storage/el2/share/r/" + bundleB;
+    std::string filePathUri =
+        "/data/storage/el2/share/64799ecdf70788e396f454ff4a6e6ae4b09e20227c39c21f6e67a2aacbcef7b9/r/" + bundleB;
     filePathUri += "/data/storage/el2/distributedfiles/.remote_share/";
     filePathUri += "data/storage/el2/base/haps/entry/files/GetPathFromUri006.txt";
     const char *filePath = filePathUri.c_str();

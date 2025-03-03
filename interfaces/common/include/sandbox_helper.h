@@ -40,6 +40,7 @@ public:
     static int32_t GetBackupPhysicalPath(const std::string &fileUri, const std::string &userId,
                                          std::string &physicalPath);
     static bool IsValidPath(const std::string &path);
+    static void GetNetworkIdFromUri(const std::string &fileUri, std::string &networkId);
 };
 } // namespace AppFileService
 } // namespace OHOS
