@@ -1056,7 +1056,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_
         string fileName;
         int32_t errCode = 0;
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_))
-            .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+            .WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalRestoreOnFileReady(_, _, _, _, _)).WillOnce(Return());
