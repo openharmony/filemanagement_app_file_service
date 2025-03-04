@@ -23,8 +23,7 @@ int32_t ServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Message
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (localDescriptor != remoteDescriptor) {
         return ERR_TRANSACTION_FAILED;
-    }
-    else {
+    } else {
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
 }
