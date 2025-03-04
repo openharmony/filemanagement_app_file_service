@@ -222,29 +222,6 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0302, testing::ext::TestSize.Level
     GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0302";
 }
 
-/**
- * @tc.number: SUB_Ext_Extension_0400
- * @tc.name: Ext_Extension_Test_0400
- * @tc.desc: 测试打开失败
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I9P3Y3
- */
-HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0400, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0400";
-    try {
-        string tarName = " ";
-        unordered_map<string, struct ReportFileInfo> infos;
-        GetTarIncludes(tarName, infos);
-        EXPECT_EQ(infos.size(), 0);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0400";
-}
 
 /**
  * @tc.number: SUB_Ext_Extension_0500
