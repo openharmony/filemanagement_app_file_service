@@ -220,11 +220,8 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
     bundleNames.emplace_back(BIncrementalData {bundleName, lastTime});
     auto newBundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session->GetSessionUserId());
     RefreshBundleDataSize(newBundleInfos, bundleName, ptr);
-    string path = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId())
-                      .append(bundleName)
-                      .append("/")
-                      .append(BConstants::BACKUP_STAT_SYMBOL)
-                      .append(to_string(lastTime));
+    string path = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId()).
+        append(bundleName).append("/").append(BConstants::BACKUP_STAT_SYMBOL).append(to_string(lastTime));
     UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP));
     if (fdLocal < 0) {
         HILOGD("fdLocal open fail, error = %{public}d", errno);

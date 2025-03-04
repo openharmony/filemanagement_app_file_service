@@ -1800,7 +1800,6 @@ ErrCode Service::UpdateTimer(const BundleName &bundleName, uint32_t timeout, boo
 
 ErrCode Service::UpdateSendRate(const std::string &bundleName, int32_t sendRate, bool &result)
 {
-    HILOGI("Begin, bundle name:%{public}s, sendRate is:%{public}d", bundleName.c_str(), sendRate);
     if (session_ == nullptr || isOccupyingSession_.load()) {
         HILOGE("Update Send Rate error, session is empty.");
         result = false;
