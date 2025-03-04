@@ -77,4 +77,10 @@ std::string BJsonUtil::BuildInitSessionErrInfo(int32_t userId, string callerName
 {
     return BBJsonUtil::jsonUtil->BuildInitSessionErrInfo(userId, callerName, activeTime);
 }
+
+bool BJsonUtil::WriteToStr(std::vector<BundleDataSize> &bundleDataList, size_t listSize, std::string scanning,
+    std::string &jsonStr)
+{
+    return BBJsonUtil::jsonUtil->WriteToStr(bundleDataList, listSize, scanning, jsonStr);
+}
 }

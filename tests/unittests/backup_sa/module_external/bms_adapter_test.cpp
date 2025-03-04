@@ -17,6 +17,7 @@
 
 #include <vector>
 
+#include "b_jsonutil_mock.h"
 #include "b_sa_utils_mock.h"
 #include "if_system_ability_manager.h"
 #include "iremote_stub.h"
@@ -88,6 +89,7 @@ public:
     static inline sptr<BundleMgrMock> bms = nullptr;
     static inline sptr<SystemAbilityManagerMock> sam = nullptr;
     static inline shared_ptr<SAUtilsMock> saUtils = nullptr;
+    static inline shared_ptr<BJsonUtilMock> jsonUtil = nullptr;
 };
 
 void BmsAdapterTest::SetUpTestCase()
@@ -96,6 +98,8 @@ void BmsAdapterTest::SetUpTestCase()
     bms = sptr<BundleMgrMock>(new BundleMgrMock());
     saUtils = make_shared<SAUtilsMock>();
     SAUtilsMock::utils = saUtils;
+    jsonUtil = make_shared<BJsonUtilMock>();
+    BJsonUtilMock::jsonUtil = jsonUtil;
 }
 
 void BmsAdapterTest::TearDownTestCase()
@@ -104,6 +108,8 @@ void BmsAdapterTest::TearDownTestCase()
     sam = nullptr;
     SAUtilsMock::utils = nullptr;
     saUtils = nullptr;
+    BJsonUtilMock::jsonUtil = nullptr;
+    jsonUtil = nullptr;
 }
 
 sptr<ISystemAbilityManager> SystemAbilityManagerClient::GetSystemAbilityManager()
@@ -208,12 +214,30 @@ HWTEST_F(BmsAdapterTest, SUB_bms_adapter_CreatBackupEnv_test_0000, testing::ext:
     GTEST_LOG_(INFO) << "BmsAdapterTest-begin SUB_bms_adapter_CreatBackupEnv_test_0000";
     try {
         std::vector<BIncrementalData> bundleNameList;
-        EXPECT_CALL(*sam, GetSystemAbility(_)).WillOnce(Return(bms)).WillOnce(Return(bms));
+        BIncrementalData data;
+        data.bundleName = BUNDLE_NAME;
+        data.lastIncrementalTime = 0;
+        bundleNameList.push_back(data);
+        EXPECT_CALL(*sam, GetSystemAbility(_)).WillOnce(Return(bms));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         BundleMgrAdapter::CreatBackupEnv(bundleNameList, USER_ID);
         EXPECT_TRUE(true);
 
+        BJsonUtil::BundleDetailInfo info;
+        EXPECT_CALL(*sam, GetSystemAbility(_)).WillOnce(Return(bms));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(info));
+        EXPECT_CALL(*bms, GetCloneBundleInfo(_, _, _, _, _)).WillOnce(Return(1));
+        BundleMgrAdapter::CreatBackupEnv(bundleNameList, USER_ID);
+        EXPECT_TRUE(true);
+
+        AppExecFwk::BundleInfo bundleInfo;
+        bundleInfo.applicationInfo.codePath = "5";
+        EXPECT_CALL(*sam, GetSystemAbility(_)).WillOnce(Return(bms));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(info));
+        EXPECT_CALL(*bms, GetCloneBundleInfo(_, _, _, _, _))
+            .WillOnce(DoAll(SetArgReferee<3>(bundleInfo), Return(ERR_OK)));
         BundleMgrAdapter::CreatBackupEnv(bundleNameList, USER_ID);
         EXPECT_TRUE(true);
     } catch (...) {

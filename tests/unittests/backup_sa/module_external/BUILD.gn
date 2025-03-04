@@ -25,9 +25,16 @@ ohos_unittest("bms_adapter_test") {
     "${path_backup_mock}/utils_mock/include",
   ]
 
-  sources = [ "bms_adapter_test.cpp" ]
+  sources = [
+    "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
+    "${path_backup_mock}/utils_mock/src/b_sa_utils_mock.cpp",
+    "bms_adapter_test.cpp",
+  ]
 
-  deps = [ "${path_backup}/services/backup_sa:backup_sa" ]
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa",
+  ]
 
   defines = [
     "LOG_TAG=\"app_file_service\"",

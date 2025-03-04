@@ -423,7 +423,7 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_1100, testing::ext::Tes
     GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_1100";
     try {
         if (backupPtr_ == nullptr) {
-            GTEST_LOG_(INFO) << "SUB_backup_b_session_backup_0900 backupPtr_ == nullptr";
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_backup_1100 backupPtr_ == nullptr";
             return;
         }
         GTEST_LOG_(INFO) << "GetInstance is false";
@@ -436,8 +436,43 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_1100, testing::ext::Tes
         EXPECT_LT(err, 0);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BSessionBackupTest-an exception occurred by RemoveExtConn.";
+        GTEST_LOG_(INFO) << "BSessionBackupTest-an exception occurred by GetLocalCapabilities.";
     }
     GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_1100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_session_backup_1200
+ * @tc.name: SUB_backup_b_session_backup_1200
+ * @tc.desc: 测试 GetBackupDataSize 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_1200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_1200";
+    try {
+        if (backupPtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_backup_1200 backupPtr_ == nullptr";
+            return;
+        }
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        bool isPreciseScan = true;
+        vector<BIncrementalData> bundleNameList;
+        SetMockGetInstance(false);
+        auto err = backupPtr_->GetBackupDataSize(isPreciseScan, bundleNameList);
+        EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
+
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        SetMockGetInstance(true);
+        err = backupPtr_->GetBackupDataSize(isPreciseScan, bundleNameList);
+        EXPECT_EQ(err, ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionBackupTest-an exception occurred by GetBackupDataSize.";
+    }
+    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_1200";
 }
 } // namespace OHOS::FileManagement::Backup

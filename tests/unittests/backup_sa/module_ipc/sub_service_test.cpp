@@ -1515,17 +1515,17 @@ HWTEST_F(ServiceTest, SUB_Service_TimeoutRadarReport_0000, TestSize.Level1)
 }
 
 /**
- * @tc.number: SUB_Service_GetLocalCapabilitiesForBdInfos_0000
- * @tc.name: SUB_Service_GetLocalCapabilitiesForBdInfos_0000
+ * @tc.number: SUB_Service_GetLocalCapabilitiesForBundleInfos_0000
+ * @tc.name: SUB_Service_GetLocalCapabilitiesForBundleInfos_0000
  * @tc.desc: 测试 GetLocalCapabilitiesForBundleInfos 的正常/异常分支
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: issueIAKC3I
  */
-HWTEST_F(ServiceTest, SUB_Service_GetLocalCapabilitiesForBdInfos_0000, TestSize.Level1)
+HWTEST_F(ServiceTest, SUB_Service_GetLocalCapabilitiesForBundleInfos_0000, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetLocalCapabilitiesForBdInfos_0000";
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetLocalCapabilitiesForBundleInfos_0000";
     try {
         ASSERT_TRUE(service != nullptr);
         auto session_  = service->session_;
@@ -1543,7 +1543,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetLocalCapabilitiesForBdInfos_0000, TestSize.
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetLocalCapabilitiesForBundleInfos.";
     }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetLocalCapabilitiesForBdInfos_0000";
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetLocalCapabilitiesForBundleInfos_0000";
 }
 
 /**
@@ -1611,8 +1611,13 @@ HWTEST_F(ServiceTest, SUB_Service_GetScanningInfo_0000, TestSize.Level1)
     try {
         size_t size = 1;
         string scanning = BUNDLE_NAME;
-        bool ret = service->GetScanningInfo(nullptr, size, scanning);
-        EXPECT_FALSE(ret);
+        EXPECT_FALSE(service->GetScanningInfo(nullptr, size, scanning));
+
+        EXPECT_CALL(*jsonUtil, WriteToStr(_, _, _, _)).WillOnce(Return(false));
+        EXPECT_FALSE(service->GetScanningInfo(service, size, scanning));
+
+        EXPECT_CALL(*jsonUtil, WriteToStr(_, _, _, _)).WillOnce(Return(true));
+        EXPECT_TRUE(service->GetScanningInfo(service, size, scanning));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetScanningInfo.";
@@ -1899,7 +1904,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetDataSizeStepByStep_0000, TestSize.Level1)
         EXPECT_TRUE(true);
 
         isPreciseScan = true;
-                EXPECT_CALL(*task, AddTask(_)).WillOnce(WithArgs<0>(Invoke([](const ThreadPool::Task &f) {
+        EXPECT_CALL(*task, AddTask(_)).WillOnce(WithArgs<0>(Invoke([](const ThreadPool::Task &f) {
             f();
         })));
         service->GetDataSizeStepByStep(isPreciseScan, bundleNameList, scanning);
@@ -1909,4 +1914,75 @@ HWTEST_F(ServiceTest, SUB_Service_GetDataSizeStepByStep_0000, TestSize.Level1)
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetDataSizeStepByStep.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetDataSizeStepByStep_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_CyclicSendScannedInfo_0000
+ * @tc.name: SUB_Service_CyclicSendScannedInfo_0000
+ * @tc.desc: 测试 CyclicSendScannedInfo 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_CyclicSendScannedInfo_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_CyclicSendScannedInfo_0000";
+    try {
+        bool isPreciseScan = false;
+        vector<BIncrementalData> bundleNameList;
+        EXPECT_CALL(*task, AddTask(_)).WillOnce(WithArgs<0>(Invoke([](const ThreadPool::Task &f) {
+            f();
+        }))).WillOnce(WithArgs<0>(Invoke([](const ThreadPool::Task &f) {
+            service->isScannedEnd_.store(true);
+        })));
+        service->CyclicSendScannedInfo(isPreciseScan, bundleNameList);
+        EXPECT_TRUE(true);
+
+        isPreciseScan = true;
+        EXPECT_CALL(*task, AddTask(_)).WillOnce(WithArgs<0>(Invoke([](const ThreadPool::Task &f) {
+            f();
+        }))).WillOnce(WithArgs<0>(Invoke([](const ThreadPool::Task &f) {
+            service->isScannedEnd_.store(true);
+        })));
+        service->CyclicSendScannedInfo(isPreciseScan, bundleNameList);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by CyclicSendScannedInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_CyclicSendScannedInfo_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_SendScannedInfo_0000
+ * @tc.name: SUB_Service_SendScannedInfo_0000
+ * @tc.desc: 测试 SendScannedInfo 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_SendScannedInfo_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SendScannedInfo_0000";
+    try {
+        string scannendInfos = "";
+        service->SendScannedInfo(scannendInfos, nullptr);
+        EXPECT_TRUE(true);
+
+        auto session_ = service->session_;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*srProxy, BackupOnScanningInfo(_)).WillOnce(Return());
+        EXPECT_CALL(*task, AddTask(_)).WillOnce(WithArgs<0>(Invoke([](const ThreadPool::Task &f) {
+            f();
+        })));
+        service->SendScannedInfo(scannendInfos, session_);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by CyclicSendScannedInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SendScannedInfo_0000";
 }

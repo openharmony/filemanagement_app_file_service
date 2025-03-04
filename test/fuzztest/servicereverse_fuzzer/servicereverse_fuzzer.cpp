@@ -29,7 +29,6 @@
 #include "service_reverse_stub.h"
 #include "service_reverse.h"
 #include "securec.h"
-#include "system_ability.h"
 
 using namespace OHOS::FileManagement::Backup;
 
