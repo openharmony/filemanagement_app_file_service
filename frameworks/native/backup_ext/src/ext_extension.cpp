@@ -313,7 +313,7 @@ static tuple<ErrCode, UniqueFd, UniqueFd> GetIncreFileHandleForSpecialVersion(co
             "GetIncreFileHandleForSpecialVersion", "CommonFile", GetAnonyPath(path)};
         HiAudit::GetInstance(false).Write(auditLog);
     }
-    string reportName = path + BConstants::BLANK_REPORT_NAME;
+    string reportName = GetReportFileName(fileName);
     UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
     if (reportFd < 0) {
         HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
@@ -904,7 +904,7 @@ int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
     return ERR_OK;
 }
 
-static void GetTarIncludes(const string &tarName, unordered_map<string, struct ReportFileInfo> &infos)
+void BackupExtExtension::GetTarIncludes(const string &tarName, unordered_map<string, struct ReportFileInfo> &infos)
 {
     // 获取简报文件内容
     string reportName = GetReportFileName(tarName);
@@ -1089,6 +1089,11 @@ void BackupExtExtension::RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo
         errFileInfos_[fileName].emplace_back(errno);
         HILOGE("Failed to change the file time. %{public}s , %{public}d", GetAnonyPath(fileName).c_str(), errno);
     }
+    // 删除大文件的rp文件
+    string reportPath = GetReportFileName(fileName);
+    if (!RemoveFile(reportPath)) {
+        HILOGE("Failed to delete backup report %{public}s, err = %{public}d", GetAnonyPath(reportPath).c_str(), errno);
+    }
 }
 
 ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &item)
@@ -1117,6 +1122,10 @@ ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &
         HILOGE("Check spec tarfile path : %{public}s err, path is forbidden", GetAnonyPath(untarPath).c_str());
         return ERR_INVALID_VALUE;
     }
+    if (IfCloudSpecialRestore(tarName)) {
+        auto ret = CloudSpecialRestore(tarName, untarPath, item.sta.st_size);
+        return ret;
+    }
     auto [err, fileInfos, errInfos] = UntarFile::GetInstance().UnPacket(tarName, untarPath);
     if (isDebug_) {
         endFileInfos_.merge(fileInfos);
@@ -1126,9 +1135,7 @@ ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &
         HILOGE("File soft links are forbidden");
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
     }
-    if (!RemoveFile(tarName)) {
-        HILOGE("Failed to delete the backup tar %{public}s", tarName.c_str());
-    }
+    DeleteBackupIncrementalTars(tarName);
     if (err != ERR_OK) {
         HILOGE("Failed to untar file = %{public}s, err = %{public}d", tarName.c_str(), err);
         return err;
@@ -1175,9 +1182,7 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
             }
         }
     }
-    if (!RemoveFile(INDEX_FILE_RESTORE)) {
-        HILOGE("Failed to delete the backup index %{public}s", INDEX_FILE_RESTORE.c_str());
-    }
+    DeleteIndexAndRpFile();
     auto endTime = std::chrono::system_clock::now();
     radarRestoreInfo_.totalFileSpendTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
@@ -1186,6 +1191,16 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
     return ERR_OK;
 }
 
+void BackupExtExtension::DeleteIndexAndRpFile()
+{
+    if (!RemoveFile(INDEX_FILE_RESTORE)) {
+        HILOGE("Failed to delete the backup index %{public}s", INDEX_FILE_RESTORE.c_str());
+    }
+    string reportManagePath = GetReportFileName(INDEX_FILE_RESTORE); // GetIncrementalFileHandle创建的空fd
+    if (!RemoveFile(reportManagePath)) {
+        HILOGE("Failed to delete the backup report index %{public}s", reportManagePath.c_str());
+    }
+}
 static bool RestoreBigFilePrecheck(string &fileName, const string &path, const string &hashName, const string &filePath)
 {
     if (filePath.empty()) {

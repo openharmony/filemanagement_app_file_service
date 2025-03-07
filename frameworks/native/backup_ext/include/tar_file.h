@@ -56,6 +56,8 @@ const char AREGTYPE = '\0'; // regular file
 const char SYMTYPE = '2';   // reserved
 const char DIRTYPE = '5';   // directory
 const char GNUTYPE_LONGNAME = 'L';
+const char EXTENSION_HEADER = 'x';
+const uint32_t OTHER_HEADER = 78;
 const int ERR_NO_PERMISSION = 13;
 } // namespace
 

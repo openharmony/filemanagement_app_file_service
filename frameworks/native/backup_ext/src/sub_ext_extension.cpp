@@ -1357,4 +1357,34 @@ void BackupExtExtension::CompareFiles(vector<struct ReportFileInfo> &allFiles,
         }
     }
 }
+
+bool BackupExtExtension::IfCloudSpecialRestore(string tarName)
+{
+    unordered_map<string, struct ReportFileInfo> result;
+    GetTarIncludes(tarName, result);
+    if (result.empty()) {
+        HILOGI("is not CloudSpecialRestore");
+        return false;
+    }
+    HILOGI("is CloudSpecialRestore");
+    return true;
+}
+
+ErrCode BackupExtExtension::CloudSpecialRestore(string tarName, string untarPath, off_t tarFileSize)
+{
+    unordered_map<string, struct ReportFileInfo> result;
+    GetTarIncludes(tarName, result);
+    if (isDebug_) {
+        FillEndFileInfos(untarPath, result);
+    }
+    auto unPacketRes = UntarFile::GetInstance().IncrementalUnPacket(tarName, untarPath, result);
+    ErrCode err = ERR_OK;
+    err = std::get<FIRST_PARAM>(unPacketRes);
+    if (int tmpErr = DealIncreUnPacketResult(tarFileSize, tarName, unPacketRes); tmpErr != ERR_OK) {
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
+    }
+    HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
+    DeleteBackupIncrementalTars(tarName);
+    return err;
+}
 } // namespace OHOS::FileManagement::Backup
