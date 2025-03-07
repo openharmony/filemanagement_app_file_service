@@ -1996,5 +1996,100 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetImplRestoreType_0100, t
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetImplRestoreType_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_sa_session_Exception_0100
+ * @tc.name: SUB_backup_sa_session_Exception_0100
+ * @tc.desc: 测试 Exception
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Exception_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_Exception_0100";
+    try {
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+
+        sessionManagerPtr_->SetExtFileNameRequest(BUNDLE_NAME, "");
+        EXPECT_TRUE(true);
+
+        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
+        std::set<std::string> fileSet = sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
+        EXPECT_TRUE(fileSet.empty());
+
+        sessionManagerPtr_->SetBackupExtName(BUNDLE_NAME, "");
+        EXPECT_TRUE(true);
+
+        std::string extName = sessionManagerPtr_->GetBackupExtName(BUNDLE_NAME);
+        EXPECT_TRUE(extName.empty());
+
+        sessionManagerPtr_->SetBackupExtInfo(BUNDLE_NAME, "");
+        EXPECT_TRUE(true);
+
+        std::string extInfo = sessionManagerPtr_->GetBackupExtInfo(BUNDLE_NAME);
+        EXPECT_TRUE(extInfo.empty());
+
+        sessionManagerPtr_->SetBundleUserId(BUNDLE_NAME, 0);
+        EXPECT_TRUE(true);
+
+        int32_t id = sessionManagerPtr_->GetBundleUserId(BUNDLE_NAME);
+        EXPECT_EQ(id, sessionManagerPtr_->GetSessionUserId());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by Exception.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_Exception_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_Exception_0200
+ * @tc.name: SUB_backup_sa_session_Exception_0200
+ * @tc.desc: 测试 Exception
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Exception_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_Exception_0200";
+    try {
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+
+        sessionManagerPtr_->SetBundleRestoreType(BUNDLE_NAME, RestoreTypeEnum::RESTORE_DATA_WAIT_SEND);
+        EXPECT_TRUE(true);
+
+        RestoreTypeEnum restoreType = sessionManagerPtr_->GetBundleRestoreType(BUNDLE_NAME);
+        EXPECT_EQ(restoreType, RestoreTypeEnum::RESTORE_DATA_WAIT_SEND);
+
+        sessionManagerPtr_->SetBundleVersionCode(BUNDLE_NAME, 0);
+        EXPECT_TRUE(true);
+
+        int64_t versionCode = sessionManagerPtr_->GetBundleVersionCode(BUNDLE_NAME);
+        EXPECT_EQ(versionCode, 0);
+
+        sessionManagerPtr_->SetBundleVersionName(BUNDLE_NAME, "");
+        EXPECT_TRUE(true);
+
+        std::string versionName = sessionManagerPtr_->GetBundleVersionName(BUNDLE_NAME);
+        EXPECT_TRUE(versionName.empty());
+
+        sessionManagerPtr_->SetClearDataFlag(BUNDLE_NAME, true);
+        EXPECT_TRUE(true);
+
+        bool flag = sessionManagerPtr_->GetClearDataFlag(BUNDLE_NAME);
+        EXPECT_TRUE(flag);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by Exception.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_Exception_0200";
+}
 #include "svc_session_manager_ex_test.cpp"
 } // namespace OHOS::FileManagement::Backup
