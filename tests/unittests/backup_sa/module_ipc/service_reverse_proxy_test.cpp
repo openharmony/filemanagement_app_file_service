@@ -2613,7 +2613,8 @@ HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_BackupOnScanningInfo_
  * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalBackupOnScanningInfo_0100, testing::ext::TestSize.Level1)
+HWTEST_F(ServiceReverseProxyTest, SUB_ServiceReverse_proxy_IncrementalBackupOnScanningInfo_0100,
+    testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-begin SUB_ServiceReverse_proxy_IncrementalBackupOnScanningInfo_0100";
     try {
