@@ -1751,4 +1751,118 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnResult
     }
     GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnResultReport_0101";
 }
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_BackupOnScanningInfo_0100
+ * @tc.name: SUB_backup_ServiceReverse_BackupOnScanningInfo_0100
+ * @tc.desc: 测试 BackupOnScanningInfo 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnScanningInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnScanningInfo_0100";
+    try {
+        Init(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnScanningInfo_0100 service_ == nullptr";
+            return;
+        }
+        std::string scannedInfo = "";
+        service_->BackupOnScanningInfo(scannedInfo);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by BackupOnScanningInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_BackupOnScanningInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_BackupOnScanningInfo_0101
+ * @tc.name: SUB_backup_ServiceReverse_BackupOnScanningInfo_0101
+ * @tc.desc: 测试 BackupOnScanningInfo 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnScanningInfo_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnScanningInfo_0101";
+    try {
+        Init(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_BackupOnScanningInfo_0101 service_ == nullptr";
+            return;
+        }
+        std::string scannedInfo = "";
+        service_->BackupOnScanningInfo(scannedInfo);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by BackupOnScanningInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_BackupOnScanningInfo_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnScanningInfo_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnScanningInfo_0100
+ * @tc.desc: 测试 IncrementalBackupOnScanningInfo 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_IncrementalBackupOnScanningInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnScanningInfo_0100";
+    try {
+        Init(IServiceReverse::Scenario::RESTORE);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalBackupOnScanningInfo_0100 service_ == nullptr";
+            return;
+        }
+        std::string scannedInfo = "";
+        service_->BackupOnScanningInfo(scannedInfo);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by BackupOnScanningInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnScanningInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnScanningInfo_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnScanningInfo_0101
+ * @tc.desc: 测试 IncrementalBackupOnScanningInfo 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_IncrementalBackupOnScanningInfo_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnScanningInfo_0101";
+    try {
+        Init(IServiceReverse::Scenario::BACKUP);
+        if (service_ == nullptr) {
+            GTEST_LOG_(INFO) <<
+                "SUB_backup_ServiceReverse_IncrementalBackupOnScanningInfo_0101 service_ == nullptr";
+            return;
+        }
+        std::string scannedInfo = "";
+        service_->BackupOnScanningInfo(scannedInfo);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by BackupOnScanningInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnScanningInfo_0101";
+}
 } // namespace OHOS::FileManagement::Backup

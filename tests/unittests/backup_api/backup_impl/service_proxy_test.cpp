@@ -1441,4 +1441,86 @@ HWTEST_F(ServiceProxyTest, SUB_Service_proxy_Cancel_0100, testing::ext::TestSize
     EXPECT_NE(ret, BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_Cancel_0100";
 }
+
+/**
+ * @tc.number: SUB_Service_proxy_RefreshDataSize_0100
+ * @tc.name: SUB_Service_proxy_RefreshDataSize_0100
+ * @tc.desc: 测试 RefreshDataSize 调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_RefreshDataSize_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_RefreshDataSize_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_RefreshDataSize_0100 proxy_ == nullptr";
+        return;
+    }
+    int64_t totalSize = 0;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
+    ErrCode ret = proxy_->RefreshDataSize(totalSize);
+    EXPECT_EQ(ret, BError(BError::Codes::SDK_INVAL_ARG));
+
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(NO_ERROR));
+    ret = proxy_->RefreshDataSize(totalSize);
+    EXPECT_EQ(ret, BError(BError::Codes::SDK_INVAL_ARG));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_RefreshDataSize_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_GetLocalCapabilitiesForBundleInfos_0100
+ * @tc.name: SUB_Service_proxy_GetLocalCapabilitiesForBundleInfos_0100
+ * @tc.desc: 测试 GetLocalCapabilitiesForBundleInfos 调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetLocalCapabilitiesForBundleInfos_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetLocalCapabilitiesForBundleInfos_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_GetLocalCapabilitiesForBundleInfos_0100 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+    ErrCode ret = proxy_->GetLocalCapabilitiesForBundleInfos();
+    EXPECT_NE(ret, BError(BError::Codes::OK));
+    ret = proxy_->GetLocalCapabilitiesForBundleInfos();
+    EXPECT_NE(ret, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_GetLocalCapabilitiesForBundleInfos_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_proxy_GetBackupDataSize_0100
+ * @tc.name: SUB_Service_proxy_GetBackupDataSize_0100
+ * @tc.desc: 测试 GetBackupDataSize 调用成功和失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I90ZV5
+ */
+HWTEST_F(ServiceProxyTest, SUB_Service_proxy_GetBackupDataSize_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceProxyTest-begin SUB_Service_proxy_GetBackupDataSize_0100";
+    if (proxy_ == nullptr) {
+        GTEST_LOG_(INFO) << "SUB_Service_proxy_GetBackupDataSize_0100 proxy_ == nullptr";
+        return;
+    }
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+        .Times(2)
+        .WillOnce(Invoke(mock_.GetRefPtr(), &IServiceMock::InvokeSendRequest))
+        .WillOnce(Return(EPERM));
+    bool isPreciseScan = true;
+    vector<BIncrementalData> bundleNameList;
+    ErrCode ret = proxy_->GetBackupDataSize(isPreciseScan, bundleNameList);
+    EXPECT_EQ(ret, BError(BError::Codes::OK));
+    ret = proxy_->GetBackupDataSize(isPreciseScan, bundleNameList);
+    EXPECT_NE(ret, BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceProxyTest-end SUB_Service_proxy_GetBackupDataSize_0100";
+}
 } // namespace OHOS::FileManagement::Backup

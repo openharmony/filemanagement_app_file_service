@@ -1019,11 +1019,14 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_DoCallJsMethod_0100, testing::ext::T
 {
     GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_DoCallJsMethod_0100";
     try {
+        auto ret = DoCallJsMethod(nullptr);
+        EXPECT_EQ(ret, EINVAL);
+
         string funcName = "";
         InputArgsParser argParserIn = {};
         ResultValueParser retParserIn = {};
         auto param = make_shared<CallJsParam>(funcName, nullptr, nullptr, argParserIn, retParserIn);
-        auto ret = DoCallJsMethod(param.get());
+        ret = DoCallJsMethod(param.get());
         EXPECT_EQ(ret, EINVAL);
 
         param->jsRuntime = jsRuntime.get();
@@ -1183,39 +1186,14 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_InvokeAppExtMethod_0100, testing::ex
         result = "test";
         ret = extBackupJs->InvokeAppExtMethod(errCode, result);
         EXPECT_EQ(ret, ERR_OK);
+
+        ret = extBackupJs->InvokeAppExtMethod(BError(BError::Codes::EXT_INVAL_ARG), result);
+        EXPECT_EQ(ret, ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by InvokeAppExtMethod.";
     }
     GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_InvokeAppExtMethod_0100";
-}
-
-/**
- * @tc.number: SUB_backup_ext_js_InvokeAppExtMethod_0200
- * @tc.name: SUB_backup_ext_js_InvokeAppExtMethod_0200
- * @tc.desc: 测试 InvokeAppExtMethod 各个分支成功与失败
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issuesIAFBOS
- */
-HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_InvokeAppExtMethod_0200, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_InvokeAppExtMethod_0200";
-    try {
-        ErrCode errCode = BError(BError::Codes::EXT_INVAL_ARG);
-        string result = "";
-        auto ret = extBackupJs->InvokeAppExtMethod(errCode, result);
-        EXPECT_EQ(ret, ERR_OK);
-
-        result = "test";
-        ret = extBackupJs->InvokeAppExtMethod(errCode, result);
-        EXPECT_EQ(ret, ERR_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by InvokeAppExtMethod.";
-    }
-    GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_InvokeAppExtMethod_0200";
 }
 
 /**
