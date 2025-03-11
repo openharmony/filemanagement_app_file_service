@@ -513,4 +513,36 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_1100, testing::ext::T
     }
     GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_1100";
 }
+
+/**
+ * @tc.number: SUB_backup_b_session_restore_1200
+ * @tc.name: SUB_backup_b_session_restore_1200
+ * @tc.desc: 测试 GetLocalCapabilities 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_1200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_1200";
+    try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_1200 restorePtr_ == nullptr";
+            return;
+        }
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        SetMockGetInstance(false);
+        auto err = restorePtr_->GetLocalCapabilities();
+        EXPECT_LT(err, 0);
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        SetMockGetInstance(true);
+        err = restorePtr_->GetLocalCapabilities();
+        EXPECT_LT(err, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionRestoreTest-an exception occurred by GetLocalCapabilities.";
+    }
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_1200";
+}
 } // namespace OHOS::FileManagement::Backup

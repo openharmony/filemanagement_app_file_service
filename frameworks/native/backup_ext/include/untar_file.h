@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -190,6 +190,25 @@ private:
      */
     bool DealFileTag(ErrFileInfo &errFileInfo,
         FileStatInfo &info, bool &isFilter, const std::string &tmpFullPath);
+
+    std::tuple<int, std::string> ParsePaxBlock();
+
+    void CheckLongName(std::string longName, FileStatInfo &info);
+
+    std::tuple<int, std::string> GetLongName(uint32_t recLen, uint32_t allLen);
+
+    std::tuple<int, bool, ErrFileInfo> MatchIncrementalScenario(bool isFilter, ErrFileInfo &errFileInfo,
+        std::string tmpFullPath, char typeFlag, FileStatInfo &info);
+
+    void MatchAregType(bool &isRightRes, FileStatInfo &info, ErrFileInfo &errFileInfo, bool &isFilter);
+
+    void MatchDirType(bool &isRightRes, FileStatInfo &info, ErrFileInfo &errFileInfo, bool &isFilter);
+
+    void MatchGnuTypeLongName(bool &isRightRes, FileStatInfo &info, ErrFileInfo &errFileInfo, bool &isFilter);
+
+    void MatchExtHeader(bool &isRightRes, FileStatInfo &info, bool &isFilter);
+
+    void MatchDefault(bool &isRightRes, FileStatInfo &info);
 
 private:
     std::string rootPath_ {};

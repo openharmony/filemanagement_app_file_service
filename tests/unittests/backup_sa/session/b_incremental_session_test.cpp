@@ -900,4 +900,39 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2700, testing::e
     }
     GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2700";
 }
+
+/**
+ * @tc.number: SUB_b_incremental_session_test_2800
+ * @tc.name: SUB_b_incremental_session_test_2800
+ * @tc.desc: 测试 GetBackupDataSize 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesI9KPRL
+ */
+HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2800, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2800";
+    try {
+        bool isPreciseScan = false;
+        vector<BIncrementalData> bundleNameList;
+        ServiceProxy::serviceProxy_ = nullptr;
+        ASSERT_TRUE(backupSession != nullptr);
+        auto err = backupSession->GetBackupDataSize(isPreciseScan, bundleNameList);
+        EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
+
+        ServiceProxy::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, GetBackupDataSize(_, _)).WillOnce(Return(BError(BError::Codes::SDK_BROKEN_IPC).GetCode()));
+        err = backupSession->GetBackupDataSize(isPreciseScan, bundleNameList);
+        EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
+
+        EXPECT_CALL(*proxy, GetBackupDataSize(_, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        err = backupSession->GetBackupDataSize(isPreciseScan, bundleNameList);
+        EXPECT_EQ(err, ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by GetBackupDataSize.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2800";
+}
 } // namespace OHOS::FileManagement::Backup

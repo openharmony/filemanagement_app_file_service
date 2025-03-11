@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -884,7 +884,7 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseTarFile_0100, testing::ext::TestS
 
         string sum = "01647";
         TarHeader header;
-        header.typeFlag = 'x';
+        header.typeFlag = 'y';
         memcpy_s(&header.magic, sizeof(header.magic), TMAGIC.c_str(), TMAGIC.length());
         memcpy_s(&header.chksum, sizeof(header.chksum), sum.c_str(), sum.length());
         EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(EPERM));
@@ -894,7 +894,7 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseTarFile_0100, testing::ext::TestS
             return BLOCK_SIZE;
         }))).WillOnce(Return(0));
         tie(ret, info, err) = UntarFile::GetInstance().ParseTarFile(rootPath);
-        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_EQ(ret, 0);
 
         EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0)).WillOnce(Return(0));
@@ -909,6 +909,40 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseTarFile_0100, testing::ext::TestS
         GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by ParseTarFile.";
     }
     GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_ParseTarFile_0100";
+}
+
+/**
+ * @tc.number: SUB_Untar_File_ParseTarFile_0200
+ * @tc.name: SUB_Untar_File_ParseTarFile_0200
+ * @tc.desc: 测试 ParseTarFile 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseTarFile_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_ParseTarFile_0200";
+    try {
+        string rootPath;
+        string sum = "01647";
+        TarHeader header;
+        header.typeFlag = 'x';
+        memcpy_s(&header.magic, sizeof(header.magic), TMAGIC.c_str(), TMAGIC.length());
+        memcpy_s(&header.chksum, sizeof(header.chksum), sum.c_str(), sum.length());
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(WithArgs<0>(Invoke([&header](void* buff) {
+            memcpy_s(buff, BLOCK_SIZE, &header, sizeof(header));
+            return BLOCK_SIZE;
+        }))).WillOnce(Return(0)).WillOnce(Return(0));
+        auto [ret, info, err] = UntarFile::GetInstance().ParseTarFile(rootPath);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by ParseTarFile.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_ParseTarFile_0200";
 }
 
 /**
@@ -945,7 +979,7 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseIncrementalTarFile_0100, testing:
 
         string sum = "01647";
         TarHeader header;
-        header.typeFlag = 'x';
+        header.typeFlag = 'y';
         memcpy_s(&header.magic, sizeof(header.magic), TMAGIC.c_str(), TMAGIC.length());
         memcpy_s(&header.chksum, sizeof(header.chksum), sum.c_str(), sum.length());
         EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(EPERM));
@@ -955,7 +989,7 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseIncrementalTarFile_0100, testing:
             return BLOCK_SIZE;
         }))).WillOnce(Return(0));
         tie(ret, info, err) = UntarFile::GetInstance().ParseIncrementalTarFile(rootPath);
-        EXPECT_EQ(ret, DEFAULT_ERR);
+        EXPECT_EQ(ret, 0);
 
         EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0)).WillOnce(Return(0));
@@ -970,6 +1004,41 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseIncrementalTarFile_0100, testing:
         GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by ParseIncrementalTarFile.";
     }
     GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_ParseIncrementalTarFile_0100";
+}
+
+/**
+ * @tc.number: SUB_Untar_File_ParseIncrementalTarFile_0200
+ * @tc.name: SUB_Untar_File_ParseIncrementalTarFile_0200
+ * @tc.desc: 测试 ParseIncrementalTarFile 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseIncrementalTarFile_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_ParseIncrementalTarFile_0200";
+    try {
+        string rootPath;
+        string sum = "01647";
+        TarHeader header;
+        header.typeFlag = 'x';
+        memcpy_s(&header.magic, sizeof(header.magic), TMAGIC.c_str(), TMAGIC.length());
+        memcpy_s(&header.chksum, sizeof(header.chksum), sum.c_str(), sum.length());
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(WithArgs<0>(Invoke([&header](void* buff) {
+            memcpy_s(buff, BLOCK_SIZE, &header, sizeof(header));
+            return BLOCK_SIZE;
+        }))).WillOnce(Return(0)).WillOnce(Return(0));
+        auto [ret, info, err] = UntarFile::GetInstance().ParseIncrementalTarFile(rootPath);
+        EXPECT_EQ(ret, DEFAULT_ERR);
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by ParseIncrementalTarFile.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_ParseIncrementalTarFile_0200";
 }
 
 /**

@@ -38,6 +38,8 @@ const std::string FILE_SCHEME_PREFIX = "file://";
 const char BACKFLASH = '/';
 const std::string FILE_MANAGER_URI_HEAD = "/storage/";
 const std::string FILE_MANAGER_AUTHORITY = "docs";
+const std::string MEDIA_FUSE_PATH_HEAD = "/data/storage/el2/media";
+const std::string MEDIA_AUTHORITY = "file://media";
 std::string g_bundleName = "";
 std::mutex g_globalMutex;
 }
@@ -113,13 +115,16 @@ string CommonFunc::GetUriFromPath(const string &path)
     }
     string realPath = path;
     NormalizePath(realPath);
+    if (realPath.find(MEDIA_FUSE_PATH_HEAD) == 0) {
+        return realPath.replace(realPath.find(MEDIA_FUSE_PATH_HEAD), MEDIA_FUSE_PATH_HEAD.length(), MEDIA_AUTHORITY);
+    }
     {
         std::lock_guard<std::mutex> lock(g_globalMutex);
         if (g_bundleName == "") {
             g_bundleName = GetSelfBundleName();
         }
     }
-    string packageName = (path.find(FILE_MANAGER_URI_HEAD) == 0) ? FILE_MANAGER_AUTHORITY : g_bundleName;
+    string packageName = (realPath.find(FILE_MANAGER_URI_HEAD) == 0) ? FILE_MANAGER_AUTHORITY : g_bundleName;
     realPath = FILE_SCHEME_PREFIX + packageName + SandboxHelper::Encode(realPath);
     return realPath;
 }

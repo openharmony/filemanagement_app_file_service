@@ -886,4 +886,75 @@ HWTEST_F(ServiceReverseStubTest,
     GTEST_LOG_(INFO)
         << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_IncrementalRestoreOnResultReport_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_ServiceReverseStub_BackupOnScanningInfo_0100
+ * @tc.name: SUB_backup_ServiceReverseStub_BackupOnScanningInfo_0100
+ * @tc.desc: Test function of BackupOnScanningInfo interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseStubTest,
+         SUB_backup_ServiceReverseStub_BackupOnScanningInfo_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_BackupOnScanningInfo_0100";
+    try {
+        MockServiceReverse service;
+        EXPECT_CALL(service, BackupOnScanningInfo(_)).WillOnce(Return());
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
+        EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
+
+        EXPECT_EQ(BError(BError::Codes::OK),
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(IServiceReverseInterfaceCode::SERVICER_BACKUP_ON_SCANNED_INFO), data,
+                      reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by BackupOnScanningInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_BackupOnScanningInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverseStub_IncrementalBackupOnScanningInfo_0100
+ * @tc.name: SUB_backup_ServiceReverseStub_IncrementalBackupOnScanningInfo_0100
+ * @tc.desc: Test function of IncrementalBackupOnScanningInfo interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceReverseStubTest,
+         SUB_backup_ServiceReverseStub_IncrementalBackupOnScanningInfo_0100,
+         testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) <<
+        "ServiceReverseStubTest-begin SUB_backup_ServiceReverseStub_IncrementalBackupOnScanningInfo_0100";
+    try {
+        MockServiceReverse service;
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(IServiceReverse::GetDescriptor()));
+        EXPECT_TRUE(data.WriteString(BUNDLE_NAME));
+
+        EXPECT_CALL(service, IncrementalBackupOnScanningInfo(_)).WillOnce(Return());
+        EXPECT_EQ(BError(BError::Codes::OK),
+                  service.OnRemoteRequest(
+                      static_cast<uint32_t>(
+                        IServiceReverseInterfaceCode::SERVICER_INCREMENTAL_BACKUP_ON_SCANNED_INFO),
+                        data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceReverseStubTest-an exception occurred by BackupOnScanningInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceReverseStubTest-end SUB_backup_ServiceReverseStub_IncrementalBackupOnScanningInfo_0100";
+}
 } // namespace OHOS::FileManagement::Backup

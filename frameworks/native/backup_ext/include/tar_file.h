@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,6 +56,8 @@ const char AREGTYPE = '\0'; // regular file
 const char SYMTYPE = '2';   // reserved
 const char DIRTYPE = '5';   // directory
 const char GNUTYPE_LONGNAME = 'L';
+const char EXTENSION_HEADER = 'x';
+const uint32_t OTHER_HEADER = 78;
 const int ERR_NO_PERMISSION = 13;
 } // namespace
 

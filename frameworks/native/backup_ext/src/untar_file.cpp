@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -327,51 +327,90 @@ std::tuple<int, EndFileInfo, ErrFileInfo> UntarFile::ParseIncrementalTarFile(con
     return {ret, fileInfos, errFileInfo};
 }
 
+void UntarFile::MatchAregType(bool &isRightRes, FileStatInfo &info, ErrFileInfo &errFileInfo, bool &isFilter)
+{
+    info.fullPath = GenRealPath(rootPath_, info.fullPath);
+    if (BDir::CheckFilePathInvalid(info.fullPath)) {
+        HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
+        isRightRes = false;
+        return;
+    }
+    errFileInfo = ParseRegularFile(info);
+    isFilter = false;
+}
+
+void UntarFile::MatchDirType(bool &isRightRes, FileStatInfo &info, ErrFileInfo &errFileInfo, bool &isFilter)
+{
+    info.fullPath = GenRealPath(rootPath_, info.fullPath);
+    if (BDir::CheckFilePathInvalid(info.fullPath)) {
+        HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
+        isRightRes = false;
+        return;
+    }
+    errFileInfo = CreateDir(info.fullPath, info.mode);
+    isFilter = false;
+}
+
+void UntarFile::MatchGnuTypeLongName(bool &isRightRes, FileStatInfo &info, ErrFileInfo &errFileInfo, bool &isFilter)
+{
+    auto result = ReadLongName(info);
+    if (BDir::CheckFilePathInvalid(info.fullPath) || BDir::CheckFilePathInvalid(info.longName)) {
+        HILOGE("Check file path : %{public}s or long name : %{public}s err, path is forbidden",
+            GetAnonyPath(info.fullPath).c_str(), GetAnonyPath(info.longName).c_str());
+        isRightRes = false;
+        return;
+    }
+    errFileInfo = std::get<SECOND_PARAM>(result);
+    isFilter = true;
+    isRightRes = (std::get<FIRST_PARAM>(result) == ERR_OK) ? true : false;
+}
+
+void UntarFile::MatchExtHeader(bool &isRightRes, FileStatInfo &info, bool &isFilter)
+{
+    auto [err, LongName] = ParsePaxBlock();
+    if (err != ERR_OK) {
+        isRightRes = false;
+        return;
+    }
+    CheckLongName(LongName, info);
+    isFilter = true;
+}
+
+void UntarFile::MatchDefault(bool &isRightRes, FileStatInfo &info)
+{
+    if (fseeko(tarFilePtr_, tarFileBlockCnt_ * BLOCK_SIZE, SEEK_CUR) != 0) {
+        HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
+        isRightRes = false;
+    }
+}
+
 tuple<int, bool, ErrFileInfo> UntarFile::ParseFileByTypeFlag(char typeFlag, FileStatInfo &info)
 {
     HILOGD("untar file: %{public}s, rootPath: %{public}s", GetAnonyPath(info.fullPath).c_str(), rootPath_.c_str());
     bool isFilter = true;
     ErrFileInfo errFileInfo;
+    bool isRightRes = true;
     switch (typeFlag) {
         case REGTYPE:
         case AREGTYPE:
-            info.fullPath = GenRealPath(rootPath_, info.fullPath);
-            if (BDir::CheckFilePathInvalid(info.fullPath)) {
-                HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
-                return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
-            }
-            errFileInfo = ParseRegularFile(info);
-            isFilter = false;
+            MatchAregType(isRightRes, info, errFileInfo, isFilter);
             break;
         case SYMTYPE:
             break;
         case DIRTYPE:
-            info.fullPath = GenRealPath(rootPath_, info.fullPath);
-            if (BDir::CheckFilePathInvalid(info.fullPath)) {
-                HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
-                return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
-            }
-            errFileInfo = CreateDir(info.fullPath, info.mode);
-            isFilter = false;
+            MatchDirType(isRightRes, info, errFileInfo, isFilter);
             break;
-        case GNUTYPE_LONGNAME: {
-            auto result = ReadLongName(info);
-            if (BDir::CheckFilePathInvalid(info.fullPath) || BDir::CheckFilePathInvalid(info.longName)) {
-                HILOGE("Check file path : %{public}s or long name : %{public}s err, path is forbidden",
-                    GetAnonyPath(info.fullPath).c_str(), GetAnonyPath(info.longName).c_str());
-                return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
-            }
-            errFileInfo = std::get<SECOND_PARAM>(result);
-            return {std::get<FIRST_PARAM>(result), isFilter, errFileInfo};
+        case GNUTYPE_LONGNAME:
+            MatchGnuTypeLongName(isRightRes, info, errFileInfo, isFilter);
             break;
-        }
-        default: {
-            if (fseeko(tarFilePtr_, tarFileBlockCnt_ * BLOCK_SIZE, SEEK_CUR) != 0) {
-                HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
-                return {-1, true, errFileInfo};
-            }
+        case EXTENSION_HEADER:
+            MatchExtHeader(isRightRes, info, isFilter);
             break;
-        }
+        default:
+            MatchDefault(isRightRes, info);
+    }
+    if (!isRightRes) {
+        return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
     }
     return {0, isFilter, errFileInfo};
 }
@@ -399,14 +438,9 @@ bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
     return true;
 }
 
-
-std::tuple<int, bool, ErrFileInfo> UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, FileStatInfo &info)
+std::tuple<int, bool, ErrFileInfo> UntarFile::MatchIncrementalScenario(bool isFilter, ErrFileInfo &errFileInfo,
+    string tmpFullPath, char typeFlag, FileStatInfo &info)
 {
-    HILOGD("untar file: %{public}s, rootPath: %{public}s", GetAnonyPath(info.fullPath).c_str(), rootPath_.c_str());
-    string tmpFullPath = info.fullPath;
-    bool isFilter = true;
-    ErrFileInfo errFileInfo;
-    RTrimNull(tmpFullPath);
     switch (typeFlag) {
         case REGTYPE:
         case AREGTYPE: {
@@ -435,6 +469,15 @@ std::tuple<int, bool, ErrFileInfo> UntarFile::ParseIncrementalFileByTypeFlag(cha
             return {std::get<FIRST_PARAM>(result), isFilter, std::get<SECOND_PARAM>(result)};
             break;
         }
+        case EXTENSION_HEADER: { // pax x header
+            auto [err, LongName] = ParsePaxBlock();
+            if (err == ERR_OK) {
+                CheckLongName(LongName, info);
+                return {err, true, errFileInfo};
+            }
+            return {err, isFilter, {{info.fullPath, {DEFAULT_ERR}}}};
+            break;
+        }
         default: {
             if (fseeko(tarFilePtr_, tarFileBlockCnt_ * BLOCK_SIZE, SEEK_CUR) != 0) {
                 HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
@@ -443,8 +486,17 @@ std::tuple<int, bool, ErrFileInfo> UntarFile::ParseIncrementalFileByTypeFlag(cha
             break;
         }
     }
-
     return {0, isFilter, errFileInfo};
+}
+
+std::tuple<int, bool, ErrFileInfo> UntarFile::ParseIncrementalFileByTypeFlag(char typeFlag, FileStatInfo &info)
+{
+    HILOGD("untar file: %{public}s, rootPath: %{public}s", GetAnonyPath(info.fullPath).c_str(), rootPath_.c_str());
+    string tmpFullPath = info.fullPath;
+    bool isFilter = true;
+    ErrFileInfo errFileInfo;
+    RTrimNull(tmpFullPath);
+    return MatchIncrementalScenario(isFilter, errFileInfo, tmpFullPath, typeFlag, info);
 }
 
 ErrFileInfo UntarFile::ParseRegularFile(FileStatInfo &info)
@@ -578,7 +630,7 @@ FILE *UntarFile::CreateFile(string &filePath)
     }
 
     uint32_t len = filePath.length();
-    HILOGW("Failed to open file %{public}d, %{public}s, err = %{public}d, Will create dir", len,
+    HILOGW("Failed to open file %{public}d, %{public}s, err = %{public}d, Will create", len,
         GetAnonyPath(filePath).c_str(), errno);
     size_t pos = filePath.rfind('/');
     if (pos == string::npos) {
@@ -600,4 +652,109 @@ FILE *UntarFile::CreateFile(string &filePath)
     return f;
 }
 
+std::tuple<int, std::string> UntarFile::ParsePaxBlock()
+{
+    int err = DEFAULT_ERR;
+    char block[BLOCK_SIZE] = {0};
+    auto readCnt = fread(block, 1, BLOCK_SIZE, tarFilePtr_);
+    if (readCnt < BLOCK_SIZE) {
+        HILOGE("Parsing tar file completed, read data count is less then block size.");
+        return {err, ""};
+    }
+    string content(block, BLOCK_SIZE);
+    string longName = "";
+    size_t pos = 0;
+    uint32_t recLen = 0;
+    uint32_t allLen = 0;
+    bool isLongName = false;
+    while (pos < BLOCK_SIZE) {
+        size_t lenEnd = content.find(' ', pos);
+        if (lenEnd == string::npos) {
+            err = ERR_OK;
+            break;
+        }
+        string pathLen = content.substr(pos, lenEnd - pos);
+        recLen = std::atoi(pathLen.c_str());
+        allLen = recLen + OTHER_HEADER;
+        if (allLen > BLOCK_SIZE) {
+            isLongName = true;
+            break;
+        }
+        string kvPair = content.substr(lenEnd + 1, recLen - (lenEnd - pos + 1));
+        size_t eqPos = kvPair.find('=');
+        if (eqPos == string::npos) {
+            break;
+        }
+        string key = kvPair.substr(0, eqPos);
+        string value = kvPair.substr(eqPos + 1);
+        if (key == "path") {
+            longName = value;
+            err = ERR_OK;
+        }
+        pos += recLen;
+    }
+    if (isLongName) {
+        HILOGI("is long name");
+        return GetLongName(recLen, allLen);
+    }
+    return {err, longName};
+}
+
+void UntarFile::CheckLongName(std::string longName, FileStatInfo &info)
+{
+    if (!longName.empty() && longName.back() == '\n') {
+        longName.pop_back();
+        info.longName = longName;
+    }
+}
+
+std::tuple<int, std::string> UntarFile::GetLongName(uint32_t recLen, uint32_t allLen)
+{
+    int err = DEFAULT_ERR;
+    off_t curPos = ftello(tarFilePtr_);
+    if (fseeko(tarFilePtr_, curPos - BLOCK_SIZE, SEEK_SET) != 0) {
+        HILOGE("fseeko failed");
+        return {err, ""};
+    }
+    double result = static_cast<double>(allLen) / BLOCK_SIZE;
+    auto ret = static_cast<uint32_t>(std::ceil(result));
+    auto curSize = ret * BLOCK_SIZE;
+    char *block = new char[curSize];
+    if (memset_s(block, curSize, 0, curSize) != EOK) {
+        delete[] block;
+        return {err, ""};
+    }
+    auto readCnt = fread(block, 1, curSize, tarFilePtr_);
+    if (readCnt < curSize) {
+        HILOGE("Parsing tar file completed, read data count is less then block size.");
+        delete[] block;
+        return {err, ""};
+    }
+    string content(block, curSize);
+    string longName = "";
+    size_t pos = 0;
+    while (pos < curSize) {
+        size_t lenEnd = content.find(' ', pos);
+        if (lenEnd == string::npos) {
+            err = ERR_OK;
+            break;
+        }
+        string pathLen = content.substr(pos, lenEnd - pos);
+        int recLen = std::atoi(pathLen.c_str());
+        string KvPair = content.substr(lenEnd + 1, recLen - (lenEnd - pos + 1));
+        size_t eqPos = KvPair.find('=');
+        if (eqPos == string::npos) {
+            break;
+        }
+        string key = KvPair.substr(0, eqPos);
+        string value = KvPair.substr(eqPos + 1);
+        if (key == "path") {
+            longName = value;
+            err = ERR_OK;
+        }
+        pos += recLen;
+    }
+    delete[] block;
+    return {err, longName};
+}
 } // namespace OHOS::FileManagement::Backup

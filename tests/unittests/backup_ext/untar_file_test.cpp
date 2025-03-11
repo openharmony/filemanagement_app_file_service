@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,9 @@
 #include "test_manager.h"
 #include "untar_file.h"
 
+#include <cstdio>
+#include <fstream>
+
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
@@ -31,6 +34,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override {};
     void TearDown() override {};
+    tuple<string, string> TouchTestFile(int num, TestManager &tm);
 };
 
 void UntarFileTest::SetUpTestCase()
@@ -69,6 +73,50 @@ static void ClearCache()
         fclose(TarFile::GetInstance().currentTarFile_);
         TarFile::GetInstance().currentTarFile_ = nullptr;
     }
+}
+
+tuple<string, string> UntarFileTest::TouchTestFile(int num, TestManager &tm)
+{
+    string root = tm.GetRootDirCurTest();
+    string testDir = root + "testdir/";
+    if (mkdir(testDir.data(), S_IRWXU) && errno != EEXIST) {
+        GTEST_LOG_(INFO) << " invoked mkdir failure, errno :" << errno;
+        throw BError(errno);
+    }
+    string aFile = "";
+    string bFile = "";
+    for (int i = 0; i < num; i++) {
+        aFile += "test001/test002/test003/test004/test005/";
+        bFile += "ab";
+    }
+    bFile += ".txt";
+    aFile += bFile;
+
+    string pax = " path=";
+    size_t length = aFile.length() + pax.length();
+    length += std::to_string(length).length();
+    string str = std::to_string(length) + pax + aFile;
+
+    double result = (static_cast<double>(length) + OTHER_HEADER) / BLOCK_SIZE;
+    auto ret = static_cast<uint32_t>(std::ceil(result));
+    auto curSize = ret * BLOCK_SIZE;
+
+    std::vector<char> data(BLOCK_SIZE, '0');
+    std::vector<char> data2;
+    data2.reserve(curSize);
+    data2.insert(data2.end(), str.begin(), str.end());
+    for (size_t i = str.size(); i < curSize; ++i) {
+        data2.push_back(0);
+    }
+    string path = testDir + "test.tar";
+    std::ofstream file(path, std::ios::out | std::ios::trunc | std::ios::binary);
+    if (!file) {
+        throw BError(errno);
+    }
+    file.write(data.data(), data.size());
+    file.write(data2.data(), data2.size());
+    file.close();
+    return {path, aFile};
 }
 
 /**
@@ -547,5 +595,172 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_IncrementalUnPacket_0500, testing::ext::T
         GTEST_LOG_(INFO) << "UntarFileTest-an exception occurred by UntarFile.";
     }
     GTEST_LOG_(INFO) << "UntarFileTest-end SUB_Untar_File_IncrementalUnPacket_0500";
+}
+/**
+ * @tc.number: SUB_Untar_File_CheckLongName_0100
+ * @tc.name: SUB_Untar_File_CheckLongName_0100
+ * @tc.desc: 测试 CheckLongName 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileTest, SUB_Untar_File_CheckLongName_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileTest-begin SUB_Untar_File_CheckLongName_0100";
+    try {
+        string longName = "";
+        FileStatInfo info;
+        UntarFile::GetInstance().CheckLongName(longName, info);
+        EXPECT_TRUE(info.longName.empty());
+
+        longName = "test\n";
+        UntarFile::GetInstance().CheckLongName(longName, info);
+        EXPECT_TRUE(info.longName == "test");
+
+        longName = "test\n";
+        UntarFile::GetInstance().CheckLongName(longName, info);
+        EXPECT_TRUE(info.longName == "test");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileTest-an exception occurred by CheckLongName.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileTest-end SUB_Untar_File_CheckLongName_0100";
+}
+
+/**
+ * @tc.number: SUB_Untar_File_ParsePaxBlock_0100
+ * @tc.name: SUB_Untar_File_ParsePaxBlock_0100
+ * @tc.desc: 测试 ParsePaxBlock 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileTest, SUB_Untar_File_ParsePaxBlock_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileTest-begin SUB_Untar_File_ParsePaxBlock_0100";
+    try {
+        TestManager tm("SUB_Untar_File_ParsePaxBlock_0100");
+        string root = tm.GetRootDirCurTest();
+        string testDir = root + "testdir/";
+        if (mkdir(testDir.data(), S_IRWXU) && errno != EEXIST) {
+            GTEST_LOG_(INFO) << " invoked mkdir failure, errno :" << errno;
+            throw BError(errno);
+        }
+        std::vector<char> data(BLOCK_SIZE, '0');
+        std::vector<char> data2;
+        data2.reserve(BLOCK_SIZE);
+        string str = "20 atime=1739170159\n";
+        data2.insert(data2.end(), str.begin(), str.end());
+        for (size_t i = str.size(); i < BLOCK_SIZE; ++i) {
+            data2.push_back(0);
+        }
+        string path = testDir + "test.tar";
+        std::ofstream file(path, std::ios::out | std::ios::trunc | std::ios::binary);
+        if (!file) {
+            throw BError(errno);
+        }
+        file.write(data.data(), data.size());
+        file.write(data2.data(), data2.size());
+        file.close();
+        UntarFile::GetInstance().tarFilePtr_ = fopen(path.c_str(), "rb");
+        if (UntarFile::GetInstance().tarFilePtr_ == nullptr) {
+            throw BError(errno);
+        }
+        char buff[BLOCK_SIZE] = {0};
+        auto readCnt = fread(buff, 1, BLOCK_SIZE, UntarFile::GetInstance().tarFilePtr_);
+        if (readCnt < BLOCK_SIZE) {
+            throw BError(errno);
+        }
+        auto res = UntarFile::GetInstance().ParsePaxBlock();
+        fclose(UntarFile::GetInstance().tarFilePtr_);
+        UntarFile::GetInstance().tarFilePtr_ =nullptr;
+        EXPECT_EQ(std::get<FIRST_PARAM>(res), 0);
+        EXPECT_TRUE(std::get<SECOND_PARAM>(res) == "");
+        ClearCache();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileTest-an exception occurred by ParsePaxBlock.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileTest-end SUB_Untar_File_ParsePaxBlock_0100";
+}
+
+/**
+ * @tc.number: SUB_Untar_File_ParsePaxBlock_0200
+ * @tc.name: SUB_Untar_File_ParsePaxBlock_0200
+ * @tc.desc: 测试 ParsePaxBlock 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileTest, SUB_Untar_File_ParsePaxBlock_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileTest-begin SUB_Untar_File_ParsePaxBlock_0200";
+    try {
+        TestManager tm("SUB_Untar_File_ParsePaxBlock_0200");
+        int num = 30;
+        auto [path, fileName] = TouchTestFile(num, tm);
+
+        UntarFile::GetInstance().tarFilePtr_ = fopen(path.c_str(), "rb");
+        if (UntarFile::GetInstance().tarFilePtr_ == nullptr) {
+            throw BError(errno);
+        }
+        char buff[BLOCK_SIZE] = {0};
+        auto readCnt = fread(buff, 1, BLOCK_SIZE, UntarFile::GetInstance().tarFilePtr_);
+        if (readCnt < BLOCK_SIZE) {
+            throw BError(errno);
+        }
+        auto [res, longName] = UntarFile::GetInstance().ParsePaxBlock();
+        fclose(UntarFile::GetInstance().tarFilePtr_);
+        UntarFile::GetInstance().tarFilePtr_ =nullptr;
+        EXPECT_EQ(res, 0);
+        EXPECT_TRUE(longName == fileName);
+        ClearCache();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileTest-an exception occurred by ParsePaxBlock.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileTest-end SUB_Untar_File_ParsePaxBlock_0200";
+}
+
+/**
+ * @tc.number: SUB_Untar_File_ParsePaxBlock_0300
+ * @tc.name: SUB_Untar_File_ParsePaxBlock_0300
+ * @tc.desc: 测试 ParsePaxBlock 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileTest, SUB_Untar_File_ParsePaxBlock_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileTest-begin SUB_Untar_File_ParsePaxBlock_0300";
+    try {
+        TestManager tm("SUB_Untar_File_ParsePaxBlock_0300");
+        int num = 1;
+        auto [path, fileName] = TouchTestFile(num, tm);
+
+        UntarFile::GetInstance().tarFilePtr_ = fopen(path.c_str(), "rb");
+        if (UntarFile::GetInstance().tarFilePtr_ == nullptr) {
+            throw BError(errno);
+        }
+        char buff[BLOCK_SIZE] = {0};
+        auto readCnt = fread(buff, 1, BLOCK_SIZE, UntarFile::GetInstance().tarFilePtr_);
+        if (readCnt < BLOCK_SIZE) {
+            throw BError(errno);
+        }
+        auto [res, longName] = UntarFile::GetInstance().ParsePaxBlock();
+        fclose(UntarFile::GetInstance().tarFilePtr_);
+        UntarFile::GetInstance().tarFilePtr_ =nullptr;
+        EXPECT_EQ(res, 0);
+        EXPECT_TRUE(longName == fileName);
+        ClearCache();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileTest-an exception occurred by ParsePaxBlock.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileTest-end SUB_Untar_File_ParsePaxBlock_0300";
 }
 } // namespace OHOS::FileManagement::Backup

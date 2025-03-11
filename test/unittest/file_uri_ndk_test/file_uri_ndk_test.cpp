@@ -260,7 +260,7 @@ HWTEST_F(NDKFileUriTest, get_uri_from_path_test_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "get_uri_from_path_test_001 start";
     const char filePath[] = "storage/Users/currentUser/Documents/GetPathFromUri001.txt";
-    const char fileUri[] = "file://com.example.filesharea/storage/Users/currentUser/Documents/GetPathFromUri001.txt";
+    const char fileUri[] = "file://docs/storage/Users/currentUser/Documents/GetPathFromUri001.txt";
     char *result = nullptr;
     unsigned int length = strlen(filePath);
     FileManagement_ErrCode ret = OH_FileUri_GetUriFromPath(filePath, length, &result);
@@ -294,6 +294,75 @@ HWTEST_F(NDKFileUriTest, get_uri_from_path_test_002, TestSize.Level1)
     ret = OH_FileUri_GetUriFromPath(filePath, length, nullptr);
     EXPECT_EQ(ret, ERR_PARAMS);
     GTEST_LOG_(INFO) << "get_uri_from_path_test_002 end";
+}
+
+/**
+ * @tc.number: get_uri_from_path_test_003
+ * @tc.name: Test function of OH_FileUri_GetUriFromPath() interface for document uri
+ * @tc.desc: Set path and get uri
+ * @tc.type: FUNC
+ */
+HWTEST_F(NDKFileUriTest, get_uri_from_path_test_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "get_uri_from_path_test_003 start";
+    const char filePath[] = "data/storage/el2/media/Photo/12/IMG_12345_999999/test.jpg";
+    const char fileUri[] = "file://media/Photo/12/IMG_12345_999999/test.jpg";
+    char *result = nullptr;
+    unsigned int length = strlen(filePath);
+    FileManagement_ErrCode ret = OH_FileUri_GetUriFromPath(filePath, length, &result);
+    EXPECT_EQ(ret, ERR_OK);
+    if (result != nullptr) {
+        GTEST_LOG_(INFO) << result;
+        EXPECT_EQ(strcmp(result, fileUri), 0);
+        FreeResult(&result);
+    }
+    GTEST_LOG_(INFO) << "get_uri_from_path_test_003 end";
+}
+
+/**
+ * @tc.number: get_uri_from_path_test_004
+ * @tc.name: Test function of OH_FileUri_GetUriFromPath() interface for document uri
+ * @tc.desc: Set path and get uri
+ * @tc.type: FUNC
+ */
+HWTEST_F(NDKFileUriTest, get_uri_from_path_test_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "get_uri_from_path_test_004 start";
+    const char filePath[] = "data/storage/el2/base/Photo/12/IMG_12345_999999/test.jpg";
+    const char fileUri[] = "file://com.example.filesharea/data/storage/el2/base/Photo/12/IMG_12345_999999/test.jpg";
+    char *result = nullptr;
+    unsigned int length = strlen(filePath);
+    FileManagement_ErrCode ret = OH_FileUri_GetUriFromPath(filePath, length, &result);
+    EXPECT_EQ(ret, ERR_OK);
+    if (result != nullptr) {
+        GTEST_LOG_(INFO) << result;
+        EXPECT_EQ(strcmp(result, fileUri), 0);
+        FreeResult(&result);
+    }
+    GTEST_LOG_(INFO) << "get_uri_from_path_test_003 end";
+}
+
+/**
+ * @tc.number: get_uri_from_path_test_005
+ * @tc.name: Test function of OH_FileUri_GetUriFromPath() interface for document uri
+ * @tc.desc: Set path and get uri
+ * @tc.type: FUNC
+ */
+HWTEST_F(NDKFileUriTest, get_uri_from_path_test_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "get_uri_from_path_test_005 start";
+    const char filePath[] = "data/storage/el1/media/Photo/12/IMG_12345_999999/test.jpg";
+    const char fileUri[] = "file://com.example.filesharea/data/storage/el1/media/Photo/12/IMG_12345_999999/test.jpg";
+    char *result = nullptr;
+    unsigned int length = strlen(filePath);
+    FileManagement_ErrCode ret = OH_FileUri_GetUriFromPath(filePath, length, &result);
+    EXPECT_EQ(ret, ERR_OK);
+    if (result != nullptr) {
+        GTEST_LOG_(INFO) << result;
+        EXPECT_EQ(strcmp(result, fileUri), 0);
+        FreeResult(&result);
+    }
+    GTEST_LOG_(INFO) << "get_uri_from_path_test_005 end";
 }
 
 /**
