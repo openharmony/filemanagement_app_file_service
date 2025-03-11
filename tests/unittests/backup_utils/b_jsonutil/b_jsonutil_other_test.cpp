@@ -301,4 +301,104 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleNameIndexInfo_0601, testing::ext::
     }
     GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleNameIndexInfo_0601";
 }
+
+/**
+ * @tc.number: b_jsonutil_BuildInitSessionErrInfo_0701
+ * @tc.name: b_jsonutil_BuildInitSessionErrInfo_0701
+ * @tc.desc: Test function of BuildInitSessionErrInfo interface.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildInitSessionErrInfo_0701, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildInitSessionErrInfo_0701";
+    try {
+        int32_t userId = 0;
+        std::string callerName;
+        std::string activeTime;
+        int cjson = 0;
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
+        auto result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime);
+        EXPECT_EQ(result, "");
+
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime);
+        EXPECT_EQ(result, "");
+
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime);
+        EXPECT_EQ(result, "");
+
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject())
+            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
+            .WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_AddItemToArray(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_AddStringToObject(_, _, _))
+            .WillOnce(Return(nullptr))
+            .WillOnce(Return(nullptr))
+            .WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime);
+        EXPECT_EQ(result, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildInitSessionErrInfo_0701";
+}
+
+/**
+ * @tc.number: b_jsonutil_WriteToStr_0801
+ * @tc.name: b_jsonutil_WriteToStr_0801
+ * @tc.desc: Test function of WriteToStr interface.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_WriteToStr_0801, testing::ext::TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin WriteToStr_0801";
+    try {
+        std::vector<BJsonUtil::BundleDataSize> bundleDataList;
+        size_t listSize = 0;
+        std::string scanning;
+        std::string jsonStr;
+        int cjson = 0;
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
+        auto result = BJsonUtil::WriteToStr(bundleDataList, listSize, scanning, jsonStr);
+        EXPECT_FALSE(result);
+
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        result = BJsonUtil::WriteToStr(bundleDataList, listSize, scanning, jsonStr);
+        EXPECT_FALSE(result);
+
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_AddStringToObject(_, _, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        result = BJsonUtil::WriteToStr(bundleDataList, listSize, scanning, jsonStr);
+        EXPECT_FALSE(result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end WriteToStr_0801";
+}
 }
