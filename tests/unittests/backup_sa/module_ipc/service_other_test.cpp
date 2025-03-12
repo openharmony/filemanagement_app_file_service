@@ -856,6 +856,39 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0200, TestSize.Lev
 }
 
 /**
+ * @tc.number: SUB_Service_AppendBundlesRestoreSession_0300
+ * @tc.name: SUB_Service_AppendBundlesRestoreSession_0300
+ * @tc.desc: 测试 AppendBundlesRestoreSession
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppendBundlesRestoreSession_0300";
+    try {
+        ASSERT_TRUE(service != nullptr);
+        std::vector<BundleName> bundleNames;
+        RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        int32_t userId = 100;
+
+        service->session_ = nullptr;
+        auto ret = service->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames, restoreType, userId);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        service->isOccupyingSession_.store(true);
+        ret = service->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames, restoreType, userId);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppendBundlesRestoreSession.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppendBundlesRestoreSession_0300";
+}
+
+/**
  * @tc.number: SUB_Service_SetCurrentSessProperties_0100
  * @tc.name: SUB_Service_SetCurrentSessProperties_0100
  * @tc.desc: 测试 SetCurrentSessProperties
