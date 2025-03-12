@@ -916,12 +916,12 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2800, testing::e
     try {
         bool isPreciseScan = false;
         vector<BIncrementalData> bundleNameList;
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         ASSERT_TRUE(backupSession != nullptr);
         auto err = backupSession->GetBackupDataSize(isPreciseScan, bundleNameList);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         EXPECT_CALL(*proxy, GetBackupDataSize(_, _)).WillOnce(Return(BError(BError::Codes::SDK_BROKEN_IPC).GetCode()));
         err = backupSession->GetBackupDataSize(isPreciseScan, bundleNameList);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());

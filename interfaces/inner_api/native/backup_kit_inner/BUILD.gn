@@ -64,7 +64,10 @@ ohos_shared_library("backup_kit_inner") {
   ]
 
   configs = [ ":private_config" ]
-  public_configs = [ ":public_config" ]
+  public_configs = [
+    ":public_config",
+    "${path_backup}/services/backup_sa:public_idl_config",
+  ]
 
   external_deps = [
     "c_utils:utils",
