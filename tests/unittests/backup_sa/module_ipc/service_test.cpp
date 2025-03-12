@@ -387,66 +387,6 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0103, testing::ext::TestSize.Leve
 }
 
 /**
- * @tc.number: SUB_Service_RefreshDataSize_0100
- * @tc.name: SUB_Service_RefreshDataSize_0100
- * @tc.desc: 测试 RefreshDataSize 接口
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(ServiceTest, SUB_Service_RefreshDataSize_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_RefreshDataSize_0100";
-    try {
-        string fileName = MANAGE_JSON;
-        EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->session_ = nullptr;
-        auto ret = servicePtr_->RefreshDataSize(0);
-        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
-
-        servicePtr_->session_ = sptr(new SvcSessionManager(servicePtr_));
-        ret = servicePtr_->RefreshDataSize(0);
-        EXPECT_EQ(ret, BError(BError::Codes::OK));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by RefreshDataSize.";
-    }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_RefreshDataSize_0100";
-}
-
-/**
- * @tc.number: SUB_Service_StopExtTimer_0100
- * @tc.name: SUB_Service_StopExtTimer_0100
- * @tc.desc: 测试 StopExtTimer 接口
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(ServiceTest, SUB_Service_StopExtTimer_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StopExtTimer_0100";
-    try {
-        string fileName = MANAGE_JSON;
-        EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->session_ = nullptr;
-        bool isExtStop = false;
-
-        auto ret = servicePtr_->StopExtTimer(isExtStop);
-        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
-
-        servicePtr_->session_ = sptr(new SvcSessionManager(servicePtr_));
-        ret = servicePtr_->StopExtTimer(isExtStop);
-        EXPECT_EQ(ret, BError(BError::Codes::OK));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by StopExtTimer.";
-    }
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StopExtTimer_0100";
-}
-
-/**
  * @tc.number: SUB_Service_AppDone_0100
  * @tc.name: SUB_Service_AppDone_0100
  * @tc.desc: 测试 AppDone 接口
@@ -2031,6 +1971,66 @@ HWTEST_F(ServiceTest, SUB_Service_HandleNotSupportBundleNames_0100, testing::ext
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleNotSupportBundleNames.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleNotSupportBundleNames_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_RefreshDataSize_0100
+ * @tc.name: SUB_Service_RefreshDataSize_0100
+ * @tc.desc: 测试 RefreshDataSize 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_RefreshDataSize_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_RefreshDataSize_0100";
+    try {
+        string fileName = MANAGE_JSON;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->session_ = nullptr;
+        auto ret = servicePtr_->RefreshDataSize(0);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+
+        servicePtr_->session_ = sptr(new SvcSessionManager(servicePtr_));
+        ret = servicePtr_->RefreshDataSize(0);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by RefreshDataSize.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_RefreshDataSize_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_StopExtTimer_0100
+ * @tc.name: SUB_Service_StopExtTimer_0100
+ * @tc.desc: 测试 StopExtTimer 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_StopExtTimer_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StopExtTimer_0100";
+    try {
+        string fileName = MANAGE_JSON;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->session_ = nullptr;
+        bool isExtStop = false;
+
+        auto ret = servicePtr_->StopExtTimer(isExtStop);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+
+        servicePtr_->session_ = sptr(new SvcSessionManager(servicePtr_));
+        ret = servicePtr_->StopExtTimer(isExtStop);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by StopExtTimer.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StopExtTimer_0100";
 }
 
 /**
