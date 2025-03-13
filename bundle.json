@@ -147,8 +147,7 @@
                             "impl/b_session_backup.h",
                             "impl/i_service_ipc_interface_code.h",
                             "impl/i_service_reverse_ipc_interface_code.h",
-                            "impl/i_service.h",
-                            "impl/i_service_reverse.h"
+                            "impl/i_service.h"
                         ]
                     }
                 },
@@ -165,7 +164,7 @@
                 }
             ],
             "test": [
-                "//foundation/filemanagement/app_file_service/test/fuzztest:fuzztest",
+                "//foundation/filemanagement/app_file_service/test/fuzztest:app_fuzztest",
                 "//foundation/filemanagement/app_file_service/test/unittest:unittest",
                 "//foundation/filemanagement/app_file_service:tgt_backup_tests"
             ]

@@ -17,7 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_B_RADAR_H
 #include <chrono>
 #include <string>
-#include "i_service_reverse.h"
+#include "iservice_reverse.h"
 
 namespace OHOS::FileManagement::Backup {
 enum class BizStageBackup : int32_t {
@@ -119,7 +119,7 @@ public:
                              enum BizStageBackup bizStage, int32_t resultCode);
     void RecordRestoreFuncRes(Info &info, const std::string &func, int32_t userId,
                               enum BizStageRestore bizStage, int32_t resultCode);
-    void RecordStatisticRes(StatInfo &statInfo, int32_t userId, enum IServiceReverse::Scenario scenario,
+    void RecordStatisticRes(StatInfo &statInfo, int32_t userId, enum IServiceReverseType::Scenario scenario,
                             int32_t succ_cnt, int32_t fail_cnt, int32_t resultCode);
 private:
     AppRadar() = default;

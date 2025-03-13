@@ -19,7 +19,7 @@
 
 #include "b_error/b_error.h"
 #include "b_resources/b_constants.h"
-#include "module_ipc/service_reverse_proxy.h"
+#include "service_reverse_proxy.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;

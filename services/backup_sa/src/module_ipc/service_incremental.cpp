@@ -72,13 +72,13 @@ ErrCode Service::Release()
         HILOGE("Release error, session is empty");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    IServiceReverse::Scenario scenario = session_->GetScenario();
+    IServiceReverseType::Scenario scenario = session_->GetScenario();
     VerifyCaller(scenario);
     AppRadar::Info info("", "", "call release");
-    if (scenario == IServiceReverse::Scenario::RESTORE) {
+    if (scenario == IServiceReverseType::Scenario::RESTORE) {
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::Release", session_->GetSessionUserId(),
             BizStageRestore::BIZ_STAGE_RELEASE, ERR_OK);
-    } else if (scenario == IServiceReverse::Scenario::BACKUP) {
+    } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
         AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::Release", session_->GetSessionUserId(),
             BizStageBackup::BIZ_STAGE_RELEASE, ERR_OK);
     }
@@ -306,7 +306,7 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     errCode = session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
-                                .scenario = IServiceReverse::Scenario::BACKUP,
+                                .scenario = IServiceReverseType::Scenario::BACKUP,
                                 .clientProxy = remote,
                                 .userId = GetUserIdDefault(),
                                 .isIncrementalBackup = true,
@@ -341,7 +341,7 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote, std:
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     errCode = session_->Active({.clientToken = IPCSkeleton::GetCallingTokenID(),
-                                .scenario = IServiceReverse::Scenario::BACKUP,
+                                .scenario = IServiceReverseType::Scenario::BACKUP,
                                 .clientProxy = remote,
                                 .userId = GetUserIdDefault(),
                                 .isIncrementalBackup = true,
@@ -386,7 +386,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         bundleNames = GetBundleNameByDetails(bundlesToBackup);
-        ErrCode ret = VerifyCaller(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::BACKUP);
         if (ret != ERR_OK) {
             HILOGE("Append bundles incremental session failed, verify caller failed, ret:%{public}d", ret);
             HandleExceptionOnAppendBundles(session_, bundleNames, {});
@@ -427,7 +427,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         bundleNames = GetBundleNameByDetails(bundlesToBackup);
-        ErrCode ret = VerifyCaller(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::BACKUP);
         if (ret != ERR_OK) {
             HILOGE("Append bundles incremental session with infos failed, verify caller failed, ret:%{public}d", ret);
             session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -485,7 +485,7 @@ void Service::HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &
 ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    ErrCode ret = VerifyCaller(IServiceReverse::Scenario::RESTORE);
+    ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
     if (ret != ERR_OK) {
         HILOGE("Publish incremental file failed, bundleName:%{public}s", fileInfo.owner.c_str());
         return ret;
@@ -546,10 +546,10 @@ ErrCode Service::AppIncrementalFileReady(const std::string &bundleName, const st
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
+        if (session_->GetScenario() == IServiceReverseType::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(bundleName, fileName, move(fd),
                                                                               move(manifestFd), errCode);
-            FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverse::Scenario::RESTORE);
+            FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverseType::Scenario::RESTORE);
             return BError(BError::Codes::OK);
         }
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
@@ -557,7 +557,7 @@ ErrCode Service::AppIncrementalFileReady(const std::string &bundleName, const st
         }
         session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName, fileName, move(fd),
             move(manifestFd), errCode);
-        FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverse::Scenario::BACKUP);
+        FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverseType::Scenario::BACKUP);
         if (session_->OnBundleFileReady(bundleName, fileName)) {
             ErrCode ret = HandleCurBundleFileReady(bundleName, fileName, true);
             if (ret != ERR_OK) {
@@ -587,10 +587,10 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
             HILOGE("Verify caller failed, ret:%{public}d", ret);
             return ret;
         }
-        if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
+        if (session_->GetScenario() == IServiceReverseType::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(callerName, fileName, move(fd),
                                                                               move(manifestFd), errCode);
-            FileReadyRadarReport(callerName, fileName, errCode, IServiceReverse::Scenario::RESTORE);
+            FileReadyRadarReport(callerName, fileName, errCode, IServiceReverseType::Scenario::RESTORE);
             return BError(BError::Codes::OK);
         }
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
@@ -598,7 +598,7 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
         }
         session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(callerName, fileName, move(fd),
             move(manifestFd), errCode);
-        FileReadyRadarReport(callerName, fileName, errCode, IServiceReverse::Scenario::BACKUP);
+        FileReadyRadarReport(callerName, fileName, errCode, IServiceReverseType::Scenario::BACKUP);
         if (session_->OnBundleFileReady(callerName, fileName)) {
             ErrCode ret = HandleCurBundleFileReady(callerName, fileName, true);
             if (ret != ERR_OK) {
@@ -669,10 +669,10 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
             HILOGE("GetIncrementalFileHandle error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        ErrCode ret = VerifyCaller(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
         if (ret != ERR_OK) {
             HILOGE("Error, bundleName:%{public}s, fileName:%{public}s", bundleName.c_str(),
-                GetAnonyPath(fileName).c_str());
+                   GetAnonyPath(fileName).c_str());
             return ret;
         }
         auto action = session_->GetServiceSchedAction(bundleName);
@@ -691,14 +691,14 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
                 HILOGE("GetIncrementalFileHandle failed, bundleName:%{public}s", bundleName.c_str());
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
-            auto[errCode, fd, reportFd] = proxy->GetIncrementalFileHandle(fileName);
-            auto err = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
+            auto err = HelpToAppIncrementalFileReady(bundleName, fileName, proxy);
             if (err != ERR_OK) {
-                HILOGE("Failed to send file handle, bundleName:%{public}s, fileName:%{public}s",
-                    bundleName.c_str(), GetAnonyPath(fileName).c_str());
-                AppRadar::Info info (bundleName, "", "");
+                HILOGE("Failed to send file handle, bundleName:%{public}s, fileName:%{public}s", bundleName.c_str(),
+                       GetAnonyPath(fileName).c_str());
+                AppRadar::Info info(bundleName, "", "");
                 AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandle",
-                    GetUserIdDefault(), BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
+                                                             GetUserIdDefault(),
+                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
             }
         } else {
             SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);
@@ -714,7 +714,7 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
 bool Service::IncrementalBackup(const string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    IServiceReverse::Scenario scenario = session_->GetScenario();
+    IServiceReverseType::Scenario scenario = session_->GetScenario();
     auto backUpConnection = session_->GetExtConnection(bundleName);
     if (backUpConnection == nullptr) {
         HILOGE("backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
@@ -729,17 +729,18 @@ bool Service::IncrementalBackup(const string &bundleName)
         NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         return true;
     }
-    if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
+    if (scenario == IServiceReverseType::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
         auto ret = proxy->IncrementalOnBackup(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
-        BundleBeginRadarReport(bundleName, ret, IServiceReverse::Scenario::BACKUP);
+        BundleBeginRadarReport(bundleName, ret, IServiceReverseType::Scenario::BACKUP);
         if (ret) {
             SendEndAppGalleryNotify(bundleName);
             ClearSessionAndSchedInfo(bundleName);
             NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         }
         return true;
-    } else if (scenario == IServiceReverse::Scenario::RESTORE && BackupPara().GetBackupOverrideIncrementalRestore() &&
+    } else if (scenario == IServiceReverseType::Scenario::RESTORE &&
+               BackupPara().GetBackupOverrideIncrementalRestore() &&
                session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
         auto ret = proxy->HandleRestore(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(ret, bundleName);
@@ -748,11 +749,10 @@ bool Service::IncrementalBackup(const string &bundleName)
             HILOGE("Failed to get backupVersion of old device");
         }
         HILOGD("backupVersion of old device = %{public}s", oldBackupVersion.c_str());
-        BundleBeginRadarReport(bundleName, ret, IServiceReverse::Scenario::RESTORE);
+        BundleBeginRadarReport(bundleName, ret, IServiceReverseType::Scenario::RESTORE);
         auto fileNameVec = session_->GetExtFileNameRequest(bundleName);
         for (const auto &fileName : fileNameVec) {
-            auto[errCode, fd, reportFd] = proxy->GetIncrementalFileHandle(fileName);
-            ret = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
+            ret = HelpToAppIncrementalFileReady(bundleName, fileName, proxy);
             if (ret) {
                 HILOGE("Failed to send file handle %{public}s", GetAnonyString(fileName).c_str());
             }
@@ -761,11 +761,20 @@ bool Service::IncrementalBackup(const string &bundleName)
     }
     return false;
 }
+ErrCode Service::HelpToAppIncrementalFileReady(const string &bundleName, const string &fileName, sptr<IExtension> proxy)
+{
+    UniqueFdGroup fdGroup;
+    proxy->GetIncrementalFileHandle(fileName, fdGroup);
+    UniqueFd fd(fdGroup.fd);
+    UniqueFd reportFd(fdGroup.reportFd);
+    auto ret = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), fdGroup.errCode);
+    return ret;
+}
 
 void Service::NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string &callerName)
 {
-    IServiceReverse::Scenario scenario = session_->GetScenario();
-    if (scenario == IServiceReverse::Scenario::BACKUP) {
+    IServiceReverseType::Scenario scenario = session_->GetScenario();
+    if (scenario == IServiceReverseType::Scenario::BACKUP) {
         HILOGI("will notify clone data, scenario is incremental backup");
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, callerName);
         BundleEndRadarReport(callerName, errCode, scenario);
@@ -782,7 +791,7 @@ void Service::NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string
             "PROC_NAME", "ohos.appfileservice", "BUNDLENAME", callerName,
             "PID", getpid(), "TIME", strTime.str()
         );
-    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+    } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
         HILOGI("will notify clone data, scenario is Restore");
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, callerName);
         BundleEndRadarReport(callerName, errCode, scenario);
@@ -891,9 +900,9 @@ void Service::CancelTask(std::string bundleName, wptr<Service> ptr)
         session->StopExtTimer(bundleName);
         backUpConnection->DisconnectBackupExtAbility();
         thisPtr->ClearSessionAndSchedInfo(bundleName);
-        IServiceReverse::Scenario scenario = session->GetScenario();
-        if ((scenario == IServiceReverse::Scenario::BACKUP && session->GetIsIncrementalBackup()) ||
-            (scenario == IServiceReverse::Scenario::RESTORE &&
+        IServiceReverseType::Scenario scenario = session->GetScenario();
+        if ((scenario == IServiceReverseType::Scenario::BACKUP && session->GetIsIncrementalBackup()) ||
+            (scenario == IServiceReverseType::Scenario::RESTORE &&
             session->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND))) {
             thisPtr->NotifyCallerCurAppIncrementDone(BError(BError::Codes::OK), bundleName);
         } else {
@@ -912,7 +921,7 @@ ErrCode Service::Cancel(std::string bundleName, int32_t &result)
         HILOGE("Cancel error, session is null");
         return BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK);
     }
-    IServiceReverse::Scenario scenario = session_->GetScenario();
+    IServiceReverseType::Scenario scenario = session_->GetScenario();
     ErrCode ret = VerifyCaller(scenario);
     if (ret != ERR_OK) {
         HILOGE("Verify caller failed, bundleName:%{public}s, scenario:%{public}d", bundleName.c_str(), scenario);

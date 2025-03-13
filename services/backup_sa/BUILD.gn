@@ -11,8 +11,101 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//build/config/components/idl_tool/idl.gni")
 import("//build/ohos.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
+
+idl_gen_interface("backup_idl") {
+  sources = [
+    "IExtension.idl",
+    "IServiceReverse.idl",
+  ]
+  sources_common = [
+    "ExtensionType.idl",
+    "ServiceReverseType.idl",
+  ]
+  hitrace = "HITRACE_TAG_FILEMANAGEMENT"
+  log_domainid = "0xD004313"
+  log_tag = "AppFileService"
+}
+
+config("public_idl_config") {
+  include_dirs = [
+    ".",
+    "${target_gen_dir}/",
+  ]
+}
+
+ohos_source_set("backup_sa_ipc") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  output_values = get_target_outputs(":backup_idl")
+
+  sources = []
+
+  sources += filter_include(output_values, [ "*.cpp" ])
+
+  public_configs = [ ":public_idl_config" ]
+
+  deps = [ ":backup_idl" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  include_dirs = [
+    ".",
+    "impl",
+    "${target_gen_dir}/",
+  ]
+
+  part_name = "app_file_service"
+
+  subsystem_name = "filemanagement"
+}
+
+ohos_source_set("backup_sa_ipc_type") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  output_values = get_target_outputs(":backup_idl")
+
+  sources = []
+
+  sources += filter_include(output_values, [ "*_type.cpp" ])
+
+  public_configs = [ ":public_idl_config" ]
+
+  deps = [ ":backup_idl" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  include_dirs = [
+    ".",
+    "${target_gen_dir}/",
+  ]
+
+  part_name = "app_file_service"
+
+  subsystem_name = "filemanagement"
+}
 
 ohos_shared_library("backup_sa") {
   branch_protector_ret = "pac_ret"
@@ -34,13 +127,9 @@ ohos_shared_library("backup_sa") {
     "src/module_ipc/sa_backup_connection.cpp",
     "src/module_ipc/service.cpp",
     "src/module_ipc/service_incremental.cpp",
-    "src/module_ipc/service_incremental_reverse_proxy.cpp",
-    "src/module_ipc/service_reverse_proxy.cpp",
     "src/module_ipc/service_stub.cpp",
     "src/module_ipc/sub_service.cpp",
     "src/module_ipc/svc_backup_connection.cpp",
-    "src/module_ipc/svc_extension_incremental_proxy.cpp",
-    "src/module_ipc/svc_extension_proxy.cpp",
     "src/module_ipc/svc_restore_deps_manager.cpp",
     "src/module_ipc/svc_session_manager.cpp",
     "src/module_notify/notify_work_service.cpp",
@@ -58,6 +147,7 @@ ohos_shared_library("backup_sa") {
   ]
 
   deps = [
+    ":backup_sa_ipc",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/utils:backup_utils",
     "${path_jsoncpp}:jsoncpp",

@@ -25,16 +25,10 @@ ohos_unittest("module_ipc_test") {
     "${path_backup_mock}/module_ipc/message_parcel_mock.cpp",
     "${path_backup_mock}/timer/timer_mock.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
-    "${path_backup}/services/backup_sa/src/module_ipc/service_incremental_reverse_proxy.cpp",
-    "${path_backup}/services/backup_sa/src/module_ipc/service_reverse_proxy.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_stub.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_backup_connection.cpp",
-    "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_incremental_proxy.cpp",
-    "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_proxy.cpp",
-    "service_reverse_proxy_test.cpp",
     "service_stub_test.cpp",
     "svc_backup_connection_test.cpp",
-    "svc_extension_proxy_test.cpp",
   ]
 
   include_dirs = [
@@ -49,6 +43,7 @@ ohos_unittest("module_ipc_test") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "//third_party/googletest:gmock_main",
@@ -103,6 +98,8 @@ ohos_unittest("backup_service_test") {
   sources += backup_mock_session_manager_src
   sources += backup_mock_scheduler_src
   sources += backup_mock_module_external_src
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
 
   include_dirs = [
     "${path_backup}/services/backup_sa/include",
@@ -182,6 +179,8 @@ ohos_unittest("backup_service_throw_test") {
   sources += backup_mock_scheduler_src
   sources += backup_mock_module_external_src
 
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
   include_dirs = [
     "${path_backup}/services/backup_sa/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
@@ -253,6 +252,8 @@ ohos_unittest("backup_service_session_test") {
   sources += backup_mock_service_src
   sources += backup_mock_module_external_src
 
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
   include_dirs = [
     "${path_backup}/services/backup_sa/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
@@ -308,6 +309,8 @@ ohos_unittest("backup_service_scheduler_test") {
   sources += backup_mock_service_src
   sources += backup_mock_session_manager_src
   sources += backup_mock_module_external_src
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
 
   include_dirs = [
     "${path_backup}/services/backup_sa/include",
@@ -372,6 +375,8 @@ ohos_unittest("backup_restore_deps_manager_test") {
   sources += backup_mock_scheduler_src
   sources += backup_mock_module_external_src
 
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
   include_dirs = [
     "${path_backup}/services/backup_sa/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
@@ -422,8 +427,6 @@ ohos_unittest("backup_service_incremental_test") {
     "${path_backup_mock}/module_sched/sched_scheduler_mock.cpp",
     "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
     "${path_backup_mock}/utils_mock/src/backup_para_mock.cpp",
-    "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_incremental_proxy.cpp",
-    "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_proxy.cpp",
     "service_incremental_test.cpp",
   ]
 
@@ -441,6 +444,7 @@ ohos_unittest("backup_service_incremental_test") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -464,6 +468,15 @@ ohos_unittest("backup_service_incremental_test") {
     "storage_service:storage_manager_sa_proxy",
   ]
 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
   defines = [ "private=public" ]
   use_exceptions = true
 }
@@ -490,8 +503,6 @@ ohos_unittest("backup_service_other_test") {
     "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
     "${path_backup_mock}/utils_mock/src/b_sa_utils_mock.cpp",
     "${path_backup_mock}/utils_mock/src/backup_para_mock.cpp",
-    "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_incremental_proxy.cpp",
-    "${path_backup}/services/backup_sa/src/module_ipc/svc_extension_proxy.cpp",
     "service_other_test.cpp",
   ]
 
@@ -512,6 +523,7 @@ ohos_unittest("backup_service_other_test") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -534,6 +546,16 @@ ohos_unittest("backup_service_other_test") {
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
   ]
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
 
   defines = [ "private=public" ]
   use_exceptions = true

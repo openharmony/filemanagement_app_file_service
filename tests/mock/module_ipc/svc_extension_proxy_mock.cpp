@@ -13,73 +13,73 @@
  * limitations under the License.
  */
 
-#include "module_ipc/svc_extension_proxy.h"
+#include "extension_proxy.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-UniqueFd SvcExtensionProxy::GetFileHandle(const string &fileName, int32_t &errCode)
-{
-    return UniqueFd(-1);
-}
-
-ErrCode SvcExtensionProxy::HandleClear()
+ErrCode ExtensionProxy::GetFileHandleWithUniqueFd(const string &fileName, int32_t &errCode, int &fd)
 {
     return 0;
 }
 
-ErrCode SvcExtensionProxy::HandleBackup(bool isClearData)
+ErrCode ExtensionProxy::HandleClear()
 {
     return 0;
 }
 
-ErrCode SvcExtensionProxy::PublishFile(const string &fileName)
+ErrCode ExtensionProxy::HandleBackup(bool isClearData)
 {
     return 0;
 }
 
-ErrCode SvcExtensionProxy::HandleRestore(bool isClearData)
+ErrCode ExtensionProxy::PublishFile(const string &fileName)
 {
     return 0;
 }
 
-ErrCode SvcExtensionProxy::GetBackupInfo(std::string &result)
+ErrCode ExtensionProxy::HandleRestore(bool isClearData)
 {
     return 0;
 }
 
-std::tuple<ErrCode, UniqueFd, UniqueFd> SvcExtensionProxy::GetIncrementalFileHandle(const string &fileName)
-{
-    return {0, UniqueFd(-1), UniqueFd(-1)};
-}
-
-ErrCode SvcExtensionProxy::PublishIncrementalFile(const string &fileName)
+ErrCode ExtensionProxy::GetBackupInfo(std::string &result)
 {
     return 0;
 }
 
-ErrCode SvcExtensionProxy::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
+ErrCode ExtensionProxy::GetIncrementalFileHandle(const string &fileName, UniqueFdGroup &fdGroup)
 {
     return 0;
 }
 
-ErrCode SvcExtensionProxy::IncrementalOnBackup(bool isClearData)
+ErrCode ExtensionProxy::PublishIncrementalFile(const string &fileName)
 {
     return 0;
 }
 
-ErrCode SvcExtensionProxy::UpdateFdSendRate(std::string &bundleName, int32_t sendRate)
+ErrCode ExtensionProxy::HandleIncrementalBackup(int incrementalFd, int manifestFd)
 {
     return 0;
 }
 
-ErrCode SvcExtensionProxy::User0OnBackup()
+ErrCode ExtensionProxy::IncrementalOnBackup(bool isClearData)
 {
     return 0;
 }
 
-tuple<UniqueFd, UniqueFd> SvcExtensionProxy::GetIncrementalBackupFileHandle()
+ErrCode ExtensionProxy::UpdateFdSendRate(const std::string &bundleName, int32_t sendRate)
 {
-    return {UniqueFd(-1), UniqueFd(-1)};
+    return 0;
+}
+
+ErrCode ExtensionProxy::User0OnBackup()
+{
+    return 0;
+}
+
+ErrCode ExtensionProxy::GetIncrementalBackupFileHandle(UniqueFdGroup &fdGroup)
+{
+    return 0;
 }
 } // namespace OHOS::FileManagement::Backup

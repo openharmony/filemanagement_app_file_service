@@ -25,12 +25,13 @@ ohos_unittest("b_session_test") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore_async.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
-    "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",
     "b_session_backup_test.cpp",
     "b_session_restore_async_test.cpp",
     "b_session_restore_test.cpp",
   ]
   sources += backup_mock_proxy_src
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
 
   include_dirs = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",

@@ -23,7 +23,7 @@
 #include "b_resources/b_constants.h"
 #include "b_utils/b_time.h"
 #include "hisysevent.h"
-#include "i_service_reverse.h"
+#include "iservice_reverse.h"
 
 namespace OHOS::FileManagement::Backup {
 int32_t AppRadar::GetUserId()
@@ -49,7 +49,7 @@ void AppRadar::RecordDefaultFuncRes(Info &info, const std::string &func, int32_t
         "PID", getpid(),
         "FUNC", func,
         "TIME", TimeUtils::GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(IServiceReverse::Scenario::UNDEFINED),
+        "BIZ_SCENE", static_cast<int32_t>(IServiceReverseType::Scenario::UNDEFINED),
         "BIZ_STAGE", static_cast<int32_t>(bizStage),
         "EXEC_STATUS", info.status,
         "RESULT_CODE", resultCode,
@@ -70,7 +70,7 @@ void AppRadar::RecordBackupFuncRes(Info &info, const std::string &func, int32_t 
         "PID", getpid(),
         "FUNC", func,
         "TIME", TimeUtils::GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(IServiceReverse::Scenario::BACKUP),
+        "BIZ_SCENE", static_cast<int32_t>(IServiceReverseType::Scenario::BACKUP),
         "BIZ_STAGE", static_cast<int32_t>(bizStage),
         "EXEC_STATUS", info.status,
         "RESULT_CODE", resultCode,
@@ -91,14 +91,14 @@ void AppRadar::RecordRestoreFuncRes(Info &info, const std::string &func, int32_t
         "PID", getpid(),
         "FUNC", func,
         "TIME", TimeUtils::GetCurrentTime(),
-        "BIZ_SCENE", static_cast<int32_t>(IServiceReverse::Scenario::RESTORE),
+        "BIZ_SCENE", static_cast<int32_t>(IServiceReverseType::Scenario::RESTORE),
         "BIZ_STAGE", static_cast<int32_t>(bizStage),
         "EXEC_STATUS", info.status,
         "RESULT_CODE", resultCode,
         "RESULT_INFO", ss.str());
 }
 
-void AppRadar::RecordStatisticRes(StatInfo &statInfo, int32_t userId, enum IServiceReverse::Scenario scenario,
+void AppRadar::RecordStatisticRes(StatInfo &statInfo, int32_t userId, enum IServiceReverseType::Scenario scenario,
                                   int32_t succ_cnt, int32_t fail_cnt, int32_t resultCode)
 {
     std::stringstream ss;

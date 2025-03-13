@@ -54,7 +54,6 @@ ohos_unittest("backup_sa_impl_test") {
     "${path_backup_mock}/system_ability_manager/service_registry_mock.cpp",
     "${path_backup_mock}/utils_mock/src/utils_mock_global_variable.cpp",
     "service_proxy_test.cpp",
-    "service_reverse_stub_test.cpp",
     "service_reverse_test.cpp",
     "svc_death_recipient_test.cpp",
   ]
@@ -69,6 +68,7 @@ ohos_unittest("backup_sa_impl_test") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",

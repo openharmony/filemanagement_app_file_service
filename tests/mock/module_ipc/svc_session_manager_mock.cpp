@@ -36,7 +36,7 @@ static int32_t g_nFileReadyNum = 0;
 static int32_t g_nAllBundlesFinished = 0;
 } // namespace
 
-ErrCode SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const
+ErrCode SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverseType::Scenario scenario) const
 {
     GTEST_LOG_(INFO) << "VerifyCallerAndScenario";
     return BError(BError::Codes::OK);
@@ -68,7 +68,7 @@ sptr<IServiceReverse> SvcSessionManager::GetServiceReverseProxy()
     return impl_.clientProxy;
 }
 
-IServiceReverse::Scenario SvcSessionManager::GetScenario()
+IServiceReverseType::Scenario SvcSessionManager::GetScenario()
 {
     GTEST_LOG_(INFO) << "GetScenario";
     return impl_.scenario;

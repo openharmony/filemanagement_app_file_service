@@ -25,6 +25,7 @@ class ServiceProxyMock : public ServiceProxy {
 public:
     explicit ServiceProxyMock(const sptr<IRemoteObject> &impl) : ServiceProxy(impl) {}
     ~ServiceProxyMock() override {}
+
 public:
     MOCK_METHOD1(InitRestoreSession, ErrCode(sptr<IServiceReverse> remote));
     MOCK_METHOD2(InitRestoreSession, ErrCode(sptr<IServiceReverse> remote, std::string &errMsg));
@@ -38,13 +39,18 @@ public:
     MOCK_METHOD2(AppFileReady, ErrCode(const std::string &fileName, UniqueFd fd));
     MOCK_METHOD3(AppFileReady, ErrCode(const std::string &fileName, UniqueFd fd, int32_t errCode));
     MOCK_METHOD1(AppDone, ErrCode(ErrCode errCode));
-    MOCK_METHOD3(ServiceResultReport, ErrCode(const std::string restoreRetInfo,
-        BackupRestoreScenario scenario, ErrCode errCode));
+    MOCK_METHOD3(ServiceResultReport,
+                 ErrCode(const std::string restoreRetInfo, BackupRestoreScenario scenario, ErrCode errCode));
     MOCK_METHOD2(GetFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
-    MOCK_METHOD5(AppendBundlesRestoreSession, ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames,
-        const std::vector<std::string> &detailInfos, RestoreTypeEnum restoreType, int32_t userId));
-    MOCK_METHOD4(AppendBundlesRestoreSession, ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames,
-        RestoreTypeEnum restoreType, int32_t userId));
+    MOCK_METHOD5(AppendBundlesRestoreSession,
+                 ErrCode(UniqueFd fd,
+                         const std::vector<BundleName> &bundleNames,
+                         const std::vector<std::string> &detailInfos,
+                         RestoreTypeEnum restoreType,
+                         int32_t userId));
+    MOCK_METHOD4(
+        AppendBundlesRestoreSession,
+        ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, RestoreTypeEnum restoreType, int32_t userId));
     MOCK_METHOD1(AppendBundlesBackupSession, ErrCode(const std::vector<BundleName> &bundleNames));
     MOCK_METHOD0(Finish, ErrCode());
     MOCK_METHOD0(Release, ErrCode());
@@ -54,12 +60,12 @@ public:
     MOCK_METHOD2(InitIncrementalBackupSession, ErrCode(sptr<IServiceReverse> remote, std::string &errMsg));
     MOCK_METHOD1(AppendBundlesIncrementalBackupSession, ErrCode(const std::vector<BIncrementalData> &bundlesToBackup));
     MOCK_METHOD2(AppendBundlesIncrementalBackupSession,
-        ErrCode(const std::vector<BIncrementalData> &bundlesToBackup, const std::vector<std::string> &infos));
+                 ErrCode(const std::vector<BIncrementalData> &bundlesToBackup, const std::vector<std::string> &infos));
     MOCK_METHOD1(PublishIncrementalFile, ErrCode(const BFileInfo &fileInfo));
     MOCK_METHOD2(PublishSAIncrementalFile, ErrCode(const BFileInfo &fileInfo, UniqueFd fd));
     MOCK_METHOD3(AppIncrementalFileReady, ErrCode(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd));
-    MOCK_METHOD4(AppIncrementalFileReady, ErrCode(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd,
-        int32_t errCode));
+    MOCK_METHOD4(AppIncrementalFileReady,
+                 ErrCode(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode));
     MOCK_METHOD1(AppIncrementalDone, ErrCode(ErrCode errCode));
     MOCK_METHOD2(GetIncrementalFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
     MOCK_METHOD2(GetBackupInfo, ErrCode(BundleName &bundleName, std::string &result));

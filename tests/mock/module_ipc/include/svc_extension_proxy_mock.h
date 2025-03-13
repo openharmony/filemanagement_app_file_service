@@ -18,26 +18,26 @@
 
 #include <gmock/gmock.h>
 
-#include "module_ipc/svc_extension_proxy.h"
+#include "extension_proxy.h"
 
 namespace OHOS::FileManagement::Backup {
-class SvcExtensionProxyMock : public SvcExtensionProxy {
+class SvcExtensionProxyMock : public ExtensionProxy {
 public:
-    SvcExtensionProxyMock() : SvcExtensionProxy(nullptr) {};
+    SvcExtensionProxyMock() : ExtensionProxy(nullptr) {};
 public:
-    MOCK_METHOD(UniqueFd, GetFileHandle, (const std::string&, int32_t&));
-    MOCK_METHOD(ErrCode, HandleClear, ());
-    MOCK_METHOD(ErrCode, HandleBackup, (bool));
-    MOCK_METHOD(ErrCode, PublishFile, (const std::string&));
-    MOCK_METHOD(ErrCode, HandleRestore, (bool));
-    MOCK_METHOD((std::tuple<ErrCode, UniqueFd, UniqueFd>), GetIncrementalFileHandle, (const std::string&));
-    MOCK_METHOD(ErrCode, PublishIncrementalFile, (const std::string&));
-    MOCK_METHOD(ErrCode, HandleIncrementalBackup, (UniqueFd, UniqueFd));
-    MOCK_METHOD(ErrCode, IncrementalOnBackup, (bool));
-    MOCK_METHOD((std::tuple<UniqueFd, UniqueFd>), GetIncrementalBackupFileHandle, ());
-    MOCK_METHOD(ErrCode, GetBackupInfo, (std::string&));
-    MOCK_METHOD(ErrCode, UpdateFdSendRate, (std::string&, int32_t));
-    MOCK_METHOD(ErrCode, User0OnBackup, ());
+MOCK_METHOD(ErrCode, GetFileHandleWithUniqueFd, (const std::string &, int32_t &, int32_t &));
+MOCK_METHOD(ErrCode, HandleClear, ());
+MOCK_METHOD(ErrCode, HandleBackup, (bool));
+MOCK_METHOD(ErrCode, PublishFile, (const std::string &));
+MOCK_METHOD(ErrCode, HandleRestore, (bool));
+MOCK_METHOD(ErrCode, GetIncrementalFileHandle, (const std::string &, UniqueFdGroup &));
+MOCK_METHOD(ErrCode, PublishIncrementalFile, (const std::string &));
+MOCK_METHOD(ErrCode, HandleIncrementalBackup, (int32_t, int32_t));
+MOCK_METHOD(ErrCode, IncrementalOnBackup, (bool));
+MOCK_METHOD(ErrCode, GetIncrementalBackupFileHandle, (UniqueFdGroup &));
+MOCK_METHOD(ErrCode, GetBackupInfo, (std::string &));
+MOCK_METHOD(ErrCode, UpdateFdSendRate, (const std::string &, int32_t));
+MOCK_METHOD(ErrCode, User0OnBackup, ());
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_SVC_BACKUP_CONNECTION_MOCK_H

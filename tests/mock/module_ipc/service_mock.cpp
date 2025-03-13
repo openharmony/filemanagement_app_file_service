@@ -168,7 +168,7 @@ ErrCode Service::VerifyCaller()
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::VerifyCaller(IServiceReverse::Scenario scenario)
+ErrCode Service::VerifyCaller(IServiceReverseType::Scenario scenario)
 {
     return BError(BError::Codes::OK);
 }
@@ -317,16 +317,16 @@ void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
     const vector<BundleName> &appendBundleNames, const vector<BundleName> &restoreBundleNames) {}
 
 void Service::BundleBeginRadarReport(const std::string &bundleName, const ErrCode errCode,
-    const IServiceReverse::Scenario scenario) {}
+    const IServiceReverseType::Scenario scenario) {}
 
 void Service::BundleEndRadarReport(const std::string &bundleName, ErrCode errCode,
-    const IServiceReverse::Scenario scenario) {}
+    const IServiceReverseType::Scenario scenario) {}
 
 void Service::FileReadyRadarReport(const std::string &bundleName, const std::string &fileName, const ErrCode errCode,
-    const IServiceReverse::Scenario scenario) {}
+    const IServiceReverseType::Scenario scenario) {}
 
 void Service::ExtensionConnectFailRadarReport(const std::string &bundleName, const ErrCode errCode,
-    const IServiceReverse::Scenario scenario) {}
+    const IServiceReverseType::Scenario scenario) {}
 
 void Service::PermissionCheckFailRadar(const std::string &info, const std::string &func) {}
 

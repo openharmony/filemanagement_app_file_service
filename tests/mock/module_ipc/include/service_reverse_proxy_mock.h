@@ -18,42 +18,44 @@
 
 #include <gmock/gmock.h>
 
-#include "i_service_reverse.h"
+#include "iservice_reverse.h"
 #include "iremote_proxy.h"
 
 namespace OHOS::FileManagement::Backup {
 class ServiceReverseProxyMock : public IRemoteProxy<IServiceReverse> {
 public:
-    MOCK_METHOD(int, SendRequest, (uint32_t, MessageParcel&, MessageParcel&, MessageOption&));
-    MOCK_METHOD(void, BackupOnFileReady, (std::string, std::string, int, int32_t));
-    MOCK_METHOD(void, BackupOnBundleStarted, (int32_t, std::string));
-    MOCK_METHOD(void, BackupOnResultReport, (std::string, std::string));;
-    MOCK_METHOD(void, BackupOnBundleFinished, (int32_t, std::string));
-    MOCK_METHOD(void, BackupOnAllBundlesFinished, (int32_t));
-    MOCK_METHOD(void, BackupOnProcessInfo, (std::string, std::string));
-    MOCK_METHOD(void, BackupOnScanningInfo, (std::string));
+    MOCK_METHOD(int, SendRequest, (uint32_t, MessageParcel &, MessageParcel &, MessageOption &));
+    MOCK_METHOD(ErrCode, BackupOnFileReady, (const std::string &, const std::string &, int, int32_t));
+    MOCK_METHOD(ErrCode, BackupOnBundleStarted, (int32_t, const std::string &));
+    MOCK_METHOD(ErrCode, BackupOnResultReport, (const std::string &, const std::string &));
+    ;
+    MOCK_METHOD(ErrCode, BackupOnBundleFinished, (int32_t, const std::string &));
+    MOCK_METHOD(ErrCode, BackupOnAllBundlesFinished, (int32_t));
+    MOCK_METHOD(ErrCode, BackupOnProcessInfo, (const std::string &, const std::string &));
+    MOCK_METHOD(ErrCode, BackupOnScanningInfo, (const std::string &));
 
-    MOCK_METHOD(void, RestoreOnBundleStarted, (int32_t, std::string));
-    MOCK_METHOD(void, RestoreOnBundleFinished, (int32_t, std::string));
-    MOCK_METHOD(void, RestoreOnAllBundlesFinished, (int32_t));
-    MOCK_METHOD(void, RestoreOnFileReady, (std::string, std::string, int, int32_t));
-    MOCK_METHOD(void, RestoreOnResultReport, (std::string, std::string, ErrCode));
-    MOCK_METHOD(void, RestoreOnProcessInfo, (std::string, std::string));
+    MOCK_METHOD(ErrCode, RestoreOnBundleStarted, (int32_t, const std::string &));
+    MOCK_METHOD(ErrCode, RestoreOnBundleFinished, (int32_t, const std::string &));
+    MOCK_METHOD(ErrCode, RestoreOnAllBundlesFinished, (int32_t));
+    MOCK_METHOD(ErrCode, RestoreOnFileReady, (const std::string &, const std::string &, int32_t, int32_t));
+    MOCK_METHOD(ErrCode, RestoreOnResultReport, (const std::string &, const std::string &, ErrCode));
+    MOCK_METHOD(ErrCode, RestoreOnProcessInfo, (const std::string &, const std::string &));
 
-    MOCK_METHOD(void, IncrementalBackupOnFileReady, (std::string, std::string, int, int, int32_t));
-    MOCK_METHOD(void, IncrementalBackupOnBundleStarted, (int32_t, std::string));
-    MOCK_METHOD(void, IncrementalBackupOnResultReport, (std::string, std::string));
-    MOCK_METHOD(void, IncrementalBackupOnBundleFinished, (int32_t, std::string));
-    MOCK_METHOD(void, IncrementalBackupOnAllBundlesFinished, (int32_t));
-    MOCK_METHOD(void, IncrementalBackupOnProcessInfo, (std::string, std::string));
-    MOCK_METHOD(void, IncrementalBackupOnScanningInfo, (std::string));
+    MOCK_METHOD(ErrCode, IncrementalBackupOnFileReady, (const std::string &, const std::string &, int, int, int32_t));
+    MOCK_METHOD(ErrCode, IncrementalBackupOnBundleStarted, (int32_t, const std::string &));
+    MOCK_METHOD(ErrCode, IncrementalBackupOnResultReport, (const std::string &, const std::string &));
+    MOCK_METHOD(ErrCode, IncrementalBackupOnBundleFinished, (int32_t, const std::string &));
+    MOCK_METHOD(ErrCode, IncrementalBackupOnAllBundlesFinished, (int32_t));
+    MOCK_METHOD(ErrCode, IncrementalBackupOnProcessInfo, (const std::string &, const std::string &));
+    MOCK_METHOD(ErrCode, IncrementalBackupOnScanningInfo, (const std::string &));
 
-    MOCK_METHOD(void, IncrementalRestoreOnBundleStarted, (int32_t, std::string));
-    MOCK_METHOD(void, IncrementalRestoreOnBundleFinished, (int32_t, std::string));
-    MOCK_METHOD(void, IncrementalRestoreOnAllBundlesFinished, (int32_t));
-    MOCK_METHOD(void, IncrementalRestoreOnFileReady, (std::string, std::string, int, int, int32_t));
-    MOCK_METHOD(void, IncrementalRestoreOnResultReport, (std::string, std::string, ErrCode));;
-    MOCK_METHOD(void, IncrementalRestoreOnProcessInfo, (std::string, std::string));
+    MOCK_METHOD(ErrCode, IncrementalRestoreOnBundleStarted, (int32_t, const std::string &));
+    MOCK_METHOD(ErrCode, IncrementalRestoreOnBundleFinished, (int32_t, const std::string &));
+    MOCK_METHOD(ErrCode, IncrementalRestoreOnAllBundlesFinished, (int32_t));
+    MOCK_METHOD(ErrCode, IncrementalRestoreOnFileReady, (const std::string &, const std::string &, int, int, int32_t));
+    MOCK_METHOD(ErrCode, IncrementalRestoreOnResultReport, (const std::string &, const std::string &, ErrCode));
+    ;
+    MOCK_METHOD(ErrCode, IncrementalRestoreOnProcessInfo, (const std::string &, const std::string &));
 
 public:
     ServiceReverseProxyMock() : IRemoteProxy<IServiceReverse>(nullptr) {}

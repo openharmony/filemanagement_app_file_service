@@ -29,7 +29,7 @@
 #include "b_json/b_report_entity.h"
 #include "b_radar/b_radar.h"
 #include "ext_backup_js.h"
-#include "ext_extension_stub.h"
+#include "extension_stub.h"
 #include "i_service.h"
 #include "tar_file.h"
 #include "thread_pool.h"
@@ -41,20 +41,20 @@ namespace OHOS::FileManagement::Backup {
 using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
                                  map<string, struct ReportFileInfo>,
                                  map<string, struct ReportFileInfo>>;
-class BackupExtExtension : public ExtExtensionStub {
+class BackupExtExtension : public ExtensionStub {
 public:
-    UniqueFd GetFileHandle(const std::string &fileName, int32_t &errCode) override;
+    ErrCode GetFileHandleWithUniqueFd(const std::string &fileName, int32_t &errCode, int& fd) override;
     ErrCode HandleClear() override;
     ErrCode PublishFile(const std::string &fileName) override;
     ErrCode HandleBackup(bool isClearData) override;
     ErrCode HandleRestore(bool isClearData) override;
-    std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncrementalFileHandle(const std::string &fileName) override;
+    ErrCode GetIncrementalFileHandle(const std::string &fileName, UniqueFdGroup &fdGroup) override;
     ErrCode PublishIncrementalFile(const std::string &fileName) override;
-    ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) override;
+    ErrCode HandleIncrementalBackup(int incrementalFd, int manifestFd) override;
     ErrCode IncrementalOnBackup(bool isClearData) override;
-    std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override;
+    ErrCode GetIncrementalBackupFileHandle(UniqueFdGroup &fdGroup) override;
     ErrCode GetBackupInfo(std::string &result) override;
-    ErrCode UpdateFdSendRate(std::string &bundleName, int32_t sendRate) override;
+    ErrCode UpdateFdSendRate(const std::string &bundleName, int32_t sendRate) override;
     void AsyncTaskRestoreForUpgrade(void);
     void ExtClear(void);
     void AsyncTaskIncrementalRestoreForUpgrade(void);
@@ -336,6 +336,10 @@ private:
     void ClearNoPermissionFiles(TarMap &pkgInfo, vector<std::string> &noPermissionFiles);
     std::function<void(ErrCode, std::string)> ReportOnProcessResultCallback(wptr<BackupExtExtension> obj,
         BackupRestoreScenario scenario);
+    UniqueFd GetFileHandle(const std::string &fileName, int32_t &errCode);
+    std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncrementalFileHandle(const std::string &fileName);
+    ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
+    std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle();
     bool IfCloudSpecialRestore(std::string tarName);
     ErrCode CloudSpecialRestore(std::string tarName, std::string untarPath, off_t tarFileSize);
     void GetTarIncludes(const string &tarName, unordered_map<string, struct ReportFileInfo> &infos);

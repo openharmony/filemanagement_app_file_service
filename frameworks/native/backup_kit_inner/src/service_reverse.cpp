@@ -21,137 +21,156 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-void ServiceReverse::BackupOnFileReady(string bundleName, string fileName, int fd, int32_t errCode)
+ErrCode ServiceReverse::BackupOnFileReady(const std::string &bundleName,
+                                          const std::string &fileName,
+                                          int fd,
+                                          int32_t errCode)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onFileReady) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     BFileInfo bFileInfo(bundleName, fileName, 0);
     callbacksBackup_.onFileReady(bFileInfo, UniqueFd(fd), errCode);
+    return BError(BError::Codes::OK);
 }
 
-void ServiceReverse::BackupOnBundleStarted(int32_t errCode, string bundleName)
+ErrCode ServiceReverse::BackupOnBundleStarted(int32_t errCode, const std::string &bundleName)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onBundleStarted) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     callbacksBackup_.onBundleStarted(errCode, bundleName);
+    return BError(BError::Codes::OK);
 }
 
-void ServiceReverse::BackupOnResultReport(std::string result, std::string bundleName)
+ErrCode ServiceReverse::BackupOnResultReport(const std::string &result, const std::string &bundleName)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onResultReport) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     callbacksBackup_.onResultReport(bundleName, result);
+    return BError(BError::Codes::OK);
 }
 
-void ServiceReverse::BackupOnBundleFinished(int32_t errCode, string bundleName)
+ErrCode ServiceReverse::BackupOnBundleFinished(int32_t errCode, const std::string &bundleName)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onBundleFinished) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     HILOGI("errCode = %{public}d, bundleName = %{public}s", errCode, bundleName.c_str());
     callbacksBackup_.onBundleFinished(errCode, bundleName);
+    return BError(BError::Codes::OK);
 }
 
-void ServiceReverse::BackupOnAllBundlesFinished(int32_t errCode)
+ErrCode ServiceReverse::BackupOnAllBundlesFinished(int32_t errCode)
 {
     HILOGI("errCode = %{public}d", errCode);
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onAllBundlesFinished) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     callbacksBackup_.onAllBundlesFinished(errCode);
+    return BError(BError::Codes::OK);
 }
 
-void ServiceReverse::BackupOnProcessInfo(std::string bundleName, std::string processInfo)
+ErrCode ServiceReverse::BackupOnProcessInfo(const std::string &bundleName, const std::string &processInfo)
 {
     HILOGI("bundleName = %{public}s", bundleName.c_str());
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onProcess) {
         HILOGI("Error scenario or callback is nullptr");
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     callbacksBackup_.onProcess(bundleName, processInfo);
+    return BError(BError::Codes::OK);
 }
 
-void ServiceReverse::BackupOnScanningInfo(std::string scannedInfo)
+ErrCode ServiceReverse::BackupOnScanningInfo(const std::string &scannedInfo)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onBackupSizeReport) {
         HILOGE("Error scenario or callback is nullptr");
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     callbacksBackup_.onBackupSizeReport(scannedInfo);
+    return BError(BError::Codes::OK);
 }
 
-void ServiceReverse::RestoreOnBundleStarted(int32_t errCode, string bundleName)
+ErrCode ServiceReverse::RestoreOnBundleStarted(int32_t errCode, const std::string &bundleName)
 {
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onBundleStarted) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     callbacksRestore_.onBundleStarted(errCode, bundleName);
+    return BError(BError::Codes::OK);
 }
 
-void ServiceReverse::RestoreOnBundleFinished(int32_t errCode, string bundleName)
+ErrCode ServiceReverse::RestoreOnBundleFinished(int32_t errCode, const std::string &bundleName)
 {
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onBundleFinished) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     HILOGI("errCode = %{public}d, bundleName = %{public}s", errCode, bundleName.c_str());
     callbacksRestore_.onBundleFinished(errCode, bundleName);
+    return BError(BError::Codes::OK);
 }
 
-void ServiceReverse::RestoreOnAllBundlesFinished(int32_t errCode)
+ErrCode ServiceReverse::RestoreOnAllBundlesFinished(int32_t errCode)
 {
     HILOGI("errCode = %{public}d", errCode);
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onAllBundlesFinished) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     callbacksRestore_.onAllBundlesFinished(errCode);
+    return BError(BError::Codes::OK);
 }
 
-void ServiceReverse::RestoreOnFileReady(string bundleName, string fileName, int fd, int32_t errCode)
+ErrCode ServiceReverse::RestoreOnFileReady(const std::string &bundleName,
+                                           const std::string &fileName,
+                                           int fd,
+                                           int32_t errCode)
 {
     HILOGD("begin, bundleName is:%{public}s", bundleName.c_str());
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onFileReady) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     BFileInfo bFileInfo(bundleName, fileName, 0);
     callbacksRestore_.onFileReady(bFileInfo, UniqueFd(fd), errCode);
+    return BError(BError::Codes::OK);
 }
 
-void ServiceReverse::RestoreOnResultReport(string result, std::string bundleName, ErrCode errCode)
+ErrCode ServiceReverse::RestoreOnResultReport(const std::string &result, const std::string &bundleName, ErrCode errCode)
 {
     HILOGI("ServiceReverse RestoreOnResultReport bundle %{public}s begin with result: %{public}s", bundleName.c_str(),
-        result.c_str());
+           result.c_str());
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onResultReport) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     callbacksRestore_.onResultReport(bundleName, result);
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onBundleFinished) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     callbacksRestore_.onBundleFinished(errCode, bundleName);
+    return BError(BError::Codes::OK);
 }
 
-void ServiceReverse::RestoreOnProcessInfo(std::string bundleName, std::string processInfo)
+ErrCode ServiceReverse::RestoreOnProcessInfo(const std::string &bundleName, const std::string &processInfo)
 {
     HILOGI("bundleName = %{public}s", bundleName.c_str());
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onProcess) {
         HILOGI("Error scenario or callback is nullptr");
-        return;
+        return BError(BError::Codes::SA_BROKEN_IPC);
     }
     callbacksRestore_.onProcess(bundleName, processInfo);
+    return BError(BError::Codes::OK);
 }
 
 ServiceReverse::ServiceReverse(BSessionBackup::Callbacks callbacks)

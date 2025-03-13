@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "module_ipc/svc_extension_proxy.h"
+#include "extension_proxy.h"
 #include "module_ipc/svc_session_manager.h"
 
 namespace OHOS::FileManagement::Backup {

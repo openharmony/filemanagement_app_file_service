@@ -19,7 +19,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-ErrCode SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const
+ErrCode SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverseType::Scenario scenario) const
 {
     return BackupSvcSessionManager::session->VerifyCallerAndScenario(clientToken, scenario);
 }
@@ -44,7 +44,7 @@ sptr<IServiceReverse> SvcSessionManager::GetServiceReverseProxy()
     return BackupSvcSessionManager::session->GetServiceReverseProxy();
 }
 
-IServiceReverse::Scenario SvcSessionManager::GetScenario()
+IServiceReverseType::Scenario SvcSessionManager::GetScenario()
 {
     return BackupSvcSessionManager::session->GetScenario();
 }

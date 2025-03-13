@@ -47,7 +47,7 @@ bool OnRemoteRequestFuzzTest(shared_ptr<BackupExtExtension> extension, const uin
 
     int pos = 0;
     uint32_t code = TypeCast<uint32_t>(data, &pos);
-    msg.WriteInterfaceToken(ExtExtensionStub::GetDescriptor());
+    msg.WriteInterfaceToken(ExtensionStub::GetDescriptor());
     msg.WriteBuffer(data + pos, size - pos);
     msg.RewindRead(0);
 
@@ -161,136 +161,6 @@ bool SetCreatorFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_
     return true;
 }
 
-bool CmdGetFileHandleFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
-{
-    MessageParcel msg;
-    MessageParcel reply;
-
-    msg.WriteString(string(reinterpret_cast<const char*>(data), size));
-    extension->CmdGetFileHandle(msg, reply);
-    return true;
-}
-
-bool CmdHandleClearFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
-{
-    MessageParcel msg;
-    MessageParcel reply;
-
-    msg.WriteBuffer(data, size);
-    extension->CmdHandleClear(msg, reply);
-    return true;
-}
-
-bool CmdHandleUser0BackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
-{
-    MessageParcel msg;
-    MessageParcel reply;
-
-    msg.WriteBuffer(data, size);
-    extension->CmdHandleUser0Backup(msg, reply);
-    return true;
-}
-
-bool CmdHandleBackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(bool)) {
-        return true;
-    }
-
-    MessageParcel msg;
-    MessageParcel reply;
-
-    msg.WriteBool(*reinterpret_cast<const bool*>(data));
-    extension->CmdHandleBackup(msg, reply);
-    return true;
-}
-
-bool CmdPublishFileFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
-{
-    MessageParcel msg;
-    MessageParcel reply;
-
-    msg.WriteString(string(reinterpret_cast<const char*>(data), size));
-    extension->CmdPublishFile(msg, reply);
-    return true;
-}
-
-bool CmdHandleRestoreFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(bool)) {
-        return true;
-    }
-
-    MessageParcel msg;
-    MessageParcel reply;
-
-    msg.WriteBool(*reinterpret_cast<const bool*>(data));
-    extension->CmdHandleRestore(msg, reply);
-    return true;
-}
-
-bool CmdGetIncrementalFileHandleFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
-{
-    MessageParcel msg;
-    MessageParcel reply;
-
-    msg.WriteString(string(reinterpret_cast<const char*>(data), size));
-    extension->CmdGetIncrementalFileHandle(msg, reply);
-    return true;
-}
-
-bool CmdPublishIncrementalFileFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
-{
-    MessageParcel msg;
-    MessageParcel reply;
-
-    msg.WriteString(string(reinterpret_cast<const char*>(data), size));
-    extension->CmdPublishIncrementalFile(msg, reply);
-    return true;
-}
-
-bool CmdHandleIncrementalBackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int) + sizeof(int)) {
-        return true;
-    }
-
-    MessageParcel msg;
-    MessageParcel reply;
-
-    int pos = 0;
-    int incrementalFd = TypeCast<int>(data, &pos);
-    int manifestFd = TypeCast<int>(data + pos);
-    msg.WriteFileDescriptor(incrementalFd);
-    msg.WriteFileDescriptor(manifestFd);
-    extension->CmdPublishIncrementalFile(msg, reply);
-    return true;
-}
-
-bool CmdIncrementalOnBackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(bool)) {
-        return true;
-    }
-
-    MessageParcel msg;
-    MessageParcel reply;
-
-    msg.WriteBool(*reinterpret_cast<const bool*>(data));
-    extension->CmdIncrementalOnBackup(msg, reply);
-    return true;
-}
-
-bool CmdGetIncrementalBackupFileHandleFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data,
-    size_t size)
-{
-    MessageParcel msg;
-    MessageParcel reply;
-
-    msg.WriteBuffer(data, size);
-    extension->CmdGetIncrementalBackupFileHandle(msg, reply);
-    return true;
-}
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -313,22 +183,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RestoreDataReadyFuzzTest(extBackup, data, size);
     OHOS::InvokeAppExtMethodFuzzTest(extBackup, data, size);
     OHOS::SetCreatorFuzzTest(extBackup, data, size);
-
-    try {
-        OHOS::CmdGetFileHandleFuzzTest(extension, data, size);
-        OHOS::CmdHandleClearFuzzTest(extension, data, size);
-        OHOS::CmdHandleUser0BackupFuzzTest(extension, data, size);
-        OHOS::CmdHandleBackupFuzzTest(extension, data, size);
-        OHOS::CmdPublishFileFuzzTest(extension, data, size);
-        OHOS::CmdHandleRestoreFuzzTest(extension, data, size);
-        OHOS::CmdGetIncrementalFileHandleFuzzTest(extension, data, size);
-        OHOS::CmdPublishIncrementalFileFuzzTest(extension, data, size);
-        OHOS::CmdHandleIncrementalBackupFuzzTest(extension, data, size);
-        OHOS::CmdIncrementalOnBackupFuzzTest(extension, data, size);
-        OHOS::CmdGetIncrementalBackupFileHandleFuzzTest(extension, data, size);
-    } catch (OHOS::FileManagement::Backup::BError &err) {
-        // Only filter BError errors, Other results are not expected.
-    }
 
     return 0;
 }

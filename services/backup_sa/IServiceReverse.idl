@@ -1,0 +1,62 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package OHOS.FileManagement.Backup;
+
+import ServiceReverseType;
+interface OHOS.FileManagement.Backup.IServiceReverse{
+    [ipccode 999] void BackupOnBundleStarted([in] int backupOnBundleStartedErrCode, [in] String bundleName);
+    [ipccode 1] void BackupOnFileReady([in] String bundleName, [in] String fileName, [in] FileDescriptor fd,
+        [in] int backupOnFileReadyErrCode);
+    [ipccode 2] void BackupOnResultReport([in] String myResult, [in] String bundleName);
+    [ipccode 3] void BackupOnBundleFinished([in] int backupOnBundleFinishedErrCode, [in] String bundleName);
+    [ipccode 4] void BackupOnAllBundlesFinished([in] int backupOnAllBundlesFinishedErrCode);
+    [ipccode 5] void BackupOnProcessInfo([in] String bundleName, [in] String processInfo);
+    [ipccode 6] void BackupOnScanningInfo([in] String scannedInfo);
+    [ipccode 7] void RestoreOnBundleStarted([in] int restoreOnBundleStartedErrCode, [in] String bundleName);
+    [ipccode 8] void RestoreOnFileReady([in] String bundleName, [in] String fileName, [in] FileDescriptor fd,
+        [in] int restoreOnFileReadyErrCode);
+    [ipccode 9] void RestoreOnResultReport([in] String myResult, [in] String bundleName,
+        [in] int restoreOnResultReportErrCode);
+    [ipccode 10] void RestoreOnBundleFinished([in] int restoreOnBundleFinishedErrCode, [in] String bundleName);
+    [ipccode 11] void RestoreOnAllBundlesFinished([in] int restoreOnAllBundlesFinishedErrCode);
+    [ipccode 12] void RestoreOnProcessInfo([in] String bundleName, [in] String processInfo);
+
+    [ipccode 13] void IncrementalBackupOnBundleStarted([in] int incrementalBackupOnBundleStartedErrCode,
+        [in] String bundleName);
+    [ipccode 14] void IncrementalBackupOnFileReady([in] String bundleName,
+                                                   [in] String fileName, [in] FileDescriptor fd,
+                                                   [in] FileDescriptor manifestFd, [in] int incrementalBackupOnFileReadyErrCode);
+    [ipccode 15] void IncrementalBackupOnResultReport([in] String myResult, [in] String bundleName);
+    [ipccode 16] void IncrementalBackupOnBundleFinished([in] int incrementalBackupOnBundleFinishedErrCode,
+        [in] String bundleName);
+    [ipccode 17] void IncrementalBackupOnAllBundlesFinished([in] int incrementalBackupOnAllBundlesFinishedErrCode);
+    [ipccode 18] void IncrementalBackupOnProcessInfo([in] String bundleName, [in] String processInfo);
+    [ipccode 19] void IncrementalBackupOnScanningInfo([in] String scannedInfo);
+
+    [ipccode 20] void IncrementalRestoreOnBundleStarted([in] int incrementalRestoreOnBundleStartedErrCode,
+        [in] String bundleName);
+    [ipccode 21] void IncrementalRestoreOnFileReady([in] String bundleName,
+                                            [in] String fileName,
+                                            [in] FileDescriptor fd,
+                                            [in] FileDescriptor manifestFd,
+                                            [in] int incrementalRestoreOnFileReadyErrCode);
+    [ipccode 22] void IncrementalRestoreOnResultReport([in] String myResult, [in] String bundleName,
+        [in] int incrementalRestoreOnResultReportErrCode);
+    [ipccode 23] void IncrementalRestoreOnBundleFinished([in] int incrementalRestoreOnBundleFinishedErrCode,
+        [in] String bundleName);
+    [ipccode 24] void IncrementalRestoreOnAllBundlesFinished([in] int incrementalRestoreOnAllBundlesFinishedErrCode);
+    [ipccode 25] void IncrementalRestoreOnProcessInfo( [in] String bundleName, [in] String processInfo);
+}

@@ -41,6 +41,7 @@ ohos_unittest("ext_extension_test") {
   ]
 
   deps = [
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/utils:backup_utils",
     "${path_jsoncpp}:jsoncpp",
     "//third_party/googletest:gtest_main",
@@ -78,49 +79,6 @@ ohos_unittest("ext_extension_test") {
   use_exceptions = true
 }
 
-ohos_unittest("ext_extension_stub_test") {
-  module_out_path = path_module_out_tests
-
-  sources = [
-    "${path_backup_mock}/module_ipc/message_parcel_mock.cpp",
-    "${path_backup}/frameworks/native/backup_ext/src/ext_extension_stub.cpp",
-    "ext_extension_stub_test.cpp",
-  ]
-
-  include_dirs = [
-    "${path_backup_mock}/module_ipc",
-    "${path_backup}/frameworks/native/backup_ext/include",
-    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
-    "${path_backup}/interfaces/common/include",
-    "${path_backup}/utils/include",
-  ]
-
-  deps = [
-    "${path_backup}/utils:backup_utils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "ipc:ipc_core",
-    "safwk:system_ability_fwk",
-  ]
-
-  cflags = [ "--coverage" ]
-  ldflags = [ "--coverage" ]
-  cflags_cc = [ "--coverage" ]
-
-  defines = [
-    "LOG_TAG=\"app_file_service\"",
-    "LOG_DOMAIN=0xD004303",
-    "private=public",
-  ]
-
-  use_exceptions = true
-}
-
 ohos_unittest("tar_file_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -139,7 +97,6 @@ ohos_unittest("tar_file_test") {
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_extension.cpp",
-    "${path_backup}/frameworks/native/backup_ext/src/ext_extension_stub.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/sub_ext_extension.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/untar_file.cpp",
@@ -163,6 +120,7 @@ ohos_unittest("tar_file_test") {
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -214,13 +172,14 @@ ohos_unittest("untar_file_sup_test") {
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_extension.cpp",
-    "${path_backup}/frameworks/native/backup_ext/src/ext_extension_stub.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/sub_ext_extension.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
     "${path_backup}/tests/mock/library_func_mock/library_func_mock.cpp",
     "untar_file_sup_test.cpp",
   ]
   sources += backup_mock_proxy_src
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
 
   include_dirs = [
     "${path_ability_runtime}/services/common/include",
@@ -231,6 +190,7 @@ ohos_unittest("untar_file_sup_test") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/frameworks/native/backup_kit_inner/include",
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/tests/mock/library_func_mock",
     "${path_backup}/utils/include",
     "${path_napi}/native_engine",
@@ -290,7 +250,6 @@ ohos_unittest("untar_file_test") {
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_extension.cpp",
-    "${path_backup}/frameworks/native/backup_ext/src/ext_extension_stub.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/sub_ext_extension.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/untar_file.cpp",
@@ -314,6 +273,7 @@ ohos_unittest("untar_file_test") {
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -367,6 +327,7 @@ ohos_unittest("ext_backup_js_test") {
   ]
 
   deps = [
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
     "${path_googletest}:gtest_main",
@@ -403,6 +364,15 @@ ohos_unittest("ext_backup_js_test") {
     "private=public",
   ]
 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
   use_exceptions = true
 }
 
@@ -445,7 +415,6 @@ group("backup_ext_test") {
   if (!use_libfuzzer) {
     deps = [
       ":ext_backup_js_test",
-      ":ext_extension_stub_test",
       ":ext_extension_test",
       ":tar_file_sub_test",
       ":tar_file_test",

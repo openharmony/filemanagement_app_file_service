@@ -18,7 +18,7 @@
 
 #include <map>
 
-#include "i_extension.h"
+#include "iextension.h"
 #include "iremote_stub.h"
 
 namespace OHOS::FileManagement::Backup {

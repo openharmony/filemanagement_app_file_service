@@ -44,7 +44,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp() override {};
     void TearDown() override {};
-    void Init(IServiceReverse::Scenario scenario);
+    void Init(IServiceReverseType::Scenario scenario);
 
     static inline sptr<SvcSessionManager> sessionManagerPtr_ = nullptr;
     static inline sptr<ServiceReverseMock> remote_ = nullptr;
@@ -67,7 +67,7 @@ void SvcSessionManagerTest::TearDownTestCase(void)
     remote_ = nullptr;
 }
 
-void SvcSessionManagerTest::Init(IServiceReverse::Scenario scenario)
+void SvcSessionManagerTest::Init(IServiceReverseType::Scenario scenario)
 {
     vector<string> bundleNames;
     vector<string> failedBundles;
@@ -96,19 +96,19 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_VerifyCallerAndScenario_01
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_VerifyCallerAndScenario_0100";
     try {
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::BACKUP;
         ErrCode ret = sessionManagerPtr_->VerifyCallerAndScenario(CLIENT_TOKEN_ID,
-            IServiceReverse::Scenario::RESTORE);
+            IServiceReverseType::Scenario::RESTORE);
         EXPECT_TRUE(ret == BError(BError::Codes::SDK_MIXED_SCENARIO).GetCode());
 
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::BACKUP;
         sessionManagerPtr_->impl_.clientToken = 0;
-        ret = sessionManagerPtr_->VerifyCallerAndScenario(CLIENT_TOKEN_ID, IServiceReverse::Scenario::BACKUP);
+        ret = sessionManagerPtr_->VerifyCallerAndScenario(CLIENT_TOKEN_ID, IServiceReverseType::Scenario::BACKUP);
         EXPECT_TRUE(ret == BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::BACKUP;
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-        ret = sessionManagerPtr_->VerifyCallerAndScenario(CLIENT_TOKEN_ID, IServiceReverse::Scenario::BACKUP);
+        ret = sessionManagerPtr_->VerifyCallerAndScenario(CLIENT_TOKEN_ID, IServiceReverseType::Scenario::BACKUP);
         EXPECT_TRUE(ret == ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -141,13 +141,13 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Active_0100, testing::ext:
         EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         newImpl.clientToken = CLIENT_TOKEN_ID;
-        newImpl.scenario = IServiceReverse::Scenario::UNDEFINED;
+        newImpl.scenario = IServiceReverseType::Scenario::UNDEFINED;
         sessionManagerPtr_->impl_.clientToken = 0;
         res = sessionManagerPtr_->Active(newImpl);
         EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         newImpl.clientToken = CLIENT_TOKEN_ID;
-        newImpl.scenario = IServiceReverse::Scenario::BACKUP;
+        newImpl.scenario = IServiceReverseType::Scenario::BACKUP;
         newImpl.clientProxy = nullptr;
         sessionManagerPtr_->impl_.clientToken = 0;
         res = sessionManagerPtr_->Active(newImpl);
@@ -282,12 +282,12 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_getscenario_0100, testing:
     try {
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->impl_.clientToken = 0;
-        IServiceReverse::Scenario scenario = sessionManagerPtr_->GetScenario();
-        EXPECT_TRUE(scenario == IServiceReverse::Scenario::UNDEFINED);
+        IServiceReverseType::Scenario scenario = sessionManagerPtr_->GetScenario();
+        EXPECT_TRUE(scenario == IServiceReverseType::Scenario::UNDEFINED);
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         scenario = sessionManagerPtr_->GetScenario();
-        EXPECT_TRUE(scenario == IServiceReverse::Scenario::UNDEFINED);
+        EXPECT_TRUE(scenario == IServiceReverseType::Scenario::UNDEFINED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by getscenario.";
@@ -320,21 +320,21 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_onBundlefileready_0100, te
     sessionManagerPtr_->impl_.backupExtNameMap.clear();
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
     sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
+    sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::RESTORE;
     fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
     EXPECT_TRUE(fileReady);
 
     sessionManagerPtr_->impl_.backupExtNameMap.clear();
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
     sessionManagerPtr_->impl_.backupExtNameMap["123"] = {};
-    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+    sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::BACKUP;
     fileReady = sessionManagerPtr_->OnBundleFileReady("123");
     EXPECT_TRUE(fileReady);
 
     sessionManagerPtr_->impl_.backupExtNameMap.clear();
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
     sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::UNDEFINED;
+    sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::UNDEFINED;
     fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME);
     EXPECT_FALSE(fileReady);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_onBundlefileready_0100";
@@ -356,21 +356,21 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_onBundlefileready_0101, te
     sessionManagerPtr_->impl_.backupExtNameMap.clear();
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
     sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+    sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::BACKUP;
     bool fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, "");
     EXPECT_FALSE(fileReady);
 
     sessionManagerPtr_->impl_.backupExtNameMap.clear();
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
     sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+    sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::BACKUP;
     fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, "test");
     EXPECT_FALSE(fileReady);
 
     sessionManagerPtr_->impl_.backupExtNameMap.clear();
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
     sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+    sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::BACKUP;
     fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, string(BConstants::EXT_BACKUP_MANAGE));
     EXPECT_FALSE(fileReady);
 
@@ -402,7 +402,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBundleExtManageInfo_0100
     EXPECT_TRUE(move(ret) == -1);
 
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
+    sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::RESTORE;
     ret = sessionManagerPtr_->OnBundleExtManageInfo(BUNDLE_NAME, UniqueFd(-1));
     EXPECT_TRUE(move(ret) == -1);
 
@@ -583,7 +583,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0102
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetExtFileNameRequest_0102";
     EXPECT_TRUE(sessionManagerPtr_ != nullptr);
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::UNDEFINED;
+    sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::UNDEFINED;
     auto fileNameSet = sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
     EXPECT_TRUE(fileNameSet.empty());
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetExtFileNameRequest_0102";
@@ -603,7 +603,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetExtFileNameRequest_0103
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetExtFileNameRequest_0103";
     EXPECT_TRUE(sessionManagerPtr_ != nullptr);
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
+    sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::RESTORE;
     auto fileNameSet = sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
     EXPECT_FALSE(fileNameSet.empty());
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetExtFileNameRequest_0103";
@@ -1009,14 +1009,14 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_NeedToUnloadService_0100, 
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
         sessionManagerPtr_->impl_.restoreDataType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::RESTORE;
         ret = sessionManagerPtr_->NeedToUnloadService();
         EXPECT_FALSE(ret);
 
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
         sessionManagerPtr_->impl_.restoreDataType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::BACKUP;
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::BACKUP;
         ret = sessionManagerPtr_->NeedToUnloadService();
         EXPECT_FALSE(ret);
     } catch (...) {
@@ -1079,7 +1079,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_OnBundleFileReady_0200, te
     try {
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->Deactive(nullptr, true);
-        Init(IServiceReverse::Scenario::BACKUP);
+        Init(IServiceReverseType::Scenario::BACKUP);
         bool fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, MANAGE_JSON);
         EXPECT_FALSE(fileReady);
         fileReady = sessionManagerPtr_->OnBundleFileReady(BUNDLE_NAME, FILE_NAME);
@@ -1470,12 +1470,12 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_IsOnAllBundlesFinished_010
     EXPECT_FALSE(ret);
 
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
+    sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::RESTORE;
     ret = sessionManagerPtr_->IsOnAllBundlesFinished();
     EXPECT_FALSE(ret);
 
     sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
-    sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::UNDEFINED;
+    sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::UNDEFINED;
     ret = sessionManagerPtr_->IsOnAllBundlesFinished();
     EXPECT_FALSE(ret);
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_IsOnAllBundlesFinished_0100";
@@ -2017,7 +2017,7 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Exception_0100, testing::e
         sessionManagerPtr_->SetExtFileNameRequest(BUNDLE_NAME, "");
         EXPECT_TRUE(true);
 
-        sessionManagerPtr_->impl_.scenario = IServiceReverse::Scenario::RESTORE;
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::RESTORE;
         std::set<std::string> fileSet = sessionManagerPtr_->GetExtFileNameRequest(BUNDLE_NAME);
         EXPECT_TRUE(fileSet.empty());
 

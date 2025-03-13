@@ -13,64 +13,159 @@
  * limitations under the License.
  */
 
-#include "module_ipc/service_reverse_proxy.h"
+#include "service_reverse_proxy.h"
 
 #include "b_error/b_error.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+ErrCode ServiceReverseProxy::BackupOnFileReady(const std::string &bundleName,
+                                               const std::string &fileName,
+                                               int fd,
+                                               int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::BackupOnFileReady(string bundleName, string fileName, int fd, int32_t errCode) {}
+ErrCode ServiceReverseProxy::BackupOnBundleStarted(int32_t errCode, const std::string &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::BackupOnBundleStarted(int32_t errCode, string bundleName) {}
+ErrCode ServiceReverseProxy::BackupOnResultReport(const std::string &result, const std::string &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::BackupOnResultReport(string result, std::string bundleName) {}
+ErrCode ServiceReverseProxy::BackupOnBundleFinished(int32_t errCode, const std::string &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::BackupOnBundleFinished(int32_t errCode, string bundleName) {}
+ErrCode ServiceReverseProxy::BackupOnAllBundlesFinished(int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::BackupOnAllBundlesFinished(int32_t errCode) {}
+ErrCode ServiceReverseProxy::BackupOnProcessInfo(const std::string &bundleName, const std::string &processInfo)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::BackupOnProcessInfo(std::string bundleName, std::string processInfo) {}
+ErrCode ServiceReverseProxy::BackupOnScanningInfo(const std::string &scannedInfo)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::BackupOnScanningInfo(std::string scannedInfo) {}
+ErrCode ServiceReverseProxy::RestoreOnBundleStarted(int32_t errCode, const std::string &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::RestoreOnBundleStarted(int32_t errCode, string bundleName) {}
+ErrCode ServiceReverseProxy::RestoreOnBundleFinished(int32_t errCode, const std::string &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::RestoreOnBundleFinished(int32_t errCode, string bundleName) {}
+ErrCode ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::RestoreOnAllBundlesFinished(int32_t errCode) {}
+ErrCode ServiceReverseProxy::RestoreOnFileReady(const std::string &bundleName,
+                                                const std::string &fileName,
+                                                int fd,
+                                                int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::RestoreOnFileReady(string bundleName, string fileName, int fd, int32_t errCode) {}
+ErrCode ServiceReverseProxy::RestoreOnResultReport(const std::string &result,
+                                                   const std::string &bundleName,
+                                                   int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::RestoreOnResultReport(string result, string bundleName, ErrCode errCode) {}
+ErrCode ServiceReverseProxy::RestoreOnProcessInfo(const std::string &bundleName, const std::string &processInfo)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::RestoreOnProcessInfo(std::string bundleName, std::string processInfo) {}
+ErrCode ServiceReverseProxy::IncrementalBackupOnFileReady(const std::string &bundleName,
+                                                          const std::string &fileName,
+                                                          int fd,
+                                                          int manifestFd,
+                                                          int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::IncrementalBackupOnFileReady(string bundleName, string fileName, int fd, int manifestFd,
-    int32_t errCode) {}
+ErrCode ServiceReverseProxy::IncrementalBackupOnBundleStarted(int32_t errCode, const std::string &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::IncrementalBackupOnBundleStarted(int32_t errCode, string bundleName) {}
+ErrCode ServiceReverseProxy::IncrementalBackupOnResultReport(const std::string &result, const std::string &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::IncrementalBackupOnResultReport(string result, std::string bundleName) {}
+ErrCode ServiceReverseProxy::IncrementalBackupOnBundleFinished(int32_t errCode, const std::string &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::IncrementalBackupOnBundleFinished(int32_t errCode, string bundleName) {}
+ErrCode ServiceReverseProxy::IncrementalBackupOnAllBundlesFinished(int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::IncrementalBackupOnAllBundlesFinished(int32_t errCode) {}
+ErrCode ServiceReverseProxy::IncrementalBackupOnProcessInfo(const std::string &bundleName,
+                                                            const std::string &processInfo)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::IncrementalBackupOnProcessInfo(std::string bundleName, std::string processInfo) {}
+ErrCode ServiceReverseProxy::IncrementalBackupOnScanningInfo(const std::string &scannedInfo)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::IncrementalBackupOnScanningInfo(std::string scannedInfo) {}
+ErrCode ServiceReverseProxy::IncrementalRestoreOnBundleStarted(int32_t errCode, const std::string &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::IncrementalRestoreOnBundleStarted(int32_t errCode, string bundleName) {}
+ErrCode ServiceReverseProxy::IncrementalRestoreOnBundleFinished(int32_t errCode, const std::string &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::IncrementalRestoreOnBundleFinished(int32_t errCode, string bundleName) {}
+ErrCode ServiceReverseProxy::IncrementalRestoreOnAllBundlesFinished(int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::IncrementalRestoreOnAllBundlesFinished(int32_t errCode) {}
+ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReady(const std::string &bundleName,
+                                                           const std::string &fileName,
+                                                           int fd,
+                                                           int manifestFd,
+                                                           int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::IncrementalRestoreOnFileReady(string bundleName, string fileName, int fd, int manifestFd,
-    int32_t errCode) {}
+ErrCode ServiceReverseProxy::IncrementalRestoreOnResultReport(const std::string &result,
+                                                              const std::string &bundleName,
+                                                              int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
 
-void ServiceReverseProxy::IncrementalRestoreOnResultReport(string result, string bundleName, ErrCode errCode) {}
-
-void ServiceReverseProxy::IncrementalRestoreOnProcessInfo(std::string bundleName, std::string processInfo) {}
+ErrCode ServiceReverseProxy::IncrementalRestoreOnProcessInfo(const std::string &bundleName,
+                                                             const std::string &processInfo)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

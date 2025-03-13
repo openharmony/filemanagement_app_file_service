@@ -25,7 +25,7 @@ class BSvcSessionManager {
 public:
     virtual ErrCode Active(struct SvcSessionManager::Impl, bool) = 0;
     virtual sptr<IServiceReverse> GetServiceReverseProxy() = 0;
-    virtual IServiceReverse::Scenario GetScenario() = 0;
+    virtual IServiceReverseType::Scenario GetScenario() = 0;
     virtual int32_t GetSessionUserId() = 0;
     virtual std::string GetSessionCallerName() = 0;
     virtual std::string GetSessionActiveTime() = 0;
@@ -73,7 +73,7 @@ class SvcSessionManagerMock : public BSvcSessionManager {
 public:
     MOCK_METHOD(ErrCode, Active, (struct SvcSessionManager::Impl, bool));
     MOCK_METHOD((sptr<IServiceReverse>), GetServiceReverseProxy, ());
-    MOCK_METHOD(IServiceReverse::Scenario, GetScenario, ());
+    MOCK_METHOD(IServiceReverseType::Scenario, GetScenario, ());
     MOCK_METHOD(int32_t, GetSessionUserId, ());
     MOCK_METHOD(std::string, GetSessionCallerName, ());
     MOCK_METHOD(std::string, GetSessionActiveTime, ());

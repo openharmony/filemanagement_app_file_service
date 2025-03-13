@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "module_ipc/svc_extension_proxy.h"
+#include "extension_proxy.h"
 
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"

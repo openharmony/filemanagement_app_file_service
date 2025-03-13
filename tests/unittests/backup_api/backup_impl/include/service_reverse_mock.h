@@ -19,7 +19,7 @@
 #include <gmock/gmock.h>
 
 #include "b_error/b_error.h"
-#include "i_service_reverse.h"
+#include "iservice_reverse.h"
 #include "iremote_stub.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -36,37 +36,151 @@ public:
         code_ = code;
         return BError(BError::Codes::OK);
     }
-    void BackupOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override {}
-    void BackupOnBundleStarted(int32_t errCode, std::string bundleName) override {}
-    void BackupOnResultReport(std::string result, std::string bundleName) override {};
-    void BackupOnBundleFinished(int32_t errCode, std::string bundleName) override {}
-    void BackupOnAllBundlesFinished(int32_t errCode) override {}
-    void BackupOnProcessInfo(std::string bundleName, std::string processInfo) override {}
-    void BackupOnScanningInfo(std::string scannedInfo) override {}
+    ErrCode BackupOnFileReady(const std::string &bundleName,
+                              const std::string &fileName,
+                              int fd,
+                              int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
 
-    void RestoreOnBundleStarted(int32_t errCode, std::string bundleName) override {}
-    void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) override {}
-    void RestoreOnAllBundlesFinished(int32_t errCode) override {}
-    void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override {}
-    void RestoreOnResultReport(std::string result, std::string bundleName, ErrCode errCode) override {}
-    void RestoreOnProcessInfo(std::string bundleName, std::string processInfo) override {}
+    ErrCode BackupOnBundleStarted(int32_t errCode, const std::string &bundleName) override
+    {
+        return BError(BError::Codes::OK);
+    }
 
-    void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
-        int32_t errCode) override {}
-    void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) override {}
-    void IncrementalBackupOnResultReport(std::string result, std::string bundleName) override {}
-    void IncrementalBackupOnBundleFinished(int32_t errCode, std::string bundleName) override {}
-    void IncrementalBackupOnAllBundlesFinished(int32_t errCode) override {}
-    void IncrementalBackupOnProcessInfo(std::string bundleName, std::string processInfo) override {}
-    void IncrementalBackupOnScanningInfo(std::string scannedInfo) override {}
+    ErrCode BackupOnResultReport(const std::string &result, const std::string &bundleName) override
+    {
+        return BError(BError::Codes::OK);
+    };
 
-    void IncrementalRestoreOnBundleStarted(int32_t errCode, std::string bundleName) override {}
-    void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) override {}
-    void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) override {}
-    void IncrementalRestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
-        int32_t errCode) override {}
-    void IncrementalRestoreOnResultReport(std::string result, std::string bundleName, ErrCode errCode) override {};
-    void IncrementalRestoreOnProcessInfo(std::string bundleName, std::string processInfo) override {}
+    ErrCode BackupOnBundleFinished(int32_t errCode, const std::string &bundleName) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode BackupOnAllBundlesFinished(int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode BackupOnProcessInfo(const std::string &bundleName, const std::string &processInfo) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode BackupOnScanningInfo(const std::string &scannedInfo) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode RestoreOnBundleStarted(int32_t errCode, const std::string &bundleName) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode RestoreOnBundleFinished(int32_t errCode, const std::string &bundleName) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode RestoreOnAllBundlesFinished(int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode RestoreOnFileReady(const std::string &bundleName,
+                               const std::string &fileName,
+                               int fd,
+                               int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode RestoreOnResultReport(const std::string &result, const std::string &bundleName, ErrCode errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode RestoreOnProcessInfo(const std::string &bundleName, const std::string &processInfo) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalBackupOnFileReady(const std::string &bundleName,
+                                         const std::string &fileName,
+                                         int fd,
+                                         int manifestFd,
+                                         int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalBackupOnBundleStarted(int32_t errCode, const std::string &bundleName) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalBackupOnResultReport(const std::string &result, const std::string &bundleName) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalBackupOnBundleFinished(int32_t errCode, const std::string &bundleName) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalBackupOnAllBundlesFinished(int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalBackupOnProcessInfo(const std::string &bundleName, const std::string &processInfo) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalBackupOnScanningInfo(const std::string &scannedInfo) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalRestoreOnBundleStarted(int32_t errCode, const std::string &bundleName) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalRestoreOnBundleFinished(int32_t errCode, const std::string &bundleName) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalRestoreOnAllBundlesFinished(int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalRestoreOnFileReady(const std::string &bundleName,
+                                          const std::string &fileName,
+                                          int fd,
+                                          int manifestFd,
+                                          int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalRestoreOnResultReport(const std::string &result,
+                                             const std::string &bundleName,
+                                             int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalRestoreOnProcessInfo(const std::string &bundleName, const std::string &processInfo) override
+    {
+        return BError(BError::Codes::OK);
+    }
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // MOCK_SERVICE_REVERSE_MOCK_H

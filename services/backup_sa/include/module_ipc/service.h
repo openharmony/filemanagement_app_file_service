@@ -23,7 +23,7 @@
 #include "b_json/b_json_clear_data_config.h"
 #include "b_json/b_json_entity_caps.h"
 #include "b_json/b_json_service_disposal_config.h"
-#include "i_service_reverse.h"
+#include "iservice_reverse.h"
 #include "iremote_stub.h"
 #include "module_sched/sched_scheduler.h"
 #include "service_stub.h"
@@ -313,7 +313,7 @@ public:
     string BundleNameWithUserId(const string& bundleName, const int32_t userId);
     std::tuple<std::string, int32_t> SplitBundleName(const string& bundleNameWithId);
     void AppendBundles(const std::vector<std::string> &bundleNames);
-    void ReportOnBundleStarted(IServiceReverse::Scenario scenario, const std::string &bundleName);
+    void ReportOnBundleStarted(IServiceReverseType::Scenario scenario, const std::string &bundleName);
     ErrCode AppIncrementalFileReady(const std::string &bundleName, const std::string &fileName, UniqueFd fd,
         UniqueFd manifestFd, int32_t errCode);
 public:
@@ -362,7 +362,7 @@ private:
      *
      * @param scenario Scenario状态
      */
-    ErrCode VerifyCaller(IServiceReverse::Scenario scenario);
+    ErrCode VerifyCaller(IServiceReverseType::Scenario scenario);
 
     /**
      * @brief 验证调用者并返回名称
@@ -544,7 +544,7 @@ private:
      */
     void SetOccupySession(bool isOccupyingSession);
 
-    void ReportOnExtConnectFailed(const IServiceReverse::Scenario scenario,
+    void ReportOnExtConnectFailed(const IServiceReverseType::Scenario scenario,
         const std::string &bundleName, const ErrCode ret);
 
     void ReleaseOnException();
@@ -561,7 +561,7 @@ private:
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         std::map<std::string, bool> &isClearDataFlags);
 
-    void TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string &bundleName);
+    void TimeoutRadarReport(IServiceReverseType::Scenario scenario, std::string &bundleName);
 
     void OnBundleStarted(BError error, sptr<SvcSessionManager> session, const BundleName &bundleName);
 
@@ -569,16 +569,16 @@ private:
         const vector<BundleName> &restoreBundleNames);
 
     void BundleBeginRadarReport(const std::string &bundleName, const ErrCode errCode,
-        const IServiceReverse::Scenario scenario);
+        const IServiceReverseType::Scenario scenario);
 
     void BundleEndRadarReport(const std::string &bundleName, ErrCode errCode,
-        const IServiceReverse::Scenario scenario);
+        const IServiceReverseType::Scenario scenario);
 
     void FileReadyRadarReport(const std::string &bundleName, const std::string &fileName, const ErrCode errCode,
-        const IServiceReverse::Scenario scenario);
+        const IServiceReverseType::Scenario scenario);
 
     void ExtensionConnectFailRadarReport(const std::string &bundleName, const ErrCode errCode,
-        const IServiceReverse::Scenario scenario);
+        const IServiceReverseType::Scenario scenario);
 
     void OnStartResRadarReport(const std::vector<std::string> &bundleNameList, int32_t stage);
 
@@ -646,6 +646,10 @@ private:
     bool GetScanningInfo(wptr<Service> obj, size_t scannedSize, string &scanning);
 
     void SetScanningInfo(string &scanning, string name);
+
+    ErrCode HelpToAppIncrementalFileReady(const string &bundleName, const string &fileName, sptr<IExtension> proxy);
+
+    void HelptoGetFileHandle(const string &bundleName, const string &fileName, sptr<IExtension> proxy);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

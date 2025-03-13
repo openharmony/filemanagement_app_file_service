@@ -66,7 +66,8 @@ ErrCode ServiceProxy::AppDone(ErrCode errCode)
 }
 
 ErrCode ServiceProxy::ServiceResultReport(const std::string restoreRetInfo,
-    BackupRestoreScenario scenario, ErrCode errCode)
+                                          BackupRestoreScenario scenario,
+                                          ErrCode errCode)
 {
     return BError(BError::Codes::OK);
 }
@@ -76,8 +77,11 @@ ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &file
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd, const vector<BundleName> &bundleNames,
-    const vector<std::string> &detailInfos, RestoreTypeEnum restoreType, int32_t userId)
+ErrCode ServiceProxy::AppendBundlesRestoreSession(UniqueFd fd,
+                                                  const vector<BundleName> &bundleNames,
+                                                  const vector<std::string> &detailInfos,
+                                                  RestoreTypeEnum restoreType,
+                                                  int32_t userId)
 {
     return BError(BError::Codes::OK);
 }
@@ -96,7 +100,7 @@ ErrCode ServiceProxy::AppendBundlesBackupSession(const vector<BundleName> &bundl
 }
 
 ErrCode ServiceProxy::AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
-    const std::vector<std::string> &detailInfos)
+                                                        const std::vector<std::string> &detailInfos)
 {
     return BError(BError::Codes::OK);
 }
@@ -143,7 +147,7 @@ ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrem
 }
 
 ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const vector<BIncrementalData> &bundlesToBackup,
-    const std::vector<std::string> &infos)
+                                                            const std::vector<std::string> &infos)
 {
     return BError(BError::Codes::OK);
 }
@@ -225,7 +229,7 @@ sptr<IService> ServiceProxy::GetInstance()
 
 void ServiceProxy::InvaildInstance() {}
 
-void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t, const OHOS::sptr<IRemoteObject>&) {}
+void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t, const OHOS::sptr<IRemoteObject> &) {}
 
 void ServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId) {}
 

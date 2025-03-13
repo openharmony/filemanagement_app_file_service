@@ -56,7 +56,6 @@ ohos_shared_library("backup_kit_inner") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_proxy.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
-    "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",
   ]
 
   defines = [
@@ -64,7 +63,10 @@ ohos_shared_library("backup_kit_inner") {
     "LOG_TAG=\"BackupAPI\"",
   ]
 
-  configs = [ ":private_config" ]
+  configs = [
+    ":private_config",
+    "${path_backup}/services/backup_sa:public_idl_config",
+  ]
   public_configs = [ ":public_config" ]
 
   external_deps = [
@@ -76,7 +78,10 @@ ohos_shared_library("backup_kit_inner") {
     "samgr:samgr_proxy",
   ]
 
-  deps = [ "${path_backup}/utils:backup_utils" ]
+  deps = [
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
+    "${path_backup}/utils:backup_utils",
+  ]
 
   cflags_cc = [
     "-fdata-sections",
