@@ -365,6 +365,30 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0102, testing::ext::TestSize.Leve
 }
 
 /**
+ * @tc.number: SUB_Service_AppFileReady_0103
+ * @tc.name: SUB_Service_AppFileReady_0103
+ * @tc.desc: 测试 AppFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0103, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppFileReady_0103";
+    try {
+        string fileName = "/manage.json";
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1), 0);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppFileReady_0103";
+}
+
+/**
  * @tc.number: SUB_Service_AppDone_0100
  * @tc.name: SUB_Service_AppDone_0100
  * @tc.desc: 测试 AppDone 接口
@@ -1794,5 +1818,274 @@ HWTEST_F(ServiceTest, SUB_Service_DeleteDisConfigFile_0100, testing::ext::TestSi
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by DeleteDisConfigFile.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DeleteDisConfigFile_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_ExtensionConnectFailRadarReport_0100
+ * @tc.name: SUB_Service_ExtensionConnectFailRadarReport_0100
+ * @tc.desc: 测试 ExtensionConnectFailRadarReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_ExtensionConnectFailRadarReport_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtensionConnectFailRadarReport_0100";
+    try {
+        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->ClearBundleRadarReport();
+        servicePtr_->ExtensionConnectFailRadarReport(BUNDLE_NAME, BError(BError::Codes::OK),
+                IServiceReverse::Scenario::BACKUP);
+        EXPECT_TRUE(true);
+
+        ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        servicePtr_->ExtensionConnectFailRadarReport(BUNDLE_NAME, BError(BError::Codes::OK),
+                IServiceReverse::Scenario::RESTORE);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by ExtensionConnectFailRadarReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ExtensionConnectFailRadarReport_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_StartRunningTimer_0100
+ * @tc.name: SUB_Service_StartRunningTimer_0100
+ * @tc.desc: 测试 StartRunningTimer 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_StartRunningTimer_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StartRunningTimer_0100";
+    try {
+        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->StartRunningTimer(BUNDLE_NAME);
+        EXPECT_TRUE(true);
+
+        ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        servicePtr_->StartRunningTimer(BUNDLE_NAME);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by StartRunningTimer.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartRunningTimer_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_TimeoutRadarReport_0100
+ * @tc.name: SUB_Service_TimeoutRadarReport_0100
+ * @tc.desc: 测试 TimeoutRadarReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_TimeoutRadarReport_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TimeoutRadarReport_0100";
+    try {
+        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        std::string bundleName = BUNDLE_NAME;
+        servicePtr_->ClearBundleRadarReport();
+        servicePtr_->TimeoutRadarReport(IServiceReverse::Scenario::BACKUP, bundleName);
+        EXPECT_TRUE(true);
+
+        ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        servicePtr_->TimeoutRadarReport(IServiceReverse::Scenario::RESTORE, bundleName);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by TimeoutRadarReport.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_TimeoutRadarReport_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_ReportOnBundleStarted_0100
+ * @tc.name: SUB_Service_ReportOnBundleStarted_0100
+ * @tc.desc: 测试 ReportOnBundleStarted 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_ReportOnBundleStarted_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ReportOnBundleStarted_0100";
+    try {
+        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->ReportOnBundleStarted(IServiceReverse::Scenario::BACKUP, BUNDLE_NAME);
+        EXPECT_TRUE(true);
+
+        ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        servicePtr_->ReportOnBundleStarted(IServiceReverse::Scenario::RESTORE, BUNDLE_NAME);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by ReportOnBundleStarted.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ReportOnBundleStarted_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_HandleNotSupportBundleNames_0100
+ * @tc.name: SUB_Service_HandleNotSupportBundleNames_0100
+ * @tc.desc: 测试 HandleNotSupportBundleNames 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceTest, SUB_Service_HandleNotSupportBundleNames_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_HandleNotSupportBundleNames_0100";
+    try {
+        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        const std::vector<std::string> srcBundleNames = {"test0", "test1", "test2", "test3"};
+        std::vector<std::string> supportBundleNames = {"test2", "test3", "test4", "test5"};
+
+        servicePtr_->HandleNotSupportBundleNames(srcBundleNames, supportBundleNames, false);
+        EXPECT_TRUE(true);
+        servicePtr_->HandleNotSupportBundleNames(srcBundleNames, supportBundleNames, true);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleNotSupportBundleNames.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleNotSupportBundleNames_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_RefreshDataSize_0100
+ * @tc.name: SUB_Service_RefreshDataSize_0100
+ * @tc.desc: 测试 RefreshDataSize 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_RefreshDataSize_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_RefreshDataSize_0100";
+    try {
+        string fileName = MANAGE_JSON;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->session_ = nullptr;
+        auto ret = servicePtr_->RefreshDataSize(0);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+
+        servicePtr_->session_ = sptr(new SvcSessionManager(servicePtr_));
+        ret = servicePtr_->RefreshDataSize(0);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by RefreshDataSize.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_RefreshDataSize_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_StopExtTimer_0100
+ * @tc.name: SUB_Service_StopExtTimer_0100
+ * @tc.desc: 测试 StopExtTimer 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_StopExtTimer_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StopExtTimer_0100";
+    try {
+        string fileName = MANAGE_JSON;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->session_ = nullptr;
+        bool isExtStop = false;
+
+        auto ret = servicePtr_->StopExtTimer(isExtStop);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+
+        servicePtr_->session_ = sptr(new SvcSessionManager(servicePtr_));
+        ret = servicePtr_->StopExtTimer(isExtStop);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by StopExtTimer.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StopExtTimer_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_PublishFile_0103
+ * @tc.name: SUB_Service_PublishFile_0103
+ * @tc.desc: 测试 PublishFile 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_PublishFile_0103, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_PublishFile_0103";
+    try {
+        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        BFileInfo fileInfo {BUNDLE_NAME, "", 0};
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->session_ = nullptr;
+        ret = servicePtr_->PublishFile(fileInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+        servicePtr_->session_ = sptr(new SvcSessionManager(servicePtr_));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by PublishFile.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_PublishFile_0103";
+}
+
+/**
+ * @tc.number: SUB_Service_AppFileReady_0104
+ * @tc.name: SUB_Service_AppFileReady_0104
+ * @tc.desc: 测试 AppFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0104, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppFileReady_0104";
+    try {
+        string fileName = "manage.json";
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->session_ = nullptr;
+        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1), 0);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+        servicePtr_->session_ = sptr(new SvcSessionManager(servicePtr_));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppFileReady_0104";
 }
 } // namespace OHOS::FileManagement::Backup

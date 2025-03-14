@@ -103,7 +103,6 @@ public:
       int fd,
       int manifestFd,
       int32_t appIncrementalFileReadyErrCode) override;
-    ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode);
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetBackupInfo(const BundleName &bundleName, std::string &result) override;
@@ -669,6 +668,8 @@ private:
     UniqueFd GetLocalCapabilitiesForBundleInfos();
 
     ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode);
+
+    ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode);
 
     ErrCode AppendBundlesRestoreSession(UniqueFd fd,
                                         const std::vector<BundleName> &bundleNames,
