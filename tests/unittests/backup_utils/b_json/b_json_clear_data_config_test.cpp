@@ -672,5 +672,4 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_1000, testing::ext::Te
     }
     GTEST_LOG_(INFO) << "BJsonClearDataConfigTest-end Clear_Data_Config_Test_1000";
 }
-
 } // namespace OHOS::FileManagement::Backup
