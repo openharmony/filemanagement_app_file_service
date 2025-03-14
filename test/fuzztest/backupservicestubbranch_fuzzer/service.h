@@ -66,9 +66,9 @@ public:
                                                    std::string&) { return BError(BError::Codes::OK); }
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData>&)
         { return BError(BError::Codes::OK); }
-    ErrCode AppendBundlesIncrementalBackupSessionWithBundleInfos(const std::vector<BIncrementalData>&, 
+    ErrCode AppendBundlesIncrementalBackupSessionWithBundleInfos(const std::vector<BIncrementalData>&,
                                                                  const std::vector<std::string>&)
-                                                                 { return BError(BError::Codes::OK); }
+        { return BError(BError::Codes::OK); }
     ErrCode PublishIncrementalFile(const BFileInfo&) { return BError(BError::Codes::OK); }
     ErrCode PublishSAIncrementalFile(const BFileInfo&, int) { return BError(BError::Codes::OK); }
     ErrCode AppIncrementalFileReady(const std::string&, int, int, int32_t)
