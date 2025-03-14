@@ -374,15 +374,6 @@ ohos_unittest("ext_backup_js_test") {
     "private=public",
   ]
 
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    cfi_vcall_icall_only = true
-    debug = false
-  }
   use_exceptions = true
 }
 

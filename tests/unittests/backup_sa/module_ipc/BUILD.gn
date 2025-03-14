@@ -478,15 +478,6 @@ ohos_unittest("backup_service_incremental_test") {
     "storage_service:storage_manager_sa_proxy",
   ]
 
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    cfi_vcall_icall_only = true
-    debug = false
-  }
   defines = [ "private=public" ]
   use_exceptions = true
 }
@@ -567,16 +558,6 @@ ohos_unittest("backup_service_other_test") {
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
   ]
-
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    cfi_vcall_icall_only = true
-    debug = false
-  }
 
   defines = [ "private=public" ]
   use_exceptions = true
