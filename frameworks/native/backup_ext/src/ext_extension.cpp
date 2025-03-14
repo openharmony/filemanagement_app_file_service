@@ -241,12 +241,12 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
 }
 
 ErrCode BackupExtExtension::GetFileHandleWithUniqueFd(const std::string &fileName,
-    int32_t &getFileHandleErrCode,
-    int &fd)
+                                                      int32_t &getFileHandleErrCode,
+                                                      int &fd)
 {
-UniqueFd fileHandleFd(GetFileHandle(fileName, getFileHandleErrCode));
-fd = fileHandleFd.Release();
-return ERR_OK;
+    UniqueFd fileHandleFd(GetFileHandle(fileName, getFileHandleErrCode));
+    fd = fileHandleFd.Release();
+    return ERR_OK;
 }
 
 UniqueFd BackupExtExtension::GetFileHandle(const string &fileName, int32_t &errCode)
