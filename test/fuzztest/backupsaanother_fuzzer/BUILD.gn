@@ -43,6 +43,8 @@ ohos_fuzztest("BackupSaAnotherFuzzTest") {
     "${path_backup}/utils:backup_utils",
   ]
 
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
   external_deps = [
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",

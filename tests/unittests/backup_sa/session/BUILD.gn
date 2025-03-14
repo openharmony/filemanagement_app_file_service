@@ -17,6 +17,16 @@ import("//foundation/filemanagement/app_file_service/backup.gni")
 ohos_unittest("b_incremental_session_test") {
   module_out_path = path_module_out_tests
 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
+
   include_dirs = [
     "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
@@ -30,11 +40,11 @@ ohos_unittest("b_incremental_session_test") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_incremental_session_restore_async.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
-
-    # "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",
     "b_incremental_session_test.cpp",
     "service_proxy_mock.cpp",
   ]
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
 
   deps = [
     "${path_backup}/services/backup_sa:backup_sa_ipc",

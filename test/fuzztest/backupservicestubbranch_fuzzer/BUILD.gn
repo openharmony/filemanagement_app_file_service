@@ -30,6 +30,8 @@ ohos_fuzztest("BackupServiceStubBranchFuzzTest") {
     "${app_file_service_path}/utils/include",
     "${app_file_service_path}/utils/include/b_hilog",
   ]
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
   cflags = [
     "-g",
     "-O0",

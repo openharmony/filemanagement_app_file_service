@@ -52,6 +52,8 @@ ohos_shared_library("backup_extension_ability_native") {
     "${path_backup}/services/backup_sa/include/module_ipc",
   ]
 
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",

@@ -309,6 +309,16 @@ ohos_unittest("untar_file_test") {
 ohos_unittest("ext_backup_js_test") {
   module_out_path = path_module_out_tests
 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
+
   sources = [
     "${path_backup}/tests/mock/backup_ext/src/ext_backup_mock.cpp",
     "${path_backup}/tests/mock/napi/src/napi_mock.cpp",

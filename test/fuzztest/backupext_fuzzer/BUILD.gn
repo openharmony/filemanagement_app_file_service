@@ -28,6 +28,9 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/utils/include",
   ]
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
   cflags = [
     "-g",
     "-O0",
