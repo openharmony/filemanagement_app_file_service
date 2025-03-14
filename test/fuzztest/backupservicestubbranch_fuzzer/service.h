@@ -29,9 +29,11 @@ namespace OHOS::FileManagement::Backup {
 class Service : public ServiceStub {
 public:
     ErrCode InitRestoreSession(const sptr<IServiceReverse>&) { return BError(BError::Codes::OK); }
-    ErrCode InitRestoreSessionWithErrMsg(const sptr<IServiceReverse>&, std::string&) { return BError(BError::Codes::OK); }
+    ErrCode InitRestoreSessionWithErrMsg(const sptr<IServiceReverse>&,
+                                         std::string&) { return BError(BError::Codes::OK); }
     ErrCode InitBackupSession(const sptr<IServiceReverse>&) { return BError(BError::Codes::OK); }
-    ErrCode InitBackupSessionWithErrMsg(const sptr<IServiceReverse>&, std::string&) { return BError(BError::Codes::OK); }
+    ErrCode InitBackupSessionWithErrMsg(const sptr<IServiceReverse>&,
+                                        std::string&) { return BError(BError::Codes::OK); }
     ErrCode Start() { return BError(BError::Codes::OK); }
     ErrCode GetLocalCapabilities(int&) { return BError(BError::Codes::OK); }
     ErrCode GetLocalCapabilitiesForBundleInfos(int&) {  return BError(BError::Codes::OK); }
@@ -42,28 +44,31 @@ public:
         BackupRestoreScenario, ErrCode) { return BError(BError::Codes::OK); }
     ErrCode GetFileHandle(const std::string&, const std::string&) { return BError(BError::Codes::OK); }
     ErrCode AppendBundlesRestoreSessionDataByDetail(int,
-                                        const std::vector<BundleName>&,
-                                        const std::vector<std::string>&,
-                                        int32_t,
-                                        int32_t) { return BError(BError::Codes::OK); }
+                                                    const std::vector<BundleName>&,
+                                                    const std::vector<std::string>&,
+                                                    int32_t,
+                                                    int32_t) { return BError(BError::Codes::OK); }
     ErrCode AppendBundlesRestoreSessionData(int,
-                                        const std::vector<BundleName>&,
-                                        int32_t,
-                                        int32_t) { return BError(BError::Codes::OK); }
+                                            const std::vector<BundleName>&,
+                                            int32_t,
+                                            int32_t) { return BError(BError::Codes::OK); }
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName>&) { return BError(BError::Codes::OK); }
     ErrCode AppendBundlesDetailsBackupSession(const std::vector<BundleName>&,
                                               const std::vector<std::string>&) { return BError(BError::Codes::OK); }
     ErrCode Finish() { return BError(BError::Codes::OK); }
     ErrCode Release() { return BError(BError::Codes::OK); }
     ErrCode Cancel(const std::string&, int32_t&) { return BError(BError::Codes::OK); }
-    ErrCode GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData>&, int&) { return BError(BError::Codes::OK); }
+    ErrCode GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData>&,
+                                            int&) { return BError(BError::Codes::OK); }
     ErrCode GetAppLocalListAndDoIncrementalBackup() { return BError(BError::Codes::OK); }
     ErrCode InitIncrementalBackupSession(const sptr<IServiceReverse>&) { return BError(BError::Codes::OK); }
-    ErrCode InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>&, std::string&) { return BError(BError::Codes::OK); }
+    ErrCode InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>&,
+                                                   std::string&) { return BError(BError::Codes::OK); }
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData>&)
         { return BError(BError::Codes::OK); }
-    ErrCode AppendBundlesIncrementalBackupSessionWithBundleInfos(const std::vector<BIncrementalData>&, const std::vector<std::string>&)
-        { return BError(BError::Codes::OK); }
+    ErrCode AppendBundlesIncrementalBackupSessionWithBundleInfos(const std::vector<BIncrementalData>&, 
+                                                                 const std::vector<std::string>&)
+                                                                 { return BError(BError::Codes::OK); }
     ErrCode PublishIncrementalFile(const BFileInfo&) { return BError(BError::Codes::OK); }
     ErrCode PublishSAIncrementalFile(const BFileInfo&, int) { return BError(BError::Codes::OK); }
     ErrCode AppIncrementalFileReady(const std::string&, int, int, int32_t)

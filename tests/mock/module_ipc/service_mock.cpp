@@ -35,55 +35,12 @@ void Service::OnStart() {}
 
 void Service::OnStop() {}
 
-ErrCode Service::GetLocalCapabilitiesForBundleInfos(int &fd)
-{
-    return BError(BError::Codes::OK);
-}
-ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
-{
-    return BError(BError::Codes::OK);
-}
-
-ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &reverseIpcRemoteObject, std::string &errMsg)
-{
-    return BError(BError::Codes::OK);
-}
-
-ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd,
-                                                         const std::vector<std::string> &bundleNames,
-                                                         const std::vector<std::string> &detailInfos,
-                                                         int32_t restoreType,
-                                                         int32_t userId)
-{
-    return BError(BError::Codes::OK);
-}
-
-ErrCode Service::AppendBundlesRestoreSessionData(int fd,
-                                                 const std::vector<std::string> &bundleNames,
-                                                 int32_t restoreType,
-                                                 int32_t userId)
-{
-    return BError(BError::Codes::OK);
-}
-ErrCode Service::AppendBundlesIncrementalBackupSessionWithBundleInfos(
-    const std::vector<BIncrementalData> &bundlesToBackup,
-    const std::vector<std::string> &bundleInfos)
-{
-    return BError(BError::Codes::OK);
-}
-
 ErrCode Service::GetLocalCapabilities(int &fd)
 {
-    fd = -1;
     return BError(BError::Codes::OK);
 }
 
-UniqueFd Service::GetLocalCapabilities()
-{
-    return UniqueFd(-1);
-}
-
-UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
+ErrCode Service::GetLocalCapabilitiesForBundleInfos(int &fd)
 {
     return UniqueFd(-1);
 }
@@ -100,7 +57,17 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &reverseIpcRemoteObject, std::string &errMsg)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
 {
     return BError(BError::Codes::OK);
 }
@@ -125,24 +92,25 @@ ErrCode Service::AppDone(ErrCode errCode)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::ServiceResultReport(const std::string &restoreRetInfo, BackupRestoreScenario sennario, ErrCode errCode)
+ErrCode Service::ServiceResultReport(const std::string &restoreRetInfo,
+    BackupRestoreScenario sennario, ErrCode errCode)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
-                                             const std::vector<BundleName> &bundleNames,
-                                             const std::vector<std::string> &detailInfos,
-                                             RestoreTypeEnum restoreType,
-                                             int32_t userId)
+ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd,
+                                                         const std::vector<std::string> &bundleNames,
+                                                         const std::vector<std::string> &detailInfos,
+                                                         int32_t restoreType,
+                                                         int32_t userId)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
-                                             const std::vector<BundleName> &bundleNames,
-                                             RestoreTypeEnum restoreType,
-                                             int32_t userId)
+ErrCode Service::AppendBundlesRestoreSessionData(int fd,
+                                                 const std::vector<std::string> &bundleNames,
+                                                 int32_t restoreType,
+                                                 int32_t userId)
 {
     return BError(BError::Codes::OK);
 }
@@ -252,8 +220,9 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
-                                                       const std::vector<std::string> &infos)
+ErrCode Service::AppendBundlesIncrementalBackupSessionWithBundleInfos(
+    const std::vector<BIncrementalData> &bundlesToBackup,
+    const std::vector<std::string> &bundleInfos)
 {
     return BError(BError::Codes::OK);
 }
@@ -345,40 +314,26 @@ std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName 
     return make_shared<ExtensionMutexInfo>(bundleName);
 }
 
-void Service::RemoveExtensionMutex(const BundleName &bundleName) {}
+void Service::RemoveExtensionMutex(const BundleName &bundleName)
+{
+}
 
 void Service::OnBundleStarted(BError error, sptr<SvcSessionManager> session, const BundleName &bundleName) {}
 
 void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
-                                             const vector<BundleName> &appendBundleNames,
-                                             const vector<BundleName> &restoreBundleNames)
-{
-}
+    const vector<BundleName> &appendBundleNames, const vector<BundleName> &restoreBundleNames) {}
 
-void Service::BundleBeginRadarReport(const std::string &bundleName,
-                                     const ErrCode errCode,
-                                     const IServiceReverse::Scenario scenario)
-{
-}
+void Service::BundleBeginRadarReport(const std::string &bundleName, const ErrCode errCode,
+    const IServiceReverse::Scenario scenario) {}
 
-void Service::BundleEndRadarReport(const std::string &bundleName,
-                                   ErrCode errCode,
-                                   const IServiceReverse::Scenario scenario)
-{
-}
+void Service::BundleEndRadarReport(const std::string &bundleName, ErrCode errCode,
+    const IServiceReverse::Scenario scenario) {}
 
-void Service::FileReadyRadarReport(const std::string &bundleName,
-                                   const std::string &fileName,
-                                   const ErrCode errCode,
-                                   const IServiceReverse::Scenario scenario)
-{
-}
+void Service::FileReadyRadarReport(const std::string &bundleName, const std::string &fileName, const ErrCode errCode,
+    const IServiceReverse::Scenario scenario) {}
 
-void Service::ExtensionConnectFailRadarReport(const std::string &bundleName,
-                                              const ErrCode errCode,
-                                              const IServiceReverse::Scenario scenario)
-{
-}
+void Service::ExtensionConnectFailRadarReport(const std::string &bundleName, const ErrCode errCode,
+    const IServiceReverse::Scenario scenario) {}
 
 void Service::PermissionCheckFailRadar(const std::string &info, const std::string &func) {}
 
@@ -411,28 +366,28 @@ void Service::ClearFailedBundles() {}
 
 void Service::GetOldDeviceBackupVersion() {}
 
-void Service::CreateDirIfNotExist(const std::string &path) {}
-
-std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &,
-                                                              bool,
-                                                              const vector<string> &)
+void Service::CreateDirIfNotExist(const std::string &path)
 {
-    return {};
 }
 
 void Service::StartRunningTimer(const std::string &bundleName) {}
 
-void Service::HandleNotSupportBundleNames(const vector<string> &, vector<string> &, bool) {}
+std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool,
+    const vector<string>&)
+{
+    return {};
+}
 
-void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData> &, std::vector<std::string> &) {}
+void Service::HandleNotSupportBundleNames(const vector<string>&, vector<string>&, bool) {}
+
+void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>&, std::vector<std::string>&) {}
 
 void Service::CancelTask(std::string bundleName, wptr<Service> ptr) {}
 
 void SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId) {}
 
-void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRestoreScenario scenario, ErrCode errCode)
-{
-}
+void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRestoreScenario scenario,
+    ErrCode errCode) {}
 
 void Service::SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId) {}
 
@@ -453,7 +408,7 @@ void Service::DeleteFromList(size_t scannedSize) {}
 
 void Service::WriteScannedInfoToList(const string &bundleName, int64_t dataSize, int64_t incDataSize) {}
 
-void Service::SendScannedInfo(const string &scannendInfos, sptr<SvcSessionManager> session) {}
+void Service::SendScannedInfo(const string&scannendInfos, sptr<SvcSessionManager> session) {}
 
 void Service::CyclicSendScannedInfo(bool isPreciseScan, vector<BIncrementalData> bundleNameList) {}
 

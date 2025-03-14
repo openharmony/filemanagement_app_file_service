@@ -39,8 +39,8 @@ ohos_unittest("b_incremental_session_test") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",
     "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
+    "${path_backup}/tests/mock/backup_kit_inner/service_client_mock.cpp",
     "b_incremental_session_test.cpp",
-    "service_client_mock.cpp",
     "service_proxy_mock.cpp",
   ]
 

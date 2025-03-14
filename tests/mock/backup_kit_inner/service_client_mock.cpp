@@ -45,12 +45,7 @@ bool ServiceClient::CheckServiceProxy()
     }
     return isNull;
 }
-
-sptr<IService> ServiceClient::GetServiceProxyPointer()
-{
-    return serviceProxy_;
-}
-
+sptr<IService> ServiceClient::GetServiceProxyPointer() { return serviceProxy_; }
 sptr<IService> ServiceClient::GetInstance()
 {
     if (!GetMockGetInstance()) {
@@ -65,16 +60,9 @@ sptr<IService> ServiceClient::GetInstance()
     }
     return serviceProxy_;
 }
-
-void ServiceClient::InvaildInstance()
-{
-    serviceProxy_ = nullptr;
-}
-
+void ServiceClient::InvaildInstance() { serviceProxy_ = nullptr; }
 void ServiceClient::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
                                                                          const OHOS::sptr<IRemoteObject> &remoteObject)
-{
-}
-
+{}
 void ServiceClient::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId) {}
 }
