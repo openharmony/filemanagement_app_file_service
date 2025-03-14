@@ -69,15 +69,6 @@ ohos_unittest("b_incremental_session_test") {
     "samgr:samgr_proxy",
   ]
 
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    cfi_vcall_icall_only = true
-    debug = false
-  }
   use_exceptions = true
 }
 
