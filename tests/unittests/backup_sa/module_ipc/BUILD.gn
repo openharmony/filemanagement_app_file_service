@@ -423,6 +423,7 @@ ohos_unittest("backup_service_incremental_test") {
     cfi_cross_dso = true
     cfi_vcall_icall_only = true
     debug = false
+    blocklist = "${path_backup}/cfi_blocklist.txt"
   }
 
   sources = [
@@ -493,6 +494,7 @@ ohos_unittest("backup_service_other_test") {
     cfi_cross_dso = true
     cfi_vcall_icall_only = true
     debug = false
+    blocklist = "${path_backup}/cfi_blocklist.txt"
   }
   sources = [
     "${path_backup_mock}/accesstoken/src/accesstoken_kit_mock.cpp",
