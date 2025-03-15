@@ -40,10 +40,7 @@ ErrCode ServiceProxy::AppIncrementalDone(int32_t appIncrementalDoneErrCode)
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppIncrementalFileReady(const std::string &fileName,
-                                              int fd,
-                                              int manifestFd,
-                                              int32_t appIncrementalFileReadyErrCode)
+ErrCode ServiceProxy::AppIncrementalFileReady(const std::string &fileName, int fd, int manifestFd, int32_t errCode)
 {
     return BError(BError::Codes::OK);
 }
@@ -82,8 +79,7 @@ ErrCode ServiceProxy::Start()
 }
 
 ErrCode ServiceProxy::AppendBundlesIncrementalBackupSessionWithBundleInfos(
-    const std::vector<BIncrementalData> &bundlesToBackup,
-    const std::vector<std::string> &bundleInfos)
+    const std::vector<BIncrementalData> &bundlesToBackup, const std::vector<std::string> &bundleInfos)
 {
     return BError(BError::Codes::OK);
 }
@@ -116,8 +112,7 @@ int32_t ServiceProxy::InitBackupSession(const sptr<IServiceReverse> &remote)
     return 1;
 }
 
-ErrCode ServiceProxy::ServiceResultReport(const std::string &restoreRetInfo,
-                                          BackupRestoreScenario scenario,
+ErrCode ServiceProxy::ServiceResultReport(const std::string &restoreRetInfo, BackupRestoreScenario scenario,
                                           int32_t serviceResultReportErrCode)
 {
     return BError(BError::Codes::OK);
@@ -138,11 +133,9 @@ ErrCode ServiceProxy::GetFileHandle(const string &bundleName, const string &file
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppendBundlesRestoreSessionDataByDetail(int fd,
-                                                              const std::vector<std::string> &bundleNames,
+ErrCode ServiceProxy::AppendBundlesRestoreSessionDataByDetail(int fd, const std::vector<std::string> &bundleNames,
                                                               const std::vector<std::string> &detailInfos,
-                                                              int32_t restoreType,
-                                                              int32_t userId)
+                                                              int32_t restoreType, int32_t userId)
 {
     return BError(BError::Codes::OK);
 }

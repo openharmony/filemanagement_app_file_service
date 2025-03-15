@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
- #ifndef TEST_UNITTEST_SERVICE_CLIENT_MOCK_H
- #define TEST_UNITTEST_SERVICE_CLIENT_MOCK_H
+#ifndef TEST_UNITTEST_SERVICE_CLIENT_MOCK_H
+#define TEST_UNITTEST_SERVICE_CLIENT_MOCK_H
+
+#include <gmock/gmock.h>
+#include "service_client.h"
  
- #include <gmock/gmock.h>
- #include "service_client.h"
+namespace OHOS::FileManagement::Backup {
+class ServiceClientMock : public ServiceClient {
  
- namespace OHOS::FileManagement::Backup {
- class ServiceClientMock : public ServiceClient {
- 
- public:
-     MOCK_METHOD0(GetServiceProxyPointer, bool());
-     MOCK_METHOD0(GetInstance, sptr<IService>());
-     MOCK_METHOD0(InvaildInstance, sptr<IService>());
-     MOCK_METHOD0(InvaildInstance, void());
-     MOCK_METHOD0(Start, ErrCode());
- };
- } // End of namespace OHOS::FileManagement::Backup
- #endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H 
+public:
+    MOCK_METHOD0(GetServiceProxyPointer, bool());
+    MOCK_METHOD0(GetInstance, sptr<IService>());
+    MOCK_METHOD0(InvaildInstance, sptr<IService>());
+    MOCK_METHOD0(InvaildInstance, void());
+    MOCK_METHOD0(Start, ErrCode());
+};
+} // End of namespace OHOS::FileManagement::Backup
+#endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H 

@@ -245,12 +245,8 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
 
 ErrCode Service::AppFileReady(const std::string &fileName, int fd, int32_t errCode)
 {
-    HILOGI("fileName =%{public}s, fd = %{public}d, errCode = %{public}d", fileName.c_str(), fd, errCode);
+    HILOGI("Begin fileName =%{public}s, fd = %{public}d, errCode = %{public}d", fileName.c_str(), fd, errCode);
     UniqueFd fdUnique(fd);
-    if (fd < 0) {
-        HILOGE("Error fd, fd = %{public}d", fd);
-        return BError(BError::Codes::SA_INVAL_ARG);
-    }
     return AppFileReady(fileName, std::move(fdUnique), errCode);
 }
 
@@ -868,7 +864,6 @@ ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote
 ErrCode Service::GetLocalCapabilitiesForBundleInfos(int &fd)
 {
     UniqueFd uniqueFd(GetLocalCapabilitiesForBundleInfos());
-    HILOGI("get GetLocalCapabilitiesForBundleInfos value");
     fd = uniqueFd.Release();
     return ErrCode(BError::Codes::OK);
 }

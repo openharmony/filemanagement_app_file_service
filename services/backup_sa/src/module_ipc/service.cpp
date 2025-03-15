@@ -225,11 +225,10 @@ void Service::OnStart()
     if (!bundleNameList.empty() || !residualBundleNameList.empty()) {
         if (!bundleNameList.empty()) {
             OnStartResRadarReport(bundleNameList, static_cast<int32_t>(BizStageBackup::BIZ_STAGE_ONSTART_DISPOSE));
-            HILOGI("bundleNameList !=null");
         }
         if (!residualBundleNameList.empty()) {
             OnStartResRadarReport(residualBundleNameList,
-                                  static_cast<int32_t>(BizStageBackup::BIZ_STAGE_ONSTART_RESIDUAL));
+                static_cast<int32_t>(BizStageBackup::BIZ_STAGE_ONSTART_RESIDUAL));
         }
         SetOccupySession(true);
         session_->Active(
@@ -278,7 +277,6 @@ ErrCode Service::GetLocalCapabilities(int& fd)
 {
     UniqueFd fdResult(GetLocalCapabilities());
     fd = fdResult.Release();
-    HILOGI("get GetLocalCapabilities value fd=%{public}d", fd);
     return BError(BError::Codes::OK);
 }
 
@@ -370,8 +368,8 @@ void Service::PermissionCheckFailRadar(const std::string &info, const std::strin
 {
     std::string funcPos = "Service::";
     AppRadar::Info resInfo("", "", info);
-    AppRadar::GetInstance().RecordDefaultFuncRes(resInfo, funcPos.append(func), GetUserIdDefault(),
-                                                 BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL,
+    AppRadar::GetInstance().RecordDefaultFuncRes(resInfo, funcPos.append(func),
+                                                 GetUserIdDefault(), BizStageBackup::BIZ_STAGE_PERMISSION_CHECK_FAIL,
                                                  BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 }
 
@@ -632,9 +630,8 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     return restoreBundleInfos;
 }
 
-void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
-                                             const vector<BundleName> &appendBundleNames,
-                                             const vector<BundleName> &restoreBundleNames)
+void Service::HandleExceptionOnAppendBundles(
+    sptr<SvcSessionManager> session, const vector<BundleName> &appendBundleNames, const vector<BundleName> &restoreBundleNames)
 {
     if (appendBundleNames.size() != restoreBundleNames.size()) {
         HILOGE("AppendBundleNames not equal restoreBundleNames, appendBundleNames size:%{public}zu,"
@@ -650,15 +647,12 @@ void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
     }
 }
 
-ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd,
-                                                         const std::vector<std::string> &bundleNames,
+ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd, const std::vector<std::string> &bundleNames,
                                                          const std::vector<std::string> &detailInfos,
-                                                         int32_t restoreType,
-                                                         int32_t userId)
+                                                         int32_t restoreType, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin AppendBundlesRestoreSessionDataByDetail");
-    HILOGI("fd = %{public}d,restoreType = %{public}d,userId=%{public}d", fd, restoreType, userId);
+    HILOGI("Begin fd = %{public}d,restoreType = %{public}d,userId=%{public}d", fd, restoreType, userId);
     UniqueFd fdUnique(fd);
     RestoreTypeEnum restoreTypeEnum = static_cast<RestoreTypeEnum>(restoreType);
     return AppendBundlesRestoreSession(std::move(fdUnique), bundleNames, detailInfos, restoreTypeEnum, userId);
@@ -722,8 +716,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
 
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
                                        std::vector<std::string> &restoreBundleNames,
-                                       RestoreTypeEnum restoreType,
-                                       std::string &backupVersion)
+                                       RestoreTypeEnum restoreType, std::string &backupVersion)
 {
     HILOGI("Start");
     session_->SetOldBackupVersion(backupVersion);
@@ -734,11 +727,11 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         });
         if (it == restoreBundleNames.end()) {
             HILOGE("Can not find current bundle, bundleName:%{public}s, appIndex:%{public}d", restoreInfo.name.c_str(),
-                   restoreInfo.appIndex);
+                restoreInfo.appIndex);
             continue;
         }
         HILOGI("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
-               restoreInfo.extensionName.c_str());
+            restoreInfo.extensionName.c_str());
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
         if ((!restoreInfo.allToBackup && !SpecialVersion(restoreInfo.versionName)) ||
             (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) {
@@ -759,14 +752,11 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
     }
     HILOGI("End");
 }
-ErrCode Service::AppendBundlesRestoreSessionData(int fd,
-                                                 const std::vector<std::string> &bundleNames,
-                                                 int32_t restoreType,
-                                                 int32_t userId)
+ErrCode Service::AppendBundlesRestoreSessionData(int fd, const std::vector<std::string> &bundleNames,
+                                                 int32_t restoreType, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin AppendBundlesRestoreSessionData");
-    HILOGI("fd = %{public}d,restoreType = %{public}d,userId=%{public}d", fd, restoreType, userId);
+    HILOGI("Begin fd = %{public}d,restoreType = %{public}d,userId=%{public}d", fd, restoreType, userId);
     UniqueFd fdUnique(fd);
     RestoreTypeEnum restoreTypeEnum = static_cast<RestoreTypeEnum>(restoreType);
     return AppendBundlesRestoreSession(std::move(fdUnique), bundleNames, restoreTypeEnum, userId);
@@ -1016,10 +1006,8 @@ ErrCode Service::ServiceResultReport(const std::string& restoreRetInfo, BackupRe
     }
 }
 
-ErrCode Service::SAResultReport(const std::string bundleName,
-                                const std::string restoreRetInfo,
-                                const ErrCode errCode,
-                                const BackupRestoreScenario sennario)
+ErrCode Service::SAResultReport(const std::string bundleName, const std::string restoreRetInfo,
+                                const ErrCode errCode, const BackupRestoreScenario sennario)
 {
     SADone(errCode, bundleName);
     if (sennario == BackupRestoreScenario::FULL_RESTORE) {
@@ -1046,7 +1034,8 @@ void Service::HandleCurBundleEndWork(std::string bundleName, const BackupRestore
 {
     HILOGI("Begin");
     try {
-        if (sennario != BackupRestoreScenario::FULL_RESTORE && sennario != BackupRestoreScenario::INCREMENTAL_RESTORE) {
+        if (sennario != BackupRestoreScenario::FULL_RESTORE &&
+            sennario != BackupRestoreScenario::INCREMENTAL_RESTORE) {
             return;
         }
         if (session_->OnBundleFileReady(bundleName)) {
@@ -1223,8 +1212,7 @@ int Service::Dump(int fd, const vector<u16string> &args)
 }
 
 void Service::ReportOnExtConnectFailed(const IServiceReverse::Scenario scenario,
-                                       const std::string &bundleName,
-                                       const ErrCode ret)
+                                       const std::string &bundleName, const ErrCode ret)
 {
     try {
         if (session_ == nullptr) {
@@ -1886,9 +1874,7 @@ ErrCode Service::BackupSA(std::string bundleName)
     return BError(BError::Codes::OK);
 }
 
-void Service::OnSABackup(const std::string &bundleName,
-                         const int &fd,
-                         const std::string &result,
+void Service::OnSABackup(const std::string &bundleName, const int &fd, const std::string &result,
                          const ErrCode &errCode)
 {
     auto task = [bundleName, fd, result, errCode, this]() {

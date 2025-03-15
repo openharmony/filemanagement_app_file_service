@@ -124,10 +124,8 @@ void Service::CreateDirIfNotExist(const std::string &path)
 ErrCode Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames, int &fd)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin GetLocalCapabilitiesIncremental fd = %{private}d", fd);
     UniqueFd fdResult(GetLocalCapabilitiesIncremental(bundleNames));
     fd = fdResult.Release();
-    HILOGI("End GetLocalCapabilitiesIncremental fd = %{private}d", fd);
     return BError(BError::Codes::OK); // anytime return OK
 }
 
@@ -423,8 +421,7 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
     }
 }
 ErrCode Service::AppendBundlesIncrementalBackupSessionWithBundleInfos(
-    const std::vector<BIncrementalData> &bundlesToBackup,
-    const std::vector<std::string> &bundleInfos)
+    const std::vector<BIncrementalData> &bundlesToBackup, const std::vector<std::string> &bundleInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     return AppendBundlesIncrementalBackupSession(bundlesToBackup, bundleInfos);
@@ -535,7 +532,6 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
 
 ErrCode Service::PublishSAIncrementalFile(const BFileInfo& fileInfo, int fd)
 {
-    HILOGI("Begin PublishSAIncrementalFile, %{public}d", fd);
     UniqueFd uniquedParameter(fd);
     return PublishSAIncrementalFile(fileInfo, std::move(uniquedParameter));
 }
@@ -563,17 +559,14 @@ ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd
     return saConnection->CallRestoreSA(move(fd));
 }
 
-ErrCode Service::AppIncrementalFileReady(const std::string &bundleName,
-                                         const std::string &fileName,
-                                         UniqueFd fd,
-                                         UniqueFd manifestFd,
-                                         int32_t errCode)
+ErrCode Service::AppIncrementalFileReady(const std::string &bundleName, const std::string &fileName, UniqueFd fd,
+                                         UniqueFd manifestFd, int32_t errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(bundleName, fileName, move(fd),
-                                                                              move(manifestFd), errCode);
+                move(manifestFd), errCode);
             FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverse::Scenario::RESTORE);
             return BError(BError::Codes::OK);
         }
@@ -586,8 +579,8 @@ ErrCode Service::AppIncrementalFileReady(const std::string &bundleName,
         if (session_->OnBundleFileReady(bundleName, fileName)) {
             ErrCode ret = HandleCurBundleFileReady(bundleName, fileName, true);
             if (ret != ERR_OK) {
-                HILOGE("Handle current file failed, bundleName:%{public}s, fileName:%{public}s", bundleName.c_str(),
-                       GetAnonyPath(fileName).c_str());
+                HILOGE("Handle current file failed, bundleName:%{public}s, fileName:%{public}s",
+                    bundleName.c_str(), GetAnonyPath(fileName).c_str());
                 return ret;
             }
         }
@@ -602,17 +595,11 @@ ErrCode Service::AppIncrementalFileReady(const std::string &bundleName,
     }
 }
 
-ErrCode Service::AppIncrementalFileReady(const std::string &fileName,
-                                         int fd,
-                                         int manifestFd,
+ErrCode Service::AppIncrementalFileReady(const std::string &fileName, int fd, int manifestFd,
                                          int32_t appIncrementalFileReadyErrCode)
 {
     HILOGI("Begin AppIncrementalFileReady:%{public}s, fd:%{public}d, manifestFd:%{public}d, errcode:%{public}d",
            fileName.c_str(), fd, manifestFd, appIncrementalFileReadyErrCode);
-    if (fd < 0 || manifestFd < 0) {
-        HILOGE("Error fd or manifestFd, fd = %{public}d, manifestFd = %{public}d", fd, manifestFd);
-        return BError(BError::Codes::SA_INVAL_ARG).GetCode();
-    }
     UniqueFd fdUnique(fd);
     UniqueFd manifestFdUnique(manifestFd);
     return AppIncrementalFileReady(fileName, std::move(fdUnique), std::move(manifestFdUnique),
@@ -781,8 +768,7 @@ bool Service::IncrementalBackup(const string &bundleName)
             NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         }
         return true;
-    } else if (scenario == IServiceReverse::Scenario::RESTORE &&
-               BackupPara().GetBackupOverrideIncrementalRestore() &&
+    } else if (scenario == IServiceReverse::Scenario::RESTORE && BackupPara().GetBackupOverrideIncrementalRestore() &&
                session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
         auto ret = proxy->HandleRestore(session_->GetClearDataFlag(bundleName));
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(ret, bundleName);

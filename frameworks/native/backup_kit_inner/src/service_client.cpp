@@ -53,7 +53,6 @@ sptr<IService> ServiceClient::GetInstance()
     if (serviceProxy_ != nullptr) {
         return serviceProxy_;
     }
-
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (!samgr) {
         HILOGE("Get an empty samgr");
@@ -70,7 +69,6 @@ sptr<IService> ServiceClient::GetInstance()
                FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, ret);
         return nullptr;
     }
-
     auto waitStatus =
         loadCallback->proxyConVar_.wait_for(lock, std::chrono::milliseconds(BConstants::BACKUP_LOADSA_TIMEOUT_MS),
                                             [loadCallback]() { return loadCallback->isLoadSuccess_.load(); });
@@ -118,7 +116,6 @@ void ServiceClient::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t
         proxyConVar_.notify_one();
         return;
     }
-
     auto callback = [](const wptr<IRemoteObject> &obj) {
         ServiceClient::InvaildInstance();
     };

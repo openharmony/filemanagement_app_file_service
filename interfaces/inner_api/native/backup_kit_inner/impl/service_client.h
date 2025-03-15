@@ -25,7 +25,6 @@
 #include "iservice.h"
 #include "system_ability_load_callback_stub.h"
 
-
 namespace OHOS::FileManagement::Backup {
 class ServiceClient {
 

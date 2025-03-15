@@ -70,39 +70,27 @@ public:
             const std::vector<std::string>& detailInfos,
             int32_t restoreType,
             int32_t userId) override;
-    ErrCode AppendBundlesRestoreSessionData(
-        int fd,
-        const std::vector<std::string>& bundleNames,
-        int32_t restoreType,
-        int32_t userId) override;
+    ErrCode AppendBundlesRestoreSessionData(int fd, const std::vector<std::string>& bundleNames,
+                                            int32_t restoreType, int32_t userId) override;
     
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
-
     ErrCode AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
                                               const std::vector<std::string> &bundleInfos) override;
     ErrCode Finish() override;
     ErrCode Release() override;
     ErrCode Cancel(const std::string& bundleName, int32_t &result) override;
-    ErrCode GetLocalCapabilitiesIncremental(
-        const std::vector<BIncrementalData>& bundleNames,
-        int& fd) override;
+    ErrCode GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData>& bundleNames, int& fd) override;
     ErrCode GetAppLocalListAndDoIncrementalBackup() override;
     ErrCode InitIncrementalBackupSession(const sptr<IServiceReverse>& remote) override;
     ErrCode InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg) override;
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) override;
-    ErrCode AppendBundlesIncrementalBackupSessionWithBundleInfos(
-        const std::vector<BIncrementalData>& bundlesToBackup,
-        const std::vector<std::string>& bundleInfos) override;
+    ErrCode AppendBundlesIncrementalBackupSessionWithBundleInfos(const std::vector<BIncrementalData>& bundlesToBackup,
+                                                                 const std::vector<std::string>& bundleInfos) override;
     ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) override;
-    ErrCode PublishSAIncrementalFile(
-           const BFileInfo& fileInfo,
-           int fd) override;
+    ErrCode PublishSAIncrementalFile(const BFileInfo& fileInfo, int fd) override;
     ErrCode PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd);
-    ErrCode AppIncrementalFileReady(
-      const std::string& fileName,
-      int fd,
-      int manifestFd,
-      int32_t appIncrementalFileReadyErrCode) override;
+    ErrCode AppIncrementalFileReady(const std::string& fileName, int fd, int manifestFd,
+                                    int32_t appIncrementalFileReadyErrCode) override;
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetBackupInfo(const BundleName &bundleName, std::string &result) override;
@@ -666,25 +654,18 @@ private:
 
     UniqueFd GetLocalCapabilities();
     UniqueFd GetLocalCapabilitiesForBundleInfos();
-
     ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode);
-
     ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode);
-
-    ErrCode AppendBundlesRestoreSession(UniqueFd fd,
-                                        const std::vector<BundleName> &bundleNames,
+    ErrCode AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames,
                                         const std::vector<std::string> &bundleInfos,
                                         RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
                                         int32_t userId = DEFAULT_INVAL_VALUE);
-    ErrCode AppendBundlesRestoreSession(UniqueFd fd,
-                                        const std::vector<BundleName> &bundleNames,
+    ErrCode AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames,
                                         RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
                                         int32_t userId = DEFAULT_INVAL_VALUE);
-
     UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames);
-    
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
-        const std::vector<std::string> &infos);
+                                                  const std::vector<std::string> &infos);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

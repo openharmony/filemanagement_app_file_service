@@ -51,7 +51,6 @@ sptr<IService> ServiceClient::GetInstance()
     if (!GetMockGetInstance()) {
         return nullptr;
     }
-
     if (!GetMockLoadSystemAbility()) {
         serviceProxy_ = sptr(new ServiceProxy(nullptr));
     } else {

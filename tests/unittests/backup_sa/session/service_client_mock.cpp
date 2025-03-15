@@ -13,28 +13,26 @@
  * limitations under the License.
  */
 
+#include "service_client.h"
+#include "iservice.h"
+#include "service_proxy.h"
+namespace OHOS::FileManagement::Backup {
+using namespace std;
 
- #include "service_client.h"
- #include "iservice.h"
- #include "service_proxy.h"
- namespace OHOS::FileManagement::Backup {
- using namespace std;
- 
- bool ServiceClient::CheckServiceProxy()
- {
-     serviceProxy_ = ServiceClient::GetInstance();
-     bool isNull = false;
-     if (serviceProxy_ != nullptr) {
-         isNull = true;
-     }
-     return isNull;
- }
- 
- sptr<IService> ServiceClient::GetServiceProxyPointer() { return serviceProxy_; }
- sptr<IService> ServiceClient::GetInstance() { return serviceProxy_; }
- void ServiceClient::InvaildInstance() {}
- void ServiceClient::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
-                                                                          const OHOS::sptr<IRemoteObject> &remoteObject)
- {}
- void ServiceClient::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId) {}
- }
+bool ServiceClient::CheckServiceProxy()
+{
+    serviceProxy_ = ServiceClient::GetInstance();
+    bool isNull = false;
+    if (serviceProxy_ != nullptr) {
+        isNull = true;
+    }
+    return isNull;
+}
+sptr<IService> ServiceClient::GetServiceProxyPointer() { return serviceProxy_; }
+sptr<IService> ServiceClient::GetInstance() { return serviceProxy_; }
+void ServiceClient::InvaildInstance() {}
+void ServiceClient::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
+                                                                         const OHOS::sptr<IRemoteObject> &remoteObject)
+{}
+void ServiceClient::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId) {}
+}
