@@ -630,8 +630,9 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     return restoreBundleInfos;
 }
 
-void Service::HandleExceptionOnAppendBundles(
-    sptr<SvcSessionManager> session, const vector<BundleName> &appendBundleNames, const vector<BundleName> &restoreBundleNames)
+void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
+                                             const vector<BundleName> &appendBundleNames,
+                                             const vector<BundleName> &restoreBundleNames)
 {
     if (appendBundleNames.size() != restoreBundleNames.size()) {
         HILOGE("AppendBundleNames not equal restoreBundleNames, appendBundleNames size:%{public}zu,"
