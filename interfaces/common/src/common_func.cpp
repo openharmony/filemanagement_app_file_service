@@ -35,6 +35,8 @@ namespace {
     const char BACKFLASH = '/';
     const std::string FILE_MANAGER_URI_HEAD = "/storage/";
     const std::string FILE_MANAGER_AUTHORITY = "docs";
+    const std::string MEDIA_FUSE_PATH_HEAD = "/data/storage/el2/media";
+    const std::string MEDIA_AUTHORITY = "file://media";
 }
 static sptr<BundleMgrProxy> GetBundleMgrProxy()
 {
@@ -87,8 +89,10 @@ string CommonFunc::GetUriFromPath(const string &path)
 {
     string realPath = path;
     NormalizePath(realPath);
-
-    string packageName = (path.find(FILE_MANAGER_URI_HEAD) == 0) ? FILE_MANAGER_AUTHORITY : GetSelfBundleName();
+    if (realPath.find(MEDIA_FUSE_PATH_HEAD) == 0) {
+        return realPath.replace(realPath.find(MEDIA_FUSE_PATH_HEAD), MEDIA_FUSE_PATH_HEAD.length(), MEDIA_AUTHORITY);
+    }
+    string packageName = (realPath.find(FILE_MANAGER_URI_HEAD) == 0) ? FILE_MANAGER_AUTHORITY : GetSelfBundleName();
     realPath = FILE_SCHEME_PREFIX + packageName + SandboxHelper::Encode(realPath);
     return realPath;
 }
