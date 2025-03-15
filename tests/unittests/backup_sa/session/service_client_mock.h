@@ -30,4 +30,4 @@ public:
     MOCK_METHOD0(Start, ErrCode());
 };
 } // End of namespace OHOS::FileManagement::Backup
-#endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H 
+#endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H
