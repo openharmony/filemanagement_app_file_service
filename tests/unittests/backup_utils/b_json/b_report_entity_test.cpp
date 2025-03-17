@@ -63,7 +63,7 @@ static tuple<string, string> GetTestFile(const TestManager &tm, const string con
  * @tc.type: FUNC
  * @tc.level Level 1
  */
-HWTEST_F(BReportEntityTest, b_report_entity_GetReportInfos_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BReportEntityTest, b_report_entity_GetReportInfos_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_GetReportInfos_0100";
     try {

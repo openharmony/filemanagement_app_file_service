@@ -23,7 +23,7 @@ ohos_unittest("remote_file_share_test") {
     debug = false
   }
 
-  module_out_path = "filemanagement/app_file_service"
+  module_out_path = "app_file_service/app_file_service/file_share"
   fuzz_config_file =
       "${app_file_service_path}/test/fuzztest/remotefileshare_fuzzer"
   resource_config_file = "../resource/ohos_test.xml"

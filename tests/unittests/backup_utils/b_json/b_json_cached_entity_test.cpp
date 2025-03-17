@@ -43,7 +43,7 @@ public:
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonCachedEntityTest, b_json_construction_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonCachedEntityTest, b_json_construction_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_construction_0100";
     try {
@@ -68,7 +68,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_construction_0100, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonCachedEntityTest, b_json_construction_0101, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonCachedEntityTest, b_json_construction_0101, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_construction_0101";
     try {
@@ -93,7 +93,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_construction_0101, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonCachedEntityTest, b_json_construction_0102, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonCachedEntityTest, b_json_construction_0102, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_construction_0102";
     try {
@@ -118,7 +118,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_construction_0102, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonCachedEntityTest, b_json_construction_0104, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonCachedEntityTest, b_json_construction_0104, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_construction_0104";
     try {
@@ -143,7 +143,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_construction_0104, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonCachedEntityTest, b_json_construction_0105, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonCachedEntityTest, b_json_construction_0105, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_construction_0105";
     try {
@@ -168,7 +168,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_construction_0105, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonCachedEntityTest, b_json_construction_0106, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonCachedEntityTest, b_json_construction_0106, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_construction_0106";
     try {
@@ -193,7 +193,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_construction_0106, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonCachedEntityTest, b_json_construction_0107, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonCachedEntityTest, b_json_construction_0107, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_construction_0107";
     try {
@@ -218,7 +218,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_construction_0107, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonCachedEntityTest, b_json_Structuralize_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonCachedEntityTest, b_json_Structuralize_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_Structuralize_0100";
     try {
@@ -244,7 +244,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_Structuralize_0100, testing::ext::TestSiz
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonCachedEntityTest, b_json_GetFd_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonCachedEntityTest, b_json_GetFd_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_GetFd_0100";
     try {
@@ -270,7 +270,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_GetFd_0100, testing::ext::TestSize.Level0
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonCachedEntityTest, b_json_Persist_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonCachedEntityTest, b_json_Persist_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_Persist_0100";
     try {
@@ -296,7 +296,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_Persist_0100, testing::ext::TestSize.Leve
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonCachedEntityTest, b_json_ReloadFromFile_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonCachedEntityTest, b_json_ReloadFromFile_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_ReloadFromFile_0100";
     try {
@@ -323,7 +323,7 @@ HWTEST_F(BJsonCachedEntityTest, b_json_ReloadFromFile_0100, testing::ext::TestSi
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonCachedEntityTest, b_json_ReloadFromString_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonCachedEntityTest, b_json_ReloadFromString_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonCachedEntityTest-begin b_json_ReloadFromString_0100";
     try {

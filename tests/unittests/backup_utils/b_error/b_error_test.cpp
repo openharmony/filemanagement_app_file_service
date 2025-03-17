@@ -36,7 +36,7 @@ public:
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_construction_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_construction_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_construction_0100";
     try {
@@ -57,7 +57,7 @@ HWTEST_F(BErrorTest, b_error_construction_0100, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_construction_0300, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_construction_0300, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_construction_0300";
     try {
@@ -79,7 +79,7 @@ HWTEST_F(BErrorTest, b_error_construction_0300, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_construction_0500, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_construction_0500, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_construction_0500";
     try {
@@ -102,7 +102,7 @@ HWTEST_F(BErrorTest, b_error_construction_0500, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_construction_0700, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_construction_0700, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_construction_0700";
     try {
@@ -125,7 +125,7 @@ HWTEST_F(BErrorTest, b_error_construction_0700, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_construction_0900, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_construction_0900, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_construction_0900";
     try {
@@ -148,7 +148,7 @@ HWTEST_F(BErrorTest, b_error_construction_0900, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_construction_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_construction_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_construction_0200";
     try {
@@ -171,7 +171,7 @@ HWTEST_F(BErrorTest, b_error_construction_0200, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_construction_0400, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_construction_0400, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_construction_0400";
     try {
@@ -194,7 +194,7 @@ HWTEST_F(BErrorTest, b_error_construction_0400, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetCode_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetCode_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCode_0100";
     BError be(BError::Codes::OK);
@@ -212,7 +212,7 @@ HWTEST_F(BErrorTest, b_error_GetCode_0100, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetCode_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetCode_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCode_0200";
     BError be(BError::Codes::UTILS_INVAL_JSON_ENTITY);
@@ -230,7 +230,7 @@ HWTEST_F(BErrorTest, b_error_GetCode_0200, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetCode_0300, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetCode_0300, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCode_0300";
     BError be(BError::Codes::UTILS_INVAL_FILE_HANDLE);
@@ -248,7 +248,7 @@ HWTEST_F(BErrorTest, b_error_GetCode_0300, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetCode_0400, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetCode_0400, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCode_0400";
     BError be(BError::Codes::UTILS_INVAL_TARBALL_ARG);
@@ -266,7 +266,7 @@ HWTEST_F(BErrorTest, b_error_GetCode_0400, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetCode_0500, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetCode_0500, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCode_0500";
     BError be(BError::Codes::UTILS_INVAL_PROCESS_ARG);
@@ -284,7 +284,7 @@ HWTEST_F(BErrorTest, b_error_GetCode_0500, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetCode_0600, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetCode_0600, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCode_0600";
     BError be(BError::Codes::UTILS_INTERRUPTED_PROCESS);
@@ -302,7 +302,7 @@ HWTEST_F(BErrorTest, b_error_GetCode_0600, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetRawCode_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetRawCode_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetRawCode_0100";
     BError be(BError::Codes::OK);
@@ -320,7 +320,7 @@ HWTEST_F(BErrorTest, b_error_GetRawCode_0100, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetRawCode_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetRawCode_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetRawCode_0200";
     BError be(BError::Codes::UTILS_INVAL_JSON_ENTITY);
@@ -338,7 +338,7 @@ HWTEST_F(BErrorTest, b_error_GetRawCode_0200, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetRawCode_0300, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetRawCode_0300, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetRawCode_0300";
     BError be(BError::Codes::UTILS_INVAL_FILE_HANDLE);
@@ -356,7 +356,7 @@ HWTEST_F(BErrorTest, b_error_GetRawCode_0300, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetRawCode_0400, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetRawCode_0400, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetRawCode_0400";
     BError be(BError::Codes::UTILS_INVAL_TARBALL_ARG);
@@ -374,7 +374,7 @@ HWTEST_F(BErrorTest, b_error_GetRawCode_0400, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetRawCode_0500, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetRawCode_0500, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetRawCode_0500";
     BError be(BError::Codes::UTILS_INVAL_PROCESS_ARG);
@@ -392,7 +392,7 @@ HWTEST_F(BErrorTest, b_error_GetRawCode_0500, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetRawCode_0600, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetRawCode_0600, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetRawCode_0600";
     BError be(BError::Codes::UTILS_INTERRUPTED_PROCESS);
@@ -410,7 +410,7 @@ HWTEST_F(BErrorTest, b_error_GetRawCode_0600, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_what_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_what_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_what_0100";
     BError be(BError::Codes::OK);
@@ -428,7 +428,7 @@ HWTEST_F(BErrorTest, b_error_what_0100, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_bool_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_bool_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_bool_0100";
     bool result = BError();
@@ -445,7 +445,7 @@ HWTEST_F(BErrorTest, b_error_bool_0100, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_int_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_int_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_int_0100";
     int result = BError();
@@ -462,7 +462,7 @@ HWTEST_F(BErrorTest, b_error_int_0100, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCodeByErrno_0100";
     int32_t errnoSys = 0;
@@ -480,7 +480,7 @@ HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0100, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCodeByErrno_0200";
     int32_t errnoSys = EPERM;
@@ -498,7 +498,7 @@ HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0200, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0300, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0300, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetCodeByErrno_0300";
     int32_t errnoSys = -EPERM;
@@ -516,7 +516,7 @@ HWTEST_F(BErrorTest, b_error_GetCodeByErrno_0300, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetBackupCodeByErrno_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetBackupCodeByErrno_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetBackupCodeByErrno_0100";
     int err = ERR_OK;
@@ -534,7 +534,7 @@ HWTEST_F(BErrorTest, b_error_GetBackupCodeByErrno_0100, testing::ext::TestSize.L
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetBackupCodeByErrno_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetBackupCodeByErrno_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetBackupCodeByErrno_0200";
     int err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
@@ -555,7 +555,7 @@ HWTEST_F(BErrorTest, b_error_GetBackupCodeByErrno_0200, testing::ext::TestSize.L
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetBackupCodeByErrno_0300, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetBackupCodeByErrno_0300, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetBackupCodeByErrno_0300";
     int err = -EPERM;
@@ -573,7 +573,7 @@ HWTEST_F(BErrorTest, b_error_GetBackupCodeByErrno_0300, testing::ext::TestSize.L
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetBackupMsgByErrno_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetBackupMsgByErrno_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetBackupMsgByErrno_0100";
     int err = BError(BError::BackupErrorCode::E_PERM).GetCode();
@@ -594,7 +594,7 @@ HWTEST_F(BErrorTest, b_error_GetBackupMsgByErrno_0100, testing::ext::TestSize.Le
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_GetBackupMsgByErrno_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BErrorTest, b_error_GetBackupMsgByErrno_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_GetBackupMsgByErrno_0200";
     int err = -EPERM;

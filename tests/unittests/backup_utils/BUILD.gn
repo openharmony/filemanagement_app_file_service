@@ -395,7 +395,7 @@ ohos_unittest("b_json_clear_data_test") {
   use_exceptions = true
 }
 
-group("backup_test") {
+group("backup_utils_test") {
   testonly = true
 
   deps = [

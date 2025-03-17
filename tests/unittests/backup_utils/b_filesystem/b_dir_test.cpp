@@ -48,7 +48,7 @@ public:
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BDirTest, b_dir_GetDirFiles_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BDirTest, b_dir_GetDirFiles_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetDirFiles_0100";
     try {
@@ -86,7 +86,7 @@ HWTEST_F(BDirTest, b_dir_GetDirFiles_0100, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BDirTest, b_dir_GetDirFiles_0104, testing::ext::TestSize.Level0)
+HWTEST_F(BDirTest, b_dir_GetDirFiles_0104, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetDirFiles_0104";
     try {

@@ -51,7 +51,7 @@ public:
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin b_dir_GetDirFiles_0100";
     try {
@@ -74,7 +74,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext::T
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin ParseBundleNameIndexStr_0200";
     try {
@@ -97,7 +97,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleNameIndexStr_0200, testing::ext::T
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0100";
     try {
@@ -131,7 +131,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0100, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0200";
     try {
@@ -163,7 +163,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0200, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0300, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0300, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0300";
     try {
@@ -195,7 +195,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0300, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0301, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0301, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0301";
     try {
@@ -227,7 +227,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0301, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0400, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0400, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0400";
     try {
@@ -262,7 +262,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0400, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0500, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0500, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0500";
     try {
@@ -296,7 +296,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0500, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0600, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0600, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0600";
     try {
@@ -330,7 +330,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0600, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0700, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0700, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0700";
     try {
@@ -363,7 +363,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0700, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0800, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0800, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0800";
     try {
@@ -396,7 +396,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0800, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0900, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0900, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0900";
     try {
@@ -429,7 +429,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0900, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_1000, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_1000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_1000";
     try {
@@ -462,7 +462,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_1000, testing::ext::TestSize
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_FindBundleInfoByName_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_FindBundleInfoByName_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin FindBundleInfoByName_0100";
     try {
@@ -489,7 +489,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_FindBundleInfoByName_0100, testing::ext::Test
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_FindBundleInfoByName_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_FindBundleInfoByName_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin FindBundleInfoByName_0200";
     try {
@@ -521,7 +521,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_FindBundleInfoByName_0200, testing::ext::Test
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_FindBundleInfoByName_0300, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_FindBundleInfoByName_0300, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin FindBundleInfoByName_0300";
     try {
@@ -553,7 +553,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_FindBundleInfoByName_0300, testing::ext::Test
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildOnProcessRetInfo_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildOnProcessRetInfo_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildOnProcessRetInfo_0100";
     try {
@@ -580,7 +580,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildOnProcessRetInfo_0100, testing::ext::Tes
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildExtensionErrInfo_0100";
     try {
@@ -609,7 +609,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0100, testing::ext::Tes
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildExtensionErrInfo_0200";
     try {
