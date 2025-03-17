@@ -1915,7 +1915,6 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Cancel_0100, TestSize.Le
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetImpl()).WillOnce(Return(impl));
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::RUNNING));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
         service->Cancel(bundleName, result);
         EXPECT_EQ(result, BError(BError::Codes::OK).GetCode());
     } catch (...) {
