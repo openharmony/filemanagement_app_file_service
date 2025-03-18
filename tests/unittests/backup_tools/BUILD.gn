@@ -148,7 +148,7 @@ ohos_unittest("backup_tool_restore_test") {
   use_exceptions = true
 }
 
-group("backup_test") {
+group("backup_tools_test") {
   testonly = true
 
   deps = [

@@ -35,7 +35,7 @@ public:
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(ToolsTest, tool_help_0100, testing::ext::TestSize.Level0)
+HWTEST_F(ToolsTest, tool_help_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ToolsTest-begin tool_help_0100";
     try {
@@ -60,7 +60,7 @@ HWTEST_F(ToolsTest, tool_help_0100, testing::ext::TestSize.Level0)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(ToolsTest, tool_help_0200, testing::ext::TestSize.Level0)
+HWTEST_F(ToolsTest, tool_help_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ToolsTest-begin tool_help_0200";
     try {

@@ -34,11 +34,17 @@ group("tgt_backup_sa") {
   ]
 }
 
-group("tgt_backup_tests") {
+group("backup_tests") {
   testonly = true
 
   deps = [
     "tests/moduletests",
     "tests/unittests",
   ]
+}
+
+group("file_share_tests") {
+  testonly = true
+
+  deps = [ "test/unittest" ]
 }

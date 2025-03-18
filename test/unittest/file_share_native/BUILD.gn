@@ -22,7 +22,7 @@ ohos_unittest("file_share_test") {
     debug = false
   }
 
-  module_out_path = "filemanagement/app_file_service"
+  module_out_path = "app_file_service/app_file_service/file_share"
   resource_config_file = "../resource/ohos_test.xml"
   sources = [ "file_share_test.cpp" ]
 

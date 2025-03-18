@@ -13,7 +13,7 @@
 import("//build/test.gni")
 
 ohos_js_unittest("FileShareTestPermission") {
-  module_out_path = "filemanagement/app_file_service"
+  module_out_path = "app_file_service/app_file_service/file_share"
 
   hap_profile = "./config.json"
 

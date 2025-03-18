@@ -36,7 +36,7 @@ public:
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BAnonyTest-begin b_anony_GetAnonyPath_0100";
     try {

@@ -24,7 +24,7 @@ ohos_unittest("file_permission_test") {
     blocklist = "${app_file_service_path}/cfi_blocklist.txt"
   }
 
-  module_out_path = "filemanagement/app_file_service"
+  module_out_path = "app_file_service/app_file_service/file_share"
   include_dirs = [
     "include",
     "${app_file_service_path}/tests/mock/file_permission_native/include",
