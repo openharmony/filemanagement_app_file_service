@@ -47,6 +47,7 @@ const string HMOS_HAP_CODE_PATH = "1";
 const string LINUX_HAP_CODE_PATH = "2";
 const string MEDIA_LIBRARY_HAP = "com.ohos.medialibrary.medialibrarydata";
 const string EXTERNAL_FILE_HAP = "com.ohos.UserFile.ExternalFileManager";
+const string APP_GALLERY_BUNDLE_NAME = "const.appgallery.shaderowner.bundlename";
 const int E_ERR = -1;
 const vector<string> dataDir = {"app", "local", "distributed", "database", "cache"};
 } // namespace
@@ -152,11 +153,8 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
 
 string BundleMgrAdapter::GetAppGalleryBundleName()
 {
-    auto bms = GetBundleManager();
-
-    string bundleName = "";
-    auto ret = bms->QueryAppGalleryBundleName(bundleName);
-    if (!ret) {
+    string bundleName = OHOS::system::GetParameter(APP_GALLERY_BUNDLE_NAME,"");
+    if (bundleName.empty()) {
         HILOGI("Get App Gallery BundleName fail!");
     } else {
         HILOGI("App Gallery BundleName: %{public}s", bundleName.c_str());

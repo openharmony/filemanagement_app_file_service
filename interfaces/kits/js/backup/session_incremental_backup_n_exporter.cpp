@@ -382,8 +382,8 @@ napi_value SessionIncrementalBackupNExporter::Constructor(napi_env env, napi_cal
         .onProcess = bind(OnProcess, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBackupSizeReport = bind(OnBackupSizeReport, backupEntity->callbacks, placeholders::_1)}, errMsg, errCode);
     if (!backupEntity->session) {
-        std::tuple<uint32_t, std::string> errInfo =
-            std::make_tuple(errCode, BError::GetBackupMsgByErrno(errCode) + ", " + errMsg);
+        std::tuple<uint32_t, std::string> errInfo = (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) ?
+            std::make_tuple(errCode, errMsg) : std::make_tuple(errCode, BError::GetBackupMsgByErrno(errCode));
         ErrParam errorParam = [ errInfo ]() { return errInfo;};
         NError(errorParam).ThrowErr(env);
         return nullptr;

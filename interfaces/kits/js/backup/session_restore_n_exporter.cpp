@@ -469,8 +469,8 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
         .onBackupServiceDied = bind(OnBackupServiceDied, restoreEntity->callbacks),
         .onProcess = bind(OnProcess, restoreEntity->callbacks, placeholders::_1, placeholders::_2)}, errMsg, errCode);
     if (!restoreEntity->sessionSheet) {
-        std::tuple<uint32_t, std::string> errInfo =
-            std::make_tuple(errCode, BError::GetBackupMsgByErrno(errCode) + ", " + errMsg);
+        std::tuple<uint32_t, std::string> errInfo = (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) ?
+            std::make_tuple(errCode, errMsg) : std::make_tuple(errCode, BError::GetBackupMsgByErrno(errCode));
         ErrParam errorParam = [ errInfo ]() { return errInfo;};
         NError(errorParam).ThrowErr(env);
         return nullptr;
