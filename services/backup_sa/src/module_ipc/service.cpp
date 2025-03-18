@@ -988,6 +988,7 @@ ErrCode Service::SAResultReport(const std::string bundleName, const std::string 
         session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
     } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
         session_->GetServiceReverseProxy()->IncrementalBackupOnResultReport(restoreRetInfo, bundleName);
+        session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
     }
     OnAllBundlesFinished(BError(BError::Codes::OK));
     if (sennario == BackupRestoreScenario::FULL_RESTORE || sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
@@ -1113,7 +1114,11 @@ void Service::ExtStart(const string &bundleName)
     try {
         HILOGE("begin ExtStart, bundle name:%{public}s", bundleName.data());
         if (SAUtils::IsSABundleName(bundleName)) {
-            BackupSA(bundleName);
+            if (session_->GetIsIncrementalBackup()) {
+                IncrementalBackupSA(bundleName);
+            } else {
+                BackupSA(bundleName);
+            }
             return;
         }
         if (IncrementalBackup(bundleName)) {
@@ -1842,15 +1847,48 @@ ErrCode Service::BackupSA(std::string bundleName)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::IncrementalBackupSA(std::string bundleName)
+{
+    HILOGI("IncrementalBackupSA begin %{public}s", bundleName.c_str());
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    auto backUpConnection = session_->GetSAExtConnection(bundleName);
+    std::shared_ptr<SABackupConnection> saConnection = backUpConnection.lock();
+    if (saConnection == nullptr) {
+        HILOGE("lock sa connection ptr is nullptr");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        auto ret = saConnection->CallBackupSA();
+        session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
+        BundleBeginRadarReport(bundleName, ret, scenario);
+        if (ret) {
+            HILOGI("IncrementalBackupSA ret is %{public}d", ret);
+            ClearSessionAndSchedInfo(bundleName);
+            NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
+            return BError(ret);
+        }
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), bundleName);
+    }
+    return BError(BError::Codes::OK);
+}
+
 void Service::OnSABackup(const std::string &bundleName, const int &fd, const std::string &result,
     const ErrCode &errCode)
 {
     auto task = [bundleName, fd, result, errCode, this]() {
         HILOGI("OnSABackup bundleName: %{public}s, fd: %{public}d, result: %{public}s, err: %{public}d",
             bundleName.c_str(), fd, result.c_str(), errCode);
-        session_->GetServiceReverseProxy()->BackupOnFileReady(bundleName, "", move(fd), errCode);
+        BackupRestoreScenario scenario = FULL_BACKUP;
+        if (session_->GetIsIncrementalBackup()) {
+            scenario = INCREMENTAL_BACKUP;
+            session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName, "", move(fd), -1, errCode);
+        } else {
+            scenario = FULL_BACKUP;
+            session_->GetServiceReverseProxy()->BackupOnFileReady(bundleName, "", move(fd), errCode);
+        }
         FileReadyRadarReport(bundleName, "", errCode, IServiceReverse::Scenario::BACKUP);
-        SAResultReport(bundleName, result, errCode, BackupRestoreScenario::FULL_BACKUP);
+        SAResultReport(bundleName, result, errCode, scenario);
     };
     threadPool_.AddTask([task]() {
         try {
