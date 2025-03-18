@@ -154,7 +154,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
 
 string BundleMgrAdapter::GetAppGalleryBundleName()
 {
-    string bundleName = OHOS::system::GetParameter(APP_GALLERY_BUNDLE_NAME,"");
+    string bundleName = OHOS::system::GetParameter(APP_GALLERY_BUNDLE_NAME, "");
     if (bundleName.empty()) {
         HILOGI("Get App Gallery BundleName fail!");
     } else {
