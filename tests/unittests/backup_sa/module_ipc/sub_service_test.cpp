@@ -1108,6 +1108,11 @@ HWTEST_F(ServiceTest, SUB_Service_TryToClearDispose_0000, TestSize.Level1)
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TryToClearDispose_0000";
     try {
         BundleName bundleName;
+        EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));
+        service->TryToClearDispose(bundleName);
+        EXPECT_TRUE(true);
+
+        bundleName = "100-test";
         EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::OK));
         EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));
         service->TryToClearDispose(bundleName);
@@ -1148,7 +1153,7 @@ HWTEST_F(ServiceTest, SUB_Service_SendErrAppGalleryNotify_0000, TestSize.Level1)
         service->SendErrAppGalleryNotify();
         EXPECT_TRUE(true);
 
-        bundleNameList.emplace_back("bundleName");
+        bundleNameList.emplace_back("100-bundleName");
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::RESTORE));
         EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNameList));
         EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::OK));
@@ -1180,7 +1185,7 @@ HWTEST_F(ServiceTest, SUB_Service_ClearDisposalOnSaStart_0000, TestSize.Level1)
         service->ClearDisposalOnSaStart();
         EXPECT_TRUE(true);
 
-        bundleNameList.emplace_back("bundleName");
+        bundleNameList.emplace_back("100-bundleName");
         EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNameList));
         EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::OK));
         EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));

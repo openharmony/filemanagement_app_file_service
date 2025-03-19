@@ -1809,7 +1809,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0100, TestSiz
         service->CancelTask("", service);
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect)).WillOnce(Return(nullptr));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));

@@ -719,9 +719,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_NoticeClientFinish_0100, testing::e
         EXPECT_NE(service, nullptr);
         string bundleName;
         ErrCode errCode = 0;
-        EXPECT_CALL(*sessionMock, GetScenario())
-            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED))
-            .WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
+        EXPECT_CALL(*sessionMock, GetScenario()).WillOnce(Return(IServiceReverse::Scenario::UNDEFINED));
         EXPECT_CALL(*sessionMock, IsOnAllBundlesFinished()).WillOnce(Return(false));
         service->NoticeClientFinish(bundleName, errCode);
         EXPECT_TRUE(true);
