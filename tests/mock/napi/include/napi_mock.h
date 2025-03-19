@@ -31,12 +31,12 @@ class Napi {
 public:
     virtual ~Napi() = default;
 public:
-    virtual napi_status napi_get_uv_event_loop(napi_env, struct uv_loop_s**) = 0;
     virtual napi_status napi_call_function(napi_env, napi_value, napi_value, size_t, const napi_value*, napi_value*)
         = 0;
     virtual napi_status napi_get_reference_value(napi_env, napi_ref, napi_value*) = 0;
     virtual napi_status napi_get_named_property(napi_env, napi_value, const char*, napi_value*) = 0;
-    virtual napi_status napi_send_event(napi_env, const std::function<void()>, napi_event_priority) = 0;
+    virtual napi_status napi_send_cancelable_event(napi_env, const std::function<void(void*)>&, void*,
+        napi_event_priority, uint64_t*, const char*) = 0;
     virtual napi_status napi_get_value_int32(napi_env, napi_value, int32_t*) = 0;
     virtual napi_status napi_get_value_int64(napi_env, napi_value, int64_t*) = 0;
     virtual napi_status napi_create_string_utf8(napi_env, const char*, size_t, napi_value*) = 0;
@@ -68,12 +68,12 @@ public:
 
 class NapiMock : public Napi {
 public:
-    MOCK_METHOD(napi_status, napi_get_uv_event_loop, (napi_env, struct uv_loop_s**));
     MOCK_METHOD(napi_status, napi_call_function, (napi_env, napi_value, napi_value, size_t, const napi_value*,
         napi_value*));
     MOCK_METHOD(napi_status, napi_get_reference_value, (napi_env, napi_ref, napi_value*));
     MOCK_METHOD(napi_status, napi_get_named_property, (napi_env, napi_value, const char*, napi_value*));
-    MOCK_METHOD(napi_status, napi_send_event, (napi_env, const std::function<void()>, napi_event_priority));
+    MOCK_METHOD(napi_status, napi_send_cancelable_event, (napi_env, (const std::function<void(void*)>&), void*,
+        napi_event_priority, uint64_t*, const char*));
     MOCK_METHOD(napi_status, napi_get_value_int32, (napi_env, napi_value, int32_t*));
     MOCK_METHOD(napi_status, napi_get_value_int64, (napi_env, napi_value, int64_t*));
     MOCK_METHOD(napi_status, napi_create_int64, (napi_env, int64_t, napi_value*));
