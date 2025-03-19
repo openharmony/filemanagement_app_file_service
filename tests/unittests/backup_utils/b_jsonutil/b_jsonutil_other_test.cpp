@@ -330,7 +330,9 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildInitSessionErrInfo_0701, testing::ext::T
         EXPECT_EQ(result, "");
 
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject())
+            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
+            .WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_AddStringToObject(_, _, _))
             .WillOnce(Return(nullptr))
             .WillOnce(Return(nullptr))
