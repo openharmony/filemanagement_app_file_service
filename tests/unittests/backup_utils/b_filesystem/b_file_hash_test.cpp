@@ -58,7 +58,7 @@ static tuple<string, string> GetTestFile(const TestManager &tm)
  * @tc.type: FUNC
  * @tc.level Level 1
  */
-HWTEST_F(BFileHashTest, b_file_hash_HashWithSHA256_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BFileHashTest, b_file_hash_HashWithSHA256_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BFileHashTest-begin b_file_hash_HashWithSHA256_0100";
     try {
@@ -83,7 +83,7 @@ HWTEST_F(BFileHashTest, b_file_hash_HashWithSHA256_0100, testing::ext::TestSize.
  * @tc.type: FUNC
  * @tc.level Level 1
  */
-HWTEST_F(BFileHashTest, b_file_hash_HashWithSHA256_0101, testing::ext::TestSize.Level0)
+HWTEST_F(BFileHashTest, b_file_hash_HashWithSHA256_0101, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BFileHashTest-begin b_file_hash_HashWithSHA256_0101";
     try {

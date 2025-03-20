@@ -69,7 +69,7 @@ void BJsonUtilTest::TearDownTestCase()
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0101, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0101, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildExtensionErrInfo_0101";
     try {
@@ -104,7 +104,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0101, testing::ext::Tes
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0201, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0201, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildExtensionErrInfo_0201";
     try {
@@ -137,7 +137,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0201, testing::ext::Tes
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildOnProcessRetInfo_0301, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildOnProcessRetInfo_0301, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildOnProcessRetInfo_0301";
     try {
@@ -183,7 +183,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildOnProcessRetInfo_0301, testing::ext::Tes
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfoJson_0401, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfoJson_0401, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfoJson_0401";
     try {
@@ -227,7 +227,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfoJson_0401, testing::ext::TestS
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildOnProcessErrInfo_0501, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildOnProcessErrInfo_0501, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildOnProcessErrInfo_0501";
     try {
@@ -283,7 +283,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildOnProcessErrInfo_0501, testing::ext::Tes
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleNameIndexInfo_0601, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleNameIndexInfo_0601, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleNameIndexInfo_0601";
     try {
@@ -311,7 +311,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleNameIndexInfo_0601, testing::ext::
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildInitSessionErrInfo_0701, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildInitSessionErrInfo_0701, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildInitSessionErrInfo_0701";
     try {
@@ -324,30 +324,21 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildInitSessionErrInfo_0701, testing::ext::T
         EXPECT_EQ(result, "");
 
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime);
-        EXPECT_EQ(result, "");
-
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
         result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime);
         EXPECT_EQ(result, "");
 
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
-        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject())
             .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
             .WillOnce(Return(nullptr));
-        EXPECT_CALL(*cJsonMock, cJSON_AddItemToArray(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_AddStringToObject(_, _, _))
             .WillOnce(Return(nullptr))
             .WillOnce(Return(nullptr))
+            .WillOnce(Return(nullptr))
             .WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
         result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime);
@@ -368,7 +359,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildInitSessionErrInfo_0701, testing::ext::T
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_WriteToStr_0801, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonUtilTest, b_jsonutil_WriteToStr_0801, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonUtilTest-begin WriteToStr_0801";
     try {

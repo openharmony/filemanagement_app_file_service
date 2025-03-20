@@ -62,38 +62,28 @@ BackupRestoreCallback::~BackupRestoreCallback()
     }
 
     unique_ptr<LibN::NAsyncContextCallback> ptr(ctx_);
-    uv_loop_s *loop = nullptr;
-    napi_status status = napi_get_uv_event_loop(env_, &loop);
-    if (status != napi_ok) {
-        HILOGE("Failed to get uv event loop");
-        ptr->cb_.CleanJsEnv();
-        return;
-    }
-
-    auto work = make_unique<uv_work_t>();
-    if (work == nullptr) {
-        HILOGE("Failed to new uv_work_t");
-        return;
-    }
-    work->data = static_cast<void *>(ctx_);
-
-    auto task = [work {work.get()}]() {
-        if (work == nullptr) {
-            HILOGE("failed to get work.");
+    auto task = [](void* ptr) ->void {
+        auto ctx = reinterpret_cast<LibN::NAsyncContextCallback *>(ptr);
+        if (ctx == nullptr) {
+            HILOGE("failed to get ctx.");
             return;
         }
-        LibN::NAsyncContextCallback *ctx = static_cast<LibN::NAsyncContextCallback *>(work->data);
         HILOGI("BackupRestoreCallback destruct delete ctx");
+        if (bool(ctx->cb_)) {
+            ctx->cb_.CleanJsEnv();
+        }
         delete ctx;
-        delete work;
     };
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    uint64_t handleId = 0;
+    auto ret = napi_send_cancelable_event(env_, task, ptr.get(), napi_eprio_high, &handleId, "destructor");
     if (ret != napi_status::napi_ok) {
-        HILOGE("Failed to call napi_send_event, ret:%{public}d, status:%{public}d", ret, status);
+        HILOGE("failed to napi_send_cancelable_event, ret:%{public}d, name:%{public}s.", ret, "destructor");
+        if (bool(ctx_->cb_)) {
+            ctx_->cb_.CleanJsEnv();
+        }
         return;
     }
     ptr.release();
-    work.release();
     ctx_ = nullptr;
     HILOGI("BackupRestoreCallback destruct end");
 }
@@ -128,12 +118,12 @@ static void DoCallJsMethod(napi_env env, void *data, InputArgsParser argParser)
     }
     napi_value global = nullptr;
     napi_get_global(env, &global);
-    napi_value callback = ctx->cb_.Deref(env).val_;
     if (!bool(ctx->cb_)) {
         HILOGE("Failed to get ref.");
         napi_close_handle_scope(env, scope);
         return;
     }
+    napi_value callback = ctx->cb_.Deref(env).val_;
     napi_value result = nullptr;
     napi_status status = napi_call_function(env, global, callback, argv.size(), argv.data(), &result);
     if (status != napi_ok) {
@@ -146,29 +136,16 @@ static void DoCallJsMethod(napi_env env, void *data, InputArgsParser argParser)
 void BackupRestoreCallback::CallJsMethod(InputArgsParser argParser)
 {
     HILOGI("call BackupRestoreCallback CallJsMethod begin.");
-    uv_loop_s *loop = nullptr;
-    napi_status status = napi_get_uv_event_loop(env_, &loop);
-    if (status != napi_ok) {
-        HILOGE("failed to get uv event loop.");
-        return;
-    }
     auto workArgs = make_shared<WorkArgs>();
-    auto work = make_unique<uv_work_t>();
-    if (workArgs == nullptr || work == nullptr) {
+    if (workArgs == nullptr) {
         HILOGE("failed to new workArgs or uv_work_t.");
         return;
     }
     workArgs->ptr = this;
     workArgs->argParser = argParser;
-    work->data = reinterpret_cast<void *>(workArgs.get());
     HILOGI("Will execute current js method");
-    auto task = [work {work.get()}]() {
-        if (work == nullptr) {
-            HILOGE("failed to get work.");
-            return;
-        }
-        HILOGI("AsyncWork Enter, %{public}zu", (size_t)work);
-        auto workArgs = reinterpret_cast<WorkArgs *>(work->data);
+    auto task = [](void* ptr) ->void {
+        auto workArgs = reinterpret_cast<WorkArgs *>(ptr);
         do {
             if (workArgs == nullptr) {
                 HILOGE("failed to get workArgs.");
@@ -180,18 +157,16 @@ void BackupRestoreCallback::CallJsMethod(InputArgsParser argParser)
         std::unique_lock<std::mutex> lock(workArgs->callbackMutex);
         workArgs->isReady.store(true);
         workArgs->callbackCondition.notify_all();
-        delete work;
     };
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    uint64_t handleId = 0;
+    auto ret = napi_send_cancelable_event(env_, task, workArgs.get(), napi_eprio_high, &handleId, "jsmethod");
     if (ret != napi_status::napi_ok) {
-        HILOGE("failed to napi_send_event, ret:%{public}d.", ret);
-        work.reset();
+        HILOGE("failed to napi_send_cancelable_event, ret:%{public}d, name:%{public}s.", ret, "jsmethod");
         return;
     }
     std::unique_lock<std::mutex> lock(workArgs->callbackMutex);
     HILOGI("Wait execute callback method end");
     workArgs->callbackCondition.wait(lock, [workArgs]() { return workArgs->isReady.load(); });
-    work.release();
     HILOGI("call BackupRestoreCallback CallJsMethod end.");
 }
 } // namespace OHOS::FileManagement::Backup

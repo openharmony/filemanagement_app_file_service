@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,7 @@
 #include "module_ipc/service.h"
 #include "module_ipc/svc_session_manager.h"
 #include "module_sched/sched_scheduler.h"
+#include "parameters.h"
 #include "status_receiver_host.h"
 #include "system_ability_definition.h"
 #include "if_system_ability_manager.h"
@@ -47,6 +48,7 @@ const string HMOS_HAP_CODE_PATH = "1";
 const string LINUX_HAP_CODE_PATH = "2";
 const string MEDIA_LIBRARY_HAP = "com.ohos.medialibrary.medialibrarydata";
 const string EXTERNAL_FILE_HAP = "com.ohos.UserFile.ExternalFileManager";
+const string APP_GALLERY_BUNDLE_NAME = "const.appgallery.shaderowner.bundlename";
 const int E_ERR = -1;
 const vector<string> dataDir = {"app", "local", "distributed", "database", "cache"};
 } // namespace
@@ -152,11 +154,8 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfos(const vecto
 
 string BundleMgrAdapter::GetAppGalleryBundleName()
 {
-    auto bms = GetBundleManager();
-
-    string bundleName = "";
-    auto ret = bms->QueryAppGalleryBundleName(bundleName);
-    if (!ret) {
+    string bundleName = OHOS::system::GetParameter(APP_GALLERY_BUNDLE_NAME, "");
+    if (bundleName.empty()) {
         HILOGI("Get App Gallery BundleName fail!");
     } else {
         HILOGI("App Gallery BundleName: %{public}s", bundleName.c_str());

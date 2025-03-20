@@ -2091,5 +2091,114 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Exception_0200, testing::e
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_Exception_0200";
 }
+
+/**
+ * @tc.number: SUB_backup_sa_session_Exception_0300
+ * @tc.name: SUB_backup_sa_session_Exception_0300
+ * @tc.desc: 测试 Exception
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_Exception_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_Exception_0300";
+    try {
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+
+        sessionManagerPtr_->SetOldBackupVersion("");
+        EXPECT_TRUE(true);
+
+        auto result = sessionManagerPtr_->GetOldBackupVersion();
+        EXPECT_EQ(result, "");
+
+        sessionManagerPtr_->SetIsReadyLaunch(BUNDLE_NAME);
+        EXPECT_TRUE(true);
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        bool stopFwkTimer = sessionManagerPtr_->StopFwkTimer(BUNDLE_NAME);
+        EXPECT_EQ(stopFwkTimer, false);
+
+        bool stopExtTimer = sessionManagerPtr_->StopExtTimer(BUNDLE_NAME);
+        EXPECT_EQ(stopExtTimer, false);
+
+        BIncrementalData incrementalData;
+        sessionManagerPtr_->SetIncrementalData(incrementalData);
+        EXPECT_TRUE(true);
+
+        int32_t manifestFd = sessionManagerPtr_->GetIncrementalManifestFd(BUNDLE_NAME);
+        EXPECT_EQ(manifestFd, BConstants::INVALID_FD_NUM);
+
+        int64_t lastIncrementalTime = sessionManagerPtr_->GetLastIncrementalTime(BUNDLE_NAME);
+        EXPECT_EQ(lastIncrementalTime, 0);
+
+        uint32_t timeout = sessionManagerPtr_->GetTimeoutValue(BUNDLE_NAME);
+        EXPECT_EQ(timeout, BConstants::TIMEOUT_INVALID);
+
+        sessionManagerPtr_->SetPublishFlag(BUNDLE_NAME);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by Exception.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_Exception_0300";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetSessionCallerName_0100
+ * @tc.name: SUB_backup_sa_session_GetSessionCallerName_0100
+ * @tc.desc: 测试 GetSessionCallerName
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSessionCallerName_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetSessionCallerName_0100";
+    try {
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        auto result = sessionManagerPtr_->GetSessionCallerName();
+        EXPECT_EQ(result, "");
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        result = sessionManagerPtr_->GetSessionCallerName();
+        EXPECT_EQ(result, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetSessionCallerName.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetSessionCallerName_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetSessionActiveTime_0100
+ * @tc.name: SUB_backup_sa_session_GetSessionActiveTime_0100
+ * @tc.desc: 测试 GetSessionActiveTime
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSessionActiveTime_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetSessionActiveTime_0100";
+    try {
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        auto result = sessionManagerPtr_->GetSessionActiveTime();
+        EXPECT_EQ(result, "");
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        result = sessionManagerPtr_->GetSessionActiveTime();
+        EXPECT_EQ(result, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetSessionActiveTime.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetSessionActiveTime_0100";
+}
 #include "svc_session_manager_ex_test.cpp"
 } // namespace OHOS::FileManagement::Backup

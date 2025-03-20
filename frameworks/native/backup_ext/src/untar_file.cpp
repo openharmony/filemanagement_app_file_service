@@ -740,7 +740,7 @@ std::tuple<int, std::string> UntarFile::GetLongName(uint32_t recLen, uint32_t al
             break;
         }
         string pathLen = content.substr(pos, lenEnd - pos);
-        int recLen = std::atoi(pathLen.c_str());
+        size_t recLen = static_cast<size_t>(std::atoi(pathLen.c_str()));
         string KvPair = content.substr(lenEnd + 1, recLen - (lenEnd - pos + 1));
         size_t eqPos = KvPair.find('=');
         if (eqPos == string::npos) {

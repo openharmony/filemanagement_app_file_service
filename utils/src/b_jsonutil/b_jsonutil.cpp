@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -468,23 +468,17 @@ std::string BJsonUtil::BuildInitSessionErrInfo(int32_t userId, std::string calle
         HILOGE("Failed to create cJSON object info, update errMsg failed");
         return "";
     }
-    cJSON *sessionInfoArray = cJSON_CreateArray();
-    if (sessionInfoArray == nullptr) {
-        HILOGE("Failed to create cJSON array sessionInfoArray, update errMsg failed");
-        cJSON_Delete(info);
-        return "";
-    }
-    cJSON_AddItemToObject(info, "sessionInfo", sessionInfoArray);
     cJSON *sessionInfoObject = cJSON_CreateObject();
     if (sessionInfoObject == nullptr) {
         HILOGE("Failed to create cJSON object sessionInfoObject, update errMsg failed");
         cJSON_Delete(info);
         return "";
     }
-    cJSON_AddItemToArray(sessionInfoArray, sessionInfoObject);
+    cJSON_AddStringToObject(sessionInfoObject, "error", "Session Conflict");
     cJSON_AddStringToObject(sessionInfoObject, "userId", to_string(userId).c_str());
     cJSON_AddStringToObject(sessionInfoObject, "name", callerName.c_str());
     cJSON_AddStringToObject(sessionInfoObject, "activeTime", activeTime.c_str());
+    cJSON_AddItemToObject(info, "sessionInfo", sessionInfoObject);
     char *jsonStr = cJSON_Print(info);
     if (jsonStr == nullptr) {
         HILOGE("update errMsg failed");

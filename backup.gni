@@ -12,7 +12,7 @@
 # limitations under the License.
 
 path_backup = "//foundation/filemanagement/app_file_service"
-path_module_out_tests = "filemanagement/app_file_service/backup"
+path_module_out_tests = "app_file_service/app_file_service/backup"
 
 path_ability_runtime = "//foundation/ability/ability_runtime"
 path_access_token = "//base/security/access_token"
