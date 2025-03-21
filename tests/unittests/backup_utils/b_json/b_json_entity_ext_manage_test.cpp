@@ -132,7 +132,7 @@ struct stat GetFileStat(const string &pathTestFile)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0100";
     try {
@@ -175,7 +175,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0100, testing::ext::
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0200";
     try {
@@ -228,7 +228,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0200, testing::ext::
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0300, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0300, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0300";
     try {
@@ -291,7 +291,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0300, testing::ext::
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0400, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0400, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0400";
     try {
@@ -355,7 +355,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0400, testing::ext::
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0500, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0500, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0500";
     try {
@@ -410,7 +410,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0500, testing::ext::
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0700, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0700, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0700";
     try {
@@ -435,7 +435,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0700, testing::ext::
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0800, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0800, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0800";
     try {
@@ -460,7 +460,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0800, testing::ext::
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0801, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0801, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0801";
     try {
@@ -485,7 +485,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0801, testing::ext::
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0802, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0802, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0802";
     try {
@@ -510,7 +510,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0802, testing::ext::
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0803, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0803, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0803";
     try {
@@ -535,7 +535,7 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0803, testing::ext::
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0804, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0804, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-begin b_json_entity_ext_manage_0804";
     try {

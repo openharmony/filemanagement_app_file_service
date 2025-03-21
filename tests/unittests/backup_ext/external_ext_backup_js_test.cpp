@@ -816,16 +816,9 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_CallJsMethod_0100, testing::ext::Tes
 {
     GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_CallJsMethod_0100";
     try {
-        extBackupJs->jsObj_ = make_unique<NativeReferenceMock>();
-        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr));
-        EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_invalid_arg));
-        auto ret = extBackupJs->CallJsMethod("", *jsRuntime, extBackupJs->jsObj_.get(), nullptr, nullptr);
-        EXPECT_EQ(ret, EINVAL);
-
         EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
-        EXPECT_CALL(*napiMock, napi_get_uv_event_loop(_, _)).WillOnce(Return(napi_ok));
-        EXPECT_CALL(*napiMock, napi_send_event(_, _, _)).WillOnce(Return(napi_invalid_arg));
-        ret = extBackupJs->CallJsMethod("", *jsRuntime, extBackupJs->jsObj_.get(), nullptr, nullptr);
+        EXPECT_CALL(*napiMock, napi_send_cancelable_event(_, _, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        auto ret = extBackupJs->CallJsMethod("", *jsRuntime, extBackupJs->jsObj_.get(), nullptr, nullptr);
         EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);

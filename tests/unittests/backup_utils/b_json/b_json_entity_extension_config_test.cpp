@@ -70,7 +70,7 @@ static vector<string> DEFAULT_EXCLUDE_DIR = {};
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_0100";
     try {
@@ -102,7 +102,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0100, te
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_0200";
     try {
@@ -133,7 +133,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0200, te
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0300, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0300, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_0300";
     try {
@@ -164,7 +164,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0300, te
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0400, testing::ext::TestSize.Level0)
+HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_0400, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin b_json_entity_extension_config_0400";
     try {

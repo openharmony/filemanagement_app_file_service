@@ -21,7 +21,7 @@ group("unittests") {
     "backup_api:backup_api_test",
     "backup_ext:backup_ext_test",
     "backup_sa:backup_sa_test",
-    "backup_tools:backup_test",
-    "backup_utils:backup_test",
+    "backup_tools:backup_tools_test",
+    "backup_utils:backup_utils_test",
   ]
 }
