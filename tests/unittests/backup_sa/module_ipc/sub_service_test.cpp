@@ -153,6 +153,7 @@ HWTEST_F(ServiceTest, SUB_Service_SAResultReport_0000, TestSize.Level1)
 
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalBackupOnResultReport(_, _)).WillOnce(Return());
+        EXPECT_CALL(*srProxy, IncrementalBackupOnBundleFinished(_, _)).WillOnce(Return());
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
         ret = service->SAResultReport("", "", 0, BackupRestoreScenario::INCREMENTAL_BACKUP);
