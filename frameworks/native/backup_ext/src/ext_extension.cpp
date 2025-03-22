@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cinttypes>
 #include <fstream>
 #include <iomanip>
 #include <map>

@@ -18,7 +18,7 @@ ohos_hap("filesharea") {
   hap_name = "filesharea"
   subsystem_name = "filemanagement"
   part_name = "app_file_service"
-  final_hap_path = "$root_out_dir/tests/unittest/filemanagement/app_file_service/resource/${hap_name}.hap"
+  final_hap_path = "$root_out_dir/tests/unittest/app_file_service/app_file_service/file_share/resource/${hap_name}.hap"
   testonly = true
   deps = [
     ":fileShareA_ets_assets",
