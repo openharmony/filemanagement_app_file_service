@@ -137,7 +137,7 @@ UniqueFd BSessionBackup::GetLocalCapabilities()
         HILOGE("Failed to get backup service");
         return UniqueFd(-EPERM);
     }
-    int fdvalue = -1;
+    int fdvalue = INVALID_FD;
     proxy->GetLocalCapabilitiesForBundleInfos(fdvalue);
     UniqueFd fd(fdvalue);
     if (fd < 0) {

@@ -77,7 +77,7 @@ UniqueFd BSessionRestore::GetLocalCapabilities()
         HILOGE("Failed to get backup service");
         return UniqueFd(-EPERM);
     }
-    int fdvalue = -1;
+    int fdvalue = INVALID_FD;
     proxy->GetLocalCapabilitiesForBundleInfos(fdvalue);
     UniqueFd fd(fdvalue);
     if (fd < 0) {
@@ -125,8 +125,8 @@ ErrCode BSessionRestore::AppendBundles(UniqueFd remoteCap,
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
     int32_t remoteCapInt = remoteCap.Get();
-    ErrCode res =
-        proxy->AppendBundlesRestoreSessionDataByDetail(remoteCapInt, bundlesToRestore, detailInfos, 0, -1);
+    ErrCode res = proxy->AppendBundlesRestoreSessionDataByDetail(remoteCapInt, bundlesToRestore, detailInfos,
+                                                                 DEFAULT_RESTORE_TYPE, DEFAULT_USER_ID);
     if (res != ERR_OK) {
         std::string ss;
         for (const auto &bundle : bundlesToRestore) {

@@ -42,6 +42,7 @@ struct BundleTaskInfo {
     std::string reportTime;
     ErrCode errCode;
 };
+const int INVALID_FD = -1;
 
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(Service);

@@ -44,7 +44,7 @@ static napi_value AsyncCallback(napi_env env, const NFuncArg& funcArg)
             HILOGI("called LocalCapabilities::AsyncCallback cbExec, failed to get proxy");
             return NError(errno);
         }
-        int fdNum = -1;
+        int fdNum = INVALID_FD;
         proxy->GetLocalCapabilities(fdNum);
         UniqueFd fdData(fdNum);
         *fd = std::move(fdData);
@@ -91,7 +91,7 @@ static napi_value AsyncDataList(napi_env env, const NFuncArg& funcArg)
             HILOGI("called LocalCapabilities::AsyncDataList cbExec, failed to get proxy");
             return NError(errno);
         }
-        int fdValue = -1;
+        int fdValue = INVALID_FD;
         proxy->GetLocalCapabilitiesIncremental(bundles, fdValue);
         UniqueFd fdData(fdValue);
         *fd = std::move(fdData);
