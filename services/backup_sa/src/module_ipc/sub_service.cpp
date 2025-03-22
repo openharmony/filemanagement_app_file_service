@@ -16,8 +16,9 @@
 #include "module_ipc/service.h"
 
 #include <algorithm>
-#include <chrono>
 #include <cerrno>
+#include <chrono>
+#include <cinttypes>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
