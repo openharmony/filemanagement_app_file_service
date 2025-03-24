@@ -131,6 +131,43 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityDisconnectDone_0
 }
 
 /**
+ * @tc.number: SUB_BackupConnection_OnAbilityDisconnectDone_0200
+ * @tc.name: SUB_BackupConnection_OnAbilityDisconnectDone_0200
+ * @tc.desc: 测试 OnAbilityDisconnectDone 链接回调接口调用成功
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityDisconnectDone_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-begin SUB_BackupConnection_OnAbilityDisconnectDone_0200";
+    try {
+        AppExecFwk::ElementName element;
+        string bundleName = "test";
+        element.SetBundleName(bundleName);
+        int resultCode = 1;
+
+        EXPECT_TRUE(backupCon_ != nullptr);
+        backupCon_->bundleNameIndexInfo_ = "app";
+        backupCon_->OnAbilityDisconnectDone(element, resultCode);
+        bool ret = backupCon_->IsExtAbilityConnected();
+        EXPECT_FALSE(ret);
+
+        backupCon_->isConnectCalled_ = true;
+        backupCon_->isCleanCalled_ = true;
+        backupCon_->bundleNameIndexInfo_ = "test";
+        backupCon_->OnAbilityDisconnectDone(element, resultCode);
+        ret = backupCon_->IsExtAbilityConnected();
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcBackupConnectionTest-an exception occurred by OnAbilityDisconnectDone.";
+    }
+    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_OnAbilityDisconnectDone_0200";
+}
+
+/**
  * @tc.number: SUB_BackupConnection_GetBackupExtProxy_0100
  * @tc.name: SUB_BackupConnection_GetBackupExtProxy_0100
  * @tc.desc: 测试 GetBackupExtProxy 获取连接状态接口调用成功
@@ -146,5 +183,23 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_GetBackupExtProxy_0100, t
     auto proxy = backupCon_->GetBackupExtProxy();
     EXPECT_EQ(proxy, nullptr);
     GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_GetBackupExtProxy_0100";
+}
+
+/**
+ * @tc.number: SUB_BackupConnection_WaitDisconnectDone_0100
+ * @tc.name: SUB_BackupConnection_WaitDisconnectDone_0100
+ * @tc.desc: 测试 WaitDisconnectDone 获取连接状态接口调用成功
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_WaitDisconnectDone_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-begin SUB_BackupConnection_WaitDisconnectDone_0100";
+    EXPECT_TRUE(backupCon_ != nullptr);
+    auto res = backupCon_->WaitDisconnectDone();
+    EXPECT_TRUE(res);
+    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_WaitDisconnectDone_0100";
 }
 } // namespace OHOS::FileManagement::Backup
