@@ -155,7 +155,8 @@ ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<Bun
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
     int32_t remoteCapInt = remoteCap.Get();
-    ErrCode res = proxy->AppendBundlesRestoreSessionData(remoteCapInt, bundlesToRestore, 0, -1);
+    ErrCode res = proxy->AppendBundlesRestoreSessionData(remoteCapInt, bundlesToRestore,
+                                                         DEFAULT_RESTORE_TYPE, DEFAULT_USER_ID);
     if (res != ERR_OK) {
         std::string ss;
         for (const auto &bundle : bundlesToRestore) {
