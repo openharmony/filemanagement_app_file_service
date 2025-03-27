@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -25,11 +25,7 @@ ohos_unittest("ext_extension_test") {
 
   module_out_path = path_module_out_tests
 
-  sources = [
-    "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_proxy.cpp",
-    "${path_backup}/frameworks/native/backup_kit_inner/src/service_proxy.cpp",
-    "ext_extension_test.cpp",
-  ]
+  sources = [ "ext_extension_test.cpp" ]
 
   include_dirs = [
     "${path_backup}/frameworks/native/backup_ext/include",
@@ -41,6 +37,7 @@ ohos_unittest("ext_extension_test") {
   ]
 
   deps = [
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",
     "${path_jsoncpp}:jsoncpp",
     "//third_party/googletest:gtest_main",
@@ -163,6 +160,7 @@ ohos_unittest("tar_file_test") {
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -240,6 +238,7 @@ ohos_unittest("untar_file_sup_test") {
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -314,6 +313,7 @@ ohos_unittest("untar_file_test") {
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
@@ -367,6 +367,7 @@ ohos_unittest("ext_backup_js_test") {
   ]
 
   deps = [
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",
     "${path_googletest}:gtest_main",

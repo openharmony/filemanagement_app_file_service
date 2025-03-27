@@ -38,7 +38,7 @@ public:
     virtual bool GetSchedBundleName(std::string&) = 0;
     virtual std::string GetBackupExtName(const std::string&) = 0;
     virtual std::string GetBackupExtInfo(const std::string&) = 0;
-    virtual sptr<SvcBackupConnection> CreateBackupConnection(BundleName&) = 0;
+    virtual sptr<SvcBackupConnection> CreateBackupConnection(const BundleName&) = 0;
     virtual bool IsOnAllBundlesFinished() = 0;
     virtual bool IsOnOnStartSched() = 0;
     virtual bool NeedToUnloadService() = 0;
@@ -86,7 +86,7 @@ public:
     MOCK_METHOD(bool, GetSchedBundleName, (std::string&));
     MOCK_METHOD(std::string, GetBackupExtName, (const std::string&));
     MOCK_METHOD(std::string, GetBackupExtInfo, (const std::string&));
-    MOCK_METHOD(sptr<SvcBackupConnection>, CreateBackupConnection, (BundleName&));
+    MOCK_METHOD(sptr<SvcBackupConnection>, CreateBackupConnection, (const BundleName&));
     MOCK_METHOD(bool, IsOnAllBundlesFinished, ());
     MOCK_METHOD(bool, IsOnOnStartSched, ());
     MOCK_METHOD(bool, NeedToUnloadService, ());

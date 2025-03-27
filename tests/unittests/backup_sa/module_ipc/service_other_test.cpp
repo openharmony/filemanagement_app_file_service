@@ -40,20 +40,38 @@
 #include "sub_service.cpp"
 
 namespace OHOS::FileManagement::Backup {
+ErrCode Service::AppendBundlesIncrementalBackupSessionWithBundleInfos(
+    const std::vector<BIncrementalData> &bundlesToBackup,
+    const std::vector<std::string> &bundleInfos)
+{
+    return BError(BError::Codes::OK);
+}
+ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, int fd)
+{
+    return BError(BError::Codes::OK);
+}
+ErrCode Service::AppIncrementalFileReady(const std::string &fileName,
+                                         int fd,
+                                         int manifestFd,
+                                         int32_t appIncrementalFileReadyErrCode)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::Release()
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::Cancel(std::string bundleName, int32_t &result)
+ErrCode Service::Cancel(const std::string& bundleName, int32_t &result)
 {
     result = BError(BError::Codes::OK);
     return BError(BError::Codes::OK);
 }
 
-UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData>&)
+ErrCode Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames, int &fd)
 {
-    return UniqueFd(-1);
+    return BError(BError::Codes::OK);
 }
 
 void Service::StartGetFdTask(std::string, wptr<Service>) {}
@@ -63,12 +81,12 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse>)
+ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse> &)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse>, std::string &)
+ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>&, std::string &)
 {
     return BError(BError::Codes::OK);
 }
@@ -123,8 +141,12 @@ void Service::NotifyCallerCurAppIncrementDone(ErrCode, const std::string&) {}
 
 void Service::SendUserIdToApp(string&, int32_t) {}
 
-void Service::SetCurrentBackupSessProperties(const vector<string>&, int32_t,
-    std::vector<BJsonEntityCaps::BundleInfo>&, bool) {}
+void Service::SetCurrentBackupSessProperties(const vector<string> &,
+                                             int32_t,
+                                             std::vector<BJsonEntityCaps::BundleInfo> &,
+                                             bool)
+{
+}
 
 std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName &bundleName)
 {

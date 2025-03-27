@@ -35,12 +35,12 @@ void Service::OnStart() {}
 
 void Service::OnStop() {}
 
-UniqueFd Service::GetLocalCapabilities()
+ErrCode Service::GetLocalCapabilities(int &fd)
 {
-    return UniqueFd(-1);
+    return BError(BError::Codes::OK);
 }
 
-UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
+ErrCode Service::GetLocalCapabilitiesForBundleInfos(int &fd)
 {
     return UniqueFd(-1);
 }
@@ -52,22 +52,22 @@ ErrCode Service::VerifyCallerAndGetCallerName(std::string &bundleName)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
+ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg)
+ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &reverseIpcRemoteObject, std::string &errMsg)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
+ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
 {
     return BError(BError::Codes::OK);
 }
@@ -82,7 +82,7 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCode)
+ErrCode Service::AppFileReady(const string &fileName, int fd, int32_t errCode)
 {
     return BError(BError::Codes::OK);
 }
@@ -92,22 +92,25 @@ ErrCode Service::AppDone(ErrCode errCode)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::ServiceResultReport(const std::string restoreRetInfo,
+ErrCode Service::ServiceResultReport(const std::string &restoreRetInfo,
     BackupRestoreScenario sennario, ErrCode errCode)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames,
-    const std::vector<std::string> &detailInfos, RestoreTypeEnum restoreType, int32_t userId)
+ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd,
+                                                         const std::vector<std::string> &bundleNames,
+                                                         const std::vector<std::string> &detailInfos,
+                                                         int32_t restoreType,
+                                                         int32_t userId)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
-                                             const std::vector<BundleName> &bundleNames,
-                                             RestoreTypeEnum restoreType,
-                                             int32_t userId)
+ErrCode Service::AppendBundlesRestoreSessionData(int fd,
+                                                 const std::vector<std::string> &bundleNames,
+                                                 int32_t restoreType,
+                                                 int32_t userId)
 {
     return BError(BError::Codes::OK);
 }
@@ -118,7 +121,7 @@ ErrCode Service::AppendBundlesBackupSession(const std::vector<BundleName> &bundl
 }
 
 ErrCode Service::AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
-    const std::vector<std::string> &bundleInfos)
+                                                   const std::vector<std::string> &bundleInfos)
 {
     return BError(BError::Codes::OK);
 }
@@ -186,15 +189,15 @@ ErrCode Service::Release()
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::Cancel(std::string bundleName, int32_t &result)
+ErrCode Service::Cancel(const std::string &bundleName, int32_t &result)
 {
     result = BError(BError::Codes::OK);
     return BError(BError::Codes::OK);
 }
 
-UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames)
+ErrCode Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames, int &fd)
 {
-    return UniqueFd(-1);
+    return BError(BError::Codes::OK);
 }
 
 ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
@@ -202,12 +205,12 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
+ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse> &remote)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
 {
     return BError(BError::Codes::OK);
 }
@@ -217,8 +220,9 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
-    const std::vector<std::string> &infos)
+ErrCode Service::AppendBundlesIncrementalBackupSessionWithBundleInfos(
+    const std::vector<BIncrementalData> &bundlesToBackup,
+    const std::vector<std::string> &bundleInfos)
 {
     return BError(BError::Codes::OK);
 }
@@ -228,12 +232,15 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd)
+ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, int fd)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppIncrementalFileReady(const string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)
+ErrCode Service::AppIncrementalFileReady(const std::string &fileName,
+                                         int fd,
+                                         int manifestFd,
+                                         int32_t appIncrementalFileReadyErrCode)
 {
     return BError(BError::Codes::OK);
 }
@@ -248,7 +255,7 @@ ErrCode Service::GetIncrementalFileHandle(const string &bundleName, const string
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
+ErrCode Service::GetBackupInfo(const BundleName &bundleName, std::string &result)
 {
     return BError(BError::Codes::OK);
 }
@@ -273,17 +280,17 @@ ErrCode Service::RefreshDataSize(int64_t totalDatasize)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result)
+ErrCode Service::UpdateTimer(const BundleName &bundleName, uint32_t timeout, bool &result)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result)
+ErrCode Service::UpdateSendRate(const std::string &bundleName, int32_t sendRate, bool &result)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario)
+ErrCode Service::ReportAppProcessInfo(const std::string &processInfo, const BackupRestoreScenario sennario)
 {
     return BError(BError::Codes::OK);
 }
@@ -384,7 +391,7 @@ void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRes
 
 void Service::SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId) {}
 
-ErrCode Service::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
+ErrCode Service::GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData> &bundleNameList)
 {
     return BError(BError::Codes::OK);
 }

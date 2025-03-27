@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef BACKUP_SERVICE_STUB_FUZZER_H
-#define BACKUP_SERVICE_STUB_FUZZER_H
+package OHOS.FileManagement.Backup.ExtensionType;
 
-#define FUZZ_PROJECT_NAME "backupservicestubbranch_fuzzer"
-
-#endif
+struct UniqueFdGroup {
+    FileDescriptor fd;
+    FileDescriptor reportFd;
+    int errCode;
+};

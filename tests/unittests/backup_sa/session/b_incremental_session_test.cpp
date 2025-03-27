@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include "b_incremental_restore_session.h"
 #include "b_incremental_session_restore_async.h"
 #include "service_proxy_mock.h"
+#include "service_client.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -45,7 +46,7 @@ void IncrementalSessionTest::SetUpTestCase()
     restoreSession = make_shared<BIncrementalRestoreSession>();
     BIncrementalSessionRestoreAsync::Callbacks callbacks;
     restoreAsyncSession = make_shared<BIncrementalSessionRestoreAsync>(callbacks);
-    ServiceProxy::serviceProxy_ = proxy;
+    ServiceClient::serviceProxy_ = proxy;
 }
 
 void IncrementalSessionTest::TearDownTestCase()
@@ -53,7 +54,7 @@ void IncrementalSessionTest::TearDownTestCase()
     backupSession = nullptr;
     restoreSession = nullptr;
     restoreAsyncSession = nullptr;
-    ServiceProxy::serviceProxy_ = nullptr;
+    ServiceClient::serviceProxy_ = nullptr;
     proxy = nullptr;
 }
 
@@ -70,14 +71,14 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0100, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0100";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         BIncrementalBackupSession::Callbacks callbacks;
         EXPECT_TRUE(backupSession != nullptr);
         auto err = backupSession->Init(callbacks);
         EXPECT_EQ(err, nullptr);
 
         EXPECT_CALL(*proxy, InitIncrementalBackupSession(_)).WillOnce(Return(-1)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = backupSession->Init(callbacks);
         EXPECT_EQ(err, nullptr);
         err = backupSession->Init(callbacks);
@@ -103,11 +104,11 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0200, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0200";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         EXPECT_TRUE(backupSession != nullptr);
         backupSession->RegisterBackupServiceDied(nullptr);
 
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         backupSession->RegisterBackupServiceDied(nullptr);
 
         EXPECT_CALL(*proxy, AsObject()).WillOnce(Return(nullptr));
@@ -132,14 +133,14 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0300, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0300";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         vector<BIncrementalData> bundlesToBackup;
         EXPECT_TRUE(backupSession != nullptr);
         auto err = backupSession->AppendBundles(bundlesToBackup);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
         EXPECT_CALL(*proxy, AppendBundlesIncrementalBackupSession(_)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = backupSession->AppendBundles(bundlesToBackup);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -162,13 +163,13 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0400, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0400";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         EXPECT_TRUE(backupSession != nullptr);
         auto err = backupSession->Release();
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
         EXPECT_CALL(*proxy, Release()).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = backupSession->Release();
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -191,14 +192,14 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0500, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0500";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         BIncrementalRestoreSession::Callbacks callbacks;
         EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->Init(callbacks);
         EXPECT_EQ(err, nullptr);
 
         EXPECT_CALL(*proxy, InitRestoreSession(_)).WillOnce(Return(-1)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreSession->Init(callbacks);
         EXPECT_EQ(err, nullptr);
         err = restoreSession->Init(callbacks);
@@ -224,11 +225,11 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0600, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0600";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         EXPECT_TRUE(restoreSession != nullptr);
         restoreSession->RegisterBackupServiceDied(nullptr);
 
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         restoreSession->RegisterBackupServiceDied(nullptr);
 
         EXPECT_CALL(*proxy, AsObject()).WillOnce(Return(nullptr));
@@ -253,16 +254,16 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0700, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0700";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         UniqueFd remoteCap1;
         vector<BundleName> bundlesToRestore;
         EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->AppendBundles(move(remoteCap1), bundlesToRestore);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
-        EXPECT_CALL(*proxy, AppendBundlesRestoreSession(_, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*proxy, AppendBundlesRestoreSessionData(_, _, _, _)).WillOnce(Return(0));
         UniqueFd remoteCap2;
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreSession->AppendBundles(move(remoteCap2), bundlesToRestore);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -285,13 +286,13 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0800, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0800";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->Release();
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
         EXPECT_CALL(*proxy, Release()).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreSession->Release();
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -314,14 +315,14 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_0900, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_0900";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         BFileInfo fileInfo;
         EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->PublishFile(fileInfo);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
         EXPECT_CALL(*proxy, PublishIncrementalFile(_)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreSession->PublishFile(fileInfo);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -345,7 +346,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1000, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1000";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         string bundleName;
         string fileName;
         EXPECT_TRUE(restoreSession != nullptr);
@@ -353,7 +354,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1000, testing::e
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
         EXPECT_CALL(*proxy, GetIncrementalFileHandle(_, _)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreSession->GetFileHandle(bundleName, fileName);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -376,7 +377,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1100, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1100";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         UniqueFd remoteCap;
         vector<BundleName> bundlesToRestore;
         vector<std::string> detailInfos;
@@ -384,8 +385,8 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1100, testing::e
         auto err = restoreSession->AppendBundles(move(remoteCap), bundlesToRestore, detailInfos);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
-        EXPECT_CALL(*proxy, AppendBundlesRestoreSession(_, _, _, _, _)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, AppendBundlesRestoreSessionDataByDetail(_, _, _, _, _)).WillOnce(Return(0));
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreSession->AppendBundles(move(remoteCap), bundlesToRestore, detailInfos);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -408,14 +409,14 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1200, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1200";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         BIncrementalSessionRestoreAsync::Callbacks callbacks;
         EXPECT_TRUE(restoreAsyncSession != nullptr);
         auto err = restoreAsyncSession->Init(callbacks);
         EXPECT_EQ(err, nullptr);
 
         EXPECT_CALL(*proxy, InitRestoreSession(_)).WillOnce(Return(-1)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreAsyncSession->Init(callbacks);
         EXPECT_EQ(err, nullptr);
         err = restoreAsyncSession->Init(callbacks);
@@ -441,11 +442,11 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1300, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1300";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         EXPECT_TRUE(restoreAsyncSession != nullptr);
         restoreAsyncSession->RegisterBackupServiceDied(nullptr);
 
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         restoreAsyncSession->RegisterBackupServiceDied(nullptr);
 
         EXPECT_CALL(*proxy, AsObject()).WillOnce(Return(nullptr));
@@ -470,16 +471,16 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1400, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1400";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         UniqueFd remoteCap1;
         vector<BundleName> bundlesToRestore;
         EXPECT_TRUE(restoreAsyncSession != nullptr);
         auto err = restoreAsyncSession->AppendBundles(move(remoteCap1), bundlesToRestore);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
-        EXPECT_CALL(*proxy, AppendBundlesRestoreSession(_, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*proxy, AppendBundlesRestoreSessionData(_, _, _, _)).WillOnce(Return(0));
         UniqueFd remoteCap2;
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreAsyncSession->AppendBundles(move(remoteCap2), bundlesToRestore);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -502,14 +503,14 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1500, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1500";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         BFileInfo fileInfo;
         EXPECT_TRUE(restoreAsyncSession != nullptr);
         auto err = restoreAsyncSession->PublishFile(fileInfo);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
         EXPECT_CALL(*proxy, PublishIncrementalFile(_)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreAsyncSession->PublishFile(fileInfo);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -533,7 +534,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1600, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1600";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         string bundleName;
         string fileName;
         EXPECT_TRUE(restoreAsyncSession != nullptr);
@@ -541,7 +542,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1600, testing::e
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
         EXPECT_CALL(*proxy, GetIncrementalFileHandle(_, _)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreAsyncSession->GetFileHandle(bundleName, fileName);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -564,7 +565,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1700, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1700";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         UniqueFd remoteCap;
         vector<BundleName> bundlesToRestore;
         vector<std::string> detailInfos;
@@ -572,8 +573,8 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1700, testing::e
         auto err = restoreAsyncSession->AppendBundles(move(remoteCap), bundlesToRestore, detailInfos);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
-        EXPECT_CALL(*proxy, AppendBundlesRestoreSession(_, _, _, _, _)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, AppendBundlesRestoreSessionDataByDetail(_, _, _, _, _)).WillOnce(Return(0));
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreAsyncSession->AppendBundles(move(remoteCap), bundlesToRestore, detailInfos);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -596,13 +597,13 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1800, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1800";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         EXPECT_TRUE(restoreAsyncSession != nullptr);
         auto err = restoreAsyncSession->Release();
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
         EXPECT_CALL(*proxy, Release()).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreAsyncSession->Release();
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -625,15 +626,15 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_1900, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_1900";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         vector<BIncrementalData> bundlesToBackup;
         vector<std::string> infos;
         EXPECT_TRUE(backupSession != nullptr);
         auto err = backupSession->AppendBundles(bundlesToBackup, infos);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
-        EXPECT_CALL(*proxy, AppendBundlesIncrementalBackupSession(_, _)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, AppendBundlesIncrementalBackupSessionWithBundleInfos(_, _)).WillOnce(Return(0));
+        ServiceClient::serviceProxy_ = proxy;
         err = backupSession->AppendBundles(bundlesToBackup, infos);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -656,7 +657,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2000, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2000";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         BFileInfo fileInfo;
         UniqueFd fd;
         EXPECT_TRUE(restoreSession != nullptr);
@@ -664,7 +665,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2000, testing::e
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
         EXPECT_CALL(*proxy, PublishSAIncrementalFile(_, _)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreSession->PublishSAFile(fileInfo, move(fd));
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -687,14 +688,14 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2100, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2100";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         std::string bundleName;
         EXPECT_TRUE(backupSession != nullptr);
         auto err = backupSession->Cancel(bundleName);
         EXPECT_EQ(err, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
 
         EXPECT_CALL(*proxy, Cancel(_, _)).WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = backupSession->Cancel(bundleName);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -717,14 +718,14 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2200, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2200";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         std::string bundleName;
         EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->Cancel(bundleName);
         EXPECT_EQ(err, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
 
         EXPECT_CALL(*proxy, Cancel(_, _)).WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreSession->Cancel(bundleName);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -747,14 +748,14 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2300, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2300";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         std::string bundleName;
         EXPECT_TRUE(restoreAsyncSession != nullptr);
         auto err = restoreAsyncSession->Cancel(bundleName);
         EXPECT_EQ(err, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
 
         EXPECT_CALL(*proxy, Cancel(_, _)).WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreAsyncSession->Cancel(bundleName);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -779,14 +780,14 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2400, testing::e
     try {
         std::string errMsg;
         ErrCode errCode;
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         BIncrementalBackupSession::Callbacks callbacks;
         EXPECT_TRUE(backupSession != nullptr);
         auto err = backupSession->Init(callbacks, errMsg, errCode);
         EXPECT_EQ(err, nullptr);
 
-        EXPECT_CALL(*proxy, InitIncrementalBackupSession(_, _)).WillOnce(Return(-1)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, InitIncrementalBackupSessionWithErrMsg(_, _)).WillOnce(Return(-1)).WillOnce(Return(0));
+        ServiceClient::serviceProxy_ = proxy;
         err = backupSession->Init(callbacks, errMsg, errCode);
         EXPECT_EQ(err, nullptr);
         err = backupSession->Init(callbacks, errMsg, errCode);
@@ -813,14 +814,14 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2500, testing::e
     try {
         std::string errMsg;
         ErrCode errCode;
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         BIncrementalRestoreSession::Callbacks callbacks;
         EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->Init(callbacks, errMsg, errCode);
         EXPECT_EQ(err, nullptr);
 
-        EXPECT_CALL(*proxy, InitRestoreSession(_, _)).WillOnce(Return(-1)).WillOnce(Return(0));
-        ServiceProxy::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, InitRestoreSessionWithErrMsg(_, _)).WillOnce(Return(-1)).WillOnce(Return(0));
+        ServiceClient::serviceProxy_ = proxy;
         err = restoreSession->Init(callbacks, errMsg, errCode);
         EXPECT_EQ(err, nullptr);
         err = restoreSession->Init(callbacks, errMsg, errCode);
@@ -845,17 +846,18 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2600, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2600";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         EXPECT_TRUE(backupSession != nullptr);
         auto err = backupSession->GetLocalCapabilities();
         EXPECT_EQ(err.Get(), -EPERM);
 
-        ServiceProxy::serviceProxy_ = proxy;
-        EXPECT_CALL(*proxy, GetLocalCapabilitiesForBundleInfos()).WillOnce(Return(UniqueFd(-1)));
+        ServiceClient::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, GetLocalCapabilitiesForBundleInfos(_)).WillOnce(Return(-1));
         err = backupSession->GetLocalCapabilities();
         EXPECT_EQ(err.Get(), -EPERM);
 
-        EXPECT_CALL(*proxy, GetLocalCapabilitiesForBundleInfos()).WillOnce(Return(UniqueFd(0)));
+        EXPECT_CALL(*proxy, GetLocalCapabilitiesForBundleInfos(_))
+            .WillOnce(DoAll(testing::SetArgReferee<0>(0), Return(0)));
         err = backupSession->GetLocalCapabilities();
         EXPECT_EQ(err.Get(), 0);
     } catch (...) {
@@ -878,17 +880,18 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2700, testing::e
 {
     GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2700";
     try {
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         EXPECT_TRUE(restoreSession != nullptr);
         auto err = restoreSession->GetLocalCapabilities();
         EXPECT_EQ(err.Get(), -EPERM);
 
-        ServiceProxy::serviceProxy_ = proxy;
-        EXPECT_CALL(*proxy, GetLocalCapabilitiesForBundleInfos()).WillOnce(Return(UniqueFd(-1)));
+        ServiceClient::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, GetLocalCapabilitiesForBundleInfos(_)).WillOnce(Return(-1));
         err = restoreSession->GetLocalCapabilities();
         EXPECT_EQ(err.Get(), -EPERM);
 
-        EXPECT_CALL(*proxy, GetLocalCapabilitiesForBundleInfos()).WillOnce(Return(UniqueFd(0)));
+        EXPECT_CALL(*proxy, GetLocalCapabilitiesForBundleInfos(_))
+            .WillOnce(DoAll(testing::SetArgReferee<0>(0), Return(0)));
         err = restoreSession->GetLocalCapabilities();
         EXPECT_EQ(err.Get(), 0);
     } catch (...) {
@@ -913,12 +916,12 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2800, testing::e
     try {
         bool isPreciseScan = false;
         vector<BIncrementalData> bundleNameList;
-        ServiceProxy::serviceProxy_ = nullptr;
+        ServiceClient::serviceProxy_ = nullptr;
         ASSERT_TRUE(backupSession != nullptr);
         auto err = backupSession->GetBackupDataSize(isPreciseScan, bundleNameList);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
 
-        ServiceProxy::serviceProxy_ = proxy;
+        ServiceClient::serviceProxy_ = proxy;
         EXPECT_CALL(*proxy, GetBackupDataSize(_, _)).WillOnce(Return(BError(BError::Codes::SDK_BROKEN_IPC).GetCode()));
         err = backupSession->GetBackupDataSize(isPreciseScan, bundleNameList);
         EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());

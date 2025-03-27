@@ -53,7 +53,7 @@ public:
     virtual void SetBackupExtName(const std::string &, const std::string &) = 0;
     virtual std::weak_ptr<SABackupConnection> GetSAExtConnection(const BundleName &) = 0;
     virtual void AppendBundles(const std::vector<BundleName> &, std::vector<BundleName> &) = 0;
-    virtual sptr<SvcBackupConnection> CreateBackupConnection(BundleName &) = 0;
+    virtual sptr<SvcBackupConnection> CreateBackupConnection(const BundleName &) = 0;
     virtual ErrCode Start() = 0;
     virtual ErrCode Finish() = 0;
     virtual bool IsOnAllBundlesFinished() = 0;
@@ -130,7 +130,7 @@ public:
     MOCK_METHOD(void, SetBackupExtName, (const std::string &, const std::string &));
     MOCK_METHOD(std::weak_ptr<SABackupConnection>, GetSAExtConnection, (const BundleName &));
     MOCK_METHOD(void, AppendBundles, (const std::vector<BundleName> &, std::vector<BundleName> &));
-    MOCK_METHOD(sptr<SvcBackupConnection>, CreateBackupConnection, (BundleName &));
+    MOCK_METHOD(sptr<SvcBackupConnection>, CreateBackupConnection, (const BundleName &));
     MOCK_METHOD(ErrCode, Start, ());
     MOCK_METHOD(ErrCode, Finish, ());
     MOCK_METHOD(bool, IsOnAllBundlesFinished, ());

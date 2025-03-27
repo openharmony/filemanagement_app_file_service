@@ -20,59 +20,65 @@
 #include <string>
 
 #include "b_error/b_error.h"
-#include "i_service_reverse.h"
+#include "iservice_reverse.h"
 #include "iremote_stub.h"
 #include "service_stub.h"
+#include "service_common.h"
 
 namespace OHOS::FileManagement::Backup {
 class Service : public ServiceStub {
 public:
-    ErrCode InitRestoreSession(sptr<IServiceReverse>) { return BError(BError::Codes::OK); }
-    ErrCode InitRestoreSession(sptr<IServiceReverse>, std::string&) { return BError(BError::Codes::OK); }
-    ErrCode InitBackupSession(sptr<IServiceReverse>) { return BError(BError::Codes::OK); }
-    ErrCode InitBackupSession(sptr<IServiceReverse>, std::string&) { return BError(BError::Codes::OK); }
+    ErrCode InitRestoreSession(const sptr<IServiceReverse>&) { return BError(BError::Codes::OK); }
+    ErrCode InitRestoreSessionWithErrMsg(const sptr<IServiceReverse>&,
+                                         std::string&) { return BError(BError::Codes::OK); }
+    ErrCode InitBackupSession(const sptr<IServiceReverse>&) { return BError(BError::Codes::OK); }
+    ErrCode InitBackupSessionWithErrMsg(const sptr<IServiceReverse>&,
+                                        std::string&) { return BError(BError::Codes::OK); }
     ErrCode Start() { return BError(BError::Codes::OK); }
-    UniqueFd GetLocalCapabilities() {  return UniqueFd(-1); }
-    UniqueFd GetLocalCapabilitiesForBundleInfos() {  return UniqueFd(-1); }
+    ErrCode GetLocalCapabilities(int&) { return BError(BError::Codes::OK); }
+    ErrCode GetLocalCapabilitiesForBundleInfos(int&) {  return BError(BError::Codes::OK); }
     ErrCode PublishFile(const BFileInfo&) { return BError(BError::Codes::OK); }
-    ErrCode AppFileReady(const std::string&, UniqueFd, int32_t) { return BError(BError::Codes::OK); }
+    ErrCode AppFileReady(const std::string&, int, int32_t) { return BError(BError::Codes::OK); }
     ErrCode AppDone(ErrCode) { return BError(BError::Codes::OK); }
-    ErrCode ServiceResultReport(const std::string,
+    ErrCode ServiceResultReport(const std::string&,
         BackupRestoreScenario, ErrCode) { return BError(BError::Codes::OK); }
     ErrCode GetFileHandle(const std::string&, const std::string&) { return BError(BError::Codes::OK); }
-    ErrCode AppendBundlesRestoreSession(UniqueFd,
-                                        const std::vector<BundleName>&,
-                                        const std::vector<std::string>&,
-                                        RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
-                                        int32_t userId = DEFAULT_INVAL_VALUE) { return BError(BError::Codes::OK); }
-    ErrCode AppendBundlesRestoreSession(UniqueFd,
-                                        const std::vector<BundleName>&,
-                                        RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
-                                        int32_t userId = DEFAULT_INVAL_VALUE) { return BError(BError::Codes::OK); }
+    ErrCode AppendBundlesRestoreSessionDataByDetail(int,
+                                                    const std::vector<BundleName>&,
+                                                    const std::vector<std::string>&,
+                                                    int32_t,
+                                                    int32_t) { return BError(BError::Codes::OK); }
+    ErrCode AppendBundlesRestoreSessionData(int,
+                                            const std::vector<BundleName>&,
+                                            int32_t,
+                                            int32_t) { return BError(BError::Codes::OK); }
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName>&) { return BError(BError::Codes::OK); }
     ErrCode AppendBundlesDetailsBackupSession(const std::vector<BundleName>&,
                                               const std::vector<std::string>&) { return BError(BError::Codes::OK); }
     ErrCode Finish() { return BError(BError::Codes::OK); }
     ErrCode Release() { return BError(BError::Codes::OK); }
-    ErrCode Cancel(std::string, int32_t&) { return BError(BError::Codes::OK); }
-    UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData>&) { return UniqueFd(-1); }
+    ErrCode Cancel(const std::string&, int32_t&) { return BError(BError::Codes::OK); }
+    ErrCode GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData>&,
+                                            int&) { return BError(BError::Codes::OK); }
     ErrCode GetAppLocalListAndDoIncrementalBackup() { return BError(BError::Codes::OK); }
-    ErrCode InitIncrementalBackupSession(sptr<IServiceReverse>) { return BError(BError::Codes::OK); }
-    ErrCode InitIncrementalBackupSession(sptr<IServiceReverse>, std::string&) { return BError(BError::Codes::OK); }
+    ErrCode InitIncrementalBackupSession(const sptr<IServiceReverse>&) { return BError(BError::Codes::OK); }
+    ErrCode InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>&,
+                                                   std::string&) { return BError(BError::Codes::OK); }
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData>&)
         { return BError(BError::Codes::OK); }
-    ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData>&, const std::vector<std::string>&)
+    ErrCode AppendBundlesIncrementalBackupSessionWithBundleInfos(const std::vector<BIncrementalData>&,
+                                                                 const std::vector<std::string>&)
         { return BError(BError::Codes::OK); }
     ErrCode PublishIncrementalFile(const BFileInfo&) { return BError(BError::Codes::OK); }
-    ErrCode PublishSAIncrementalFile(const BFileInfo&, UniqueFd) { return BError(BError::Codes::OK); }
-    ErrCode AppIncrementalFileReady(const std::string&, UniqueFd, UniqueFd, int32_t)
+    ErrCode PublishSAIncrementalFile(const BFileInfo&, int) { return BError(BError::Codes::OK); }
+    ErrCode AppIncrementalFileReady(const std::string&, int, int, int32_t)
         { return BError(BError::Codes::OK); }
     ErrCode AppIncrementalDone(ErrCode) { return BError(BError::Codes::OK); }
     ErrCode GetIncrementalFileHandle(const std::string&, const std::string&) { return BError(BError::Codes::OK); }
-    ErrCode GetBackupInfo(BundleName&, std::string&) { return BError(BError::Codes::OK); }
-    ErrCode UpdateTimer(BundleName&, uint32_t, bool&) { return BError(BError::Codes::OK); }
-    ErrCode UpdateSendRate(std::string&, int32_t, bool&) { return BError(BError::Codes::OK); }
-    ErrCode ReportAppProcessInfo(const std::string, const BackupRestoreScenario) { return BError(BError::Codes::OK); }
+    ErrCode GetBackupInfo(const BundleName&, std::string&) { return BError(BError::Codes::OK); }
+    ErrCode UpdateTimer(const BundleName&, uint32_t, bool&) { return BError(BError::Codes::OK); }
+    ErrCode UpdateSendRate(const std::string&, int32_t, bool&) { return BError(BError::Codes::OK); }
+    ErrCode ReportAppProcessInfo(const std::string&, BackupRestoreScenario) { return BError(BError::Codes::OK); }
     ErrCode StartExtTimer(bool&) { return BError(BError::Codes::OK); }
     ErrCode StartFwkTimer(bool&) { return BError(BError::Codes::OK); }
     ErrCode StopExtTimer(bool&) { return BError(BError::Codes::OK); }
@@ -80,7 +86,7 @@ public:
 
     ErrCode SAResultReport(const std::string, const std::string,
                            const ErrCode, const BackupRestoreScenario) { return BError(BError::Codes::OK); }
-    ErrCode GetBackupDataSize(bool, std::vector<BIncrementalData>) { return BError(BError::Codes::OK); }
+    ErrCode GetBackupDataSize(bool, const std::vector<BIncrementalData>&) { return BError(BError::Codes::OK); }
 };
 } // namespace OHOS::FileManagement::Backup
 

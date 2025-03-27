@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,7 @@
 #include "b_json/b_json_clear_data_config.h"
 #include "b_json/b_json_entity_caps.h"
 #include "b_json/b_json_service_disposal_config.h"
-#include "i_service_reverse.h"
+#include "iservice_reverse.h"
 #include "iremote_stub.h"
 #include "module_sched/sched_scheduler.h"
 #include "service_stub.h"
@@ -42,59 +42,62 @@ struct BundleTaskInfo {
     std::string reportTime;
     ErrCode errCode;
 };
+const int INVALID_FD = -1;
 
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(Service);
 
     // 以下都是IPC接口
 public:
-    ErrCode InitRestoreSession(sptr<IServiceReverse> remote) override;
-    ErrCode InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg) override;
-    ErrCode InitBackupSession(sptr<IServiceReverse> remote) override;
-    ErrCode InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg) override;
+    ErrCode InitRestoreSession(const sptr<IServiceReverse>& remote) override;
+    ErrCode InitRestoreSessionWithErrMsg(const sptr<IServiceReverse>& reverseIpcRemoteObject,
+        std::string& errMsg) override;
+    ErrCode InitBackupSession(const sptr<IServiceReverse>& remote) override;
+    ErrCode InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg) override;
     ErrCode Start() override;
-    UniqueFd GetLocalCapabilities() override;
-    UniqueFd GetLocalCapabilitiesForBundleInfos() override;
+    ErrCode GetLocalCapabilities(int& fd) override;
+    
+    ErrCode GetLocalCapabilitiesForBundleInfos(int& fd) override;
     ErrCode PublishFile(const BFileInfo &fileInfo) override;
-    ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode) override;
+    ErrCode AppFileReady(const std::string &fileName, int fd, int32_t errCode) override;
     ErrCode AppDone(ErrCode errCode) override;
-    ErrCode ServiceResultReport(const std::string restoreRetInfo,
+    ErrCode ServiceResultReport(const std::string& restoreRetInfo,
         BackupRestoreScenario sennario, ErrCode errCode) override;
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override;
-    ErrCode AppendBundlesRestoreSession(UniqueFd fd,
-                                        const std::vector<BundleName> &bundleNames,
-                                        const std::vector<std::string> &bundleInfos,
-                                        RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
-                                        int32_t userId = DEFAULT_INVAL_VALUE) override;
-    ErrCode AppendBundlesRestoreSession(UniqueFd fd,
-                                        const std::vector<BundleName> &bundleNames,
-                                        RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
-                                        int32_t userId = DEFAULT_INVAL_VALUE) override;
+  
+    ErrCode AppendBundlesRestoreSessionDataByDetail(
+            int fd,
+            const std::vector<std::string>& bundleNames,
+            const std::vector<std::string>& detailInfos,
+            int32_t restoreType,
+            int32_t userId) override;
+    ErrCode AppendBundlesRestoreSessionData(int fd, const std::vector<std::string>& bundleNames,
+                                            int32_t restoreType, int32_t userId) override;
+    
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
     ErrCode AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
                                               const std::vector<std::string> &bundleInfos) override;
     ErrCode Finish() override;
     ErrCode Release() override;
-    ErrCode Cancel(std::string bundleName, int32_t &result) override;
-
-    UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) override;
+    ErrCode Cancel(const std::string& bundleName, int32_t &result) override;
+    ErrCode GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData>& bundleNames, int& fd) override;
     ErrCode GetAppLocalListAndDoIncrementalBackup() override;
-    ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote) override;
-    ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote, std::string &errMsg) override;
+    ErrCode InitIncrementalBackupSession(const sptr<IServiceReverse>& remote) override;
+    ErrCode InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg) override;
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) override;
-    ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
-        const std::vector<std::string> &infos) override;
-
+    ErrCode AppendBundlesIncrementalBackupSessionWithBundleInfos(const std::vector<BIncrementalData>& bundlesToBackup,
+                                                                 const std::vector<std::string>& bundleInfos) override;
     ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) override;
-    ErrCode PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd) override;
-    ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd,
-        int32_t errCode) override;
+    ErrCode PublishSAIncrementalFile(const BFileInfo& fileInfo, int fd) override;
+    ErrCode PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd);
+    ErrCode AppIncrementalFileReady(const std::string& fileName, int fd, int manifestFd,
+                                    int32_t appIncrementalFileReadyErrCode) override;
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
-    ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override;
-    ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result) override;
-    ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) override;
-    ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario) override;
+    ErrCode GetBackupInfo(const BundleName &bundleName, std::string &result) override;
+    ErrCode UpdateTimer(const BundleName &bundleName, uint32_t timeout, bool &result) override;
+    ErrCode UpdateSendRate(const std::string &bundleName, int32_t sendRate, bool &result) override;
+    ErrCode ReportAppProcessInfo(const std::string& processInfo,  BackupRestoreScenario sennario) override;
     ErrCode StartExtTimer(bool &isExtStart) override;
     ErrCode StartFwkTimer(bool &isFwkStart) override;
     ErrCode StopExtTimer(bool &isExtStop) override;
@@ -104,7 +107,7 @@ public:
                            const ErrCode errCode, const BackupRestoreScenario sennario);
     void StartGetFdTask(std::string bundleName, wptr<Service> ptr);
 
-    ErrCode GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList) override;
+    ErrCode GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList) override;
 
     // 以下都是非IPC接口
 public:
@@ -212,7 +215,7 @@ public:
      * @param bundleName 应用名称
      *
      */
-    AAFwk::Want CreateConnectWant (BundleName &bundleName);
+    AAFwk::Want CreateConnectWant (const BundleName &bundleName);
 
     /**
      * @brief SA backup回调
@@ -242,7 +245,8 @@ public:
      * @param bundleName 应用名称
      *
      */
-    std::function<void(const std::string &&)> GetBackupInfoConnectDone(wptr<Service> obj, std::string &bundleName);
+    std::function<void(const std::string &&)> GetBackupInfoConnectDone(wptr<Service> obj,
+                                                                       const std::string &bundleName);
 
     /**
      * @brief GetBackupInfo extension死亡回调
@@ -252,7 +256,7 @@ public:
      *
      */
     std::function<void(const std::string &&, bool)> GetBackupInfoConnectDied(
-        wptr<Service> obj, std::string &bundleName);
+        wptr<Service> obj, const std::string &bundleName);
 
     /**
      * @brief timeout callback
@@ -526,7 +530,7 @@ private:
      * @param result 业务结果出参
      *
      */
-    ErrCode GetBackupInfoCmdHandle(BundleName &bundleName, std::string &result);
+    ErrCode GetBackupInfoCmdHandle(const BundleName &bundleName, std::string &result);
 
     /**
      * @brief 添加需要清理的Session
@@ -646,6 +650,23 @@ private:
     bool GetScanningInfo(wptr<Service> obj, size_t scannedSize, string &scanning);
 
     void SetScanningInfo(string &scanning, string name);
+
+    ErrCode InitRestoreSession(const sptr<IServiceReverse>& remote, std::string &errMsg);
+
+    UniqueFd GetLocalCapabilities();
+    UniqueFd GetLocalCapabilitiesForBundleInfos();
+    ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode);
+    ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode);
+    ErrCode AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames,
+                                        const std::vector<std::string> &bundleInfos,
+                                        RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
+                                        int32_t userId = DEFAULT_INVAL_VALUE);
+    ErrCode AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames,
+                                        RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND,
+                                        int32_t userId = DEFAULT_INVAL_VALUE);
+    UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames);
+    ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
+                                                  const std::vector<std::string> &infos);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

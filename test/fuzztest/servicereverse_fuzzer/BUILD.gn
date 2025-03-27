@@ -42,6 +42,8 @@ ohos_fuzztest("ServiceReverseFuzzTest") {
 
   external_deps = [
     "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "ipc:ipc_core",
   ]
 
