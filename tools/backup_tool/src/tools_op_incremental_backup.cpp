@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,7 +42,7 @@
 #include "b_resources/b_constants.h"
 #include "backup_kit_inner.h"
 #include "base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter/hitrace_meter.h"
-#include "service_proxy.h"
+#include "service_client.h"
 #include "tools_op.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -273,7 +273,7 @@ static int GetLocalCapabilitiesIncremental(shared_ptr<SessionBckup> ctx,
         fprintf(stderr, "Failed to open file. error: %d %s\n", errno, strerror(errno));
         return -EPERM;
     }
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (!proxy) {
         fprintf(stderr, "Get an empty backup sa proxy\n");
         return -EPERM;
@@ -286,11 +286,13 @@ static int GetLocalCapabilitiesIncremental(shared_ptr<SessionBckup> ctx,
         ctx->lastIncrementalData.push_back(data);
         num++;
     }
-    UniqueFd fd = proxy->GetLocalCapabilitiesIncremental(ctx->lastIncrementalData);
+    int fdVal = -1;
+    proxy->GetLocalCapabilitiesIncremental(ctx->lastIncrementalData, fdVal);
+    UniqueFd fd(fdVal);
     if (fd < 0) {
         fprintf(stderr, "error GetLocalCapabilitiesIncremental");
     } else {
-        BFile::SendFile(fdLocal, fd);
+        BFile::SendFile(fdLocal, std::move(fd));
     }
     return 0;
 }

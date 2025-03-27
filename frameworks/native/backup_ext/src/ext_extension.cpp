@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cinttypes>
 #include <fstream>
 #include <iomanip>
 #include <map>
@@ -53,9 +54,9 @@
 #include "b_utils/b_time.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
-#include "i_service.h"
+#include "iservice.h"
 #include "sandbox_helper.h"
-#include "service_proxy.h"
+#include "service_client.h"
 #include "tar_file.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -400,7 +401,7 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalFileHandle(
         }
         VerifyCaller();
         if (BDir::CheckFilePathInvalid(fileName)) {
-            auto proxy = ServiceProxy::GetInstance();
+            auto proxy = ServiceClient::GetInstance();
             if (proxy == nullptr) {
                 throw BError(BError::Codes::EXT_BROKEN_IPC, string("Failed to AGetInstance"));
             }
@@ -459,10 +460,10 @@ static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
     cache.SetExtManage(pkgInfo);
     cachedEntity.Persist();
     close(cachedEntity.GetFd().Release());
-
+    int fdval = open(INDEX_FILE_BACKUP.data(), O_RDONLY);
     ErrCode ret =
-        proxy->AppFileReady(string(BConstants::EXT_BACKUP_MANAGE), UniqueFd(open(INDEX_FILE_BACKUP.data(), O_RDONLY)),
-            ERR_OK);
+       proxy->AppFileReady(string(BConstants::EXT_BACKUP_MANAGE), fdval,
+           ERR_OK);
     if (SUCCEEDED(ret)) {
         HILOGI("The application is packaged successfully");
     } else {
@@ -500,8 +501,8 @@ ErrCode BackupExtExtension::BigFileReady(TarMap &bigFileInfo, sptr<IService> pro
         WaitToSendFd(startTime, fdNum);
         int32_t errCode = ERR_OK;
         string filePath = std::get<0>(item.second);
-        UniqueFd fd(open(filePath.data(), O_RDONLY));
-        if (fd < 0) {
+        int fdval = open(filePath.data(), O_RDONLY);
+        if (fdval < 0) {
             HILOGE("open file failed, file name is %{public}s, err = %{public}d", GetAnonyString(filePath).c_str(),
                 errno);
             errCode = errno;
@@ -513,7 +514,7 @@ ErrCode BackupExtExtension::BigFileReady(TarMap &bigFileInfo, sptr<IService> pro
                 continue;
             }
         }
-        ret = proxy->AppFileReady(item.first, std::move(fd), errCode);
+        ret = proxy->AppFileReady(item.first, fdval, errCode);
         if (SUCCEEDED(ret)) {
             HILOGI("The application is packaged successfully, package name is %{public}s", item.first.c_str());
         } else {
@@ -685,15 +686,15 @@ static ErrCode TarFileReady(const TarMap &tarFileInfo, sptr<IService> proxy)
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
     string tarPath = path + tarName;
     int32_t errCode = ERR_OK;
-    UniqueFd fd(open(tarPath.data(), O_RDONLY));
-    if (fd < 0) {
+    int fdval = open(tarPath.data(), O_RDONLY);
+    if (fdval < 0) {
         HILOGE("TarFileReady open file failed, file name is %{public}s, err = %{public}d", tarName.c_str(), errno);
         errCode = errno;
         AuditLog auditLog = {false, "Open fd failed", "ADD", "", 1, "FAILED",
             "TarFileReady", "tarFile", tarPath};
         HiAudit::GetInstance(false).Write(auditLog);
     }
-    int ret = proxy->AppFileReady(tarName, std::move(fd), errCode);
+    int ret = proxy->AppFileReady(tarName, fdval, errCode);
     if (SUCCEEDED(ret)) {
         HILOGI("TarFileReady: AppFileReady success for %{public}s", tarName.c_str());
         // 删除文件
@@ -776,7 +777,7 @@ int BackupExtExtension::DoBackup(TarMap &bigFileInfo, map<string, size_t> &small
         return EPERM;
     }
 
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
     }
@@ -841,9 +842,9 @@ bool BackupExtExtension::RefreshDataSize(int64_t totalSize)
         HILOGI("no backup datasize, don't need to refresh");
         return true;
     }
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
-        HILOGE("Failed to obtain the ServiceProxy handle");
+        HILOGE("Failed to obtain the ServiceClient handle");
         return false;
     }
     HILOGI("start RefreshDatasize by ipc");
@@ -1724,9 +1725,9 @@ void BackupExtExtension::AppDone(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("AppDone Begin.");
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
-        HILOGE("Failed to obtain the ServiceProxy handle");
+        HILOGE("Failed to obtain the ServiceClient handle");
         DoClear();
         return;
     }
@@ -1739,8 +1740,8 @@ void BackupExtExtension::AppDone(ErrCode errCode)
 void BackupExtExtension::AppResultReport(const std::string restoreRetInfo,
     BackupRestoreScenario scenario, ErrCode errCode)
 {
-    auto proxy = ServiceProxy::GetInstance();
-    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+    auto proxy = ServiceClient::GetInstance();
+    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceClient handle");
     HILOGI("restoreRetInfo is %{public}s", restoreRetInfo.c_str());
     auto ret = proxy->ServiceResultReport(restoreRetInfo, scenario, errCode);
     if (ret != ERR_OK) {
@@ -1750,8 +1751,8 @@ void BackupExtExtension::AppResultReport(const std::string restoreRetInfo,
 
 void BackupExtExtension::StartExtTimer(bool &isExtStart)
 {
-    auto proxy = ServiceProxy::GetInstance();
-    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+    auto proxy = ServiceClient::GetInstance();
+    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceClient handle");
     HILOGI("Start ext timer by ipc.");
     auto ret = proxy->StartExtTimer(isExtStart);
     if (ret != ERR_OK) {
@@ -1762,8 +1763,8 @@ void BackupExtExtension::StartExtTimer(bool &isExtStart)
 void BackupExtExtension::StartFwkTimer(bool &isFwkStart)
 {
     HILOGI("Do backup, start fwk timer begin.");
-    auto proxy = ServiceProxy::GetInstance();
-    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceProxy handle");
+    auto proxy = ServiceClient::GetInstance();
+    BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceClient handle");
     HILOGI("Start fwk timer by ipc.");
     auto ret = proxy->StartFwkTimer(isFwkStart);
     if (ret != ERR_OK) {
@@ -1776,9 +1777,9 @@ bool BackupExtExtension::StopExtTimer()
 {
     HILOGI("StopExtTimer start");
     bool isExtStop;
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
-        HILOGE("Failed to obtain the ServiceProxy handle");
+        HILOGE("Failed to obtain the ServiceClient handle");
         return false;
     }
     HILOGI("StopExtTimer by ipc");
@@ -1976,7 +1977,8 @@ static void WriteFile(const string &filename, const vector<struct ReportFileInfo
  * 增量tar包和简报信息回传
  */
 ErrCode BackupExtExtension::IncrementalTarFileReady(const TarMap &bigFileInfo,
-    const vector<struct ReportFileInfo> &srcFiles, sptr<IService> proxy)
+                                                    const vector<struct ReportFileInfo> &srcFiles,
+                                                    sptr<IService> proxy)
 {
     string tarFile = bigFileInfo.begin()->first;
     string manageFile = GetReportFileName(tarFile);
@@ -1984,8 +1986,9 @@ ErrCode BackupExtExtension::IncrementalTarFileReady(const TarMap &bigFileInfo,
     WriteFile(file, srcFiles);
 
     string tarName = string(INDEX_FILE_INCREMENTAL_BACKUP).append(tarFile);
-    ErrCode ret = proxy->AppIncrementalFileReady(tarFile, UniqueFd(open(tarName.data(), O_RDONLY)),
-                                                 UniqueFd(open(file.data(), O_RDONLY)), ERR_OK);
+    int fd = open(tarName.data(), O_RDONLY);
+    int manifestFd = open(file.data(), O_RDONLY);
+    ErrCode ret = proxy->AppIncrementalFileReady(tarFile, fd, manifestFd, ERR_OK);
     if (SUCCEEDED(ret)) {
         HILOGI("IncrementalTarFileReady: The application is packaged successfully");
         // 删除文件
@@ -2015,8 +2018,8 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
         auto [path, sta, isBeforeTar] = item.second;
         int32_t errCode = ERR_OK;
         WaitToSendFd(startTime, fdNum);
-        UniqueFd fd(open(path.data(), O_RDONLY));
-        if (fd < 0) {
+        int fdval = open(path.data(), O_RDONLY);
+        if (fdval < 0) {
             HILOGE("IncrementalBigFileReady open file failed, file name is %{public}s, err = %{public}d",
                 GetAnonyString(path).c_str(), errno);
             errCode = errno;
@@ -2034,7 +2037,8 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
         }
         string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append(item.first));
         WriteFile(file, bigInfo);
-        ret = proxy->AppIncrementalFileReady(item.first, std::move(fd), UniqueFd(open(file.data(), O_RDONLY)), errCode);
+        int manifestFdval = open(file.data(), O_RDONLY);
+        ret = proxy->AppIncrementalFileReady(item.first, fdval, manifestFdval, errCode);
         if (SUCCEEDED(ret)) {
             HILOGI("IncrementalBigFileReady: The application is packaged successfully, package name is %{public}s",
                    item.first.c_str());
@@ -2066,11 +2070,11 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
 
     string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append("all"));
     WriteFile(file, srcFiles);
-    UniqueFd fd(open(INDEX_FILE_BACKUP.data(), O_RDONLY));
-    UniqueFd manifestFd(open(file.data(), O_RDONLY));
+    int fdval = open(INDEX_FILE_BACKUP.data(), O_RDONLY);
+    int manifestFdval = open(file.data(), O_RDONLY);
     ErrCode ret =
-        proxy->AppIncrementalFileReady(string(BConstants::EXT_BACKUP_MANAGE), std::move(fd), std::move(manifestFd),
-            ERR_OK);
+        proxy->AppIncrementalFileReady(string(BConstants::EXT_BACKUP_MANAGE), fdval,
+            manifestFdval, ERR_OK);
     if (SUCCEEDED(ret)) {
         HILOGI("IncrementalAllFileReady successfully");
         RemoveFile(file);

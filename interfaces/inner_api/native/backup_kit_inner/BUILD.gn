@@ -18,7 +18,7 @@ import("//foundation/filemanagement/app_file_service/backup.gni")
 config("public_config") {
   include_dirs = [
     ".",
-    "impl",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
   ]
 }
 
@@ -52,9 +52,8 @@ ohos_shared_library("backup_kit_inner") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_backup.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore_async.cpp",
-    "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_proxy.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_client.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
-    "${path_backup}/frameworks/native/backup_kit_inner/src/service_proxy.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",
   ]
@@ -65,7 +64,10 @@ ohos_shared_library("backup_kit_inner") {
   ]
 
   configs = [ ":private_config" ]
-  public_configs = [ ":public_config" ]
+  public_configs = [
+    ":public_config",
+    "${path_backup}/services/backup_sa:public_idl_config",
+  ]
 
   external_deps = [
     "c_utils:utils",
@@ -76,7 +78,10 @@ ohos_shared_library("backup_kit_inner") {
     "samgr:samgr_proxy",
   ]
 
-  deps = [ "${path_backup}/utils:backup_utils" ]
+  deps = [
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
+    "${path_backup}/utils:backup_utils",
+  ]
 
   cflags_cc = [
     "-fdata-sections",

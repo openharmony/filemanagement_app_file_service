@@ -77,12 +77,14 @@ bool CmdInitRestoreSessionFuzzTest(sptr<Service> service, const uint8_t *data, s
 {
     MessageParcel msg;
     MessageParcel reply;
-
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_INIT_RESTORE_SESSION);
+    
     try {
         BSessionRestore::Callbacks callbacks;
         msg.WriteRemoteObject(new ServiceReverse(callbacks));
         msg.WriteBuffer(data, size);
-        service->CmdInitRestoreSession(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -93,12 +95,14 @@ bool CmdInitBackupSessionFuzzTest(sptr<Service> service, const uint8_t *data, si
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_INIT_BACKUP_SESSION);
 
     try {
         BSessionBackup::Callbacks callbacks;
         msg.WriteRemoteObject(new ServiceReverse(callbacks));
         msg.WriteBuffer(data, size);
-        service->CmdInitBackupSession(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -109,10 +113,12 @@ bool CmdStartFuzzTest(sptr<Service> service, const uint8_t *data, size_t size)
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_START);
 
     try {
         msg.WriteBuffer(data, size);
-        service->CmdStart(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -123,10 +129,12 @@ bool CmdGetLocalCapabilitiesFuzzTest(sptr<Service> service, const uint8_t *data,
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_LOCAL_CAPABILITIES);
 
     try {
         msg.WriteBuffer(data, size);
-        service->CmdGetLocalCapabilities(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -141,6 +149,8 @@ bool CmdPublishFileFuzzTest(sptr<Service> service, const uint8_t *data, size_t s
 
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_PUBLISH_FILE);
 
     try {
         int pos = 0;
@@ -150,7 +160,7 @@ bool CmdPublishFileFuzzTest(sptr<Service> service, const uint8_t *data, size_t s
         info.owner = string(reinterpret_cast<const char*>(data + pos), len);
         info.fileName = string(reinterpret_cast<const char*>(data + pos + len), len);
         msg.WriteParcelable(&info);
-        service->CmdPublishFile(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -165,6 +175,8 @@ bool CmdAppFileReadyFuzzTest(sptr<Service> service, const uint8_t *data, size_t 
 
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APP_FILE_READY);
 
     try {
         int pos = 0;
@@ -177,7 +189,7 @@ bool CmdAppFileReadyFuzzTest(sptr<Service> service, const uint8_t *data, size_t 
             msg.WriteFileDescriptor(fd);
         }
         msg.WriteInt32(errCode);
-        service->CmdAppFileReady(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -192,11 +204,13 @@ bool CmdAppDoneFuzzTest(sptr<Service> service, const uint8_t *data, size_t size)
 
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APP_DONE);
 
     try {
         int32_t errCode = TypeCast<int32_t>(data);
         msg.WriteInt32(errCode);
-        service->CmdAppDone(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -211,6 +225,8 @@ bool CmdResultReportFuzzTest(sptr<Service> service, const uint8_t *data, size_t 
 
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_SERVICE_RESULT_REPORT);
 
     try {
         int pos = 0;
@@ -219,7 +235,7 @@ bool CmdResultReportFuzzTest(sptr<Service> service, const uint8_t *data, size_t 
         msg.WriteString(string(reinterpret_cast<const char*>(data + pos), size - pos));
         msg.WriteInt32(scenario);
         msg.WriteInt32(errCode);
-        service->CmdResultReport(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -230,12 +246,14 @@ bool CmdGetFileHandleFuzzTest(sptr<Service> service, const uint8_t *data, size_t
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_FILE_HANDLE);
 
     try {
         int len = size >> 1;
         msg.WriteString(string(reinterpret_cast<const char*>(data), len));
         msg.WriteString(string(reinterpret_cast<const char*>(data + len), size - len));
-        service->CmdGetFileHandle(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -250,6 +268,8 @@ bool CmdAppendBundlesRestoreSessionFuzzTest(sptr<Service> service, const uint8_t
 
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APPEND_BUNDLES_RESTORE_SESSION_DATA);
 
     try {
         int pos = 0;
@@ -262,7 +282,7 @@ bool CmdAppendBundlesRestoreSessionFuzzTest(sptr<Service> service, const uint8_t
         msg.WriteStringVector(bundleNames);
         msg.WriteInt32(type);
         msg.WriteInt32(userId);
-        service->CmdAppendBundlesRestoreSession(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -277,6 +297,8 @@ bool CmdAppendBundlesDetailsRestoreSessionFuzzTest(sptr<Service> service, const 
 
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APPEND_BUNDLES_RESTORE_SESSION_DATA_BY_DETAIL);
 
     try {
         int pos = 0;
@@ -293,7 +315,7 @@ bool CmdAppendBundlesDetailsRestoreSessionFuzzTest(sptr<Service> service, const 
         msg.WriteStringVector(detailInfos);
         msg.WriteInt32(type);
         msg.WriteInt32(userId);
-        service->CmdAppendBundlesDetailsRestoreSession(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -304,12 +326,14 @@ bool CmdAppendBundlesBackupSessionFuzzTest(sptr<Service> service, const uint8_t 
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APPEND_BUNDLES_BACKUP_SESSION);
 
     try {
         vector<string> bundleNames;
         bundleNames.emplace_back(string(reinterpret_cast<const char*>(data), size));
         msg.WriteStringVector(bundleNames);
-        service->CmdAppendBundlesBackupSession(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -320,6 +344,8 @@ bool CmdAppendBundlesDetailsBackupSessionFuzzTest(sptr<Service> service, const u
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APPEND_BUNDLES_DETAILS_BACKUP_SESSION);
 
     try {
         int len = size >> 1;
@@ -329,7 +355,7 @@ bool CmdAppendBundlesDetailsBackupSessionFuzzTest(sptr<Service> service, const u
         detailInfos.emplace_back(string(reinterpret_cast<const char*>(data + len), len));
         msg.WriteStringVector(bundleNames);
         msg.WriteStringVector(detailInfos);
-        service->CmdAppendBundlesDetailsBackupSession(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -340,9 +366,11 @@ bool CmdFinishFuzzTest(sptr<Service> service, const uint8_t *data, size_t size)
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_FINISH);
     try {
         msg.WriteBuffer(data, size);
-        service->CmdFinish(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -353,9 +381,11 @@ bool CmdFinishFuzzTest(sptr<Service> service, const uint8_t *data, size_t size)
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_RELEASE);
     try {
         msg.WriteBuffer(data, size);
-        service->CmdRelease(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -366,12 +396,14 @@ bool CmdGetLocalCapabilitiesIncrementalFuzzTest(sptr<Service> service, const uin
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_LOCAL_CAPABILITIES_INCREMENTAL);
 
     try {
         vector<BIncrementalData> bundleNames;
         bundleNames.emplace_back(string(reinterpret_cast<const char*>(data), size), 0);
         WriteParcelableVector(bundleNames, msg);
-        service->CmdGetLocalCapabilitiesIncremental(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -382,9 +414,11 @@ bool CmdGetAppLocalListAndDoIncrementalBackupFuzzTest(sptr<Service> service, con
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_APP_LOCAL_LIST_AND_DO_INCREMENTAL_BACKUP);
     try {
         msg.WriteBuffer(data, size);
-        service->CmdGetAppLocalListAndDoIncrementalBackup(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -395,12 +429,14 @@ bool CmdInitIncrementalBackupSessionFuzzTest(sptr<Service> service, const uint8_
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_INIT_INCREMENTAL_BACKUP_SESSION);
 
     try {
         BIncrementalBackupSession::Callbacks callbacks;
         msg.WriteRemoteObject(new ServiceReverse(callbacks));
         msg.WriteBuffer(data, size);
-        service->CmdInitIncrementalBackupSession(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -411,12 +447,14 @@ bool CmdAppendBundlesIncrementalBackupSessionFuzzTest(sptr<Service> service, con
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION);
 
     try {
         vector<BIncrementalData> bundlesToBackup;
         bundlesToBackup.emplace_back(string(reinterpret_cast<const char*>(data), size), 0);
         WriteParcelableVector(bundlesToBackup, msg);
-        service->CmdAppendBundlesIncrementalBackupSession(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -427,6 +465,9 @@ bool CmdAppendBundlesDetailsIncrementalBackupSessionFuzzTest(sptr<Service> servi
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(
+        IServiceIpcCode::COMMAND_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION_WITH_BUNDLE_INFOS);
 
     try {
         int len = size >> 2;
@@ -437,7 +478,7 @@ bool CmdAppendBundlesDetailsIncrementalBackupSessionFuzzTest(sptr<Service> servi
         infos.emplace_back(string(reinterpret_cast<const char*>(data + len + len), len));
         WriteParcelableVector(bundlesToBackup, msg);
         msg.WriteStringVector(infos);
-        service->CmdAppendBundlesDetailsIncrementalBackupSession(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -452,6 +493,8 @@ bool CmdPublishIncrementalFileFuzzTest(sptr<Service> service, const uint8_t *dat
 
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_PUBLISH_INCREMENTAL_FILE);
 
     try {
         int pos = 0;
@@ -461,7 +504,7 @@ bool CmdPublishIncrementalFileFuzzTest(sptr<Service> service, const uint8_t *dat
         info.owner = string(reinterpret_cast<const char*>(data + pos), len);
         info.fileName = string(reinterpret_cast<const char*>(data + pos + len), len);
         msg.WriteParcelable(&info);
-        service->CmdPublishIncrementalFile(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -476,6 +519,8 @@ bool CmdPublishIncrementalFileFuzzTest(sptr<Service> service, const uint8_t *dat
 
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_PUBLISH_S_A_INCREMENTAL_FILE);
 
     try {
         int pos = 0;
@@ -487,7 +532,7 @@ bool CmdPublishIncrementalFileFuzzTest(sptr<Service> service, const uint8_t *dat
         info.fileName = string(reinterpret_cast<const char*>(data + pos + len), len);
         msg.WriteParcelable(&info);
         msg.WriteFileDescriptor(fd);
-        service->CmdPublishSAIncrementalFile(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -502,6 +547,8 @@ bool CmdAppIncrementalFileReadyFuzzTest(sptr<Service> service, const uint8_t *da
 
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APP_INCREMENTAL_FILE_READY);
 
     try {
         int pos = 0;
@@ -516,7 +563,7 @@ bool CmdAppIncrementalFileReadyFuzzTest(sptr<Service> service, const uint8_t *da
             msg.WriteFileDescriptor(fd2);
         }
         msg.WriteInt32(errCode);
-        service->CmdAppIncrementalFileReady(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -531,11 +578,13 @@ bool CmdAppIncrementalDoneFuzzTest(sptr<Service> service, const uint8_t *data, s
 
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APP_INCREMENTAL_DONE);
 
     try {
         int32_t errCode = TypeCast<int32_t>(data);
         msg.WriteInt32(errCode);
-        service->CmdAppIncrementalDone(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -546,12 +595,14 @@ bool CmdGetIncrementalFileHandleFuzzTest(sptr<Service> service, const uint8_t *d
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_INCREMENTAL_FILE_HANDLE);
 
     try {
         int len = size >> 1;
         msg.WriteString(string(reinterpret_cast<const char*>(data), len));
         msg.WriteString(string(reinterpret_cast<const char*>(data + len), size - len));
-        service->CmdGetIncrementalFileHandle(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -562,10 +613,12 @@ bool CmdGetBackupInfoFuzzTest(sptr<Service> service, const uint8_t *data, size_t
 {
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_BACKUP_INFO);
 
     try {
         msg.WriteString(string(reinterpret_cast<const char*>(data), size));
-        service->CmdGetBackupInfo(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -580,13 +633,15 @@ bool CmdUpdateTimerFuzzTest(sptr<Service> service, const uint8_t *data, size_t s
 
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_UPDATE_TIMER);
 
     try {
         int pos = 0;
         int32_t timeout = TypeCast<int32_t>(data, &pos);
         msg.WriteString(string(reinterpret_cast<const char*>(data + pos), size - pos));
         msg.WriteInt32(timeout);
-        service->CmdUpdateTimer(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
@@ -601,13 +656,15 @@ bool CmdUpdateSendRateFuzzTest(sptr<Service> service, const uint8_t *data, size_
 
     MessageParcel msg;
     MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_UPDATE_SEND_RATE);
 
     try {
         int pos = 0;
         int32_t sendRate = TypeCast<int32_t>(data, &pos);
         msg.WriteString(string(reinterpret_cast<const char*>(data + pos), size - pos));
         msg.WriteInt32(sendRate);
-        service->CmdUpdateSendRate(msg, reply);
+        service->OnRemoteRequest(code, msg, reply, option);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }

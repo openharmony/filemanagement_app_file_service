@@ -121,6 +121,13 @@ void Service::CreateDirIfNotExist(const std::string &path)
         }
     }
 }
+ErrCode Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames, int &fd)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    UniqueFd fdResult(GetLocalCapabilitiesIncremental(bundleNames));
+    fd = fdResult.Release();
+    return BError(BError::Codes::OK); // anytime return OK
+}
 
 UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames)
 {
@@ -213,7 +220,6 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
     RefreshBundleDataSize(newBundleInfos, bundleName, ptr);
     string path = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId()).
         append(bundleName).append("/").append(BConstants::BACKUP_STAT_SYMBOL).append(to_string(lastTime));
-    HILOGD("path = %{public}s,bundleName = %{public}s", path.c_str(), bundleName.c_str());
     UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP));
     if (fdLocal < 0) {
         HILOGD("fdLocal open fail, error = %{public}d", errno);
@@ -293,7 +299,7 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
     }
 }
 
-ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
+ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remote)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     ErrCode errCode = VerifyCaller();
@@ -328,7 +334,7 @@ ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote)
     return errCode;
 }
 
-ErrCode Service::InitIncrementalBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
+ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     ErrCode errCode = VerifyCaller();
@@ -413,6 +419,12 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
+}
+ErrCode Service::AppendBundlesIncrementalBackupSessionWithBundleInfos(
+    const std::vector<BIncrementalData> &bundlesToBackup, const std::vector<std::string> &bundleInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    return AppendBundlesIncrementalBackupSession(bundlesToBackup, bundleInfos);
 }
 
 ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
@@ -518,6 +530,12 @@ ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::PublishSAIncrementalFile(const BFileInfo& fileInfo, int fd)
+{
+    UniqueFd uniquedParameter(fd);
+    return PublishSAIncrementalFile(fileInfo, std::move(uniquedParameter));
+}
+
 ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd)
 {
     std::string bundleName = fileInfo.owner;
@@ -542,13 +560,13 @@ ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd
 }
 
 ErrCode Service::AppIncrementalFileReady(const std::string &bundleName, const std::string &fileName, UniqueFd fd,
-    UniqueFd manifestFd, int32_t errCode)
+                                         UniqueFd manifestFd, int32_t errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         if (session_->GetScenario() == IServiceReverse::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(bundleName, fileName, move(fd),
-                                                                              move(manifestFd), errCode);
+                move(manifestFd), errCode);
             FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverse::Scenario::RESTORE);
             return BError(BError::Codes::OK);
         }
@@ -556,7 +574,7 @@ ErrCode Service::AppIncrementalFileReady(const std::string &bundleName, const st
             fd = session_->OnBundleExtManageInfo(bundleName, move(fd));
         }
         session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName, fileName, move(fd),
-            move(manifestFd), errCode);
+                                                                         move(manifestFd), errCode);
         FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverse::Scenario::BACKUP);
         if (session_->OnBundleFileReady(bundleName, fileName)) {
             ErrCode ret = HandleCurBundleFileReady(bundleName, fileName, true);
@@ -575,6 +593,17 @@ ErrCode Service::AppIncrementalFileReady(const std::string &bundleName, const st
         HILOGE("Unexpected exception");
         return EPERM;
     }
+}
+
+ErrCode Service::AppIncrementalFileReady(const std::string &fileName, int fd, int manifestFd,
+                                         int32_t appIncrementalFileReadyErrCode)
+{
+    HILOGI("Begin AppIncrementalFileReady:%{public}s, fd:%{public}d, manifestFd:%{public}d, errcode:%{public}d",
+           fileName.c_str(), fd, manifestFd, appIncrementalFileReadyErrCode);
+    UniqueFd fdUnique(fd);
+    UniqueFd manifestFdUnique(manifestFd);
+    return AppIncrementalFileReady(fileName, std::move(fdUnique), std::move(manifestFdUnique),
+                                   appIncrementalFileReadyErrCode);
 }
 
 ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)
@@ -904,7 +933,7 @@ void Service::CancelTask(std::string bundleName, wptr<Service> ptr)
     thisPtr->OnAllBundlesFinished(BError(BError::Codes::OK));
 }
 
-ErrCode Service::Cancel(std::string bundleName, int32_t &result)
+ErrCode Service::Cancel(const std::string& bundleName, int32_t &result)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("Begin, bundle name:%{public}s", bundleName.c_str());

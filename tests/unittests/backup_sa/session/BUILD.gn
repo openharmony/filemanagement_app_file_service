@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -20,6 +20,13 @@ ohos_unittest("b_incremental_session_test") {
   include_dirs = [
     "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/services/backup_sa/include",
+    "${path_backup}/services/backup_sa/include/module_notify",
+    "${path_backup}/utils/include",
+    "${path_backup}/utils/src",
+    "${path_backup}/tests/mock/utils_mock/include",
+    ".",
+    "session",
   ]
 
   sources = [
@@ -31,15 +38,25 @@ ohos_unittest("b_incremental_session_test") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",
+    "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
     "b_incremental_session_test.cpp",
+    "service_client_mock.cpp",
     "service_proxy_mock.cpp",
   ]
 
   deps = [
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${path_backup}/cfi_blocklist.txt"
+  }
 
   defines = [
     "LOG_TAG=\"app_file_service\"",

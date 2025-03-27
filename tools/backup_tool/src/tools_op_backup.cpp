@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,7 +39,7 @@
 #include "b_resources/b_constants.h"
 #include "backup_kit_inner.h"
 #include "base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter/hitrace_meter.h"
-#include "service_proxy.h"
+#include "service_client.h"
 #include "tools_op.h"
 #include "tools_op_backup.h"
 
@@ -240,12 +240,13 @@ static int32_t InitPathCapFile(const string &pathCapFile, vector<string> bundleN
         fprintf(stderr, "Failed to open file. error: %d %s\n", errno, strerror(errno));
         return -EPERM;
     }
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (!proxy) {
         fprintf(stderr, "Get an empty backup sa proxy\n");
         return -EPERM;
     }
-    BFile::SendFile(fdLocal, proxy->GetLocalCapabilities());
+    int fd = -1;
+    BFile::SendFile(fdLocal, proxy->GetLocalCapabilities(fd));
 
     auto ctx = make_shared<Session>();
     ctx->session_ = BSessionBackup::Init(

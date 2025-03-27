@@ -45,7 +45,7 @@ bool CmdInitRestoreSessionFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_RESTORE_SESSION),
+    service->OnRemoteRequest(static_cast<uint32_t>(IServiceIpcCode::COMMAND_INIT_RESTORE_SESSION),
         datas, reply, option);
     service = nullptr;
     return true;
@@ -61,7 +61,7 @@ bool CmdInitBackupSessionFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_BACKUP_SESSION),
+    service->OnRemoteRequest(static_cast<uint32_t>(IServiceIpcCode::COMMAND_INIT_BACKUP_SESSION),
         datas, reply, option);
     service = nullptr;
     return true;
@@ -87,7 +87,7 @@ bool CmdPublishFileFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_FILE),
+    service->OnRemoteRequest(static_cast<uint32_t>(IServiceIpcCode::COMMAND_PUBLISH_FILE),
         datas, reply, option);
     service = nullptr;
     return true;
@@ -103,7 +103,7 @@ bool CmdGetLocalCapabilitiesFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES);
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_LOCAL_CAPABILITIES);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
     return true;
@@ -127,7 +127,7 @@ bool CmdAppFileReadyFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_FILE_READY);
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APP_FILE_READY);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
     return true;
@@ -145,7 +145,7 @@ bool CmdAppDoneFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_DONE),
+    service->OnRemoteRequest(static_cast<uint32_t>(IServiceIpcCode::COMMAND_APP_DONE),
         datas, reply, option);
     service = nullptr;
     return true;
@@ -161,7 +161,7 @@ bool CmdStartFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_START),
+    service->OnRemoteRequest(static_cast<uint32_t>(IServiceIpcCode::COMMAND_START),
         datas, reply, option);
     service = nullptr;
     return true;
@@ -177,7 +177,7 @@ bool CmdFinishFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_FINISH),
+    service->OnRemoteRequest(static_cast<uint32_t>(IServiceIpcCode::COMMAND_FINISH),
         datas, reply, option);
     service = nullptr;
     return true;
@@ -219,7 +219,7 @@ bool CmdAppendBundlesRestoreSessionFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_RESTORE_SESSION),
+    service->OnRemoteRequest(static_cast<uint32_t>(IServiceIpcCode::COMMAND_APPEND_BUNDLES_RESTORE_SESSION_DATA),
         datas, reply, option);
     service = nullptr;
     return true;

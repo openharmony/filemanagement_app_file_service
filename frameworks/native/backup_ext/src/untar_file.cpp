@@ -674,7 +674,7 @@ std::tuple<int, std::string> UntarFile::ParsePaxBlock()
             break;
         }
         string pathLen = content.substr(pos, lenEnd - pos);
-        recLen = std::atoi(pathLen.c_str());
+        recLen = static_cast<uint32_t>(std::atoi(pathLen.c_str()));
         allLen = recLen + OTHER_HEADER;
         if (allLen > BLOCK_SIZE) {
             isLongName = true;

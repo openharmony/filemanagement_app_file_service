@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,14 +15,13 @@
 #include "prop_n_operation.h"
 
 #include "b_error/b_error.h"
-#include "b_incremental_data.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
 #include "filemgmt_libhilog.h"
 #include "filemgmt_libn.h"
 #include "incremental_backup_data.h"
 #include "parse_inc_info_from_js.h"
-#include "service_proxy.h"
+#include "service_client.h"
 #include "access_token.h"
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
@@ -39,13 +38,16 @@ static napi_value AsyncCallback(napi_env env, const NFuncArg& funcArg)
     auto fd = make_shared<UniqueFd>();
     auto cbExec = [fd]() -> NError {
         HILOGI("called LocalCapabilities::AsyncCallback cbExec");
-        ServiceProxy::InvaildInstance();
-        auto proxy = ServiceProxy::GetInstance();
+        ServiceClient::InvaildInstance();
+        auto proxy = ServiceClient::GetInstance();
         if (!proxy) {
             HILOGI("called LocalCapabilities::AsyncCallback cbExec, failed to get proxy");
             return NError(errno);
         }
-        *fd = proxy->GetLocalCapabilities();
+        int fdNum = INVALID_FD;
+        proxy->GetLocalCapabilities(fdNum);
+        UniqueFd fdData(fdNum);
+        *fd = std::move(fdData);
         HILOGI("called LocalCapabilities::AsyncCallback cbExec success");
         return NError(ERRNO_NOERR);
     };
@@ -81,15 +83,18 @@ static napi_value AsyncDataList(napi_env env, const NFuncArg& funcArg)
     }
 
     auto fd = make_shared<UniqueFd>();
-    auto cbExec = [fd, bundles { move(bundles) }]() -> NError {
+    auto cbExec = [fd, bundles {move(bundles)}]() -> NError {
         HILOGI("called LocalCapabilities::AsyncDataList cbExec");
-        ServiceProxy::InvaildInstance();
-        auto proxy = ServiceProxy::GetInstance();
+        ServiceClient::InvaildInstance();
+        auto proxy = ServiceClient::GetInstance();
         if (!proxy) {
             HILOGI("called LocalCapabilities::AsyncDataList cbExec, failed to get proxy");
             return NError(errno);
         }
-        *fd = proxy->GetLocalCapabilitiesIncremental(bundles);
+        int fdValue = INVALID_FD;
+        proxy->GetLocalCapabilitiesIncremental(bundles, fdValue);
+        UniqueFd fdData(fdValue);
+        *fd = std::move(fdData);
         return NError(ERRNO_NOERR);
     };
     auto cbCompl = [fd](napi_env env, NError err) -> NVal {
@@ -165,8 +170,8 @@ napi_value PropNOperation::DoGetBackupInfo(napi_env env, napi_callback_info info
         return nullptr;
     }
 
-    ServiceProxy::InvaildInstance();
-    auto proxy = ServiceProxy::GetInstance();
+    ServiceClient::InvaildInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (!proxy) {
         HILOGE("called DoGetBackupInfo,failed to get proxy");
         return nullptr;
@@ -191,8 +196,8 @@ napi_value PropNOperation::DoGetBackupInfo(napi_env env, napi_callback_info info
 bool PropNOperation::UpdateSendRate(std::string &bundleName, int32_t sendRate)
 {
     bool result = false;
-    ServiceProxy::InvaildInstance();
-    auto proxy = ServiceProxy::GetInstance();
+    ServiceClient::InvaildInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (!proxy) {
         HILOGE("called UpdateSendRate,failed to get proxy");
         return result;
@@ -208,8 +213,8 @@ bool PropNOperation::UpdateSendRate(std::string &bundleName, int32_t sendRate)
 bool PropNOperation::UpdateTimer(std::string &bundleName, uint32_t timeout)
 {
     bool result = false;
-    ServiceProxy::InvaildInstance();
-    auto proxy = ServiceProxy::GetInstance();
+    ServiceClient::InvaildInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (!proxy) {
         HILOGE("called DoUpdateTimer,failed to get proxy");
         return result;
