@@ -791,6 +791,32 @@ bool Service::IncrementalBackup(const string &bundleName)
     return false;
 }
 
+ErrCode Service::IncrementalBackupSA(std::string bundleName)
+{
+    HILOGI("IncrementalBackupSA begin %{public}s", bundleName.c_str());
+    IServiceReverse::Scenario scenario = session_->GetScenario();
+    auto backUpConnection = session_->GetSAExtConnection(bundleName);
+    std::shared_ptr<SABackupConnection> saConnection = backUpConnection.lock();
+    if (saConnection == nullptr) {
+        HILOGE("lock sa connection ptr is nullptr");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    if (scenario == IServiceReverse::Scenario::BACKUP) {
+        auto ret = saConnection->CallBackupSA();
+        session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
+        BundleBeginRadarReport(bundleName, ret, scenario);
+        if (ret) {
+            HILOGE("IncrementalBackupSA ret is %{public}d", ret);
+            ClearSessionAndSchedInfo(bundleName);
+            NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
+            return BError(ret);
+        }
+    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), bundleName);
+    }
+    return BError(BError::Codes::OK);
+}
+
 void Service::NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string &callerName)
 {
     IServiceReverse::Scenario scenario = session_->GetScenario();
