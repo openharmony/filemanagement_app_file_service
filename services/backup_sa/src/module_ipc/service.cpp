@@ -72,6 +72,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+const int INVALID_FD = -1;
 REGISTER_SYSTEM_ABILITY_BY_ID(Service, FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, false);
 
 namespace {
@@ -1862,7 +1863,7 @@ ErrCode Service::IncrementalBackupSA(std::string bundleName)
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
         BundleBeginRadarReport(bundleName, ret, scenario);
         if (ret) {
-            HILOGI("IncrementalBackupSA ret is %{public}d", ret);
+            HILOGE("IncrementalBackupSA ret is %{public}d", ret);
             ClearSessionAndSchedInfo(bundleName);
             NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
             return BError(ret);
@@ -1882,7 +1883,8 @@ void Service::OnSABackup(const std::string &bundleName, const int &fd, const std
         BackupRestoreScenario scenario = FULL_BACKUP;
         if (session_->GetIsIncrementalBackup()) {
             scenario = INCREMENTAL_BACKUP;
-            session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName, "", move(fd), -1, errCode);
+            session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName,"",
+                move(fd), INVALID_FD, errCode);
         } else {
             scenario = FULL_BACKUP;
             session_->GetServiceReverseProxy()->BackupOnFileReady(bundleName, "", move(fd), errCode);
