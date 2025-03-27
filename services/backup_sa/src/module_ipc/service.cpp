@@ -1883,8 +1883,8 @@ void Service::OnSABackup(const std::string &bundleName, const int &fd, const std
         BackupRestoreScenario scenario = FULL_BACKUP;
         if (session_->GetIsIncrementalBackup()) {
             scenario = INCREMENTAL_BACKUP;
-            session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName,"",
-                move(fd), INVALID_FD, errCode);
+            session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName, "", move(fd), INVALID_FD,
+                                                                             errCode);
         } else {
             scenario = FULL_BACKUP;
             session_->GetServiceReverseProxy()->BackupOnFileReady(bundleName, "", move(fd), errCode);
