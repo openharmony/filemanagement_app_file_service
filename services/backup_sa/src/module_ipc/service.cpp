@@ -1887,13 +1887,13 @@ void Service::OnSABackup(const std::string &bundleName, const int &fd, const std
     auto task = [bundleName, fd, result, errCode, this]() {
         HILOGI("OnSABackup bundleName: %{public}s, fd: %{public}d, result: %{public}s, err: %{public}d",
                bundleName.c_str(), fd, result.c_str(), errCode);
-        BackupRestoreScenario scenario = FULL_BACKUP;
+        BackupRestoreScenario scenario = BackupRestoreScenario::FULL_BACKUP;
         if (session_->GetIsIncrementalBackup()) {
-            scenario = INCREMENTAL_BACKUP;
+            scenario = BackupRestoreScenario::INCREMENTAL_BACKUP;
             session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName, "", move(fd), INVALID_FD,
                                                                              errCode);
         } else {
-            scenario = FULL_BACKUP;
+            scenario = BackupRestoreScenario::FULL_BACKUP;
             session_->GetServiceReverseProxy()->BackupOnFileReady(bundleName, "", move(fd), errCode);
         }
         FileReadyRadarReport(bundleName, "", errCode, IServiceReverse::Scenario::BACKUP);
