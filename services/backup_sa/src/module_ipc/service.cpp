@@ -72,7 +72,6 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-const int INVALID_FD = -1;
 REGISTER_SYSTEM_ABILITY_BY_ID(Service, FILEMANAGEMENT_BACKUP_SERVICE_SA_ID, false);
 
 namespace {
