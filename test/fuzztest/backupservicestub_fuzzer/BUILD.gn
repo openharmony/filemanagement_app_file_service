@@ -43,6 +43,7 @@ ohos_fuzztest("BackupServiceStubFuzzTest") {
   deps = [
     "${app_file_service_path}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${app_file_service_path}/services/backup_sa:backup_sa",
+    "${app_file_service_path}/services/backup_sa:backup_sa_ipc_stub",
     "${app_file_service_path}/utils:backup_utils",
   ]
 

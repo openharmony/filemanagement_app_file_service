@@ -32,7 +32,8 @@
 #include "b_file_info.h"
 #include "b_incremental_data.h"
 #include "b_resources/b_constants.h"
-#include "i_service.h"
+#include "service_common.h"
+#include "iservice.h"
 #include "iservice_reverse.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "module_ipc/sa_backup_connection.h"
@@ -332,7 +333,7 @@ public:
      *
      * @param bundleName 应用名称
      */
-    sptr<SvcBackupConnection> CreateBackupConnection(BundleName &bundleName);
+    sptr<SvcBackupConnection> CreateBackupConnection(const BundleName &bundleName);
 
     /**
      * @brief 开始备份

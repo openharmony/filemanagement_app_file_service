@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,7 +22,8 @@
 #include <vector>
 
 #include "b_json/b_json_entity_caps.h"
-#include "i_service.h"
+#include "service_common.h"
+#include "iservice.h"
 
 namespace OHOS::FileManagement::Backup {
 

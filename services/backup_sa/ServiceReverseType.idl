@@ -15,7 +15,7 @@
     
 package OHOS.FileManagement.Backup.IServiceReverseType;
 
-enum  Scenario {
+enum Scenario {
     UNDEFINED,
     BACKUP,
     RESTORE,

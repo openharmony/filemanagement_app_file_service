@@ -51,7 +51,7 @@ static bool DetectFatalLog(string_view output)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0100, testing::ext::TestSize.Level0)
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0100";
     try {
@@ -86,7 +86,7 @@ HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0100, testing::ext::TestSize.Lev
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0200, testing::ext::TestSize.Level0)
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0200, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0200";
     try {
@@ -114,7 +114,7 @@ HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0200, testing::ext::TestSize.Lev
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0300, testing::ext::TestSize.Level0)
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0300, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0300";
     try {
@@ -141,7 +141,7 @@ HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0300, testing::ext::TestSize.Lev
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0400, testing::ext::TestSize.Level0)
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0400, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0400";
     try {
@@ -168,7 +168,7 @@ HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0400, testing::ext::TestSize.Lev
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0500, testing::ext::TestSize.Level0)
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0500, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0500";
     try {
@@ -195,7 +195,7 @@ HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0500, testing::ext::TestSize.Lev
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0600, testing::ext::TestSize.Level0)
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0600, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0600";
     try {
@@ -222,7 +222,7 @@ HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0600, testing::ext::TestSize.Lev
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0700, testing::ext::TestSize.Level0)
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0700, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0700";
     try {
@@ -249,7 +249,7 @@ HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0700, testing::ext::TestSize.Lev
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0800, testing::ext::TestSize.Level0)
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0800, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0800";
     try {
@@ -276,7 +276,7 @@ HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0800, testing::ext::TestSize.Lev
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0900, testing::ext::TestSize.Level0)
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0900, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_0900";
     try {
@@ -301,7 +301,7 @@ HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_0900, testing::ext::TestSize.Lev
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_1000, testing::ext::TestSize.Level0)
+HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_1000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BProcessTest-begin SUB_backup_tool_BProcess_1000";
     try {

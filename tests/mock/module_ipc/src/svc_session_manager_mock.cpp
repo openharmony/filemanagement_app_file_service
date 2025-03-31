@@ -132,7 +132,7 @@ void SvcSessionManager::SetBundleUserId(const string &bundleName, const int32_t 
 
 void SvcSessionManager::AppendBundles(const vector<BundleName> &, vector<BundleName> &) {}
 
-sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &bundleName)
+sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(const BundleName &bundleName)
 {
     return BSvcSessionManager::sessionManager->CreateBackupConnection(bundleName);
 }

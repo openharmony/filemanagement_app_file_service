@@ -33,24 +33,23 @@ using namespace std;
 
 class BService {
 public:
-    virtual UniqueFd GetLocalCapabilities() = 0;
+    virtual ErrCode GetLocalCapabilities(int& fd) = 0;
     virtual ErrCode VerifyCallerAndGetCallerName(std::string&) = 0;
-    virtual ErrCode InitRestoreSession(sptr<IServiceReverse>) = 0;
-    virtual ErrCode InitRestoreSession(sptr<IServiceReverse>, std::string&) = 0;
-    virtual ErrCode InitBackupSession(sptr<IServiceReverse>) = 0;
-    virtual ErrCode InitBackupSession(sptr<IServiceReverse>, std::string&) = 0;
+    virtual ErrCode InitRestoreSession(const sptr<IServiceReverse>&) = 0;
+    virtual ErrCode InitRestoreSessionWithErrMsg(const sptr<IServiceReverse>&, std::string&) = 0;
+    virtual ErrCode InitBackupSession(const sptr<IServiceReverse>&) = 0;
+    virtual ErrCode InitBackupSessionWithErrMsg(const sptr<IServiceReverse>&, std::string&) = 0;
     virtual ErrCode Start() = 0;
     virtual ErrCode PublishFile(const BFileInfo&) = 0;
-    virtual ErrCode AppFileReady(const string&, UniqueFd, int32_t) = 0;
+    virtual ErrCode AppFileReady(const std::string &, int, int32_t) = 0;
     virtual ErrCode AppDone(ErrCode) = 0;
     virtual ErrCode ServiceResultReport(const std::string, BackupRestoreScenario, ErrCode) = 0;
-    virtual ErrCode AppendBundlesRestoreSession(UniqueFd, const std::vector<BundleName>&,
-        const std::vector<std::string>&, RestoreTypeEnum, int32_t) = 0;
-    virtual ErrCode AppendBundlesRestoreSession(UniqueFd, const std::vector<BundleName>&, RestoreTypeEnum,
-        int32_t) = 0;
+    virtual ErrCode AppendBundlesRestoreSessionDataByDetail(int, const std::vector<std::string>&,
+                                                            const std::vector<std::string>&, int32_t, int32_t) = 0;
+    virtual ErrCode AppendBundlesRestoreSessionData(int, const std::vector<std::string>&, int32_t, int32_t) = 0;
     virtual ErrCode AppendBundlesBackupSession(const std::vector<BundleName>&) = 0;
     virtual ErrCode AppendBundlesDetailsBackupSession(const std::vector<BundleName>&,
-        const std::vector<std::string>&) = 0;
+                                                      const std::vector<std::string>&) = 0;
     virtual ErrCode Finish() = 0;
     virtual ErrCode LaunchBackupExtension(const BundleName&) = 0;
     virtual ErrCode LaunchBackupSAExtension(const BundleName&) = 0;
@@ -59,9 +58,9 @@ public:
     virtual ErrCode VerifyCaller() = 0;
     virtual ErrCode VerifyCaller(IServiceReverseType::Scenario) = 0;
     virtual int32_t GetUserIdDefault() = 0;
-    virtual ErrCode GetBackupInfo(BundleName&, std::string&) = 0;
-    virtual ErrCode UpdateTimer(BundleName&, uint32_t, bool&) = 0;
-    virtual ErrCode UpdateSendRate(std::string&, int32_t, bool&) = 0;
+    virtual ErrCode GetBackupInfo(const BundleName&, std::string&) = 0;
+    virtual ErrCode UpdateTimer(const BundleName&, uint32_t, bool&) = 0;
+    virtual ErrCode UpdateSendRate(const std::string&, int32_t, bool&) = 0;
     virtual ErrCode ReportAppProcessInfo(const std::string, BackupRestoreScenario) = 0;
     virtual ErrCode StartExtTimer(bool&) = 0;
     virtual ErrCode StartFwkTimer(bool&) = 0;
@@ -75,7 +74,7 @@ public:
     virtual ErrCode HandleCurBundleFileReady(const std::string&, const std::string&, bool) = 0;
     virtual ErrCode HandleCurAppDone(ErrCode, const std::string&, bool) = 0;
     virtual UniqueFd GetLocalCapabilitiesForBundleInfos() = 0;
-    virtual ErrCode GetBackupDataSize(bool, vector<BIncrementalData>) = 0;
+    virtual ErrCode GetBackupDataSize(bool, const std::vector<BIncrementalData>&) = 0;
 public:
     virtual bool UpdateToRestoreBundleMap(const string&, const string&) = 0;
 public:
@@ -87,20 +86,20 @@ public:
 
 class ServiceMock : public BService {
 public:
-    MOCK_METHOD(UniqueFd, GetLocalCapabilities, ());
+    MOCK_METHOD(ErrCode, GetLocalCapabilities, (int&));
     MOCK_METHOD(ErrCode, VerifyCallerAndGetCallerName, (std::string&));
-    MOCK_METHOD(ErrCode, InitRestoreSession, (sptr<IServiceReverse>));
-    MOCK_METHOD(ErrCode, InitRestoreSession, (sptr<IServiceReverse>, std::string&));
-    MOCK_METHOD(ErrCode, InitBackupSession, (sptr<IServiceReverse>));
-    MOCK_METHOD(ErrCode, InitBackupSession, ((sptr<IServiceReverse>), std::string&));
+    MOCK_METHOD(ErrCode, InitRestoreSession, (const sptr<IServiceReverse>&));
+    MOCK_METHOD(ErrCode, InitRestoreSessionWithErrMsg, (const sptr<IServiceReverse>&, std::string&));
+    MOCK_METHOD(ErrCode, InitBackupSession, (const sptr<IServiceReverse>&));
+    MOCK_METHOD(ErrCode, InitBackupSessionWithErrMsg, (const sptr<IServiceReverse>&, std::string&));
     MOCK_METHOD(ErrCode, Start, ());
     MOCK_METHOD(ErrCode, PublishFile, (const BFileInfo&));
-    MOCK_METHOD(ErrCode, AppFileReady, (const string&, UniqueFd, int32_t));
+    MOCK_METHOD(ErrCode, AppFileReady, (const string&, int, int32_t));
     MOCK_METHOD(ErrCode, AppDone, (ErrCode));
     MOCK_METHOD(ErrCode, ServiceResultReport, (const std::string, BackupRestoreScenario, ErrCode));
-    MOCK_METHOD(ErrCode, AppendBundlesRestoreSession, (UniqueFd, (const std::vector<BundleName>&),
-        (const std::vector<std::string>&), RestoreTypeEnum, int32_t));
-    MOCK_METHOD(ErrCode, AppendBundlesRestoreSession, (UniqueFd, (const std::vector<BundleName>&), RestoreTypeEnum,
+    MOCK_METHOD(ErrCode, AppendBundlesRestoreSessionDataByDetail, (int, (const std::vector<std::string>&),
+        (const std::vector<std::string>&), int32_t, int32_t));
+    MOCK_METHOD(ErrCode, AppendBundlesRestoreSessionData, (int, (const std::vector<BundleName>&), int32_t,
         int32_t));
     MOCK_METHOD(ErrCode, AppendBundlesBackupSession, (const std::vector<BundleName>&));
     MOCK_METHOD(ErrCode, AppendBundlesDetailsBackupSession, ((const std::vector<BundleName>&),
@@ -113,9 +112,9 @@ public:
     MOCK_METHOD(ErrCode, VerifyCaller, ());
     MOCK_METHOD(ErrCode, VerifyCaller, (IServiceReverseType::Scenario));
     MOCK_METHOD(int32_t, GetUserIdDefault, ());
-    MOCK_METHOD(ErrCode, GetBackupInfo, (BundleName&, std::string&));
-    MOCK_METHOD(ErrCode, UpdateTimer, (BundleName&, uint32_t, bool&));
-    MOCK_METHOD(ErrCode, UpdateSendRate, (std::string&, int32_t, bool&));
+    MOCK_METHOD(ErrCode, GetBackupInfo, (const BundleName&, std::string&));
+    MOCK_METHOD(ErrCode, UpdateTimer, (const BundleName&, uint32_t, bool&));
+    MOCK_METHOD(ErrCode, UpdateSendRate, (const std::string&, int32_t, bool&));
     MOCK_METHOD(ErrCode, ReportAppProcessInfo, (const std::string, BackupRestoreScenario));
     MOCK_METHOD(ErrCode, StartExtTimer, (bool&));
     MOCK_METHOD(ErrCode, StartFwkTimer, (bool&));
@@ -129,7 +128,7 @@ public:
     MOCK_METHOD(ErrCode, HandleCurBundleFileReady, (const std::string&, const std::string&, bool));
     MOCK_METHOD(ErrCode, HandleCurAppDone, (ErrCode, const std::string&, bool));
     MOCK_METHOD(UniqueFd, GetLocalCapabilitiesForBundleInfos, ());
-    MOCK_METHOD(ErrCode, GetBackupDataSize, (bool, vector<BIncrementalData>));
+    MOCK_METHOD(ErrCode, GetBackupDataSize, (bool, const std::vector<BIncrementalData>&));
 public:
     MOCK_METHOD(bool, UpdateToRestoreBundleMap, (const string&, const string&));
 };
@@ -138,9 +137,18 @@ void Service::OnStart() {}
 
 void Service::OnStop() {}
 
-UniqueFd Service::GetLocalCapabilities()
+ErrCode Service::GetLocalCapabilitiesForBundleInfos(int &fd)
 {
-    return BService::serviceMock->GetLocalCapabilities();
+    return BError(BError::Codes::OK);
+}
+ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::GetLocalCapabilities(int &fd)
+{
+    return BService::serviceMock->GetLocalCapabilities(fd);
 }
 
 void Service::StopAll(const wptr<IRemoteObject>&, bool) {}
@@ -150,24 +158,19 @@ ErrCode Service::VerifyCallerAndGetCallerName(std::string &bundleName)
     return BService::serviceMock->VerifyCallerAndGetCallerName(bundleName);
 }
 
-ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote)
+ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
 {
     return BService::serviceMock->InitRestoreSession(remote);
 }
 
-ErrCode Service::InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg)
+ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
 {
-    return BService::serviceMock->InitRestoreSession(remote, errMsg);
+    return BService::serviceMock->InitRestoreSessionWithErrMsg(remote, errMsg);
 }
 
-ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote)
+ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
 {
     return BService::serviceMock->InitBackupSession(remote);
-}
-
-ErrCode Service::InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg)
-{
-    return BService::serviceMock->InitBackupSession(remote, errMsg);
 }
 
 ErrCode Service::Start()
@@ -180,31 +183,38 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
     return BService::serviceMock->PublishFile(fileInfo);
 }
 
-ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCode)
+ErrCode Service::AppFileReady(const std::string &fileName, int fd, int32_t appFileReadyErrCode)
 {
-    return BService::serviceMock->AppFileReady(fileName, move(fd), errCode);
+    return BService::serviceMock->AppFileReady(fileName, fd, appFileReadyErrCode);
 }
 
-ErrCode Service::AppDone(ErrCode errCode)
+ErrCode Service::AppDone(int32_t appDoneErrCode)
 {
-    return BService::serviceMock->AppDone(errCode);
+    return BService::serviceMock->AppDone(appDoneErrCode);
 }
 
-ErrCode Service::ServiceResultReport(const std::string restoreRetInfo, BackupRestoreScenario sennario, ErrCode errCode)
+ErrCode Service::ServiceResultReport(const std::string& restoreRetInfo,
+    BackupRestoreScenario sennario, ErrCode errCode)
 {
     return BService::serviceMock->ServiceResultReport(restoreRetInfo, sennario, errCode);
 }
 
-ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames,
-    const std::vector<std::string> &detailInfos, RestoreTypeEnum restoreType, int32_t userId)
+ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd,
+                                                         const std::vector<std::string> &bundleNames,
+                                                         const std::vector<std::string> &detailInfos,
+                                                         int32_t restoreType,
+                                                         int32_t userId)
 {
-    return BService::serviceMock->AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos, restoreType, userId);
+    return BService::serviceMock->AppendBundlesRestoreSessionDataByDetail(fd, bundleNames, detailInfos,
+                                                                          restoreType, userId);
 }
 
-ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd, const std::vector<BundleName> &bundleNames,
-    RestoreTypeEnum restoreType, int32_t userId)
+ErrCode Service::AppendBundlesRestoreSessionData(int fd,
+                                                 const std::vector<std::string> &bundleNames,
+                                                 int32_t restoreType,
+                                                 int32_t userId)
 {
-    return BService::serviceMock->AppendBundlesRestoreSession(move(fd), bundleNames, restoreType, userId);
+    return BService::serviceMock->AppendBundlesRestoreSessionData(fd, bundleNames, restoreType, userId);
 }
 
 ErrCode Service::AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames)
@@ -213,7 +223,7 @@ ErrCode Service::AppendBundlesBackupSession(const std::vector<BundleName> &bundl
 }
 
 ErrCode Service::AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
-    const std::vector<std::string> &bundleInfos)
+                                                   const std::vector<std::string> &bundleInfos)
 {
     return BService::serviceMock->AppendBundlesDetailsBackupSession(bundleNames, bundleInfos);
 }
@@ -278,17 +288,17 @@ void Service::SendStartAppGalleryNotify(const BundleName&) {}
 
 void Service::SessionDeactive() {}
 
-ErrCode Service::GetBackupInfo(BundleName &bundleName, std::string &result)
+ErrCode Service::GetBackupInfo(const BundleName &bundleName, std::string &result)
 {
     return BService::serviceMock->GetBackupInfo(bundleName, result);
 }
 
-ErrCode Service::UpdateTimer(BundleName &bundleName, uint32_t timeOut, bool &result)
+ErrCode Service::UpdateTimer(const BundleName &bundleName, uint32_t timeOut, bool &result)
 {
     return BService::serviceMock->UpdateTimer(bundleName, timeOut, result);
 }
 
-ErrCode Service::UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result)
+ErrCode Service::UpdateSendRate(const std::string &bundleName, int32_t sendRate, bool &result)
 {
     return BService::serviceMock->UpdateSendRate(bundleName, sendRate,  result);
 }
@@ -303,7 +313,7 @@ void Service::SendEndAppGalleryNotify(const BundleName&) {}
 
 void Service::NoticeClientFinish(const string&, ErrCode) {}
 
-ErrCode Service::ReportAppProcessInfo(const std::string processInfo, BackupRestoreScenario sennario)
+ErrCode Service::ReportAppProcessInfo(const std::string &processInfo, BackupRestoreScenario sennario)
 {
     return BService::serviceMock->ReportAppProcessInfo(processInfo, sennario);
 }
@@ -418,9 +428,8 @@ UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
     return BService::serviceMock->GetLocalCapabilitiesForBundleInfos();
 }
 
-void Service::AppendBundles(const std::vector<std::string>&) {}
-
-ErrCode Service::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
+void Service::AppendBundles(const std::vector<std::string> &bundleNames) {}
+ErrCode Service::GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList)
 {
     return BService::serviceMock->GetBackupDataSize(isPreciseScan, bundleNameList);
 }
@@ -516,7 +525,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetLocalCapabilitiesIncr
     try {
         auto session_ = service->session_;
         service->session_ = nullptr;
-        auto fd = service->GetLocalCapabilitiesIncremental({});
+        int fd = -1;
+        service->GetLocalCapabilitiesIncremental({}, fd);
         service->session_ = session_;
         EXPECT_EQ(static_cast<int>(fd), -ENOENT);
 
@@ -741,7 +751,9 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         auto session_ = service->session_;
         service->session_ = nullptr;
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr), BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        sptr<IServiceReverse> srPrt = static_cast<sptr<IServiceReverse>>(srProxy);
+        srPrt = nullptr;
+        EXPECT_EQ(service->InitIncrementalBackupSession(srPrt), BError(BError::Codes::SA_INVAL_ARG).GetCode());
         service->session_ = session_;
 
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
@@ -749,7 +761,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
-        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr), BError(BError::Codes::OK).GetCode());
+        EXPECT_EQ(service->InitIncrementalBackupSession(srPrt), BError(BError::Codes::OK).GetCode());
 
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
@@ -786,14 +798,15 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_InitIncrementalBackupSession_0100";
     try {
         std::string errMsg;
+        sptr<IServiceReverse> reverseNUll = nullptr;
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
-        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr, errMsg),
+        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
             BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         auto session_ = service->session_;
         service->session_ = nullptr;
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr, errMsg),
+        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
             BError(BError::Codes::SA_INVAL_ARG).GetCode());
         service->session_ = session_;
 
@@ -802,8 +815,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
-        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr, errMsg), BError(BError::Codes::OK).GetCode());
-
+        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
+            BError(BError::Codes::OK).GetCode());
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
@@ -813,7 +826,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         EXPECT_CALL(*session, GetSessionCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, GetSessionActiveTime()).WillOnce(Return(""));
         EXPECT_CALL(*jsonUtil, BuildInitSessionErrInfo(_, _, _)).WillOnce(Return(""));
-        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr, errMsg),
+        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
             BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
@@ -821,7 +834,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
-        EXPECT_EQ(service->InitIncrementalBackupSession(nullptr, errMsg),
+        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
             BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1042,26 +1055,32 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_
         string bundleName;
         string fileName;
         int32_t errCode = 0;
+        EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_))
+            .WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalRestoreOnFileReady(_, _, _, _, _)).WillOnce(Return(0));
-        auto ret = service->AppIncrementalFileReady(bundleName, fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        auto ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
+        EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_))
+            .WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return(0));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
-        ret = service->AppIncrementalFileReady(bundleName, fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         fileName = BConstants::EXT_BACKUP_MANAGE;
+        EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_))
+            .WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
         EXPECT_CALL(*session, OnBundleExtManageInfo(_, _)).WillOnce(Return(UniqueFd(-1)));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return(0));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
-        ret = service->AppIncrementalFileReady(bundleName, fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1086,23 +1105,27 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_
         string bundleName;
         string fileName;
         int32_t errCode = 0;
+        EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_))
+            .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return(0));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*srvMock, HandleCurBundleFileReady(_, _, _))
             .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
-        auto ret = service->AppIncrementalFileReady(bundleName, fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        auto ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         fileName = BConstants::EXT_BACKUP_MANAGE;
+        EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_))
+            .WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
         EXPECT_CALL(*session, OnBundleExtManageInfo(_, _)).WillOnce(Return(UniqueFd(-1)));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return(0));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*srvMock, HandleCurBundleFileReady(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        ret = service->AppIncrementalFileReady(bundleName, fileName, UniqueFd(-1), UniqueFd(-1), errCode);
+        ret = service->AppIncrementalFileReady(fileName, UniqueFd(-1), UniqueFd(-1), errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1807,7 +1830,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0100, TestSiz
         service->CancelTask("", service);
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect)).WillOnce(Return(nullptr));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
@@ -1913,7 +1936,6 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Cancel_0100, TestSize.Le
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetImpl()).WillOnce(Return(impl));
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::RUNNING));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
         service->Cancel(bundleName, result);
         EXPECT_EQ(result, BError(BError::Codes::OK).GetCode());
     } catch (...) {

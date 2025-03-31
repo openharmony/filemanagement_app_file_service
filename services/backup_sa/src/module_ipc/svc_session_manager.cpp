@@ -682,7 +682,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames, vec
     impl_.isAppendFinish = true;
 }
 
-sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &bundleName)
+sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(const BundleName &bundleName)
 {
     HILOGD("SvcSessionManager::CreateBackupConnection begin.");
     return GetBackupAbilityExt(bundleName);

@@ -54,7 +54,7 @@ bool CmdGetFileHandleFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_FILE_NAME),
+    service->OnRemoteRequest(static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_FILE_HANDLE),
         datas, reply, option);
     service = nullptr;
     return true;
@@ -79,7 +79,7 @@ bool CmdAppendBundlesBackupSessionFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_BACKUP_SESSION);
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APPEND_BUNDLES_BACKUP_SESSION);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
     return true;
@@ -95,7 +95,7 @@ bool CmdReleaseFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_RELSEASE_SESSION);
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_RELEASE);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
     return true;
@@ -113,7 +113,7 @@ void GetBundleNamesData(const uint8_t *data, size_t size, vector<BIncrementalDat
         }
 
         int64_t nTime = *(reinterpret_cast<const int64_t*>(data));
-        int32_t fd = *(reinterpret_cast<const int32_t*>(data));
+        int fd = *(reinterpret_cast<const int32_t*>(data));
         int32_t priority = *(reinterpret_cast<const int32_t*>(data + sizeof(int32_t)));
         string parameters = string(reinterpret_cast<const char*>(data), size) + to_string(size - i);
         BIncrementalData incrementaData(name, nTime, fd, parameters, priority);
@@ -152,7 +152,7 @@ bool CmdGetLocalCapabilitiesIncrementalFuzzTest(const uint8_t *data, size_t size
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_LOCAL_CAPABILITIES_INCREMENTAL);
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_LOCAL_CAPABILITIES_INCREMENTAL);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
     return true;
@@ -168,7 +168,7 @@ bool CmdInitIncrementalBackupSessionFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_INIT_INCREMENTAL_BACKUP_SESSION);
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_INIT_INCREMENTAL_BACKUP_SESSION);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
     return true;
@@ -189,7 +189,7 @@ bool CmdAppendBundlesIncrementalBackupSessionFuzzTest(const uint8_t *data, size_
 
     sptr service(new Service(SERVICE_ID));
     uint32_t code = static_cast<uint32_t>(
-        IServiceInterfaceCode::SERVICE_CMD_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION);
+        IServiceIpcCode::COMMAND_APPEND_BUNDLES_INCREMENTAL_BACKUP_SESSION);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
     return true;
@@ -216,7 +216,7 @@ bool CmdPublishIncrementalFileFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_PUBLISH_INCREMENTAL_FILE);
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_PUBLISH_INCREMENTAL_FILE);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
     return true;
@@ -242,7 +242,7 @@ bool CmdAppIncrementalFileReadyFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    uint32_t code = static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_INCREMENTAL_FILE_READY);
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APP_INCREMENTAL_FILE_READY);
     service->OnRemoteRequest(code, datas, reply, option);
     service = nullptr;
     return true;
@@ -261,7 +261,7 @@ bool CmdAppIncrementalDoneFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_APP_INCREMENTAL_DONE),
+    service->OnRemoteRequest(static_cast<uint32_t>(IServiceIpcCode::COMMAND_APP_INCREMENTAL_DONE),
         datas, reply, option);
     service = nullptr;
     return true;
@@ -287,7 +287,7 @@ bool CmdGetIncrementalFileHandleFuzzTest(const uint8_t *data, size_t size)
     MessageOption option;
 
     sptr service(new Service(SERVICE_ID));
-    service->OnRemoteRequest(static_cast<uint32_t>(IServiceInterfaceCode::SERVICE_CMD_GET_INCREMENTAL_FILE_NAME),
+    service->OnRemoteRequest(static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_INCREMENTAL_FILE_HANDLE),
         datas, reply, option);
     service = nullptr;
     return true;

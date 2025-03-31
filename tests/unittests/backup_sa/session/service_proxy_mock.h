@@ -27,53 +27,49 @@ public:
     ~ServiceProxyMock() override {}
 
 public:
-    MOCK_METHOD1(InitRestoreSession, ErrCode(sptr<IServiceReverse> remote));
-    MOCK_METHOD2(InitRestoreSession, ErrCode(sptr<IServiceReverse> remote, std::string &errMsg));
-    MOCK_METHOD1(InitBackupSession, ErrCode(sptr<IServiceReverse> remote));
-    MOCK_METHOD2(InitBackupSession, ErrCode(sptr<IServiceReverse> remote, std::string &errMsg));
+    MOCK_METHOD1(InitRestoreSession, ErrCode(const sptr<IServiceReverse> &remote));
+    MOCK_METHOD2(InitRestoreSessionWithErrMsg, ErrCode(const sptr<IServiceReverse> &remote, std::string &errMsg));
+    MOCK_METHOD1(InitBackupSession, ErrCode(const sptr<IServiceReverse> &remote));
+    MOCK_METHOD2(InitBackupSessionWithErrMsg, ErrCode(const sptr<IServiceReverse> &remote, std::string &errMsg));
     MOCK_METHOD0(Start, ErrCode());
     MOCK_METHOD0(AsObject, sptr<IRemoteObject>());
-    MOCK_METHOD0(GetLocalCapabilities, UniqueFd());
-    MOCK_METHOD0(GetLocalCapabilitiesForBundleInfos, UniqueFd());
+    MOCK_METHOD1(GetLocalCapabilitiesForBundleInfos, ErrCode(int32_t &));
     MOCK_METHOD1(PublishFile, ErrCode(const BFileInfo &fileInfo));
-    MOCK_METHOD2(AppFileReady, ErrCode(const std::string &fileName, UniqueFd fd));
-    MOCK_METHOD3(AppFileReady, ErrCode(const std::string &fileName, UniqueFd fd, int32_t errCode));
-    MOCK_METHOD1(AppDone, ErrCode(ErrCode errCode));
-    MOCK_METHOD3(ServiceResultReport,
-                 ErrCode(const std::string restoreRetInfo, BackupRestoreScenario scenario, ErrCode errCode));
+    MOCK_METHOD2(AppFileReady, ErrCode(const std::string &fileName, int fd));
+    MOCK_METHOD3(AppFileReady, ErrCode(const std::string &fileName, int fd, int32_t errCode));
+    MOCK_METHOD1(AppDone, ErrCode(int32_t errCode));
+
     MOCK_METHOD2(GetFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
-    MOCK_METHOD5(AppendBundlesRestoreSession,
-                 ErrCode(UniqueFd fd,
-                         const std::vector<BundleName> &bundleNames,
-                         const std::vector<std::string> &detailInfos,
-                         RestoreTypeEnum restoreType,
-                         int32_t userId));
-    MOCK_METHOD4(
-        AppendBundlesRestoreSession,
-        ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, RestoreTypeEnum restoreType, int32_t userId));
+
     MOCK_METHOD1(AppendBundlesBackupSession, ErrCode(const std::vector<BundleName> &bundleNames));
     MOCK_METHOD0(Finish, ErrCode());
     MOCK_METHOD0(Release, ErrCode());
-    MOCK_METHOD2(Cancel, ErrCode(std::string bundleName, int32_t &result));
-    MOCK_METHOD1(GetLocalCapabilitiesIncremental, UniqueFd(const std::vector<BIncrementalData> &bundleNames));
-    MOCK_METHOD1(InitIncrementalBackupSession, ErrCode(sptr<IServiceReverse> remote));
-    MOCK_METHOD2(InitIncrementalBackupSession, ErrCode(sptr<IServiceReverse> remote, std::string &errMsg));
+    MOCK_METHOD2(Cancel, ErrCode(const std::string &bundleName, int32_t &result));
+    MOCK_METHOD2(GetLocalCapabilitiesIncremental, ErrCode(const std::vector<BIncrementalData> &bundleNames, int &fd));
+    MOCK_METHOD1(InitIncrementalBackupSession, ErrCode(const sptr<IServiceReverse> &remote));
+    MOCK_METHOD2(InitIncrementalBackupSessionWithErrMsg,
+                 ErrCode(const sptr<IServiceReverse> &remote, std::string &errMsg));
     MOCK_METHOD1(AppendBundlesIncrementalBackupSession, ErrCode(const std::vector<BIncrementalData> &bundlesToBackup));
-    MOCK_METHOD2(AppendBundlesIncrementalBackupSession,
+    MOCK_METHOD2(AppendBundlesIncrementalBackupSessionWithBundleInfos,
                  ErrCode(const std::vector<BIncrementalData> &bundlesToBackup, const std::vector<std::string> &infos));
     MOCK_METHOD1(PublishIncrementalFile, ErrCode(const BFileInfo &fileInfo));
-    MOCK_METHOD2(PublishSAIncrementalFile, ErrCode(const BFileInfo &fileInfo, UniqueFd fd));
-    MOCK_METHOD3(AppIncrementalFileReady, ErrCode(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd));
+    MOCK_METHOD2(PublishSAIncrementalFile, ErrCode(const BFileInfo &fileInfo, int fd));
+    MOCK_METHOD3(AppIncrementalFileReady, ErrCode(const std::string &fileName, int fd, int manifestFd));
     MOCK_METHOD4(AppIncrementalFileReady,
-                 ErrCode(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode));
-    MOCK_METHOD1(AppIncrementalDone, ErrCode(ErrCode errCode));
+                 ErrCode(const std::string &fileName, int fd, int manifestFd, int32_t errCode));
+    MOCK_METHOD1(AppIncrementalDone, ErrCode(int32_t errCode));
     MOCK_METHOD2(GetIncrementalFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
-    MOCK_METHOD2(GetBackupInfo, ErrCode(BundleName &bundleName, std::string &result));
-    MOCK_METHOD3(UpdateTimer, ErrCode(BundleName &bundleName, uint32_t timeout, bool &result));
+    MOCK_METHOD2(GetBackupInfo, ErrCode(const BundleName &bundleName, std::string &result));
+    MOCK_METHOD3(UpdateTimer, ErrCode(const BundleName &bundleName, uint32_t timeout, bool &result));
     MOCK_METHOD0(GetAppLocalListAndDoIncrementalBackup, ErrCode());
     MOCK_METHOD1(StopExtTimer, ErrCode(bool &isExtStop));
     MOCK_METHOD1(RefreshDataSize, ErrCode(int64_t totalsize));
-    MOCK_METHOD2(GetBackupDataSize, ErrCode(bool isPreciseScan, std::vector<BIncrementalData> bundleNameList));
+    MOCK_METHOD5(
+        AppendBundlesRestoreSessionDataByDetail,
+        ErrCode(int32_t, const std::vector<std::string> &, const std::vector<std::string> &, int32_t, int32_t));
+    MOCK_METHOD4(AppendBundlesRestoreSessionData,
+                 ErrCode(int32_t, const std::vector<std::string> &, int32_t, int32_t));
+    MOCK_METHOD2(GetBackupDataSize, ErrCode(bool isPreciseScan, const std::vector<BIncrementalData> &bundleNameList));
 };
 } // End of namespace OHOS::FileManagement::Backup
 #endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H

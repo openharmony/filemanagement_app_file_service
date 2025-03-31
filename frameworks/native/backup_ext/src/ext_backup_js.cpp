@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,7 +40,9 @@
 #include "b_error/b_excep_utils.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_extension_config.h"
+#include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
+#include "directory_ex.h"
 #include "ext_extension.h"
 #include "filemgmt_libhilog.h"
 
@@ -413,6 +415,7 @@ void ExtBackupJs::Init(const shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
         // 获取应用扩展的 BackupExtensionAbility 的路径
         const AppExecFwk::AbilityInfo &info = *abilityInfo_;
         string bundleName = info.bundleName;
+        InitTempPath(bundleName);
         string moduleName(info.moduleName + "::" + info.name);
         string modulePath = GetSrcPath(info);
         int moduleType = static_cast<int>(info.type);
@@ -867,27 +870,12 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
                               InputArgsParser argParser,
                               ResultValueParser retParser)
 {
-    uv_loop_s *loop = nullptr;
-    napi_status status = napi_get_uv_event_loop(jsRuntime.GetNapiEnv(), &loop);
-    if (status != napi_ok) {
-        HILOGE("failed to get uv event loop.");
-        return EINVAL;
-    }
     auto param = std::make_shared<CallJsParam>(funcName, &jsRuntime, jsObj, argParser, retParser);
     BExcepUltils::BAssert(param, BError::Codes::EXT_BROKEN_FRAMEWORK, "failed to new param.");
 
-    auto work = std::make_shared<uv_work_t>();
-    BExcepUltils::BAssert(work, BError::Codes::EXT_BROKEN_FRAMEWORK, "failed to new uv_work_t.");
-
-    work->data = reinterpret_cast<void *>(param.get());
     HILOGI("Will execute current js method");
-    auto task = [work {work.get()}]() {
-        if (work == nullptr) {
-            HILOGE("failed to get work.");
-            return;
-        }
-        HILOGI("AsyncWork Enter, %{public}zu", (size_t)work);
-        CallJsParam *param = reinterpret_cast<CallJsParam *>(work->data);
+    auto task = [](void* ptr) ->void {
+        auto param = reinterpret_cast<CallJsParam *>(ptr);
         do {
             if (param == nullptr) {
                 HILOGE("failed to get CallJsParam.");
@@ -903,9 +891,11 @@ int ExtBackupJs::CallJsMethod(const std::string &funcName,
         param->isReady.store(true);
         param->backupOperateCondition.notify_all();
     };
-    auto ret = napi_send_event(jsRuntime.GetNapiEnv(), task, napi_eprio_high);
+    uint64_t handleId = 0;
+    auto ret = napi_send_cancelable_event(jsRuntime.GetNapiEnv(), task, param.get(), napi_eprio_high, &handleId,
+        funcName.c_str());
     if (ret != napi_status::napi_ok) {
-        HILOGE("failed to napi_send_event, ret:%{public}d.", ret);
+        HILOGE("failed to napi_send_cancelable_event, ret:%{public}d, name:%{public}s.", ret, funcName.c_str());
         return EINVAL;
     }
     HILOGI("Wait execute current js method");
@@ -1025,5 +1015,31 @@ ErrCode ExtBackupJs::OnProcess(std::function<void(ErrCode, const std::string)> c
     }
     HILOGI("BackupExtensionAbulity(JS) OnProcess end.");
     return errCode;
+}
+
+void ExtBackupJs::InitTempPath(const std::string &bundleName)
+{
+    std::string el2BackupDir(BConstants::PATH_BUNDLE_BACKUP_HOME);
+    if (access(el2BackupDir.c_str(), F_OK) != 0) {
+        HILOGW("backup home el2 dir not exits, try to create");
+        if (!ForceCreateDirectory(el2BackupDir.data())) {
+            HILOGE("Failed to create directory, err = %{public}d", errno);
+            AppRadar::Info info(bundleName, "", "Create backup home el2 dir failed");
+            AppRadar::GetInstance().RecordDefaultFuncRes(info, "ExtBackupJs::InitTempPath",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
+                static_cast<int32_t>(BError::Codes::EXT_CREATE_DIR_ERROR));
+        }
+    }
+    std::string el1BackupDir(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1);
+    if (access(el1BackupDir.c_str(), F_OK) != 0) {
+        HILOGW("backup home el1 dir not exits, try to create");
+        if (!ForceCreateDirectory(el1BackupDir.data())) {
+            HILOGE("Failed to create home el1 dir, err = %{public}d", errno);
+            AppRadar::Info info(bundleName, "", "Create backup home el1 dir failed");
+            AppRadar::GetInstance().RecordDefaultFuncRes(info, "ExtBackupJs::InitTempPath",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
+                static_cast<int32_t>(BError::Codes::EXT_CREATE_DIR_ERROR));
+        }
+    }
 }
 } // namespace OHOS::FileManagement::Backup

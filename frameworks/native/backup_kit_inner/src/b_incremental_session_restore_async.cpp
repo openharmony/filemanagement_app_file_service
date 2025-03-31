@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,7 @@
 #include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
-#include "service_proxy.h"
+#include "service_client.h"
 #include "service_reverse.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -31,7 +31,7 @@ BIncrementalSessionRestoreAsync::~BIncrementalSessionRestoreAsync()
         HILOGE("Death Recipient is nullptr");
         return;
     }
-    auto proxy = ServiceProxy::GetServiceProxyPointer();
+    auto proxy = ServiceClient::GetServiceProxyPointer();
     if (proxy == nullptr) {
         return;
     }
@@ -47,8 +47,8 @@ shared_ptr<BIncrementalSessionRestoreAsync> BIncrementalSessionRestoreAsync::Ini
 {
     try {
         auto restore = make_shared<BIncrementalSessionRestoreAsync>(callbacks);
-        ServiceProxy::InvaildInstance();
-        auto proxy = ServiceProxy::GetInstance();
+        ServiceClient::InvaildInstance();
+        auto proxy = ServiceClient::GetInstance();
         if (proxy == nullptr) {
             HILOGE("Failed to get backup service");
             return nullptr;
@@ -79,7 +79,7 @@ shared_ptr<BIncrementalSessionRestoreAsync> BIncrementalSessionRestoreAsync::Ini
 
 ErrCode BIncrementalSessionRestoreAsync::PublishFile(BFileInfo fileInfo)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -88,7 +88,7 @@ ErrCode BIncrementalSessionRestoreAsync::PublishFile(BFileInfo fileInfo)
 
 ErrCode BIncrementalSessionRestoreAsync::GetFileHandle(const string &bundleName, const string &fileName)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -102,12 +102,14 @@ ErrCode BIncrementalSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
                                                        RestoreTypeEnum restoreType,
                                                        int32_t userId)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-    ErrCode res = proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, detailInfos, restoreType,
-        userId);
+    int fdCode = remoteCap.Get();
+    int32_t restoreTypeInt = static_cast<int32_t>(restoreType);
+    ErrCode res =
+        proxy->AppendBundlesRestoreSessionDataByDetail(fdCode, bundlesToRestore, detailInfos, restoreTypeInt, userId);
     if (res != ERR_OK) {
         std::string ss;
         for (const auto &bundle : bundlesToRestore) {
@@ -115,7 +117,8 @@ ErrCode BIncrementalSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
         }
         AppRadar::Info info(ss.c_str(), "", "AppendBundles with infos");
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BIncrementalSessionRestoreAsync::AppendBundles",
-            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
+                                                     AppRadar::GetInstance().GetUserId(),
+                                                     BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
     return res;
 }
@@ -125,11 +128,14 @@ ErrCode BIncrementalSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
                                                        RestoreTypeEnum restoreType,
                                                        int32_t userId)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-    ErrCode res = proxy->AppendBundlesRestoreSession(move(remoteCap), bundlesToRestore, restoreType, userId);
+    int fdCode = remoteCap.Get();
+    int32_t restoreTypeInt = static_cast<int32_t>(restoreType);
+    ErrCode res =
+        proxy->AppendBundlesRestoreSessionData(fdCode, bundlesToRestore, restoreTypeInt, userId);
     if (res != ERR_OK) {
         std::string ss;
         for (const auto &bundle : bundlesToRestore) {
@@ -137,14 +143,15 @@ ErrCode BIncrementalSessionRestoreAsync::AppendBundles(UniqueFd remoteCap,
         }
         AppRadar::Info info(ss.c_str(), "", "");
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BIncrementalSessionRestoreAsync::AppendBundles",
-            AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
+                                                     AppRadar::GetInstance().GetUserId(),
+                                                     BizStageRestore::BIZ_STAGE_APPEND_BUNDLES_FAIL, res);
     }
     return res;
 }
 
 ErrCode BIncrementalSessionRestoreAsync::Release()
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -154,7 +161,7 @@ ErrCode BIncrementalSessionRestoreAsync::Release()
 
 void BIncrementalSessionRestoreAsync::RegisterBackupServiceDied(std::function<void()> functor)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr || !functor) {
         return;
     }
@@ -171,7 +178,7 @@ void BIncrementalSessionRestoreAsync::RegisterBackupServiceDied(std::function<vo
 ErrCode BIncrementalSessionRestoreAsync::Cancel(std::string bundleName)
 {
     ErrCode result = BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK;
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Called Cancel, failed to get proxy.");
         return result;

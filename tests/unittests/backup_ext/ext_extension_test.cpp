@@ -592,4 +592,66 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_1000, testing::ext::TestSize.Level
     }
     GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_1000";
 }
+
+/**
+ * @tc.number: SUB_Ext_Extension_1100
+ * @tc.name: Ext_Extension_Test_1100
+ * @tc.desc: 测试 GetFileHandleForSpecialCloneCloud
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_Test_1100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_1100";
+    try {
+        ErrCode errCode = ERR_OK;
+        int64_t cost = 0;
+        uint32_t includeNum = 0;
+        uint32_t excludeNum = 0;
+        AppRadar::DoBackupInfo backupInfo = {cost, 0, 0, 0, includeNum, excludeNum};
+        RecordDoBackupRes(BUNDLE_NAME, errCode, backupInfo);
+
+        cost = BConstants::MAX_TIME_COST;
+        includeNum = BConstants::MAX_INEXCLUDE_SIZE;
+        backupInfo = {cost, 0, 0, 0, includeNum, excludeNum};
+        RecordDoBackupRes(BUNDLE_NAME, errCode, backupInfo);
+
+        errCode = BError(BError::Codes::EXT_BROKEN_IPC);
+        RecordDoBackupRes(BUNDLE_NAME, errCode, backupInfo);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_1100";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_1200
+ * @tc.name: Ext_Extension_Test_1200
+ * @tc.desc: 测试 GetFileHandleForSpecialCloneCloud
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_Test_1200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_1200";
+    try {
+        const string fileName = "1.txt";
+        string tarName = "2.tar";
+        auto ret = GetIncrementalFileHandlePath(fileName, BUNDLE_NAME, tarName);
+        EXPECT_NE(ret, ERR_OK);
+        ret = GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_FILE_MANAGER, tarName);
+        EXPECT_NE(ret, ERR_OK);
+        ret = GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_MEDIAL_DATA, tarName);
+        EXPECT_NE(ret, ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_1200";
+}
 } // namespace OHOS::FileManagement::Backup

@@ -11,5 +11,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# any change to xxx_ipc_interface_code.h needs to be reviewed by @leonchan5
-interfaces/inner_api/native/backup_kit_inner/impl/i_service_ipc_interface_code.h @leonchan5
+# any change to xxx_ipc_interface_code.h needs to be reviewed by @leonchan5 liubao6@huawei.com
+interfaces/inner_api/native/backup_kit_inner/impl/i_service_ipc_interface_code.h @leonchan5 liubao6@huawei.com

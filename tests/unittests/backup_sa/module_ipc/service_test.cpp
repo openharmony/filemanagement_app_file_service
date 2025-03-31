@@ -88,18 +88,20 @@ ErrCode ServiceTest::Init(IServiceReverseType::Scenario scenario)
         EXPECT_TRUE(remote_ != nullptr);
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
         EXPECT_GE(fd, BError(BError::Codes::OK));
-        ret = servicePtr_->InitRestoreSession(remote_);
+        sptr<IServiceReverse> srptr_=static_cast<sptr<IServiceReverse>>(remote_);
+        ret = servicePtr_->InitRestoreSession(srptr_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-        ret = servicePtr_->InitRestoreSession(remote_, errMsg);
+        ret = servicePtr_->InitRestoreSessionWithErrMsg(srptr_, errMsg);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->Finish();
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
-        ret = servicePtr_->InitBackupSession(remote_);
+        sptr<IServiceReverse> srptr_ = static_cast<sptr<IServiceReverse>>(remote_);
+        ret = servicePtr_->InitBackupSession(srptr_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-        ret = servicePtr_->InitBackupSession(remote_, errMsg);
+        ret = servicePtr_->InitBackupSessionWithErrMsg(srptr_, errMsg);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->AppendBundlesBackupSession(bundleNames);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
@@ -301,11 +303,11 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0100, testing::ext::TestSize.Leve
     try {
         string fileName = MANAGE_JSON;
         EXPECT_TRUE(servicePtr_ != nullptr);
-        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1), 0);
+        auto ret = servicePtr_->AppFileReady(fileName, 1, 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "ServiceTest-AppFileReady Branches";
         fileName = "test";
-        ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1), 0);
+        ret = servicePtr_->AppFileReady(fileName, 1, 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -329,7 +331,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0101, testing::ext::TestSize.Leve
     try {
         string fileName = "";
         EXPECT_TRUE(servicePtr_ != nullptr);
-        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1), 0);
+        auto ret = servicePtr_->AppFileReady(fileName, 1, 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -353,7 +355,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0102, testing::ext::TestSize.Leve
     try {
         string fileName = "manage.json";
         EXPECT_TRUE(servicePtr_ != nullptr);
-        auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1), 0);
+        auto ret = servicePtr_->AppFileReady(fileName, 1, 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);

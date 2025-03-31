@@ -155,7 +155,7 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames, vec
     BackupSvcSessionManager::session->AppendBundles(bundleNames, failedBundles);
 }
 
-sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(BundleName &bundleName)
+sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(const BundleName &bundleName)
 {
     return BackupSvcSessionManager::session->CreateBackupConnection(bundleName);
 }

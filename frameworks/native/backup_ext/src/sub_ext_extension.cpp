@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cinttypes>
 #include <fstream>
 #include <iomanip>
 #include <map>
@@ -51,9 +52,8 @@
 #include "b_tarball/b_tarball_factory.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
-#include "i_service.h"
 #include "sandbox_helper.h"
-#include "service_proxy.h"
+#include "service_client.h"
 #include "tar_file.h"
 #include "b_anony/b_anony.h"
 
@@ -483,7 +483,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupC
     HILOGI("Begin get IncOnBackupCallback");
     return [obj](ErrCode errCode, std::string errMsg) {
         HILOGI("App onbackup end");
-        auto proxy = ServiceProxy::GetInstance();
+        auto proxy = ServiceClient::GetInstance();
         if (proxy == nullptr) {
             throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
         }
@@ -525,7 +525,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupE
 {
     HILOGI("Begin get HandleIncBackupEx callback");
     return [obj](ErrCode errCode, const std::string backupExRetInfo) {
-        auto proxy = ServiceProxy::GetInstance();
+        auto proxy = ServiceClient::GetInstance();
         if (proxy == nullptr) {
             throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
         }
@@ -575,7 +575,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupE
 
 void BackupExtExtension::ReportAppProcessInfo(const std::string processInfo, BackupRestoreScenario scenario)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Report app process error, proxy is empty");
         return;
@@ -739,9 +739,9 @@ void BackupExtExtension::CloseOnProcessTimeOutTimer()
 void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
 {
     HILOGI("Begin");
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
-        HILOGE("Failed to obtain the ServiceProxy handle");
+        HILOGE("Failed to obtain the ServiceClient handle");
         DoClear();
         return;
     }
@@ -1173,7 +1173,7 @@ int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> 
     if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
         throw BError(errno);
     }
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
     }

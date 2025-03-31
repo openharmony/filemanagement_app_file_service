@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,7 @@
 #include "b_error/b_error.h"
 #include "b_radar/b_radar.h"
 #include "filemgmt_libhilog.h"
-#include "service_proxy.h"
+#include "service_client.h"
 #include "service_reverse.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -30,7 +30,7 @@ BIncrementalBackupSession::~BIncrementalBackupSession()
         HILOGI("Death Recipient is nullptr");
         return;
     }
-    auto proxy = ServiceProxy::GetServiceProxyPointer();
+    auto proxy = ServiceClient::GetServiceProxyPointer();
     if (proxy == nullptr) {
         return;
     }
@@ -46,8 +46,8 @@ unique_ptr<BIncrementalBackupSession> BIncrementalBackupSession::Init(Callbacks 
     try {
         HILOGI("Init IncrementalBackupSession Begin");
         auto backup = make_unique<BIncrementalBackupSession>();
-        ServiceProxy::InvaildInstance();
-        auto proxy = ServiceProxy::GetInstance();
+        ServiceClient::InvaildInstance();
+        auto proxy = ServiceClient::GetInstance();
         if (proxy == nullptr) {
             HILOGI("Failed to get backup service");
             return nullptr;
@@ -76,13 +76,13 @@ unique_ptr<BIncrementalBackupSession> BIncrementalBackupSession::Init(Callbacks 
     try {
         HILOGI("Init IncrementalBackupSession Begin");
         auto backup = make_unique<BIncrementalBackupSession>();
-        ServiceProxy::InvaildInstance();
-        auto proxy = ServiceProxy::GetInstance();
+        ServiceClient::InvaildInstance();
+        auto proxy = ServiceClient::GetInstance();
         if (proxy == nullptr) {
             HILOGI("Failed to get backup service");
             return nullptr;
         }
-        errCode = proxy->InitIncrementalBackupSession(sptr(new ServiceReverse(callbacks)), errMsg);
+        errCode = proxy->InitIncrementalBackupSessionWithErrMsg(sptr(new ServiceReverse(callbacks)), errMsg);
         if (errCode != ERR_OK) {
             HILOGE("Failed to Backup because of %{public}d", errCode);
             AppRadar::Info info("", "", "");
@@ -101,7 +101,7 @@ unique_ptr<BIncrementalBackupSession> BIncrementalBackupSession::Init(Callbacks 
 
 void BIncrementalBackupSession::RegisterBackupServiceDied(function<void()> functor)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr || !functor) {
         return;
     }
@@ -111,7 +111,7 @@ void BIncrementalBackupSession::RegisterBackupServiceDied(function<void()> funct
     }
 
     auto callback = [functor](const wptr<IRemoteObject> &obj) {
-        ServiceProxy::InvaildInstance();
+        ServiceClient::InvaildInstance();
         HILOGI("Backup service died");
         functor();
     };
@@ -122,12 +122,14 @@ void BIncrementalBackupSession::RegisterBackupServiceDied(function<void()> funct
 UniqueFd BIncrementalBackupSession::GetLocalCapabilities()
 {
     HILOGI("GetLocalCapabilities begin");
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to get backup service");
         return UniqueFd(-EPERM);
     }
-    UniqueFd fd = proxy->GetLocalCapabilitiesForBundleInfos();
+    int fdvalue = INVALID_FD;
+    proxy->GetLocalCapabilitiesForBundleInfos(fdvalue);
+    UniqueFd fd(fdvalue);
     if (fd < 0) {
         HILOGE("Failed to get local capabilities for bundleinfos");
         return UniqueFd(-EPERM);
@@ -138,7 +140,7 @@ UniqueFd BIncrementalBackupSession::GetLocalCapabilities()
 ErrCode BIncrementalBackupSession::GetBackupDataSize(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
 {
     HILOGI("GetBackupDataSize Begin");
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to get backup service");
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
@@ -153,7 +155,7 @@ ErrCode BIncrementalBackupSession::GetBackupDataSize(bool isPreciseScan, vector<
 
 ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundlesToBackup)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -174,12 +176,12 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
 ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundlesToBackup,
     std::vector<std::string> infos)
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
 
-    int32_t res = proxy->AppendBundlesIncrementalBackupSession(bundlesToBackup, infos);
+    int32_t res = proxy->AppendBundlesIncrementalBackupSessionWithBundleInfos(bundlesToBackup, infos);
     if (res != ERR_OK) {
         std::string ss;
         for (const auto &bundle : bundlesToBackup) {
@@ -194,7 +196,7 @@ ErrCode BIncrementalBackupSession::AppendBundles(vector<BIncrementalData> bundle
 
 ErrCode BIncrementalBackupSession::Release()
 {
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
@@ -205,7 +207,7 @@ ErrCode BIncrementalBackupSession::Release()
 ErrCode BIncrementalBackupSession::Cancel(std::string bundleName)
 {
     ErrCode result = BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK;
-    auto proxy = ServiceProxy::GetInstance();
+    auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Called Cancel, failed to get proxy.");
         return result;

@@ -23,6 +23,9 @@
 #include "service_reverse_stub.h"
 
 namespace OHOS::FileManagement::Backup {
+const int DEFAULT_RESTORE_TYPE = 0;
+const int DEFAULT_USER_ID = -1;
+
 class ServiceReverse final : public ServiceReverseStub {
 public:
     ErrCode BackupOnFileReady(const std::string &bundleName,

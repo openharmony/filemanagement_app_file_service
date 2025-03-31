@@ -143,11 +143,9 @@
                             "impl/b_session_restore.h",
                             "impl/b_session_restore_async.h",
                             "impl/b_file_info.h",
-                            "impl/service_proxy.h",
+                            "impl/service_client.h",
                             "impl/b_session_backup.h",
-                            "impl/i_service_ipc_interface_code.h",
-                            "impl/i_service_reverse_ipc_interface_code.h",
-                            "impl/i_service.h"
+                            "impl/i_service_reverse_ipc_interface_code.h"
                         ]
                     }
                 },
@@ -165,8 +163,8 @@
             ],
             "test": [
                 "//foundation/filemanagement/app_file_service/test/fuzztest:fuzztest",
-                "//foundation/filemanagement/app_file_service/test/unittest:unittest",
-                "//foundation/filemanagement/app_file_service:tgt_backup_tests"
+                "//foundation/filemanagement/app_file_service:file_share_tests",
+                "//foundation/filemanagement/app_file_service:backup_tests"
             ]
         }
     }
