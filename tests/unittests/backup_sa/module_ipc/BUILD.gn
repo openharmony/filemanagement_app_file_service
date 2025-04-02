@@ -456,7 +456,6 @@ ohos_unittest("backup_service_incremental_test") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
-    "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
     "${path_googletest}:gmock_main",

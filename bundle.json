@@ -144,8 +144,7 @@
                             "impl/b_session_restore_async.h",
                             "impl/b_file_info.h",
                             "impl/service_client.h",
-                            "impl/b_session_backup.h",
-                            "impl/iservice_reverse.h"
+                            "impl/b_session_backup.h"
                         ]
                     }
                 },
