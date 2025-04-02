@@ -145,7 +145,7 @@
                             "impl/b_file_info.h",
                             "impl/service_client.h",
                             "impl/b_session_backup.h",
-                            "impl/i_service_reverse_ipc_interface_code.h"
+                            "impl/iservice_reverse.h"
                         ]
                     }
                 },
