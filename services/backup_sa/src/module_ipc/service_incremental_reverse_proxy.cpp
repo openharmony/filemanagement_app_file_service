@@ -19,6 +19,7 @@
 #include "b_error/b_excep_utils.h"
 #include "filemgmt_libhilog.h"
 #include "module_app_gallery/app_gallery_dispose_proxy.h"
+#include "b_sa/b_sa_utils.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -28,13 +29,18 @@ void ServiceReverseProxy::IncrementalBackupOnFileReady(string bundleName, string
 {
     BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
     MessageParcel data;
+    bool appFlag = true;
+    if (SAUtils::IsSABundleName(bundleName)) {
+        appFlag = false;
+    }
+    
     bool fdFlag = true;
-    if (fd < 0 || manifestFd < 0) {
+    if (fd < 0 || (appFlag && manifestFd < 0)) {
         fdFlag = false;
     }
     if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) ||
         !data.WriteString(fileName) || !data.WriteBool(fdFlag) ||
-        (fdFlag == true && (!data.WriteFileDescriptor(fd) || !data.WriteFileDescriptor(manifestFd))) ||
+        (fdFlag == true && (!data.WriteFileDescriptor(fd) || (!data.WriteFileDescriptor(manifestFd) && appFlag))) ||
         !data.WriteInt32(errCode)) {
         throw BError(BError::Codes::SA_BROKEN_IPC);
     }

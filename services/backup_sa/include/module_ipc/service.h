@@ -504,6 +504,15 @@ private:
     ErrCode BackupSA(std::string bundleName);
 
     /**
+     * @brief SA增量备份恢复入口
+     *
+     * @param bundleName SAID
+     *
+     * @return ErrCode OK if backup sa, otherwise backup sa failed.
+    */
+    ErrCode IncrementalBackupSA(std::string bundleName);
+
+    /**
      * @brief 执行通知调用方
      *
      * @param errCode 错误码

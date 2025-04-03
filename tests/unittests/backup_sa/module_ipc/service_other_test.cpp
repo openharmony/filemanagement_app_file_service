@@ -137,6 +137,11 @@ bool Service::IncrementalBackup(const string&)
     return false;
 }
 
+ErrCode Service::IncrementalBackupSA(std::string bundleName)
+{
+    return BError(BError::Codes::OK);
+}
+
 void Service::NotifyCallerCurAppIncrementDone(ErrCode, const std::string&) {}
 
 void Service::SendUserIdToApp(string&, int32_t) {}
