@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
-import("../../../../backup.gni")
+import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ohos_unittest("bms_adapter_test") {
   module_out_path = path_module_out_tests

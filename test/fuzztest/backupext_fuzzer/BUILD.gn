@@ -22,8 +22,6 @@ ohos_fuzztest("BackupExtFuzzTest") {
   module_out_path = "app_file_service/app_file_service"
   fuzz_config_file = "${app_file_service_path}/test/fuzztest/backupext_fuzzer"
   include_dirs = [
-    "${path_ability_runtime}/services/common/include",
-    "${path_ability_runtime}/interfaces/kits/native/appkit/ability_runtime",
     "${path_backup}/frameworks/native/backup_ext/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/utils/include",

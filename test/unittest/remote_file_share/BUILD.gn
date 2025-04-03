@@ -26,28 +26,25 @@ ohos_unittest("remote_file_share_test") {
   module_out_path = "app_file_service/app_file_service/file_share"
   fuzz_config_file =
       "${app_file_service_path}/test/fuzztest/remotefileshare_fuzzer"
-  resource_config_file = "../resource/ohos_test.xml"
+  resource_config_file =
+      "${app_file_service_path}/test/unittest/resource/ohos_test.xml"
 
   sources = [ "remote_file_share_test.cpp" ]
 
   include_dirs = [
-    "include",
-    "../../../interfaces/innerkits/native/remote_file_share/include",
-    "../../../interfaces/innerkits/native/remote_file_share/src",
-    "${utils_system_safwk_path}/native/include",
-    "${path_base}/include",
+    "${app_file_service_path}/interfaces/innerkits/native/remote_file_share/include",
+    "${app_file_service_path}/interfaces/innerkits/native/remote_file_share/src",
   ]
 
-  deps = [
-    "../../../interfaces/innerkits/native:remote_file_share_native",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${app_file_service_path}/interfaces/innerkits/native:remote_file_share_native" ]
 
   external_deps = [
     "ability_base:zuri",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",

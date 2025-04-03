@@ -36,11 +36,12 @@ ohos_static_library("backup_test_utils") {
 
   public_configs = [ ":test_util_public_config" ]
 
-  deps = [
-    "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
+  deps = [ "${path_backup}/utils:backup_utils" ]
+  external_deps = [
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
   ]
-  external_deps = [ "hilog:libhilog" ]
   use_exceptions = true
   part_name = "app_file_service"
   subsystem_name = "filemanagement"

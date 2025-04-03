@@ -18,8 +18,7 @@ config("file_share_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "file_share/include",
-    "//third_party/json/include",
-    "../../common/include",
+    "${app_file_service_path}/interfaces/common/include",
   ]
 }
 
@@ -27,8 +26,7 @@ config("file_uri_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "file_uri/include",
-    "//third_party/json/include",
-    "../../common/include",
+    "${app_file_service_path}/interfaces/common/include",
   ]
 }
 
@@ -45,8 +43,8 @@ ohos_shared_library("fileshare_native") {
   }
 
   sources = [
-    "../../common/src/json_utils.cpp",
-    "../../common/src/sandbox_helper.cpp",
+    "${app_file_service_path}/interfaces/common/src/json_utils.cpp",
+    "${app_file_service_path}/interfaces/common/src/sandbox_helper.cpp",
     "file_share/src/file_permission.cpp",
     "file_share/src/file_share.cpp",
   ]
@@ -67,6 +65,7 @@ ohos_shared_library("fileshare_native") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
     "napi:ace_napi",
   ]
   defines = []
@@ -94,9 +93,9 @@ ohos_shared_library("fileuri_native") {
   }
 
   sources = [
-    "../../common/src/common_func.cpp",
-    "../../common/src/json_utils.cpp",
-    "../../common/src/sandbox_helper.cpp",
+    "${app_file_service_path}/interfaces/common/src/common_func.cpp",
+    "${app_file_service_path}/interfaces/common/src/json_utils.cpp",
+    "${app_file_service_path}/interfaces/common/src/sandbox_helper.cpp",
     "file_uri/src/file_uri.cpp",
   ]
 
@@ -110,6 +109,7 @@ ohos_shared_library("fileuri_native") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
     "samgr:samgr_proxy",
   ]
 
@@ -118,14 +118,14 @@ ohos_shared_library("fileuri_native") {
 }
 
 ohos_prebuilt_etc("file_share_sandbox.json") {
-  source = "../../common/file_share_sandbox.json"
+  source = "${app_file_service_path}/interfaces/common/file_share_sandbox.json"
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
   module_install_dir = "etc/app_file_service"
 }
 
 ohos_prebuilt_etc("backup_sandbox.json") {
-  source = "../../common/backup_sandbox.json"
+  source = "${app_file_service_path}/interfaces/common/backup_sandbox.json"
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
   module_install_dir = "etc/app_file_service"
@@ -135,12 +135,9 @@ config("remote_file_share_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "${utils_system_safwk_path}/native/include",
     "remote_file_share/include",
-    "//third_party/json/include",
-    "${path_base}/include",
-    "../../common/include",
-    ".",
+    "${app_file_service_path}/interfaces/common/include",
+    "${app_file_service_path}/interfaces",
   ]
 }
 
@@ -154,8 +151,8 @@ ohos_shared_library("remote_file_share_native") {
   }
 
   sources = [
-    "../../common/src/json_utils.cpp",
-    "../../common/src/sandbox_helper.cpp",
+    "${app_file_service_path}/interfaces/common/src/json_utils.cpp",
+    "${app_file_service_path}/interfaces/common/src/sandbox_helper.cpp",
     "remote_file_share/src/remote_file_share.cpp",
   ]
 
@@ -165,6 +162,8 @@ ohos_shared_library("remote_file_share_native") {
     "ability_base:zuri",
     "c_utils:utils",
     "hilog:libhilog",
+    "json:nlohmann_json_static",
+    "safwk:system_ability_fwk",
   ]
 
   if (defined(global_parts_info) &&
@@ -182,11 +181,8 @@ config("sandbox_helper_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "${utils_system_safwk_path}/native/include",
-    "//third_party/json/include",
-    "${path_base}/include",
-    "../../common/include",
-    ".",
+    "${app_file_service_path}/interfaces/common/include",
+    "${app_file_service_path}/interfaces",
   ]
 }
 
@@ -200,8 +196,8 @@ ohos_shared_library("sandbox_helper_native") {
   }
 
   sources = [
-    "../../common/src/json_utils.cpp",
-    "../../common/src/sandbox_helper.cpp",
+    "${app_file_service_path}/interfaces/common/src/json_utils.cpp",
+    "${app_file_service_path}/interfaces/common/src/sandbox_helper.cpp",
   ]
 
   public_configs = [ ":sandbox_helper_config" ]
@@ -210,6 +206,8 @@ ohos_shared_library("sandbox_helper_native") {
     "ability_base:zuri",
     "c_utils:utils",
     "hilog:libhilog",
+    "json:nlohmann_json_static",
+    "safwk:system_ability_fwk",
   ]
 
   innerapi_tags = [ "platformsdk_indirect" ]

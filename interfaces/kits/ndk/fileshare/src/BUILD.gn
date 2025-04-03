@@ -26,9 +26,9 @@ ohos_shared_library("ohfileshare") {
   }
 
   include_dirs = [
-    "../include",
-    "${app_file_service_path}/interfaces/innerkits/native/file_share/include/",
     "${app_file_service_path}/interfaces/common/include/",
+    "${app_file_service_path}/interfaces/innerkits/native/file_share/include/",
+    "${app_file_service_path}/interfaces/kits/ndk/fileshare/include",
   ]
 
   sources = [ "oh_file_share.cpp" ]

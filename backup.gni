@@ -14,24 +14,7 @@
 path_backup = "//foundation/filemanagement/app_file_service"
 path_module_out_tests = "app_file_service/app_file_service/backup"
 
-path_ability_runtime = "//foundation/ability/ability_runtime"
-path_access_token = "//base/security/access_token"
-path_backup_js =
-    "//foundation/filemanagement/app_file_service/interfaces/kits/js"
-path_base = "//commonlibrary/c_utils/base"
-path_faultloggerd = "//base/hiviewdfx/faultloggerd"
-path_file_api = "//foundation/filemanagement/file_api"
-path_googletest = "//third_party/googletest"
-path_ipc = "//foundation/communication/ipc"
-path_jsoncpp = "//third_party/jsoncpp"
-path_rust = "//third_party/rust"
-path_napi = "//foundation/arkui/napi"
-path_samgr = "//foundation/systemabilitymgr/samgr"
-path_init = "//base/startup/init"
-path_filemgmt_libn = "//foundation/filemanagement/file_api/utils/filemgmt_libn"
 path_backup_mock = "//foundation/filemanagement/app_file_service/tests/mock"
-
-path_bas_hiviewdfx_hilog = "//base/hiviewdfx/hilog"
 
 backup_mock_parcel_include_dirs = [ "$path_backup_mock/parcel/include" ]
 backup_mock_parcel_src = [ "$path_backup_mock/parcel/src/parcel.cpp" ]

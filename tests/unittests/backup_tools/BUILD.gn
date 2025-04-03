@@ -41,7 +41,6 @@ ohos_unittest("backup_tool_test") {
   sources += backup_mock_proxy_src
 
   include_dirs = [
-    "${path_base}/include",
     "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner",
@@ -55,8 +54,6 @@ ohos_unittest("backup_tool_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags = [ "--coverage" ]
@@ -67,9 +64,12 @@ ohos_unittest("backup_tool_test") {
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "samgr:samgr_proxy",
   ]
 
@@ -105,7 +105,6 @@ ohos_unittest("backup_tool_restore_test") {
   sources += backup_mock_proxy_src
 
   include_dirs = [
-    "${path_base}/include",
     "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner",
@@ -119,8 +118,6 @@ ohos_unittest("backup_tool_restore_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags = [ "--coverage" ]
@@ -131,9 +128,12 @@ ohos_unittest("backup_tool_restore_test") {
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "samgr:samgr_proxy",
   ]
 
