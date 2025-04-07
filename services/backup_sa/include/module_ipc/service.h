@@ -320,6 +320,8 @@ public:
     void ReportOnBundleStarted(IServiceReverse::Scenario scenario, const std::string &bundleName);
     ErrCode AppIncrementalFileReady(const std::string &bundleName, const std::string &fileName, UniqueFd fd,
         UniqueFd manifestFd, int32_t errCode);
+    ErrCode SendFileHandle(const std::string &bundleName, const std::string &fileName);
+    ErrCode SendIncrementalFileHandle(const std::string &bundleName, const std::string &fileName);
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {

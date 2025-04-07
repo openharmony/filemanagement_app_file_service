@@ -91,7 +91,7 @@ public:
      * @param filePath 待核实的路径
      * @return 是否是异常无效路径
      */
-    static bool CheckFilePathInvalid(const std::string &filePath);
+    static bool IsFilePathValid(const std::string &filePath);
 
     /**
      * @brief 核实文件是否存在软链接并删除

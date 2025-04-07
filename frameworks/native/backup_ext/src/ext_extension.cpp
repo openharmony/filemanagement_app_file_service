@@ -400,7 +400,7 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalFileHandle(
             throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
         }
         VerifyCaller();
-        if (BDir::CheckFilePathInvalid(fileName)) {
+        if (!BDir::IsFilePathValid(fileName)) {
             auto proxy = ServiceClient::GetInstance();
             if (proxy == nullptr) {
                 throw BError(BError::Codes::EXT_BROKEN_IPC, string("Failed to AGetInstance"));
@@ -967,7 +967,7 @@ int BackupExtExtension::DoIncrementalRestore()
             string tarName = path + item;
 
             // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
-            if (BDir::CheckFilePathInvalid(tarName) || BDir::CheckAndRmSoftLink(tarName)) {
+            if (!BDir::IsFilePathValid(tarName) || BDir::CheckAndRmSoftLink(tarName)) {
                 HILOGE("Check incre tarfile path : %{public}s err, path is forbidden", GetAnonyPath(tarName).c_str());
                 return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
             }
@@ -1056,7 +1056,7 @@ void BackupExtExtension::RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo
     }
     const struct stat &sta = item.sta;
     string fileName = item.hashName;
-    if (BDir::CheckFilePathInvalid(fileName)) {
+    if (!BDir::IsFilePathValid(fileName)) {
         HILOGE("Check big spec file path : %{public}s err, path is forbidden", GetAnonyPath(fileName).c_str());
         errFileInfos_[fileName].emplace_back(DEFAULT_INVAL_VALUE);
         if (!RemoveFile(fileName)) {
@@ -1111,7 +1111,7 @@ ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &
     }
     HILOGI("Start to untar file = %{public}s, untarPath = %{public}s", GetAnonyPath(item.hashName).c_str(),
         GetAnonyPath(untarPath).c_str());
-    if (BDir::CheckFilePathInvalid(tarName)) {
+    if (!BDir::IsFilePathValid(tarName)) {
         HILOGE("Check spec tarfile hash path : %{public}s err, path is forbidden", GetAnonyPath(tarName).c_str());
         return ERR_INVALID_VALUE;
     }
@@ -1119,7 +1119,7 @@ ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &
         HILOGE("File soft links are forbidden");
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
     }
-    if (BDir::CheckFilePathInvalid(untarPath)) {
+    if (!BDir::IsFilePathValid(untarPath)) {
         HILOGE("Check spec tarfile path : %{public}s err, path is forbidden", GetAnonyPath(untarPath).c_str());
         return ERR_INVALID_VALUE;
     }
@@ -1268,11 +1268,8 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path,
 
     string fileName = path + itemHashName;
     string filePath = appendTargetPath ? (path + itemFileName) : itemFileName;
-    if (BDir::CheckFilePathInvalid(filePath)) {
+    if (!BDir::IsFilePathValid(filePath)) {
         HILOGE("Check big file path : %{public}s err, path is forbidden", GetAnonyPath(filePath).c_str());
-        AuditLog auditLog = {false, "Check file path", "ADD", "", 1, "FAILED", "CheckFilePathInvalid",
-            "RestoreOneBigFile", GetAnonyPath(filePath)};
-        HiAudit::GetInstance(false).Write(auditLog);
         return;
     }
     if (BDir::CheckAndRmSoftLink(fileName)) {

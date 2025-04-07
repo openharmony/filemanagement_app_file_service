@@ -1089,57 +1089,6 @@ ErrCode Service::LaunchBackupSAExtension(const BundleName &bundleName)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    try {
-        if (session_ == nullptr) {
-            HILOGE("GetFileHandle error, session is empty");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        ErrCode ret = VerifyCaller(IServiceReverse::Scenario::RESTORE);
-        if (ret != ERR_OK) {
-            HILOGE("verify caller failed, bundleName:%{public}s", bundleName.c_str());
-            return ret;
-        }
-        bool updateRes = SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);
-        if (updateRes) {
-            return BError(BError::Codes::OK);
-        }
-        auto action = session_->GetServiceSchedAction(bundleName);
-        if (action == BConstants::ServiceSchedAction::UNKNOWN) {
-            HILOGE("action is unknown, bundleName:%{public}s", bundleName.c_str());
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        if (action == BConstants::ServiceSchedAction::RUNNING) {
-            auto backUpConnection = session_->GetExtConnection(bundleName);
-            if (backUpConnection == nullptr) {
-                HILOGE("backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
-                return BError(BError::Codes::SA_INVAL_ARG);
-            }
-            auto proxy = backUpConnection->GetBackupExtProxy();
-            if (!proxy) {
-                HILOGE("GetFileHandle error, Extension backup Proxy is empty");
-                return BError(BError::Codes::SA_INVAL_ARG);
-            }
-            int32_t errCode = 0;
-            UniqueFd fd = proxy->GetFileHandle(fileName, errCode);
-            if (errCode != ERR_OK) {
-                AppRadar::Info info(bundleName, "", "");
-                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
-                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, errCode);
-            }
-            session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd), errCode);
-            FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverse::Scenario::RESTORE);
-        } else {
-            session_->SetExtFileNameRequest(bundleName, fileName);
-        }
-        return BError(BError::Codes::OK);
-    } catch (const BError &e) {
-        return e.GetCode();
-    }
-}
-
 void Service::ExtStart(const string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
