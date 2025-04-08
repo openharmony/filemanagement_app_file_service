@@ -193,14 +193,12 @@ HWTEST_F(ServiceClientTest, SUB_service_client_test_0800, testing::ext::TestSize
     booleanValue = false;
     ret = proxy->StartExtTimer(booleanValue);
     EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-
     booleanValue = true;
     ret = proxy->StartFwkTimer(booleanValue);
     EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
     booleanValue = false;
     ret = proxy->StartFwkTimer(booleanValue);
     EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-
     booleanValue = true;
     ret = proxy->StopExtTimer(booleanValue);
     EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
@@ -210,66 +208,12 @@ HWTEST_F(ServiceClientTest, SUB_service_client_test_0800, testing::ext::TestSize
     bool isExt = true;
     bundleName = "";
     ret = proxy->UpdateTimer(bundleName, 0, isExt);
-    EXPECT_NE(ret, BError(BError::BackupErrorCode::E_INVAL));
-    EXPECT_EQ(isExt, false);
-    bundleName = "";
-    ret = proxy->UpdateTimer(bundleName, 0, isExt);
-    EXPECT_NE(ret, BError(BError::BackupErrorCode::E_INVAL));
+    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
     EXPECT_EQ(isExt, false);
     bundleName = "test";
     ret = proxy->UpdateTimer(bundleName, 10, isExt);
     EXPECT_EQ(ret, BError(BError::Codes::OK));
     EXPECT_EQ(isExt, false);
-
-    isExt = true;
-    bundleName = "";
-    ret = proxy->UpdateSendRate(bundleName, 0, isExt);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-    EXPECT_TRUE(isExt);
-
-    isExt = true;
-    bundleName = "";
-    ret = proxy->UpdateSendRate(bundleName, 0, isExt);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-    EXPECT_TRUE(isExt);
-
-    bundleName = "test";
-    ret = proxy->UpdateSendRate(bundleName, 10, isExt);
-    EXPECT_NE(ret, BError(BError::BackupErrorCode::E_INVAL));
-    EXPECT_TRUE(isExt);
-    bundleName = "";
-    ret = proxy->AppIncrementalFileReady(bundleName, 0, 0, 0);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-    bundleName = "";
-    ret = proxy->AppIncrementalFileReady(bundleName, 0, 0, 0);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-    bundleName = "test";
-    ret = proxy->AppIncrementalFileReady(bundleName, 1, 1, 0);
-    EXPECT_NE(ret, BError(BError::BackupErrorCode::E_INVAL));
-    fileName = "";
-    ret = proxy->AppFileReady(fileName, 0, 0);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-    fileName = "";
-    ret = proxy->AppFileReady(fileName, 0, 0);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-    fileName = "name";
-    ret = proxy->AppFileReady(fileName, -1, 0);
-    EXPECT_NE(ret, BError(BError::BackupErrorCode::E_INVAL));
-    ret = proxy->AppFileReady(fileName, 0, 0);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-    bundleName = "";
-    fileName = "";
-    ret = proxy->GetFileHandle(bundleName, fileName);
-    EXPECT_EQ(ret, BError(BError::Codes::OK));
-    EXPECT_EQ(fileName, "");
-    bundleName = "";
-    ret = proxy->GetFileHandle(bundleName, fileName);
-    EXPECT_EQ(ret, BError(BError::Codes::OK));
-    EXPECT_EQ(fileName, "");
-    bundleName = "test";
-    ret = proxy->GetFileHandle(bundleName, fileName);
-    EXPECT_EQ(ret, BError(BError::Codes::OK));
-    EXPECT_EQ(fileName, "");
     GTEST_LOG_(INFO) << "ServiceClientTest-end SUB_service_client_test_0800";
 }
 
@@ -421,5 +365,47 @@ HWTEST_F(ServiceClientTest, SUB_service_client_test_1300, testing::ext::TestSize
     EXPECT_NE(proxy, nullptr);
 
     GTEST_LOG_(INFO) << "ServiceClientTest-end SUB_service_client_test_1300";
+}
+
+HWTEST_F(ServiceClientTest, SUB_service_client_test_1400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceClientTest-begin SUB_service_client_test_1400";
+    proxy = ServiceClient::GetInstance();
+    EXPECT_NE(proxy, nullptr);
+    std::string bundleName;
+    std::string fileName;
+    bool isExt = true;
+    bundleName = "";
+    ret = proxy->UpdateSendRate(bundleName, 0, isExt);
+    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
+    EXPECT_TRUE(isExt);
+    bundleName = "test";
+    ret = proxy->UpdateSendRate(bundleName, 10, isExt);
+    EXPECT_NE(ret, BError(BError::BackupErrorCode::E_INVAL));
+    EXPECT_TRUE(isExt);
+    bundleName = "";
+    ret = proxy->AppIncrementalFileReady(bundleName, 0, 0, 0);
+    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
+    bundleName = "test";
+    ret = proxy->AppIncrementalFileReady(bundleName, 1, 1, 0);
+    EXPECT_NE(ret, BError(BError::BackupErrorCode::E_INVAL));
+    fileName = "";
+    ret = proxy->AppFileReady(fileName, 0, 0);
+    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
+    fileName = "name";
+    ret = proxy->AppFileReady(fileName, -1, 0);
+    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
+    ret = proxy->AppFileReady(fileName, 0, 0);
+    EXPECT_NE(ret, BError(BError::BackupErrorCode::E_INVAL));
+    bundleName = "";
+    fileName = "";
+    ret = proxy->GetFileHandle(bundleName, fileName);
+    EXPECT_NE(ret, BError(BError::Codes::OK));
+    EXPECT_EQ(fileName, "");
+    bundleName = "test";
+    ret = proxy->GetFileHandle(bundleName, fileName);
+    EXPECT_EQ(ret, BError(BError::Codes::OK));
+    EXPECT_EQ(fileName, "");
+    GTEST_LOG_(INFO) << "ServiceClientTest-end SUB_service_client_test_1400";
 }
 } // namespace OHOS::FileManagement::Backup
