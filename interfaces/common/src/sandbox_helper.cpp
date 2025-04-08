@@ -15,6 +15,7 @@
 
 #include "sandbox_helper.h"
 
+#include <dlfcn.h>
 #include <iomanip>
 #include <sstream>
 #include <unordered_set>
@@ -27,6 +28,8 @@ using namespace std;
 
 namespace OHOS {
 namespace AppFileService {
+typedef void (*ConvertFileUriToMntPath)(const std::vector<std::string> &fileUris,
+                                        std::vector<std::string> &physicalPaths);
 namespace {
     const string PACKAGE_NAME_FLAG = "<PackageName>";
     const string CURRENT_USER_ID_FLAG = "<currentUserId>";
@@ -63,6 +66,7 @@ struct MediaUriInfo {
 std::unordered_map<std::string, std::string> SandboxHelper::sandboxPathMap_;
 std::unordered_map<std::string, std::string> SandboxHelper::backupSandboxPathMap_;
 std::mutex SandboxHelper::mapMutex_;
+void* SandboxHelper::libMediaHandle_;
 
 string SandboxHelper::Encode(const string &uri)
 {
@@ -305,6 +309,30 @@ static int32_t GetMediaPhysicalPath(const std::string &sandboxPath, const std::s
 
     physicalPath = SHAER_PATH_HEAD + userId + SHAER_PATH_MID + mediaUriInfo.mediaType +
                    BACKSLASH + to_string(bucketNum) + BACKSLASH + mediaUriInfo.realName + mediaSuffix;
+    return 0;
+}
+
+int32_t SandboxHelper::GetMediaSharePath(const std::vector<std::string> &fileUris,
+                                         std::vector<std::string> &physicalPaths)
+{
+    if (libMediaHandle_ == nullptr) {
+        libMediaHandle_ = dlopen("libmedia_library_handler.z.so", RTLD_LAZY | RTLD_GLOBAL);
+    }
+    if (libMediaHandle_ == nullptr) {
+        LOGE("dlopen libmedia_library_handler.z.so failed, errno = %{public}s", dlerror());
+        return -EINVAL;
+    }
+    ConvertFileUriToMntPath convertFileUriToMntPath =
+        (ConvertFileUriToMntPath)dlsym(libMediaHandle_, "ConvertFileUriToMntPath");
+    if (convertFileUriToMntPath == nullptr) {
+        LOGE("GetMediaSharePath dlsym failed, errno %{public}s", dlerror());
+        return -EINVAL;
+    }
+    convertFileUriToMntPath(fileUris, physicalPaths);
+    if (fileUris.size() != physicalPaths.size()) {
+        LOGE("GetMediaSharePath returns fewer results than the output parameters");
+        return -EINVAL;
+    }
     return 0;
 }
 

@@ -40,10 +40,12 @@ namespace ModuleRemoteFileShare {
 using namespace OHOS::DistributedHardware;
 #endif
 namespace {
+const int E_OK = 0;
 const int HMDFS_CID_SIZE = 64;
 const int USER_ID_INIT = 100;
 const unsigned HMDFS_IOC = 0xf2;
 const std::string FILE_SCHEME = "file";
+const std::string BACKSLASH = "/";
 const std::string DISTRIBUTED_DIR_PATH = "/data/storage/el2/distributedfiles";
 const std::string DST_PATH_HEAD = "/data/service/el2/";
 const std::string DST_PATH_MID = "/hmdfs/account/data/";
@@ -93,7 +95,7 @@ static std::string GetProcessName()
 {
     char pthreadName[PATH_MAX];
     int ret = pthread_getname_np(pthread_self(), pthreadName, sizeof(pthreadName));
-    if (ret != 0) {
+    if (ret != E_OK) {
         LOGE("RemoteFileShare::GetProcessName, pthread_getname_np failed with %{public}d", errno);
         return "";
     }
@@ -133,12 +135,12 @@ static int CreateShareDir(const std::string &path)
 {
     if (access(path.c_str(), F_OK) != 0) {
         int ret = mkdir(path.c_str(), S_IRWXU);
-        if (ret != 0) {
+        if (ret != E_OK) {
             LOGE("RemoteFileShare::CreateShareDir, make dir failed with %{public}d", errno);
             return errno;
         }
     }
-    return 0;
+    return E_OK;
 }
 
 static std::string GetSharePath(const int &userId, const std::string &packageName)
@@ -154,18 +156,18 @@ static std::string GetLowerSharePath(const int &userId, const std::string &packa
 static bool DeleteShareDir(const std::string &PACKAGE_PATH, const std::string &SHARE_PATH)
 {
     bool result = true;
-    if (access(SHARE_PATH.c_str(), F_OK) == 0) {
+    if (access(SHARE_PATH.c_str(), F_OK) == E_OK) {
         int ret = rmdir(SHARE_PATH.c_str());
-        if (ret != 0) {
+        if (ret != E_OK) {
             LOGE("RemoteFileShare::DeleteShareDir, delete dir failed with %{public}d", errno);
             result = false;
         } else {
             LOGI("RemoteFileShare::DeleteShareDir, delete path successfully");
         }
     }
-    if (access(PACKAGE_PATH.c_str(), F_OK) == 0) {
+    if (access(PACKAGE_PATH.c_str(), F_OK) == E_OK) {
         int ret = rmdir(PACKAGE_PATH.c_str());
-        if (ret != 0) {
+        if (ret != E_OK) {
             LOGE("RemoteFileShare::DeleteShareDir, delete dir failed with %{public}d", errno);
             result = false;
         } else {
@@ -194,7 +196,7 @@ static int CreateShareFile(struct HmdfsShareControl &shareControl, const char *f
         LOGE("RemoteFileShare::CreateShareFile, ioctl failed with %{public}d", errno);
     }
     close(dirFd);
-    return 0;
+    return E_OK;
 }
 
 static int CheckInputValidity(const int &fd, const int &userId, const std::string &deviceId)
@@ -210,7 +212,7 @@ int RemoteFileShare::CreateSharePath(const int &fd,
     struct HmdfsShareControl shareControl;
     shareControl.fd = fd;
 
-    if (CheckInputValidity(fd, userId, deviceId) != 0) {
+    if (CheckInputValidity(fd, userId, deviceId) != E_OK) {
         LOGE("RemoteFileShare::CreateSharePath, invalid argument with %{public}d", EINVAL);
         return EINVAL;
     }
@@ -228,9 +230,9 @@ int RemoteFileShare::CreateSharePath(const int &fd,
     }
 
     const std::string LOWER_SHARE_PATH = PACKAGE_PATH + SHARE_PATH_DIR;
-    if (CreateShareDir(PACKAGE_PATH) != 0)
+    if (CreateShareDir(PACKAGE_PATH) != E_OK)
         return errno;
-    if (CreateShareDir(LOWER_SHARE_PATH) != 0) {
+    if (CreateShareDir(LOWER_SHARE_PATH) != E_OK) {
         DeleteShareDir(PACKAGE_PATH, LOWER_SHARE_PATH);
         return errno;
     }
@@ -251,32 +253,34 @@ int RemoteFileShare::CreateSharePath(const int &fd,
     }
     sharePath = SHARE_PATH + "/" + file_name;
 
-    if (CreateShareFile(shareControl, realPath, deviceId) != 0) {
+    if (CreateShareFile(shareControl, realPath, deviceId) != E_OK) {
         LOGE("RemoteFileShare::CreateSharePath, create share file failed with %{public}d", errno);
         /* When the file is exist, we should not delete the dictionary */
         if (errno == EEXIST) {
-            return 0;
+            return E_OK;
         }
         sharePath = "";
         DeleteShareDir(PACKAGE_PATH, LOWER_SHARE_PATH);
         return errno;
     }
     LOGI("RemoteFileShare::CreateSharePath, create successfully");
-    return 0;
+    return E_OK;
 }
 
 static int GetDistributedPath(Uri &uri,
                               const int &userId,
                               std::string &distributedPath,
-                              const std::string &bundleName)
+                              const std::string &bundleName,
+                              const std::string &networkId)
 {
-    distributedPath = DST_PATH_HEAD + std::to_string(userId) + DST_PATH_MID + bundleName +
-                      REMOTE_SHARE_PATH_DIR + SandboxHelper::Decode(uri.GetPath());
+    distributedPath = DST_PATH_HEAD + std::to_string(userId) + DST_PATH_MID + bundleName + REMOTE_SHARE_PATH_DIR +
+                      BACKSLASH + networkId + SandboxHelper::Decode(uri.GetPath());
     if (distributedPath.size() >= PATH_MAX) {
+        LOGE("Path is too long with %{public}zu", distributedPath.size());
         return -EINVAL;
     }
 
-    return 0;
+    return E_OK;
 }
 
 static std::string GetPhysicalPath(Uri &uri, const std::string &userId)
@@ -289,7 +293,7 @@ static std::string GetPhysicalPath(Uri &uri, const std::string &userId)
 
     std::string physicalPath = "";
     int ret = SandboxHelper::GetPhysicalPath(uri.ToString(), userId, physicalPath);
-    if (ret != 0) {
+    if (ret != E_OK) {
         LOGE("Get physical path failed with %{public}d", ret);
         return "";
     }
@@ -341,8 +345,8 @@ static void SetHmdfsUriInfo(struct HmdfsUriInfo &hui,
                             const std::string &networkId,
                             const std::string &bundleName)
 {
-    hui.uriStr = FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH + REMOTE_SHARE_PATH_DIR +
-                 uri.GetPath() + networkId;
+    hui.uriStr = FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH + REMOTE_SHARE_PATH_DIR + BACKSLASH +
+                 networkId + uri.GetPath() + NETWORK_PARA + networkId;
 
     hui.fileSize = fileSize;
     return;
@@ -351,14 +355,14 @@ static void SetHmdfsUriInfo(struct HmdfsUriInfo &hui,
 static int32_t SetPublicDirHmdfsInfo(const std::string &physicalPath, const std::string &uriStr,
                                      struct HmdfsUriInfo &hui, const std::string &networkId)
 {
-    hui.uriStr = uriStr + networkId;
+    hui.uriStr = uriStr + NETWORK_PARA + networkId;
     struct stat buf = {};
-    if (stat(physicalPath.c_str(), &buf) != 0) {
+    if (stat(physicalPath.c_str(), &buf) != E_OK) {
         LOGE("Failed to get physical path stat with %{public}d", -errno);
         return -errno;
     }
     hui.fileSize = static_cast<size_t>(buf.st_size);
-    return 0;
+    return E_OK;
 }
 
 static int32_t GetMergePathFd(HmdfsDstInfo &hdi, UniqueFd &dirFd, const int32_t &userId)
@@ -371,12 +375,12 @@ static int32_t GetMergePathFd(HmdfsDstInfo &hdi, UniqueFd &dirFd, const int32_t 
         return errno;
     }
     int32_t ret = ioctl(dirMergeFd, HMDFS_IOC_GET_DST_PATH, &hdi);
-    if (ret != 0) {
+    if (ret != E_OK) {
         LOGE("Ioctl merge failed with %{public}d", errno);
         return -errno;
     }
     dirFd = std::move(dirMergeFd);
-    return 0;
+    return E_OK;
 }
 
 int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int32_t &userId, struct HmdfsUriInfo &hui)
@@ -393,17 +397,16 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
         bundleName = MEDIA_BUNDLE_NAME;
     }
 
-    std::string networkId = NETWORK_PARA + GetLocalNetworkId();
+    std::string networkId = GetLocalNetworkId();
     if (bundleName == FILE_MANAGER_AUTHORITY) {
         (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, hui, networkId);
         LOGD("GetDfsUriFromLocal successfully");
-        return 0;
+        return E_OK;
     }
 
     std::string distributedPath;
-    int ret = GetDistributedPath(uri, userId, distributedPath, bundleName);
-    if (ret != 0) {
-        LOGE("Path is too long with %{public}d", ret);
+    int ret = GetDistributedPath(uri, userId, distributedPath, bundleName, networkId);
+    if (ret != E_OK) {
         return ret;
     }
 
@@ -418,28 +421,96 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
     }
 
     ret = ioctl(dirFd, HMDFS_IOC_GET_DST_PATH, &hdi);
-    if (ret != 0 && GetMergePathFd(hdi, dirFd, userId) != 0) {
+    if (ret != E_OK && GetMergePathFd(hdi, dirFd, userId) != E_OK) {
         return errno;
     }
     SetHmdfsUriInfo(hui, uri, hdi.size, networkId, bundleName);
     LOGI("GetDfsUriFromLocal successfully");
-    return 0;
+    return E_OK;
 }
 
-int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uriList,
-                                             const int32_t &userId,
-                                             std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
+static int32_t UriCategoryByType(const std::vector<std::string> &uriList,
+                                 std::vector<std::string> &mediaUriList,
+                                 std::vector<std::string> &otherUriList)
 {
-    LOGI("GetDfsUrisFromLocal start");
+    LOGI("GetDfsUrisFromLocal UriCategoryByType start");
+    if (uriList.size() == 0) {
+        LOGE("Parameter uriList is NULL");
+        return -EINVAL;
+    }
+    for (auto &uriStr : uriList) {
+        Uri uri(uriStr);
+        std::string bundleName = uri.GetAuthority();
+        if (bundleName == MEDIA_AUTHORITY) {
+            mediaUriList.push_back(uriStr);
+        } else {
+            otherUriList.push_back(uriStr);
+        }
+    }
+    return E_OK;
+}
+
+static int32_t GetMediaDfsUrisFromLocal(const std::vector<std::string> &uriList,
+                                        const int32_t &userId,
+                                        std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
+{
+    LOGI("GetMediaDfsUrisFromLocal start");
     std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
     UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
     if (dirFd < 0) {
         LOGE("Open share path failed with %{public}d", errno);
         return errno;
     }
-    LOGI("open ioctlDir end");
-    std::string networkId = NETWORK_PARA + GetLocalNetworkId();
-    for (auto &uriStr : uriList) {
+    std::vector<std::string> physicalPaths;
+    int getPhysicalPathRet = SandboxHelper::GetMediaSharePath(uriList, physicalPaths);
+    if (getPhysicalPathRet != E_OK) {
+        return -EINVAL;
+    }
+    std::string networkId = GetLocalNetworkId();
+    std::string bundleName = MEDIA_BUNDLE_NAME;
+    for (size_t i = 0; i < uriList.size(); i++) {
+        Uri uri(uriList[i]);
+        LOGD("GetDfsUriFromLocal begin, uri: %{private}s", uriList[i].c_str());
+        std::string distributedPath;
+        int ret = GetDistributedPath(uri, userId, distributedPath, bundleName, networkId);
+        if (ret != E_OK) {
+            return ret;
+        }
+        struct HmdfsDstInfo hdi;
+        InitHmdfsInfo(hdi, physicalPaths[i], distributedPath, bundleName);
+        ret = ioctl(dirFd, HMDFS_IOC_GET_DST_PATH, &hdi);
+        if (ret != E_OK && GetMergePathFd(hdi, dirFd, userId) != E_OK) {
+            return errno;
+        }
+        HmdfsUriInfo dfsUriInfo;
+        SetHmdfsUriInfo(dfsUriInfo, uri, hdi.size, networkId, bundleName);
+        uriToDfsUriMaps.insert({uriList[i], dfsUriInfo});
+    }
+    LOGI("GetDfsUrisFromLocal successfully");
+    return E_OK;
+}
+
+int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uriList,
+                                             const int32_t &userId,
+                                             std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
+{
+    std::vector<std::string> otherUriList;
+    std::vector<std::string> mediaUriList;
+    int ret = UriCategoryByType(uriList, mediaUriList, otherUriList);
+    if (ret == E_OK && mediaUriList.size() != E_OK) {
+        ret = GetMediaDfsUrisFromLocal(mediaUriList, userId, uriToDfsUriMaps);
+    }
+    if (ret != E_OK) {
+        return ret;
+    }
+    std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
+    UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
+    if (dirFd < 0) {
+        LOGE("Open share path failed with %{public}d", errno);
+        return errno;
+    }
+    std::string networkId = GetLocalNetworkId();
+    for (const auto &uriStr : otherUriList) {
         Uri uri(uriStr);
         std::string bundleName = uri.GetAuthority();
         LOGD("GetDfsUriFromLocal begin, uri: %{private}s", uriStr.c_str());
@@ -448,27 +519,22 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
             LOGE("Failed to get physical path");
             return -EINVAL;
         }
-        if (bundleName == MEDIA_AUTHORITY) {
-            bundleName = MEDIA_BUNDLE_NAME;
-        }
         if (bundleName == FILE_MANAGER_AUTHORITY) {
             HmdfsUriInfo dfsUriInfo;
             (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, dfsUriInfo, networkId);
             uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
-            LOGD("GetDfsUriFromLocal successfully");
             continue;
         }
 
         std::string distributedPath;
-        int ret = GetDistributedPath(uri, userId, distributedPath, bundleName);
-        if (ret != 0) {
-            LOGE("Path is too long with %{public}d", ret);
+        ret = GetDistributedPath(uri, userId, distributedPath, bundleName, networkId);
+        if (ret != E_OK) {
             return ret;
         }
         struct HmdfsDstInfo hdi;
         InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
         ret = ioctl(dirFd, HMDFS_IOC_GET_DST_PATH, &hdi);
-        if (ret != 0 && GetMergePathFd(hdi, dirFd, userId) != 0) {
+        if (ret != E_OK && GetMergePathFd(hdi, dirFd, userId) != E_OK) {
             return errno;
         }
         HmdfsUriInfo dfsUriInfo;
@@ -476,7 +542,7 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
         uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
     }
     LOGI("GetDfsUrisFromLocal successfully");
-    return 0;
+    return E_OK;
 }
 
 int32_t RemoteFileShare::TransRemoteUriToLocal(const std::vector<std::string> &uriList,
@@ -529,7 +595,7 @@ int32_t RemoteFileShare::TransRemoteUriToLocal(const std::vector<std::string> &u
         return -EINVAL;
     }
     resultList = tmpResultList;
-    return 0;
+    return E_OK;
 }
 } // namespace ModuleRemoteFileShare
 } // namespace AppFileService

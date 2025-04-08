@@ -461,6 +461,68 @@ HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0007, testing::ext::TestSize.
 }
 
 /**
+ * @tc.name: File_share_GetMediaSharePath_0001
+ * @tc.desc: Test function of GetMediaSharePath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetMediaSharePath_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetMediaSharePath_0001";
+    std::string fileUri = "file://media/Photo/test/IMG_12345_999999/test.jpg";
+    vector<string> uriList;
+    vector<string> physicalPathList;
+    uriList.push_back(fileUri);
+    int32_t ret = SandboxHelper::GetMediaSharePath(uriList, physicalPathList);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetMediaSharePath_0001";
+}
+
+/**
+ * @tc.name: File_share_GetMediaSharePath_0002
+ * @tc.desc: Test function of GetMediaSharePath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetMediaSharePath_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetMediaSharePath_0002";
+    std::string fileUri = "file://media/Photo";
+    vector<string> uriList;
+    vector<string> physicalPathList;
+    uriList.push_back(fileUri);
+    int32_t ret = SandboxHelper::GetMediaSharePath(uriList, physicalPathList);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetMediaSharePath_0002";
+}
+
+/**
+ * @tc.name: File_share_GetMediaSharePath_0003
+ * @tc.desc: Test function of GetMediaSharePath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetMediaSharePath_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetMediaSharePath_0003";
+    std::string fileUri = "file://media/Photo/test/IMG_12345_/test.JPG";
+    std::string fileUri1 = "file://media/Photo/test/IMG_12345_/test.JPG";
+    vector<string> uriList;
+    vector<string> physicalPathList;
+    uriList.push_back(fileUri);
+    uriList.push_back(fileUri1);
+    int32_t ret = SandboxHelper::GetMediaSharePath(uriList, physicalPathList);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetMediaSharePath_0003";
+}
+
+/**
  * @tc.name: File_share_CheckValidPath_0001
  * @tc.desc: Test function of CheckValidPath() interface for FAILURE.
  * @tc.size: MEDIUM
