@@ -1020,6 +1020,7 @@ ErrCode Service::SAResultReport(const std::string bundleName, const std::string 
         session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
     } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
         session_->GetServiceReverseProxy()->IncrementalBackupOnResultReport(restoreRetInfo, bundleName);
+        session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
     }
     OnAllBundlesFinished(BError(BError::Codes::OK));
     if (sennario == BackupRestoreScenario::FULL_RESTORE || sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
@@ -1152,7 +1153,11 @@ void Service::ExtStart(const string &bundleName)
     try {
         HILOGE("begin ExtStart, bundle name:%{public}s", bundleName.data());
         if (SAUtils::IsSABundleName(bundleName)) {
-            BackupSA(bundleName);
+            if (session_->GetIsIncrementalBackup()) {
+                IncrementalBackupSA(bundleName);
+            } else {
+                BackupSA(bundleName);
+            }
             return;
         }
         if (IncrementalBackup(bundleName)) {
@@ -1890,9 +1895,17 @@ void Service::OnSABackup(const std::string &bundleName, const int &fd, const std
     auto task = [bundleName, fd, result, errCode, this]() {
         HILOGI("OnSABackup bundleName: %{public}s, fd: %{public}d, result: %{public}s, err: %{public}d",
                bundleName.c_str(), fd, result.c_str(), errCode);
-        session_->GetServiceReverseProxy()->BackupOnFileReady(bundleName, "", move(fd), errCode);
-        FileReadyRadarReport(bundleName, "", errCode, IServiceReverseType::Scenario::BACKUP);
-        SAResultReport(bundleName, result, errCode, BackupRestoreScenario::FULL_BACKUP);
+        BackupRestoreScenario scenario = BackupRestoreScenario::FULL_BACKUP;
+        if (session_->GetIsIncrementalBackup()) {
+            scenario = BackupRestoreScenario::INCREMENTAL_BACKUP;
+            session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName, "", move(fd), INVALID_FD,
+                                                                             errCode);
+        } else {
+            scenario = BackupRestoreScenario::FULL_BACKUP;
+            session_->GetServiceReverseProxy()->BackupOnFileReady(bundleName, "", move(fd), errCode);
+        }
+        FileReadyRadarReport(bundleName, "", errCode, IServiceReverse::Scenario::BACKUP);
+        SAResultReport(bundleName, result, errCode, scenario);
     };
     threadPool_.AddTask([task]() {
         try {

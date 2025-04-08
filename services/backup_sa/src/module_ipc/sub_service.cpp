@@ -560,7 +560,7 @@ void Service::ExtConnectDied(const string &callName)
             backUpConnection->DisconnectBackupExtAbility();
         }
         bool needCleanData = session_->GetClearDataFlag(callName);
-        if (!needCleanData) {
+        if (!needCleanData || SAUtils::IsSABundleName(callName)) {
             HILOGE("Current extension is died, but not need clean data, bundleName:%{public}s", callName.c_str());
             SendEndAppGalleryNotify(callName);
             ClearSessionAndSchedInfo(callName);
