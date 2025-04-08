@@ -376,7 +376,7 @@ HWTEST_F(ServiceClientTest, SUB_service_client_test_1400, testing::ext::TestSize
     std::string fileName;
     bool isExt = true;
     bundleName = "";
-    ret = proxy->UpdateSendRate(bundleName, 0, isExt);
+    ErrCode ret = proxy->UpdateSendRate(bundleName, 0, isExt);
     EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
     EXPECT_TRUE(isExt);
     bundleName = "test";
