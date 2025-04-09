@@ -330,7 +330,7 @@ std::tuple<int, EndFileInfo, ErrFileInfo> UntarFile::ParseIncrementalTarFile(con
 void UntarFile::MatchAregType(bool &isRightRes, FileStatInfo &info, ErrFileInfo &errFileInfo, bool &isFilter)
 {
     info.fullPath = GenRealPath(rootPath_, info.fullPath);
-    if (BDir::CheckFilePathInvalid(info.fullPath)) {
+    if (!BDir::IsFilePathValid(info.fullPath)) {
         HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
         isRightRes = false;
         return;
@@ -342,7 +342,7 @@ void UntarFile::MatchAregType(bool &isRightRes, FileStatInfo &info, ErrFileInfo 
 void UntarFile::MatchDirType(bool &isRightRes, FileStatInfo &info, ErrFileInfo &errFileInfo, bool &isFilter)
 {
     info.fullPath = GenRealPath(rootPath_, info.fullPath);
-    if (BDir::CheckFilePathInvalid(info.fullPath)) {
+    if (!BDir::IsFilePathValid(info.fullPath)) {
         HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
         isRightRes = false;
         return;
@@ -354,7 +354,7 @@ void UntarFile::MatchDirType(bool &isRightRes, FileStatInfo &info, ErrFileInfo &
 void UntarFile::MatchGnuTypeLongName(bool &isRightRes, FileStatInfo &info, ErrFileInfo &errFileInfo, bool &isFilter)
 {
     auto result = ReadLongName(info);
-    if (BDir::CheckFilePathInvalid(info.fullPath) || BDir::CheckFilePathInvalid(info.longName)) {
+    if (!BDir::IsFilePathValid(info.fullPath) || !BDir::IsFilePathValid(info.longName)) {
         HILOGE("Check file path : %{public}s or long name : %{public}s err, path is forbidden",
             GetAnonyPath(info.fullPath).c_str(), GetAnonyPath(info.longName).c_str());
         isRightRes = false;
@@ -428,7 +428,7 @@ bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
         return true;
     }
     info.fullPath = GenRealPath(rootPath_, info.fullPath);
-    if (BDir::CheckFilePathInvalid(info.fullPath)) {
+    if (!BDir::IsFilePathValid(info.fullPath)) {
         HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
         errFileInfo[info.fullPath].emplace_back(DEFAULT_ERR);
         return false;
@@ -453,7 +453,7 @@ std::tuple<int, bool, ErrFileInfo> UntarFile::MatchIncrementalScenario(bool isFi
             break;
         case DIRTYPE:
             info.fullPath = GenRealPath(rootPath_, info.fullPath);
-            if (BDir::CheckFilePathInvalid(info.fullPath)) {
+            if (!BDir::IsFilePathValid(info.fullPath)) {
                 HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
                 return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
             }
@@ -462,7 +462,7 @@ std::tuple<int, bool, ErrFileInfo> UntarFile::MatchIncrementalScenario(bool isFi
             break;
         case GNUTYPE_LONGNAME: {
             auto result = ReadLongName(info);
-            if (BDir::CheckFilePathInvalid(info.fullPath)) {
+            if (!BDir::IsFilePathValid(info.fullPath)) {
                 HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
                 return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
             }

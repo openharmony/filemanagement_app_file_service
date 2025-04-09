@@ -37,6 +37,7 @@
 #include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
+#include "b_filesystem/b_dir.h"
 #include "b_file_info.h"
 #include "b_hiaudit/hi_audit.h"
 #include "b_json/b_json_cached_entity.h"
@@ -208,6 +209,71 @@ ErrCode Service::Finish()
         HILOGE("Failde to Finish");
         return e.GetCode();
     }
+}
+
+ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        if (session_ == nullptr) {
+            HILOGE("GetFileHandle error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        ErrCode ret = VerifyCaller(IServiceReverse::Scenario::RESTORE);
+        if (ret != ERR_OK) {
+            HILOGE("verify caller failed, bundleName:%{public}s", bundleName.c_str());
+            return ret;
+        }
+        if (!BDir::IsFilePathValid(fileName)) {
+            HILOGE("path is forbidden, path : %{public}s", GetAnonyPath(fileName).c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        bool updateRes = SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);
+        if (updateRes) {
+            return BError(BError::Codes::OK);
+        }
+        auto action = session_->GetServiceSchedAction(bundleName);
+        if (action == BConstants::ServiceSchedAction::UNKNOWN) {
+            HILOGE("action is unknown, bundleName:%{public}s", bundleName.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        if (action == BConstants::ServiceSchedAction::RUNNING) {
+            auto err = SendFileHandle(bundleName, fileName);
+            if (err != ERR_OK) {
+                HILOGE("SendFileHandle failed, bundle:%{public}s", bundleName.c_str());
+                return err;
+            }
+        } else {
+            session_->SetExtFileNameRequest(bundleName, fileName);
+        }
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        return e.GetCode();
+    }
+}
+
+ErrCode Service::SendFileHandle(const std::string &bundleName, const std::string &fileName)
+{
+    auto backUpConnection = session_->GetExtConnection(bundleName);
+    if (backUpConnection == nullptr) {
+        HILOGE("backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    auto proxy = backUpConnection->GetBackupExtProxy();
+    if (!proxy) {
+        HILOGE("GetFileHandle failed, bundleName:%{public}s", bundleName.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    int32_t errCode = 0;
+    UniqueFd fd = proxy->GetFileHandle(fileName, errCode);
+    if (errCode != ERR_OK) {
+        AppRadar::Info info(bundleName, "", "");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
+                                                     BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, errCode);
+    }
+    session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd), errCode);
+    FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverse::Scenario::RESTORE);
+    return BError(BError::Codes::OK);
 }
 
 ErrCode Service::PublishFile(const BFileInfo &fileInfo)
