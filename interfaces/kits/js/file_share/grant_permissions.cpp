@@ -76,6 +76,40 @@ static napi_value GetResultData(napi_env env, const vector<bool> &results)
     return res;
 }
 
+static napi_status GetUriPolicy(napi_env env, napi_value agrv, std::vector<UriPolicyInfo> &uriPolicies, uint32_t i)
+{
+    napi_value object;
+    status = napi_get_element(env, agrv, i, &object);
+    if (status != napi_ok) {
+        LOGE("get element failed");
+        return status;
+    }
+    napi_value uriValue;
+    napi_value modeValue;
+    status = napi_get_named_property(env, object, "uri", &uriValue);
+    if (status != napi_ok) {
+        LOGE("get named property failed");
+        napi_close_handle_scope(env, scope);
+        return status;
+    }
+    status = napi_get_named_property(env, object, "operationMode", &modeValue);
+    if (status != napi_ok) {
+        LOGE("get named property failed");
+        napi_close_handle_scope(env, scope);
+        return status;
+    }
+    auto [succStr, str, ignore] = NVal(env, uriValue).ToUTF8String();
+    auto [succMode, mode] = NVal(env, modeValue).ToUint32();
+    if (!succStr || !succMode) {
+        LOGE("the argument error");
+        napi_close_handle_scope(env, scope);
+        return napi_invalid_arg;
+    }
+    UriPolicyInfo uriPolicy {.uri = str.get(), .mode = mode};
+    uriPolicies.emplace_back(uriPolicy);
+    return napi_ok;
+}
+
 static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<UriPolicyInfo> &uriPolicies)
 {
     uint32_t count;
@@ -94,36 +128,11 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
         if (status != napi_ok) {
             return status;
         }
-        napi_value object;
-        status = napi_get_element(env, agrv, i, &object);
+        status = GetUriPolicy(env, agrv, uriPolicies, i);
         if (status != napi_ok) {
-            LOGE("get element failed");
             napi_close_handle_scope(env, scope);
             return status;
         }
-        napi_value uriValue;
-        napi_value modeValue;
-        status = napi_get_named_property(env, object, "uri", &uriValue);
-        if (status != napi_ok) {
-            LOGE("get named property failed");
-            napi_close_handle_scope(env, scope);
-            return status;
-        }
-        status = napi_get_named_property(env, object, "operationMode", &modeValue);
-        if (status != napi_ok) {
-            LOGE("get named property failed");
-            napi_close_handle_scope(env, scope);
-            return status;
-        }
-        auto [succStr, str, ignore] = NVal(env, uriValue).ToUTF8String();
-        auto [succMode, mode] = NVal(env, modeValue).ToUint32();
-        if (!succStr || !succMode) {
-            LOGE("the argument error");
-            napi_close_handle_scope(env, scope);
-            return napi_invalid_arg;
-        }
-        UriPolicyInfo uriPolicy {.uri = str.get(), .mode = mode};
-        uriPolicies.emplace_back(uriPolicy);
         status = napi_close_handle_scope(env, scope);
         if (status != napi_ok) {
             return status;
@@ -146,6 +155,41 @@ static napi_status CheckPathArray(napi_env env, napi_value agrv, uint32_t &count
     return napi_ok;
 }
 
+static napi_status GetPathPolicy(napi_env env, napi_value agrv, std::vector<PathPolicyInfo> &pathPolicies, uint32_t i)
+{
+    napi_value object;
+    status = napi_get_element(env, agrv, i, &object);
+    if (status != napi_ok) {
+        LOGE("get element failed");
+        napi_close_handle_scope(env, scope);
+        return status;
+    }
+    napi_value pathValue;
+    napi_value modeValue;
+    status = napi_get_named_property(env, object, "path", &pathValue);
+    if (status != napi_ok) {
+        LOGE("get named property failed");
+        napi_close_handle_scope(env, scope);
+        return status;
+    }
+    status = napi_get_named_property(env, object, "operationMode", &modeValue);
+    if (status != napi_ok) {
+        LOGE("get named property failed");
+        napi_close_handle_scope(env, scope);
+        return status;
+    }
+    auto [succStr, str, ignore] = NVal(env, pathValue).ToUTF8String();
+    auto [succMode, mode] = NVal(env, modeValue).ToUint32();
+    if (!succStr || !succMode) {
+        LOGE("the argument error");
+        napi_close_handle_scope(env, scope);
+        return napi_invalid_arg;
+    }
+    PathPolicyInfo pathPolicy {.path = str.get(), .mode = mode};
+    pathPolicies.emplace_back(pathPolicy);
+    return napi_ok;
+}
+
 static napi_status GetPathPoliciesArg(napi_env env, napi_value agrv, std::vector<PathPolicyInfo> &pathPolicies)
 {
     uint32_t count;
@@ -160,36 +204,11 @@ static napi_status GetPathPoliciesArg(napi_env env, napi_value agrv, std::vector
             LOGE("open handle scope failed");
             return status;
         }
-        napi_value object;
-        status = napi_get_element(env, agrv, i, &object);
+        status = GetPathPolicy(env, agrv, uriPolicies, i);
         if (status != napi_ok) {
-            LOGE("get element failed");
             napi_close_handle_scope(env, scope);
             return status;
         }
-        napi_value pathValue;
-        napi_value modeValue;
-        status = napi_get_named_property(env, object, "path", &pathValue);
-        if (status != napi_ok) {
-            LOGE("get named property failed");
-            napi_close_handle_scope(env, scope);
-            return status;
-        }
-        status = napi_get_named_property(env, object, "operationMode", &modeValue);
-        if (status != napi_ok) {
-            LOGE("get named property failed");
-            napi_close_handle_scope(env, scope);
-            return status;
-        }
-        auto [succStr, str, ignore] = NVal(env, pathValue).ToUTF8String();
-        auto [succMode, mode] = NVal(env, modeValue).ToUint32();
-        if (!succStr || !succMode) {
-            LOGE("the argument error");
-            napi_close_handle_scope(env, scope);
-            return napi_invalid_arg;
-        }
-        PathPolicyInfo pathPolicy {.path = str.get(), .mode = mode};
-        pathPolicies.emplace_back(pathPolicy);
         status = napi_close_handle_scope(env, scope);
         if (status != napi_ok) {
             return status;
