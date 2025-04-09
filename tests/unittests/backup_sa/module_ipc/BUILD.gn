@@ -43,8 +43,6 @@ ohos_unittest("module_ipc_test") {
     "${path_backup}/services/backup_sa/include",
     "${path_backup}/tests/unittests/backup_api/backup_impl/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
-    "${path_base}/include",
-    "${path_ipc}/interfaces/innerkits/ipc_core/include",
   ]
 
   deps = [
@@ -52,7 +50,6 @@ ohos_unittest("module_ipc_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "//third_party/googletest:gmock_main",
   ]
 
   external_deps = [
@@ -60,6 +57,8 @@ ohos_unittest("module_ipc_test") {
     "ability_runtime:ability_manager",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
@@ -118,8 +117,6 @@ ohos_unittest("backup_service_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -129,11 +126,14 @@ ohos_unittest("backup_service_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -200,8 +200,6 @@ ohos_unittest("backup_service_throw_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -211,11 +209,14 @@ ohos_unittest("backup_service_throw_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -260,7 +261,6 @@ ohos_unittest("backup_service_session_test") {
     "${path_backup}/services/backup_sa/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/tests/unittests/backup_api/backup_impl/include",
-    "${path_base}/include",
     "${path_backup_mock}/bundle_manager/include",
   ]
 
@@ -270,8 +270,6 @@ ohos_unittest("backup_service_session_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -280,10 +278,13 @@ ohos_unittest("backup_service_session_test") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -324,7 +325,6 @@ ohos_unittest("backup_service_scheduler_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
   ]
 
   external_deps = [
@@ -333,6 +333,8 @@ ohos_unittest("backup_service_scheduler_test") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
@@ -389,8 +391,6 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -400,11 +400,14 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -451,8 +454,6 @@ ohos_unittest("backup_service_incremental_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -462,11 +463,14 @@ ohos_unittest("backup_service_incremental_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -523,8 +527,6 @@ ohos_unittest("backup_service_other_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -534,11 +536,14 @@ ohos_unittest("backup_service_other_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",

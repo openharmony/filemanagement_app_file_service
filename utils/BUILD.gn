@@ -25,7 +25,6 @@ config("utils_public_config") {
   include_dirs = [
     "include",
     "include/b_hilog",
-    "${path_base}/include",
   ]
 }
 
@@ -101,11 +100,12 @@ ohos_shared_library("backup_utils") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
+    "openssl:libcrypto_shared",
     "zlib:shared_libz",
   ]
 
   include_dirs = [
-    "${path_init}/interfaces/innerkits/include/syspara",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/utils/include",
   ]
@@ -114,8 +114,6 @@ ohos_shared_library("backup_utils") {
     ":backup_cxx_cppdeps",
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
     "${path_backup}/services/backup_sa:backup_sa_ipc_type",
-    "${path_jsoncpp}:jsoncpp",
-    "//third_party/openssl:libcrypto_shared",
   ]
 
   cflags_cc = [

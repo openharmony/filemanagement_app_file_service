@@ -39,8 +39,6 @@ ohos_unittest("ext_extension_test") {
   deps = [
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -53,10 +51,13 @@ ohos_unittest("ext_extension_test") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "ipc:ipc_napi",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -92,14 +93,12 @@ ohos_unittest("ext_extension_stub_test") {
     "${path_backup}/utils/include",
   ]
 
-  deps = [
-    "${path_backup}/utils:backup_utils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${path_backup}/utils:backup_utils" ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
@@ -145,15 +144,11 @@ ohos_unittest("tar_file_test") {
   sources += backup_mock_proxy_src
 
   include_dirs = [
-    "${path_ability_runtime}/services/common/include",
-    "${path_ability_runtime}/interfaces/kits/napi/aafwk/inner/napi_common",
-    "${path_ability_runtime}/interfaces/kits/native/appkit/ability_runtime",
     "${path_backup}/frameworks/native/backup_ext/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/utils/include",
-    "${path_napi}/native_engine",
   ]
   include_dirs += backup_mock_utils_include
 
@@ -163,8 +158,6 @@ ohos_unittest("tar_file_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags = [ "--coverage" ]
@@ -181,9 +174,12 @@ ohos_unittest("tar_file_test") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "ipc:ipc_napi",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
@@ -221,9 +217,6 @@ ohos_unittest("untar_file_sup_test") {
   sources += backup_mock_proxy_src
 
   include_dirs = [
-    "${path_ability_runtime}/services/common/include",
-    "${path_ability_runtime}/interfaces/kits/napi/aafwk/inner/napi_common",
-    "${path_ability_runtime}/interfaces/kits/native/appkit/ability_runtime",
     "${path_backup}/frameworks/native/backup_ext/include",
     "${path_backup}/frameworks/native/backup_ext/src",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
@@ -231,7 +224,6 @@ ohos_unittest("untar_file_sup_test") {
     "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/tests/mock/library_func_mock",
     "${path_backup}/utils/include",
-    "${path_napi}/native_engine",
   ]
   include_dirs += backup_mock_utils_include
 
@@ -241,8 +233,6 @@ ohos_unittest("untar_file_sup_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags = [ "--coverage" ]
@@ -259,9 +249,12 @@ ohos_unittest("untar_file_sup_test") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "ipc:ipc_napi",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
@@ -298,15 +291,11 @@ ohos_unittest("untar_file_test") {
   sources += backup_mock_proxy_src
 
   include_dirs = [
-    "${path_ability_runtime}/services/common/include",
-    "${path_ability_runtime}/interfaces/kits/napi/aafwk/inner/napi_common",
-    "${path_ability_runtime}/interfaces/kits/native/appkit/ability_runtime",
     "${path_backup}/frameworks/native/backup_ext/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/utils/include",
-    "${path_napi}/native_engine",
   ]
   include_dirs += backup_mock_utils_include
 
@@ -316,8 +305,6 @@ ohos_unittest("untar_file_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags = [ "--coverage" ]
@@ -334,9 +321,12 @@ ohos_unittest("untar_file_test") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "ipc:ipc_napi",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
@@ -369,9 +359,6 @@ ohos_unittest("ext_backup_js_test") {
   deps = [
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_googletest}:gtest_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -385,10 +372,13 @@ ohos_unittest("ext_backup_js_test") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "ipc:ipc_napi",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

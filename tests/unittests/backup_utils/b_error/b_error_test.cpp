@@ -36,7 +36,7 @@ public:
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BErrorTest, b_error_construction_0100, testing::ext::TestSize.Level1)
+HWTEST_F(BErrorTest, b_error_construction_0100, testing::ext::TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "BErrorTest-begin b_error_construction_0100";
     try {

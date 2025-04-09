@@ -26,13 +26,12 @@ ohos_unittest("file_share_permission_ndk_sup_test") {
 
   module_out_path = "app_file_service/app_file_service/file_share"
   include_dirs = [
-    "include",
     "${app_file_service_path}/interfaces/kits/ndk/fileshare/include",
     "${app_file_service_path}/tests/mock/file_permission_native_mock/include",
     "${app_file_service_path}/tests/mock/parameter_mock/include",
-    "//third_party/googletest/include",
   ]
-  resource_config_file = "../../resource/ohos_test.xml"
+  resource_config_file =
+      "${app_file_service_path}/test/unittest/resource/ohos_test.xml"
   sources = [
     "${app_file_service_path}/interfaces/kits/ndk/fileshare/src/oh_file_share.cpp",
     "${app_file_service_path}/tests/mock/file_permission_native_mock/src/file_permission_mock.cpp",
@@ -47,6 +46,8 @@ ohos_unittest("file_share_permission_ndk_sup_test") {
     "access_token:libtoken_setproc",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
@@ -54,7 +55,5 @@ ohos_unittest("file_share_permission_ndk_sup_test") {
   ]
   deps = [
     "${app_file_service_path}/interfaces/innerkits/native:fileshare_native",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 }

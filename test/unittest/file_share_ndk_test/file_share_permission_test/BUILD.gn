@@ -25,12 +25,11 @@ ohos_unittest("file_share_permission_ndk_test") {
 
   module_out_path = "app_file_service/app_file_service/file_share"
   include_dirs = [
-    "include",
     "${app_file_service_path}/interfaces/kits/ndk/fileshare/include",
     "${app_file_service_path}/interfaces/kits/ndk/fileshare/src",
-    "//third_party/googletest/include",
   ]
-  resource_config_file = "../../resource/ohos_test.xml"
+  resource_config_file =
+      "${app_file_service_path}/test/unittest/resource/ohos_test.xml"
   sources = [ "file_share_permission_test.cpp" ]
   external_deps = [
     "ability_base:base",
@@ -41,6 +40,8 @@ ohos_unittest("file_share_permission_ndk_test") {
     "access_token:libtoken_setproc",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
@@ -49,7 +50,5 @@ ohos_unittest("file_share_permission_ndk_test") {
   deps = [
     "${app_file_service_path}/interfaces/innerkits/native:fileshare_native",
     "${app_file_service_path}/interfaces/kits/ndk/fileshare/src:ohfileshare",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 }
