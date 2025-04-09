@@ -79,7 +79,7 @@ static napi_value GetResultData(napi_env env, const vector<bool> &results)
 static napi_status GetUriPolicy(napi_env env, napi_value agrv, std::vector<UriPolicyInfo> &uriPolicies, uint32_t i)
 {
     napi_value object;
-    status = napi_get_element(env, agrv, i, &object);
+    napi_status status = napi_get_element(env, agrv, i, &object);
     if (status != napi_ok) {
         LOGE("get element failed");
         return status;
@@ -155,7 +155,7 @@ static napi_status CheckPathArray(napi_env env, napi_value agrv, uint32_t &count
 static napi_status GetPathPolicy(napi_env env, napi_value agrv, std::vector<PathPolicyInfo> &pathPolicies, uint32_t i)
 {
     napi_value object;
-    status = napi_get_element(env, agrv, i, &object);
+    napi_status status = napi_get_element(env, agrv, i, &object);
     if (status != napi_ok) {
         LOGE("get element failed");
         return status;
