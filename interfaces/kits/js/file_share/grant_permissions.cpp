@@ -197,7 +197,7 @@ static napi_status GetPathPoliciesArg(napi_env env, napi_value agrv, std::vector
             LOGE("open handle scope failed");
             return status;
         }
-        status = GetPathPolicy(env, agrv, uriPolicies, i);
+        status = GetPathPolicy(env, agrv, pathPolicies, i);
         if (status != napi_ok) {
             napi_close_handle_scope(env, scope);
             return status;
