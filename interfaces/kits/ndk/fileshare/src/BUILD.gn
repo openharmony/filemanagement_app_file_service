@@ -29,6 +29,7 @@ ohos_shared_library("ohfileshare") {
     "${app_file_service_path}/interfaces/common/include/",
     "${app_file_service_path}/interfaces/innerkits/native/file_share/include/",
     "${app_file_service_path}/interfaces/kits/ndk/fileshare/include",
+    "${app_file_service_path}/interfaces/kits/ndk/fileuri/include",
   ]
 
   sources = [ "oh_file_share.cpp" ]
