@@ -125,19 +125,19 @@ static bool ConvertPolicyErrorResultBool(const std::vector<bool> &errorResults, 
 
 static FileManagement_ErrCode ErrorCodeConversion(int32_t errorCode)
 {
-    FileManagement_ErrCode errCode = E_UNKNOWN_ERROR;
+    FileManagement_ErrCode errCode = ERR_UNKNOWN;
     switch (errorCode) {
-        case static_cast<int32_t>(E_NO_ERROR):
-            errCode = E_NO_ERROR;
+        case static_cast<int32_t>(ERR_OK):
+            errCode = ERR_OK;
             break;
-        case static_cast<int32_t>(E_PERMISSION):
-            errCode = E_PERMISSION;
+        case static_cast<int32_t>(ERR_PERMISSION_ERROR):
+            errCode = ERR_PERMISSION_ERROR;
             break;
-        case static_cast<int32_t>(E_PARAMS):
-            errCode = E_PARAMS;
+        case static_cast<int32_t>(ERR_PARAMS):
+            errCode = ERR_PARAMS;
             break;
         case EPERM:
-            errCode = E_EPERM;
+            errCode = ERR_EPERM;
             break;
         default:
             break;
@@ -155,16 +155,16 @@ static FileManagement_ErrCode ExecAction(const FileShare_PolicyInfo *policies,
     (*resultNum) = 0;
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (!ConvertPolicyInfo(policies, policyNum, uriPolicies)) {
-        return E_PARAMS;
+        return ERR_PARAMS;
     }
     std::deque<OHOS::AppFileService::PolicyErrorResult> errorResults;
     auto ret = ErrorCodeConversion(exec(uriPolicies, errorResults));
-    if (ret == E_NO_ERROR) {
-        return E_NO_ERROR;
+    if (ret == ERR_OK) {
+        return ERR_OK;
     }
     if (!ConvertPolicyErrorResult(errorResults, result, *resultNum)) {
         OH_FileShare_ReleasePolicyErrorResult(*result, *resultNum);
-        return E_ENOMEM;
+        return ERR_ENOMEM;
     }
     return ret;
 }
@@ -176,11 +176,11 @@ FileManagement_ErrCode OH_FileShare_PersistPermission(const FileShare_PolicyInfo
 {
     if (policies == nullptr || result == nullptr || resultNum == nullptr) {
         LOGE("The external input pointer is abnormal");
-        return E_PARAMS;
+        return ERR_PARAMS;
     }
     if (policyNum == 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
         LOGE("The policyNum is abnormal");
-        return E_PARAMS;
+        return ERR_PARAMS;
     }
     return ExecAction(policies, policyNum, result, resultNum, OHOS::AppFileService::FilePermission::PersistPermission);
 }
@@ -192,11 +192,11 @@ FileManagement_ErrCode OH_FileShare_RevokePermission(const FileShare_PolicyInfo 
 {
     if (policies == nullptr || result == nullptr || resultNum == nullptr) {
         LOGE("The external input pointer is abnormal");
-        return E_PARAMS;
+        return ERR_PARAMS;
     }
     if (policyNum == 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
         LOGE("The policyNum is abnormal");
-        return E_PARAMS;
+        return ERR_PARAMS;
     }
     return ExecAction(policies, policyNum, result, resultNum, OHOS::AppFileService::FilePermission::RevokePermission);
 }
@@ -208,11 +208,11 @@ FileManagement_ErrCode OH_FileShare_ActivatePermission(const FileShare_PolicyInf
 {
     if (policies == nullptr || result == nullptr || resultNum == nullptr) {
         LOGE("The external input pointer is abnormal");
-        return E_PARAMS;
+        return ERR_PARAMS;
     }
     if (policyNum == 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
         LOGE("The policyNum is abnormal");
-        return E_PARAMS;
+        return ERR_PARAMS;
     }
     return ExecAction(policies, policyNum, result, resultNum, OHOS::AppFileService::FilePermission::ActivatePermission);
 }
@@ -224,11 +224,11 @@ FileManagement_ErrCode OH_FileShare_DeactivatePermission(const FileShare_PolicyI
 {
     if (policies == nullptr || result == nullptr || resultNum == nullptr) {
         LOGE("The external input pointer is abnormal");
-        return E_PARAMS;
+        return ERR_PARAMS;
     }
     if (policyNum == 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
         LOGE("The policyNum is abnormal");
-        return E_PARAMS;
+        return ERR_PARAMS;
     }
     return ExecAction(policies, policyNum, result, resultNum,
                       OHOS::AppFileService::FilePermission::DeactivatePermission);
@@ -241,16 +241,16 @@ FileManagement_ErrCode OH_FileShare_CheckPersistentPermission(const FileShare_Po
 {
     if (policies == nullptr || result == nullptr || resultNum == nullptr) {
         LOGE("The external input pointer is abnormal");
-        return E_PARAMS;
+        return ERR_PARAMS;
     }
     if (policyNum == 0 || policyNum > OHOS::AppFileService::MAX_ARRAY_SIZE) {
         LOGE("The policyNum is abnormal");
-        return E_PARAMS;
+        return ERR_PARAMS;
     }
     *resultNum = 0;
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (!ConvertPolicyInfo(policies, policyNum, uriPolicies)) {
-        return E_PARAMS;
+        return ERR_PARAMS;
     }
     std::vector<bool> errorResults;
     auto ret = OHOS::AppFileService::FilePermission::CheckPersistentPermission(uriPolicies, errorResults);
@@ -258,10 +258,10 @@ FileManagement_ErrCode OH_FileShare_CheckPersistentPermission(const FileShare_Po
         return ErrorCodeConversion(ret);
     }
     if (!ConvertPolicyErrorResultBool(errorResults, result)) {
-        return E_ENOMEM;
+        return ERR_ENOMEM;
     }
     *resultNum = errorResults.size();
-    return E_NO_ERROR;
+    return ERR_OK;
 }
 
 void OH_FileShare_ReleasePolicyErrorResult(FileShare_PolicyErrorResult *result, unsigned int num)

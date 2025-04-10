@@ -104,17 +104,17 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_PersistPermission_test_002,
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_PARAMS);
+    EXPECT_EQ(ret, ERR_PARAMS);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
 
     policies[0].uri = policyUriChar;
     ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_PARAMS);
+    EXPECT_EQ(ret, ERR_PARAMS);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
 
     policies[0].length = sizeof(policyUriChar);
     ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_PARAMS);
+    EXPECT_EQ(ret, ERR_PARAMS);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_002 end";
 }
@@ -140,9 +140,9 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_PersistPermission_test_003,
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
     
-    EXPECT_CALL(*filePermMoc_, PersistPermission(_, _)).WillOnce(Return(E_PERMISSION));
+    EXPECT_CALL(*filePermMoc_, PersistPermission(_, _)).WillOnce(Return(ERR_PERMISSION_ERROR));
     FileManagement_ErrCode ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_ENOMEM);
+    EXPECT_EQ(ret, ERR_ENOMEM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     
     std::deque<PolicyErrorResult> errorResults;
@@ -152,9 +152,9 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_PersistPermission_test_003,
     }
 
     EXPECT_CALL(*filePermMoc_, PersistPermission(_, _))
-        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(E_PARAMS)));
+        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(ERR_PARAMS)));
     ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_ENOMEM);
+    EXPECT_EQ(ret, ERR_ENOMEM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_003 end";
 }
@@ -185,13 +185,13 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_PersistPermission_test_004,
     EXPECT_CALL(*filePermMoc_, PersistPermission(_, _))
         .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(EPERM)));
     FileManagement_ErrCode ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_EPERM);
+    EXPECT_EQ(ret, ERR_EPERM);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
 
     EXPECT_CALL(*filePermMoc_, PersistPermission(_, _))
-        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(E_EPERM)));
+        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(ERR_EPERM)));
     ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_UNKNOWN_ERROR);
+    EXPECT_EQ(ret, ERR_UNKNOWN);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_004 end";
 }
@@ -217,9 +217,9 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_PersistPermission_test_005,
     FileShare_PolicyErrorResult *result = nullptr;
     unsigned int resultNum;
 
-    EXPECT_CALL(*filePermMoc_, PersistPermission(_, _)).WillOnce(Return(E_NO_ERROR));
+    EXPECT_CALL(*filePermMoc_, PersistPermission(_, _)).WillOnce(Return(ERR_OK));
     FileManagement_ErrCode ret = OH_FileShare_PersistPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_NO_ERROR);
+    EXPECT_EQ(ret, ERR_OK);
     OH_FileShare_ReleasePolicyErrorResult(result, resultNum);
     GTEST_LOG_(INFO) << "OH_FileShare_PersistPermission_test_005 end";
 }
@@ -245,7 +245,7 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_CheckPersistentPermission_t
     bool *result = nullptr;
     unsigned int resultNum;
     FileManagement_ErrCode ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_PARAMS);
+    EXPECT_EQ(ret, ERR_PARAMS);
     if (result != nullptr) {
         free(result);
     }
@@ -253,7 +253,7 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_CheckPersistentPermission_t
     policies[0].length = strlen(policyUriChar);
     EXPECT_CALL(*filePermMoc_, CheckPersistentPermission(_, _)).WillOnce(Return(EPERM));
     ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_EPERM);
+    EXPECT_EQ(ret, ERR_EPERM);
     if (result != nullptr) {
         free(result);
     }
@@ -280,9 +280,9 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_CheckPersistentPermission_t
     unsigned int policiesNum = sizeof(policies) / sizeof(policies[0]);
     bool *result = nullptr;
     unsigned int resultNum;
-    EXPECT_CALL(*filePermMoc_, CheckPersistentPermission(_, _)).WillOnce(Return(E_NO_ERROR));
+    EXPECT_CALL(*filePermMoc_, CheckPersistentPermission(_, _)).WillOnce(Return(ERR_OK));
     FileManagement_ErrCode ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_ENOMEM);
+    EXPECT_EQ(ret, ERR_ENOMEM);
     if (result != nullptr) {
         free(result);
     }
@@ -293,9 +293,9 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_CheckPersistentPermission_t
     }
 
     EXPECT_CALL(*filePermMoc_, CheckPersistentPermission(_, _))
-        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(E_NO_ERROR)));
+        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(ERR_OK)));
     ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_ENOMEM);
+    EXPECT_EQ(ret, ERR_ENOMEM);
     if (result != nullptr) {
         free(result);
     }
@@ -327,9 +327,9 @@ HWTEST_F(NDKFileSharePermissionSupTest, OH_FileShare_CheckPersistentPermission_t
     errorResults.push_back(false);
 
     EXPECT_CALL(*filePermMoc_, CheckPersistentPermission(_, _))
-        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(E_NO_ERROR)));
+        .WillOnce(DoAll(SetArgReferee<1>(errorResults), Return(ERR_OK)));
     FileManagement_ErrCode ret = OH_FileShare_CheckPersistentPermission(policies, policiesNum, &result, &resultNum);
-    EXPECT_EQ(ret, E_NO_ERROR);
+    EXPECT_EQ(ret, ERR_OK);
 
     if (result != nullptr) {
         free(result);

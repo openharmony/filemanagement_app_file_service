@@ -29,7 +29,7 @@ ohos_ndk_library("libohfileshare") {
 ohos_ndk_headers("oh_file_share_header") {
   dest_dir = "$ndk_headers_out_dir/filemanagement/fileshare/"
   sources = [
-    "${app_file_service_path}/interfaces/kits/ndk/fileshare/include/error_code.h",
+    "${app_file_service_path}/interfaces/kits/ndk/fileuri/include/error_code.h",
     "${app_file_service_path}/interfaces/kits/ndk/fileshare/include/oh_file_share.h",
   ]
 }
