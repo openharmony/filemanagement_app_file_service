@@ -421,18 +421,18 @@ napi_value SessionIncrementalBackupNExporter::GetLocalCapabilities(napi_env env,
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get backupSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-    UniqueFd fd;
-    auto cbExec = [session {backupEntity->session.get()}, &fd]() -> NError {
+    auto fd = make_shared<UniqueFd>();
+    auto cbExec = [session {backupEntity->session.get()}, fd]() -> NError {
         if (!session) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "backup session is nullptr").GetCode());
         }
-        fd = session->GetLocalCapabilities();
+        *fd = session->GetLocalCapabilities();
         return fd < 0 ? NError(BError(BError::Codes::SA_INVAL_ARG, "Failed to get local capabilities.").GetCode()) :
             NError(BError(BError::Codes::OK, "Success to get local capabilities.").GetCode());
     };
-    auto cbCompl = [&fd](napi_env env, NError err) -> NVal {
+    auto cbCompl = [fd](napi_env env, NError err) -> NVal {
         NVal obj = NVal::CreateObject(env);
-        obj.AddProp({NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd.Release()).val_)});
+        obj.AddProp({NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
         return err ? NVal {env, err.GetNapiErr(env)} : obj;
     };
     NVal thisVar(env, funcArg.GetThisVar());

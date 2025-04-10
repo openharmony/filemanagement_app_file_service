@@ -296,8 +296,8 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
         HILOGW("GetBigFiles, path = %{public}s", item.c_str());
         auto [errCode, files, smallFiles] = GetDirFilesDetail(item, true, BConstants::BIG_FILE_BOUNDARY);
         if (errCode == 0) {
-            incFiles.merge(move(files));
             HILOGW("big files: %{public}zu; small files: %{public}zu", files.size(), smallFiles.size());
+            incFiles.merge(move(files));
             incSmallFiles.merge(move(smallFiles));
         }
     }
