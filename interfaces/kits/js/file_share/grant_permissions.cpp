@@ -152,7 +152,8 @@ static napi_status CheckPathArray(napi_env env, napi_value agrv, uint32_t &count
     return napi_ok;
 }
 
-static napi_status GetPathPolicy(napi_env env, napi_value agrv, std::vector<PathPolicyInfo> &pathPolicies, uint32_t index)
+static napi_status GetPathPolicy(napi_env env, napi_value agrv, std::vector<PathPolicyInfo> &pathPolicies,
+    uint32_t index)
 {
     napi_value object;
     napi_status status = napi_get_element(env, agrv, index, &object);
