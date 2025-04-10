@@ -424,13 +424,12 @@ napi_value SessionBackupNExporter::GetLocalCapabilities(napi_env env, napi_callb
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "backup session is nullptr").GetCode());
         }
         *fd = session->GetLocalCapabilities();
-        return fd < 0 ? NError(BError(BError::Codes::SA_INVAL_ARG, "Failed to get local capabilities.").GetCode()) :
-            NError(BError(BError::Codes::OK, "Success to get local capabilities.").GetCode());
+        return NError(ERRNO_NOERR);
     };
     auto cbCompl = [fd](napi_env env, NError err) -> NVal {
         NVal obj = NVal::CreateObject(env);
         obj.AddProp({NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
-        return err ? NVal {env, err.GetNapiErr(env)} : obj;
+        return {obj};
     };
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
