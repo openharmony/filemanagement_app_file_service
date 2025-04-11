@@ -39,8 +39,6 @@ ohos_unittest("ext_extension_test") {
   deps = [
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -53,13 +51,57 @@ ohos_unittest("ext_extension_test") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "ipc:ipc_napi",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+  ]
+
+  cflags = [ "--coverage" ]
+  ldflags = [ "--coverage" ]
+  cflags_cc = [ "--coverage" ]
+
+  defines = [
+    "LOG_TAG=\"app_file_service\"",
+    "LOG_DOMAIN=0xD004303",
+    "private=public",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("ext_extension_stub_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup_mock}/module_ipc/message_parcel_mock.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_extension_stub.cpp",
+    "ext_extension_stub_test.cpp",
+  ]
+
+  include_dirs = [
+    "${path_backup_mock}/module_ipc",
+    "${path_backup}/frameworks/native/backup_ext/include",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/interfaces/common/include",
+    "${path_backup}/utils/include",
+  ]
+
+  deps = [ "${path_backup}/utils:backup_utils" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
   ]
 
   cflags = [ "--coverage" ]
@@ -101,15 +143,11 @@ ohos_unittest("tar_file_test") {
   sources += backup_mock_proxy_src
 
   include_dirs = [
-    "${path_ability_runtime}/services/common/include",
-    "${path_ability_runtime}/interfaces/kits/napi/aafwk/inner/napi_common",
-    "${path_ability_runtime}/interfaces/kits/native/appkit/ability_runtime",
     "${path_backup}/frameworks/native/backup_ext/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/utils/include",
-    "${path_napi}/native_engine",
   ]
   include_dirs += backup_mock_utils_include
 
@@ -119,8 +157,6 @@ ohos_unittest("tar_file_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags = [ "--coverage" ]
@@ -137,9 +173,12 @@ ohos_unittest("tar_file_test") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "ipc:ipc_napi",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
@@ -178,9 +217,6 @@ ohos_unittest("untar_file_sup_test") {
   public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
 
   include_dirs = [
-    "${path_ability_runtime}/services/common/include",
-    "${path_ability_runtime}/interfaces/kits/napi/aafwk/inner/napi_common",
-    "${path_ability_runtime}/interfaces/kits/native/appkit/ability_runtime",
     "${path_backup}/frameworks/native/backup_ext/include",
     "${path_backup}/frameworks/native/backup_ext/src",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
@@ -189,7 +225,6 @@ ohos_unittest("untar_file_sup_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/tests/mock/library_func_mock",
     "${path_backup}/utils/include",
-    "${path_napi}/native_engine",
   ]
   include_dirs += backup_mock_utils_include
 
@@ -199,8 +234,6 @@ ohos_unittest("untar_file_sup_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags = [ "--coverage" ]
@@ -217,9 +250,12 @@ ohos_unittest("untar_file_sup_test") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "ipc:ipc_napi",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
@@ -255,15 +291,11 @@ ohos_unittest("untar_file_test") {
   sources += backup_mock_proxy_src
 
   include_dirs = [
-    "${path_ability_runtime}/services/common/include",
-    "${path_ability_runtime}/interfaces/kits/napi/aafwk/inner/napi_common",
-    "${path_ability_runtime}/interfaces/kits/native/appkit/ability_runtime",
     "${path_backup}/frameworks/native/backup_ext/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/utils/include",
-    "${path_napi}/native_engine",
   ]
   include_dirs += backup_mock_utils_include
 
@@ -273,8 +305,6 @@ ohos_unittest("untar_file_test") {
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags = [ "--coverage" ]
@@ -291,9 +321,12 @@ ohos_unittest("untar_file_test") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "ipc:ipc_napi",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
@@ -337,9 +370,6 @@ ohos_unittest("ext_backup_js_test") {
   deps = [
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_googletest}:gtest_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
@@ -353,10 +383,13 @@ ohos_unittest("ext_backup_js_test") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "ipc:ipc_napi",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

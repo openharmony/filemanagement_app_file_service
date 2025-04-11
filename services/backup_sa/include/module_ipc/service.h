@@ -56,7 +56,7 @@ public:
     ErrCode InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg) override;
     ErrCode Start() override;
     ErrCode GetLocalCapabilities(int& fd) override;
-    
+
     ErrCode GetLocalCapabilitiesForBundleInfos(int& fd) override;
     ErrCode PublishFile(const BFileInfo &fileInfo) override;
     ErrCode AppFileReady(const std::string &fileName, int fd, int32_t errCode) override;
@@ -64,7 +64,7 @@ public:
     ErrCode ServiceResultReport(const std::string& restoreRetInfo,
         BackupRestoreScenario sennario, ErrCode errCode) override;
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override;
-  
+
     ErrCode AppendBundlesRestoreSessionDataByDetail(
             int fd,
             const std::vector<std::string>& bundleNames,
@@ -73,7 +73,7 @@ public:
             int32_t userId) override;
     ErrCode AppendBundlesRestoreSessionData(int fd, const std::vector<std::string>& bundleNames,
                                             int32_t restoreType, int32_t userId) override;
-    
+
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
     ErrCode AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
                                               const std::vector<std::string> &bundleInfos) override;
@@ -320,6 +320,8 @@ public:
     void ReportOnBundleStarted(IServiceReverseType::Scenario scenario, const std::string &bundleName);
     ErrCode AppIncrementalFileReady(const std::string &bundleName, const std::string &fileName, UniqueFd fd,
         UniqueFd manifestFd, int32_t errCode);
+    ErrCode SendFileHandle(const std::string &bundleName, const std::string &fileName);
+    ErrCode SendIncrementalFileHandle(const std::string &bundleName, const std::string &fileName);
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {
@@ -678,8 +680,6 @@ private:
                                                   const std::vector<std::string> &infos);
 
     ErrCode HelpToAppIncrementalFileReady(const string &bundleName, const string &fileName, sptr<IExtension> proxy);
-
-    void HelptoGetFileHandle(const string &bundleName, const string &fileName, sptr<IExtension> proxy);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

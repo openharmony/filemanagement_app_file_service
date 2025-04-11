@@ -15,7 +15,7 @@
     "abilities": [
       {
         "name": "EntryAbility",
-        "srcEntrance": "./ets/entryability/EntryAbility.ts",
+        "srcEntrance": "ets/entryability/EntryAbility.ts",
         "description": "$string:EntryAbility_desc",
         "icon": "$media:icon",
         "label": "$string:EntryAbility_label",

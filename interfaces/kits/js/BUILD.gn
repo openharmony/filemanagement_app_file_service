@@ -25,15 +25,15 @@ ohos_shared_library("fileshare") {
   }
 
   include_dirs = [
-    ".",
-    "../../common/include",
+    "${app_file_service_path}/interfaces",
+    "${app_file_service_path}/interfaces/common/include",
     "${app_file_service_path}/interfaces/innerkits/native/file_share/include",
   ]
 
   sources = [
-    "../../common/src/json_utils.cpp",
-    "../../common/src/sandbox_helper.cpp",
-    "../../innerkits/native/file_share/src/file_permission.cpp",
+    "${app_file_service_path}/interfaces/common/src/json_utils.cpp",
+    "${app_file_service_path}/interfaces/common/src/sandbox_helper.cpp",
+    "${app_file_service_path}/interfaces/innerkits/native/file_share/src/file_permission.cpp",
     "file_share/fileshare_n_exporter.cpp",
     "file_share/grant_permissions.cpp",
     "file_share/grant_uri_permission.cpp",
@@ -88,13 +88,13 @@ ohos_shared_library("fileuri") {
 
   include_dirs = [
     ".",
-    "../../common/include",
+    "${app_file_service_path}/interfaces/common/include",
     "${app_file_service_path}/interfaces/innerkits/native/file_uri/include",
   ]
 
   sources = [
-    "../../common/src/common_func.cpp",
-    "../../common/src/sandbox_helper.cpp",
+    "${app_file_service_path}/interfaces/common/src/common_func.cpp",
+    "${app_file_service_path}/interfaces/common/src/sandbox_helper.cpp",
     "file_uri/file_uri_n_exporter.cpp",
     "file_uri/get_uri_from_path.cpp",
     "file_uri/module.cpp",
@@ -139,29 +139,26 @@ ohos_shared_library("backup") {
   subsystem_name = "filemanagement"
   part_name = "app_file_service"
 
-  include_dirs = [ "${path_napi}/interfaces/kits" ]
-
   defines = [
     "LOG_DOMAIN=0xD004306",
     "LOG_TAG=\"BackupNAPI\"",
   ]
 
   sources = [
-    "${path_backup_js}/backup/general_callbacks.cpp",
-    "${path_backup_js}/backup/module.cpp",
-    "${path_backup_js}/backup/parse_inc_info_from_js.cpp",
-    "${path_backup_js}/backup/prop_n_exporter.cpp",
-    "${path_backup_js}/backup/prop_n_operation.cpp",
-    "${path_backup_js}/backup/session_backup_n_exporter.cpp",
-    "${path_backup_js}/backup/session_incremental_backup_n_exporter.cpp",
-    "${path_backup_js}/backup/session_restore_n_exporter.cpp",
+    "backup/general_callbacks.cpp",
+    "backup/module.cpp",
+    "backup/parse_inc_info_from_js.cpp",
+    "backup/prop_n_exporter.cpp",
+    "backup/prop_n_operation.cpp",
+    "backup/session_backup_n_exporter.cpp",
+    "backup/session_incremental_backup_n_exporter.cpp",
+    "backup/session_restore_n_exporter.cpp",
   ]
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/utils:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   cflags_cc = [
@@ -180,6 +177,7 @@ ohos_shared_library("backup") {
     "file_api:filemgmt_libn",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]

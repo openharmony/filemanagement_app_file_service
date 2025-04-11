@@ -86,12 +86,12 @@ ohos_unittest("b_file_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "jsoncpp:jsoncpp",
   ]
 
   use_exceptions = true
@@ -113,13 +113,13 @@ ohos_unittest("b_jsonutil_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
     "cJSON:cjson",
     "c_utils:utils",
     "hilog:libhilog",
+    "jsoncpp:jsoncpp",
   ]
 
   use_exceptions = true
@@ -141,24 +141,22 @@ ohos_unittest("b_json_test") {
   ]
   sources += backup_mock_parameter_src
 
-  include_dirs = [
-    "${path_backup}/utils",
-    "${path_base}/include",
-  ]
+  include_dirs = [ "${path_backup}/utils" ]
   include_dirs += backup_mock_parameter_include_dirs
 
   deps = [
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
     "cJSON:cjson",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
+    "jsoncpp:jsoncpp",
   ]
 
   defines = [
@@ -194,19 +192,17 @@ ohos_unittest("b_tarball_cmdline_test") {
     "b_tarball/b_tarball_cmdline_test.cpp",
   ]
 
-  include_dirs = [
-    "${path_base}/include",
-    "${path_backup}/utils/include",
-  ]
+  include_dirs = [ "${path_backup}/utils/include" ]
 
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
-    "${path_googletest}:gmock_main",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
   ]
 
@@ -229,16 +225,14 @@ ohos_unittest("b_tarball_factory_test") {
     "b_tarball/b_tarball_factory_test.cpp",
   ]
 
-  include_dirs = [
-    "${path_base}/include",
-    "${path_backup}/utils/include",
-  ]
+  include_dirs = [ "${path_backup}/utils/include" ]
 
-  deps = [
-    "${path_backup}/tests/utils:backup_test_utils",
-    "${path_googletest}:gmock_main",
+  deps = [ "${path_backup}/tests/utils:backup_test_utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
   ]
-  external_deps = [ "c_utils:utils" ]
   use_exceptions = true
 }
 
@@ -255,19 +249,16 @@ ohos_unittest("b_process_test") {
 
   sources = [ "b_process/b_process_test.cpp" ]
 
-  include_dirs = [
-    "${path_base}/include",
-    "${path_backup}/utils/include",
-  ]
+  include_dirs = [ "${path_backup}/utils/include" ]
 
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
-    "${path_jsoncpp}:jsoncpp",
   ]
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "jsoncpp:jsoncpp",
   ]
 
   use_exceptions = true
@@ -285,7 +276,6 @@ ohos_unittest("b_json_other_test") {
 
   include_dirs = [
     "${path_backup}/utils",
-    "${path_base}/include",
     "${path_backup}/tests/mock/cJson/include",
   ]
   include_dirs += backup_mock_parameter_include_dirs
@@ -294,14 +284,15 @@ ohos_unittest("b_json_other_test") {
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
     "cJSON:cjson",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
+    "jsoncpp:jsoncpp",
   ]
 
   defines = [
@@ -326,7 +317,6 @@ ohos_unittest("b_jsonutil_other_test") {
 
   include_dirs = [
     "${path_backup}/utils",
-    "${path_base}/include",
     "${path_backup}/tests/mock/cJson/include",
   ]
   include_dirs += backup_mock_parameter_include_dirs
@@ -334,14 +324,15 @@ ohos_unittest("b_jsonutil_other_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
     "cJSON:cjson",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
+    "jsoncpp:jsoncpp",
   ]
 
   defines = [
@@ -366,7 +357,6 @@ ohos_unittest("b_json_clear_data_test") {
 
   include_dirs = [
     "${path_backup}/utils",
-    "${path_base}/include",
     "${path_backup}/tests/mock/cJson/include",
   ]
   include_dirs += backup_mock_parameter_include_dirs
@@ -375,14 +365,15 @@ ohos_unittest("b_json_clear_data_test") {
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
-    "${path_googletest}:gmock_main",
-    "${path_jsoncpp}:jsoncpp",
   ]
 
   external_deps = [
     "cJSON:cjson",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
+    "jsoncpp:jsoncpp",
   ]
 
   defines = [

@@ -31,12 +31,16 @@
                 "device_manager",
                 "faultloggerd",
                 "file_api",
+                "hicollie",
                 "hitrace",
                 "hilog",
                 "hisysevent",
                 "ipc",
                 "init",
+                "json",
+                "jsoncpp",
                 "napi",
+                "openssl",
                 "safwk",
                 "samgr",
                 "storage_service",
@@ -44,9 +48,7 @@
                 "zlib"
             ],
             "third_party": [
-                "bounds_checking_function",
-                "jsoncpp",
-                "openssl"
+                "bounds_checking_function"
             ]
         },
         "adapted_system_type": [

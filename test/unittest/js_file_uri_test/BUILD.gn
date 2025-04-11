@@ -15,7 +15,7 @@ import("//build/test.gni")
 ohos_js_unittest("FileUriTest") {
   module_out_path = "app_file_service/app_file_service/file_share"
 
-  hap_profile = "./config.json"
+  hap_profile = "config.json"
 
-  certificate_profile = "./signature/openharmony_sx.p7b"
+  certificate_profile = "signature/openharmony_sx.p7b"
 }

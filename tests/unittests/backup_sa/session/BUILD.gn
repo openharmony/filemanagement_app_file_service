@@ -59,8 +59,6 @@ ohos_unittest("b_incremental_session_test") {
   deps = [
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
 
   defines = [
@@ -72,6 +70,8 @@ ohos_unittest("b_incremental_session_test") {
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",

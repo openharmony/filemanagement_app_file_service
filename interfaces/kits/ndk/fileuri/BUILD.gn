@@ -13,16 +13,18 @@
 
 import("//build/ohos.gni")
 import("//build/ohos/ndk/ndk.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
+
 ohos_ndk_headers("oh_file_uri_header") {
   dest_dir = "$ndk_headers_out_dir/filemanagement/file_uri/"
-  sources = [ "./include/oh_file_uri.h" ]
+  sources = [ "${app_file_service_path}/interfaces/kits/ndk/fileuri/include/oh_file_uri.h" ]
 }
 
 ohos_ndk_library("libohfileuri") {
   output_name = "ohfileuri"
   output_extension = "so"
   system_capability = "SystemCapability.FileManagement.AppFileService"
-  ndk_description_file = "./liboh_file_uri.ndk.json"
+  ndk_description_file = "${app_file_service_path}/interfaces/kits/ndk/fileuri/liboh_file_uri.ndk.json"
   min_compact_version = "12"
   system_capability_headers = [ "filemanagement/file_uri/oh_file_uri.h" ]
 }

@@ -12,29 +12,42 @@
 # limitations under the License.
 
 import("//build/test.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
-ohos_unittest("bms_adapter_test") {
+ohos_unittest("service_client_test") {
   module_out_path = path_module_out_tests
 
   include_dirs = [
+    "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/services/backup_sa/include",
+    "${path_backup}/services/backup_sa/include/module_notify",
     "${path_backup}/utils/include",
-    "${path_backup}/utils/include/b_hilog",
-    "${path_backup_mock}/utils_mock/include",
+    "${path_backup}/utils/src",
+    "${path_backup}/tests/mock/utils_mock/include",
+    ".",
   ]
 
   sources = [
-    "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
-    "${path_backup_mock}/utils_mock/src/b_sa_utils_mock.cpp",
-    "bms_adapter_test.cpp",
+    "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
+    "service_client_test.cpp",
   ]
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
-    "${path_backup}/services/backup_sa:backup_sa",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
+    "${path_backup}/utils:backup_utils",
   ]
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
 
   defines = [
     "LOG_TAG=\"app_file_service\"",
@@ -44,9 +57,15 @@ ohos_unittest("bms_adapter_test") {
   ]
 
   external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
+    "ability_runtime:ability_manager",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -61,7 +80,7 @@ ohos_unittest("bms_adapter_test") {
   use_exceptions = true
 }
 
-group("adapter_test") {
+group("backup_sa_service_client_test") {
   testonly = true
-  deps = [ ":bms_adapter_test" ]
+  deps = [ ":service_client_test" ]
 }

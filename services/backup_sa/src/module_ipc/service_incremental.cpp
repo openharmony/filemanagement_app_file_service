@@ -35,6 +35,7 @@
 #include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
+#include "b_filesystem/b_dir.h"
 #include "b_hiaudit/hi_audit.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_caps.h"
@@ -704,30 +705,20 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
                    GetAnonyPath(fileName).c_str());
             return ret;
         }
+        if (!BDir::IsFilePathValid(fileName)) {
+            HILOGE("path is forbidden, path : %{public}s", GetAnonyPath(fileName).c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         auto action = session_->GetServiceSchedAction(bundleName);
         if (action == BConstants::ServiceSchedAction::UNKNOWN) {
             HILOGE("action is unknown, bundleName:%{public}s", bundleName.c_str());
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         if (action == BConstants::ServiceSchedAction::RUNNING) {
-            auto backUpConnection = session_->GetExtConnection(bundleName);
-            if (backUpConnection == nullptr) {
-                HILOGE("backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
-                return BError(BError::Codes::SA_INVAL_ARG);
-            }
-            auto proxy = backUpConnection->GetBackupExtProxy();
-            if (!proxy) {
-                HILOGE("GetIncrementalFileHandle failed, bundleName:%{public}s", bundleName.c_str());
-                return BError(BError::Codes::SA_INVAL_ARG);
-            }
-            auto err = HelpToAppIncrementalFileReady(bundleName, fileName, proxy);
+            auto err = SendIncrementalFileHandle(bundleName, fileName);
             if (err != ERR_OK) {
-                HILOGE("Failed to send file handle, bundleName:%{public}s, fileName:%{public}s", bundleName.c_str(),
-                       GetAnonyPath(fileName).c_str());
-                AppRadar::Info info(bundleName, "", "");
-                AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandle",
-                                                             GetUserIdDefault(),
-                                                             BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
+                HILOGE("SendIncrementalFileHandle failed, bundle:%{public}s", bundleName.c_str());
+                return err;
             }
         } else {
             SvcRestoreDepsManager::GetInstance().UpdateToRestoreBundleMap(bundleName, fileName);
@@ -738,6 +729,30 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
         HILOGE("GetIncrementalFileHandle exception, bundleName:%{public}s", bundleName.c_str());
         return e.GetCode();
     }
+}
+
+ErrCode Service::SendIncrementalFileHandle(const std::string &bundleName, const std::string &fileName)
+{
+    auto backUpConnection = session_->GetExtConnection(bundleName);
+    if (backUpConnection == nullptr) {
+        HILOGE("backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    auto proxy = backUpConnection->GetBackupExtProxy();
+    if (!proxy) {
+        HILOGE("GetIncrementalFileHandle failed, bundleName:%{public}s", bundleName.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    auto[errCode, fd, reportFd] = proxy->GetIncrementalFileHandle(fileName);
+    auto err = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
+    if (err != ERR_OK) {
+        HILOGE("Failed to send file handle, bundleName:%{public}s, fileName:%{public}s",
+            bundleName.c_str(), GetAnonyPath(fileName).c_str());
+        AppRadar::Info info (bundleName, "", "");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandle",
+            GetUserIdDefault(), BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, err);
+    }
+    return BError(BError::Codes::OK);
 }
 
 bool Service::IncrementalBackup(const string &bundleName)
@@ -803,14 +818,14 @@ ErrCode Service::HelpToAppIncrementalFileReady(const string &bundleName, const s
 ErrCode Service::IncrementalBackupSA(std::string bundleName)
 {
     HILOGI("IncrementalBackupSA begin %{public}s", bundleName.c_str());
-    IServiceReverse::Scenario scenario = session_->GetScenario();
+    IServiceReverseType::Scenario scenario = session_->GetScenario();
     auto backUpConnection = session_->GetSAExtConnection(bundleName);
     std::shared_ptr<SABackupConnection> saConnection = backUpConnection.lock();
     if (saConnection == nullptr) {
         HILOGE("lock sa connection ptr is nullptr");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    if (scenario == IServiceReverse::Scenario::BACKUP) {
+    if (scenario == IServiceReverseType::Scenario::BACKUP) {
         auto ret = saConnection->CallBackupSA();
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(ret, bundleName);
         BundleBeginRadarReport(bundleName, ret, scenario);
@@ -820,7 +835,7 @@ ErrCode Service::IncrementalBackupSA(std::string bundleName)
             NoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
             return BError(ret);
         }
-    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+    } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleStarted(BError(BError::Codes::OK), bundleName);
     }
     return BError(BError::Codes::OK);
