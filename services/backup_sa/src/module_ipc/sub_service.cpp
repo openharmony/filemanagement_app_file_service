@@ -265,7 +265,9 @@ ErrCode Service::SendFileHandle(const std::string &bundleName, const std::string
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     int32_t errCode = 0;
-    UniqueFd fd = proxy->GetFileHandle(fileName, errCode);
+    int32_t fdCode = 0;
+    proxy->GetFileHandleWithUniqueFd(fileName, errCode, fdCode);
+    UniqueFd fd(fdCode);
     if (errCode != ERR_OK) {
         AppRadar::Info info(bundleName, "", "");
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),

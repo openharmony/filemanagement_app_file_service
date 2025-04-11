@@ -743,8 +743,11 @@ ErrCode Service::SendIncrementalFileHandle(const std::string &bundleName, const 
         HILOGE("GetIncrementalFileHandle failed, bundleName:%{public}s", bundleName.c_str());
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    auto[errCode, fd, reportFd] = proxy->GetIncrementalFileHandle(fileName);
-    auto err = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
+    UniqueFdGroup fdGroup;
+    proxy->GetIncrementalFileHandle(fileName, fdGroup);
+    UniqueFd fd(fdGroup.fd);
+    UniqueFd reportFd(fdGroup.reportFd);
+    auto err = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), fdGroup.errCode);
     if (err != ERR_OK) {
         HILOGE("Failed to send file handle, bundleName:%{public}s, fileName:%{public}s",
             bundleName.c_str(), GetAnonyPath(fileName).c_str());
