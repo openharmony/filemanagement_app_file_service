@@ -19,7 +19,6 @@
 #include <sstream>
 #include <unordered_set>
 #include <vector>
-
 #include "log.h"
 #include "json_utils.h"
 #include "uri.h"
@@ -42,13 +41,16 @@ namespace {
     const string FILE_MANAGER_AUTHORITY = "docs";
     const string DLP_MANAGER_BUNDLE_NAME = "com.ohos.dlpmanager";
     const string FUSE_URI_HEAD = "/mnt/data/fuse";
-    const string BACKFLASH = "/";
+    const char BACKSLASH = '/';
     const string MEDIA = "media";
     const string NETWORK_ID_FLAG = "<networkId>";
     const string LOCAL = "local";
     const int ASSET_IN_BUCKET_NUM_MAX = 1000;
     const int ASSET_DIR_START_NUM = 16;
     const int DECODE_FORMAT_NUM = 16;
+    const std::string PATH_INVALID_FLAG1 = "../";
+    const std::string PATH_INVALID_FLAG2 = "/..";
+    const uint32_t PATH_INVALID_FLAG_LEN = 3;
 }
 
 struct MediaUriInfo {
@@ -302,7 +304,7 @@ static int32_t GetMediaPhysicalPath(const std::string &sandboxPath, const std::s
     }
 
     physicalPath = SHAER_PATH_HEAD + userId + SHAER_PATH_MID + mediaUriInfo.mediaType +
-                   BACKFLASH + to_string(bucketNum) + BACKFLASH + mediaUriInfo.realName + mediaSuffix;
+                   BACKSLASH + to_string(bucketNum) + BACKSLASH + mediaUriInfo.realName + mediaSuffix;
     return 0;
 }
 
@@ -342,6 +344,10 @@ static void DoGetPhysicalPath(string &lowerPathTail, string &lowerPathHead, cons
 int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::string &userId,
                                        std::string &physicalPath)
 {
+    if (!IsValidPath(fileUri)) {
+        LOGE("fileUri is ValidUri, The fileUri contains '/./' or '../'characters");
+        return -EINVAL;
+    }
     Uri uri(fileUri);
     string bundleName = uri.GetAuthority();
     if (bundleName == MEDIA) {
@@ -378,6 +384,10 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
 int32_t SandboxHelper::GetBackupPhysicalPath(const std::string &fileUri, const std::string &userId,
                                              std::string &physicalPath)
 {
+    if (!IsValidPath(fileUri)) {
+        LOGE("fileUri is ValidUri, The fileUri contains '/./' or '../'characters");
+        return -EINVAL;
+    }
     Uri uri(fileUri);
     string bundleName = uri.GetAuthority();
     if (bundleName == MEDIA) {
@@ -411,10 +421,22 @@ int32_t SandboxHelper::GetBackupPhysicalPath(const std::string &fileUri, const s
     return 0;
 }
 
-bool SandboxHelper::IsValidPath(const std::string &path)
+bool SandboxHelper::IsValidPath(const std::string &filePath)
 {
-    if (path.find("/./") != std::string::npos ||
-        path.find("/../") != std::string::npos) {
+    if (filePath.find("/./") != std::string::npos) {
+        return false;
+    }
+    size_t pos = filePath.find(PATH_INVALID_FLAG1);
+    while (pos != string::npos) {
+        if (pos == 0 || filePath[pos - 1] == BACKSLASH) {
+            LOGE("Relative path is not allowed, path contain ../");
+            return false;
+        }
+        pos = filePath.find(PATH_INVALID_FLAG1, pos + PATH_INVALID_FLAG_LEN);
+    }
+    pos = filePath.rfind(PATH_INVALID_FLAG2);
+    if ((pos != string::npos) && (filePath.size() - pos == PATH_INVALID_FLAG_LEN)) {
+        LOGE("Relative path is not allowed, path tail is /..");
         return false;
     }
     return true;

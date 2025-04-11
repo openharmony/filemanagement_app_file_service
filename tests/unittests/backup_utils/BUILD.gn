@@ -84,6 +84,7 @@ ohos_unittest("b_file_test") {
   include_dirs = [ "${path_backup}/utils/src/b_filesystem" ]
 
   deps = [
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
   ]
