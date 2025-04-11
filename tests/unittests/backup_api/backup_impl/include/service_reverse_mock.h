@@ -116,6 +116,14 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode IncrementalSaBackupOnFileReady(const std::string &bundleName,
+                                           const std::string &fileName,
+                                           int fd,
+                                           int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+    
     ErrCode IncrementalBackupOnBundleStarted(int32_t errCode, const std::string &bundleName) override
     {
         return BError(BError::Codes::OK);

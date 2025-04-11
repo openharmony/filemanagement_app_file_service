@@ -56,6 +56,8 @@ public:
                                          int fd,
                                          int manifestFd,
                                          int32_t errCode) override;
+    ErrCode IncrementalSaBackupOnFileReady(const std::string &bundleName, const std::string &fileName,
+                                           int fd, int32_t errCode) override;
     ErrCode IncrementalBackupOnBundleStarted(int32_t errCode, const std::string &bundleName) override;
     ErrCode IncrementalBackupOnResultReport(const std::string &result, const std::string &bundleName) override;
     ErrCode IncrementalBackupOnBundleFinished(int32_t errCode, const std::string &bundleName) override;

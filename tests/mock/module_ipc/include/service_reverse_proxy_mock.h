@@ -42,6 +42,7 @@ public:
     MOCK_METHOD(ErrCode, RestoreOnProcessInfo, (const std::string &, const std::string &));
 
     MOCK_METHOD(ErrCode, IncrementalBackupOnFileReady, (const std::string &, const std::string &, int, int, int32_t));
+    MOCK_METHOD(ErrCode, IncrementalSaBackupOnFileReady, (const std::string &, const std::string &, int, int32_t));
     MOCK_METHOD(ErrCode, IncrementalBackupOnBundleStarted, (int32_t, const std::string &));
     MOCK_METHOD(ErrCode, IncrementalBackupOnResultReport, (const std::string &, const std::string &));
     MOCK_METHOD(ErrCode, IncrementalBackupOnBundleFinished, (int32_t, const std::string &));
