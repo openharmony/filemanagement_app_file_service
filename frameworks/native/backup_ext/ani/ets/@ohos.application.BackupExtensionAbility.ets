@@ -15,16 +15,16 @@
 
 
 export interface BundleVersion {
+    code: number;
+    name: string;
+}
+
+export class BundleVersionInner implements BundleVersion {
     public code: number;
     public name: string;
 }
 
-class BundleVersionInner extends BundleVersion {
-    public code: number;
-    public name: string;
-}
-
-export default class BackupExtensionAbility {
-    onBackup(): void;
-    onRestore(bundleVersion: BundleVersion): void;
+export default abstract class BackupExtensionAbility {
+    abstract onBackup(): void;
+    abstract onRestore(bundleVersion: BundleVersion): void;
 }
