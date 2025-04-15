@@ -16,15 +16,14 @@
 #ifndef EXT_BACKUP_ANI_H
 #define EXT_BACKUP_ANI_H
 
-#include "ani_utils.h"
 #include "ext_backup_context.h"
-#include "extension_base.h"
+#include "ext_backup.h"
 #include "runtime.h"
 #include "sts_runtime.h"
 
 namespace OHOS::FileManagement::Backup {
 
-class ExtBackupAni : public AbilityRuntime::ExtensionBase<ExtBackupContext> {
+class ExtBackupAni : public ExtBackup {
 public:
     void Init(const std::shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
               const std::shared_ptr<AppExecFwk::OHOSApplication> &application,
@@ -35,10 +34,10 @@ public:
     static ExtBackupAni *Create(const std::unique_ptr<AbilityRuntime::Runtime> &runtime);
 
     ErrCode OnBackup(std::function<void(ErrCode, std::string)> callback,
-                     std::function<void(ErrCode, const std::string)> callbackEx);
+                     std::function<void(ErrCode, const std::string)> callbackEx) override;
 
     ErrCode OnRestore(std::function<void(ErrCode, std::string)> callback,
-                      std::function<void(ErrCode, const std::string)> callbackEx);
+                      std::function<void(ErrCode, const std::string)> callbackEx) override;
 
 public:
     explicit ExtBackupAni(AbilityRuntime::Runtime &runtime);
@@ -50,7 +49,6 @@ private:
 
 private:
     AbilityRuntime::STSRuntime &stsRuntime_;
-    ani_env *env_;
     std::unique_ptr<AbilityRuntime::STSNativeReference> etsObj_;
 };
 
