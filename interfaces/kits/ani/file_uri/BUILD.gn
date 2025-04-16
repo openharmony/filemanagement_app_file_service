@@ -49,6 +49,7 @@ ohos_shared_library("fileuri_ani") {
     "file_api:filemgmt_libn",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "napi:ace_napi",
     "runtime_core:ani",
     "samgr:samgr_proxy",
   ]
