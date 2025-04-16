@@ -74,7 +74,7 @@ bool CmdPublishFileFuzzTest(const uint8_t *data, size_t size)
     if (size > 0) {
         int pos = (size + 1) >> 1;
         std::string fileName(reinterpret_cast<const char *>(data), pos);
-        std::string bundleName(reinterpret_cast<const char *>(data) + pos, size - pos);
+        std::string bundleName(reinterpret_cast<const char *>(data + pos), size - pos);
         uint32_t sn = 0;
         if (size > sizeof(uint32_t)) {
             sn = *(reinterpret_cast<const uint32_t *>(data));

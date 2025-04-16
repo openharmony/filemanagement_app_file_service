@@ -51,7 +51,7 @@ bool BackupOnFileReadyFuzzTest(sptr<ServiceReverse> service, const uint8_t *data
     try {
         int pos = 0;
         int fd = TypeCast<int>(data, &pos);
-        bool fdFlag = TypeCast<bool>(data, &pos);
+        bool fdFlag = TypeCast<bool>(data + pos, &pos);
         int len = ((size - pos) >> 1);
         msg.WriteString(string(reinterpret_cast<const char*>(data + pos), len));
         msg.WriteString(string(reinterpret_cast<const char*>(data + pos + len), size - pos - len));
@@ -258,8 +258,8 @@ bool RestoreOnFileReadyFuzzTest(sptr<ServiceReverse> service, const uint8_t *dat
     try {
         int pos = 0;
         int fd = TypeCast<int>(data, &pos);
-        bool fdFlag = TypeCast<bool>(data, &pos);
-        int32_t errCode = TypeCast<int32_t>(data, &pos);
+        bool fdFlag = TypeCast<bool>(data + pos, &pos);
+        int32_t errCode = TypeCast<int32_t>(data + pos, &pos);
         int len = ((size - pos) >> 1);
         msg.WriteString(string(reinterpret_cast<const char*>(data + pos), len));
         msg.WriteString(string(reinterpret_cast<const char*>(data + pos + len), size - pos - len));
@@ -330,9 +330,9 @@ bool IncrementalBackupOnFileReadyFuzzTest(sptr<ServiceReverse> service, const ui
     try {
         int pos = 0;
         int fd = TypeCast<int>(data, &pos);
-        int manifestFd = TypeCast<int>(data, &pos);
-        bool fdFlag = TypeCast<bool>(data, &pos);
-        int32_t errCode = TypeCast<int32_t>(data, &pos);
+        int manifestFd = TypeCast<int>(data + pos, &pos);
+        bool fdFlag = TypeCast<bool>(data + pos, &pos);
+        int32_t errCode = TypeCast<int32_t>(data + pos, &pos);
         int len = ((size - pos) >> 1);
         msg.WriteString(string(reinterpret_cast<const char*>(data + pos), len));
         msg.WriteString(string(reinterpret_cast<const char*>(data + pos + len), size - pos - len));
@@ -541,9 +541,9 @@ bool IncrementalRestoreOnFileReadyFuzzTest(sptr<ServiceReverse> service, const u
     try {
         int pos = 0;
         int fd = TypeCast<int>(data, &pos);
-        int manifestFd = TypeCast<int>(data, &pos);
-        bool fdFlag = TypeCast<bool>(data, &pos);
-        int32_t errCode = TypeCast<int32_t>(data, &pos);
+        int manifestFd = TypeCast<int>(data + pos, &pos);
+        bool fdFlag = TypeCast<bool>(data + pos, &pos);
+        int32_t errCode = TypeCast<int32_t>(data + pos, &pos);
         int len = ((size - pos) >> 1);
         msg.WriteString(string(reinterpret_cast<const char*>(data + pos), len));
         msg.WriteString(string(reinterpret_cast<const char*>(data + pos + len), size - pos - len));

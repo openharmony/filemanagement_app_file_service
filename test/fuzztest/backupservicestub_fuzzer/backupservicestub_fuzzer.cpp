@@ -526,7 +526,7 @@ bool CmdPublishIncrementalFileFuzzTest(sptr<Service> service, const uint8_t *dat
         int pos = 0;
         BFileInfo info;
         int fd = TypeCast<int>(data, &pos);
-        info.sn = TypeCast<TmpFileSN>(data, &pos);
+        info.sn = TypeCast<TmpFileSN>(data + pos, &pos);
         int len = (size - pos) >> 1;
         info.owner = string(reinterpret_cast<const char*>(data + pos), len);
         info.fileName = string(reinterpret_cast<const char*>(data + pos + len), len);

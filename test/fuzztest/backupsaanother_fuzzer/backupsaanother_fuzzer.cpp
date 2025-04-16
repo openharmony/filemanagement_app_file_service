@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstring>
 #include <climits>
+#include <fuzzer/FuzzedDataProvider.h>
 #include <vector>
 
 #include "message_parcel.h"
@@ -103,19 +104,24 @@ bool CmdReleaseFuzzTest(const uint8_t *data, size_t size)
 
 void GetBundleNamesData(const uint8_t *data, size_t size, vector<BIncrementalData> &bundleNames)
 {
-    for (size_t i = 0; i < size; i++) {
-        string param(reinterpret_cast<const char*>(data), size);
-        string name = param + to_string(i);
-        if (size < sizeof(int64_t)) {
-            BIncrementalData data(name, 0);
-            bundleNames.push_back(data);
-            continue;
-        }
-
-        int64_t nTime = *(reinterpret_cast<const int64_t*>(data));
-        int fd = *(reinterpret_cast<const int32_t*>(data));
-        int32_t priority = *(reinterpret_cast<const int32_t*>(data + sizeof(int32_t)));
-        string parameters = string(reinterpret_cast<const char*>(data), size) + to_string(size - i);
+    int minLen = sizeof(int64_t) + sizeof(int) + sizeof(int32_t);
+    if (size < minLen + 1) {
+        return;
+    }
+    FuzzedDataProvider fdp(data, size);
+    uint8_t loop = fdp.ConsumeIntegral<uint8_t>();
+    size--;
+    if (loop == 0 || (minLen * loop) > size) {
+        return;
+    }
+    int blob = (size / loop);
+    int len = (blob - minLen) >> 1;
+    for (size_t i = 0, pos = 1; i < loop; i++, pos += blob) {
+        int64_t nTime = fdp.ConsumeIntegral<int64_t>();
+        int fd = fdp.ConsumeIntegral<int>();
+        int32_t priority = fdp.ConsumeIntegral<int32_t>();
+        string name(reinterpret_cast<const char*>(data + pos + minLen), len);
+        string parameters(reinterpret_cast<const char*>(data + pos + len + minLen), len);
         BIncrementalData incrementaData(name, nTime, fd, parameters, priority);
         bundleNames.push_back(incrementaData);
     }
@@ -202,7 +208,7 @@ bool CmdPublishIncrementalFileFuzzTest(const uint8_t *data, size_t size)
     if (size > 0) {
         int pos = (size + 1) >> 1;
         std::string fileName(reinterpret_cast<const char *>(data), pos);
-        std::string bundleName(reinterpret_cast<const char *>(data) + pos, size - pos);
+        std::string bundleName(reinterpret_cast<const char *>(data + pos), size - pos);
         uint32_t sn = 0;
         if (size > sizeof(uint32_t)) {
             sn = *(reinterpret_cast<const uint32_t *>(data));
