@@ -21,7 +21,7 @@ export interface BundleVersion {
 
 export class BundleVersionInner implements BundleVersion {
     public code: number;
-    public name: string;
+    public name: string = '';
 }
 
 export default abstract class BackupExtensionAbility {
