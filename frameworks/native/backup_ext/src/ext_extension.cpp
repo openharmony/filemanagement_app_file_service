@@ -58,6 +58,7 @@
 #include "sandbox_helper.h"
 #include "service_client.h"
 #include "tar_file.h"
+#include "InstalldUnTarFile.h"
 
 namespace OHOS::FileManagement::Backup {
 const string INDEX_FILE_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
@@ -1144,6 +1145,96 @@ ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &
     return ERR_OK;
 }
 
+ErrCode BackupExtExtension::RestoreTarListForSpecialCloneCloud(const std::vector<const ExtManageInfo> &tarList)
+{
+    if (tarList.empty()) {
+        HILOGI("no tar files, bundle: %{public}s", bundleName_.c_str());
+        return ERR_OK;
+    }
+    bool isSplit = CheckIsSplitTarList(tarList);
+    if (!isSplit) {
+        HILOGI("tar list unsplit, bundle: %{public}s", bundleName_.c_str());
+        return RestoreUnSplitTarListForSpecialCloneCloud(tarList);
+    }
+
+    HILOGI("tar list split, bundle: %{public}s", bundleName_.c_str());
+    return RestoreSplitTarListForSpecialCloneCloud(tarList);
+}
+
+bool BackupExtExtension::CheckIsSplitTarList(const std::vector<const ExtManageInfo> &tarList)
+{
+    auto *unSplitTar = new installd::UnTarFile(nullptr);
+    bool isSplit = false;
+    for (const auto &item : tarList) {
+        // reset untar object
+        unSplitTar->Reset();
+
+        HILOGI("check if split tar, filename: %{public}s, path: %{public}s", GetAnonyPath(item.hashName).c_str(),
+            GetAnonyPath(item.fileName).c_str());
+        // check if tar is split
+        isSplit = unSplitTar->CheckIsSplitTar(item.hashName, item.fileName);
+        if (isSplit) {
+            HILOGI("check is split tar, filename: %{public}s, path: %{public}s", GetAnonyPath(item.hashName).c_str(),
+                GetAnonyPath(item.fileName).c_str());
+            break;
+        }
+    }
+    // destory untar object
+    delete unSplitTar;
+    return isSplit;
+}
+
+ErrCode BackupExtExtension::RestoreUnSplitTarListForSpecialCloneCloud(const std::vector<const ExtManageInfo> &tarList)
+{
+    for (const auto &item : tarList) {
+        // 待解压tar文件处理
+        HILOGI("untar unsplit, filename: %{public}s, path: %{public}s", GetAnonyPath(item.hashName).c_str(),
+            GetAnonyPath(item.fileName).c_str());
+        radarRestoreInfo_.tarFileNum++;
+        radarRestoreInfo_.tarFileSize += static_cast<uint64_t>(item.sta.st_size);
+        int ret = RestoreTarForSpecialCloneCloud(item);
+        if (isDebug_ && ret != ERR_OK) {
+            errFileInfos_[item.hashName].emplace_back(ret);
+            endFileInfos_[item.hashName] = item.sta.st_size;
+        }
+        if (ret != ERR_OK) {
+            HILOGE("Failed to restore tar file %{public}s", item.hashName.c_str());
+            return ERR_INVALID_VALUE;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BackupExtExtension::RestoreSplitTarListForSpecialCloneCloud(const std::vector<const ExtManageInfo> &tarList)
+{
+    auto *unSplitTar = new installd::UnTarFile(nullptr);
+    ErrCode errCode = ERR_OK;
+    for (const auto &item : tarList) {
+        radarRestoreInfo_.tarFileNum++;
+        radarRestoreInfo_.tarFileSize += static_cast<uint64_t>(item.sta.st_size);
+        // reset untar object
+        unSplitTar->Reset();
+
+        // do untar with root path
+        int ret = unSplitTar->UnSplitTar(item.hashName, item.fileName);
+        if (isDebug_ && ret != ERR_OK) {
+            errFileInfos_[item.hashName].emplace_back(ret);
+            endFileInfos_[item.hashName] = item.sta.st_size;
+        }
+        if (ret != ERR_OK) {
+            HILOGE("Failed to restore tar file %{public}s", item.hashName.c_str());
+            errCode = ERR_INVALID_VALUE;
+            break;
+        }
+        if (!RemoveFile(item.hashName)) {
+            HILOGE("Failed to delete the backup split tar %{public}s", item.hashName.c_str());
+        }
+    }
+    // destory untar object
+    delete unSplitTar;
+    return errCode;
+}
+
 ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -1158,6 +1249,7 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
     auto info = cache.GetExtManageInfo();
     HILOGI("Start do restore for SpecialCloneCloud.");
     auto startTime = std::chrono::system_clock::now();
+    auto tarList = std::vector<const ExtManageInfo>();
     for (const auto &item : info) {
         if (item.hashName.empty()) {
             HILOGE("Hash name empty");
@@ -1169,20 +1261,16 @@ ErrCode BackupExtExtension::RestoreFilesForSpecialCloneCloud()
             radarRestoreInfo_.bigFileSize += static_cast<uint64_t>(item.sta.st_size);
             RestoreBigFilesForSpecialCloneCloud(item);
         } else {
-            // 待解压tar文件处理
-            radarRestoreInfo_.tarFileNum++;
-            radarRestoreInfo_.tarFileSize += static_cast<uint64_t>(item.sta.st_size);
-            int ret = RestoreTarForSpecialCloneCloud(item);
-            if (isDebug_ && ret != ERR_OK) {
-                errFileInfos_[item.hashName].emplace_back(ret);
-                endFileInfos_[item.hashName] = item.sta.st_size;
-            }
-            if (ret != ERR_OK) {
-                HILOGE("Failed to restore tar file %{public}s", item.hashName.c_str());
-                return ERR_INVALID_VALUE;
-            }
+            tarList.emplace_back(item);
         }
     }
+
+    int ret = RestoreTarListForSpecialCloneCloud(tarList);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to restore tar file %{public}s", bundleName_.c_str());
+        return ERR_INVALID_VALUE;
+    }
+
     DeleteIndexAndRpFile();
     auto endTime = std::chrono::system_clock::now();
     radarRestoreInfo_.totalFileSpendTime =

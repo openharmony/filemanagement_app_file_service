@@ -37,6 +37,7 @@ ohos_shared_library("backup_extension_ability_native") {
     "src/sub_ext_extension.cpp",
     "src/tar_file.cpp",
     "src/untar_file.cpp",
+    "src/InstalldUnTarFile.cpp",
   ]
 
   defines = [

@@ -341,6 +341,11 @@ private:
     ErrCode CloudSpecialRestore(std::string tarName, std::string untarPath, off_t tarFileSize);
     void GetTarIncludes(const string &tarName, unordered_map<string, struct ReportFileInfo> &infos);
     void DeleteIndexAndRpFile();
+    ErrCode RestoreTarListForSpecialCloneCloud(const std::vector<const ExtManageInfo> &tarList);
+    bool CheckIsSplitTarList(const std::vector<const ExtManageInfo> &tarList);
+    ErrCode RestoreUnSplitTarListForSpecialCloneCloud(const std::vector<const ExtManageInfo> &tarList);
+    ErrCode RestoreSplitTarListForSpecialCloneCloud(const std::vector<const ExtManageInfo> &tarList);
+
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
