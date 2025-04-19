@@ -17,10 +17,25 @@
 #define PHONECLONE_INSTALLDUNTARFILE_H
 #include <vector>
 #include <string>
-#include "InstalldTarUtils.h"
-#include "TarUtil.h"
+#include "installdTarUtils.h"
+#include "tarUtil.h"
 
 namespace installd {
+
+struct ParseTarPath {
+    char *longName = nullptr;
+    char *longLink = nullptr;
+    char *fullPath = nullptr;
+    char *realName = nullptr;
+    char *realLink = nullptr;
+};
+
+struct TarFileInfo {
+    off_t fileSize;
+    off_t fileBlockCnt;
+    off_t pos;
+};
+
 // helper function.
 off_t ParseOctalStr(const char *p, size_t n);
 
@@ -41,13 +56,24 @@ public:
     typedef enum { eList = 0, eUnpack = 1, eCheckSplit = 2 } EParseType;
 
 private:
-    int ParseTarFile(const char *rootPath = "", UnTarFile::EParseType type = eList);
+    bool IsProcessTarEnd(char *buff, int &ret);
+    int ParseTarFile(const char *rootPath = "", EParseType type = eList);
     bool IsEmptyBlock(const char *p);
+    int CheckFileAndInitPath(const char *rootPath, ParseTarPath *parseTarPath);
+    void SetFileChmodAndChown(char *buff, ParseTarPath *parseTarPath, bool &isSoftLink);
+    void HandleGnuLongLink(ParseTarPath *parseTarPath, bool &isSkip, TarFileInfo &tarFileInfo);
+    void HandleGnuLongName(ParseTarPath *parseTarPath, bool &isSkip, TarFileInfo &tarFileInfo);
+    void HandleRegularFile(char *buff, EParseType type, ParseTarPath *parseTarPath, bool &isSkip,
+        TarFileInfo &tarFileInfo);
+    bool FileReadAndWrite(char *destBuff, FILE *destF, size_t readBuffSize);
+    void HandleRegularEUnpackFile(char *buff, ParseTarPath *parseTarPath, bool &isSkip, TarFileInfo &tarFileInfo);
+    bool ProcessTarBlock(char *buff, EParseType type, ParseTarPath *parseTarPath, bool &isSkip, bool &isSoftLink);
     bool IsValidTarBlock(const TarHeader *tarHeader);
     bool VerifyChecksum(const TarHeader *tarHeader);
     bool CheckSliceTar(const char *tarInfo, const char *dstPathName, std::vector<std::string> &fileNameVector);
     bool HandleCheckFile(const char *tarBaseName, std::vector<std::string> &fileNameVector, int &num);
-    void FreePointer(char *longName, char *longLink, char *fullPath);
+    void FreePointer(ParseTarPath *parseTarPath);
+    void FreeLongTypePointer(ParseTarPath *parseTarPath);
     bool CreateDirWithRecursive(const std::string &filePath, mode_t mode = (mode_t)448);
 
 private:

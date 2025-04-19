@@ -54,11 +54,11 @@
 #include "b_utils/b_time.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
+#include "installdUnTarFile.h"
 #include "iservice.h"
 #include "sandbox_helper.h"
 #include "service_client.h"
 #include "tar_file.h"
-#include "InstalldUnTarFile.h"
 
 namespace OHOS::FileManagement::Backup {
 const string INDEX_FILE_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).

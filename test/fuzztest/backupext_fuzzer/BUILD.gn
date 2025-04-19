@@ -40,6 +40,7 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_extension.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_extension_stub.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/installdUnTarFile.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/sub_ext_extension.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/untar_file.cpp",

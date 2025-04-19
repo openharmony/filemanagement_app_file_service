@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include "InstalldUnTarFile.h"
+#include "installdUnTarFile.h"
 
 #include <cstdio>
 #include <directory_ex.h>
+#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <string>
 #include <unistd.h>
 
 #include "securec.h"
@@ -28,6 +28,7 @@
 
 namespace installd {
 const uid_t OCTAL = 8;
+const mode_t FILE_MODE = 448;
 
 uid_t FixUpOwnerDirFile(const uid_t uid, const gid_t gid, const uid_t owner, gid_t& newGid)
 {
@@ -291,7 +292,7 @@ bool UnTarFile::IsEmptyBlock(const char *p)
     return ('\0' == p[0]);
 }
 
-int UnTarFile::ParseTarFile(const char *rootPath, EParseType type)
+int UnTarFile::CheckFileAndInitPath(const char *rootPath, ParseTarPath *parseTarPath)
 {
     if (FilePtr == nullptr) {
         LOGE("read tar happened error!\n");
@@ -302,23 +303,9 @@ int UnTarFile::ParseTarFile(const char *rootPath, EParseType type)
         LOGE("rootPath is nullptr!\n");
         return ERR_NOEXIST;
     }
-    LOGI("ParseTarFile");
-
-    // re-parse tar header
-    char buff[BLOCK_SIZE] = {0};
-    size_t readCnt = 0;
-    off_t pos = 0;
-    char *longName = nullptr;
-    char *longLink = nullptr;
-    char *fullPath = nullptr;
-    bool isSkip = false;
-    bool isSoftlink = false;
-    int ret = 0;
-
     // tarSize
     fseeko(FilePtr, 0L, SEEK_END);
     tarSize = ftello(FilePtr);
-
     // reback file to begin
     fseeko(FilePtr, 0L, SEEK_SET);
     if (tarSize % BLOCK_SIZE != 0) {
@@ -326,257 +313,310 @@ int UnTarFile::ParseTarFile(const char *rootPath, EParseType type)
         return ERR_FORMAT;
     }
 
-    fullPath = (char *)malloc(PATH_MAX_LEN * sizeof(char));
-    if (fullPath == nullptr) {
+    parseTarPath->fullPath = (char *)malloc(PATH_MAX_LEN * sizeof(char));
+    if (parseTarPath->fullPath == nullptr) {
         return ERR_MALLOC;
     }
+    memset_s(parseTarPath->fullPath, PATH_MAX_LEN * sizeof(char), 0, PATH_MAX_LEN * sizeof(char));
+    return 0;
+}
 
-    memset_s(fullPath, PATH_MAX_LEN * sizeof(char), 0, PATH_MAX_LEN * sizeof(char));
-
-    while (1) {
-        readCnt = fread(buff, 1, BLOCK_SIZE, FilePtr);
-        if (readCnt < BLOCK_SIZE) {
-            LOGE("read short than 512 expected, got %{public}zu, tarSize", readCnt);
-
-            // when split unpack, ftell size is over than file really size [0,READ_BUFF_SIZE]
-            if (!isSplit || readCnt != 0 || ftello(FilePtr) > (tarSize + READ_BUFF_SIZE)) {
-                ret = ERR_IO;
+bool UnTarFile::ProcessTarBlock(char *buff, EParseType type, ParseTarPath *parseTarPath, bool &isSkip, bool &isSoftLink)
+{
+    TarHeader *tarHeader = (TarHeader *)buff;
+    TarFileInfo tarFileInfo = {};
+    tarFileInfo.fileSize = ParseOctalStr(buff + TSIZE_BASE, TSIZE_LEN);
+    tarFileInfo.fileBlockCnt = (tarFileInfo.fileSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    tarFileInfo.pos = ftello(FilePtr);
+    switch (tarHeader->typeflag) {
+        case SPLIT_START_TYPE:
+        case SPLIT_END_TYPE:
+        case SPLIT_CONTINUE_TYPE:
+            if (eCheckSplit == type) {
+                isSplit = true;
+                return false;
             }
-            FreePointer(longName, longLink, fullPath);
-            return ret;
+        case REGTYPE:
+        case AREGTYPE:
+            HandleRegularFile(buff, type, parseTarPath, isSkip, tarFileInfo);
+            break;
+        case SYMTYPE:
+            CreateSoftlink(parseTarPath->realLink, parseTarPath->fullPath);
+            isSoftLink = true;
+            isSkip = false;
+            break;
+        case DIRTYPE:
+            CreateDir(parseTarPath->fullPath, FILE_MODE);
+            isSkip = false;
+            break;
+        case TarUtil::GNUTYPE_LONGNAME:
+            HandleGnuLongName(parseTarPath, isSkip, tarFileInfo);
+            return true;
+        case GNUTYPE_LONGLINK:
+            HandleGnuLongLink(parseTarPath, isSkip, tarFileInfo);
+            return true;
+        default:
+            isSkip = true;
+            fseeko(FilePtr, tarFileInfo.fileBlockCnt * BLOCK_SIZE, SEEK_CUR);
+            break;
+    }
+
+    if (!isSkip) {
+        SetFileChmodAndChown(buff, parseTarPath, isSoftLink);
+    }
+    isSkip = false;
+    FreeLongTypePointer(parseTarPath);
+    return true;
+}
+
+void UnTarFile::SetFileChmodAndChown(char *buff, ParseTarPath *parseTarPath, bool &isSoftLink)
+{
+    // uid & gid
+    gid_t newGid = 0;
+    uid_t uid = (uid_t)ParseOctalStr(buff + TUID_BASE, TUID_LEN);
+    gid_t gid = (gid_t)ParseOctalStr(buff + TGID_BASE, TGID_LEN);
+    uid_t newUid = FixUpOwnerDirFile(uid, gid, newOwner, newGid);
+    if (!isSoftLink) {
+        chmod(parseTarPath->fullPath, FILE_MODE);
+        chown(parseTarPath->fullPath, newUid, newGid);
+        return;
+    }
+    lchown(parseTarPath->fullPath, newUid, newGid);
+    isSoftLink = false;
+}
+
+void UnTarFile::HandleGnuLongLink(ParseTarPath *parseTarPath, bool &isSkip, TarFileInfo &tarFileInfo)
+{
+    /* long link */
+    if (parseTarPath->longLink != nullptr) {
+        free(parseTarPath->longLink);
+        parseTarPath->longLink = nullptr;
+    }
+    size_t nameLen = (size_t)tarFileInfo.fileSize;
+    if (nameLen < PATH_MAX_LEN) {
+        parseTarPath->longLink = (char *)malloc((nameLen + 1) * sizeof(char));
+    }
+    if (parseTarPath->longLink != nullptr) {
+        memset_s(parseTarPath->longLink, (nameLen + 1) * sizeof(char), 0, (nameLen + 1) * sizeof(char));
+        if (nameLen != fread(parseTarPath->longLink, sizeof(char), nameLen, FilePtr)) {
+            free(parseTarPath->longLink);
+            parseTarPath->longLink = nullptr;
         }
+    }
 
-        // two empty continuous block indicate end of file
-        if (IsEmptyBlock(buff)) {
-            char tailBuff[BLOCK_SIZE] = {0};
-            size_t tailRead = 0;
-            tailRead = fread(tailBuff, 1, BLOCK_SIZE, FilePtr);
-            if ((tailRead == BLOCK_SIZE) && IsEmptyBlock(tailBuff)) {
-                LOGI("untarfile is end.Success!");
-                FreePointer(longName, longLink, fullPath);
-                return ret;
-            }
+    // anyway, go to correct pos
+    isSkip = true;
+    fseeko(FilePtr, tarFileInfo.pos + tarFileInfo.fileBlockCnt * BLOCK_SIZE, SEEK_SET);
+}
+
+void UnTarFile::HandleGnuLongName(ParseTarPath *parseTarPath, bool &isSkip, TarFileInfo &tarFileInfo)
+{
+    if (parseTarPath->longName != nullptr) {
+        free(parseTarPath->longName);
+        parseTarPath->longName = nullptr;
+    }
+    size_t nameLen = (size_t)tarFileInfo.fileSize;
+    if (nameLen < PATH_MAX_LEN) {
+        parseTarPath->longName = (char *)malloc((nameLen + 1) * sizeof(char));
+    }
+    if (parseTarPath->longName != nullptr) {
+        memset_s(parseTarPath->longName, (nameLen + 1) * sizeof(char), 0, (nameLen + 1) * sizeof(char));
+        if (nameLen != fread(parseTarPath->longName, sizeof(char), nameLen, FilePtr)) {
+            free(parseTarPath->longName);
+            parseTarPath->longName = nullptr;
         }
+    }
 
-        // check header
-        TarHeader *tarHeader = (TarHeader *)buff;
-        if (!IsValidTarBlock(tarHeader)) {
-            LOGE("isSplit cur size %{public}jd, tarSize %{public}jd", ftello(FilePtr), tarSize);
+    // anyway, go to correct pos
+    isSkip = true;
+    fseeko(FilePtr, tarFileInfo.pos + tarFileInfo.fileBlockCnt * BLOCK_SIZE, SEEK_SET);
+}
 
-            // when split unpack, ftell size is over than file really size [0,READ_BUFF_SIZE]
-            if (!isSplit || ftello(FilePtr) > (tarSize + READ_BUFF_SIZE) || !IsEmptyBlock(buff)) {
-                ret = ERR_FORMAT;
-            }
-            FreePointer(longName, longLink, fullPath);
-            return ret;
-        }
+void UnTarFile::HandleRegularFile(char *buff, EParseType type, ParseTarPath *parseTarPath, bool &isSkip,
+    TarFileInfo &tarFileInfo)
+{
+    if (eList == type) {
+        file_names.push_back(std::string(parseTarPath->realName));
+        file_sizes.push_back(tarFileInfo.fileSize);
+        file_data_addrs.push_back(tarFileInfo.pos);
 
-        // mode
-        mode_t mode = (mode_t) 448;
+        fseeko(FilePtr, tarFileInfo.fileBlockCnt * BLOCK_SIZE, SEEK_CUR);
+        return;
+    }
+    if (eUnpack == type) {
+        HandleRegularEUnpackFile(buff, parseTarPath, isSkip, tarFileInfo);
+    }
+}
 
-        // uid & gid
-        gid_t newGid = 0;
-        uid_t uid = (uid_t)ParseOctalStr(buff + TUID_BASE, TUID_LEN);
-        gid_t gid = (gid_t)ParseOctalStr(buff + TGID_BASE, TGID_LEN);
-        uid_t newUid = FixUpOwnerDirFile(uid, gid, newOwner, newGid);
+bool UnTarFile::FileReadAndWrite(char *destBuff, FILE *destF, size_t readBuffSize)
+{
+    if (readBuffSize != fread(destBuff, sizeof(char), readBuffSize, FilePtr)) {
+        LOGE("read file content shorter than expect!\n");
+        return false;
+    }
 
-        // file size & content offset
-        off_t fileSize = ParseOctalStr(buff + TSIZE_BASE, TSIZE_LEN);
-        off_t fileBlockCnt = (fileSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
-        pos = ftello(FilePtr);
+    if (readBuffSize != fwrite(destBuff, sizeof(char), readBuffSize, destF)) {
+        LOGE("write file content shorter than expect!\n");
+        return false;
+    }
+    return true;
+}
 
-        // longName & longLink
-        char *realName = tarHeader->name;
-        if (longName != nullptr) {
-            realName = longName;
-        }
-
-        GenRealPath(rootPath, realName, fullPath);
-        char *realLink = tarHeader->linkname;
-        if (longLink != nullptr) {
-            realLink = longLink;
-        }
-        CreateDir(const_cast<char *>(rootPath), mode);
-        switch (tarHeader->typeflag) {
-            case SPLIT_START_TYPE:
-            case SPLIT_END_TYPE:
-            case SPLIT_CONTINUE_TYPE:
-                if (eCheckSplit == type) {
-                    isSplit = true;
-                    FreePointer(longName, longLink, fullPath);
-                    return ret;
-                }
-            case REGTYPE:    /* regular file */
-            case AREGTYPE: { /* regular file */
-                if (eList == type) {
-                    file_names.push_back(std::string(realName));
-                    file_sizes.push_back(fileSize);
-                    file_data_addrs.push_back(pos);
-
-                    fseeko(FilePtr, fileBlockCnt * BLOCK_SIZE, SEEK_CUR);
-                } else if (eUnpack == type) {
-                    char *destBuff = (char *)malloc(READ_BUFF_SIZE * sizeof(char));
-                    if (destBuff != nullptr) {
-                        FILE *destF = CreateFile(fullPath, mode, tarHeader->typeflag);
-                        bool IsAbort = false;
-                        bool IsInvalid = false;
-                        if (destF != nullptr) {
-                            off_t restSize = fileSize;
-                            size_t readBuffSize = READ_BUFF_SIZE;
-
-                            memset_s(destBuff, READ_BUFF_SIZE * sizeof(char), 0, READ_BUFF_SIZE * sizeof(char));
-
-                            while (restSize > 0) {
-                                if (restSize < READ_BUFF_SIZE) {
-                                    readBuffSize = restSize;
-                                }
-                                if (readBuffSize != fread(destBuff, sizeof(char), readBuffSize, FilePtr)) {
-                                    LOGE("read file content shorter than expect!\n");
-                                    IsInvalid = true;
-                                    break;
-                                }
-
-                                if (readBuffSize != fwrite(destBuff, sizeof(char), readBuffSize, destF)) {
-                                    LOGE("write file content shorter than expect!\n");
-                                    IsInvalid = true;
-                                    break;
-                                }
-                                restSize -= readBuffSize;
-                            }
-
-                            if (destBuff != nullptr) {
-                                free(destBuff);
-                                destBuff = nullptr;
-                            }
-                            if (destF != nullptr) {
-                                fflush(destF);
-                                (void)fclose(destF);
-                                destF = nullptr;
-                            }
-                            if (IsInvalid) {
-                                unlink(fullPath);
-                                isSkip = true;
-                            }
-                            if (IsAbort) {
-                                FreePointer(longName, longLink, fullPath);
-                                return ret;
-                            }
-
-                            // anyway, go to correct pos
-                            fseeko(FilePtr, pos + fileBlockCnt * BLOCK_SIZE, SEEK_SET);
-                        } else {
-                            LOGE("destF is null!");
-                            fseeko(FilePtr, fileBlockCnt * BLOCK_SIZE, SEEK_CUR);
-                        }
-                    } else {
-                        LOGE("malloc memory fail!skip!");
-                    }
-                    isSkip = false;
-                }
-                break;
-            }
-            case SYMTYPE: {
-                CreateSoftlink(realLink, fullPath);
-                isSoftlink = true;
-                isSkip = false;
-                break;
-            }
-            case DIRTYPE: {
-                CreateDir(fullPath, mode);
-                isSkip = false;
-                break;
-            }
-            case TarUtil::GNUTYPE_LONGNAME: {
-                if (longName != nullptr) {
-                    free(longName);
-                    longName = nullptr;
-                }
-
-                size_t nameLen = (size_t)fileSize;
-                if (nameLen < PATH_MAX_LEN) {
-                    longName = (char *)malloc((nameLen + 1) * sizeof(char));
-                }
-                if (longName != nullptr) {
-                    memset_s(longName, (nameLen + 1) * sizeof(char), 0, (nameLen + 1) * sizeof(char));
-                    if (nameLen != fread(longName, sizeof(char), nameLen, FilePtr)) {
-                        free(longName);
-                        longName = nullptr;
-                    }
-                }
-
-                // anyway, go to correct pos
-                isSkip = true;
-                fseeko(FilePtr, pos + fileBlockCnt * BLOCK_SIZE, SEEK_SET);
-                continue;
-            }
-            case GNUTYPE_LONGLINK: {
-                /* long link */
-                if (longLink != nullptr) {
-                    free(longLink);
-                    longLink = nullptr;
-                }
-
-                size_t nameLen = (size_t)fileSize;
-                if (nameLen < PATH_MAX_LEN) {
-                    longLink = (char *)malloc((nameLen + 1) * sizeof(char));
-                }
-                if (longLink != nullptr) {
-                    memset_s(longLink, (nameLen + 1) * sizeof(char), 0, (nameLen + 1) * sizeof(char));
-                    if (nameLen != fread(longLink, sizeof(char), nameLen, FilePtr)) {
-                        free(longLink);
-                        longLink = nullptr;
-                    }
-                }
-
-                // anyway, go to correct pos
-                isSkip = true;
-                fseeko(FilePtr, pos + fileBlockCnt * BLOCK_SIZE, SEEK_SET);
-                continue;
-            }
-            default: {
-                // Ignoring, skip
-                isSkip = true;
-                fseeko(FilePtr, fileBlockCnt * BLOCK_SIZE, SEEK_CUR);
-                break;
-            }
-        }
-
-        if (!isSkip) {
-            if (!isSoftlink) {
-                chmod(fullPath, mode);
-                chown(fullPath, newUid, newGid);
-            } else {
-                lchown(fullPath, newUid, newGid);
-                isSoftlink = false;
-            }
-        }
+void UnTarFile::HandleRegularEUnpackFile(char *buff, ParseTarPath *parseTarPath, bool &isSkip, TarFileInfo &tarFileInfo)
+{
+    TarHeader *tarHeader = (TarHeader *)buff;
+    char *destBuff = (char *)malloc(READ_BUFF_SIZE * sizeof(char));
+    if (destBuff == nullptr) {
+        LOGE("malloc memory fail!skip!");
         isSkip = false;
-
-        if (longName != nullptr) {
-            free(longName);
-            longName = nullptr;
+        return;
+    }
+    FILE *destF = CreateFile(parseTarPath->fullPath, FILE_MODE, tarHeader->typeflag);
+    if (destF == nullptr) {
+        LOGE("destF is null!");
+        free(destBuff);
+        fseeko(FilePtr, tarFileInfo.fileBlockCnt * BLOCK_SIZE, SEEK_CUR);
+        isSkip = false;
+        return;
+    }
+    memset_s(destBuff, READ_BUFF_SIZE * sizeof(char), 0, READ_BUFF_SIZE * sizeof(char));
+    bool isInvalid = false;
+    off_t readBuffSize = READ_BUFF_SIZE;
+    off_t restSize = tarFileInfo.fileSize;
+    while (restSize > 0) {
+        if (restSize < READ_BUFF_SIZE) {
+            readBuffSize = restSize;
         }
-        if (longLink != nullptr) {
-            free(longLink);
-            longLink = nullptr;
+        if (!FileReadAndWrite(destBuff, destF, readBuffSize)) {
+            isInvalid = true;
+            break;
+        }
+        restSize -= readBuffSize;
+    }
+
+    if (destBuff != nullptr) {
+        free(destBuff);
+        destBuff = nullptr;
+    }
+    if (destF != nullptr) {
+        fflush(destF);
+        (void)fclose(destF);
+        destF = nullptr;
+    }
+    if (isInvalid) {
+        unlink(parseTarPath->fullPath);
+        isSkip = true;
+    } else {
+        isSkip = false;
+    }
+    // anyway, go to correct pos
+    fseeko(FilePtr, tarFileInfo.pos + tarFileInfo.fileBlockCnt * BLOCK_SIZE, SEEK_SET);
+}
+
+bool UnTarFile::IsProcessTarEnd(char *buff, int &ret)
+{
+    size_t readCnt = fread(buff, 1, BLOCK_SIZE, FilePtr);
+    if (readCnt < BLOCK_SIZE) {
+        LOGE("read short than 512 expected, got %{public}zu, tarSize", readCnt);
+
+        // when split unpack, ftell size is over than file really size [0,READ_BUFF_SIZE]
+        if (!isSplit || readCnt != 0 || ftello(FilePtr) > (tarSize + READ_BUFF_SIZE)) {
+            ret = ERR_IO;
+        }
+        return true;
+    }
+
+    // two empty continuous block indicate end of file
+    if (IsEmptyBlock(buff)) {
+        char tailBuff[BLOCK_SIZE] = {0};
+        size_t tailRead = 0;
+        tailRead = fread(tailBuff, 1, BLOCK_SIZE, FilePtr);
+        if ((tailRead == BLOCK_SIZE) && IsEmptyBlock(tailBuff)) {
+            LOGI("untarfile is end.Success!");
+            return true;
+        }
+    }
+
+    // check header
+    TarHeader *tarHeader = (TarHeader *)buff;
+    if (!IsValidTarBlock(tarHeader)) {
+        LOGE("isSplit cur size %{public}jd, tarSize %{public}jd", ftello(FilePtr), tarSize);
+
+        // when split unpack, ftell size is over than file really size [0,READ_BUFF_SIZE]
+        if (!isSplit || ftello(FilePtr) > (tarSize + READ_BUFF_SIZE) || !IsEmptyBlock(buff)) {
+            ret = ERR_FORMAT;
+        }
+        return true;
+    }
+    return false;
+}
+
+int UnTarFile::ParseTarFile(const char *rootPath, EParseType type)
+{
+    ParseTarPath parseTarPath = {};
+    int ret = CheckFileAndInitPath(rootPath, &parseTarPath);
+    if (ret != 0) {
+        return ret;
+    }
+    LOGI("ParseTarFile");
+
+    // re-parse tar header
+    char buff[BLOCK_SIZE] = {};
+    bool isSkip = false;
+    bool isSoftLink = false;
+    while (true) {
+        if (IsProcessTarEnd(buff, ret)) {
+            FreePointer(&parseTarPath);
+            return ret;
+        }
+
+        TarHeader *tarHeader = (TarHeader *)buff;
+        parseTarPath.realName = tarHeader->name;
+        if (parseTarPath.longName != nullptr) {
+            parseTarPath.realName = parseTarPath.longName;
+        }
+
+        GenRealPath(rootPath, parseTarPath.realName, parseTarPath.fullPath);
+        parseTarPath.realLink = tarHeader->linkname;
+        if (parseTarPath.longLink != nullptr) {
+            parseTarPath.realLink = parseTarPath.longLink;
+        }
+
+        CreateDir(const_cast<char *>(rootPath), FILE_MODE);
+
+        if (!ProcessTarBlock(buff, type, &parseTarPath, isSkip, isSoftLink)) {
+            FreePointer(&parseTarPath);
+            return ret;
         }
     }
     return ret;
 }
 
-void UnTarFile::FreePointer(char *longName, char *longLink, char *fullPath)
+void UnTarFile::FreePointer(ParseTarPath *parseTarPath)
 {
-    if (fullPath != nullptr) {
-        free(fullPath);
-        fullPath = nullptr;
+    if (parseTarPath->fullPath != nullptr) {
+        free(parseTarPath->fullPath);
+        parseTarPath->fullPath = nullptr;
     }
-    if (longName != nullptr) {
-        free(longName);
-        longName = nullptr;
+    if (parseTarPath->longName != nullptr) {
+        free(parseTarPath->longName);
+        parseTarPath->longName = nullptr;
     }
-    if (longLink != nullptr) {
-        free(longLink);
-        longLink = nullptr;
+    if (parseTarPath->longLink != nullptr) {
+        free(parseTarPath->longLink);
+        parseTarPath->longLink = nullptr;
+    }
+}
+
+void UnTarFile::FreeLongTypePointer(ParseTarPath *parseTarPath)
+{
+    if (parseTarPath->longName != nullptr) {
+        free(parseTarPath->longName);
+        parseTarPath->longName = nullptr;
+    }
+    if (parseTarPath->longLink != nullptr) {
+        free(parseTarPath->longLink);
+        parseTarPath->longLink = nullptr;
     }
 }
 
