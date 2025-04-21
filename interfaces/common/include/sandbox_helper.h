@@ -29,10 +29,12 @@ private:
     static std::unordered_map<std::string, std::string> backupSandboxPathMap_;
     static bool GetSandboxPathMap();
     static bool GetBackupSandboxPathMap();
+    static void* libMediaHandle_;
 public:
     static std::string Encode(const std::string &uri);
     static std::string Decode(const std::string &uri);
     static bool CheckValidPath(const std::string &filePath);
+    static int32_t GetMediaSharePath(const std::vector<std::string> &fileUris, std::vector<std::string> &physicalPaths);
     static int32_t GetPhysicalPath(const std::string &fileUri, const std::string &userId,
                                    std::string &physicalPath);
     static int32_t GetBackupPhysicalPath(const std::string &fileUri, const std::string &userId,

@@ -143,7 +143,8 @@ string FileUri::GetRealPath()
 string FileUri::GetRealPathBySA(const std::string &targetBundleName)
 {
     string sandboxPath = DecodeBySA(uri_.GetPath());
-    if (sandboxPath.empty()) {
+    if (sandboxPath.empty() || !SandboxHelper::IsValidPath(sandboxPath)) {
+        LOGE("path is ValidPath, The path contains '/./' or '../'characters");
         return "";
     }
     string realPath = sandboxPath;
@@ -165,6 +166,10 @@ string FileUri::ToString()
 string FileUri::GetFullDirectoryUri()
 {
     string uri = uri_.ToString();
+    if (!SandboxHelper::IsValidPath(uri)) {
+        LOGE("uri is ValidUri, The uri contains '/./' or '../'characters");
+        return "";
+    }
     struct stat fileInfo;
     if (stat(GetRealPath().c_str(), &fileInfo) != 0) {
         LOGE("fileInfo is error,%{public}s", strerror(errno));
@@ -198,6 +203,10 @@ bool FileUri::CheckUriFormat(const std::string &uri)
 {
     if (uri.find(FILE_SCHEME_PREFIX) != 0) {
         LOGE("URI is missing file://");
+        return false;
+    }
+    if (!SandboxHelper::IsValidPath(uri)) {
+        LOGE("uri is ValidPath, The uri contains '/./' or '../'characters");
         return false;
     }
     return true;

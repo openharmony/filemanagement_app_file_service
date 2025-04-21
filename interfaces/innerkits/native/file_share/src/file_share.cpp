@@ -139,6 +139,23 @@ static bool CheckIfNeedShare(const string &uriStr, ShareFileType type, FileShare
     return true;
 }
 
+static void DelSharePath(const string &delPath)
+{
+    if (!SandboxHelper::CheckValidPath(delPath)) {
+        LOGE("DelSharePath, umount path is invalid");
+        return;
+    }
+
+    if (access(delPath.c_str(), F_OK) == 0) {
+        if (umount2(delPath.c_str(), MNT_DETACH) != 0) {
+            LOGE("DelSharePath, umount failed with %{public}d", errno);
+        }
+        if (remove(delPath.c_str()) != 0) {
+            LOGE("DelSharePath, remove failed with %{public}d", errno);
+        }
+    }
+}
+
 static int32_t GetSharePath(const string &uri, FileShareInfo &info, uint32_t flag)
 {
     string shareRPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH + info.targetBundleName_ +
@@ -153,6 +170,7 @@ static int32_t GetSharePath(const string &uri, FileShareInfo &info, uint32_t fla
 
     if (CheckIfNeedShare(uri, info.type_, info, shareRPath)) {
         info.sharePath_.push_back(shareRPath);
+        DelSharePath(shareRWPath);
     }
 
     if ((flag & WRITE_URI_PERMISSION) == WRITE_URI_PERMISSION &&
@@ -242,23 +260,6 @@ static bool DeleteExistShareFile(const string &path)
         }
     }
     return true;
-}
-
-static void DelSharePath(const string &delPath)
-{
-    if (!SandboxHelper::CheckValidPath(delPath)) {
-        LOGE("DelSharePath, umount path is invalid");
-        return;
-    }
-
-    if (access(delPath.c_str(), F_OK) == 0) {
-        if (umount2(delPath.c_str(), MNT_DETACH) != 0) {
-            LOGE("DelSharePath, umount failed with %{public}d", errno);
-        }
-        if (remove(delPath.c_str()) != 0) {
-            LOGE("DelSharePath, remove failed with %{public}d", errno);
-        }
-    }
 }
 
 static void UmountDelUris(vector<string> sharePathList, string currentUid, string bundleNameSelf)

@@ -26,18 +26,7 @@ using namespace std;
 
 BIncrementalBackupSession::~BIncrementalBackupSession()
 {
-    if (!deathRecipient_) {
-        HILOGI("Death Recipient is nullptr");
-        return;
-    }
-    auto proxy = ServiceClient::GetServiceProxyPointer();
-    if (proxy == nullptr) {
-        return;
-    }
-    auto remoteObject = proxy->AsObject();
-    if (remoteObject != nullptr) {
-        remoteObject->RemoveDeathRecipient(deathRecipient_);
-    }
+    HILOGE("BIncrementalBackupSession Destory");
     deathRecipient_ = nullptr;
 }
 

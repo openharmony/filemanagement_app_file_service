@@ -34,6 +34,7 @@
 #include "directory_ex.h"
 #include "errors.h"
 #include "filemgmt_libhilog.h"
+#include "sandbox_helper.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -41,9 +42,6 @@ const int32_t PATH_MAX_LEN = 4096;
 const size_t TOP_ELE = 0;
 const std::string APP_DATA_DIR = BConstants::PATH_PUBLIC_HOME +
     BConstants::PATH_APP_DATA + BConstants::FILE_SEPARATOR_CHAR;
-const std::string PATH_INVALID_FLAG1 = "../";
-const std::string PATH_INVALID_FLAG2 = "/..";
-const uint32_t PATH_INVALID_FLAG_LEN = 3;
 
 static bool IsEmptyDirectory(const string &path)
 {
@@ -296,8 +294,8 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
         HILOGW("GetBigFiles, path = %{public}s", item.c_str());
         auto [errCode, files, smallFiles] = GetDirFilesDetail(item, true, BConstants::BIG_FILE_BOUNDARY);
         if (errCode == 0) {
-            incFiles.merge(move(files));
             HILOGW("big files: %{public}zu; small files: %{public}zu", files.size(), smallFiles.size());
+            incFiles.merge(move(files));
             incSmallFiles.merge(move(smallFiles));
         }
     }
@@ -516,22 +514,7 @@ vector<string> BDir::GetDirs(const vector<string_view> &paths)
 
 bool BDir::IsFilePathValid(const std::string &filePath)
 {
-    size_t pos = filePath.find(PATH_INVALID_FLAG1);
-    while (pos != string::npos) {
-        if (pos == 0 || filePath[pos - 1] == BConstants::FILE_SEPARATOR_CHAR) {
-            HILOGE("Relative path is not allowed, path contain ../, path = %{private}s",
-                GetAnonyString(filePath).c_str());
-            return false;
-        }
-        pos = filePath.find(PATH_INVALID_FLAG1, pos + PATH_INVALID_FLAG_LEN);
-    }
-    pos = filePath.rfind(PATH_INVALID_FLAG2);
-    if ((pos != string::npos) && (filePath.size() - pos == PATH_INVALID_FLAG_LEN)) {
-        HILOGE("Relative path is not allowed, path tail is /.., path = %{private}s",
-            GetAnonyString(filePath).c_str());
-        return false;
-    }
-    return true;
+    return AppFileService::SandboxHelper::IsValidPath(filePath);
 }
 
 bool BDir::CheckAndRmSoftLink(const std::string &filePath)

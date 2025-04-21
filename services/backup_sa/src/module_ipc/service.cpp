@@ -1655,7 +1655,7 @@ ErrCode Service::GetBackupInfo(const BundleName &bundleName, std::string &result
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         if (session_->GetImpl().clientToken) {
-            return BError(BError::Codes::SA_REFUSED_ACT, "Already have an active session");
+            HILOGI("Already have an active session, bundleName:%{public}s", bundleName.c_str());
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         auto ret = GetBackupInfoCmdHandle(bundleName, result);

@@ -508,23 +508,22 @@ napi_value SessionRestoreNExporter::GetLocalCapabilities(napi_env env, napi_call
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get restoreSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-    UniqueFd fd;
-    auto cbExec = [session {restoreEntity}, &fd]() -> NError {
+    auto fd = make_shared<UniqueFd>();
+    auto cbExec = [session {restoreEntity}, fd]() -> NError {
         if (!session && (session->sessionWhole || session->sessionSheet)) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "backup session is nullptr").GetCode());
         }
         if (session->sessionWhole) {
-            fd = session->sessionWhole->GetLocalCapabilities();
+            *fd = session->sessionWhole->GetLocalCapabilities();
         } else if (session->sessionSheet) {
-            fd = session->sessionSheet->GetLocalCapabilities();
+            *fd = session->sessionSheet->GetLocalCapabilities();
         }
-        return fd < 0 ? NError(BError(BError::Codes::SA_INVAL_ARG, "Failed to get local capabilities.").GetCode()) :
-            NError(BError(BError::Codes::OK, "Success to get local capabilities.").GetCode());
+        return NError(ERRNO_NOERR);
     };
-    auto cbCompl = [&fd](napi_env env, NError err) -> NVal {
+    auto cbCompl = [fd](napi_env env, NError err) -> NVal {
         NVal obj = NVal::CreateObject(env);
-        obj.AddProp({NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd.Release()).val_)});
-        return err ? NVal {env, err.GetNapiErr(env)} : obj;
+        obj.AddProp({NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
+        return {obj};
     };
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;

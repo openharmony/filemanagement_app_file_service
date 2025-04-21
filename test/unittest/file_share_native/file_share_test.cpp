@@ -422,6 +422,107 @@ HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0006, testing::ext::TestSize.
 }
 
 /**
+ * @tc.name: File_share_GetPhysicalPath_0007
+ * @tc.desc: Test function of GetPhysicalPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0007, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0007";
+    std::string fileUri0 = "file://docs/storage/Users/currentUser/../test../test1";
+    std::string fileUri1 = "file://docs/storage/Users/currentUser/test../../test";
+    std::string fileUri2 = "file://docs/storage/Users/currentUser/test../../";
+    std::string fileUri3 = "file://docs/storage/Users/currentUser/test../test../..";
+    std::string fileUri4 = "file://docs/storage/Users/currentUser/test/..test/..";
+    std::string fileUri5 = "file://docs/storage/Users/currentUser/test/test../test";
+    std::string fileUri6 = "file://docs/storage/Users/currentUser/test../test../test";
+    std::string fileUri7 = "file://docs/storage/Users/currentUser/test../test../test../..test";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetPhysicalPath(fileUri0, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    ret = SandboxHelper::GetPhysicalPath(fileUri1, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    ret = SandboxHelper::GetPhysicalPath(fileUri2, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    ret = SandboxHelper::GetPhysicalPath(fileUri3, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    ret = SandboxHelper::GetPhysicalPath(fileUri4, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    ret = SandboxHelper::GetPhysicalPath(fileUri5, "100", physicalPath);
+    EXPECT_EQ(ret, E_OK);
+    ret = SandboxHelper::GetPhysicalPath(fileUri6, "100", physicalPath);
+    EXPECT_EQ(ret, E_OK);
+    ret = SandboxHelper::GetPhysicalPath(fileUri7, "100", physicalPath);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0007";
+}
+
+/**
+ * @tc.name: File_share_GetMediaSharePath_0001
+ * @tc.desc: Test function of GetMediaSharePath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetMediaSharePath_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetMediaSharePath_0001";
+    std::string fileUri = "file://media/Photo/test/IMG_12345_999999/test.jpg";
+    vector<string> uriList;
+    vector<string> physicalPathList;
+    uriList.push_back(fileUri);
+    int32_t ret = SandboxHelper::GetMediaSharePath(uriList, physicalPathList);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetMediaSharePath_0001";
+}
+
+/**
+ * @tc.name: File_share_GetMediaSharePath_0002
+ * @tc.desc: Test function of GetMediaSharePath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetMediaSharePath_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetMediaSharePath_0002";
+    std::string fileUri = "file://media/Photo";
+    vector<string> uriList;
+    vector<string> physicalPathList;
+    uriList.push_back(fileUri);
+    int32_t ret = SandboxHelper::GetMediaSharePath(uriList, physicalPathList);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetMediaSharePath_0002";
+}
+
+/**
+ * @tc.name: File_share_GetMediaSharePath_0003
+ * @tc.desc: Test function of GetMediaSharePath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetMediaSharePath_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetMediaSharePath_0003";
+    std::string fileUri = "file://media/Photo/test/IMG_12345_/test.JPG";
+    std::string fileUri1 = "file://media/Photo/test/IMG_12345_/test.JPG";
+    vector<string> uriList;
+    vector<string> physicalPathList;
+    uriList.push_back(fileUri);
+    uriList.push_back(fileUri1);
+    int32_t ret = SandboxHelper::GetMediaSharePath(uriList, physicalPathList);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetMediaSharePath_0003";
+}
+
+/**
  * @tc.name: File_share_CheckValidPath_0001
  * @tc.desc: Test function of CheckValidPath() interface for FAILURE.
  * @tc.size: MEDIUM
@@ -440,6 +541,43 @@ HWTEST_F(FileShareTest, File_share_CheckValidPath_0001, testing::ext::TestSize.L
     ret = SandboxHelper::CheckValidPath(filePath2);
     EXPECT_FALSE(ret);
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_CheckValidPath_0001";
+}
+
+/**
+ * @tc.name: File_share_IsValidPath_0002
+ * @tc.desc: Test function of CheckValidPath() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_IsValidPath_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_IsValidPath_0002";
+    bool result = SandboxHelper::IsValidPath("../test../test1");
+    EXPECT_FALSE(result);
+    result = SandboxHelper::IsValidPath("/../test../test1");
+    EXPECT_FALSE(result);
+    result = SandboxHelper::IsValidPath("test../../test");
+    EXPECT_FALSE(result);
+    result = SandboxHelper::IsValidPath("test../../");
+    EXPECT_FALSE(result);
+    result = SandboxHelper::IsValidPath("test../test../..");
+    EXPECT_FALSE(result);
+    result = SandboxHelper::IsValidPath("/test/..test/..");
+    EXPECT_FALSE(result);
+
+    result = SandboxHelper::IsValidPath("test");
+    EXPECT_TRUE(result);
+    result = SandboxHelper::IsValidPath("/test/test../test");
+    EXPECT_TRUE(result);
+    result = SandboxHelper::IsValidPath("/test../test../test");
+    EXPECT_TRUE(result);
+    result = SandboxHelper::IsValidPath("/test../test../test../");
+    EXPECT_TRUE(result);
+    result = SandboxHelper::IsValidPath("/test../test../test../..test");
+    EXPECT_TRUE(result);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_IsValidPath_0002";
 }
 
 /**
@@ -558,4 +696,44 @@ HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0006, testing::ext::Tes
     EXPECT_EQ(ret, -EINVAL);
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetBackupPhysicalPath_0006";
 }
+
+/**
+ * @tc.name: File_share_GetBackupPhysicalPath_0007
+ * @tc.desc: Test function of GetBackupPhysicalPath() interface for FAILURE.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0007, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0007";
+    std::string fileUri0 = "file://docs/storage/Users/currentUser/../test../test1";
+    std::string fileUri1 = "file://docs/storage/Users/currentUser/test../../test";
+    std::string fileUri2 = "file://docs/storage/Users/currentUser/test../../";
+    std::string fileUri3 = "file://docs/storage/Users/currentUser/test../test../..";
+    std::string fileUri4 = "file://docs/storage/Users/currentUser/test/..test/..";
+    std::string fileUri5 = "file://docs/storage/Users/currentUser/test/test../test";
+    std::string fileUri6 = "file://docs/storage/Users/currentUser/test../test../test";
+    std::string fileUri7 = "file://docs/storage/Users/currentUser/test../test../test../..test";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetBackupPhysicalPath(fileUri0, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    ret = SandboxHelper::GetBackupPhysicalPath(fileUri1, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    ret = SandboxHelper::GetBackupPhysicalPath(fileUri2, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    ret = SandboxHelper::GetBackupPhysicalPath(fileUri3, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    ret = SandboxHelper::GetBackupPhysicalPath(fileUri4, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    ret = SandboxHelper::GetBackupPhysicalPath(fileUri5, "100", physicalPath);
+    EXPECT_EQ(ret, E_OK);
+    ret = SandboxHelper::GetBackupPhysicalPath(fileUri6, "100", physicalPath);
+    EXPECT_EQ(ret, E_OK);
+    ret = SandboxHelper::GetBackupPhysicalPath(fileUri7, "100", physicalPath);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetBackupPhysicalPath_0007";
+}
+
 } // namespace
