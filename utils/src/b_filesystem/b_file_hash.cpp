@@ -15,6 +15,10 @@
 
 #include "b_filesystem/b_file_hash.h"
 
+#include <algorithm>
+#include <chrono>
+#include <cinttypes>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -22,6 +26,7 @@
 #include <openssl/sha.h>
 #include <sstream>
 #include <unistd.h>
+#include "b_resources/b_constants.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -73,5 +78,22 @@ tuple<int, string> BackupFileHash::HashWithSHA256(const string &fpath)
     int err = ForEachFileSegment(fpath, sha256Update);
     SHA256_Final(res.get(), &ctx);
     return HashFinal(err, res, SHA256_DIGEST_LENGTH);
+}
+
+std::string BackupFileHash::HashFilePath(const string &fileName)
+{
+    std::filesystem::path filePath = fileName;
+    std::string realFileName = filePath.filename().string();
+    ostringstream strHex;
+    strHex << hex;
+
+    hash<string> strHash;
+    size_t szHash = strHash(realFileName);
+    strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
+    string hashResult = strHex.str();
+    szHash = strHash(realFileName);
+    strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
+    hashResult = strHex.str();
+    return hashResult;
 }
 } // namespace OHOS::FileManagement::Backup
