@@ -564,7 +564,8 @@ int UnTarFile::ParseTarFile(const char *rootPath, EParseType type)
     char buff[BLOCK_SIZE] = {};
     bool isSkip = false;
     bool isSoftLink = false;
-    while (true) {
+    const off_t blockCnt = tarSize / BLOCK_SIZE;
+    for (off_t i = 0; i < blockCnt; i++) {
         if (IsProcessTarEnd(buff, ret)) {
             FreePointer(&parseTarPath);
             return ret;
@@ -589,6 +590,8 @@ int UnTarFile::ParseTarFile(const char *rootPath, EParseType type)
             return ret;
         }
     }
+    LOGI("blockCnt overflow");
+    FreePointer(&parseTarPath);
     return ret;
 }
 
