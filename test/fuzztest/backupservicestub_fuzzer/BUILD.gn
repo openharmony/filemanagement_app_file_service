@@ -38,10 +38,11 @@ ohos_fuzztest("BackupServiceStubFuzzTest") {
   ]
   sources = [ "backupservicestub_fuzzer.cpp" ]
 
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
   deps = [
     "${app_file_service_path}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${app_file_service_path}/services/backup_sa:backup_sa",
-    "${app_file_service_path}/services/backup_sa:backup_sa_ipc_stub",
     "${app_file_service_path}/utils:backup_utils",
   ]
 

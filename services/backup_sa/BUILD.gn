@@ -16,7 +16,16 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
 idl_gen_interface("backup_idl") {
-  sources = [ "IService.idl" ]
+  sources = [
+    "IExtension.idl",
+    "IService.idl",
+    "IServiceReverse.idl",
+  ]
+  sources_common = [
+    "ExtensionType.idl",
+    "ServiceReverseType.idl",
+    "ServiceType.idl",
+  ]
   hitrace = "HITRACE_TAG_FILEMANAGEMENT"
   log_domainid = "0xD004313"
   log_tag = "AppFileService"
@@ -110,7 +119,8 @@ ohos_source_set("backup_sa_ipc_stub") {
 
   sources = []
 
-  sources += filter_include(output_values, [])
+  sources += filter_include(output_values, [ "*_type.cpp" ])
+  sources += filter_include(output_values, [ "*_stub.cpp" ])
   public_configs = [ ":public_idl_config" ]
 
   deps = [ ":backup_idl" ]
@@ -126,6 +136,7 @@ ohos_source_set("backup_sa_ipc_stub") {
 
   include_dirs = [
     ".",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${target_gen_dir}/",
   ]
 
@@ -161,12 +172,8 @@ ohos_shared_library("backup_sa") {
     "src/module_ipc/sa_backup_connection.cpp",
     "src/module_ipc/service.cpp",
     "src/module_ipc/service_incremental.cpp",
-    "src/module_ipc/service_incremental_reverse_proxy.cpp",
-    "src/module_ipc/service_reverse_proxy.cpp",
     "src/module_ipc/sub_service.cpp",
     "src/module_ipc/svc_backup_connection.cpp",
-    "src/module_ipc/svc_extension_incremental_proxy.cpp",
-    "src/module_ipc/svc_extension_proxy.cpp",
     "src/module_ipc/svc_restore_deps_manager.cpp",
     "src/module_ipc/svc_session_manager.cpp",
     "src/module_notify/notify_work_service.cpp",

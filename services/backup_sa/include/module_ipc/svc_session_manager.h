@@ -81,7 +81,7 @@ class SvcSessionManager : public virtual RefBase {
 public:
     struct Impl {
         uint32_t clientToken {0};
-        IServiceReverse::Scenario scenario {IServiceReverse::Scenario::UNDEFINED};
+        IServiceReverseType::Scenario scenario {IServiceReverseType::Scenario::UNDEFINED};
         std::map<BundleName, BackupExtInfo> backupExtNameMap;
         sptr<IServiceReverse> clientProxy;
         bool isBackupStart {false};
@@ -107,7 +107,7 @@ public:
      *
      * @return ErrCode 错误码
      */
-    ErrCode VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const;
+    ErrCode VerifyCallerAndScenario(uint32_t clientToken, IServiceReverseType::Scenario scenario) const;
 
     /**
      * @brief 激活会话
@@ -148,10 +148,10 @@ public:
     /**
      * @brief 获取Scenario
      *
-     * @return IServiceReverse::Scenario 返回scenario
+     * @return IServiceReverseType::Scenario 返回scenario
      * @throw BError::Codes::SA_INVAL_ARG 获取异常
      */
-    IServiceReverse::Scenario GetScenario();
+    IServiceReverseType::Scenario GetScenario();
 
     /**
      * @brief 获取当前处理事务会话对应的userId

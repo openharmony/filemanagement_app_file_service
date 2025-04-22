@@ -785,7 +785,7 @@ ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
     return ERR_OK;
 }
 
-ErrCode BackupExtExtension::UpdateFdSendRate(std::string &bundleName, int32_t sendRate)
+ErrCode BackupExtExtension::UpdateFdSendRate(const std::string &bundleName, int32_t sendRate)
 {
     try {
         std::lock_guard<std::mutex> lock(updateSendRateLock_);

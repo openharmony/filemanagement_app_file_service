@@ -17,7 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_SVC_BACKUP_CONNECTION_H
 
 #include "ability_connect_callback_stub.h"
-#include "i_extension.h"
+#include "iextension.h"
 
 namespace OHOS::FileManagement::Backup {
 class SvcBackupConnection : public AAFwk::AbilityConnectionStub {

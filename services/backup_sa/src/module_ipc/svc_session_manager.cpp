@@ -40,7 +40,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-ErrCode SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverse::Scenario scenario) const
+ErrCode SvcSessionManager::VerifyCallerAndScenario(uint32_t clientToken, IServiceReverseType::Scenario scenario) const
 {
     shared_lock<shared_mutex> lock(lock_);
     if (impl_.scenario != scenario) {
@@ -88,7 +88,7 @@ ErrCode SvcSessionManager::Active(Impl newImpl, bool isOccupyingSession)
         HILOGE("Active session fail, No caller token was specified");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    if (!isOccupyingSession && newImpl.scenario == IServiceReverse::Scenario::UNDEFINED) {
+    if (!isOccupyingSession && newImpl.scenario == IServiceReverseType::Scenario::UNDEFINED) {
         HILOGE("Active session fail, No scenario was specified");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
@@ -124,10 +124,10 @@ ErrCode SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, b
 
     deathRecipient_ = nullptr;
     AppRadar::Info info("", "", "deactive session success");
-    if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
+    if (impl_.scenario == IServiceReverseType::Scenario::RESTORE) {
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "SvcSessionManager::Deactive", impl_.userId,
             BizStageRestore::BIZ_STAGE_DEACTIVE_SESSION, ERR_OK);
-    } else if (impl_.scenario == IServiceReverse::Scenario::BACKUP) {
+    } else if (impl_.scenario == IServiceReverseType::Scenario::BACKUP) {
         AppRadar::GetInstance().RecordBackupFuncRes(info, "SvcSessionManager::Deactive", impl_.userId,
             BizStageBackup::BIZ_STAGE_DEACTIVE_SESSION, ERR_OK);
     }
@@ -163,12 +163,12 @@ sptr<IServiceReverse> SvcSessionManager::GetServiceReverseProxy()
     return impl_.clientProxy;
 }
 
-IServiceReverse::Scenario SvcSessionManager::GetScenario()
+IServiceReverseType::Scenario SvcSessionManager::GetScenario()
 {
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         HILOGE("Get scenario failed, No caller token was specified");
-        return IServiceReverse::Scenario::UNDEFINED;
+        return IServiceReverseType::Scenario::UNDEFINED;
     }
     return impl_.scenario;
 }
@@ -217,10 +217,10 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
         return false;
     }
     // 判断是否结束 通知EXTENTION清理资源  TOOL应用完成备份
-    if (impl_.scenario == IServiceReverse::Scenario::RESTORE || SAUtils::IsSABundleName(bundleName)) {
+    if (impl_.scenario == IServiceReverseType::Scenario::RESTORE || SAUtils::IsSABundleName(bundleName)) {
         it->second.isBundleFinished = true;
         return true;
-    } else if (impl_.scenario == IServiceReverse::Scenario::BACKUP) {
+    } else if (impl_.scenario == IServiceReverseType::Scenario::BACKUP) {
         if (!fileName.empty() && fileName != BConstants::EXT_BACKUP_MANAGE) {
             auto ret = it->second.fileNameInfo.emplace(fileName);
             if (!ret.second) {
@@ -246,7 +246,7 @@ UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, Uniq
         HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
         return UniqueFd(-EPERM);
     }
-    if (impl_.scenario != IServiceReverse::Scenario::BACKUP) {
+    if (impl_.scenario != IServiceReverseType::Scenario::BACKUP) {
         HILOGE("Invalid Scenario, bundleName:%{public}s", bundleName.c_str());
         return UniqueFd(-EPERM);
     }
@@ -436,10 +436,10 @@ ErrCode SvcSessionManager::InitClient(Impl &newImpl)
     deathRecipient_ = sptr(new SvcDeathRecipient(callback));
     remoteObj->AddDeathRecipient(deathRecipient_);
     AppRadar::Info info("", "", "active session success");
-    if (newImpl.scenario == IServiceReverse::Scenario::RESTORE) {
+    if (newImpl.scenario == IServiceReverseType::Scenario::RESTORE) {
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "SvcSessionManager::InitClient", newImpl.userId,
             BizStageRestore::BIZ_STAGE_ACTIVE_SESSION, ERR_OK);
-    } else if (newImpl.scenario == IServiceReverse::Scenario::BACKUP) {
+    } else if (newImpl.scenario == IServiceReverseType::Scenario::BACKUP) {
         AppRadar::GetInstance().RecordBackupFuncRes(info, "SvcSessionManager::InitClient", newImpl.userId,
             BizStageBackup::BIZ_STAGE_ACTIVE_SESSION, ERR_OK);
     }
@@ -470,7 +470,7 @@ std::set<std::string> SvcSessionManager::GetExtFileNameRequest(const std::string
         return std::set<std::string>();
     }
 
-    if (impl_.scenario != IServiceReverse::Scenario::RESTORE) {
+    if (impl_.scenario != IServiceReverseType::Scenario::RESTORE) {
         HILOGE("Invalid Scenario, bundleName:%{public}s", bundleName.c_str());
         return std::set<std::string>();
     }
@@ -718,7 +718,7 @@ bool SvcSessionManager::IsOnAllBundlesFinished()
         return false;
     }
     bool isAllBundlesFinished = !impl_.backupExtNameMap.size();
-    if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
+    if (impl_.scenario == IServiceReverseType::Scenario::RESTORE) {
         bool isAllBundlesRestored = SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
         isAllBundlesFinished = (isAllBundlesFinished && isAllBundlesRestored);
     }
@@ -748,7 +748,7 @@ bool SvcSessionManager::NeedToUnloadService()
         return false;
     }
     bool isNeedToUnloadService = (!impl_.backupExtNameMap.size() && (sessionCnt_.load() <= 0));
-    if (impl_.scenario == IServiceReverse::Scenario::RESTORE) {
+    if (impl_.scenario == IServiceReverseType::Scenario::RESTORE) {
         bool isAllBundlesRestored = SvcRestoreDepsManager::GetInstance().IsAllBundlesRestored();
         isNeedToUnloadService = (isNeedToUnloadService && isAllBundlesRestored);
     }

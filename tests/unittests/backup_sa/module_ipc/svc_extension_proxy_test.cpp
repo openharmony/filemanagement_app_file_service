@@ -21,7 +21,7 @@
 #include "b_error/b_error.h"
 #include "ext_extension_mock.h"
 #include "message_parcel_mock.h"
-#include "module_ipc/svc_extension_proxy.h"
+#include "extension_proxy.h"
 #include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -35,7 +35,7 @@ public:
     void SetUp() override {};
     void TearDown() override {};
 public:
-    static inline sptr<SvcExtensionProxy> proxy_ = nullptr;
+    static inline sptr<ExtensionProxy> proxy_ = nullptr;
     static inline sptr<BackupExtExtensionMock> mock_ = nullptr;
     static inline shared_ptr<MessageParcelMock> messageParcelMock_ = nullptr;
 };
@@ -43,7 +43,7 @@ public:
 void SvcExtensionProxyTest::SetUpTestCase()
 {
     mock_ = sptr(new BackupExtExtensionMock());
-    proxy_ = sptr(new SvcExtensionProxy(mock_));
+    proxy_ = sptr(new ExtensionProxy(mock_));
     messageParcelMock_ = make_shared<MessageParcelMock>();
     MessageParcelMock::messageParcel = messageParcelMock_;
 }

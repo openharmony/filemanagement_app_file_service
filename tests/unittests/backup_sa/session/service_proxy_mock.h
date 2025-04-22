@@ -25,6 +25,7 @@ class ServiceProxyMock : public ServiceProxy {
 public:
     explicit ServiceProxyMock(const sptr<IRemoteObject> &impl) : ServiceProxy(impl) {}
     ~ServiceProxyMock() override {}
+
 public:
     MOCK_METHOD1(InitRestoreSession, ErrCode(const sptr<IServiceReverse> &remote));
     MOCK_METHOD2(InitRestoreSessionWithErrMsg, ErrCode(const sptr<IServiceReverse> &remote, std::string &errMsg));

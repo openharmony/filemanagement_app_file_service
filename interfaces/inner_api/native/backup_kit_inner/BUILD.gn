@@ -55,7 +55,6 @@ ohos_shared_library("backup_kit_inner") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_client.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
-    "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse_stub.cpp",
   ]
 
   defines = [
