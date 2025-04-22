@@ -54,7 +54,7 @@
 #include "b_utils/b_time.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
-#include "installdUnTarFile.h"
+#include "installd_un_tar_file.h"
 #include "iservice.h"
 #include "sandbox_helper.h"
 #include "service_client.h"

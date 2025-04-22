@@ -15,10 +15,10 @@
 
 #ifndef PHONECLONE_INSTALLDUNTARFILE_H
 #define PHONECLONE_INSTALLDUNTARFILE_H
-#include <vector>
+#include "installd_tar_utils.h"
+#include "tar_util.h"
 #include <string>
-#include "installdTarUtils.h"
-#include "tarUtil.h"
+#include <vector>
 
 namespace installd {
 
