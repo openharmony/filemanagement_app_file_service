@@ -28,39 +28,55 @@ const int DEFAULT_USER_ID = -1;
 
 class ServiceReverse final : public ServiceReverseStub {
 public:
-    void BackupOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override;
-    void BackupOnBundleStarted(int32_t errCode, std::string bundleName) override;
-    void BackupOnResultReport(std::string result, std::string bundleName) override;
-    void BackupOnBundleFinished(int32_t errCode, std::string bundleName) override;
-    void BackupOnAllBundlesFinished(int32_t errCode) override;
-    void BackupOnProcessInfo(std::string bundleName, std::string processInfo) override;
-    void BackupOnScanningInfo(std::string scannedInfo) override;
+    ErrCode BackupOnFileReady(const std::string &bundleName,
+                              const std::string &fileName,
+                              int fd,
+                              int32_t errCode) override;
+    ErrCode BackupOnBundleStarted(int32_t errCode, const std::string &bundleName) override;
+    ErrCode BackupOnResultReport(const std::string &result, const std::string &bundleName) override;
+    ErrCode BackupOnBundleFinished(int32_t errCode, const std::string &bundleName) override;
+    ErrCode BackupOnAllBundlesFinished(int32_t errCode) override;
+    ErrCode BackupOnProcessInfo(const std::string &bundleName, const std::string &processInfo) override;
+    ErrCode BackupOnScanningInfo(const std::string &scannedInfo) override;
 
-    void RestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
-    void RestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
-    void RestoreOnAllBundlesFinished(int32_t errCode) override;
-    void RestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int32_t errCode) override;
-    void RestoreOnResultReport(std::string result, std::string bundleName,
-        ErrCode errCode = 0) override;
-    void RestoreOnProcessInfo(std::string bundleName, std::string processInfo) override;
+    ErrCode RestoreOnBundleStarted(int32_t errCode, const std::string &bundleName) override;
+    ErrCode RestoreOnBundleFinished(int32_t errCode, const std::string &bundleName) override;
+    ErrCode RestoreOnAllBundlesFinished(int32_t errCode) override;
+    ErrCode RestoreOnFileReady(const std::string &bundleName,
+                               const std::string &fileName,
+                               int fd,
+                               int32_t errCode) override;
+    ErrCode RestoreOnResultReport(const std::string &result,
+                                  const std::string &bundleName,
+                                  ErrCode errCode = 0) override;
+    ErrCode RestoreOnProcessInfo(const std::string &bundleName, const std::string &processInfo) override;
 
-    void IncrementalBackupOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
-        int32_t errCode) override;
-    void IncrementalBackupOnBundleStarted(int32_t errCode, std::string bundleName) override;
-    void IncrementalBackupOnResultReport(std::string result, std::string bundleName) override;
-    void IncrementalBackupOnBundleFinished(int32_t errCode, std::string bundleName) override;
-    void IncrementalBackupOnAllBundlesFinished(int32_t errCode) override;
-    void IncrementalBackupOnProcessInfo(std::string bundleName, std::string processInfo) override;
-    void IncrementalBackupOnScanningInfo(std::string scannedInfo) override;
+    ErrCode IncrementalBackupOnFileReady(const std::string &bundleName,
+                                         const std::string &fileName,
+                                         int fd,
+                                         int manifestFd,
+                                         int32_t errCode) override;
+    ErrCode IncrementalSaBackupOnFileReady(const std::string &bundleName, const std::string &fileName,
+                                           int fd, int32_t errCode) override;
+    ErrCode IncrementalBackupOnBundleStarted(int32_t errCode, const std::string &bundleName) override;
+    ErrCode IncrementalBackupOnResultReport(const std::string &result, const std::string &bundleName) override;
+    ErrCode IncrementalBackupOnBundleFinished(int32_t errCode, const std::string &bundleName) override;
+    ErrCode IncrementalBackupOnAllBundlesFinished(int32_t errCode) override;
+    ErrCode IncrementalBackupOnProcessInfo(const std::string &bundleName, const std::string &processInfo) override;
+    ErrCode IncrementalBackupOnScanningInfo(const std::string &scannedInfo) override;
 
-    void IncrementalRestoreOnBundleStarted(int32_t errCode, std::string bundleName) override;
-    void IncrementalRestoreOnBundleFinished(int32_t errCode, std::string bundleName) override;
-    void IncrementalRestoreOnAllBundlesFinished(int32_t errCode) override;
-    void IncrementalRestoreOnFileReady(std::string bundleName, std::string fileName, int fd, int manifestFd,
-        int32_t errCode) override;
-    void IncrementalRestoreOnResultReport(std::string result, std::string bundleName,
-        ErrCode errCode = 0) override;
-    void IncrementalRestoreOnProcessInfo(std::string bundleName, std::string processInfo) override;
+    ErrCode IncrementalRestoreOnBundleStarted(int32_t errCode, const std::string &bundleName) override;
+    ErrCode IncrementalRestoreOnBundleFinished(int32_t errCode, const std::string &bundleName) override;
+    ErrCode IncrementalRestoreOnAllBundlesFinished(int32_t errCode) override;
+    ErrCode IncrementalRestoreOnFileReady(const std::string &bundleName,
+                                          const std::string &fileName,
+                                          int fd,
+                                          int manifestFd,
+                                          int32_t errCode) override;
+    ErrCode IncrementalRestoreOnResultReport(const std::string &result,
+                                             const std::string &bundleName,
+                                             ErrCode errCode) override;
+    ErrCode IncrementalRestoreOnProcessInfo(const std::string &bundleName, const std::string &processInfo) override;
 
 public:
     ServiceReverse() = delete;

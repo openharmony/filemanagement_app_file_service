@@ -33,7 +33,6 @@ ohos_shared_library("backup_extension_ability_native") {
     "src/ext_backup_js.cpp",
     "src/ext_backup_loader.cpp",
     "src/ext_extension.cpp",
-    "src/ext_extension_stub.cpp",
     "src/sub_ext_extension.cpp",
     "src/tar_file.cpp",
     "src/untar_file.cpp",
@@ -45,6 +44,8 @@ ohos_shared_library("backup_extension_ability_native") {
   ]
 
   include_dirs = [ "include" ]
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",

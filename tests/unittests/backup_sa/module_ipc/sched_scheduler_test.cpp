@@ -42,7 +42,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override {};
     void TearDown() override {};
-    void Init(IServiceReverse::Scenario scenario);
+    void Init(IServiceReverseType::Scenario scenario);
 
     static inline sptr<SchedScheduler> schedPtr_ = nullptr;
     static inline sptr<SvcSessionManager> sessionManagerPtr_ = nullptr;
@@ -63,7 +63,7 @@ void SchedSchedulerTest::TearDownTestCase()
     sessionManagerPtr_ = nullptr;
 }
 
-void SchedSchedulerTest::Init(IServiceReverse::Scenario scenario)
+void SchedSchedulerTest::Init(IServiceReverseType::Scenario scenario)
 {
     vector<string> bundleNames;
     map<string, BackupExtInfo> backupExtNameMap;
@@ -99,7 +99,7 @@ HWTEST_F(SchedSchedulerTest, SUB_Service_Sched_0100, testing::ext::TestSize.Leve
 {
     GTEST_LOG_(INFO) << "SchedSchedulerTest-begin SUB_Service_Sched_0100";
     try {
-        Init(IServiceReverse::Scenario::BACKUP);
+        Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_TRUE(schedPtr_ != nullptr);
         schedPtr_->Sched();
         GTEST_LOG_(INFO) << "SchedSchedulerTest-Sched Branches";

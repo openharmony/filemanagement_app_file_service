@@ -56,7 +56,7 @@ public:
     ErrCode InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg) override;
     ErrCode Start() override;
     ErrCode GetLocalCapabilities(int& fd) override;
-    
+
     ErrCode GetLocalCapabilitiesForBundleInfos(int& fd) override;
     ErrCode PublishFile(const BFileInfo &fileInfo) override;
     ErrCode AppFileReady(const std::string &fileName, int fd, int32_t errCode) override;
@@ -64,7 +64,7 @@ public:
     ErrCode ServiceResultReport(const std::string& restoreRetInfo,
         BackupRestoreScenario sennario, ErrCode errCode) override;
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override;
-  
+
     ErrCode AppendBundlesRestoreSessionDataByDetail(
             int fd,
             const std::vector<std::string>& bundleNames,
@@ -73,7 +73,7 @@ public:
             int32_t userId) override;
     ErrCode AppendBundlesRestoreSessionData(int fd, const std::vector<std::string>& bundleNames,
                                             int32_t restoreType, int32_t userId) override;
-    
+
     ErrCode AppendBundlesBackupSession(const std::vector<BundleName> &bundleNames) override;
     ErrCode AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
                                               const std::vector<std::string> &bundleInfos) override;
@@ -317,7 +317,7 @@ public:
     string BundleNameWithUserId(const string& bundleName, const int32_t userId);
     std::tuple<std::string, int32_t> SplitBundleName(const string& bundleNameWithId);
     void AppendBundles(const std::vector<std::string> &bundleNames);
-    void ReportOnBundleStarted(IServiceReverse::Scenario scenario, const std::string &bundleName);
+    void ReportOnBundleStarted(IServiceReverseType::Scenario scenario, const std::string &bundleName);
     ErrCode AppIncrementalFileReady(const std::string &bundleName, const std::string &fileName, UniqueFd fd,
         UniqueFd manifestFd, int32_t errCode);
     ErrCode SendFileHandle(const std::string &bundleName, const std::string &fileName);
@@ -368,7 +368,7 @@ private:
      *
      * @param scenario Scenario状态
      */
-    ErrCode VerifyCaller(IServiceReverse::Scenario scenario);
+    ErrCode VerifyCaller(IServiceReverseType::Scenario scenario);
 
     /**
      * @brief 验证调用者并返回名称
@@ -559,7 +559,7 @@ private:
      */
     void SetOccupySession(bool isOccupyingSession);
 
-    void ReportOnExtConnectFailed(const IServiceReverse::Scenario scenario,
+    void ReportOnExtConnectFailed(const IServiceReverseType::Scenario scenario,
         const std::string &bundleName, const ErrCode ret);
 
     void ReleaseOnException();
@@ -576,7 +576,7 @@ private:
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         std::map<std::string, bool> &isClearDataFlags);
 
-    void TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string &bundleName);
+    void TimeoutRadarReport(IServiceReverseType::Scenario scenario, std::string &bundleName);
 
     void OnBundleStarted(BError error, sptr<SvcSessionManager> session, const BundleName &bundleName);
 
@@ -584,16 +584,16 @@ private:
         const vector<BundleName> &restoreBundleNames);
 
     void BundleBeginRadarReport(const std::string &bundleName, const ErrCode errCode,
-        const IServiceReverse::Scenario scenario);
+        const IServiceReverseType::Scenario scenario);
 
     void BundleEndRadarReport(const std::string &bundleName, ErrCode errCode,
-        const IServiceReverse::Scenario scenario);
+        const IServiceReverseType::Scenario scenario);
 
     void FileReadyRadarReport(const std::string &bundleName, const std::string &fileName, const ErrCode errCode,
-        const IServiceReverse::Scenario scenario);
+        const IServiceReverseType::Scenario scenario);
 
     void ExtensionConnectFailRadarReport(const std::string &bundleName, const ErrCode errCode,
-        const IServiceReverse::Scenario scenario);
+        const IServiceReverseType::Scenario scenario);
 
     void OnStartResRadarReport(const std::vector<std::string> &bundleNameList, int32_t stage);
 
@@ -678,6 +678,8 @@ private:
     UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames);
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
                                                   const std::vector<std::string> &infos);
+
+    ErrCode HelpToAppIncrementalFileReady(const string &bundleName, const string &fileName, sptr<IExtension> proxy);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

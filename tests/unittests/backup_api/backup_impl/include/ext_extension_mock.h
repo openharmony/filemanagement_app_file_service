@@ -20,9 +20,9 @@
 #include <gmock/gmock.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
+#include "unique_fd.h"
 #include "b_error/b_error.h"
-#include "i_extension.h"
+#include "iextension.h"
 #include "iremote_stub.h"
 #include "test_manager.h"
 
@@ -51,9 +51,16 @@ public:
         reply.WriteInt32(0);
         reply.WriteFileDescriptor(fd);
         return BError(BError::Codes::OK);
-    }
+    };
 
-    UniqueFd GetFileHandle(const std::string &fileName, int32_t &errCode) override
+    ErrCode GetFileHandleWithUniqueFd(const std::string &fileName, int32_t &getFileHandleErrCode, int &fd) override
+    {
+        UniqueFd fdResult = GetFileHandle(fileName, getFileHandleErrCode);
+        fd = fdResult.Release();
+        return ERR_OK;
+    };
+
+    UniqueFd GetFileHandle(const std::string &fileName, int32_t &errCode)
     {
         GTEST_LOG_(INFO) << "GetFileHandle" << fileName;
         if (fileName == "testName") {
@@ -104,7 +111,11 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncrementalFileHandle(const std::string &fileName) override
+    ErrCode GetIncrementalFileHandle(const std::string &fileName, UniqueFdGroup &fdGroup) override
+    {
+        return BError(BError::Codes::OK);
+    }
+    std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncrementalFileHandle(const std::string &fileName)
     {
         return {BError(BError::Codes::OK), UniqueFd(-1), UniqueFd(-1)};
     };
@@ -114,7 +125,11 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd) override
+    ErrCode HandleIncrementalBackup(int incrementalFd, int manifestFd) override
+    {
+        return BError(BError::Codes::OK);
+    };
+    ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
     {
         return BError(BError::Codes::OK);
     };
@@ -124,7 +139,12 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle() override
+    ErrCode GetIncrementalBackupFileHandle(UniqueFdGroup &fdGroup) override
+    {
+        return BError(BError::Codes::OK);
+    };
+
+    std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle()
     {
         return {UniqueFd(-1), UniqueFd(-1)};
     };
@@ -134,7 +154,7 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    ErrCode UpdateFdSendRate(std::string &bundleName, int32_t sendRate) override
+    ErrCode UpdateFdSendRate(const std::string &bundleName, int32_t sendRate) override
     {
         return BError(BError::Codes::OK);
     };

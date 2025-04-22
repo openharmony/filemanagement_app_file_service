@@ -27,6 +27,9 @@ ohos_fuzztest("ServiceReverseFuzzTest") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/utils/include",
   ]
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
   cflags = [
     "-g",
     "-O0",
@@ -37,6 +40,7 @@ ohos_fuzztest("ServiceReverseFuzzTest") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/utils:backup_utils",
   ]
 

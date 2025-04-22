@@ -241,6 +241,15 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
     return fd;
 }
 
+ErrCode BackupExtExtension::GetFileHandleWithUniqueFd(const std::string &fileName,
+                                                      int32_t &getFileHandleErrCode,
+                                                      int &fd)
+{
+    UniqueFd fileHandleFd(GetFileHandle(fileName, getFileHandleErrCode));
+    fd = fileHandleFd.Release();
+    return ERR_OK;
+}
+
 UniqueFd BackupExtExtension::GetFileHandle(const string &fileName, int32_t &errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -384,6 +393,16 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForNorm
         }
     } while (0);
     return {errCode, move(fd), move(reportFd)};
+}
+
+ErrCode BackupExtExtension::GetIncrementalFileHandle(const std::string &fileName, UniqueFdGroup &fdGroup)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    auto [errCode, fd, reportFd] = GetIncrementalFileHandle(fileName);
+    fdGroup.errCode = errCode;
+    fdGroup.fd = fd.Release();
+    fdGroup.reportFd = reportFd.Release();
+    return ERR_OK;
 }
 
 tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
@@ -1909,6 +1928,17 @@ void BackupExtExtension::FillFileInfos(UniqueFd incrementalFd,
         allFiles.size(), smallFiles.size(), bigFiles.size());
 }
 
+ErrCode BackupExtExtension::HandleIncrementalBackup(int incrementalFd, int manifestFd)
+{
+    HILOGI("Start HandleIncrementalBackup. incrementalFd:%{public}d, manifestFd:%{public}d", incrementalFd, manifestFd);
+    UniqueFd incrementalFdUnique(dup(incrementalFd));
+    UniqueFd manifestFdUnique(dup(manifestFd));
+    ErrCode ret = HandleIncrementalBackup(std::move(incrementalFdUnique), std::move(manifestFdUnique));
+    close(incrementalFd);
+    close(manifestFd);
+    return ret;
+}
+
 ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -1936,6 +1966,14 @@ ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
     }
     AsyncTaskOnIncrementalBackup();
     return ERR_OK;
+}
+
+ErrCode BackupExtExtension::GetIncrementalBackupFileHandle(UniqueFdGroup& fdGroup)
+{
+    auto [fd, reportFd] = GetIncrementalBackupFileHandle();
+    fdGroup.fd = fd.Release();
+    fdGroup.reportFd = reportFd.Release();
+    return BError(BError::Codes::OK).GetCode();
 }
 
 tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()

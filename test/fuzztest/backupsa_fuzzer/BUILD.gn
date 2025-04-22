@@ -36,10 +36,11 @@ ohos_fuzztest("BackupSaFuzzTest") {
 
   deps = [
     "${app_file_service_path}/services/backup_sa:backup_sa",
-    "${app_file_service_path}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/utils:backup_utils",
   ]
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
 
   external_deps = [
     "ability_runtime:ability_manager",

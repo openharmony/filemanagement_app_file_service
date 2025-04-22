@@ -44,7 +44,7 @@ public:
     void SetUp() {};
     void TearDown() {};
 
-    ErrCode Init(IServiceReverse::Scenario scenario);
+    ErrCode Init(IServiceReverseType::Scenario scenario);
 
     static inline sptr<Service> servicePtr_ = nullptr;
     static inline sptr<ServiceReverseMock> remote_ = nullptr;
@@ -64,7 +64,7 @@ void ServiceTest::TearDownTestCase()
     remote_ = nullptr;
 }
 
-ErrCode ServiceTest::Init(IServiceReverse::Scenario scenario)
+ErrCode ServiceTest::Init(IServiceReverseType::Scenario scenario)
 {
     vector<string> bundleNames;
     vector<string> detailInfos;
@@ -83,7 +83,7 @@ ErrCode ServiceTest::Init(IServiceReverse::Scenario scenario)
     detailInfos.emplace_back(json);
     string errMsg;
     ErrCode ret = 0;
-    if (scenario == IServiceReverse::Scenario::RESTORE) {
+    if (scenario == IServiceReverseType::Scenario::RESTORE) {
         EXPECT_TRUE(servicePtr_ != nullptr);
         EXPECT_TRUE(remote_ != nullptr);
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
@@ -97,8 +97,8 @@ ErrCode ServiceTest::Init(IServiceReverse::Scenario scenario)
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->Finish();
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-    } else if (scenario == IServiceReverse::Scenario::BACKUP) {
-        sptr<IServiceReverse> srptr_=static_cast<sptr<IServiceReverse>>(remote_);
+    } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
+        sptr<IServiceReverse> srptr_ = static_cast<sptr<IServiceReverse>>(remote_);
         ret = servicePtr_->InitBackupSession(srptr_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->InitBackupSessionWithErrMsg(srptr_, errMsg);
@@ -215,7 +215,7 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0100, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_PublishFile_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         BFileInfo fileInfo {BUNDLE_NAME, "", 0};
         EXPECT_TRUE(servicePtr_ != nullptr);
@@ -245,7 +245,7 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0101, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_PublishFile_0101";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         BFileInfo fileInfo {BUNDLE_NAME, "", 0};
         EXPECT_TRUE(servicePtr_ != nullptr);
@@ -275,7 +275,7 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0102, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_PublishFile_0102";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         BFileInfo fileInfo {BUNDLE_NAME, "", 0};
         EXPECT_TRUE(servicePtr_ != nullptr);
@@ -406,7 +406,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0100, testing::ext::TestSize.Level1)
         auto ret = servicePtr_->AppDone(BError(BError::Codes::OK));
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "SUB_Service_AppDone_0100 BACKUP";
-        ret = Init(IServiceReverse::Scenario::BACKUP);
+        ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "ServiceTest-AppDone Branches";
         ret = servicePtr_->AppDone(1);
@@ -439,7 +439,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0101, testing::ext::TestSize.Level1)
         auto ret = servicePtr_->AppDone(BError(BError::Codes::OK));
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "SUB_Service_AppDone_0101 RESTORE";
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->AppDone(BError(BError::Codes::OK));
         EXPECT_EQ(ret, BError(BError::Codes::OK));
@@ -526,13 +526,13 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0100, testing::ext::Test
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_LaunchBackupExtension_0100";
     try {
         GTEST_LOG_(INFO) << "SUB_Service_LaunchBackupExtension_0100 RESTORE";
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         ret = servicePtr_->LaunchBackupExtension(BUNDLE_NAME);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "SUB_Service_LaunchBackupExtension_0100 BACKUP";
-        ret = Init(IServiceReverse::Scenario::BACKUP);
+        ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->LaunchBackupExtension(BUNDLE_NAME);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
@@ -557,7 +557,7 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0101, testing::ext::Test
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_LaunchBackupExtension_0101";
     try {
         GTEST_LOG_(INFO) << "SUB_Service_LaunchBackupExtension_0100 UNDEFINED";
-        ErrCode ret = Init(IServiceReverse::Scenario::UNDEFINED);
+        ErrCode ret = Init(IServiceReverseType::Scenario::UNDEFINED);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         ret = servicePtr_->LaunchBackupExtension(BUNDLE_NAME);
@@ -582,7 +582,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0100, testing::ext::TestSize.Lev
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetFileHandle_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         ret = servicePtr_->GetFileHandle(BUNDLE_NAME, FILE_NAME);
@@ -607,7 +607,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0101, testing::ext::TestSize.Lev
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetFileHandle_0101";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
 
         SvcSessionManager::Impl impl_;
@@ -643,13 +643,13 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0100, testing::ext::Test
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBackupExtensionDied_0100";
     try {
         GTEST_LOG_(INFO) << "SUB_Service_OnBackupExtensionDied_0100 RESTORE";
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         string bundleName = BUNDLE_NAME;
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->OnBackupExtensionDied(move(bundleName));
         GTEST_LOG_(INFO) << "SUB_Service_OnBackupExtensionDied_0100 BACKUP";
-        ret = Init(IServiceReverse::Scenario::BACKUP);
+        ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         bundleName = BUNDLE_NAME;
         servicePtr_->OnBackupExtensionDied(move(bundleName));
@@ -674,7 +674,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0101, testing::ext::Test
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBackupExtensionDied_0101";
     try {
         GTEST_LOG_(INFO) << "SUB_Service_OnBackupExtensionDied_0101 RESTORE";
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         string bundleName = BUNDLE_NAME;
         SvcSessionManager::Impl impl_;
@@ -684,12 +684,12 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0101, testing::ext::Test
         extInfo.versionName = "0.0.0.0-0.0.0.0";
         impl_.restoreDataType = RESTORE_DATA_WAIT_SEND;
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
-        impl_.scenario = IServiceReverse::Scenario::RESTORE;
+        impl_.scenario = IServiceReverseType::Scenario::RESTORE;
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->OnBackupExtensionDied(move(bundleName));
         GTEST_LOG_(INFO) << "SUB_Service_OnBackupExtensionDied_0101 BACKUP";
 
-        ret = Init(IServiceReverse::Scenario::BACKUP);
+        ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         impl_.restoreDataType = RESTORE_DATA_READDY;
         bundleName = "123456789";
@@ -716,14 +716,14 @@ HWTEST_F(ServiceTest, SUB_Service_ExtStart_0100, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtStart_0100";
     try {
         GTEST_LOG_(INFO) << "SUB_Service_ExtStart_0100 BACKUP";
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->ExtStart(BUNDLE_NAME);
         GTEST_LOG_(INFO) << "ServiceTest-ExtStart BACKUP Branches";
         servicePtr_->ExtStart(BUNDLE_NAME);
         GTEST_LOG_(INFO) << "SUB_Service_ExtStart_0100 RESTORE";
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         servicePtr_->ExtStart(BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -747,7 +747,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtStart_0101, testing::ext::TestSize.Level1)
     try {
         GTEST_LOG_(INFO) << "SUB_Service_ExtStart_0101 BACKUP";
         std::string bundleName = "123456";
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->ExtStart(bundleName);
@@ -762,16 +762,16 @@ HWTEST_F(ServiceTest, SUB_Service_ExtStart_0101, testing::ext::TestSize.Level1)
         extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, bundleNameIndexInfo));
         extInfo.backUpConnection->backupProxy_ = nullptr;
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
-        impl_.scenario = IServiceReverse::Scenario::UNDEFINED;
-        ret = Init(IServiceReverse::Scenario::UNDEFINED);
+        impl_.scenario = IServiceReverseType::Scenario::UNDEFINED;
+        ret = Init(IServiceReverseType::Scenario::UNDEFINED);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->ExtStart(BUNDLE_NAME);
 
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->ExtStart(BUNDLE_NAME);
 
-        ret = Init(IServiceReverse::Scenario::UNDEFINED);
+        ret = Init(IServiceReverseType::Scenario::UNDEFINED);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->ExtStart(BUNDLE_NAME);
     } catch (...) {
@@ -867,19 +867,19 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectFailed_0100, testing::ext::TestSize.
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtConnectFailed_0100";
     try {
         GTEST_LOG_(INFO) << "SUB_Service_ExtConnectFailed_0100 RESTORE";
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->ExtConnectFailed(BUNDLE_NAME, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "SUB_Service_ExtConnectFailed_0100 BACKUP";
-        ret = Init(IServiceReverse::Scenario::BACKUP);
+        ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->ExtConnectFailed(BUNDLE_NAME, BError(BError::Codes::OK));
 
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
         impl_.restoreDataType = RESTORE_DATA_READDY;
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->ExtConnectFailed(BUNDLE_NAME, BError(BError::Codes::OK));
     } catch (...) {
@@ -1090,7 +1090,7 @@ HWTEST_F(ServiceTest, SUB_Service_SendStartAppGalleryNotify_0101, testing::ext::
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SendStartAppGalleryNotify_0101";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->SendStartAppGalleryNotify(BUNDLE_NAME);
@@ -1138,7 +1138,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetBackupInfo_0100, testing::ext::TestSize.Lev
     try {
         std::string bundleName = "com.example.app2backup";
         std::string backupInfo = "backup info";
-        auto ret = Init(IServiceReverse::Scenario::BACKUP);
+        auto ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->GetBackupInfo(bundleName, backupInfo);
@@ -1164,7 +1164,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetBackupInfo_0101, testing::ext::TestSize.Lev
     try {
         std::string bundleName = "com.example.app2backup";
         std::string result = "ok";
-        auto ret = Init(IServiceReverse::Scenario::BACKUP);
+        auto ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->session_ = nullptr;
@@ -1306,7 +1306,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnBundleStarted_0100, testing::ext::TestSize.L
         servicePtr_->OnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), session, BUNDLE_NAME);
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
-        impl_.scenario = IServiceReverse::Scenario::RESTORE;
+        impl_.scenario = IServiceReverseType::Scenario::RESTORE;
         servicePtr_->OnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), session, BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1550,7 +1550,7 @@ HWTEST_F(ServiceTest, SUB_Service_HandleCurBundleEndWork_0100, testing::ext::Tes
         BackupExtInfo extInfo {};
         extInfo.backUpConnection = nullptr;
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
-        impl_.scenario = IServiceReverse::Scenario::RESTORE;
+        impl_.scenario = IServiceReverseType::Scenario::RESTORE;
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->HandleCurBundleEndWork(BUNDLE_NAME, BackupRestoreScenario::FULL_RESTORE);
     } catch (...) {
@@ -1574,7 +1574,7 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupSAExtension_0100, testing::ext::Te
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_LaunchBackupSAExtension_0100";
     try {
         std::string bundleName = "123456";
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         ret = servicePtr_->LaunchBackupSAExtension(BUNDLE_NAME);
@@ -1597,7 +1597,7 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupSAExtension_0100, testing::ext::Te
         ret = servicePtr_->LaunchBackupSAExtension(bundleName);
         EXPECT_NE(ret, BError(BError::Codes::OK));
 
-        ret = Init(IServiceReverse::Scenario::BACKUP);
+        ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->LaunchBackupSAExtension(bundleName);
         EXPECT_NE(ret, BError(BError::Codes::OK));
@@ -1622,7 +1622,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0100, testing::ext::TestSize.Le
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtConnectDied_0100";
     try {
         std::string callName = "123456";
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
@@ -1632,7 +1632,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0100, testing::ext::TestSize.Le
         string bundleNameIndexInfo = "123456789";
         extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, bundleNameIndexInfo));
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
-        impl_.scenario = IServiceReverse::Scenario::RESTORE;
+        impl_.scenario = IServiceReverseType::Scenario::RESTORE;
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->ExtConnectDied(callName);
         extInfo.backUpConnection->isConnected_.store(true);
@@ -1657,19 +1657,19 @@ HWTEST_F(ServiceTest, SUB_Service_NoticeClientFinish_0100, testing::ext::TestSiz
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_NoticeClientFinish_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->NoticeClientFinish(BUNDLE_NAME, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "SUB_Service_NoticeClientFinish_0100 BACKUP";
-        ret = Init(IServiceReverse::Scenario::BACKUP);
+        ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->NoticeClientFinish(BUNDLE_NAME, BError(BError::Codes::OK));
 
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
         impl_.restoreDataType = RESTORE_DATA_READDY;
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->NoticeClientFinish(BUNDLE_NAME, BError(BError::Codes::OK));
     } catch (...) {
@@ -1692,13 +1692,13 @@ HWTEST_F(ServiceTest, SUB_Service_OnAllBundlesFinished_0100, testing::ext::TestS
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnAllBundlesFinished_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->session_ = sptr(new SvcSessionManager(servicePtr_));
         servicePtr_->OnAllBundlesFinished(BError(BError::Codes::OK));
 
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->OnAllBundlesFinished(BError(BError::Codes::OK));
     } catch (...) {
@@ -1721,12 +1721,12 @@ HWTEST_F(ServiceTest, SUB_Service_SendEndAppGalleryNotify_0100, testing::ext::Te
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SendEndAppGalleryNotify_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->SendEndAppGalleryNotify(BUNDLE_NAME);
 
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->SendEndAppGalleryNotify(BUNDLE_NAME);
     } catch (...) {
@@ -1749,12 +1749,12 @@ HWTEST_F(ServiceTest, SUB_Service_SendErrAppGalleryNotify_0100, testing::ext::Te
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SendErrAppGalleryNotify_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->SendErrAppGalleryNotify();
 
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->SendErrAppGalleryNotify();
     } catch (...) {
@@ -1777,12 +1777,12 @@ HWTEST_F(ServiceTest, SUB_Service_ClearDisposalOnSaStart_0100, testing::ext::Tes
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ClearDisposalOnSaStart_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->ClearDisposalOnSaStart();
 
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->ClearDisposalOnSaStart();
     } catch (...) {
@@ -1805,12 +1805,12 @@ HWTEST_F(ServiceTest, SUB_Service_DeleteDisConfigFile_0100, testing::ext::TestSi
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_DeleteDisConfigFile_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->DeleteDisConfigFile();
 
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->DeleteDisConfigFile();
     } catch (...) {
@@ -1833,18 +1833,18 @@ HWTEST_F(ServiceTest, SUB_Service_ExtensionConnectFailRadarReport_0100, testing:
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtensionConnectFailRadarReport_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->ClearBundleRadarReport();
         servicePtr_->ExtensionConnectFailRadarReport(BUNDLE_NAME, BError(BError::Codes::OK),
-                IServiceReverse::Scenario::BACKUP);
+                IServiceReverseType::Scenario::BACKUP);
         EXPECT_TRUE(true);
 
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->ExtensionConnectFailRadarReport(BUNDLE_NAME, BError(BError::Codes::OK),
-                IServiceReverse::Scenario::RESTORE);
+                IServiceReverseType::Scenario::RESTORE);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1866,13 +1866,13 @@ HWTEST_F(ServiceTest, SUB_Service_StartRunningTimer_0100, testing::ext::TestSize
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StartRunningTimer_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->StartRunningTimer(BUNDLE_NAME);
         EXPECT_TRUE(true);
 
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         servicePtr_->StartRunningTimer(BUNDLE_NAME);
         EXPECT_TRUE(true);
@@ -1896,17 +1896,17 @@ HWTEST_F(ServiceTest, SUB_Service_TimeoutRadarReport_0100, testing::ext::TestSiz
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TimeoutRadarReport_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         std::string bundleName = BUNDLE_NAME;
         servicePtr_->ClearBundleRadarReport();
-        servicePtr_->TimeoutRadarReport(IServiceReverse::Scenario::BACKUP, bundleName);
+        servicePtr_->TimeoutRadarReport(IServiceReverseType::Scenario::BACKUP, bundleName);
         EXPECT_TRUE(true);
 
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-        servicePtr_->TimeoutRadarReport(IServiceReverse::Scenario::RESTORE, bundleName);
+        servicePtr_->TimeoutRadarReport(IServiceReverseType::Scenario::RESTORE, bundleName);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1928,15 +1928,15 @@ HWTEST_F(ServiceTest, SUB_Service_ReportOnBundleStarted_0100, testing::ext::Test
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ReportOnBundleStarted_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
-        servicePtr_->ReportOnBundleStarted(IServiceReverse::Scenario::BACKUP, BUNDLE_NAME);
+        servicePtr_->ReportOnBundleStarted(IServiceReverseType::Scenario::BACKUP, BUNDLE_NAME);
         EXPECT_TRUE(true);
 
-        ret = Init(IServiceReverse::Scenario::RESTORE);
+        ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-        servicePtr_->ReportOnBundleStarted(IServiceReverse::Scenario::RESTORE, BUNDLE_NAME);
+        servicePtr_->ReportOnBundleStarted(IServiceReverseType::Scenario::RESTORE, BUNDLE_NAME);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1958,7 +1958,7 @@ HWTEST_F(ServiceTest, SUB_Service_HandleNotSupportBundleNames_0100, testing::ext
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_HandleNotSupportBundleNames_0100";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::BACKUP);
+        ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
         const std::vector<std::string> srcBundleNames = {"test0", "test1", "test2", "test3"};
@@ -2048,7 +2048,7 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0103, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_PublishFile_0103";
     try {
-        ErrCode ret = Init(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         BFileInfo fileInfo {BUNDLE_NAME, "", 0};
         EXPECT_TRUE(servicePtr_ != nullptr);

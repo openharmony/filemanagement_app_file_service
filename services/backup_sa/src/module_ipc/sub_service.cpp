@@ -84,11 +84,11 @@ void Service::AppendBundles(const std::vector<std::string> &bundleNames)
     }
 }
 
-void Service::ReportOnBundleStarted(IServiceReverse::Scenario scenario, const std::string &bundleName)
+void Service::ReportOnBundleStarted(IServiceReverseType::Scenario scenario, const std::string &bundleName)
 {
-    if (scenario == IServiceReverse::Scenario::BACKUP) {
+    if (scenario == IServiceReverseType::Scenario::BACKUP) {
         session_->GetServiceReverseProxy()->BackupOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), bundleName);
-    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+    } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
         session_->GetServiceReverseProxy()->RestoreOnBundleStarted(BError(BError::Codes::SA_INVAL_ARG), bundleName);
     }
 }
@@ -165,7 +165,7 @@ bool Service::IsReportFileReadyFail(const std::string &bundleName)
     return true;
 }
 
-void Service::TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string &bundleName)
+void Service::TimeoutRadarReport(IServiceReverseType::Scenario scenario, std::string &bundleName)
 {
     if (!IsReportBundleExecFail(bundleName)) {
         return;
@@ -175,11 +175,11 @@ void Service::TimeoutRadarReport(IServiceReverse::Scenario scenario, std::string
     if (session_->GetTimeoutValue(bundleName) == 0) {
         errCode = BError::BackupErrorCode::E_FORCE_TIMEOUT;
     }
-    if (scenario == IServiceReverse::Scenario::BACKUP) {
+    if (scenario == IServiceReverseType::Scenario::BACKUP) {
         AppRadar::Info info(bundleName, "", "on backup timeout");
         AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
             BizStageBackup::BIZ_STAGE_ON_BACKUP, errCode);
-    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+    } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
         AppRadar::Info info(bundleName, "", "on restore timeout");
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::TimeOutCallback", GetUserIdDefault(),
             BizStageRestore::BIZ_STAGE_ON_RESTORE, errCode);
@@ -219,7 +219,7 @@ ErrCode Service::GetFileHandle(const string &bundleName, const string &fileName)
             HILOGE("GetFileHandle error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        ErrCode ret = VerifyCaller(IServiceReverse::Scenario::RESTORE);
+        ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
         if (ret != ERR_OK) {
             HILOGE("verify caller failed, bundleName:%{public}s", bundleName.c_str());
             return ret;
@@ -265,14 +265,16 @@ ErrCode Service::SendFileHandle(const std::string &bundleName, const std::string
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     int32_t errCode = 0;
-    UniqueFd fd = proxy->GetFileHandle(fileName, errCode);
+    int32_t fdCode = 0;
+    proxy->GetFileHandleWithUniqueFd(fileName, errCode, fdCode);
+    UniqueFd fd(fdCode);
     if (errCode != ERR_OK) {
         AppRadar::Info info(bundleName, "", "");
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetFileHandle", GetUserIdDefault(),
                                                      BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, errCode);
     }
     session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd), errCode);
-    FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverse::Scenario::RESTORE);
+    FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverseType::Scenario::RESTORE);
     return BError(BError::Codes::OK);
 }
 
@@ -283,7 +285,7 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
         HILOGE("PublishFile error, session is empty");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    ErrCode ret = VerifyCaller(IServiceReverse::Scenario::RESTORE);
+    ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
     if (ret != ERR_OK) {
         HILOGE("PublishFile error, verify caller by scenario failed, ret:%{public}d", ret);
         return ret;
@@ -404,11 +406,11 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("begin %{public}s", bundleName.data());
-    IServiceReverse::Scenario scenario = session_->GetScenario();
+    IServiceReverseType::Scenario scenario = session_->GetScenario();
     BConstants::ExtensionAction action;
-    if (scenario == IServiceReverse::Scenario::BACKUP || scenario == IServiceReverse::Scenario::CLEAN) {
+    if (scenario == IServiceReverseType::Scenario::BACKUP || scenario == IServiceReverseType::Scenario::CLEAN) {
         action = BConstants::ExtensionAction::BACKUP;
-    } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+    } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
         action = BConstants::ExtensionAction::RESTORE;
     } else {
         action = BConstants::ExtensionAction::INVALID;
@@ -488,7 +490,7 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), bundleNameIndexInfo);
             }
             BundleBeginRadarReport(bundleNameIndexInfo, BError(BError::Codes::SA_FORBID_BACKUP_RESTORE).GetCode(),
-                IServiceReverse::Scenario::BACKUP);
+                IServiceReverseType::Scenario::BACKUP);
             continue;
         }
         supportBackupNames.emplace_back(bundleNameIndexInfo);
@@ -687,15 +689,15 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
     HILOGI("begin %{public}s", bundleName.c_str());
     try {
         auto scenario = session_->GetScenario();
-        if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
+        if (scenario == IServiceReverseType::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
-        } else if (scenario == IServiceReverse::Scenario::RESTORE &&
+        } else if (scenario == IServiceReverseType::Scenario::RESTORE &&
                 BackupPara().GetBackupOverrideIncrementalRestore() &&
                 session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
-        } else if (scenario == IServiceReverse::Scenario::BACKUP) {
+        } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
             session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
-        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
         };
         BundleEndRadarReport(bundleName, errCode, scenario);
@@ -717,20 +719,20 @@ void Service::OnAllBundlesFinished(ErrCode errCode)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("called begin.");
     if (session_->IsOnAllBundlesFinished()) {
-        IServiceReverse::Scenario scenario = session_->GetScenario();
-        if (isInRelease_.load() && (scenario == IServiceReverse::Scenario::RESTORE)) {
+        IServiceReverseType::Scenario scenario = session_->GetScenario();
+        if (isInRelease_.load() && (scenario == IServiceReverseType::Scenario::RESTORE)) {
             HILOGI("Will destory session info");
             SessionDeactive();
         }
-        if (scenario == IServiceReverse::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
+        if (scenario == IServiceReverseType::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnAllBundlesFinished(errCode);
-        } else if (scenario == IServiceReverse::Scenario::RESTORE &&
+        } else if (scenario == IServiceReverseType::Scenario::RESTORE &&
                    BackupPara().GetBackupOverrideIncrementalRestore() &&
                    session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
             session_->GetServiceReverseProxy()->IncrementalRestoreOnAllBundlesFinished(errCode);
-        } else if (scenario == IServiceReverse::Scenario::BACKUP) {
+        } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
             session_->GetServiceReverseProxy()->BackupOnAllBundlesFinished(errCode);
-        } else if (scenario == IServiceReverse::Scenario::RESTORE) {
+        } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->RestoreOnAllBundlesFinished(errCode);
         }
         if (!BackupPara().GetBackupOverrideBackupSARelease()) {
@@ -748,8 +750,8 @@ ErrCode Service::VerifySendRateParam()
         HILOGE("Update send rate fail, verify caller failed, ret:%{public}d", ret);
         return ret;
     }
-    IServiceReverse::Scenario scenario = session_ -> GetScenario();
-    if (scenario != IServiceReverse::Scenario::BACKUP) {
+    IServiceReverseType::Scenario scenario = session_ -> GetScenario();
+    if (scenario != IServiceReverseType::Scenario::BACKUP) {
         HILOGE("This method is applicable to the backup scenario");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
@@ -777,7 +779,7 @@ ErrCode Service::HandleCurBundleFileReady(const std::string &bundleName, const s
     if (isIncBackup) {
         session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(BError(BError::Codes::OK),
             bundleName);
-        BundleEndRadarReport(bundleName, BError(BError::Codes::OK), IServiceReverse::Scenario::BACKUP);
+        BundleEndRadarReport(bundleName, BError(BError::Codes::OK), IServiceReverseType::Scenario::BACKUP);
     } else {
         session_->GetServiceReverseProxy()->BackupOnBundleFinished(BError(BError::Codes::OK), bundleName);
         BundleEndRadarReport(bundleName, BError(BError::Codes::OK), session_->GetScenario());
@@ -865,7 +867,7 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::st
     }
     ret = session_->Active({
         .clientToken = IPCSkeleton::GetCallingTokenID(),
-        .scenario = IServiceReverse::Scenario::RESTORE,
+        .scenario = IServiceReverseType::Scenario::RESTORE,
         .clientProxy = remote,
         .userId = GetUserIdDefault(),
         .callerName = GetCallerName(),
@@ -903,7 +905,7 @@ ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote
     session_->SetMemParaCurSize(oldSize);
     ret = session_->Active({
         .clientToken = IPCSkeleton::GetCallingTokenID(),
-        .scenario = IServiceReverse::Scenario::BACKUP,
+        .scenario = IServiceReverseType::Scenario::BACKUP,
         .clientProxy = remote,
         .userId = GetUserIdDefault(),
         .callerName = GetCallerName(),
@@ -1220,7 +1222,7 @@ void Service::SendScannedInfo(const string&scannendInfos, sptr<SvcSessionManager
     }
     HILOGI("start send scanned info");
     auto task = [session {session}, scannendInfos {scannendInfos}]() {
-        if (session->GetScenario() == IServiceReverse::Scenario::BACKUP && session->GetIsIncrementalBackup()) {
+        if (session->GetScenario() == IServiceReverseType::Scenario::BACKUP && session->GetIsIncrementalBackup()) {
             HILOGI("this is incremental backup sending info");
             session->GetServiceReverseProxy()->IncrementalBackupOnScanningInfo(scannendInfos);
             return;

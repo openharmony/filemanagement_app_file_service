@@ -27,12 +27,12 @@ class BackupSvcSessionManager {
 public:
     virtual ~BackupSvcSessionManager() = default;
 public:
-    virtual ErrCode VerifyCallerAndScenario(uint32_t, IServiceReverse::Scenario) = 0;
+    virtual ErrCode VerifyCallerAndScenario(uint32_t, IServiceReverseType::Scenario) = 0;
     virtual ErrCode Active(SvcSessionManager::Impl) = 0;
     virtual ErrCode Deactive(const wptr<IRemoteObject> &, bool) = 0;
     virtual ErrCode VerifyBundleName(std::string &) = 0;
     virtual sptr<IServiceReverse> GetServiceReverseProxy() = 0;
-    virtual IServiceReverse::Scenario GetScenario() = 0;
+    virtual IServiceReverseType::Scenario GetScenario() = 0;
     virtual bool OnBundleFileReady(const std::string &, const std::string &) = 0;
     virtual UniqueFd OnBundleExtManageInfo(const std::string &, UniqueFd) = 0;
     virtual void RemoveExtInfo(const std::string &) = 0;
@@ -104,12 +104,12 @@ public:
 
 class SvcSessionManagerMock : public BackupSvcSessionManager {
 public:
-    MOCK_METHOD(ErrCode, VerifyCallerAndScenario, (uint32_t, IServiceReverse::Scenario));
+    MOCK_METHOD(ErrCode, VerifyCallerAndScenario, (uint32_t, IServiceReverseType::Scenario));
     MOCK_METHOD(ErrCode, Active, (SvcSessionManager::Impl));
     MOCK_METHOD(ErrCode, Deactive, (const wptr<IRemoteObject> &, bool));
     MOCK_METHOD(ErrCode, VerifyBundleName, (std::string &));
     MOCK_METHOD(sptr<IServiceReverse>, GetServiceReverseProxy, ());
-    MOCK_METHOD(IServiceReverse::Scenario, GetScenario, ());
+    MOCK_METHOD(IServiceReverseType::Scenario, GetScenario, ());
     MOCK_METHOD(bool, OnBundleFileReady, (const std::string &, const std::string &));
     MOCK_METHOD(UniqueFd, OnBundleExtManageInfo, (const std::string &, UniqueFd));
     MOCK_METHOD(void, RemoveExtInfo, (const std::string &));
