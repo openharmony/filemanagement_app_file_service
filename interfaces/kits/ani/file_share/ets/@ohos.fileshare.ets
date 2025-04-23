@@ -21,6 +21,20 @@ import hilog from '@ohos.hilog'
 export namespace fileShare {
   loadLibrary("fileshare_ani")
 
+  export enum OperationMode {
+      READ_MODE = 0b1,
+      WRITE_MODE = 0b10
+  }
+  export interface PolicyInfo {
+      uri: string;
+      operationMode: int;
+  }
+
+  class PolicyInfo_inner implements PolicyInfo {
+      uri: string;
+      operationMode: int;
+  }
+
   export function grantUriPermission(uri: string, bundleName: string, flag: wantConstant.Flags,
     callback: AsyncCallback<void>): void {
     hilog.info(0x0000, 'grantUriPermission', "Start grantUriPermission in callback main thread.");
