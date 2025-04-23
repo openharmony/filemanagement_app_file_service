@@ -15,6 +15,7 @@
 
 #include "b_incremental_session_restore_async.h"
 
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_radar/b_radar.h"
 #include "b_resources/b_constants.h"
@@ -81,7 +82,8 @@ ErrCode BIncrementalSessionRestoreAsync::GetFileHandle(const string &bundleName,
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-
+    HILOGI("Begin getFileHandle, bundle:%{public}s, fileName:%{public}s", bundleName.c_str(),
+        GetAnonyPath(fileName).c_str());
     return proxy->GetIncrementalFileHandle(bundleName, fileName);
 }
 
