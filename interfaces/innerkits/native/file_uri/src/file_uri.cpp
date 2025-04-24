@@ -31,6 +31,7 @@ namespace OHOS {
 namespace AppFileService {
 namespace ModuleFileUri {
 const std::string PATH_SHARE = "/data/storage/el2/share";
+const std::string MEDIA_FUSE_PATH_HEAD = "/data/storage/el2/";
 const std::string MODE_RW = "/rw/";
 const std::string MODE_R = "/r/";
 const std::string FILE_SCHEME_PREFIX = "file://";
@@ -89,6 +90,10 @@ string FileUri::GetRealPath()
     if (bundleName == FILE_MANAGER_AUTHORITY &&
         uri_.ToString().find(NETWORK_PARA) == string::npos &&
         (access(realPath.c_str(), F_OK) == 0 || CheckFileManagerFullMountEnable())) {
+        return realPath;
+    }
+    if (bundleName == MEDIA_AUTHORITY) {
+        realPath = MEDIA_FUSE_PATH_HEAD + bundleName + sandboxPath;
         return realPath;
     }
 
