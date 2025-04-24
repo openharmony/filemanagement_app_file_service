@@ -226,7 +226,7 @@ HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_CreateDirWithRecursive_0100
     GTEST_LOG_(INFO) << "InstalldUnTarFileTest-begin Installd_Un_Tar_File_CreateDirWithRecursive_0100";
     try {
         installd::UnTarFile unTarFile(nullptr);
-        mode_t mode = (mode_t)448;
+        mode_t mode = 448;
         bool ret = unTarFile.CreateDirWithRecursive("", mode);
         EXPECT_FALSE(ret);
 
