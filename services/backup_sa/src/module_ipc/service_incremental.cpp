@@ -715,6 +715,8 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         if (action == BConstants::ServiceSchedAction::RUNNING) {
+            HILOGI("Restore getIncrementalFileHandle begin, bundleName:%{public}s, fileName:%{public}s",
+                bundleName.c_str(), GetAnonyPath(fileName).c_str());
             auto err = SendIncrementalFileHandle(bundleName, fileName);
             if (err != ERR_OK) {
                 HILOGE("SendIncrementalFileHandle failed, bundle:%{public}s", bundleName.c_str());

@@ -21,6 +21,7 @@
 #include <gtest/gtest.h>
 
 #include "b_error/b_error.h"
+#include "b_radar/b_radar.h"
 #include "module_ipc/service.h"
 #include "module_ipc/svc_session_manager.h"
 #include "module_sched/sched_scheduler.h"
@@ -77,7 +78,7 @@ void SchedSchedulerTest::Init(IServiceReverseType::Scenario scenario)
     };
     transform(bundleNames.begin(), bundleNames.end(), inserter(backupExtNameMap, backupExtNameMap.end()),
               setBackupExtNameMap);
-              
+
     EXPECT_TRUE(sessionManagerPtr_ != nullptr);
     sessionManagerPtr_->Active({
         .clientToken = CLIENT_TOKEN_ID,

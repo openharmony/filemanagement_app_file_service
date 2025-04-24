@@ -23,6 +23,7 @@ namespace OHOS::FileManagement::Backup {
 class BackupFileHash {
 public:
     static std::tuple<int, std::string> HashWithSHA256(const std::string &fpath);
+    static std::string HashFilePath(const std::string &fileName);
 };
 } // namespace OHOS::FileManagement::Backup
 

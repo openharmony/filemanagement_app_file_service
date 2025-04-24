@@ -1387,4 +1387,35 @@ ErrCode BackupExtExtension::CloudSpecialRestore(string tarName, string untarPath
     DeleteBackupIncrementalTars(tarName);
     return err;
 }
+
+void BackupExtExtension::RmBigFileReportForSpecialCloneCloud(const std::string &srcFileName)
+{
+    // 删除大文件的rp文件
+    string reportFileName = GetReportFileName(srcFileName);
+    if (reportHashSrcPathMap_.empty()) {
+        if (!RemoveFile(reportFileName)) {
+            HILOGE("Failed to delete backup report %{public}s, err = %{public}d",
+                GetAnonyPath(reportFileName).c_str(), errno);
+        }
+        return;
+    }
+    std::unique_lock<std::mutex> lock(reportHashLock_);
+    auto iter = reportHashSrcPathMap_.find(srcFileName);
+    if (iter == reportHashSrcPathMap_.end()) {
+        if (!RemoveFile(reportFileName)) {
+            HILOGE("Failed to remove cuurent file report %{public}s, err = %{public}d",
+                GetAnonyPath(reportFileName).c_str(), errno);
+        }
+        return;
+    }
+    std::string reportHashFilePath = iter->second;
+    HILOGI("Will remove current reportHashFile, reportHashFilePath:%{public}s",
+        GetAnonyPath(reportHashFilePath).c_str());
+    if (!RemoveFile(reportHashFilePath)) {
+        HILOGE("Failed to delete backup report %{public}s, err = %{public}d",
+            GetAnonyPath(reportHashFilePath).c_str(), errno);
+    }
+    reportHashSrcPathMap_.erase(iter);
+    lock.unlock();
+}
 } // namespace OHOS::FileManagement::Backup

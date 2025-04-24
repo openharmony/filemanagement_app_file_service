@@ -350,6 +350,9 @@ private:
     ErrCode RestoreUnSplitTarListForSpecialCloneCloud(const std::vector<const ExtManageInfo> &tarList);
     ErrCode RestoreSplitTarListForSpecialCloneCloud(const std::vector<const ExtManageInfo> &tarList);
 
+    tuple<ErrCode, UniqueFd, UniqueFd> GetIncreFileHandleForSpecialVersion(const string &fileName);
+    void RmBigFileReportForSpecialCloneCloud(const std::string &srcFile);
+    string GetReportFileName(const string &fileName);
 private:
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
@@ -383,6 +386,9 @@ private:
     std::atomic<bool> isFirstCallOnProcess_ {false};
     std::atomic<bool> isExecAppDone_ {false};
     OHOS::ThreadPool reportOnProcessRetPool_;
+
+    std::mutex reportHashLock_;
+    std::map<std::string, std::string> reportHashSrcPathMap_;
 
     BackupRestoreScenario curScenario_ { BackupRestoreScenario::FULL_BACKUP };
 };
