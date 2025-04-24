@@ -329,13 +329,13 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForSpec
         }
         std::unique_lock<std::mutex> lock(reportHashLock_);
         reportHashSrcPathMap_.emplace(fileName, reportFullHashName);
-        lock.unlock();
         return { errCode, move(fd), move(reportHashFd) };
     }
     UniqueFd reportFd(open(reportFullFileName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
     if (reportFd < 0) {
         HILOGE("Failed to open report file = %{public}s, err = %{public}d",
             GetAnonyPath(reportFullFileName).c_str(), errno);
+        errCode = errno;
     }
     return { errCode, move(fd), move(reportFd) };
 }
