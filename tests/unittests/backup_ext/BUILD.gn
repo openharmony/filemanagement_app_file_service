@@ -464,8 +464,8 @@ ohos_unittest("installd_un_tar_file_test") {
   cflags_cc = [ "--coverage" ]
 
   deps = [
-    "${path_backup}/utils:backup_utils",
     "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
   ]
 
   external_deps = [
@@ -486,11 +486,11 @@ group("backup_ext_test") {
     deps = [
       ":ext_backup_js_test",
       ":ext_extension_test",
+      ":installd_un_tar_file_test",
       ":tar_file_sub_test",
       ":tar_file_test",
       ":untar_file_sup_test",
       ":untar_file_test",
-      ":installd_un_tar_file_test",
     ]
   }
 }
