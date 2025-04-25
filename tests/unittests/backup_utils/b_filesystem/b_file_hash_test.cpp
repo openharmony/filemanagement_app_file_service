@@ -96,4 +96,26 @@ HWTEST_F(BFileHashTest, b_file_hash_HashWithSHA256_0101, testing::ext::TestSize.
     }
     GTEST_LOG_(INFO) << "BFileHashTest-end b_file_hash_HashWithSHA256_0101";
 }
+
+/**
+ * @tc.number: SUB_backup_b_file_hash_HashFilePath_0100
+ * @tc.name: b_file_hash_HashFilePath_0100
+ * @tc.desc: Test function of HashFilePath interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BFileHashTest, b_file_hash_HashFilePath_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BFileHashTest-begin b_file_hash_HashFilePath_0100";
+    try {
+        std::string filePath = "/AAA/BBB/C.txt";
+        std::string hashResult = BackupFileHash::HashFilePath(filePath);
+        EXPECT_TRUE(!hashResult.empty());
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BFileHashTest-an exception occurred by HashFilePath.";
+        e.what();
+    }
+    GTEST_LOG_(INFO) << "BFileHashTest-end b_file_hash_HashFilePath_0100";
+}
 } // namespace OHOS::FileManagement::Backup
