@@ -53,7 +53,7 @@ StorageManager::BundleStats StorageMgrAdapter::GetBundleStats(const string &bund
 {
     StorageManager::BundleStats bundleStats;
     auto storageMgr = GetStorageManager();
-    if (storageMgr->GetBundleStats(bundleName, bundleStats)) {
+    if (storageMgr->GetBundleStats(bundleName, bundleStats, 0, 0)) {
         throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle stats");
     }
     return bundleStats;
