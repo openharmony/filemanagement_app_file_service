@@ -135,6 +135,7 @@ ohos_unittest("tar_file_test") {
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_extension.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/installd_un_tar_file.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/sub_ext_extension.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/untar_file.cpp",
@@ -207,6 +208,7 @@ ohos_unittest("untar_file_sup_test") {
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_extension.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/installd_un_tar_file.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/sub_ext_extension.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
     "${path_backup}/tests/mock/library_func_mock/library_func_mock.cpp",
@@ -283,6 +285,7 @@ ohos_unittest("untar_file_test") {
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_extension.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/installd_un_tar_file.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/sub_ext_extension.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/untar_file.cpp",
@@ -442,12 +445,48 @@ ohos_unittest("tar_file_sub_test") {
   use_exceptions = true
 }
 
+ohos_unittest("installd_un_tar_file_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/frameworks/native/backup_ext/src/installd_un_tar_file.cpp",
+    "installd_un_tar_file_test.cpp",
+  ]
+
+  include_dirs = [
+    "${path_backup}/frameworks/native/backup_ext/include",
+    "${path_backup}/interfaces/common/include",
+    "${path_backup}/utils/include",
+  ]
+
+  cflags = [ "--coverage" ]
+  ldflags = [ "--coverage" ]
+  cflags_cc = [ "--coverage" ]
+
+  deps = [
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 group("backup_ext_test") {
   testonly = true
   if (!use_libfuzzer) {
     deps = [
       ":ext_backup_js_test",
       ":ext_extension_test",
+      ":installd_un_tar_file_test",
       ":tar_file_sub_test",
       ":tar_file_test",
       ":untar_file_sup_test",
