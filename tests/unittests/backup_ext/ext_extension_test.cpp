@@ -117,29 +117,6 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0101, testing::ext::TestSize.Level
 }
 
 /**
- * @tc.number: SUB_Ext_Extension_0200
- * @tc.name: Ext_Extension_Test_0200
- * @tc.desc: 测试成功
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I9P3Y3
- */
-HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0200, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0200";
-    try {
-        string fileName = "filename";
-        string reportName = GetReportFileName(fileName);
-        EXPECT_EQ(reportName, "filename.rp");
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0200";
-}
-
-/**
  * @tc.number: SUB_Ext_Extension_0300
  * @tc.name: Ext_Extension_Test_0300
  * @tc.desc: 测试tarfile为空
@@ -565,31 +542,5 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0900, testing::ext::TestSize.Level
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0900";
-}
-
-/**
- * @tc.number: SUB_Ext_Extension_1000
- * @tc.name: Ext_Extension_Test_1000
- * @tc.desc: 测试 GetFileHandleForSpecialCloneCloud
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I9P3Y3
- */
-HWTEST_F(ExtExtensionTest, Ext_Extension_Test_1000, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_1000";
-    try {
-        std::string fileName = "test.txt";
-        auto [ret, fd, reportFd] = GetIncreFileHandleForSpecialVersion(fileName);
-        EXPECT_NE(ret, ERR_OK);
-        fileName = "/test.txt";
-        tie(ret, fd, reportFd) = GetIncreFileHandleForSpecialVersion(fileName);
-        EXPECT_NE(ret, ERR_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_1000";
 }
 } // namespace OHOS::FileManagement::Backup

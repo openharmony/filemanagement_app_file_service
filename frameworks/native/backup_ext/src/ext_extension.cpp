@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cinttypes>
 #include <fstream>
 #include <iomanip>
 #include <map>
@@ -205,7 +206,6 @@ static bool CheckAndCreateDirectory(const string &filePath)
 static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("GetFileHandleForSpecialCloneCloud: fileName is %{public}s", GetAnonyPath(fileName).c_str());
     string filePath = fileName;
     if (fileName.front() != BConstants::FILE_SEPARATOR_CHAR) {
         filePath = BConstants::FILE_SEPARATOR_CHAR + fileName;
@@ -213,29 +213,20 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
     size_t filePathPrefix = filePath.find_last_of(BConstants::FILE_SEPARATOR_CHAR);
     if (filePathPrefix == string::npos) {
         HILOGE("GetFileHandleForSpecialCloneCloud: Invalid fileName");
-        AuditLog auditLog = {false, "Open fd failed", "ADD", "", 1, "FAILED",
-            "GetFileHandleForSpecialCloneCloud", "CommonFile", GetAnonyPath(filePath)};
-        HiAudit::GetInstance(false).Write(auditLog);
-        return UniqueFd(-1);
+        return UniqueFd(BConstants::INVALID_FD_NUM);
     }
     string path = filePath.substr(0, filePathPrefix);
     if (access(path.c_str(), F_OK) != 0) {
         bool created = ForceCreateDirectory(path.data());
         if (!created) {
             HILOGE("Failed to create restore folder.");
-            AuditLog auditLog = {false, "ForceCreateDirectory failed", "ADD", "", 1,
-                "FAILED", "GetFileHandleForSpecialCloneCloud", "CommonFile", GetAnonyPath(path)};
-            HiAudit::GetInstance(false).Write(auditLog);
-            return UniqueFd(-1);
+            return UniqueFd(BConstants::INVALID_FD_NUM);
         }
     }
     UniqueFd fd(open(fileName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
     if (fd < 0) {
-        HILOGE("Open file failed, file name is %{private}s, err = %{public}d", fileName.data(), errno);
-        AuditLog auditLog = {false, "open fd failed", "ADD", "", 1, "FAILED",
-            "GetFileHandleForSpecialCloneCloud", "CommonFile", GetAnonyPath(fileName)};
-        HiAudit::GetInstance(false).Write(auditLog);
-        return UniqueFd(-1);
+        HILOGE("Open file failed, file name is %{public}s, err = %{public}d", GetAnonyPath(fileName).c_str(), errno);
+        return UniqueFd(BConstants::INVALID_FD_NUM);
     }
     return fd;
 }
@@ -287,36 +278,54 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName, int32_t &errC
     }
 }
 
-static string GetReportFileName(const string &fileName)
+string BackupExtExtension::GetReportFileName(const string &fileName)
 {
     string reportName = fileName + "." + string(BConstants::REPORT_FILE_EXT);
     return reportName;
 }
 
-static tuple<ErrCode, UniqueFd, UniqueFd> GetIncreFileHandleForSpecialVersion(const string &fileName)
+tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForSpecialVersion(const string &fileName)
 {
     ErrCode errCode = ERR_OK;
+    HILOGI("Begin GetFileHandleForSpecialCloneCloud: fileName is %{public}s", GetAnonyPath(fileName).c_str());
     UniqueFd fd = GetFileHandleForSpecialCloneCloud(fileName);
     if (fd < 0) {
-        HILOGE("Failed to open file = %{private}s, err = %{public}d", fileName.c_str(), errno);
-        AuditLog auditLog = {false, "Open fd failed", "ADD", "", 1, "FAILED",
-            "GetIncreFileHandleForSpecialVersion", "CommonFile", GetAnonyPath(fileName)};
-        HiAudit::GetInstance(false).Write(auditLog);
+        HILOGE("Failed to open file = %{public}s, err = %{public}d", GetAnonyPath(fileName).c_str(), errno);
         errCode = errno;
     }
 
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
-        HILOGE("Failed to create restore folder : %{private}s, err = %{public}d", path.c_str(), errno);
+        HILOGE("Failed to create restore folder : %{public}s, err = %{public}d", path.c_str(), errno);
         errCode = errno;
-        AuditLog auditLog = {false, "mkdir failed", "ADD", "", 1, "FAILED",
-            "GetIncreFileHandleForSpecialVersion", "CommonFile", GetAnonyPath(path)};
-        HiAudit::GetInstance(false).Write(auditLog);
     }
-    string reportName = GetReportFileName(fileName);
-    UniqueFd reportFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    size_t reportParentPathPos = fileName.find_last_of(BConstants::FILE_SEPARATOR_CHAR);
+    if (reportParentPathPos == std::string::npos) {
+        HILOGE("Get current file parent path error");
+        UniqueFd invalidFd(BConstants::INVALID_FD_NUM);
+        return { errCode, move(fd), move(invalidFd) };
+    }
+    string reportFullFileName = GetReportFileName(fileName);
+    string reportFileName = reportFullFileName.substr(reportParentPathPos + 1);
+    if (reportFileName.size() > BConstants::LONG_FILE_NAME_BOUNDARY_VAL) {
+        string reportHashName = BackupFileHash::HashFilePath(reportFullFileName);
+        HILOGI("FileName is too long, report HashName is:%{public}s", reportHashName.c_str());
+        std::string reportParentPath = fileName.substr(0, reportParentPathPos);
+        std::string reportFullHashName = reportParentPath + BConstants::FILE_SEPARATOR_CHAR + reportHashName;
+        UniqueFd reportHashFd(open(reportFullHashName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+        if (reportHashFd < 0) {
+            HILOGE("Failed open report file = %{public}s, err = %{public}d",
+                GetAnonyPath(reportFullHashName).c_str(), errno);
+            errCode = errno;
+        }
+        std::unique_lock<std::mutex> lock(reportHashLock_);
+        reportHashSrcPathMap_.emplace(fileName, reportFullHashName);
+        return { errCode, move(fd), move(reportHashFd) };
+    }
+    UniqueFd reportFd(open(reportFullFileName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
     if (reportFd < 0) {
-        HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
+        HILOGE("Failed to open report file = %{public}s, err = %{public}d",
+            GetAnonyPath(reportFullFileName).c_str(), errno);
         errCode = errno;
     }
     return {errCode, move(fd), move(reportFd)};
@@ -349,8 +358,8 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForNorm
     HILOGI("extension: GetIncrementalFileHandle single to single Name:%{public}s", GetAnonyPath(fileName).c_str());
     std::string tarName;
     int32_t errCode = ERR_OK;
-    UniqueFd fd(-1);
-    UniqueFd reportFd(-1);
+    UniqueFd fd(BConstants::INVALID_FD_NUM);
+    UniqueFd reportFd(BConstants::INVALID_FD_NUM);
     do {
         errCode = GetIncrementalFileHandlePath(fileName, bundleName_, tarName);
         if (errCode != ERR_OK) {
@@ -365,19 +374,18 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForNorm
         if (fd < 0) {
             HILOGE("Failed to open tar file = %{public}s, err = %{public}d", GetAnonyPath(tarName).c_str(), errno);
             errCode = errno;
-            AuditLog auditLog = {false, "Open fd failed", "ADD", "", 1, "FAILED",
-                "GetIncreFileHandleForNormalVersion", "CommonFile", GetAnonyPath(tarName)};
-            HiAudit::GetInstance(false).Write(auditLog);
             break;
         }
         // 对应的简报文件
         string reportName = GetReportFileName(tarName);
         if (access(reportName.c_str(), F_OK) == 0) {
-            HILOGE("The report file already exists, Name = %{private}s, err =%{public}d", reportName.c_str(), errno);
+            HILOGE("The report file already exists, Name = %{public}s, err =%{public}d",
+                GetAnonyPath(reportName).c_str(), errno);
         }
         reportFd = UniqueFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
         if (reportFd < 0) {
-            HILOGE("Failed to open report file = %{private}s, err = %{public}d", reportName.c_str(), errno);
+            HILOGE("Failed to open report file = %{public}s, err = %{public}d",
+                GetAnonyPath(reportName).c_str(), errno);
             errCode = errno;
             break;
         }
@@ -449,9 +457,6 @@ static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
     UniqueFd fd(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
     if (fd < 0) {
         HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_BACKUP.c_str(), errno);
-        AuditLog auditLog = {false, "Open fd failed", "ADD", "", 1, "FAILED", "Backup File",
-            "IndexFileReady", GetAnonyPath(INDEX_FILE_BACKUP)};
-        HiAudit::GetInstance(false).Write(auditLog);
         return BError::GetCodeByErrno(errno);
     }
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
@@ -1089,11 +1094,7 @@ void BackupExtExtension::RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo
         errFileInfos_[fileName].emplace_back(errno);
         HILOGE("Failed to change the file time. %{public}s , %{public}d", GetAnonyPath(fileName).c_str(), errno);
     }
-    // 删除大文件的rp文件
-    string reportPath = GetReportFileName(fileName);
-    if (!RemoveFile(reportPath)) {
-        HILOGE("Failed to delete backup report %{public}s, err = %{public}d", GetAnonyPath(reportPath).c_str(), errno);
-    }
+    RmBigFileReportForSpecialCloneCloud(fileName);
 }
 
 ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &item)
