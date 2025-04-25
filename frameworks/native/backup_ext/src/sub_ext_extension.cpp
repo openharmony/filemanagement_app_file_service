@@ -1392,6 +1392,7 @@ void BackupExtExtension::RmBigFileReportForSpecialCloneCloud(const std::string &
 {
     // 删除大文件的rp文件
     string reportFileName = GetReportFileName(srcFileName);
+    std::unique_lock<std::mutex> lock(reportHashLock_);
     if (reportHashSrcPathMap_.empty()) {
         if (!RemoveFile(reportFileName)) {
             HILOGE("Failed to delete backup report %{public}s, err = %{public}d",
@@ -1399,7 +1400,6 @@ void BackupExtExtension::RmBigFileReportForSpecialCloneCloud(const std::string &
         }
         return;
     }
-    std::unique_lock<std::mutex> lock(reportHashLock_);
     auto iter = reportHashSrcPathMap_.find(srcFileName);
     if (iter == reportHashSrcPathMap_.end()) {
         if (!RemoveFile(reportFileName)) {
@@ -1416,6 +1416,5 @@ void BackupExtExtension::RmBigFileReportForSpecialCloneCloud(const std::string &
             GetAnonyPath(reportHashFilePath).c_str(), errno);
     }
     reportHashSrcPathMap_.erase(iter);
-    lock.unlock();
 }
 } // namespace OHOS::FileManagement::Backup
