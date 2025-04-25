@@ -29,6 +29,7 @@ ohos_shared_library("backup_extension_ability_native") {
   sources = [
     "src/ext_backup.cpp",
     "src/ext_backup_ani.cpp",
+    "src/ext_backup_ani_error.cpp",
     "src/ext_backup_context.cpp",
     "src/ext_backup_context_js.cpp",
     "src/ext_backup_js.cpp",

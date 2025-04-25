@@ -37,6 +37,7 @@ ohos_fuzztest("BackupExtFuzzTest") {
   sources = [
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_ani.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_ani_error.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
