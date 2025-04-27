@@ -43,7 +43,9 @@ ohos_fuzztest("SvcRestoreDepsManagerFuzzTest") {
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
     "hilog:libhilog",
+    "ipc:ipc_core",
     "jsoncpp:jsoncpp",
   ]
 

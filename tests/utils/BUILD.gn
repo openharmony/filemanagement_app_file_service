@@ -38,6 +38,7 @@ ohos_static_library("backup_test_utils") {
 
   deps = [ "${path_backup}/utils:backup_utils" ]
   external_deps = [
+    "c_utils:utils",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
