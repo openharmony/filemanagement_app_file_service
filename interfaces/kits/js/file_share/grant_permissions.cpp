@@ -152,8 +152,10 @@ static napi_status CheckPathArray(napi_env env, napi_value agrv, uint32_t &count
     return napi_ok;
 }
 
-static napi_status GetPathPolicy(napi_env env, napi_value agrv, std::vector<PathPolicyInfo> &pathPolicies,
-    uint32_t index)
+static napi_status GetPathPolicy(napi_env env,
+                                 napi_value agrv,
+                                 std::vector<PathPolicyInfo> &pathPolicies,
+                                 uint32_t index)
 {
     napi_value object;
     napi_status status = napi_get_element(env, agrv, index, &object);
@@ -232,8 +234,11 @@ napi_value PersistPermission(napi_env env, napi_callback_info info)
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
-        LOGE("PolicyErrorArgs make_shared is failed");
-        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        LOGE("Make_shared is failed");
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(E_UNKNOWN_ERROR, "Out of memory, execute make_shared function failed");
+        ErrParam errorParam = [errInfo]() { return errInfo; };
+        NError(errorParam).ThrowErr(env);
         return nullptr;
     }
     auto cbExec = [uriPolicies, arg]() -> NError {
@@ -271,8 +276,11 @@ napi_value RevokePermission(napi_env env, napi_callback_info info)
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
-        LOGE("PolicyErrorArgs make_shared is failed");
-        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        LOGE("Make_shared is failed");
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(E_UNKNOWN_ERROR, "Out of memory, execute make_shared function failed");
+        ErrParam errorParam = [errInfo]() { return errInfo; };
+        NError(errorParam).ThrowErr(env);
         return nullptr;
     }
     auto cbExec = [uriPolicies, arg]() -> NError {
@@ -310,8 +318,11 @@ napi_value ActivatePermission(napi_env env, napi_callback_info info)
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
-        LOGE("PolicyErrorArgs make make_shared failed");
-        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        LOGE("Make_shared is failed");
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(E_UNKNOWN_ERROR, "Out of memory, execute make_shared function failed");
+        ErrParam errorParam = [errInfo]() { return errInfo; };
+        NError(errorParam).ThrowErr(env);
         return nullptr;
     }
     auto cbExec = [uriPolicies, arg]() -> NError {
@@ -349,8 +360,11 @@ napi_value DeactivatePermission(napi_env env, napi_callback_info info)
     }
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
-        LOGE("PolicyErrorArgs make_shared is failed");
-        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        LOGE("Make_shared is failed");
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(E_UNKNOWN_ERROR, "Out of memory, execute make_shared function failed");
+        ErrParam errorParam = [errInfo]() { return errInfo; };
+        NError(errorParam).ThrowErr(env);
         return nullptr;
     }
     auto cbExec = [uriPolicies, arg]() -> NError {
@@ -388,8 +402,11 @@ napi_value CheckPersistentPermission(napi_env env, napi_callback_info info)
     }
     shared_ptr<PolicyInfoResultArgs> arg = make_shared<PolicyInfoResultArgs>();
     if (arg == nullptr) {
-        LOGE("PolicyInfoResultArgs make_shared is failed");
-        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        LOGE("Make_shared is failed");
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(E_UNKNOWN_ERROR, "Out of memory, execute make_shared function failed");
+        ErrParam errorParam = [errInfo]() { return errInfo; };
+        NError(errorParam).ThrowErr(env);
         return nullptr;
     }
     auto cbExec = [uriPolicies, arg]() -> NError {
@@ -409,11 +426,10 @@ napi_value CheckPersistentPermission(napi_env env, napi_callback_info info)
 
 static bool CheckTokenIdPermission(uint32_t tokenCaller, const string &permission)
 {
-    return AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
-           PermissionState::PERMISSION_GRANTED;
+    return AccessTokenKit::VerifyAccessToken(tokenCaller, permission) == PermissionState::PERMISSION_GRANTED;
 }
 
-static bool CheckArgs(napi_env env, napi_callback_info info, NFuncArg& funcArg)
+static bool CheckArgs(napi_env env, napi_callback_info info, NFuncArg &funcArg)
 {
     if (!funcArg.InitArgs(NARG_CNT::THREE)) {
         LOGE("ActivatePermission Number of arguments unmatched");
@@ -421,7 +437,7 @@ static bool CheckArgs(napi_env env, napi_callback_info info, NFuncArg& funcArg)
     }
 
     auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToInt32();
-    if (!succTokenId  || tokenId == 0) {
+    if (!succTokenId || tokenId == 0) {
         LOGE("Failed to get tokenid or tokenid is 0");
         return false;
     }
@@ -470,11 +486,14 @@ napi_value CheckPathPermission(napi_env env, napi_callback_info info)
 
     shared_ptr<PolicyInfoResultArgs> arg = make_shared<PolicyInfoResultArgs>();
     if (arg == nullptr) {
-        LOGE("PolicyInfoResultArgs make_shared is failed");
-        NError(E_UNKNOWN_ERROR).ThrowErr(env);
+        LOGE("Make_shared is failed");
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(E_UNKNOWN_ERROR, "Out of memory, execute make_shared function failed");
+        ErrParam errorParam = [errInfo]() { return errInfo; };
+        NError(errorParam).ThrowErr(env);
         return nullptr;
     }
-    auto cbExec = [tokenId { move(tokenId)}, pathPolicies, policyType { move(policyType)}, arg]() -> NError {
+    auto cbExec = [tokenId {move(tokenId)}, pathPolicies, policyType {move(policyType)}, arg]() -> NError {
         arg->errNo = FilePermission::CheckPathPermission(tokenId, pathPolicies, policyType, arg->resultData);
         return NError(arg->errNo);
     };
