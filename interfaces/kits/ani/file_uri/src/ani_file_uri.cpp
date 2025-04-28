@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,24 @@
  * limitations under the License.
  */
 
-#include <ani.h>
-#include <iostream>
-#include <vector>
+#include "ani_util_native_ptr.h"
 #include "common_func.h"
 #include "file_uri_entity.h"
 #include "file_utils.h"
 #include "log.h"
+#include "n_error.h"
+#include <ani.h>
+#include <iostream>
+#include <vector>
 
 using namespace OHOS::AppFileService;
 
 static std::string ParseObjToStr(ani_env *env, ani_string stringObj)
 {
-    ani_size  strSize;
+    ani_size strSize;
     env->String_GetUTF8Size(stringObj, &strSize);
     std::vector<char> buffer(strSize + 1);
-    char* utf8Buffer = buffer.data();
+    char *utf8Buffer = buffer.data();
 
     ani_size byteswritten = 0;
     env->String_GetUTF8(stringObj, utf8Buffer, strSize + 1, &byteswritten);
@@ -40,31 +42,54 @@ static std::string ParseObjToStr(ani_env *env, ani_string stringObj)
 
 static ModuleFileUri::FileUriEntity *unwrapp(ani_env *env, ani_object object)
 {
-    ani_long fileuriEntity_;
-    if (ANI_OK != env->Object_GetFieldByName_Long(object, "fileUriEntity_", &fileuriEntity_)) {
+    ani_long fileUriEntityHolder_;
+    if (ANI_OK != env->Object_GetFieldByName_Long(object, "fileUriEntity_", &fileUriEntityHolder_)) {
+        LOGE("Get fileuriEntityHolder_ failed");
         return nullptr;
     }
-    return reinterpret_cast<ModuleFileUri::FileUriEntity *>(fileuriEntity_);
+    auto fileUriHolder = reinterpret_cast<StdSharedPtrHolder<ModuleFileUri::FileUriEntity> *>(fileUriEntityHolder_);
+    if (!fileUriHolder) {
+        LOGE("Get fileuriEntityHolder by long ptr failed");
+        return nullptr;
+    }
+    return reinterpret_cast<ModuleFileUri::FileUriEntity *>(fileUriHolder->Get().get());
 }
 
-static ani_error CreateAniError(ani_env *env, std::string&& errMsg)
+static void ThrowBusinessError(ani_env *env, int errCode, std::string &&errMsg)
 {
-    static const char *errorClsName = "Lescompat/Error;";
+    LOGD("Begin ThrowBusinessError.");
+    static const char *errorClsName = "L@ohos/base/BusinessError;";
     ani_class cls {};
     if (ANI_OK != env->FindClass(errorClsName, &cls)) {
-        LOGE("Not found %{public}s.", errorClsName);
-        return nullptr;
+        LOGE("find class BusinessError %{public}s failed", errorClsName);
+        return;
     }
     ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "Lstd/core/String;:V", &ctor)) {
-        LOGE("Not found method <ctor> in  %{public}s.", errorClsName);
-        return nullptr;
+    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", ":V", &ctor)) {
+        LOGE("find method BusinessError.constructor failed");
+        return;
     }
-    ani_string error_msg;
-    env->String_NewUTF8(errMsg.c_str(), 17U, &error_msg);
     ani_object errorObject;
-    env->Object_New(cls, ctor, &errorObject, error_msg);
-    return static_cast<ani_error>(errorObject);
+    if (ANI_OK != env->Object_New(cls, ctor, &errorObject)) {
+        LOGE("create BusinessError object failed");
+        return;
+    }
+    ani_double aniErrCode = static_cast<ani_double>(errCode);
+    ani_string errMsgStr;
+    if (ANI_OK != env->String_NewUTF8(errMsg.c_str(), errMsg.size(), &errMsgStr)) {
+        LOGE("convert errMsg to ani_string failed");
+        return;
+    }
+    if (ANI_OK != env->Object_SetFieldByName_Double(errorObject, "code", aniErrCode)) {
+        LOGE("set error code failed");
+        return;
+    }
+    if (ANI_OK != env->Object_SetPropertyByName_Ref(errorObject, "message", errMsgStr)) {
+        LOGE("set error message failed");
+        return;
+    }
+    env->ThrowError(static_cast<ani_error>(errorObject));
+    return;
 }
 
 static ani_string GetUriFromPath(ani_env *env, ani_string stringObj)
@@ -72,18 +97,11 @@ static ani_string GetUriFromPath(ani_env *env, ani_string stringObj)
     LOGD("Enter GetUriFromPath");
     ani_string uriObj = nullptr;
     std::string path = ParseObjToStr(env, stringObj);
-    if (path == "") {
-        LOGE("GetUriFromPath get path parameter failed!");
-        ani_error err = CreateAniError(env, "GetUriFromPath get path parameter failed!");
-        env->ThrowError(err);
-        return uriObj;
-    }
 
     std::string uri = CommonFunc::GetUriFromPath(path);
     if (uri == "") {
         LOGE("CommonFunc::GetUriFromPath failed!");
-        ani_error err = CreateAniError(env, "GetUriFromPath failed!");
-        env->ThrowError(err);
+        ThrowBusinessError(env, OHOS::FileManagement::LibN::E_PARAMS, "CommonFunc::GetUriFromPath failed!");
         return uriObj;
     }
     LOGD("GetUriFromPath uri: %{public}s", uri.c_str());
@@ -99,24 +117,23 @@ void FileUriConstructor(ani_env *env, ani_object obj, ani_string stringObj)
     std::string path = ParseObjToStr(env, stringObj);
     if (path == "") {
         LOGE("FileUriConstructor get path parameter failed!");
-        ani_error err = CreateAniError(env, "GetUriFromPath get path parameter failed!");
-        env->ThrowError(err);
+        ThrowBusinessError(env, EINVAL, "Failed to get path");
         return;
     }
     auto fileuriEntity = OHOS::FileManagement::CreateUniquePtr<ModuleFileUri::FileUriEntity>(path);
     if (fileuriEntity == nullptr) {
         LOGE("Failed to request heap memory.");
-        ani_error err = CreateAniError(env, "Failed to request heap memory.");
-        env->ThrowError(err);
+        ThrowBusinessError(env, ENOMEM, "Failed to request heap memory.");
         return;
     }
     LOGD("FileUriConstructor fileuriEntity:  %{public}p.", fileuriEntity.get());
+    StdSharedPtrHolder<ModuleFileUri::FileUriEntity> *holder =
+        new StdSharedPtrHolder<ModuleFileUri::FileUriEntity>(std::move(fileuriEntity));
 
     ani_namespace ns;
     if (env->FindNamespace("L@ohos/file/fileuri/fileUri;", &ns) != ANI_OK) {
         LOGE("Namespace L@ohos/file/fileuri/fileUri not found.");
-        ani_error err = CreateAniError(env, "Namespace L@ohos/file/fileuri/fileUri not found.");
-        env->ThrowError(err);
+        ThrowBusinessError(env, EPERM, "Namespace L@ohos/file/fileuri/fileUri not found.");
         return;
     };
 
@@ -124,23 +141,20 @@ void FileUriConstructor(ani_env *env, ani_object obj, ani_string stringObj)
     static const char *className = "LFileUri;";
     if (env->Namespace_FindClass(ns, className, &cls) != ANI_OK) {
         LOGE("Not found class LFileUri in Namespace L@ohos/file/fileuri/fileUri.");
-        ani_error err = CreateAniError(env, "Class LFileUri not found.");
-        env->ThrowError(err);
+        ThrowBusinessError(env, EPERM, "Class LFileUri not found.");
         return;
     }
 
     ani_method acquireObj;
     if (ANI_OK != env->Class_FindMethod(cls, "acquireFileUriEntity", "J:V", &acquireObj)) {
         LOGE("Not found method acquireFileUriEntity in class LFileUri.");
-        ani_error err = CreateAniError(env, "Method acquireFileUriEntity not found.");
-        env->ThrowError(err);
+        ThrowBusinessError(env, EPERM, "Method acquireFileUriEntity not found.");
         return;
     }
 
-    if (ANI_OK != env->Object_CallMethod_Void(obj, acquireObj, reinterpret_cast<ani_long>(fileuriEntity.get()))) {
+    if (ANI_OK != env->Object_CallMethod_Void(obj, acquireObj, reinterpret_cast<ani_long>(holder))) {
         LOGE("Call method acquireFileUriEntity failed.");
-        ani_error err = CreateAniError(env, "Call method acquireFileUriEntity failed.");
-        env->ThrowError(err);
+        ThrowBusinessError(env, EPERM, "Call method acquireFileUriEntity failed.");
         return;
     }
 }
@@ -181,6 +195,13 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         LOGE("Cannot bind native methods to class %{public}s.", className);
         return ANI_ERROR;
     };
+
+    ani_class cleanerCls;
+    if (ANI_OK != env->FindClass("L@ohos/file/fileuri/Cleaner;", &cleanerCls)) {
+        LOGE("Not found class @ohos/file/fileuri/Cleaner;.");
+        return ANI_NOT_FOUND;
+    }
+    NativePtrCleaner(env).Bind(cleanerCls);
 
     *result = ANI_VERSION_1;
     return ANI_OK;

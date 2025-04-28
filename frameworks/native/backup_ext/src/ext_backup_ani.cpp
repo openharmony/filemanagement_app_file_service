@@ -14,6 +14,8 @@
  */
 
 #include "ext_backup_ani.h"
+
+#include "ani_utils.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "filemgmt_libhilog.h"
@@ -25,7 +27,6 @@ ExtBackupAni::ExtBackupAni(AbilityRuntime::Runtime &runtime)
     : stsRuntime_(static_cast<AbilityRuntime::STSRuntime &>(runtime))
 {
     HILOGI("Create as an BackupExtensionAbility");
-    env_ = stsRuntime_.GetAniEnv();
 }
 
 ExtBackupAni::~ExtBackupAni()
@@ -74,24 +75,49 @@ void ExtBackupAni::Init(const std::shared_ptr<AppExecFwk::AbilityLocalRecord> &r
 
 ErrCode ExtBackupAni::CallEtsOnBackup()
 {
-    if (ANI_OK != env_->Object_CallMethodByName_Void(etsObj_->aniObj, "onBackup", nullptr)) {
+    ani_vm *vm = nullptr;
+    if (ANI_OK != stsRuntime_.GetAniEnv()->GetVM(&vm)) {
+        return EINVAL;
+    }
+    ani_env *env = nullptr;
+    ani_options aniArgs {0, nullptr};
+    if (ANI_OK != vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env)) {
+        if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
+            return EINVAL;
+        }
+    }
+    if (ANI_OK != env->Object_CallMethodByName_Void(etsObj_->aniObj, "onBackup", nullptr)) {
         HILOGE("Failed to call the method: onBackup");
         return EINVAL;
     }
+    vm->DetachCurrentThread();
     return ERR_OK;
 }
 
 ErrCode ExtBackupAni::CallEtsOnRestore()
 {
-    ani_object bundleVersionObj = AniObjectUtils::Create(env_, "LBundleVersionInner;");
+    ani_vm *vm = nullptr;
+    if (ANI_OK != stsRuntime_.GetAniEnv()->GetVM(&vm)) {
+        return EINVAL;
+    }
+    ani_env *env = nullptr;
+    ani_options aniArgs {0, nullptr};
+    if (ANI_OK != vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env)) {
+        if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
+            return EINVAL;
+        }
+    }
+    const std::string className = "L@ohos/application/BackupExtensionAbility/BundleVersionInner;";
+    ani_object bundleVersionObj = AniObjectUtils::Create(env, className.c_str());
     if (nullptr == bundleVersionObj) {
         HILOGE("Failed to Create the BundleVersionInner");
         return EINVAL;
     }
-    if (ANI_OK != env_->Object_CallMethodByName_Void(etsObj_->aniObj, "onRestore", nullptr, bundleVersionObj)) {
+    if (ANI_OK != env->Object_CallMethodByName_Void(etsObj_->aniObj, "onRestore", nullptr, bundleVersionObj)) {
         HILOGE("Failed to call the method: onRestore");
         return EINVAL;
     }
+    vm->DetachCurrentThread();
     return ERR_OK;
 }
 
