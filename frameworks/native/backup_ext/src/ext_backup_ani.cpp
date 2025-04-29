@@ -14,10 +14,10 @@
  */
 
 #include "ext_backup_ani.h"
-
 #include "ani_utils.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
+#include "ext_backup_ani_error.h"
 #include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -131,8 +131,9 @@ ErrCode ExtBackupAni::OnBackup(function<void(ErrCode, std::string)> callback,
                                std::function<void(ErrCode, const std::string)> callbackEx)
 {
     HILOGI("ExtBackupAni OnBackup");
-    BExcepUltils::BAssert(etsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the onBackup interface.");
+    auto env = stsRuntime_.GetAniEnv();
+    AniError::Assert(etsObj_, env, AniError::errorCode::EXT_BROKEN_FRAMEWORK,
+                     "The app does not provide the onBackup interface.");
     return CallEtsOnBackup();
 }
 
@@ -140,8 +141,9 @@ ErrCode ExtBackupAni::OnRestore(std::function<void(ErrCode, std::string)> callba
                                 std::function<void(ErrCode, const std::string)> callbackEx)
 {
     HILOGI("ExtBackupAni OnRestore");
-    BExcepUltils::BAssert(etsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the OnRestore interface.");
+    auto env = stsRuntime_.GetAniEnv();
+    AniError::Assert(etsObj_, env, AniError::errorCode::EXT_BROKEN_FRAMEWORK,
+                     "The app does not provide the onRestore interface.");
     return CallEtsOnRestore();
 }
 
