@@ -21,6 +21,7 @@
 #include "file_utils.h"
 #include "log.h"
 #include "n_error.h"
+#include "ani_util_native_ptr.h"
 
 using namespace OHOS::AppFileService;
 
@@ -41,11 +42,17 @@ static std::string ParseObjToStr(ani_env *env, ani_string stringObj)
 
 static ModuleFileUri::FileUriEntity *unwrapp(ani_env *env, ani_object object)
 {
-    ani_long fileuriEntity_;
-    if (ANI_OK != env->Object_GetFieldByName_Long(object, "fileUriEntity_", &fileuriEntity_)) {
+    ani_long fileUriEntityHolder_;
+    if (ANI_OK != env->Object_GetFieldByName_Long(object, "fileUriEntity_", &fileUriEntityHolder_)) {
+        LOGE("Get fileuriEntityHolder_ failed");
         return nullptr;
     }
-    return reinterpret_cast<ModuleFileUri::FileUriEntity *>(fileuriEntity_);
+    auto fileUriHolder = reinterpret_cast<StdSharedPtrHolder<ModuleFileUri::FileUriEntity> *>(fileUriEntityHolder_);
+    if (!fileUriHolder) {
+        LOGE("Get fileuriEntityHolder by long ptr failed");
+        return nullptr;
+    }
+    return reinterpret_cast<ModuleFileUri::FileUriEntity *>(fileUriHolder->Get().get());
 }
 
 static void ThrowBusinessError(ani_env *env, int errCode, std::string&& errMsg)
@@ -120,6 +127,8 @@ void FileUriConstructor(ani_env *env, ani_object obj, ani_string stringObj)
         return;
     }
     LOGD("FileUriConstructor fileuriEntity:  %{public}p.", fileuriEntity.get());
+    StdSharedPtrHolder<ModuleFileUri::FileUriEntity> *holder
+        = new StdSharedPtrHolder<ModuleFileUri::FileUriEntity>(std::move(fileuriEntity));
 
     ani_namespace ns;
     if (env->FindNamespace("L@ohos/file/fileuri/fileUri;", &ns) != ANI_OK) {
@@ -143,7 +152,7 @@ void FileUriConstructor(ani_env *env, ani_object obj, ani_string stringObj)
         return;
     }
 
-    if (ANI_OK != env->Object_CallMethod_Void(obj, acquireObj, reinterpret_cast<ani_long>(fileuriEntity.get()))) {
+    if (ANI_OK != env->Object_CallMethod_Void(obj, acquireObj, reinterpret_cast<ani_long>(holder))) {
         LOGE("Call method acquireFileUriEntity failed.");
         ThrowBusinessError(env, EPERM, "Call method acquireFileUriEntity failed.");
         return;
@@ -186,6 +195,13 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         LOGE("Cannot bind native methods to class %{public}s.", className);
         return ANI_ERROR;
     };
+
+    ani_class cleanerCls;
+    if (ANI_OK != env->FindClass("L@ohos/file/fileuri/Cleaner;", &cleanerCls)) {
+        LOGE("Not found class @ohos/file/fileuri/Cleaner;.");
+        return ANI_NOT_FOUND;
+    }
+    NativePtrCleaner(env).Bind(cleanerCls);
 
     *result = ANI_VERSION_1;
     return ANI_OK;

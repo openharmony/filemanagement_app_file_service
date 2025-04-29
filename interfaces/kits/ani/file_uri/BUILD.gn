@@ -32,6 +32,7 @@ ohos_shared_library("fileuri_ani") {
   ]
 
   include_dirs = [
+    "include",
     "../../../common/include",
     "../../js/file_uri",
     "${app_file_service_path}/interfaces/innerkits/native/file_uri/include",
