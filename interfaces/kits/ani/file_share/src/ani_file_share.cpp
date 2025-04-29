@@ -23,6 +23,7 @@
 #include "datashare_values_bucket.h"
 #include "ipc_skeleton.h"
 #include "log.h"
+#include "n_error.h"
 #include "remote_uri.h"
 #include "tokenid_kit.h"
 #include "uri.h"
@@ -31,6 +32,7 @@
 
 using namespace OHOS::DataShare;
 using namespace OHOS::DistributedFS::ModuleRemoteUri;
+using namespace OHOS::FileManagement::LibN;
 
 namespace OHOS {
 namespace AppFileService {
@@ -62,24 +64,41 @@ static ani_int ParseEnumToInt(ani_env *env, ani_enum_item enumItem)
     return intValue;
 }
 
-static ani_error CreateAniError(ani_env *env, std::string&& errMsg)
+static void ThrowBusinessError(ani_env *env, int errCode, std::string&& errMsg)
 {
-    static const char *errorClsName = "Lescompat/Error;";
+    LOGD("Begin ThrowBusinessError.");
+    static const char *errorClsName = "L@ohos/base/BusinessError;";
     ani_class cls {};
     if (ANI_OK != env->FindClass(errorClsName, &cls)) {
-        LOGE("%{public}s: Not found namespace %{public}s.", __func__, errorClsName);
-        return nullptr;
+        LOGE("find class BusinessError %{public}s failed", errorClsName);
+        return;
     }
     ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "Lstd/core/String;:V", &ctor)) {
-        LOGE("%{public}s: Not found <ctor> in %{public}s.", __func__, errorClsName);
-        return nullptr;
+    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", ":V", &ctor)) {
+        LOGE("find method BusinessError.constructor failed");
+        return;
     }
-    ani_string error_msg;
-    env->String_NewUTF8(errMsg.c_str(), 17U, &error_msg);
     ani_object errorObject;
-    env->Object_New(cls, ctor, &errorObject, error_msg);
-    return static_cast<ani_error>(errorObject);
+    if (ANI_OK != env->Object_New(cls, ctor, &errorObject)) {
+        LOGE("create BusinessError object failed");
+        return;
+    }
+    ani_double aniErrCode = static_cast<ani_double>(errCode);
+    ani_string errMsgStr;
+    if (ANI_OK != env->String_NewUTF8(errMsg.c_str(), errMsg.size(), &errMsgStr)) {
+        LOGE("convert errMsg to ani_string failed");
+        return;
+    }
+    if (ANI_OK != env->Object_SetFieldByName_Double(errorObject, "code", aniErrCode)) {
+        LOGE("set error code failed");
+        return;
+    }
+    if (ANI_OK != env->Object_SetPropertyByName_Ref(errorObject, "message", errMsgStr)) {
+        LOGE("set error message failed");
+        return;
+    }
+    env->ThrowError(static_cast<ani_error>(errorObject));
+    return;
 }
 
 static bool IsSystemApp()
@@ -234,8 +253,7 @@ static void GrantUriPermission(ani_env *env, ani_string uri, ani_string bundleNa
     LOGD("Enter GrantUriPermission.");
     if (!IsSystemApp()) {
         LOGE("%{public}s: GrantUriPermission is not System App!", __func__);
-        ani_error error = CreateAniError(env, "GrantUriPermission is not System App!");
-        env->ThrowError(error);
+        ThrowBusinessError(env, E_PERMISSION_SYS, "FileShare::GrantUriPermission is not System App!");
         return;
     }
 
@@ -243,8 +261,7 @@ static void GrantUriPermission(ani_env *env, ani_string uri, ani_string bundleNa
     std::string uriStr = ParseObjToStr(env, uri);
     if (!CheckValidPublicUri(uriStr)) {
         LOGE("%{public}s: GrantUriPermission uri is not valid!", __func__);
-        ani_error error = CreateAniError(env, "GrantUriPermission uri is not valid!");
-        env->ThrowError(error);
+        ThrowBusinessError(env, EINVAL, "GrantUriPermission uri is not valid!");
         return;
     }
     uriPermInfo.uri = uriStr;
@@ -254,8 +271,7 @@ static void GrantUriPermission(ani_env *env, ani_string uri, ani_string bundleNa
     ani_int wantConstantFlag = ParseEnumToInt(env, static_cast<ani_enum_item>(enumIndex));
     if (wantConstantFlag < 0) {
         LOGE("%{public}s: GrantUriPermission ParseEnumToInt Faild!", __func__);
-        ani_error error = CreateAniError(env, "GrantUriPermission ParseEnumToInt Faild!");
-        env->ThrowError(error);
+        ThrowBusinessError(env, EINVAL, "GrantUriPermission is not System App!");
         return;
     }
     uriPermInfo.flag = wantConstantFlag;
@@ -264,7 +280,12 @@ static void GrantUriPermission(ani_env *env, ani_string uri, ani_string bundleNa
         uriStr.c_str(), bundleNameStr.c_str(), wantConstantFlag, uriPermInfo.mode.c_str());
 
     int ret = DoGrantUriPermission(uriPermInfo);
-    LOGD("DoGrantUriPermission ret: %{public}d.", ret);
+    if (ret < 0) {
+        LOGE("FileShare::GrantUriPermission DoGrantUriPermission failed with %{public}d", ret);
+        ThrowBusinessError(env, -ret, "GrantUriPermission failed");
+        return;
+    }
+    LOGD("FileShare::GrantUriPermission DoGrantUriPermission successfully!");
 }
 } // namespace ModuleFileShare
 } // namespace AppFileService

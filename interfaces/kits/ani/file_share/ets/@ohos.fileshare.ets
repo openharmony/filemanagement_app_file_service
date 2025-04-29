@@ -16,34 +16,49 @@
 import type { AsyncCallback } from '@ohos.base';
 import { BusinessError } from '@ohos.base';
 import type wantConstant from '@ohos.app.ability.wantConstant';
+import hilog from '@ohos.hilog'
 
 export namespace fileShare {
   loadLibrary("fileshare_ani")
 
+  export enum OperationMode {
+      READ_MODE = 0b1,
+      WRITE_MODE = 0b10
+  }
+  export interface PolicyInfo {
+      uri: string;
+      operationMode: int;
+  }
+
+  class PolicyInfo_inner implements PolicyInfo {
+      uri: string;
+      operationMode: int;
+  }
+
   export function grantUriPermission(uri: string, bundleName: string, flag: wantConstant.Flags,
     callback: AsyncCallback<void>): void {
-    console.log("Start grantUriPermission in callback main thread.");
+    hilog.info(0x0000, 'grantUriPermission', "Start grantUriPermission in callback main thread.");
     let p1 = taskpool.execute(grantUriPermissionSync, uri, bundleName, flag);
     p1.then((err: NullishType) => {
       let error: BusinessError<void>;
       callback(error, undefined);
     });
     p1.catch((err: NullishType) => {
-      console.log("grantUriPermission catch in callback thread.");
-      let error: BusinessError<void>;
+      hilog.info(0x0000, 'grantUriPermission', "grantUriPermission catch in callback thread.");
+      let error =  err as BusinessError<void>;
       callback(error, undefined);
     });
   }
 
   export function grantUriPermission(uri: string, bundleName: string, flag: wantConstant.Flags): Promise<void> {
-    console.log("Start grantUriPermission in promise main thread");
+    hilog.info(0x0000, 'grantUriPermission', "Start grantUriPermission in promise main thread");
     let p = new Promise<void>((resolve: (value: undefined) => void, reject: (error: Object) => void): void => {
       let p1 = taskpool.execute(grantUriPermissionSync, uri, bundleName, flag);
       p1.then((e: NullishType): void => {
         resolve(undefined);
       });
       p1.catch((e: Error): void => {
-        console.log("grantUriPermission catch in promise thread.");
+        hilog.info(0x0000, 'grantUriPermission', "grantUriPermission catch in promise thread.");
         reject(e);
       });
     });
@@ -51,7 +66,7 @@ export namespace fileShare {
   }
 
   export function grantUriPermissionSync(uri: string, bundleName: string, flag: wantConstant.Flags):int {
-    console.log("Start grantUriPermissionSync in thread.");
+    hilog.info(0x0000, 'grantUriPermission', "Start grantUriPermissionSync in thread.");
     grantUriPermissionInner(uri, bundleName, flag);
     return 0;
   }

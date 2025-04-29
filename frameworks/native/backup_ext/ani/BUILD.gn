@@ -13,50 +13,28 @@
 
 import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
-import("//foundation/filemanagement/app_file_service/backup.gni")
 
-group("backup_ext_ani_package") {
-  deps = [ ":backup_ext_ani" ]
-}
-
-ohos_shared_library("backup_ext_ani") {
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
+if (support_jsapi) {
+  group("backup_ext_ani_package") {
+    deps = [
+      ":backup_ext_abc_etc",
+    ]
   }
 
-  sources = [ "src/ext_backup_ani.cpp" ]
+  generate_static_abc("backup_ext_abc") {
+    base_url = "./ets"
+    files = [ "./ets/@ohos.application.BackupExtensionAbility.ets" ]
+    dst_file = "$target_out_dir/backup_ext.abc"
+    out_puts = [ "$target_out_dir/backup_ext.abc" ]
+    is_boot_abc = "True"
+    device_dst_file = "/system/framework/backup_ext.abc"
+  }
 
-  include_dirs = [
-    "include",
-    "../include",
-  ]
-
-  deps = [ "${path_backup}/utils:backup_utils" ]
-
-  external_deps = [
-    "ability_base:want",
-    "ability_runtime:ability_context_native",
-    "ability_runtime:abilitykit_native",
-    "ability_runtime:app_context",
-    "ability_runtime:appkit_native",
-    "ability_runtime:extensionkit_native",
-    "ability_runtime:runtime",
-    "access_token:libaccesstoken_sdk",
-    "bundle_framework:appexecfwk_core",
-    "c_utils:utils",
-    "hilog:libhilog",
-    "hitrace:hitrace_meter",
-    "ipc:ipc_core",
-    "runtime_core:ani",
-    "samgr:samgr_proxy",
-  ]
-
-  subsystem_name = "filemanagement"
-  part_name = "app_file_service"
-  output_extension = "so"
+  ohos_prebuilt_etc("backup_ext_abc_etc") {
+    source = "$target_out_dir/backup_ext.abc"
+    module_install_dir = "framework"
+    subsystem_name = "filemanagement"
+    part_name = "app_file_service"
+    deps = [ ":backup_ext_abc" ]
+   }
 }
