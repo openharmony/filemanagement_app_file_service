@@ -1,0 +1,16 @@
+@!namespace("@ohos.file.fileuri", "fileUri")
+
+@!sts_inject("""
+static { loadLibrary("file_fileuri_taihe.z"); }
+""")
+
+@class
+interface FileUri {
+    @get("name")
+    getName(): String;
+}
+
+@ctor("FileUri")
+function makeFileUri(name :String): FileUri;
+
+function getUriFromPath(path: String): String;

@@ -1,0 +1,35 @@
+@!namespace("@ohos.fileshare","fileShare")
+
+@!sts_inject("""
+static { loadLibrary("file_share_taihe.z"); }
+""")
+
+enum OperationMode:i32{
+    READ_MODE=1,
+    WRITE_MODE=2,
+}
+
+struct PolicyInfo{
+    uri:String;
+    operationMode:i32;
+}
+
+function makePolicyInfo(uri:String,operationMode:i32): PolicyInfo;
+
+enum PolicyErrorCode:i32{
+    PERSISTENCE_FORBIDDEN = 1,
+    INVALID_MODE = 2,
+    INVALID_PATH = 3,
+    PERMISSION_NOT_PERSISTED = 4,
+}
+
+@gen_promise("activatePermission")
+function activatePermissionSync(
+    policies: Array<PolicyInfo>
+): void;
+
+
+@gen_promise("deactivatePermission")
+function deactivatePermissionSync(
+    policies: Array<PolicyInfo>
+): void;

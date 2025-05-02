@@ -1,0 +1,86 @@
+import("//build/config/components/ets_frontend/ets2abc_config.gni")
+import("//build/ohos.gni")
+import("//build/ohos/taihe_idl/taihe.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
+
+part_name = "app_file_service"
+subsystem_name = "filemanagement"
+taihe_generated_file_path = "$taihe_file_path/out/$subsystem_name/$part_name/fileshare"
+
+copy_taihe_idl("copy_taihe") {
+  sources = [ "${app_file_service_path}/interfaces/kits/taihe/fileshare/idl/ohos.fileshare.taihe" ]
+}
+
+ohos_taihe("run_taihe") {
+  taihe_generated_file_path = "$taihe_generated_file_path"
+  deps = [ ":copy_taihe" ]
+  outputs = [
+    "$taihe_generated_file_path/src/ohos.fileshare.ani.cpp",
+    "$taihe_generated_file_path/src/ohos.fileshare.abi.c",
+  ]
+}
+
+taihe_shared_library("file_share_taihe") {
+  taihe_generated_file_path = "$taihe_generated_file_path"
+  subsystem_name = "filemanagement"
+  part_name = "app_file_service"
+
+  include_dirs = [
+    "include",
+    "${app_file_service_path}/interfaces/common/include/log.h",
+    "${app_file_service_path}/interfaces/innerkits/native/file_share/include",
+    "${app_file_service_path}/interfaces/kits/ndk/fileshare/include"
+  ]
+
+  sources = get_target_outputs(":run_taihe")
+  sources += [
+    "src/ani_constructor.cpp",
+    "src/grant_permissons.cpp"
+  ]
+
+  deps = [
+    ":run_taihe",
+    "${app_file_service_path}/interfaces/innerkits/native:fileshare_native",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+  ]
+}
+
+generate_static_abc("file_share_taihe_abc") {
+    base_url = "$taihe_generated_file_path"
+    files = [ "$taihe_generated_file_path/@ohos.fileshare.ets" ]
+    is_boot_abc = "True"
+    device_dst_file = "/system/framework/file_share_taihe_abc.abc"
+    dependencies = [ ":run_taihe" ]
+}
+
+generate_static_abc("file_share_taihe_test_abc"){
+    base_url = "${app_file_service_path}/interfaces/kits/taihe/fileshare/test"
+    files=[
+      "${app_file_service_path}/interfaces/kits/taihe/fileshare/test/test_activatePermission.ets",
+      "${app_file_service_path}/interfaces/kits/taihe/fileshare/test/test_deactivatePermission.ets",
+      "${app_file_service_path}/interfaces/kits/taihe/fileshare/test/test_main.ets",
+    ]
+    is_boot_abc = "True"
+    device_dst_file = "/system/framework/file_share_taihe_test_abc.abc"
+}
+
+ohos_prebuilt_etc("file_share_etc") {
+  source = "$target_out_dir/file_share_taihe_abc.abc"
+  module_install_dir = "framework"
+  part_name = "app_file_service"
+  subsystem_name = "filemanagement"
+  deps = [
+    ":file_share_taihe_abc",
+  ]
+}
+
+group("afs_fileshare_taihe") {
+  deps = [
+    ":file_share_taihe",
+    ":file_share_etc",
+  ]
+}
