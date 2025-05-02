@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
- #ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_GRANT_PERMISSONS_H
- #define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_GRANT_PERMISSONS_H
-
-#include "ohos.fileshare.proj.hpp"
-#include "ohos.fileshare.impl.hpp"
-#include "taihe/runtime.hpp"
+#ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_GRANT_PERMISSONS_H
+#define FILEMANAGEMENT_APP_FILE_SERVICEACES_FILE_SHARE_TAIHE_GRANT_PERONS_H
+ 
+#include "ohos.fileshare.proj"
+#include "oh.fileshare.impl.hpp"
+#include "taihe/runtime"
 #include "file_permission.h"
 
 namespace ANI::fileShare {
@@ -35,6 +35,6 @@ using namespace ohos::fileshare;
         ~PolicyErrorArgs() = default;
     };
 
-}  // namespace 
+} //namespace ANI::fileShare
 
 #endif // FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_GRANT_PERMISSONS_H

@@ -24,34 +24,33 @@ namespace ANI::fileUri {
 
 const std::string FILE_SCHEME_PREFIX_TAIHE = "file://";
 
-FileUriImpl::FileUriImpl(string_view name) 
-: uri_((std::string(name.c_str()).find(FILE_SCHEME_PREFIX_TAIHE) == 0) ? std::string(name.c_str())
-: OHOS::AppFileService::CommonFunc::GetUriFromPath(std::string(name.c_str())))
+FileUriImpl::FileUriImpl(string_view name)
+    : uri_((std::string(name.c_str()).find(FILE_SCHEME_PREFIX_TAIHE) == 0) ? std::string(name.c_str())
+    : OHOS::AppFileService::CommonFunc::GetUriFromPath(std::string(name.c_str())))
 {
-
 }
 
-string FileUriImpl::getName() {
+string FileUriImpl::getName()
+{
 std::string sandboxPath = OHOS::AppFileService::SandboxHelper::Decode(uri_.GetPath());
     size_t posLast = sandboxPath.find_last_of("/");
     if (posLast == std::string::npos) {
         return "";
     }
-    
     if (posLast == (sandboxPath.size() - 1)) {
         return "";
     }
-    
     return sandboxPath.substr(posLast + 1);
-
 }
 
 
-FileUri makeFileUri(string_view name) {
+FileUri makeFileUri(string_view name)
+{
     return make_holder<FileUriImpl, FileUri>(name);
 }
 
-string getUriFromPath(string_view path) {
+string getUriFromPath(string_view path)
+{
     const std::string strPath = path.c_str();
     std::string uri = OHOS::AppFileService::CommonFunc::GetUriFromPath(strPath);
 

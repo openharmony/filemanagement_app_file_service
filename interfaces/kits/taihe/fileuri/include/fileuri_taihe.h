@@ -34,7 +34,7 @@ public:
 
     string getName();
 
-private: 
+private:
     OHOS::Uri uri_;
 };
 
