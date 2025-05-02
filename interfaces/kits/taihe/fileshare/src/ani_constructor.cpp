@@ -16,6 +16,7 @@
 #define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_ANI_CONSTRUCTOR_H
 
 #include "ohos.fileshare.ani.hpp"
+
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
     ani_env *env;

@@ -23,7 +23,7 @@ using namespace ANI::fileShare;
  
 namespace ANI::fileShare {
  
-PolicyInfo makePolicyInfo(string_view uri,int32_t operationMode)
+PolicyInfo makePolicyInfo(string_view uri, int32_t operationMode)
 {
     return PolicyInfo{uri, operationMode};
 }
@@ -44,7 +44,7 @@ int32_t GetUriPoliciesArg(array_view<PolicyInfo> policies,
             LOGE("URI is empty");
             return E_PARAMS;
         }
-        if (uriPolicy.mode != READ_MODE && 
+        if (uriPolicy.mode != READ_MODE &&
             uriPolicy.mode != (READ_MODE | WRITE_MODE)) {
             LOGE("Invalid operation mode");
             return E_PARAMS;
@@ -57,7 +57,7 @@ int32_t GetUriPoliciesArg(array_view<PolicyInfo> policies,
 void activatePermissionSync(array_view<PolicyInfo> policies)
 {
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
-    if (GetUriPoliciesArg(policies,uriPolicies)) {
+    if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get URI policies");
         set_business_error(E_PARAMS, "Failed to get URI policies");
     }
