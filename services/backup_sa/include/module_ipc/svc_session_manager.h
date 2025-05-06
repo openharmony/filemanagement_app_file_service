@@ -644,6 +644,22 @@ private:
     std::atomic<int> sessionCnt_ {0};
     int32_t memoryParaCurSize_ {BConstants::DEFAULT_VFS_CACHE_PRESSURE};
 };
+
+class CounterHelper {
+public:
+    CounterHelper(sptr<SvcSessionManager> session, const std::string& funcName)
+        : session_(session), funcName_(funcName)
+    {
+        session_->IncreaseSessionCnt(funcName_);
+    }
+    ~CounterHelper()
+    {
+        session_->DecreaseSessionCnt(funcName_);
+    }
+private:
+    sptr<SvcSessionManager> session_;
+    std::string funcName_;
+};
 } // namespace OHOS::FileManagement::Backup
 
 #endif // OHOS_FILEMGMT_BACKUP_SVC_SESSION_MANAGER_H

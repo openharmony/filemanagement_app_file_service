@@ -188,22 +188,6 @@ void BackupExtExtension::VerifyCaller()
     }
 }
 
-static bool CheckAndCreateDirectory(const string &filePath)
-{
-    size_t pos = filePath.rfind('/');
-    if (pos == string::npos) {
-        return true;
-    }
-
-    string folderPath = "/" + filePath.substr(0, pos);
-    if (access(folderPath.c_str(), F_OK) != 0) {
-        if (!ForceCreateDirectory(folderPath.data())) {
-            return false;
-        }
-    }
-    return true;
-}
-
 static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -1329,7 +1313,7 @@ static bool RestoreBigFilePrecheck(string &fileName, const string &path, const s
     }
 
     // 目录不存在且只有大文件时，不能通过untar创建，需要检查并创建
-    if (!CheckAndCreateDirectory(filePath)) {
+    if (!BDir::CheckAndCreateDirectory(filePath)) {
         HILOGE("failed to create directory %{public}s", GetAnonyString(filePath).c_str());
         return false;
     }

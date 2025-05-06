@@ -44,6 +44,14 @@ public:
     static std::tuple<ErrCode, std::vector<std::string>> GetDirFiles(const std::string &path);
 
     /**
+     * @brief 校验文件父目录是否存在，不存在时创建
+     *
+     * @param 文件路径
+     * @return 文件父目录是否已可用
+     */
+    static bool CheckAndCreateDirectory(const string &filePath);
+
+    /**
      * @brief 从给定的includes和excludes目录及文件中获取所有有用大文件和其链接文件的集合
      *
      * @param includes 需要包含的文件及目录集合

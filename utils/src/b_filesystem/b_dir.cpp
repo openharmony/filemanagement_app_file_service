@@ -283,6 +283,22 @@ static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
     return filteredPath;
 }
 
+bool BDir::CheckAndCreateDirectory(const string &filePath)
+{
+    size_t pos = filePath.rfind('/');
+    if (pos == string::npos) {
+        return true;
+    }
+
+    string folderPath = "/" + filePath.substr(0, pos);
+    if (access(folderPath.c_str(), F_OK) != 0) {
+        if (!ForceCreateDirectory(folderPath.data())) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static void UpdateFileStat(std::shared_ptr<RadarAppStatistic> appStatistic, std::string filePath, uint64_t fileSize,
     uint32_t& maxDirDepth)
 {

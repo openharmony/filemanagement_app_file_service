@@ -681,45 +681,40 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             HILOGE("AppendBundles restore session with infos error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         SetUserIdAndRestoreType(restoreType, userId);
         ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
         if (ret != ERR_OK) {
             HILOGE("AppendBundles restore session with infos error, verify caller failed, ret:%{public}d", ret);
             HandleExceptionOnAppendBundles(session_, bundleNames, {});
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return ret;
         }
         std::vector<std::string> bundleNamesOnly;
         std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, session_->GetSessionUserId(),
-                                        isClearDataFlags);
+            isClearDataFlags);
         std::string oldBackupVersion;
         auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames, oldBackupVersion);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         HandleExceptionOnAppendBundles(session_, bundleNames, restoreBundleNames);
         if (restoreBundleNames.empty()) {
             HILOGE("AppendBundlesRestoreSession failed, restoreBundleNames is empty.");
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return BError(BError::Codes::OK);
         }
         AppendBundles(restoreBundleNames);
         SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap, isClearDataFlags, restoreType,
-                                 oldBackupVersion);
+            oldBackupVersion);
         OnStartSched();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("End");
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("Catch exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
         HILOGE("Unexpected exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }

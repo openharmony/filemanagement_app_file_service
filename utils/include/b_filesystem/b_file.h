@@ -100,7 +100,7 @@ public:
      * @return 0 if path is invalid
      * @return file size in byte if path is valid
      */
-     static uint64_t GetFileSize(const string &path);
+    static uint64_t GetFileSize(const string &path);
 private:
 };
 } // namespace OHOS::FileManagement::Backup
