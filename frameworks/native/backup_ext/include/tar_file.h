@@ -99,6 +99,7 @@ public:
      */
     void SetPacketMode(bool isReset);
 
+    uint64_t GetTarFileSize() { return static_cast<uint64_t>(currentTarFileSize_); }
 private:
     TarFile() {}
     ~TarFile() = default;
@@ -219,7 +220,6 @@ private:
     bool I2OcsConvert(const struct stat &st, TarHeader &hdr, std::string &fileName);
 
     bool ToAddFile(std::string &path, int &err);
-
 private:
     uint32_t fileCount_ {0};
     TarMap tarMap_ {};

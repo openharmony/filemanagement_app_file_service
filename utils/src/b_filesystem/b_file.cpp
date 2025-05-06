@@ -218,4 +218,14 @@ bool BFile::EndsWith(const string &str, const string &suffix)
     }
     return (str.rfind(suffix) == (str.length() - suffix.length()));
 }
+
+uint64_t BFile::GetFileSize(const string &path)
+{
+    struct stat sta = {};
+    if (stat(path.data(), &sta) == -1) {
+        HILOGE("get file size fail: %{public}s", path.c_str());
+        return 0;
+    }
+    return sta.st_size;
+}
 } // namespace OHOS::FileManagement::Backup

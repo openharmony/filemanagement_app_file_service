@@ -92,6 +92,15 @@ public:
      * @return false str is not endswith suffix
      */
     static bool EndsWith(const string &str, const string &suffix);
+
+        /**
+     * @brief get file size by path
+     *
+     * @param path file path
+     * @return 0 if path is invalid
+     * @return file size in byte if path is valid
+     */
+     static uint64_t GetFileSize(const string &path);
 private:
 };
 } // namespace OHOS::FileManagement::Backup

@@ -115,6 +115,10 @@ void SvcSessionManager::SetServiceSchedAction(const string &bundleName, BConstan
     BackupSvcSessionManager::session->SetServiceSchedAction(bundleName, action);
 }
 
+void SvcSessionManager::UpdateDfxInfo(const std::string &bundleName, uint64_t uniqId)
+{
+}
+
 string SvcSessionManager::GetBackupExtName(const string &bundleName)
 {
     return BackupSvcSessionManager::session->GetBackupExtName(bundleName);

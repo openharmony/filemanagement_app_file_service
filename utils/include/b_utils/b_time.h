@@ -18,11 +18,18 @@
 #include <string>
 
 namespace OHOS::FileManagement::Backup {
+
+constexpr uint32_t MS_TO_US = 1000;
+constexpr uint32_t SECOND_TO_MS = 1000;
+
 class TimeUtils {
 public:
     static int64_t GetTimeS();
     static int64_t GetTimeMS();
     static int64_t GetTimeUS();
+    static uint32_t GetSpendSecond(int64_t startSecond);
+    static uint32_t GetSpendMS(int64_t startMS);
+    static uint32_t GetSpendUS(int64_t startUS);
     static std::string GetCurrentTime();
 };
 } // namespace OHOS::FileManagement::TimeUtils

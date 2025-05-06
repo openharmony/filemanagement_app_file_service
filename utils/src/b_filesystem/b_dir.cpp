@@ -283,8 +283,18 @@ static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
     return filteredPath;
 }
 
+static void UpdateFileStat(std::shared_ptr<RadarAppStatistic> appStatistic, std::string filePath, uint64_t fileSize,
+    uint32_t& maxDirDepth)
+{
+    appStatistic->UpdateFileDist(ExtractFileExt(filePath), fileSize);
+    uint32_t dirDepth = std::count(filePath.begin(), filePath.end(), '/');
+    if (dirDepth > maxDirDepth) {
+        maxDirDepth = dirDepth;
+    }
+}
+
 tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(const vector<string> &includes,
-                                                                                const vector<string> &excludes)
+    const vector<string> &excludes, std::shared_ptr<RadarAppStatistic> appStatistic)
 {
     set<string> inc = ExpandPathWildcard(includes, true);
 
@@ -317,9 +327,11 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
     };
 
     map<string, size_t> resSmallFiles;
+    uint32_t maxDirDepth = BConstants::APP_BASE_PATH_DEPTH;
     for (const auto &item : incSmallFiles) {
         if (!isMatch(endExcludes, item.first)) {
             resSmallFiles.emplace(item);
+            UpdateFileStat(appStatistic, item.first, item.second, maxDirDepth);
         }
     }
 
@@ -327,8 +339,10 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
     for (const auto &item : incFiles) {
         if (!isMatch(endExcludes, item.first)) {
             bigFiles.emplace(item);
+            UpdateFileStat(appStatistic, item.first, item.second.st_size, maxDirDepth);
         }
     }
+    appStatistic->dirDepth_ = maxDirDepth - BConstants::APP_BASE_PATH_DEPTH;
     HILOGW("total number of big files is %{public}zu", bigFiles.size());
     HILOGW("total number of small files is %{public}zu", resSmallFiles.size());
     return {ERR_OK, move(bigFiles), move(resSmallFiles)};

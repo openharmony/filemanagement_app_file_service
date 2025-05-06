@@ -206,6 +206,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreCallback(
             HILOGE("Ext extension handle have been released");
             return;
         }
+        extensionPtr->OnRestoreFinish();
         if (extensionPtr->isExecAppDone_.load()) {
             HILOGE("Appdone has been executed for the current application");
             return;
@@ -242,6 +243,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreExCallbac
             HILOGE("Ext extension handle have been released");
             return;
         }
+        extensionPtr->OnRestoreExFinish();
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
             return;
@@ -306,6 +308,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
             HILOGE("Ext extension handle have been released");
             return;
         }
+        extensionPtr->OnRestoreExFinish();
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
             return;
@@ -353,6 +356,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreCall
             HILOGE("Ext extension handle have been released");
             return;
         }
+        extensionPtr->OnRestoreFinish();
         if (extensionPtr->isExecAppDone_.load()) {
             HILOGE("Appdone has been executed for the current application");
             return;
@@ -398,6 +402,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupCall
             HILOGE("Ext extension handle have been released");
             return;
         }
+        extensionPtr->OnBackupFinish();
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
             return;
@@ -440,6 +445,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
             HILOGE("Ext extension handle have been released");
             return;
         }
+        extensionPtr->OnBackupExFinish();
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
             return;
@@ -492,6 +498,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupC
             HILOGE("Current extension execute call backup error, extPtr is empty");
             return;
         }
+        extPtr->OnBackupFinish();
         if (extPtr->isExecAppDone_.load()) {
             HILOGE("Appdone has been executed for the current application");
             return;
@@ -534,6 +541,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupE
             HILOGE("Ext extension handle have been released");
             return;
         }
+        extensionPtr->OnBackupExFinish();
         if (extensionPtr->extension_ == nullptr) {
             HILOGE("Extension handle have been released");
             return;
@@ -628,6 +636,36 @@ void BackupExtExtension::ExecCallOnProcessTask(wptr<BackupExtExtension> obj, Bac
         AsyncCallJsOnProcessTask(obj, scenario);
     }
     HILOGI("End");
+}
+
+void BackupExtExtension::OnBackupFinish()
+{
+    appStatistic_->onBackupSpend_.End();
+}
+
+void BackupExtExtension::OnBackupExFinish()
+{
+    appStatistic_->onBackupexSpend_.End();
+}
+
+void BackupExtExtension::OnRestoreFinish()
+{
+    appStatistic_->onRestoreSpend_.End();
+}
+
+void BackupExtExtension::OnRestoreExFinish()
+{
+    appStatistic_->onRestoreexSpend_.End();
+}
+
+void BackupExtExtension::DoBackupStart()
+{
+    appStatistic_->doBackupSpend_.Start();
+}
+
+void BackupExtExtension::DoBackupEnd()
+{
+    appStatistic_->doBackupSpend_.End();
 }
 
 void BackupExtExtension::AsyncCallJsOnProcessTask(wptr<BackupExtExtension> obj, BackupRestoreScenario scenario)
@@ -739,6 +777,7 @@ void BackupExtExtension::CloseOnProcessTimeOutTimer()
 void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
 {
     HILOGI("Begin");
+    ReportAppStatistic(errCode);
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to obtain the ServiceClient handle");
@@ -794,13 +833,24 @@ ErrCode BackupExtExtension::UpdateFdSendRate(const std::string &bundleName, int3
         bundleName_ = bundleName;
         sendRate_ = sendRate;
         if (sendRate > 0) {
+            appStatistic_->UpdateSendRateZeroSpend();
             startSendFdRateCon_.notify_one();
+        } else {
+            appStatistic_->sendRateZeroStart_ = TimeUtils::GetTimeUS();
         }
         return ERR_OK;
     } catch (...) {
         HILOGE("Failed to UpdateFdSendRate");
         return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
     }
+}
+
+ErrCode BackupExtExtension::UpdateDfxInfo(int64_t uniqId, uint32_t extConnectSpend, const std::string &bundleName)
+{
+    appStatistic_->SetUniqId(uniqId);
+    appStatistic_->extConnectSpend_ = extConnectSpend;
+    appStatistic_->appCaller_ = bundleName;
+    return ERR_OK;
 }
 
 bool BackupExtExtension::SetStagingPathProperties()

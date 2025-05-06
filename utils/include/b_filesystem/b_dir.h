@@ -18,6 +18,7 @@
 
 #include <linux/stat.h>
 #include <map>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <sys/stat.h>
@@ -27,6 +28,7 @@
 #include <vector>
 
 #include "b_json/b_report_entity.h"
+#include "b_radar/radar_app_statistic.h"
 #include "errors.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -49,7 +51,8 @@ public:
      * @return 错误码、大文件名集合
      */
     static std::tuple<ErrCode, std::map<std::string, struct stat>, std::map<std::string, size_t>> GetBigFiles(
-        const std::vector<std::string> &includes, const std::vector<std::string> &excludes);
+        const std::vector<std::string> &includes, const std::vector<std::string> &excludes,
+        std::shared_ptr<RadarAppStatistic> appStatistic);
 
     /**
      * @brief Get the Dirs object

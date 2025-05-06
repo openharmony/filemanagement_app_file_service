@@ -217,6 +217,8 @@ public:
      */
     wptr<SvcBackupConnection> GetExtConnection(const BundleName &bundleName);
 
+    void UpdateDfxInfo(const std::string &bundleName, uint64_t uniqId);
+
     /**
      * @brief get sa extension connection
      *

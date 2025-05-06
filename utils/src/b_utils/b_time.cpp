@@ -42,6 +42,30 @@ int64_t TimeUtils::GetTimeUS()
         return nowUs.count();
 }
 
+uint32_t TimeUtils::GetSpendSecond(int64_t startTime)
+{
+    if (startTime == 0) {
+        return 0;
+    }
+    return static_cast<uint32_t>(GetTimeS() - startTime);
+}
+
+uint32_t TimeUtils::GetSpendMS(int64_t startTime)
+{
+    if (startTime == 0) {
+        return 0;
+    }
+    return static_cast<uint32_t>(GetTimeMS() - startTime);
+}
+
+uint32_t TimeUtils::GetSpendUS(int64_t startTime)
+{
+    if (startTime == 0) {
+        return 0;
+    }
+    return static_cast<uint32_t>(GetTimeUS() - startTime);
+}
+
 std::string TimeUtils::GetCurrentTime()
 {
     auto now = std::chrono::system_clock::now();

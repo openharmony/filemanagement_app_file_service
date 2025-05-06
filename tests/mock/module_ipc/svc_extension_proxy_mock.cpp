@@ -82,4 +82,9 @@ ErrCode ExtensionProxy::GetIncrementalBackupFileHandle(UniqueFdGroup &fdGroup)
 {
     return 0;
 }
+
+ErrCode ExtensionProxy::UpdateDfxInfo(int64_t uniqId, uint32_t extConnectSpend, const std::string &bundleName)
+{
+    return 0;
+}
 } // namespace OHOS::FileManagement::Backup

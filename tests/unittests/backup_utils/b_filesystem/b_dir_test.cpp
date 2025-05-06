@@ -22,6 +22,7 @@
 #include <errors.h>
 #include <file_ex.h>
 #include <gtest/gtest.h>
+#include <memory>
 
 #include "b_filesystem/b_dir.h"
 #include "b_dir.cpp"
@@ -37,6 +38,8 @@ public:
     static void TearDownTestCase() {};
     void SetUp() {};
     void TearDown() {};
+protected:
+    std::shared_ptr<RadarAppStatistic> appStatistic_ = std::make_shared<RadarAppStatistic>();
 };
 
 /**
@@ -144,7 +147,7 @@ HWTEST_F(BDirTest, b_dir_GetBigFiles_0100, testing::ext::TestSize.Level1)
         EXPECT_EQ(ret, 0);
         vector<string> includes = {rootDir};
         vector<string> excludes = {filePath2};
-        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
+        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes, appStatistic_);
         EXPECT_EQ(errCode, ERR_OK);
         EXPECT_EQ(mpNameToStat.at(filePath1).st_size, 1024 * 1024 * 3);
         EXPECT_EQ(mpNameToStat.find(filePath2), mpNameToStat.end());
@@ -170,7 +173,7 @@ HWTEST_F(BDirTest, b_dir_GetBigFiles_0200, testing::ext::TestSize.Level1)
     try {
         vector<string> includes = {{}, {}};
         vector<string> excludes = {{}};
-        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
+        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes, appStatistic_);
         EXPECT_EQ(errCode, ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -194,7 +197,7 @@ HWTEST_F(BDirTest, b_dir_GetBigFiles_0201, testing::ext::TestSize.Level1)
     try {
         vector<string> includes = {"/data/"};
         vector<string> excludes;
-        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
+        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes, appStatistic_);
         EXPECT_EQ(errCode, ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -218,7 +221,7 @@ HWTEST_F(BDirTest, b_dir_GetBigFiles_0202, testing::ext::TestSize.Level1)
     try {
         vector<string> includes = {"/data/app/"};
         vector<string> excludes;
-        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
+        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes, appStatistic_);
         EXPECT_EQ(errCode, ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -243,7 +246,7 @@ HWTEST_F(BDirTest, b_dir_GetBigFiles_0203, testing::ext::TestSize.Level1)
         vector<string> includes;
         vector<string> excludes;
         const string str = "";
-        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
+        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes, appStatistic_);
         EXPECT_EQ(errCode, ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -284,7 +287,7 @@ HWTEST_F(BDirTest, b_dir_GetBigFiles_0300, testing::ext::TestSize.Level1)
         system(touchFilePrefix.append("c.txt").c_str());
         vector<string> includes = {preparedDir + string("/*"), preparedDir + string("test")};
         vector<string> excludes = {preparedDir + string("/test/test1/test2"), {}};
-        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
+        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes, appStatistic_);
         EXPECT_EQ(errCode, ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);

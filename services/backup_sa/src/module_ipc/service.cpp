@@ -470,9 +470,11 @@ ErrCode Service::VerifyCaller(IServiceReverseType::Scenario scenario)
 ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::RESTORE, GetCallerName());
     ErrCode ret = VerifyCaller();
     if (ret != ERR_OK) {
         HILOGE("Init restore session failed, verify caller failed");
+        totalStatistic_->Report("InitRestoreSession", ret, MODULE_INIT);
         return ret;
     }
     ret = session_->Active({
@@ -490,6 +492,7 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
         ClearFileReadyRadarReport();
         return ret;
     }
+    totalStatistic_->Report("InitRestoreSession", ret, MODULE_INIT);
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         HILOGE("Active restore session error, Already have a session");
         return ret;
@@ -502,9 +505,11 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
 ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::BACKUP, GetCallerName());
     ErrCode ret = VerifyCaller();
     if (ret != ERR_OK) {
         HILOGE("Init full backup session fail, verify caller failed");
+        totalStatistic_->Report("InitBackupSession", ret, MODULE_INIT);
         return ret;
     }
     int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
@@ -525,6 +530,7 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
         ClearFileReadyRadarReport();
         return ret;
     }
+    totalStatistic_->Report("InitBackupSession", ret, MODULE_INIT);
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         HILOGE("Active backup session error, Already have a session");
         return ret;
@@ -666,6 +672,9 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (totalStatistic_ != nullptr) {
+        totalStatistic_->totalSpendTime_.Start();
+    }
     HILOGI("Begin");
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
@@ -769,6 +778,9 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (totalStatistic_ != nullptr) {
+        totalStatistic_->totalSpendTime_.Start();
+    }
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("AppendBundles restore session error, session is empty");
@@ -869,6 +881,9 @@ void Service::SetCurrentSessProperties(
 ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (totalStatistic_ != nullptr) {
+        totalStatistic_->totalSpendTime_.Start();
+    }
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("AppendBundles backup session error, session is empty");
@@ -908,6 +923,9 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
                                                    const vector<std::string> &bundleInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (totalStatistic_ != nullptr) {
+        totalStatistic_->totalSpendTime_.Start();
+    }
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("AppendBundles backup session with infos error, session is empty");
@@ -1259,6 +1277,9 @@ void Service::ExtConnectDone(string bundleName)
             session_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::CLEAN);
         } else {
             session_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::RUNNING);
+            if (totalStatistic_ != nullptr) {
+                session_->UpdateDfxInfo(bundleName, totalStatistic_->GetUniqId());
+            }
             bool needCleanData = session_->GetClearDataFlag(bundleName);
             if (needCleanData) {
                 HILOGI("Current bundle need clean data, bundleName:%{public}s", bundleName.c_str());

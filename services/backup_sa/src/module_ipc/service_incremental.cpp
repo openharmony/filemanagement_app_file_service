@@ -303,9 +303,11 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
 ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remote)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::BACKUP, GetCallerName(), Mode::INCREMENTAL);
     ErrCode errCode = VerifyCaller();
     if (errCode != ERR_OK) {
         HILOGE("Init incremental backup session fail, Verify caller failed, errCode:%{public}d", errCode);
+        totalStatistic_->Report("InitIncrementalBackupSession", errCode, MODULE_INIT);
         return errCode;
     }
     if (session_ == nullptr) {
@@ -326,6 +328,7 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
         ClearFileReadyRadarReport();
         return errCode;
     }
+    totalStatistic_->Report("InitIncrementalBackupSession", errCode, MODULE_INIT);
     if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         HILOGE("Active restore session error, Already have a session");
         return errCode;
@@ -338,9 +341,11 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
 ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::BACKUP, GetCallerName(), Mode::INCREMENTAL);
     ErrCode errCode = VerifyCaller();
     if (errCode != ERR_OK) {
         HILOGE("Init incremental backup session fail, Verify caller failed, errCode:%{public}d", errCode);
+        totalStatistic_->Report("InitIncrementalBackupSessionWithErrMsg", errCode, MODULE_INIT);
         return errCode;
     }
     if (session_ == nullptr) {
@@ -361,6 +366,7 @@ ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceRever
         ClearFileReadyRadarReport();
         return errCode;
     }
+    totalStatistic_->Report("InitIncrementalBackupSessionWithErrMsg", errCode, MODULE_INIT);
     if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),
