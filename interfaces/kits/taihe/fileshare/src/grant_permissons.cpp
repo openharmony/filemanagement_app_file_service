@@ -20,14 +20,14 @@
 
 using namespace taihe;
 using namespace ANI::fileShare;
- 
+
 namespace ANI::fileShare {
- 
+
 PolicyInfo makePolicyInfo(string_view uri, int32_t operationMode)
 {
     return PolicyInfo{uri, operationMode};
 }
- 
+
 int32_t GetUriPoliciesArg(array_view<PolicyInfo> policies,
     std::vector<OHOS::AppFileService::UriPolicyInfo> &uriPolicies)
 {
@@ -53,42 +53,46 @@ int32_t GetUriPoliciesArg(array_view<PolicyInfo> policies,
     }
     return E_NO_ERROR;
 }
- 
+
 void activatePermissionSync(array_view<PolicyInfo> policies)
 {
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get URI policies");
         set_business_error(E_PARAMS, "Failed to get URI policies");
+        return ;
     }
- 
+
     std::shared_ptr<PolicyErrorArgs> arg = std::make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("PolicyErrorArgs make make_shared failed");
         set_business_error(E_UNKNOWN_ERROR, "PolicyErrorArgs make make_shared failed");
+        return ;
     }
- 
+
     arg->errNo = OHOS::AppFileService::FilePermission::ActivatePermission(uriPolicies, arg->errorResults);
     if (arg->errNo) {
         LOGE("Activation failed");
         set_business_error(arg->errNo, "Activation failed");
     }
 }
- 
+
 void deactivatePermissionSync(array_view<PolicyInfo> policies)
 {
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get URI policies");
         set_business_error(E_PARAMS, "Failed to get URI policies");
+        return ;
     }
- 
+
     std::shared_ptr<PolicyErrorArgs> arg = std::make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("PolicyErrorArgs make make_shared failed");
         set_business_error(E_UNKNOWN_ERROR, "PolicyErrorArgs make make_shared failed");
+        return ;
     }
- 
+
     arg->errNo = OHOS::AppFileService::FilePermission::DeactivatePermission(uriPolicies, arg->errorResults);
     if (arg->errNo) {
         LOGE("Deactivation failed");
@@ -96,10 +100,9 @@ void deactivatePermissionSync(array_view<PolicyInfo> policies)
     }
 }
 } // namespace
- 
+
 // NOLINTBEGIN
 TH_EXPORT_CPP_API_makePolicyInfo(makePolicyInfo);
 TH_EXPORT_CPP_API_activatePermissionSync(activatePermissionSync);
 TH_EXPORT_CPP_API_deactivatePermissionSync(deactivatePermissionSync);
  // NOLINTEND
- 

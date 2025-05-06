@@ -31,13 +31,6 @@ struct PolicyInfo{
 
 function makePolicyInfo(uri:String,operationMode:i32): PolicyInfo;
 
-enum PolicyErrorCode:i32{
-    PERSISTENCE_FORBIDDEN = 1,
-    INVALID_MODE = 2,
-    INVALID_PATH = 3,
-    PERMISSION_NOT_PERSISTED = 4,
-}
-
 @gen_promise("activatePermission")
 function activatePermissionSync(
     policies: Array<PolicyInfo>

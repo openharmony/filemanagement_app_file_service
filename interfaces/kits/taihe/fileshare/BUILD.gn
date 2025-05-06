@@ -38,6 +38,15 @@ taihe_shared_library("file_share_taihe") {
   subsystem_name = "filemanagement"
   part_name = "app_file_service"
 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   include_dirs = [
     "include",
     "${app_file_service_path}/interfaces/common/include/log.h",
@@ -68,17 +77,6 @@ generate_static_abc("file_share_taihe_abc") {
     is_boot_abc = "True"
     device_dst_file = "/system/framework/file_share_taihe_abc.abc"
     dependencies = [ ":run_taihe" ]
-}
-
-generate_static_abc("file_share_taihe_test_abc"){
-    base_url = "${app_file_service_path}/interfaces/kits/taihe/fileshare/test"
-    files=[
-      "${app_file_service_path}/interfaces/kits/taihe/fileshare/test/test_activatePermission.ets",
-      "${app_file_service_path}/interfaces/kits/taihe/fileshare/test/test_deactivatePermission.ets",
-      "${app_file_service_path}/interfaces/kits/taihe/fileshare/test/test_main.ets",
-    ]
-    is_boot_abc = "True"
-    device_dst_file = "/system/framework/file_share_taihe_test_abc.abc"
 }
 
 ohos_prebuilt_etc("file_share_etc") {

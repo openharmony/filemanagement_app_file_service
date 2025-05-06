@@ -16,9 +16,9 @@
 * limitations under the License.
 */
 
-#include "ohos.fileshare.proj"
-#include "oh.fileshare.impl.hpp"
-#include "taihe/runtime"
+#include "ohos.fileshare.proj.hpp"
+#include "ohos.fileshare.impl.hpp"
+#include "taihe/runtime.hpp"
 #include "file_permission.h"
 
 namespace ANI::fileShare {

@@ -38,6 +38,15 @@ taihe_shared_library("file_fileuri_taihe") {
   subsystem_name = "$subsystem_name"
   part_name = "$part_name"
 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   include_dirs = [
     "include",
     "${app_file_service_path}/interfaces/common/include",
@@ -69,15 +78,6 @@ generate_static_abc("file_fileuri_taihe_abc") {
   is_boot_abc = "True"
   device_dst_file = "/system/framework/file_fileuri_taihe_abc.abc"
   dependencies = [ ":run_taihe" ]
-}
-
-generate_static_abc("file_fileuri_test") {
-  base_url = "${app_file_service_path}/interfaces/kits/taihe/fileuri/test"
-  files = [
-    "${app_file_service_path}/interfaces/kits/taihe/fileuri/test/test_main.ets",
-  ]
-  is_boot_abc = "True"
-  device_dst_file = "/system/framework/file_fileuri_test.abc"
 }
 
 ohos_prebuilt_etc("file_fileuri_etc") {
