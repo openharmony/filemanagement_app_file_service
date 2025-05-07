@@ -22,12 +22,10 @@
 #include "file_permission.h"
 
 namespace ANI::fileShare {
-using namespace taihe;
-using namespace ohos::fileshare;
 
-    PolicyInfo makePolicyInfo(string_view uri, int32_t operationMode);
-    void activatePermissionSync(array_view<PolicyInfo> policies);
-    void deactivatePermissionSync(array_view<PolicyInfo> policies);
+    ohos::fileshare::PolicyInfo makePolicyInfo(taihe::string_view uri, int32_t operationMode);
+    void activatePermissionSync(taihe::array_view<ohos::fileshare::PolicyInfo> policies);
+    void deactivatePermissionSync(taihe::array_view<ohos::fileshare::PolicyInfo> policies);
 
     struct PolicyErrorArgs {
         std::deque<OHOS::AppFileService::PolicyErrorResult> errorResults;

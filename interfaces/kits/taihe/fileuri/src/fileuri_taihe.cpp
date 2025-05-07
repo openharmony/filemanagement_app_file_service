@@ -18,8 +18,6 @@
 #include "common_func.h"
 #include "sandbox_helper.h"
 
-using namespace ANI::fileUri;
-
 namespace ANI::fileUri {
 
 const std::string FILE_SCHEME_PREFIX_TAIHE = "file://";
@@ -57,5 +55,5 @@ string getUriFromPath(string_view path)
 }
 }  // namespace ANI::fileUri
 
-TH_EXPORT_CPP_API_makeFileUri(makeFileUri);
-TH_EXPORT_CPP_API_getUriFromPath(getUriFromPath);
+TH_EXPORT_CPP_API_makeFileUri(ANI::fileUri::makeFileUri);
+TH_EXPORT_CPP_API_getUriFromPath(ANI::fileUri::getUriFromPath);
