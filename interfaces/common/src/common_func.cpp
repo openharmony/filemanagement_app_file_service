@@ -90,6 +90,7 @@ string CommonFunc::GetUriFromPath(const string &path)
     string realPath = path;
     NormalizePath(realPath);
     if (realPath.find(MEDIA_FUSE_PATH_HEAD) == 0) {
+        realPath = SandboxHelper::Encode(realPath);
         return realPath.replace(realPath.find(MEDIA_FUSE_PATH_HEAD), MEDIA_FUSE_PATH_HEAD.length(), MEDIA_AUTHORITY);
     }
     string packageName = (realPath.find(FILE_MANAGER_URI_HEAD) == 0) ? FILE_MANAGER_AUTHORITY : GetSelfBundleName();
