@@ -18,14 +18,17 @@
 #include "oh_file_share.h"
 #include <iostream>
 
+using namespace taihe;
+using namespace ANI::fileShare;
+
 namespace ANI::fileShare {
 
-PolicyInfo makePolicyInfo(taihe::string_view uri, int32_t operationMode)
+PolicyInfo makePolicyInfo(string_view uri, int32_t operationMode)
 {
     return PolicyInfo{uri, operationMode};
 }
 
-int32_t GetUriPoliciesArg(taihe::array_view<PolicyInfo> policies,
+int32_t GetUriPoliciesArg(array_view<PolicyInfo> policies,
     std::vector<OHOS::AppFileService::UriPolicyInfo> &uriPolicies)
 {
     uint32_t count = policies.size();
@@ -51,7 +54,7 @@ int32_t GetUriPoliciesArg(taihe::array_view<PolicyInfo> policies,
     return E_NO_ERROR;
 }
 
-void activatePermissionSync(taihe::array_view<PolicyInfo> policies)
+void activatePermissionSync(array_view<PolicyInfo> policies)
 {
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
@@ -74,7 +77,7 @@ void activatePermissionSync(taihe::array_view<PolicyInfo> policies)
     }
 }
 
-void deactivatePermissionSync(taihe::array_view<PolicyInfo> policies)
+void deactivatePermissionSync(array_view<PolicyInfo> policies)
 {
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
@@ -99,7 +102,7 @@ void deactivatePermissionSync(taihe::array_view<PolicyInfo> policies)
 } // namespace
 
 // NOLINTBEGIN
-TH_EXPORT_CPP_API_makePolicyInfo(ANI::fileShare::makePolicyInfo);
-TH_EXPORT_CPP_API_activatePermissionSync(ANI::fileShare::activatePermissionSync);
-TH_EXPORT_CPP_API_deactivatePermissionSync(ANI::fileShare::deactivatePermissionSync);
+TH_EXPORT_CPP_API_makePolicyInfo(makePolicyInfo);
+TH_EXPORT_CPP_API_activatePermissionSync(activatePermissionSync);
+TH_EXPORT_CPP_API_deactivatePermissionSync(deactivatePermissionSync);
  // NOLINTEND

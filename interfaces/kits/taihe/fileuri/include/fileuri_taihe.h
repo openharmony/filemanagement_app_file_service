@@ -23,12 +23,14 @@
 #include "file_uri.h"
 
 namespace ANI::fileUri {
+using namespace taihe;
+using namespace ohos::file::fileuri;
 
 class FileUriImpl {
 public:
     FileUriImpl() = delete;
 
-    FileUriImpl(taihe::string_view name);
+    FileUriImpl(string_view name);
 
     string getName();
 
@@ -36,10 +38,9 @@ private:
     OHOS::Uri uri_;
 };
 
-ohos::file::fileuri::FileUri makeFileUri(taihe::string_view name);
+FileUri makeFileUri(string_view name);
 
-string getUriFromPath(taihe::string_view path);
-
+string getUriFromPath(string_view path);
 }
 
 #endif // INTERFACES_KITS_TAIHE_INCLUDE_FILEURI_TAIHE_H
