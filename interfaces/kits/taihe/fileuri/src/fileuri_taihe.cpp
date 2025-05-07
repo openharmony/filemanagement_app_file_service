@@ -32,7 +32,7 @@ FileUriImpl::FileUriImpl(string_view name)
 
 string FileUriImpl::getName()
 {
-std::string sandboxPath = OHOS::AppFileService::SandboxHelper::Decode(uri_.GetPath());
+    std::string sandboxPath = OHOS::AppFileService::SandboxHelper::Decode(uri_.GetPath());
     size_t posLast = sandboxPath.find_last_of("/");
     if (posLast == std::string::npos) {
         return "";
@@ -42,7 +42,6 @@ std::string sandboxPath = OHOS::AppFileService::SandboxHelper::Decode(uri_.GetPa
     }
     return sandboxPath.substr(posLast + 1);
 }
-
 
 FileUri makeFileUri(string_view name)
 {

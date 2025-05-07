@@ -18,10 +18,9 @@
 #include "oh_file_share.h"
 #include <iostream>
 
+namespace ANI::fileShare {
 using namespace taihe;
 using namespace ANI::fileShare;
-
-namespace ANI::fileShare {
 
 PolicyInfo makePolicyInfo(string_view uri, int32_t operationMode)
 {

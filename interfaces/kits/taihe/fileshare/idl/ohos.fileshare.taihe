@@ -19,14 +19,14 @@
 static { loadLibrary("file_share_taihe.z"); }
 """)
 
-enum OperationMode:i32{
-    READ_MODE=1,
-    WRITE_MODE=2,
+enum OperationMode: i32 {
+    READ_MODE = 1,
+    WRITE_MODE = 2,
 }
 
-struct PolicyInfo{
-    uri:String;
-    operationMode:i32;
+struct PolicyInfo {
+    uri: String;
+    operationMode: i32;
 }
 
 function makePolicyInfo(uri:String,operationMode:i32): PolicyInfo;
@@ -35,7 +35,6 @@ function makePolicyInfo(uri:String,operationMode:i32): PolicyInfo;
 function activatePermissionSync(
     policies: Array<PolicyInfo>
 ): void;
-
 
 @gen_promise("deactivatePermission")
 function deactivatePermissionSync(

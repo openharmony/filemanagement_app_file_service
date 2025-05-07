@@ -1,6 +1,3 @@
-#ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_GRANT_PERMISSONS_H
-#define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_GRANT_PERMISSONS_H
-
 /*
 * Copyright (c) 2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +12,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+#ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_GRANT_PERMISSONS_H
+#define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_GRANT_PERMISSONS_H
 
 #include "ohos.fileshare.proj.hpp"
 #include "ohos.fileshare.impl.hpp"
