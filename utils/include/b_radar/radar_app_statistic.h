@@ -48,7 +48,7 @@ const std::unordered_map<std::string, FileType> FileTypeDef = {
     {"raw", PIC},
     {"wav", AUDIO}, {"flac", AUDIO}, {"wma", AUDIO}, {"acc", AUDIO}, {"mp3", AUDIO}, {"ogg", AUDIO}, {"opus", AUDIO},
     {"mov", VEDIO}, {"wmv", VEDIO}, {"rm", VEDIO}, {"rmvb", VEDIO}, {"3gp", VEDIO}, {"m4v", VEDIO}, {"mkv", VEDIO},
-    {"rar", COMPRESS}, {"zip", COMPRESS}, {"7z", COMPRESS}, {"gz", COMPRESS}, {"iso", COMPRESS},
+    {"rar", COMPRESS}, {"zip", COMPRESS}, {"7z", COMPRESS}, {"gz", COMPRESS}, {"iso", COMPRESS}, {"tar", COMPRESS},
     {"exe", BIN}, {"doc", BIN}, {"docx", BIN}, {"xls", BIN}, {"xlsx", BIN}, {"ppt", BIN}, {"pdf", BIN}
 };
 

@@ -223,7 +223,7 @@ uint64_t BFile::GetFileSize(const string &path)
 {
     struct stat sta = {};
     if (stat(path.data(), &sta) == -1) {
-        HILOGE("get file size fail: %{public}s", path.c_str());
+        HILOGE("get file size fail error:%{public}s", strerror(errno));
         return 0;
     }
     return sta.st_size;

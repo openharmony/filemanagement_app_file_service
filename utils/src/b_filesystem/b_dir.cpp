@@ -303,7 +303,16 @@ static void UpdateFileStat(std::shared_ptr<RadarAppStatistic> appStatistic, std:
     uint32_t& maxDirDepth)
 {
     appStatistic->UpdateFileDist(ExtractFileExt(filePath), fileSize);
-    uint32_t dirDepth = std::count(filePath.begin(), filePath.end(), '/');
+    uint32_t dirDepth = 0;
+    const char* pstr = filePath.c_str();
+    char pre = '-';
+    uint32_t pathLen = filePath.size();
+    for (int i = 0; i < pathLen; i++) {
+        if (pstr[i] == '/' && pre != '/') {
+            dirDepth++;
+        }
+        pre = pstr[i];
+    }
     if (dirDepth > maxDirDepth) {
         maxDirDepth = dirDepth;
     }

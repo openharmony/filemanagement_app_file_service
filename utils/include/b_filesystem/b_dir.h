@@ -49,7 +49,7 @@ public:
      * @param 文件路径
      * @return 文件父目录是否已可用
      */
-    static bool CheckAndCreateDirectory(const string &filePath);
+    static bool CheckAndCreateDirectory(const std::string &filePath);
 
     /**
      * @brief 从给定的includes和excludes目录及文件中获取所有有用大文件和其链接文件的集合
