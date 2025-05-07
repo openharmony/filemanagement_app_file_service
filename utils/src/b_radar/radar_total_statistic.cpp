@@ -28,9 +28,6 @@ RadarTotalStatistic::RadarTotalStatistic(BizScene bizScene, std::string callerNa
 
 void RadarTotalStatistic::Report(const std::string &func, int32_t error)
 {
-    HILOGI("radar__report scene:%{public}d, err:%{public}d, uniqId:%{public}ld, hostPkg:%{public}s, mode:%{public}u, "
-        "succ:%{public}u, fail:%{public}u, totalSpend: %{public}u", static_cast<int32_t>(bizScene_), error, uniqId_,
-        hostPkg_.c_str(), static_cast<uint32_t>(mode_), succBundleCount_, failBundleCount_, totalSpendTime_.GetSpan());
     HiSysEventWrite(
         DOMAIN,
         BACKUP_RESTORE_STATISTIC,

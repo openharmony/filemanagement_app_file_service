@@ -75,17 +75,6 @@ void FileSizeStat::UpdateStat(uint64_t fileSize)
 
 void RadarAppStatistic::ReportBackup(const std::string &func, int32_t errorCode)
 {
-    HILOGI("radar__report appCaller:%{public}s, err:%{public}d, uniqId:%{public}ld, manageJsonSize:%{public}lu, "
-        "exConnectSpend:%{public}u, onBackupSpend:%{public}u, onBackupExSpend:%{public}u, tarSpend:%{public}u, "
-        "hashSpend:%{public}u, scanFileSpend:%{public}u, sendRZSpend:%{public}u, doBackupSpend:%{public}u, "
-        "smallFileCount:%{public}u, smallFileSize:%{public}lu, tarFileCount:%{public}u, tarFileSize:%{public}lu, "
-        "bigFileCount:%{public}u, bigFileSize:%{public}lu, tarBoundSize:%{public}lu, fileTypeDist:%{public}s, "
-        "fileSizeDist:%{public}s, dirDepth:%{public}u",
-        appCaller_.c_str(), errorCode, uniqId_, manageJsonSize_,
-        extConnectSpend_, onBackupSpend_.GetSpan(), onBackupexSpend_.GetSpan(), tarSpend_, hashSpendUS_ / MS_TO_US,
-        scanFileSpend_.GetSpan(), sendRateZeroSpendUS_ / MS_TO_US, doBackupSpend_.GetSpan(), smallFileCount_,
-        smallFileSize_, tarFileCount_, tarFileSize_, bigFileCount_, bigFileSize_, tarBoundSize_,
-        fileTypeDist_.ToJsonString().c_str(), fileSizeDist_.ToJsonString().c_str(), dirDepth_);
     HiSysEventWrite(
         DOMAIN,
         BACKUP_RESTORE_APP_STATISTIC,
@@ -124,13 +113,6 @@ void RadarAppStatistic::ReportBackup(const std::string &func, BError errCode)
 
 void RadarAppStatistic::ReportRestore(const std::string &func, int32_t errorCode)
 {
-    HILOGI("radar__report appCaller:%{public}s, err:%{public}d, uniqId:%{public}ld, tarFileCount:%{public}u, "
-        "tarFileSize:%{public}lu, bigFileCount:%{public}u, bigFileSize:%{public}lu, exConnectSpend:%{public}u, "
-        "onRestoreSpend:%{public}u, onRestoreExSpend:%{public}u, untarSpend:%{public}u, bigFileSpend:%{public}u, "
-        "doRestoreSpend:%{public}u, tarBoundSize:%{public}lu",
-        appCaller_.c_str(), errorCode, uniqId_, tarFileCount_, tarFileSize_, bigFileCount_, bigFileSize_,
-        extConnectSpend_, onRestoreSpend_.GetSpan(), onRestoreexSpend_.GetSpan(), untarSpend_, bigFileSpend_,
-        doRestoreSpend_, tarBoundSize_);
     HiSysEventWrite(
         DOMAIN,
         BACKUP_RESTORE_APP_STATISTIC,
