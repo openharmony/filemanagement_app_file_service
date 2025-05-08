@@ -619,13 +619,17 @@ static NContextCBExec GetPublishFileCBExec(napi_env env, NFuncArg &funcArg, cons
         if (entity->sessionWhole) {
             return NError(entity->sessionWhole->PublishFile(fileInfo));
         }
-        if (SAUtils::IsSABundleName(fileName)) {
-            HILOGI("SA %{public}s pushlish file", bundleName.c_str());
-            if (fcntl(std::atoi(fileName.c_str()), F_GETFD) == -1) {
-                HILOGE("PublishFile fd is invalid.");
-                return NError(BError(BError::Codes::SDK_INVAL_ARG, "PublishFile fd is invalid.").GetCode());
+        if (SAUtils::IsSABundleName(bundleName)) {
+            if (SAUtils::IsSABundleName(fileName)) {
+                HILOGI("SA %{public}s pushlish file", bundleName.c_str());
+                if (fcntl(std::atoi(fileName.c_str()), F_GETFD) == -1) {
+                    HILOGE("PublishFile fd is invalid.");
+                    return NError(BError(BError::Codes::SDK_INVAL_ARG, "PublishFile fd is invalid.").GetCode());
+                }
+                return NError(entity->sessionSheet->PublishSAFile(fileInfo, UniqueFd(std::atoi(fileName.c_str()))));
             }
-            return NError(entity->sessionSheet->PublishSAFile(fileInfo, UniqueFd(std::atoi(fileName.c_str()))));
+            HILOGE("SA:%{public}s, fileName:%{private}s is invalid", bundleName.c_str(), fileName.c_str());
+            return NError(BError(BError::Codes::SDK_INVAL_ARG, "PublishFile fd is invalid.").GetCode());
         }
         return NError(entity->sessionSheet->PublishFile(fileInfo));
     };
