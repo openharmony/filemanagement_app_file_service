@@ -18,44 +18,43 @@
 #include "common_func.h"
 #include "sandbox_helper.h"
 
-using namespace ANI::fileUri;
-
-namespace ANI::fileUri {
+namespace ANI::FileUri {
 
 const std::string FILE_SCHEME_PREFIX_TAIHE = "file://";
+const std::string FILE_FILEURI_FAILED = "";
 
-FileUriImpl::FileUriImpl(string_view name)
+FileUriImpl::FileUriImpl(taihe::string_view name)
     : uri_((std::string(name.c_str()).find(FILE_SCHEME_PREFIX_TAIHE) == 0) ? std::string(name.c_str())
     : OHOS::AppFileService::CommonFunc::GetUriFromPath(std::string(name.c_str())))
 {
 }
 
-string FileUriImpl::getName()
+std::string FileUriImpl::getName()
 {
     std::string sandboxPath = OHOS::AppFileService::SandboxHelper::Decode(uri_.GetPath());
     size_t posLast = sandboxPath.find_last_of("/");
     if (posLast == std::string::npos) {
-        return "";
+        return FILE_FILEURI_FAILED;
     }
     if (posLast == (sandboxPath.size() - 1)) {
-        return "";
+        return FILE_FILEURI_FAILED;
     }
     return sandboxPath.substr(posLast + 1);
 }
 
-FileUri makeFileUri(string_view name)
+
+ohos::file::fileuri::FileUri makeFileUri(taihe::string_view name)
 {
-    return make_holder<FileUriImpl, FileUri>(name);
+    return taihe::make_holder<FileUriImpl, ohos::file::fileuri::FileUri>(name);
 }
 
-string getUriFromPath(string_view path)
+std::string getUriFromPath(taihe::string_view path)
 {
     const std::string strPath = path.c_str();
     std::string uri = OHOS::AppFileService::CommonFunc::GetUriFromPath(strPath);
-
     return uri;
 }
-}  // namespace ANI::fileUri
+}  // namespace ANI::FileUri
 
-TH_EXPORT_CPP_API_makeFileUri(makeFileUri);
-TH_EXPORT_CPP_API_getUriFromPath(getUriFromPath);
+TH_EXPORT_CPP_API_makeFileUri(ANI::FileUri::makeFileUri);
+TH_EXPORT_CPP_API_getUriFromPath(ANI::FileUri::getUriFromPath);

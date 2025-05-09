@@ -21,7 +21,7 @@ subsystem_name = "filemanagement"
 taihe_generated_file_path = "$taihe_file_path/out/$subsystem_name/$part_name/fileshare"
 
 copy_taihe_idl("copy_taihe") {
-    sources = [ "${app_file_service_path}/interfaces/kits/taihe/fileshare/idl/ohos.fileshare.taihe" ]
+  sources = [ "${app_file_service_path}/interfaces/kits/taihe/fileshare/idl/ohos.fileshare.taihe" ]
 }
 
 ohos_taihe("run_taihe") {
@@ -72,11 +72,12 @@ taihe_shared_library("file_share_taihe") {
 }
 
 generate_static_abc("file_share_taihe_abc") {
-    base_url = "$taihe_generated_file_path"
-    files = [ "$taihe_generated_file_path/@ohos.fileshare.ets" ]
-    is_boot_abc = "True"
-    device_dst_file = "/system/framework/file_share_taihe_abc.abc"
-    dependencies = [ ":run_taihe" ]
+  base_url = "$taihe_generated_file_path"
+  files = [ "$taihe_generated_file_path/@ohos.fileshare.ets" ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/file_share_taihe_abc.abc"
+  dependencies = [ ":run_taihe" ]
+    
 }
 
 ohos_prebuilt_etc("file_share_etc") {

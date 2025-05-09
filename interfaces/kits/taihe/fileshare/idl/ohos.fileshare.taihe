@@ -28,8 +28,7 @@ struct PolicyInfo {
     uri: String;
     operationMode: i32;
 }
-
-function makePolicyInfo(uri:String,operationMode:i32): PolicyInfo;
+function makePolicyInfo(uri: String, operationMode: i32): PolicyInfo;
 
 @gen_promise("activatePermission")
 function activatePermissionSync(

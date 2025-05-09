@@ -18,17 +18,14 @@
 #include "oh_file_share.h"
 #include <iostream>
 
-using namespace taihe;
-using namespace ANI::fileShare;
+namespace ANI::FileShare {
 
-namespace ANI::fileShare {
-
-PolicyInfo makePolicyInfo(string_view uri, int32_t operationMode)
+ohos::fileshare::PolicyInfo makePolicyInfo(taihe::string_view uri, int32_t operationMode)
 {
-    return PolicyInfo{uri, operationMode};
+    return {uri, operationMode};
 }
 
-int32_t GetUriPoliciesArg(array_view<PolicyInfo> policies,
+int32_t GetUriPoliciesArg(taihe::array_view<ohos::fileshare::PolicyInfo> policies,
     std::vector<OHOS::AppFileService::UriPolicyInfo> &uriPolicies)
 {
     uint32_t count = policies.size();
@@ -54,55 +51,56 @@ int32_t GetUriPoliciesArg(array_view<PolicyInfo> policies,
     return E_NO_ERROR;
 }
 
-void activatePermissionSync(array_view<PolicyInfo> policies)
+void activatePermissionSync(taihe::array_view<ohos::fileshare::PolicyInfo> policies)
 {
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get URI policies");
-        set_business_error(E_PARAMS, "Failed to get URI policies");
+        taihe::set_business_error(E_PARAMS, "Failed to get URI policies");
         return ;
     }
 
     std::shared_ptr<PolicyErrorArgs> arg = std::make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("PolicyErrorArgs make make_shared failed");
-        set_business_error(E_UNKNOWN_ERROR, "PolicyErrorArgs make make_shared failed");
+        taihe::set_business_error(E_UNKNOWN_ERROR, "PolicyErrorArgs make make_shared failed");
         return ;
     }
 
     arg->errNo = OHOS::AppFileService::FilePermission::ActivatePermission(uriPolicies, arg->errorResults);
     if (arg->errNo) {
         LOGE("Activation failed");
-        set_business_error(arg->errNo, "Activation failed");
+        taihe::set_business_error(arg->errNo, "Activation failed");
     }
 }
 
-void deactivatePermissionSync(array_view<PolicyInfo> policies)
+void deactivatePermissionSync(taihe::array_view<ohos::fileshare::PolicyInfo> policies)
 {
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get URI policies");
-        set_business_error(E_PARAMS, "Failed to get URI policies");
+        taihe::set_business_error(E_PARAMS, "Failed to get URI policies");
         return ;
     }
 
     std::shared_ptr<PolicyErrorArgs> arg = std::make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("PolicyErrorArgs make make_shared failed");
-        set_business_error(E_UNKNOWN_ERROR, "PolicyErrorArgs make make_shared failed");
+        taihe::set_business_error(E_UNKNOWN_ERROR, "PolicyErrorArgs make make_shared failed");
         return ;
     }
 
     arg->errNo = OHOS::AppFileService::FilePermission::DeactivatePermission(uriPolicies, arg->errorResults);
     if (arg->errNo) {
         LOGE("Deactivation failed");
-        set_business_error(arg->errNo, "Deactivation failed");
+        taihe::set_business_error(arg->errNo, "Deactivation failed");
+        return ;
     }
 }
-} // namespace
+} // namespace ANI::FileShare
 
 // NOLINTBEGIN
-TH_EXPORT_CPP_API_makePolicyInfo(makePolicyInfo);
-TH_EXPORT_CPP_API_activatePermissionSync(activatePermissionSync);
-TH_EXPORT_CPP_API_deactivatePermissionSync(deactivatePermissionSync);
+TH_EXPORT_CPP_API_makePolicyInfo(ANI::FileShare::makePolicyInfo);
+TH_EXPORT_CPP_API_activatePermissionSync(ANI::FileShare::activatePermissionSync);
+TH_EXPORT_CPP_API_deactivatePermissionSync(ANI::FileShare::deactivatePermissionSync);
  // NOLINTEND

@@ -16,31 +16,30 @@
 #ifndef INTERFACES_KITS_TAIHE_INCLUDE_FILEURI_TAIHE_H
 #define INTERFACES_KITS_TAIHE_INCLUDE_FILEURI_TAIHE_H
 
+#include <string>
 #include "ohos.file.fileuri.proj.hpp"
 #include "ohos.file.fileuri.impl.hpp"
 #include "taihe/runtime.hpp"
-#include "stdexcept"
 #include "file_uri.h"
 
-namespace ANI::fileUri {
-using namespace taihe;
-using namespace ohos::file::fileuri;
+namespace ANI::FileUri {
 
 class FileUriImpl {
 public:
     FileUriImpl() = delete;
 
-    FileUriImpl(string_view name);
+    FileUriImpl(taihe::string_view name);
 
-    string getName();
+    std::string getName();
 
 private:
     OHOS::Uri uri_;
 };
 
-FileUri makeFileUri(string_view name);
+ohos::file::fileuri::FileUri makeFileUri(taihe::string_view name);
 
-string getUriFromPath(string_view path);
+std::string getUriFromPath(taihe::string_view path);
+
 }
 
 #endif // INTERFACES_KITS_TAIHE_INCLUDE_FILEURI_TAIHE_H

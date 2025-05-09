@@ -26,6 +26,6 @@ interface FileUri {
 }
 
 @ctor("FileUri")
-function makeFileUri(name :String): FileUri;
+function makeFileUri(name: String): FileUri;
 
 function getUriFromPath(path: String): String;
