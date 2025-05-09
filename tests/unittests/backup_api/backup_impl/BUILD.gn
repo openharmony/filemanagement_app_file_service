@@ -80,6 +80,7 @@ ohos_unittest("backup_sa_impl_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "samgr:dynamic_cache",
     "samgr:samgr_proxy",
   ]
 

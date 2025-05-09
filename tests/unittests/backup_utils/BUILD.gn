@@ -57,7 +57,10 @@ ohos_unittest("b_error_test") {
     "${path_backup}/utils/:backup_utils",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 
   defines = [ "private = public" ]
 

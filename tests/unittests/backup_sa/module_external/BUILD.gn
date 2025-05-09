@@ -54,6 +54,7 @@ ohos_unittest("bms_adapter_test") {
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
+    "samgr:dynamic_cache",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
   ]

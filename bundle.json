@@ -45,6 +45,7 @@
                 "samgr",
                 "storage_service",
                 "sandbox_manager",
+                "selinux_adapter",
                 "zlib"
             ],
             "third_party": [
