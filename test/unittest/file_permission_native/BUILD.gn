@@ -44,6 +44,7 @@ ohos_unittest("file_permission_test") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "app_file_service:fileshare_native",
+    "cJSON:cjson_static",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "googletest:gmock_main",
@@ -52,6 +53,7 @@ ohos_unittest("file_permission_test") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   defines = [ "private = public" ]
   if (sandbox_manarer) {

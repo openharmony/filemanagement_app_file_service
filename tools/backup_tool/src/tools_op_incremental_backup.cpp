@@ -41,7 +41,7 @@
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_resources/b_constants.h"
 #include "backup_kit_inner.h"
-#include "base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter/hitrace_meter.h"
+#include "hitrace_meter.h"
 #include "service_client.h"
 #include "tools_op.h"
 

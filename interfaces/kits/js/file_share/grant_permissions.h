@@ -17,6 +17,7 @@
 #define GRANT_PERMISSIONS_H
 
 #include <deque>
+#include <functional>
 
 #include "file_permission.h"
 #include "filemgmt_libn.h"
@@ -24,6 +25,7 @@
 namespace OHOS {
 namespace AppFileService {
 namespace ModuleFileShare {
+using ErrParam = std::function<std::tuple<uint32_t, std::string>()>;
 napi_value PersistPermission(napi_env env, napi_callback_info info);
 napi_value RevokePermission(napi_env env, napi_callback_info info);
 napi_value ActivatePermission(napi_env env, napi_callback_info info);

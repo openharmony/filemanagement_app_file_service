@@ -39,6 +39,7 @@ ohos_unittest("file_share_permission_ndk_test") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "cJSON:cjson_static",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "googletest:gmock_main",
@@ -47,6 +48,7 @@ ohos_unittest("file_share_permission_ndk_test") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   deps = [
     "${app_file_service_path}/interfaces/innerkits/native:fileshare_native",
