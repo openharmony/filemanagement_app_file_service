@@ -120,7 +120,6 @@ string CommonFunc::GetUriFromPath(const string &path)
     string realPath = path;
     NormalizePath(realPath);
     if (realPath.find(MEDIA_FUSE_PATH_HEAD) == 0) {
-        realPath = SandboxHelper::Encode(realPath);
         return realPath.replace(realPath.find(MEDIA_FUSE_PATH_HEAD), MEDIA_FUSE_PATH_HEAD.length(), MEDIA_AUTHORITY);
     }
     {
