@@ -188,22 +188,6 @@ void BackupExtExtension::VerifyCaller()
     }
 }
 
-static bool CheckAndCreateDirectory(const string &filePath)
-{
-    size_t pos = filePath.rfind('/');
-    if (pos == string::npos) {
-        return true;
-    }
-
-    string folderPath = "/" + filePath.substr(0, pos);
-    if (access(folderPath.c_str(), F_OK) != 0) {
-        if (!ForceCreateDirectory(folderPath.data())) {
-            return false;
-        }
-    }
-    return true;
-}
-
 static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -471,7 +455,7 @@ ErrCode BackupExtExtension::HandleClear()
     }
 }
 
-static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
+ErrCode BackupExtExtension::IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     UniqueFd fd(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
@@ -484,6 +468,7 @@ static ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
     cache.SetExtManage(pkgInfo);
     cachedEntity.Persist();
     close(cachedEntity.GetFd().Release());
+    appStatistic_->manageJsonSize_ = BFile::GetFileSize(INDEX_FILE_BACKUP);
     int fdval = open(INDEX_FILE_BACKUP.data(), O_RDONLY);
     ErrCode ret =
        proxy->AppFileReady(string(BConstants::EXT_BACKUP_MANAGE), fdval,
@@ -655,10 +640,13 @@ static bool IsUserTar(const string &tarFile, const std::vector<ExtManageInfo> &e
     return false;
 }
 
-static pair<TarMap, map<string, size_t>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes)
+pair<TarMap, map<string, size_t>> BackupExtExtension::GetFileInfos(const vector<string> &includes,
+    const vector<string> &excludes)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    auto [errCode, files, smallFiles] = BDir::GetBigFiles(includes, excludes);
+    appStatistic_->scanFileSpend_.Start();
+    auto [errCode, files, smallFiles] = BDir::GetBigFiles(includes, excludes, appStatistic_);
+    appStatistic_->scanFileSpend_.End();
     if (errCode != 0) {
         return {};
     }
@@ -682,12 +670,13 @@ static pair<TarMap, map<string, size_t>> GetFileInfos(const vector<string> &incl
 
     TarMap bigFiles;
     for (const auto &item : files) {
+        int64_t hashStart = TimeUtils::GetTimeUS();
         string md5Name = getStringHash(bigFiles, item.first);
+        appStatistic_->hashSpendUS_ += TimeUtils::GetSpendUS(hashStart);
         if (!md5Name.empty()) {
             bigFiles.emplace(md5Name, make_tuple(item.first, item.second, true));
         }
     }
-
     return {bigFiles, smallFiles};
 }
 
@@ -747,13 +736,18 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
     auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
+    uint32_t totalTarUs = 0;
     for (const auto &small : srcFiles) {
         totalSize += small.second;
         fileCount += 1;
         packFiles.emplace_back(small.first);
         if (totalSize >= BConstants::DEFAULT_SLICE_SIZE || fileCount >= BConstants::MAX_FILE_COUNT) {
             TarMap tarMap {};
+            int64_t tarStartUs = TimeUtils::GetTimeUS();
             TarFile::GetInstance().Packet(packFiles, "part", path, tarMap, reportCb);
+            totalTarUs += TimeUtils::GetSpendUS(tarStartUs);
+            appStatistic_->tarFileSize_ += TarFile::GetInstance().GetTarFileSize();
+            appStatistic_->tarFileCount_++;
             tar.insert(tarMap.begin(), tarMap.end());
             // 执行tar包回传功能
             WaitToSendFd(startTime, fdNum);
@@ -768,7 +762,11 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
     if (fileCount > 0) {
         // 打包回传
         TarMap tarMap {};
+        int64_t tarStartUs = TimeUtils::GetTimeUS();
         TarFile::GetInstance().Packet(packFiles, "part", path, tarMap, reportCb);
+        totalTarUs += TimeUtils::GetSpendUS(tarStartUs);
+        appStatistic_->tarFileSize_ += TarFile::GetInstance().GetTarFileSize();
+        appStatistic_->tarFileCount_++;
         TarFileReady(tarMap, proxy);
         fdNum = 1;
         WaitToSendFd(startTime, fdNum);
@@ -776,6 +774,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
         packFiles.clear();
         RefreshTimeInfo(startTime, fdNum);
     }
+    appStatistic_->tarSpend_ = totalTarUs / MS_TO_US;
 }
 
 int BackupExtExtension::DoBackup(TarMap &bigFileInfo, map<string, size_t> &smallFiles,
@@ -837,15 +836,19 @@ tuple<ErrCode, uint32_t, uint32_t> BackupExtExtension::CalculateDataSize(const B
 
     // 扫描文件计算数据量
     tie(bigFileInfo, smallFiles) = GetFileInfos(includes, excludes);
+    appStatistic_->smallFileCount_ = smallFiles.size();
+    appStatistic_->bigFileCount_ = bigFileInfo.size();
     for (const auto &item : bigFileInfo) {
         int64_t fileSize = static_cast<int64_t>(std::get<1>(item.second).st_size);
         HILOGD("bigfile size = %{public}" PRId64 "", fileSize);
         totalSize += fileSize;
     }
+    appStatistic_->bigFileSize_ = totalSize;
     HILOGI("bigfile size = %{public}" PRId64 "", totalSize);
     for (const auto &item : smallFiles) {
         totalSize += static_cast<int64_t>(item.second);
     }
+    appStatistic_->smallFileSize_ = totalSize - appStatistic_->bigFileSize_;
     HILOGI("scanning end, Datasize = %{public}" PRId64 "", totalSize);
     return {ERR_OK, static_cast<uint32_t>(includes.size()), static_cast<uint32_t>(excludes.size())};
 }
@@ -1025,6 +1028,7 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
             map<string, size_t> smallFiles;
             BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
             auto cache = cachedEntity.Structuralize();
+            ptr->DoBackupStart();
             auto [err, includeSize, excludeSize] = ptr->CalculateDataSize(cache, totalSize, bigFileInfo, smallFiles);
             if (err != ERR_OK) {
                 throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to mkdir");
@@ -1039,6 +1043,7 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
                 throw BError(BError::Codes::EXT_TIMER_ERROR, "Failed to start fwkTimer");
             }
             auto ret = ptr->DoBackup(bigFileInfo, smallFiles, includeSize, excludeSize);
+            ptr->DoBackupEnd();
             ptr->AppDone(ret);
             HILOGI("backup app done %{public}d", ret);
         } catch (const BError &e) {
@@ -1308,7 +1313,7 @@ static bool RestoreBigFilePrecheck(string &fileName, const string &path, const s
     }
 
     // 目录不存在且只有大文件时，不能通过untar创建，需要检查并创建
-    if (!CheckAndCreateDirectory(filePath)) {
+    if (!BDir::CheckAndCreateDirectory(filePath)) {
         HILOGE("failed to create directory %{public}s", GetAnonyString(filePath).c_str());
         return false;
     }
@@ -1801,10 +1806,28 @@ void BackupExtExtension::DoClear()
     }
 }
 
+void BackupExtExtension::ReportAppStatistic(ErrCode errCode)
+{
+    if (curScenario_ == BackupRestoreScenario::FULL_BACKUP ||
+        curScenario_ == BackupRestoreScenario::INCREMENTAL_BACKUP) {
+        appStatistic_->ReportBackup("AppDone", errCode);
+    } else {
+        appStatistic_->untarSpend_ = static_cast<uint32_t>(radarRestoreInfo_.tarFileSpendTime);
+        appStatistic_->bigFileSpend_ = static_cast<uint32_t>(radarRestoreInfo_.bigFileSpendTime);
+        appStatistic_->doRestoreSpend_ = static_cast<uint32_t>(radarRestoreInfo_.totalFileSpendTime);
+        appStatistic_->bigFileCount_ = radarRestoreInfo_.bigFileNum;
+        appStatistic_->tarFileCount_ = radarRestoreInfo_.tarFileNum;
+        appStatistic_->bigFileSize_ = radarRestoreInfo_.bigFileSize;
+        appStatistic_->tarFileSize_ = radarRestoreInfo_.tarFileSize;
+        appStatistic_->ReportRestore("AppDone", errCode);
+    }
+}
+
 void BackupExtExtension::AppDone(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("AppDone Begin.");
+    ReportAppStatistic(errCode);
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to obtain the ServiceClient handle");
@@ -1880,6 +1903,8 @@ void BackupExtExtension::UpdateOnStartTime()
 {
     std::lock_guard<std::mutex> lock(onStartTimeLock_);
     g_onStart = std::chrono::system_clock::now();
+    appStatistic_->onBackupSpend_.Start();
+    appStatistic_->onBackupexSpend_.Start();
 }
 
 void BackupExtExtension::AsyncTaskOnBackup()

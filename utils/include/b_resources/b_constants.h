@@ -182,6 +182,8 @@ static inline std::string GetSaBundleBackupToolDir(int32_t userId)
     return str;
 }
 
+constexpr uint32_t APP_BASE_PATH_DEPTH = 4;
+
 // 备份恢复配置文件暂存路径
 static inline std::string_view BACKUP_CONFIG_EXTENSION_PATH = "/data/storage/el2/base/cache/";
 

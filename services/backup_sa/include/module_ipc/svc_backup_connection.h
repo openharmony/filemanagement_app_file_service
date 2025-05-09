@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_SVC_BACKUP_CONNECTION_H
 
 #include "ability_connect_callback_stub.h"
+#include "b_radar/radar_const.h"
 #include "iextension.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -89,6 +90,8 @@ public:
      */
     bool WaitDisconnectDone();
 
+    uint32_t GetConnectSpan() { return connectSpend_.GetSpan(); }
+
 public:
     SvcBackupConnection(std::function<void(const std::string &&, bool)> callDied,
                         std::function<void(const std::string &&)> callConnected,
@@ -111,6 +114,7 @@ private:
     std::function<void(const std::string &&, bool)> callDied_;
     std::function<void(const std::string &&)> callConnected_;
     std::string bundleNameIndexInfo_;
+    Duration connectSpend_;
 };
 } // namespace OHOS::FileManagement::Backup
 

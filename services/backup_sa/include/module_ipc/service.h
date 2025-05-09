@@ -17,12 +17,14 @@
 #define OHOS_FILEMGMT_BACKUP_SERVICE_H
 
 #include <cstdint>
+#include <memory>
 #include <mutex>
 
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_json/b_json_clear_data_config.h"
 #include "b_json/b_json_entity_caps.h"
 #include "b_json/b_json_service_disposal_config.h"
+#include "b_radar/radar_total_statistic.h"
 #include "iservice_reverse.h"
 #include "iremote_stub.h"
 #include "module_sched/sched_scheduler.h"
@@ -385,6 +387,11 @@ private:
     void ClearSessionAndSchedInfo(const std::string &bundleName);
 
     /**
+     * @brief 上报总体统计打点
+     */
+    void TotalStatReport(ErrCode errCode);
+
+    /**
      * @brief 整个备份恢复流程结束
      *
      * @param errCode 错误码
@@ -714,6 +721,7 @@ private:
     std::condition_variable getDataSizeCon_;
     std::atomic<bool> isScannedEnd_ {false};
     std::atomic<bool> onScanning_ {false};
+    std::shared_ptr<RadarTotalStatistic> totalStatistic_ = nullptr;
 public:
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
     std::map<BundleName, BundleTaskInfo> failedBundles_;

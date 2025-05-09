@@ -746,8 +746,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_InitIncrementalBackupSession_0000";
     try {
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        EXPECT_CALL(*srvMock, GetCallerName()).WillRepeatedly(Return(""));
         EXPECT_EQ(service->InitIncrementalBackupSession(nullptr), BError(BError::Codes::SA_INVAL_ARG).GetCode());
-
         auto session_ = service->session_;
         service->session_ = nullptr;
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
@@ -759,21 +759,18 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
-        EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
         EXPECT_EQ(service->InitIncrementalBackupSession(srPrt), BError(BError::Codes::OK).GetCode());
 
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
-        EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::SA_SESSION_CONFLICT)));
         EXPECT_EQ(service->InitIncrementalBackupSession(nullptr), BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
-        EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
         EXPECT_EQ(service->InitIncrementalBackupSession(nullptr), BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
@@ -800,6 +797,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         std::string errMsg;
         sptr<IServiceReverse> reverseNUll = nullptr;
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        EXPECT_CALL(*srvMock, GetCallerName()).WillRepeatedly(Return(""));
         EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
             BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
@@ -813,14 +811,12 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
-        EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
         EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
             BError(BError::Codes::OK).GetCode());
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
-        EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::SA_SESSION_CONFLICT)));
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*session, GetSessionCallerName()).WillOnce(Return(""));
@@ -832,7 +828,6 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
-        EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
         EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
             BError(BError::Codes::SA_INVAL_ARG).GetCode());

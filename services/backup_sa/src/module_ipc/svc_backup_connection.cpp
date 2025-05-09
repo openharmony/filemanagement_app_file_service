@@ -36,6 +36,7 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
                                                int resultCode)
 {
     HILOGI("called begin");
+    connectSpend_.End();
     if (remoteObject == nullptr) {
         HILOGE("Failed to ability connect done, remote is nullptr");
         return;
@@ -109,6 +110,7 @@ ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t 
     isCleanCalled_.store(isCleanCalled);
     isConnectCalled_.store(true);
     std::unique_lock<std::mutex> lock(mutex_);
+    connectSpend_.Start();
     ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, userId);
     HILOGI("Called end, ret=%{public}d, userId=%{public}d.", ret, userId);
     return ret;

@@ -310,6 +310,19 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
     return wptr(it->second.backUpConnection);
 }
 
+void SvcSessionManager::UpdateDfxInfo(const std::string &bundleName, uint64_t uniqId)
+{
+    auto backupConnection = GetExtConnection(bundleName);
+    if (backupConnection == nullptr) {
+        return;
+    }
+    auto proxy = backupConnection->GetBackupExtProxy();
+    if (proxy == nullptr) {
+        return;
+    }
+    proxy->UpdateDfxInfo(uniqId, backupConnection->GetConnectSpan(), bundleName);
+}
+
 std::weak_ptr<SABackupConnection> SvcSessionManager::GetSAExtConnection(const BundleName &bundleName)
 {
     HILOGD("svcMrg:GetExt, bundleName:%{public}s", bundleName.c_str());

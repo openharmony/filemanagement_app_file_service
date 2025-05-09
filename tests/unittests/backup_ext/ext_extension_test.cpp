@@ -86,7 +86,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0100, testing::ext::TestSize.Level
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0100";
     try {
         string filePath = " ";
-        EXPECT_TRUE(CheckAndCreateDirectory(filePath));
+        EXPECT_TRUE(BDir::CheckAndCreateDirectory(filePath));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
@@ -108,7 +108,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0101, testing::ext::TestSize.Level
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0101";
     try {
         string filePath = PATH + "/tmp";
-        EXPECT_TRUE(CheckAndCreateDirectory(filePath));
+        EXPECT_TRUE(BDir::CheckAndCreateDirectory(filePath));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";

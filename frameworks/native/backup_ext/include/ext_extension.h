@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_BACKUP_EXT_EXTENSION_H
 
 #include <chrono>
+#include <memory>
 #include <shared_mutex>
 #include <string>
 #include <vector>
@@ -28,6 +29,7 @@
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_json/b_report_entity.h"
 #include "b_radar/b_radar.h"
+#include "b_radar/radar_app_statistic.h"
 #include "ext_backup_js.h"
 #include "extension_stub.h"
 #include "service_common.h"
@@ -60,7 +62,7 @@ public:
     void ExtClear(void);
     void AsyncTaskIncrementalRestoreForUpgrade(void);
     ErrCode User0OnBackup() override;
-
+    ErrCode UpdateDfxInfo(int64_t uniqId, uint32_t extConnectSpend, const std::string &bundleName) override;
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
         const std::string &bundleName) : extension_(extension)
@@ -73,6 +75,7 @@ public:
         onProcessTaskPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         reportOnProcessRetPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         SetStagingPathProperties();
+        appStatistic_ = std::make_shared<RadarAppStatistic>();
     }
     ~BackupExtExtension()
     {
@@ -353,7 +356,17 @@ private:
     tuple<ErrCode, UniqueFd, UniqueFd> GetIncreFileHandleForSpecialVersion(const string &fileName);
     void RmBigFileReportForSpecialCloneCloud(const std::string &srcFile);
     string GetReportFileName(const string &fileName);
+    void OnBackupFinish();
+    void OnBackupExFinish();
+    void OnRestoreFinish();
+    void OnRestoreExFinish();
+    void DoBackupStart();
+    void DoBackupEnd();
 private:
+    pair<TarMap, map<string, size_t>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes);
+    void ReportAppStatistic(ErrCode errCode);
+    ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy);
+
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
     std::string backupInfo_;
@@ -390,6 +403,7 @@ private:
     std::mutex reportHashLock_;
     std::map<std::string, std::string> reportHashSrcPathMap_;
 
+    std::shared_ptr<RadarAppStatistic> appStatistic_ = nullptr;
     BackupRestoreScenario curScenario_ { BackupRestoreScenario::FULL_BACKUP };
 };
 } // namespace OHOS::FileManagement::Backup

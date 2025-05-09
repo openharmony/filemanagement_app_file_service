@@ -502,4 +502,8 @@ std::string SvcSessionManager::GetOldBackupVersion()
 {
     return impl_.oldBackupVersion;
 }
+
+void SvcSessionManager::UpdateDfxInfo(const std::string &bundleName, uint64_t uniqId)
+{
+}
 } // namespace OHOS::FileManagement::Backup

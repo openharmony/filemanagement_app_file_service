@@ -62,6 +62,7 @@ public:
     virtual int GetSessionCnt() = 0;
     virtual SvcSessionManager::Impl GetImpl() = 0;
     virtual std::string GetOldBackupVersion() = 0;
+    virtual void UpdateDfxInfo(const BundleName &bundleName, uint64_t uniqId) = 0;
 public:
     BSvcSessionManager() = default;
     virtual ~BSvcSessionManager() = default;
@@ -110,6 +111,7 @@ public:
     MOCK_METHOD(int, GetSessionCnt, ());
     MOCK_METHOD(SvcSessionManager::Impl, GetImpl, ());
     MOCK_METHOD(std::string, GetOldBackupVersion, ());
+    MOCK_METHOD(void, UpdateDfxInfo, (const std::string &, uint64_t));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_SVC_SESSION_MANAGER_MOCK_H

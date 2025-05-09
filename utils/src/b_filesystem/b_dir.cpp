@@ -283,8 +283,43 @@ static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
     return filteredPath;
 }
 
+bool BDir::CheckAndCreateDirectory(const string &filePath)
+{
+    size_t pos = filePath.rfind('/');
+    if (pos == string::npos) {
+        return true;
+    }
+
+    string folderPath = "/" + filePath.substr(0, pos);
+    if (access(folderPath.c_str(), F_OK) != 0) {
+        if (!ForceCreateDirectory(folderPath.data())) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static void UpdateFileStat(std::shared_ptr<RadarAppStatistic> appStatistic, std::string filePath, uint64_t fileSize,
+    uint32_t& maxDirDepth)
+{
+    appStatistic->UpdateFileDist(ExtractFileExt(filePath), fileSize);
+    uint32_t dirDepth = 0;
+    const char* pstr = filePath.c_str();
+    char pre = '-';
+    uint32_t pathLen = filePath.size();
+    for (int i = 0; i < pathLen; i++) {
+        if (pstr[i] == '/' && pre != '/') {
+            dirDepth++;
+        }
+        pre = pstr[i];
+    }
+    if (dirDepth > maxDirDepth) {
+        maxDirDepth = dirDepth;
+    }
+}
+
 tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(const vector<string> &includes,
-                                                                                const vector<string> &excludes)
+    const vector<string> &excludes, std::shared_ptr<RadarAppStatistic> appStatistic)
 {
     set<string> inc = ExpandPathWildcard(includes, true);
 
@@ -317,9 +352,11 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
     };
 
     map<string, size_t> resSmallFiles;
+    uint32_t maxDirDepth = BConstants::APP_BASE_PATH_DEPTH;
     for (const auto &item : incSmallFiles) {
         if (!isMatch(endExcludes, item.first)) {
             resSmallFiles.emplace(item);
+            UpdateFileStat(appStatistic, item.first, item.second, maxDirDepth);
         }
     }
 
@@ -327,8 +364,10 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
     for (const auto &item : incFiles) {
         if (!isMatch(endExcludes, item.first)) {
             bigFiles.emplace(item);
+            UpdateFileStat(appStatistic, item.first, item.second.st_size, maxDirDepth);
         }
     }
+    appStatistic->dirDepth_ = maxDirDepth - BConstants::APP_BASE_PATH_DEPTH;
     HILOGW("total number of big files is %{public}zu", bigFiles.size());
     HILOGW("total number of small files is %{public}zu", resSmallFiles.size());
     return {ERR_OK, move(bigFiles), move(resSmallFiles)};

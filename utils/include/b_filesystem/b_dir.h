@@ -18,6 +18,7 @@
 
 #include <linux/stat.h>
 #include <map>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <sys/stat.h>
@@ -27,6 +28,7 @@
 #include <vector>
 
 #include "b_json/b_report_entity.h"
+#include "b_radar/radar_app_statistic.h"
 #include "errors.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -42,6 +44,14 @@ public:
     static std::tuple<ErrCode, std::vector<std::string>> GetDirFiles(const std::string &path);
 
     /**
+     * @brief 校验文件父目录是否存在，不存在时创建
+     *
+     * @param 文件路径
+     * @return 文件父目录是否已可用
+     */
+    static bool CheckAndCreateDirectory(const std::string &filePath);
+
+    /**
      * @brief 从给定的includes和excludes目录及文件中获取所有有用大文件和其链接文件的集合
      *
      * @param includes 需要包含的文件及目录集合
@@ -49,7 +59,8 @@ public:
      * @return 错误码、大文件名集合
      */
     static std::tuple<ErrCode, std::map<std::string, struct stat>, std::map<std::string, size_t>> GetBigFiles(
-        const std::vector<std::string> &includes, const std::vector<std::string> &excludes);
+        const std::vector<std::string> &includes, const std::vector<std::string> &excludes,
+        std::shared_ptr<RadarAppStatistic> appStatistic);
 
     /**
      * @brief Get the Dirs object
