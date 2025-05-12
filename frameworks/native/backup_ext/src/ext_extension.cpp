@@ -52,6 +52,7 @@
 #include "b_tarball/b_tarball_factory.h"
 #include "b_hiaudit/hi_audit.h"
 #include "b_utils/b_time.h"
+#include "b_utils/scan_file_singleton.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
 #include "installd_un_tar_file.h"
@@ -498,13 +499,14 @@ void BackupExtExtension::ClearNoPermissionFiles(TarMap &pkgInfo, vector<std::str
     }
 }
 
-ErrCode BackupExtExtension::BigFileReady(TarMap &bigFileInfo, sptr<IService> proxy)
+ErrCode BackupExtExtension::BigFileReady(TarMap &bigFileInfo, sptr<IService> proxy, int backupedFileSize)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("BigFileReady Begin: bigFileInfo file size is: %{public}zu", bigFileInfo.size());
+    HILOGI("BigFileReady Begin: bigFileInfo file size is: %{public}zu, backupedFileSize is %{public}d",
+           bigFileInfo.size(), backupedFileSize);
     ErrCode ret {ERR_OK};
     auto startTime = std::chrono::system_clock::now();
-    int fdNum = 0;
+    int fdNum = backupedFileSize;
     vector<string> noPermissionFiles;
     for (auto &item : bigFileInfo) {
         WaitToSendFd(startTime, fdNum);
@@ -530,7 +532,7 @@ ErrCode BackupExtExtension::BigFileReady(TarMap &bigFileInfo, sptr<IService> pro
         RefreshTimeInfo(startTime, fdNum);
     }
     ClearNoPermissionFiles(bigFileInfo, noPermissionFiles);
-    HILOGI("BigFileReady End");
+    HILOGI("BigFileReady End, fdNum is %{public}d", fdNum);
     return ret;
 }
 
@@ -777,11 +779,12 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
     appStatistic_->tarSpend_ = totalTarUs / MS_TO_US;
 }
 
-int BackupExtExtension::DoBackup(TarMap &bigFileInfo, map<string, size_t> &smallFiles,
+int BackupExtExtension::DoBackup(TarMap &bigFileInfo, TarMap &fileBackupedInfo, map<string, size_t> &smallFiles,
     uint32_t includesNum, uint32_t excludesNum)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Start Do backup");
+    HILOGI("bigFileInfo size: %{public}zu, fileBackupedInfo size %{public}zu, smallFiles size: %{public}zu",
+           bigFileInfo.size(), fileBackupedInfo.size(), smallFiles.size());
     auto start = std::chrono::system_clock::now();
     if (extension_ == nullptr) {
         HILOGE("Failed to do backup, extension is nullptr");
@@ -798,24 +801,25 @@ int BackupExtExtension::DoBackup(TarMap &bigFileInfo, map<string, size_t> &small
 
     // 回传大文件
     HILOGI("Will notify BigFileReady");
-    auto res = BigFileReady(bigFileInfo, proxy);
+    auto res = BigFileReady(bigFileInfo, proxy, fileBackupedInfo.size());
 
     HILOGI("Start packet Tar files");
     // 分片打包， 回传tar包
     TarMap tarMap {};
     DoPacket(smallFiles, tarMap, proxy);
     bigFileInfo.insert(tarMap.begin(), tarMap.end());
+    fileBackupedInfo.insert(bigFileInfo.begin(), bigFileInfo.end());
     HILOGI("Do backup, DoPacket end");
 
     HILOGI("Will notify IndexFileReady");
-    if (auto ret = IndexFileReady(bigFileInfo, proxy); ret) {
+    if (auto ret = IndexFileReady(fileBackupedInfo, proxy); ret) {
         return ret;
     }
 
     HILOGI("HandleBackup finish, ret = %{public}d", res);
     auto end = std::chrono::system_clock::now();
     auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    AppRadar::DoBackupInfo doBackupInfo = {cost, bigFileInfo.size(), smallFiles.size(), tarMap.size(),
+    AppRadar::DoBackupInfo doBackupInfo = {cost, fileBackupedInfo.size(), smallFiles.size(), tarMap.size(),
                                            includesNum, excludesNum};
     RecordDoBackupRes(bundleName_, res, doBackupInfo);
     return res;
@@ -836,6 +840,7 @@ tuple<ErrCode, uint32_t, uint32_t> BackupExtExtension::CalculateDataSize(const B
 
     // 扫描文件计算数据量
     tie(bigFileInfo, smallFiles) = GetFileInfos(includes, excludes);
+    ScanFileSingleton::GetInstance().SetCompeletedFlag(true);
     appStatistic_->smallFileCount_ = smallFiles.size();
     appStatistic_->bigFileCount_ = bigFileInfo.size();
     for (const auto &item : bigFileInfo) {
@@ -1020,32 +1025,34 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         try {
-            if (!ptr->StopExtTimer()) {
-                throw BError(BError::Codes::EXT_TIMER_ERROR, "Failed to stop extTimer");
-            }
-            int64_t totalSize = 0;
-            TarMap bigFileInfo;
-            map<string, size_t> smallFiles;
-            BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
-            auto cache = cachedEntity.Structuralize();
-            ptr->DoBackupStart();
-            auto [err, includeSize, excludeSize] = ptr->CalculateDataSize(cache, totalSize, bigFileInfo, smallFiles);
-            if (err != ERR_OK) {
-                throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to mkdir");
-            }
-            if (!ptr->RefreshDataSize(totalSize)) {
-                throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to RefreshDataSize");
-            }
-            bool isFwkStart;
-            ptr->StartFwkTimer(isFwkStart);
-            if (!isFwkStart) {
-                HILOGE("Do backup, start fwk timer fail.");
-                throw BError(BError::Codes::EXT_TIMER_ERROR, "Failed to start fwkTimer");
-            }
-            auto ret = ptr->DoBackup(bigFileInfo, smallFiles, includeSize, excludeSize);
-            ptr->DoBackupEnd();
-            ptr->AppDone(ret);
-            HILOGI("backup app done %{public}d", ret);
+            ptr->CalculateDataSizeTask(config);
+        } catch (const BError &e) {
+            HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
+            ScanFileSingleton::GetInstance().SetCompeletedFlag(true);
+            ptr->AppDone(e.GetCode());
+        } catch (...) {
+            HILOGE("Failed to restore the ext bundle");
+            ScanFileSingleton::GetInstance().SetCompeletedFlag(true);
+            ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+        }
+    };
+
+    // REM: 这里异步化了，需要做并发控制
+    // 在往线程池中投入任务之前将需要的数据拷贝副本到参数中，保证不发生读写竞争，
+    // 由于拷贝参数时尚运行在主线程中，故在参数拷贝过程中是线程安全的。
+    threadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+
+    auto dobackupTask = [obj {wptr<BackupExtExtension>(this)}, config]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        try {
+            ptr->DoBackUpTask(config);
         } catch (const BError &e) {
             HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
             ptr->AppDone(e.GetCode());
@@ -1056,12 +1063,9 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
         ptr->DoClear();
     };
 
-    // REM: 这里异步化了，需要做并发控制
-    // 在往线程池中投入任务之前将需要的数据拷贝副本到参数中，保证不发生读写竞争，
-    // 由于拷贝参数时尚运行在主线程中，故在参数拷贝过程中是线程安全的。
-    threadPool_.AddTask([task]() {
+    doBackupPool_.AddTask([dobackupTask]() {
         try {
-            task();
+            dobackupTask();
         } catch (...) {
             HILOGE("Failed to add task to thread pool");
         }
@@ -2055,20 +2059,6 @@ ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
     }
     AsyncTaskOnIncrementalBackup();
     return ERR_OK;
-}
-
-ErrCode BackupExtExtension::GetIncrementalBackupFileHandle(UniqueFdGroup& fdGroup)
-{
-    auto [fd, reportFd] = GetIncrementalBackupFileHandle();
-    fdGroup.fd = fd.Release();
-    fdGroup.reportFd = reportFd.Release();
-    return BError(BError::Codes::OK).GetCode();
-}
-
-tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    return {UniqueFd(-1), UniqueFd(-1)};
 }
 
 static void WriteFile(const string &filename, const vector<struct ReportFileInfo> &srcFiles)
