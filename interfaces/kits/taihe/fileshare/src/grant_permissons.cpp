@@ -25,7 +25,7 @@ ohos::fileshare::PolicyInfo makePolicyInfo(taihe::string_view uri, int32_t opera
     return {uri, operationMode};
 }
 
-int32_t GetUriPoliciesArg(taihe::array_view<ohos::fileshare::PolicyInfo> policies,
+int32_t getUriPoliciesArg(taihe::array_view<ohos::fileshare::PolicyInfo> policies,
     std::vector<OHOS::AppFileService::UriPolicyInfo> &uriPolicies)
 {
     uint32_t count = policies.size();
@@ -54,7 +54,7 @@ int32_t GetUriPoliciesArg(taihe::array_view<ohos::fileshare::PolicyInfo> policie
 void activatePermissionSync(taihe::array_view<ohos::fileshare::PolicyInfo> policies)
 {
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
-    if (GetUriPoliciesArg(policies, uriPolicies)) {
+    if (getUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get URI policies");
         taihe::set_business_error(E_PARAMS, "Failed to get URI policies");
         return ;
@@ -77,7 +77,7 @@ void activatePermissionSync(taihe::array_view<ohos::fileshare::PolicyInfo> polic
 void deactivatePermissionSync(taihe::array_view<ohos::fileshare::PolicyInfo> policies)
 {
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
-    if (GetUriPoliciesArg(policies, uriPolicies)) {
+    if (getUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get URI policies");
         taihe::set_business_error(E_PARAMS, "Failed to get URI policies");
         return ;
