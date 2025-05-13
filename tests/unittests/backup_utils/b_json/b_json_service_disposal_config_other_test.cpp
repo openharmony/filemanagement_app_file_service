@@ -29,13 +29,16 @@
 #include "b_json/b_json_service_disposal_config.h"
 #include "cJsonMock.h"
 
+#include "cjson_func_define.h"
+#include "b_json_service_disposal_config.cpp"
+#include "cjson_func_undef.h"
+
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
 
 namespace {
 const string PATH = "/data/service/el2/100/backup/";
-const string CONFIG_NAME = "RestoreDisposalConfig.json";
 } // namespace
 
 class BJsonServiceDisposalConfigTest : public testing::Test {

@@ -27,12 +27,13 @@
 #include "b_process/b_process.h"
 #include "cJsonMock.h"
 
+#include "cjson_func_define.h"
+#include "b_jsonutil.cpp"
+#include "cjson_func_undef.h"
+
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
-namespace {
-    const static int BUNDLE_INDEX_DEFAULT_VAL = 0;
-}
 
 class BJsonUtilTest : public testing::Test {
 public:
