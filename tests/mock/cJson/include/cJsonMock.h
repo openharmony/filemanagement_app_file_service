@@ -18,6 +18,12 @@
 #include <cJSON.h>
 #include <gmock/gmock.h>
 
+CJSON_PUBLIC(cJSON *) CJSONParse(const char *value);
+CJSON_PUBLIC(cJSON *) CJSONGetObjectItem(const cJSON *const object, const char *const string);
+CJSON_PUBLIC(void) CJSONDelete(cJSON *item);
+CJSON_PUBLIC(cJSON_bool) CJSONIsArray(const cJSON * const item);
+CJSON_PUBLIC(void) CJSONFree(void *object);
+
 namespace OHOS::FileManagement::Backup {
 class CJson {
 public:

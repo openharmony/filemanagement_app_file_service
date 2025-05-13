@@ -274,13 +274,13 @@ ohos_unittest("b_json_other_test") {
   sources = [
     "${path_backup}/tests/mock/cJson/src/cJsonMock.cpp",
     "${path_backup}/tests/unittests/backup_utils/b_json/b_json_service_disposal_config_other_test.cpp",
-    "${path_backup}/utils/src/b_json/b_json_service_disposal_config.cpp",
   ]
   sources += backup_mock_parameter_src
 
   include_dirs = [
     "${path_backup}/utils",
     "${path_backup}/tests/mock/cJson/include",
+    "${path_backup}/utils/src/b_json",
   ]
   include_dirs += backup_mock_parameter_include_dirs
 
@@ -315,13 +315,13 @@ ohos_unittest("b_jsonutil_other_test") {
   sources = [
     "${path_backup}/tests/mock/cJson/src/cJsonMock.cpp",
     "${path_backup}/tests/unittests/backup_utils/b_jsonutil/b_jsonutil_other_test.cpp",
-    "${path_backup}/utils/src/b_jsonutil/b_jsonutil.cpp",
   ]
   sources += backup_mock_parameter_src
 
   include_dirs = [
     "${path_backup}/utils",
     "${path_backup}/tests/mock/cJson/include",
+    "${path_backup}/utils/src/b_jsonutil",
   ]
   include_dirs += backup_mock_parameter_include_dirs
 
@@ -355,13 +355,13 @@ ohos_unittest("b_json_clear_data_test") {
   sources = [
     "${path_backup}/tests/mock/cJson/src/cJsonMock.cpp",
     "${path_backup}/tests/unittests/backup_utils/b_json/b_json_clear_data_config_test.cpp",
-    "${path_backup}/utils/src/b_json/b_json_clear_data_config.cpp",
   ]
   sources += backup_mock_parameter_src
 
   include_dirs = [
     "${path_backup}/utils",
     "${path_backup}/tests/mock/cJson/include",
+    "${path_backup}/utils/src/b_json",
   ]
   include_dirs += backup_mock_parameter_include_dirs
 

@@ -29,13 +29,16 @@
 #include "b_json/b_json_clear_data_config.h"
 #include "cJsonMock.h"
 
+#include "cjson_func_define.h"
+#include "b_json_clear_data_config.cpp"
+#include "cjson_func_undef.h"
+
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
 
 namespace {
 const string PATH = "/data/service/el2/100/backup/";
-const string CONFIG_NAME = "ClearDataConfig.json";
 } // namespace
 
 class BJsonClearDataConfigTest : public testing::Test {
