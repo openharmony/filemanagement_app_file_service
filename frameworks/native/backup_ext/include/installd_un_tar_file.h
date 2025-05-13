@@ -45,9 +45,6 @@ public:
     virtual ~UnTarFile(void);
 
 public:
-    std::vector<std::string> GetFileNames();
-    int UnSplitPack(const char *path, uid_t owner = 0);
-    int UnPack(const char *path, uid_t owner = 0);
     void Reset();
     bool CheckIsSplitTar(const std::string &tarFile, const std::string &rootpath);
     int UnSplitTar(const std::string &tarFile, const std::string &rootpath);
@@ -70,8 +67,6 @@ private:
     bool ProcessTarBlock(char *buff, EParseType type, ParseTarPath *parseTarPath, bool &isSkip, bool &isSoftLink);
     bool IsValidTarBlock(const TarHeader *tarHeader);
     bool VerifyChecksum(const TarHeader *tarHeader);
-    bool CheckSliceTar(const char *tarInfo, const char *dstPathName, std::vector<std::string> &fileNameVector);
-    bool HandleCheckFile(const char *tarBaseName, std::vector<std::string> &fileNameVector, int &num);
     void FreePointer(ParseTarPath *parseTarPath);
     void FreeLongTypePointer(ParseTarPath *parseTarPath);
     bool CreateDirWithRecursive(const std::string &filePath, mode_t mode = (mode_t)448);
