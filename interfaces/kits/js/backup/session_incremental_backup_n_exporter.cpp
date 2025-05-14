@@ -704,7 +704,7 @@ napi_value SessionIncrementalBackupNExporter::CleanBundleTempDir(napi_env env, n
         return nullptr;
     }
     auto cbCompl = [](napi_env env, NError err) -> NVal {
-        return err? NVal::CreateBool(env, false) : NVal::CreateBool(env, false);
+        return err? NVal::CreateBool(env, false) : NVal::CreateBool(env, true);
     };
     HILOGD("Called SessionIncrementalBackupNExporter::CleanBundleTempDir end.");
 
