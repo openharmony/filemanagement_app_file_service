@@ -705,7 +705,7 @@ napi_value SessionBackupNExporter::CleanBundleTempDir(napi_env env, napi_callbac
         return nullptr;
     }
     auto cbCompl = [](napi_env env, NError err) -> NVal {
-        return err ==? NVal::CreateBool(env, false) : NVal::CreateBool(env, true);
+        return err ? NVal::CreateBool(env, false) : NVal::CreateBool(env, true);
     };
     HILOGD("Called SessionBackupNExporter::CleanBundleTempDir end.");
 

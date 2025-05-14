@@ -894,7 +894,7 @@ napi_value SessionRestoreNExporter::CleanBundleTempDir(napi_env env, napi_callba
         return nullptr;
     }
     auto cbCompl = [](napi_env env, NError err) -> NVal {
-        return err? NVal::CreateBool(env, false) : NVal::CreateBool(env, true);
+        return err ? NVal::CreateBool(env, false) : NVal::CreateBool(env, true);
     };
     HILOGD("Called SessionRestore::CleanBundleTempDir end.");
 
