@@ -13,29 +13,8 @@
 * limitations under the License.
 */
 
-@!namespace("@ohos.fileshare","fileShare")
+@!namespace("@ohos.fileshare")
 
 @!sts_inject("""
-static { loadLibrary("file_share_taihe.z"); }
+import type wantConstant from '@ohos.app.ability.wantConstant';
 """)
-
-enum OperationMode: i32 {
-    READ_MODE = 1,
-    WRITE_MODE = 2,
-}
-
-struct PolicyInfo {
-    uri: String;
-    operationMode: i32;
-}
-function makePolicyInfo(uri: String, operationMode: i32): PolicyInfo;
-
-@gen_promise("activatePermission")
-function activatePermissionSync(
-    policies: Array<PolicyInfo>
-): void;
-
-@gen_promise("deactivatePermission")
-function deactivatePermissionSync(
-    policies: Array<PolicyInfo>
-): void;

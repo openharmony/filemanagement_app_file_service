@@ -42,7 +42,6 @@ std::string FileUriImpl::getName()
     return sandboxPath.substr(posLast + 1);
 }
 
-
 ohos::file::fileuri::FileUri makeFileUri(taihe::string_view name)
 {
     return taihe::make_holder<FileUriImpl, ohos::file::fileuri::FileUri>(name);
