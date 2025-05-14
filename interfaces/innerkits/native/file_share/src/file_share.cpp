@@ -52,6 +52,7 @@ const string SHARE_PATH = "/share/";
 const string EXTERNAL_PATH = "file://docs/storage/External";
 const string NETWORK_PARA = "networkid=";
 const int32_t DLP_COMMON = 0;
+const std::string BACKSLASH = "/";
 }
 
 struct FileShareInfo {
@@ -158,11 +159,19 @@ static void DelSharePath(const string &delPath)
 
 static int32_t GetSharePath(const string &uri, FileShareInfo &info, uint32_t flag)
 {
+    string networkId = "";
+    SandboxHelper::GetNetworkIdFromUri(uri, networkId);
     string shareRPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH + info.targetBundleName_ +
                         SHARE_R_PATH + info.providerBundleName_ + info.providerSandboxPath_;
     string shareRWPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH + info.targetBundleName_ +
                          SHARE_RW_PATH + info.providerBundleName_ + info.providerSandboxPath_;
 
+    if (!networkId.empty()) {
+        shareRPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH + info.targetBundleName_ + BACKSLASH +
+                            networkId + SHARE_R_PATH + info.providerBundleName_ + info.providerSandboxPath_;
+        shareRWPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH + info.targetBundleName_ + BACKSLASH +
+                            networkId + SHARE_RW_PATH + info.providerBundleName_ + info.providerSandboxPath_;
+    }
     if (!SandboxHelper::IsValidPath(shareRPath) || !SandboxHelper::IsValidPath(shareRWPath)) {
         LOGE("Invalid share path");
         return -EINVAL;
