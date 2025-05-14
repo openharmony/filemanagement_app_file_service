@@ -150,6 +150,7 @@ static FILE *CreateFile(char* path, mode_t mode, char fileType)
     }
     if (fchmod(fileno(f), S_IRUSR | S_IWUSR) == -1) {
         LOGE("fail to change file permission");
+        (void)fclose(f);
         return nullptr;
     }
 
@@ -225,8 +226,10 @@ int UnTarFile::UnSplitTar(const std::string &tarFile, const std::string &rootpat
     } else {
         LOGI("UnTarFile::UnSplitPack, untar split suc!");
     }
-    (void)fclose(FilePtr);
-    FilePtr = nullptr;
+    if (FilePtr != nullptr) {
+        (void)fclose(FilePtr);
+        FilePtr = nullptr;
+    }
     return parseRet;
 }
 
@@ -243,8 +246,10 @@ bool UnTarFile::CheckIsSplitTar(const std::string &tarFile, const std::string &r
     } else {
         LOGI("UnTarFile::CheckIsSplitTar, check is split, %{public}d", isSplit);
     }
-    (void)fclose(FilePtr);
-    FilePtr = nullptr;
+    if (FilePtr != nullptr) {
+        (void)fclose(FilePtr);
+        FilePtr = nullptr;
+    }
     if (isSplit) {
         return true;
     }
@@ -645,143 +650,5 @@ bool UnTarFile::CreateDirWithRecursive(const std::string &filePath, mode_t mode)
         }
     } while (index != std::string::npos);
     return access(filePath.c_str(), F_OK) == 0;
-}
-
-std::vector<std::string> UnTarFile::GetFileNames()
-{
-    if (file_names.empty()) {
-        ParseTarFile();
-    }
-
-    return file_names;
-}
-
-int UnTarFile::UnPack(const char *path, uid_t owner)
-{
-    newOwner = owner;
-    int ret = ParseTarFile(path, eUnpack);
-    if (remove(m_srcPath.c_str()) != 0) {
-        LOGI("delete failed");
-    }
-    return ret;
-}
-
-int UnTarFile::UnSplitPack(const char *path, uid_t owner)
-{
-    LOGI("Start UnSplitPack");
-    newOwner = owner;
-    isSplit = true;
-    int num = 0;
-    std::vector<std::string> taskSrcPathName;
-    std::string pathDir(path);
-    pathDir = pathDir.substr(0, pathDir.find_last_of('/'));
-
-    if (!HandleCheckFile(m_srcPath.c_str(), taskSrcPathName, num)) {
-        LOGE("UnTarFile::UnSplitPack, handleCheckFile failed!");
-        return -1;
-    }
-
-    int ret = 0;
-    if (FilePtr != nullptr) {
-        (void)fclose(FilePtr);
-        FilePtr = nullptr;
-        LOGE("FilePtr is not null!");
-    }
-    for (int i = 0; i < num; i++) {
-        FilePtr = fopen(taskSrcPathName[i].c_str(), "rb");
-        if (FilePtr != nullptr) {
-            int parseRet = ParseTarFile(pathDir.c_str(), eUnpack);
-            if (parseRet != 0) {
-                LOGE("UnTarFile::UnSplitPack, untar split failed!");
-                (void)fclose(FilePtr);
-                FilePtr = nullptr;
-                return parseRet;
-            } else {
-                LOGI("UnTarFile::UnSplitPack, untar split suc!");
-                (void)fclose(FilePtr);
-                FilePtr = nullptr;
-            }
-        }
-        if (remove(taskSrcPathName[i].c_str()) != 0) {
-            LOGI("delete failed");
-        }
-    }
-
-    LOGI("UnTarFile::UnSplitPack, untar split finish!");
-    taskSrcPathName.clear();
-    return ret;
-}
-
-// check slice tar file according the tar info
-bool UnTarFile::CheckSliceTar(const char *tarInfo, const char *dstPathName, std::vector<std::string> &fileNameVector)
-{
-    if (tarInfo == nullptr) {
-        LOGE("error, tarInfo is NULL");
-        return false;
-    }
-    std::string info(tarInfo);
-    size_t pos = info.find_last_of("|");
-    std::string tarName(dstPathName);
-    tarName.append("/");
-    tarName.append(info.substr(0, pos));
-
-    std::string subSize = info.substr(pos + 1);
-    if (subSize.empty()) {
-        LOGE("error subSize is empty");
-        return false;
-    }
-    off_t size = strtol(subSize.c_str(), nullptr, 0);
-
-    if (access(tarName.c_str(), F_OK)) {
-        LOGE("error, slice tar file don't exist, error:%{public}s", strerror(errno));
-        return true;
-    }
-
-    struct stat stSliceTar;
-    if (stat(tarName.c_str(), &stSliceTar) == -1) {
-        LOGE("error, failed to get stat of tar file, error: %{public}s", strerror(errno));
-        return false;
-    }
-
-    if (size != stSliceTar.st_size) {
-        LOGE("error, the size of the tar file is not equal to the size in the check file\n");
-        return false;
-    }
-    fileNameVector.push_back(tarName);
-    return true;
-}
-
-bool UnTarFile::HandleCheckFile(const char *tarBaseName, std::vector<std::string> &fileNameVector, int &num)
-{
-    LOGI("HandleCheckFile");
-    if (tarBaseName == nullptr) {
-        LOGE("tarBaseName is nullptr");
-        return false;
-    }
-
-    FILE *fd = fopen(tarBaseName, "rb");
-    if (fd == nullptr) {
-        LOGE("open check file error, error:%{public}s", strerror(errno));
-        return false;
-    }
-
-    std::string taskSPath(tarBaseName);
-    std::string dirName = taskSPath.substr(0, taskSPath.find_last_of('/'));
-
-    char tarInfo[PATH_MAX_LEN] = {0};
-    bool ret = true;
-    while ((fgets(tarInfo, (sizeof(tarInfo) - 1), fd)) != nullptr) {
-        if (!CheckSliceTar(tarInfo, dirName.c_str(), fileNameVector)) {
-            LOGE("handleCheckFile: failed");
-            ret = false;
-            break;
-        }
-        num++;
-        memset_s(tarInfo, PATH_MAX_LEN, 0, PATH_MAX_LEN);
-    }
-    LOGI("HandleCheckFile end");
-    (void)fclose(fd);
-    fd = nullptr;
-    return ret;
 }
 } // namespace installd
