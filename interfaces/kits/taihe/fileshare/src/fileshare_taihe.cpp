@@ -68,7 +68,7 @@ static int32_t GetUriPoliciesArg(taihe::array_view<ohos::fileshare::fileShare::P
         OHOS::AppFileService::UriPolicyInfo uriPolicy;
         uriPolicy.uri = policies[i].uri;
         uriPolicy.mode = policies[i].operationMode;
-        if (uriPolicy.uri == FlLE_NOPS) {
+        if (uriPolicy.uri == FILE_NOPS) {
             LOGE("URI is empty");
             return E_PARAMS;
         }
@@ -147,7 +147,7 @@ static int32_t GetIdFromUri(std::string uri)
 
 static std::string GetModeFromFlag(uint32_t flag)
 {
-    std::string mode = FlLE_NOPS;
+    std::string mode = FILE_NOPS;
     if (flag & OHOS::AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION) {
         mode += FILE_READ;
     }
