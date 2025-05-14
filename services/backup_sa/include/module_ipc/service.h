@@ -110,6 +110,7 @@ public:
     void StartGetFdTask(std::string bundleName, wptr<Service> ptr);
 
     ErrCode GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList) override;
+    ErrCode CleanBundleTempDir(const std::string &bundleName) override;
 
     // 以下都是非IPC接口
 public:

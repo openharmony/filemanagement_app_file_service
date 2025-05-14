@@ -212,4 +212,24 @@ ErrCode SvcExtensionProxy::UpdateFdSendRate(std::string &bundleName, int32_t sen
     HILOGI("SvcExtensionProxy::UpdateFdSendRate end.");
     return ret;
 }
+
+ErrCode SvcExtensionProxy::CleanBundleTempDir()
+{
+    HILOGD("CleanBundleTempDir start");
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    BExcepUltils::BAssert(Remote(), BError::Codes::SDK_INVAL_ARG, "Remote is nullptr");
+    MessageParcel data;
+    data.WriteInterfaceToken(GetDescriptor());
+
+    MessageParcel reply;
+    MessageOption option;
+    int32_t ret = 
+        Remote()->SendRequest(static_cast<uint32_t>(IExtensionInterfaceCode::CMD_CLEAN_BUNDLE_TEMP_DIR), data, reply, option);
+    if (ret != NO_ERROR) {
+        HILOGE("Received error %{public}d when doing IPC", ret);
+        return ErrCode(ret);
+    }
+    HILOGD("CleanBundleTempDir end");
+    return reply.ReadInt32();
+}
 } // namespace OHOS::FileManagement::Backup

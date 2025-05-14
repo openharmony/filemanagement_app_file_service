@@ -2080,4 +2080,51 @@ void Service::SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userI
         session_->SetSessionUserId(GetUserIdDefault());
     }
 }
+
+ErrCode Service::CleanBundleTempDir(const string &callerName)
+{
+    HILOGI("CleanBundleTempDir.");
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+
+    if (session_ == nullptr) {
+        HILOGE("Get BackupInfo error, session is empty.");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    std::string bundleName = callerName;
+    auto backupConnection = session_->CreateBackupConnection(bundleName);
+    if (backupConnection == nullptr) {
+        HILOGE("backupConnection is null. bundleName: %{public}s", bundleName.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    auto callConnected = GetBackupInfoConnectDone(wptr(this), bundleName);
+    auto callDied = GetBackupInfoConnectDied(wptr(this), bundleName);
+    backupConnection->SetCallback(callConnected);
+    backupConnection->SetCallDied(callDied);
+    AAFwk::Want want = CreateConnectWant(bundleName);
+    auto ret = backupConnection->ConnectBackupExtAbility(want, GetUserIdDefault(), false);
+    if (ret) {
+        HILOGE("CleanBundleTempDir error, ConnectBackupExtAbility failed, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
+        return BError(BError::Codes::SA_BOOT_EXT_FAIL);
+    }
+    std::unique_lock<std::mutex> lock(getBackupInfoSyncLock_);
+    getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
+    if (isConnectDied_.load()) {
+        HILOGE("CleanBundleTempDir error, GetBackupInfoConnectDied, please check bundleName: %{public}s", bundleName.c_str());
+        isConnectDied_.store(false);
+        return BError(BError::Codes::EXT_ABILITY_DIED);
+    }
+
+    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+    auto proxy = backupConnection->GetBackupExtProxy();
+    if (!proxy) {
+        HILOGE("CleanBundleTempDir error, Extension backup Proxy is empty.");
+        backupConnection->DisconnectBackupExtAbility();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    proxy->CleanBundleTempDir();
+    backupConnection->DisconnectBackupExtAbility();
+    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

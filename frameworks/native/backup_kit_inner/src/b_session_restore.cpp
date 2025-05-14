@@ -209,4 +209,14 @@ ErrCode BSessionRestore::Cancel(std::string bundleName)
     }
     return result;
 }
+
+ErrCode BSessionRestore::CleanBundleTempDir(const std::string &bundleName)
+{
+    HILOGI("CleanBundleTempDir.");
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+    return proxy->CleanBundleTempDir(bundleName);
+}
 } // namespace OHOS::FileManagement::Backup

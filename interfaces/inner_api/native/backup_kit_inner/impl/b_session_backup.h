@@ -130,6 +130,14 @@ public:
      */
     void RegisterBackupServiceDied(std::function<void()> functor);
 
+    /**
+     * @brief 备份或者恢复任务结束后，用于清理当前应用的临时目录(./backup目录下的backup和restore目录)的数据
+     *
+     * @param bundleName 应用名称
+     * @return ErrCode 规范错误码
+     */
+    ErrCode CleanBundleTempDir(const std::string &bundleName);
+
 public:
     ~BSessionBackup();
 
