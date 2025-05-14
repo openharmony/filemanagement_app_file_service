@@ -35,7 +35,7 @@ const std::string MEDIA_FILE_URI_AUDIO_PREFEX = "file://media/Audio/";
 const std::string MEDIA_FILE_URI_VIDEO_PREFEX = "file://media/video/";
 const std::string MEDIA_FILE_URI_IMAGE_PREFEX = "file://media/image/";
 const std::string MEDIA_FILE_URI_FILE_PREFEX = "file://media/file/";
-const std::string MEDIA_FILE_URI_Audio_PREFEX = "file://media/audio/";
+const std::string MEDIA_FILE_URI_AUDIO_LOW_PREFEX = "file://media/audio/";
 const std::string PERMISSION_BUNDLE_NAME = "bundle_name";
 const std::string PERMISSION_FILE_ID = "file_id";
 const std::string PERMISSION_MODE = "mode";
@@ -168,7 +168,7 @@ static int32_t GetMediaTypeAndApiFromUri(const std::string &uri, bool &isApi10)
     } else if (uri.find(MEDIA_FILE_URI_AUDIO_PREFEX) == 0) {
         isApi10 = true;
         return MediaFileTable::AUDIO_TABLE;
-    } else if (uri.find(MEDIA_FILE_URI_Audio_PREFEX) == 0) {
+    } else if (uri.find(MEDIA_FILE_URI_AUDIO_LOW_PREFEX) == 0) {
         return MediaFileTable::AUDIO_TABLE;
     } else if (uri.find(MEDIA_FILE_URI_FILE_PREFEX) == 0) {
         return MediaFileTable::FILE_TABLE;
@@ -250,7 +250,7 @@ static int32_t DoGrantUriPermission(const UriPermissionInfo &uriPermInfo)
         auto& uriPermissionClient = OHOS::AAFwk::UriPermissionManagerClient::GetInstance();
         int32_t ret = uriPermissionClient.GrantUriPermission(uri, uriPermInfo.flag,
             uriPermInfo.bundleName);
-        if (ret != 0) {
+        if (ret != E_NO_ERROR) {
             LOGD("uriPermissionClient.GrantUriPermission by uri permission client failed!");
             return GrantInMediaLibrary(uriPermInfo, uri);
         }
@@ -261,7 +261,7 @@ static int32_t DoGrantUriPermission(const UriPermissionInfo &uriPermInfo)
 void GrantUriPermissionSync(taihe::string_view uri, taihe::string_view bundleName, uintptr_t flag)
 {
     LOGD("fileShare::GrantUriPermission begin!");
-    if(!IsSystemApp()) {
+    if (!IsSystemApp()) {
         LOGE("fileShare::GrantUriPermission is not System App!");
         taihe::set_business_error(E_PERMISSION_SYS, "fileShare::GrantUriPermission is not System App!");
     }
