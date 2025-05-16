@@ -111,7 +111,7 @@ static ani_string GetUriFromPath(ani_env *env, ani_string stringObj)
     return uriObj;
 }
 
-void FileUriConstructor(ani_env *env, ani_object obj, ani_string stringObj)
+static void FileUriConstructor(ani_env *env, ani_object obj, ani_string stringObj)
 {
     LOGD("Enter FileUriConstructor");
     std::string path = ParseObjToStr(env, stringObj);
