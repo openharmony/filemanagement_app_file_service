@@ -58,20 +58,26 @@ const std::unordered_map<std::string, std::string> permissionPathMap = {
 #ifdef SANDBOX_MANAGER
 namespace {
 
-bool CheckValidUri(const string &uriStr)
+bool CheckValidUri(const string &uriStr, const string &path, bool checkAccess)
 {
     if (uriStr.find(FILE_SCHEME_PREFIX) != 0) {
         LOGE("Incorrect URI format!");
         return false;
     }
+    if (uriStr.find(NETWORK_PARA) != string::npos) {
+        LOGE("the URI is not the current device URI");
+        return false;
+    }
+    // Only Media path can skip access check
     Uri uri(uriStr);
     std::string bundleName = uri.GetAuthority();
     if (bundleName == MEDIA_AUTHORITY) {
-        LOGE("the URI is media URI");
-        return false;
+        LOGI("media path, skip access check");
+        return true;
     }
-    if (uriStr.find(NETWORK_PARA) != string::npos) {
-        LOGE("the URI is not the current device URI");
+    // check if path can be accessed
+    if (checkAccess && (access(path.c_str(), F_OK) != 0)) {
+        LOGE("access path failed");
         return false;
     }
     return true;
@@ -181,7 +187,7 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
     for (auto uriPolicy : uriPolicies) {
         AppFileService::ModuleFileUri::FileUri fileuri(uriPolicy.uri);
         string path = fileuri.GetRealPath();
-        if (!CheckValidUri(uriPolicy.uri) || access(path.c_str(), F_OK) != 0) {
+        if (!CheckValidUri(uriPolicy.uri, path, true)) {
             LOGE("Not correct uri!");
             PolicyErrorResult result = {uriPolicy.uri, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
             errorResults.emplace_back(result);
@@ -200,7 +206,7 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
     for (const auto &uriPolicy : uriPolicies) {
         AppFileService::ModuleFileUri::FileUri fileuri(uriPolicy.uri);
         string path = fileuri.GetRealPath();
-        if (!CheckValidUri(uriPolicy.uri)) {
+        if (!CheckValidUri(uriPolicy.uri, path, false)) {
             LOGE("Not correct uri!");
             errorResults.emplace_back(false);
         } else {
