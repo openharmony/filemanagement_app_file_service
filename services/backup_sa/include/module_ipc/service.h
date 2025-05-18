@@ -567,6 +567,15 @@ private:
      */
     void SetOccupySession(bool isOccupyingSession);
 
+    /**
+     * @brief 尝试拉起某个应用的extension
+     *
+     * @param bundleName 目标应用
+     * @param extConnection 框架和应用的连接
+     *
+     */
+    ErrCode TryToConnectExt(const std::string& bundleName, sptr<SvcBackupConnection>& extConnection);
+
     void ReportOnExtConnectFailed(const IServiceReverseType::Scenario scenario,
         const std::string &bundleName, const ErrCode ret);
 

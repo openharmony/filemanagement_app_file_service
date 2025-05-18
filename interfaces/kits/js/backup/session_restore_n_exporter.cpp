@@ -874,7 +874,6 @@ napi_value SessionRestoreNExporter::CleanBundleTempDir(napi_env env, napi_callba
         return nullptr;
     }
     NFuncArg funcArg(env, cbinfo);
-    //校验参数格式是否是1
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         HILOGE("Number of arguments unmatched");
         NError(E_PARAMS).ThrowErr(env);
@@ -896,7 +895,6 @@ napi_value SessionRestoreNExporter::CleanBundleTempDir(napi_env env, napi_callba
     auto cbCompl = [](napi_env env, NError err) -> NVal {
         return err ? NVal::CreateBool(env, false) : NVal::CreateBool(env, true);
     };
-    HILOGD("Called SessionRestore::CleanBundleTempDir end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;

@@ -234,7 +234,7 @@ ErrCode BIncrementalRestoreSession::Cancel(std::string bundleName)
 
 ErrCode BIncrementalRestoreSession::CleanBundleTempDir(const std::string &bundleName)
 {
-    HILOGI("CleanBundleTempDir.");
+    HILOGI("BIncrementalRestoreSession::CleanBundleTempDir");
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();

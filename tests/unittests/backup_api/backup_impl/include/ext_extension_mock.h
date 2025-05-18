@@ -168,6 +168,11 @@ public:
     {
         return ERR_OK;
     };
+
+    ErrCode CleanBundleTempDir() override
+    {
+        return BError(BError::Codes::OK);
+    };
 private:
     int32_t nHandleBackupNum_ = 0;
 };

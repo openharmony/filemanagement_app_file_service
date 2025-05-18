@@ -1471,7 +1471,7 @@ void Service::ClearDisposalOnSaStart()
     if (!bundleNameList.empty()) {
         for (vector<string>::iterator it = bundleNameList.begin(); it != bundleNameList.end(); ++it) {
             string bundleName = *it;
-            HILOGE("dispose has residual, clear now, bundelName =%{public}s", bundleName.c_str());
+            HILOGE("dispose has residual, clear now, bundleName =%{public}s", bundleName.c_str());
             TryToClearDispose(bundleName);
         }
     }
@@ -2081,43 +2081,62 @@ void Service::SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userI
     }
 }
 
-ErrCode Service::CleanBundleTempDir(const string &callerName)
+ErrCode Service::TryToConnectExt(const std::string& bundleName, sptr<SvcBackupConnection>& extConnection)
 {
-    HILOGI("CleanBundleTempDir.");
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-
-    if (session_ == nullptr) {
-        HILOGE("Get BackupInfo error, session is empty.");
-        return BError(BError::Codes::SA_INVAL_ARG);
+    extConnection = session_->GetExtConnection(bundleName);
+    if (extConnection != nullptr && extConnection->IsExtAbilityConnected()) {
+        return BError(BError::Codes::OK);
     }
-    std::string bundleName = callerName;
-    auto backupConnection = session_->CreateBackupConnection(bundleName);
-    if (backupConnection == nullptr) {
-        HILOGE("backupConnection is null. bundleName: %{public}s", bundleName.c_str());
+    if (extConnection == nullptr) {
+        extConnection = session_->CreateBackupConnection(bundleName);
+    }
+    if (extConnection == nullptr) {
+        HILOGE("backupConnection is null, bundleName: %{public}s",  bundleName.c_str());
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     auto callConnected = GetBackupInfoConnectDone(wptr(this), bundleName);
     auto callDied = GetBackupInfoConnectDied(wptr(this), bundleName);
-    backupConnection->SetCallback(callConnected);
-    backupConnection->SetCallDied(callDied);
+    extConnection->SetCallback(callConnected);
+    extConnection->SetCallDied(callDied);
     AAFwk::Want want = CreateConnectWant(bundleName);
-    auto ret = backupConnection->ConnectBackupExtAbility(want, GetUserIdDefault(), false);
-    if (ret) {
-        HILOGE("CleanBundleTempDir error, ConnectBackupExtAbility failed, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), ret);
-        return BError(BError::Codes::SA_BOOT_EXT_FAIL);
+    auto err = extConnection->ConnectBackupExtAbility(want, GetUserIdDefault(), false);
+    if (err) {
+        HILOGE("ConnectBackupExtAbility failed, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), err);
+        return BError(BError::Codes::SA_BOOT_EXT_FAIL);;
     }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::CleanBundleTempDir(const string &bundleName)
+{
+    HILOGI("Service::CleanBundleTempDir");
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+
+    if (session_ == nullptr) {
+        HILOGE("session is empty.");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    sptr<SvcBackupConnection> backupConnection;
+    ErrCode err = TryToConnectExt(bundleName, backupConnection);
+    if (err) {return err;}
+
     std::unique_lock<std::mutex> lock(getBackupInfoSyncLock_);
     getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
     if (isConnectDied_.load()) {
-        HILOGE("CleanBundleTempDir error, GetBackupInfoConnectDied, please check bundleName: %{public}s", bundleName.c_str());
+        HILOGE("GetBackupInfoConnectDied, please check bundleName: %{public}s", bundleName.c_str());
         isConnectDied_.store(false);
         return BError(BError::Codes::EXT_ABILITY_DIED);
     }
 
     session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+    if (backupConnection == nullptr) {
+        HILOGE("backupConnection is empty.");
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
     auto proxy = backupConnection->GetBackupExtProxy();
     if (!proxy) {
-        HILOGE("CleanBundleTempDir error, Extension backup Proxy is empty.");
+        HILOGE("Extension backup Proxy is empty.");
         backupConnection->DisconnectBackupExtAbility();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::SA_INVAL_ARG);

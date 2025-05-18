@@ -231,7 +231,7 @@ ErrCode BSessionBackup::Cancel(std::string bundleName)
 
 ErrCode BSessionBackup::CleanBundleTempDir(const std::string &bundleName)
 {
-    HILOGI("CleanBundleTempDir.");
+    HILOGI("BSessionBackup::CleanBundleTempDir");
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();

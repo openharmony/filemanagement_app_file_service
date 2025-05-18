@@ -267,6 +267,11 @@ public:
     {
         return BError(BError::Codes::OK);
     }
+
+    ErrCode CleanBundleTempDir(const std::string &bundleName) override
+    {
+        return BError(BError::Codes::OK);
+    };
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // MOCK_I_SERVICE_MOCK_H
