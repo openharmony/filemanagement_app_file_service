@@ -33,6 +33,9 @@ constexpr const int32_t MAX_ARRAY_SIZE = 500;
 typedef enum OperationMode {
     READ_MODE = 1 << 0,
     WRITE_MODE = 1 << 1,
+    CREATE_MODE = 1 << 2,
+    DELETE_MODE = 1 << 3,
+    RENAME_MODE = 1 << 4,
 } OperationMode;
 
 typedef enum PolicyFlag {
@@ -87,6 +90,8 @@ public:
                                                 const vector<PathPolicyInfo> &uriPolicies,
                                                 int32_t policyType,
                                                 vector<bool> &errorResults);
+    static int32_t GrantPermission(const vector<UriPolicyInfo> &uriPolicies, const std::string &bundleName,
+        int32_t appCloneIndex, deque<struct PolicyErrorResult> &errorResults);
 #ifdef SANDBOX_MANAGER
 private:
     static void ParseErrorResults(const vector<uint32_t> &resultCodes,
@@ -94,7 +99,7 @@ private:
                                   deque<struct PolicyErrorResult> &errorResults);
     static void ParseErrorResults(const vector<bool> &resultCodes, vector<bool> &errorResults);
     static vector<PolicyInfo> GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
-                                                                 deque<struct PolicyErrorResult> &errorResults);
+        deque<struct PolicyErrorResult> &errorResults, bool checkAccess = true);
     static vector<PolicyInfo> GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
                                                                  vector<bool> &errorResults);
     static vector<PolicyInfo> GetSandboxPolicyInfo(const vector<PathPolicyInfo> &pathPolicies);

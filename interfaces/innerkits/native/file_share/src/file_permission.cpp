@@ -181,13 +181,13 @@ void FilePermission::ParseErrorResults(const vector<bool> &resultCodes, vector<b
 }
 
 vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
-                                                                      deque<struct PolicyErrorResult> &errorResults)
+    deque<struct PolicyErrorResult> &errorResults, bool checkAccess)
 {
     vector<PolicyInfo> pathPolicies;
     for (auto uriPolicy : uriPolicies) {
         AppFileService::ModuleFileUri::FileUri fileuri(uriPolicy.uri);
         string path = fileuri.GetRealPath();
-        if (!CheckValidUri(uriPolicy.uri, path, true)) {
+        if (!CheckValidUri(uriPolicy.uri, path, checkAccess)) {
             LOGE("Not correct uri!");
             PolicyErrorResult result = {uriPolicy.uri, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
             errorResults.emplace_back(result);
@@ -325,6 +325,34 @@ int32_t FilePermission::PersistPermission(const vector<UriPolicyInfo> &uriPolici
     vector<uint32_t> resultCodes;
     LOGI("PersistPermission pathPolicies size: %{public}zu", pathPolicies.size());
     int32_t sandboxManagerErrorCode = SandboxManagerKit::PersistPolicy(pathPolicies, resultCodes);
+    errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
+    if (errorCode == EPERM) {
+        ParseErrorResults(resultCodes, pathPolicies, errorResults);
+    }
+#endif
+    return errorCode;
+}
+
+int32_t FilePermission::GrantPermission(const vector<UriPolicyInfo> &uriPolicies, const std::string &bundleName,
+    int32_t appCloneIndex, deque<struct PolicyErrorResult> &errorResults)
+{
+    int errorCode = 0;
+#ifdef SANDBOX_MANAGER
+    if (uriPolicies.size() == 0 || uriPolicies.size() > MAX_ARRAY_SIZE) {
+        LOGE("The number of result codes exceeds the maximum");
+        return FileManagement::LibN::E_PARAMS;
+    }
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, false);
+    if (pathPolicies.size() == 0) {
+        return EPERM;
+    }
+    vector<uint32_t> resultCodes;
+    LOGI("GrantDecPermission size:%{public}zu bundleName:%{public}s appCloneIndex:%{public}d",
+        pathPolicies.size(), bundleName.c_str(), appCloneIndex);
+    
+    uint64_t policyFlag = 1; // support persistent
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::SetPolicyByBundleName(bundleName,
+        appCloneIndex, pathPolicies, policyFlag, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);

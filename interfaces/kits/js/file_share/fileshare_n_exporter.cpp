@@ -70,6 +70,12 @@ void InitOperationMode(napi_env env, napi_value exports)
                                      NVal::CreateUint32(env, static_cast<uint32_t>(OperationMode::READ_MODE)).val_),
         DECLARE_NAPI_STATIC_PROPERTY("WRITE_MODE",
                                      NVal::CreateUint32(env, static_cast<uint32_t>(OperationMode::WRITE_MODE)).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("CREATE_MODE",
+                                     NVal::CreateUint32(env, static_cast<uint32_t>(OperationMode::CREATE_MODE)).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("DELETE_MODE",
+                                     NVal::CreateUint32(env, static_cast<uint32_t>(OperationMode::DELETE_MODE)).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("RENAME_MODE",
+                                     NVal::CreateUint32(env, static_cast<uint32_t>(OperationMode::RENAME_MODE)).val_),
     };
     napi_value obj = nullptr;
     napi_status status = napi_create_object(env, &obj);
