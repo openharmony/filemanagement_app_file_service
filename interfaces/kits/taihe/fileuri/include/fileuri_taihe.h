@@ -39,7 +39,6 @@ private:
 ohos::file::fileuri::FileUri makeFileUri(taihe::string_view name);
 
 std::string getUriFromPath(taihe::string_view path);
-
-}
+} // ANI::FileUri
 
 #endif // INTERFACES_KITS_TAIHE_INCLUDE_FILEURI_TAIHE_H

@@ -16,16 +16,18 @@
 #ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_GRANT_PERMISSONS_H
 #define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_GRANT_PERMISSONS_H
 
-#include "ohos.fileshare.proj.hpp"
-#include "ohos.fileshare.impl.hpp"
+#include "ohos.fileshare.fileShare.proj.hpp"
+#include "ohos.fileshare.fileShare.impl.hpp"
 #include "taihe/runtime.hpp"
 #include "file_permission.h"
+#include "iremote_broker.h"
 
 namespace ANI::FileShare {
 
-    ohos::fileshare::PolicyInfo makePolicyInfo(taihe::string_view uri, int32_t operationMode);
-    void activatePermissionSync(taihe::array_view<ohos::fileshare::PolicyInfo> policies);
-    void deactivatePermissionSync(taihe::array_view<ohos::fileshare::PolicyInfo> policies);
+    ohos::fileshare::fileShare::PolicyInfo MakePolicyInfo(taihe::string_view uri, int32_t operationMode);
+    void ActivatePermissionSync(taihe::array_view<ohos::fileshare::fileShare::PolicyInfo> policies);
+    void DeactivatePermissionSync(taihe::array_view<ohos::fileshare::fileShare::PolicyInfo> policies);
+    void GrantUriPermissionSync(taihe::string_view uri, taihe::string_view bundleName, uintptr_t flag);
 
     struct PolicyErrorArgs {
         std::deque<OHOS::AppFileService::PolicyErrorResult> errorResults;
@@ -33,6 +35,26 @@ namespace ANI::FileShare {
         ~PolicyErrorArgs() = default;
     };
 
+    struct UriPermissionInfo {
+        unsigned int flag;
+        std::string mode;
+        std::string bundleName;
+        std::string uri;
+    };
+
+    enum MediaFileTable {
+        FILE_TABLE = 0,
+        PHOTO_TABLE = 1,
+        AUDIO_TABLE = 2,
+    };
+
+class FileShareGrantToken : public OHOS::IRemoteBroker {
+public:
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.fileshare.grantUriPermission");
+
+    FileShareGrantToken() = default;
+    virtual ~FileShareGrantToken() noexcept = default;
+};
 } //namespace ANI::FileShare
 
 #endif // FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_GRANT_PERMISSONS_H

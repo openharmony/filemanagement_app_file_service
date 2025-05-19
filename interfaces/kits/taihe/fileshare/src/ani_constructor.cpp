@@ -15,6 +15,8 @@
 #ifndef FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_ANI_CONSTRUCTOR_H
 #define FILEMANAGEMENT_APP_FILE_SERVICE_INTERFACES_FILE_SHARE_TAIHE_ANI_CONSTRUCTOR_H
 
+#include "taihe/runtime.hpp"
+#include "ohos.fileshare.fileShare.ani.hpp"
 #include "ohos.fileshare.ani.hpp"
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
@@ -23,8 +25,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
         return ANI_ERROR;
     }
-    if (ANI_OK != ohos::fileshare::ANIRegister(env)) {
-        std::cerr << "Error from ohos::fileshare::ANIRegister" << std::endl;
+    if (ANI_OK != ohos::fileshare::fileShare::ANIRegister(env)) {
+        std::cerr << "Error from ohos::fileshare::fileShare::ANIRegister" << std::endl;
         return ANI_ERROR;
     }
     *result = ANI_VERSION_1;
