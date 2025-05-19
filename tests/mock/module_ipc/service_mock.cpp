@@ -396,7 +396,7 @@ ErrCode Service::GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrem
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::CleanBundleTempDir(const std::string& bundleName)
+ErrCode Service::CleanBundleTempDir(const std::string& bundleName)
 {
     return BError(BError::Codes::OK);
 }
