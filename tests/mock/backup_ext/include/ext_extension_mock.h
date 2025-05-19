@@ -120,6 +120,7 @@ public:
     MOCK_METHOD((std::function<void(ErrCode, const std::string)>), HandleTaskBackupEx, (wptr<BackupExtExtension>));
     MOCK_METHOD(void, WaitToSendFd, ((std::chrono::system_clock::time_point&), int&));
     MOCK_METHOD(void, RefreshTimeInfo, ((std::chrono::system_clock::time_point&), int&));
+    MOCK_METHOD(ErrCode, CleanBundleTempDir, ());
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_EXT_EXTENSION_MOCK_H

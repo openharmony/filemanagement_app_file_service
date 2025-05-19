@@ -2322,4 +2322,136 @@ HWTEST_F(ServiceTest, SUB_Service_GetSupportBackupBundleNames_0100, testing::ext
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetSupportBackupBundleNames_0100";
 }
+
+/**
+ * @tc.number: SUB_Service_TryToConnectExt_0000
+ * @tc.name: SUB_Service_TryToConnectExt_0000
+ * @tc.desc: 测试 TryToConnectExt 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TryToConnectExt_0000";
+    try {
+        BundleName bundleName;
+        sptr<SvcBackupConnection> extConnection;
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetScenario())
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        auto res = service->TryToConnectExt(bundleName, extConnection);
+        EXPECT_EQ(res, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by TryToConnectExt.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_TryToConnectExt_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_TryToConnectExt_0100
+ * @tc.name: SUB_Service_TryToConnectExt_0100
+ * @tc.desc: 测试 TryToConnectExt 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TryToConnectExt_0100";
+    try {
+        BundleName bundleName;
+        sptr<SvcBackupConnection> extConnection;
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetScenario())
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
+        auto res = service->TryToConnectExt(bundleName, extConnection);
+        EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by TryToConnectExt.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_TryToConnectExt_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_CleanBundleTempDir_0000
+ * @tc.name: SUB_Service_CleanBundleTempDir_0000
+ * @tc.desc: 测试 CleanBundleTempDir 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(ServiceTest, SUB_Service_CleanBundleTempDir_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_CleanBundleTempDir_0000";
+    try {
+        BundleName bundleName;
+        sptr<SvcBackupConnection> extConnection;
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetScenario())
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        auto res = service->CleanBundleTempDir(bundleName);
+        EXPECT_EQ(res, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by CleanBundleTempDir.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_CleanBundleTempDir_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_CleanBundleTempDir_0100
+ * @tc.name: SUB_Service_CleanBundleTempDir_0100
+ * @tc.desc: 测试 CleanBundleTempDir 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(ServiceTest, SUB_Service_CleanBundleTempDir_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_CleanBundleTempDir_0100";
+    try {
+        BundleName bundleName;
+        sptr<SvcBackupConnection> extConnection;
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetScenario())
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        auto res = service->CleanBundleTempDir(bundleName);
+        EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by CleanBundleTempDir.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_CleanBundleTempDir_0100";
+}
 }
