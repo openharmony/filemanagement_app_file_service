@@ -483,7 +483,7 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_1200, testing::ext::Tes
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
- * @tc.require: issuesI9KPRL
+ * @tc.require: IC7RHQ
  */
 HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_1300, testing::ext::TestSize.Level1)
 {
