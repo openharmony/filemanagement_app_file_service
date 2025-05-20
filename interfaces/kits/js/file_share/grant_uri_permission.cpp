@@ -17,6 +17,7 @@
 #include "ability.h"
 #include "datashare_helper.h"
 #include "datashare_values_bucket.h"
+#include "grant_permissions.h"
 #include "ipc_skeleton.h"
 #include "log.h"
 #include "remote_uri.h"
@@ -253,6 +254,11 @@ namespace ModuleFileShare {
             LOGE("FileShare::GrantUriPermission GetJSArgsForGrantUriPermission Number of arguments unmatched!");
             NError(EINVAL).ThrowErr(env);
             return nullptr;
+        }
+
+        if (!NVal(env, funcArg[NARG_POS::FIRST]).TypeIs(napi_string)) {
+            LOGI("is grant dec permissions.");
+            return GrantDecUriPermission(env, funcArg);
         }
 
         UriPermissionInfo uriPermInfo;

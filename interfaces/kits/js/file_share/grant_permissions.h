@@ -32,6 +32,7 @@ napi_value ActivatePermission(napi_env env, napi_callback_info info);
 napi_value DeactivatePermission(napi_env env, napi_callback_info info);
 napi_value CheckPersistentPermission(napi_env env, napi_callback_info info);
 napi_value CheckPathPermission(napi_env env, napi_callback_info info);
+napi_value GrantDecUriPermission(napi_env env, FileManagement::LibN::NFuncArg &funcArg);
 
 struct PolicyErrorArgs {
     deque<PolicyErrorResult> errorResults;

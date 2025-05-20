@@ -508,6 +508,54 @@ napi_value CheckPathPermission(napi_env env, napi_callback_info info)
     return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
+napi_value GrantDecUriPermission(napi_env env, FileManagement::LibN::NFuncArg &funcArg)
+{
+    LOGI("GrantDecUriPermission");
+    std::vector<UriPolicyInfo> uriPolicies;
+    if (GetUriPoliciesArg(env, funcArg[NARG_POS::FIRST], uriPolicies) != napi_ok) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto [succBundleName, bundleName, lenBundleName] = NVal(env, funcArg[NARG_POS::SECOND]).ToUTF8String();
+    if (!succBundleName) {
+        LOGE("FileShare::GetJSArgs get bundleName parameter failed!");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+    std::string targetBundleName = string(bundleName.get());
+
+    auto [succAppCloneIndex, appCloneIndex] = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
+
+    shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
+    if (arg == nullptr) {
+        LOGE("Make_shared is failed");
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(E_UNKNOWN_ERROR, "Out of memory, execute make_shared function failed");
+        ErrParam errorParam = [errInfo]() { return errInfo; };
+        NError(errorParam).ThrowErr(env);
+        return nullptr;
+    }
+    auto cbExec = [uriPolicies, targetBundleName, appCloneIndex {move(appCloneIndex)}, arg]() -> NError {
+        arg->errNo = FilePermission::GrantPermission(uriPolicies, targetBundleName, appCloneIndex, arg->errorResults);
+        return NError(arg->errNo);
+    };
+    auto cbCompl = [arg](napi_env env, NError err) -> NVal {
+        if (err) {
+            if (arg->errNo == EPERM) {
+                napi_value data = err.GetNapiErr(env);
+                napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
+                return NVal(env, data);
+            }
+            return {env, err.GetNapiErr(env)};
+        }
+        return NVal::CreateUndefined(env);
+    };
+    const string procedureName = "grant_permission";
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
+}
+
 } // namespace ModuleFileShare
 } // namespace AppFileService
 } // namespace OHOS
