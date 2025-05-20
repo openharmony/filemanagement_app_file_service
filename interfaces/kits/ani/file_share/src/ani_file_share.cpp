@@ -274,7 +274,7 @@ static void GrantUriPermission(ani_env *env, ani_string uri, ani_string bundleNa
         ThrowBusinessError(env, EINVAL, "GrantUriPermission is not System App!");
         return;
     }
-    uriPermInfo.flag = wantConstantFlag;
+    uriPermInfo.flag = static_cast<uint32_t>(wantConstantFlag);
     uriPermInfo.mode = GetModeFromFlag(wantConstantFlag);
     LOGD("GrantUriPermission uri: %{public}s, bundleName: %{public}s, flag: %{public}d, mode: %{public}s",
         uriStr.c_str(), bundleNameStr.c_str(), wantConstantFlag, uriPermInfo.mode.c_str());
