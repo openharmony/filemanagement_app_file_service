@@ -32,11 +32,11 @@ ohos_unittest("service_client_test") {
   sources = [
     "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
     "service_client_test.cpp",
+    "service_mock.cpp",
   ]
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
-    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",
   ]
 
