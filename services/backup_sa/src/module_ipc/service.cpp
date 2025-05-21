@@ -2089,18 +2089,18 @@ ErrCode Service::TryToConnectExt(const std::string& bundleName, sptr<SvcBackupCo
     }
     if (extConnection == nullptr) {
         extConnection = session_->CreateBackupConnection(bundleName);
-    }
-    if (extConnection == nullptr) {
-        HILOGE("backupConnection is null, bundleName: %{public}s",  bundleName.c_str());
-        return BError(BError::Codes::SA_INVAL_ARG);
+        if (extConnection == nullptr) {
+            HILOGE("backupConnection is null, bundleName: %{public}s", bundleName.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
     }
     auto callConnected = GetBackupInfoConnectDone(wptr(this), bundleName);
     auto callDied = GetBackupInfoConnectDied(wptr(this), bundleName);
     extConnection->SetCallback(callConnected);
     extConnection->SetCallDied(callDied);
     AAFwk::Want want = CreateConnectWant(bundleName);
-    auto err = extConnection->ConnectBackupExtAbility(want, GetUserIdDefault(), false);
-    if (err) {
+    ErrCode err = extConnection->ConnectBackupExtAbility(want, GetUserIdDefault(), false);
+    if (err != BError(BError::Codes::OK)) {
         HILOGE("ConnectBackupExtAbility failed, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), err);
         return BError(BError::Codes::SA_BOOT_EXT_FAIL);;
     }
@@ -2118,7 +2118,7 @@ ErrCode Service::CleanBundleTempDir(const string &bundleName)
     }
     sptr<SvcBackupConnection> backupConnection;
     ErrCode err = TryToConnectExt(bundleName, backupConnection);
-    if (err) {return err;}
+    if (err != BError(BError::Codes::OK)) {return err;}
 
     std::unique_lock<std::mutex> lock(getBackupInfoSyncLock_);
     getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
