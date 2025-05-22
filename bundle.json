@@ -161,6 +161,15 @@
                         ],
                         "header_base": "//foundation/filemanagement/app_file_service/interfaces//kits/cj/src"
                     }
+                },
+                {
+                    "name": "//foundation/filemanagement/app_file_service/interfaces/kits/cj:cj_file_grant_permission_ffi",
+                    "header": {
+                        "header_files": [
+                            "file_grant_permission_ffi.h"
+                        ],
+                        "header_base": "//foundation/filemanagement/app_file_service/interfaces/kits/cj/src"
+                    }
                 }
             ],
             "test": [
