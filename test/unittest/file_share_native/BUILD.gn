@@ -28,6 +28,14 @@ ohos_unittest("file_share_test") {
       "${app_file_service_path}/test/unittest/resource/ohos_test.xml"
   sources = [ "file_share_test.cpp" ]
 
+  include_dirs = [
+    "${app_file_service_path}/interfaces/innerkits/native/file_share/include",
+    "${app_file_service_path}/interfaces/innerkits/native/file_share/src",
+  ]
+
+  deps =
+      [ "${app_file_service_path}/interfaces/innerkits/native:fileuri_native" ]
+
   external_deps = [
     "ability_base:base",
     "ability_base:want",

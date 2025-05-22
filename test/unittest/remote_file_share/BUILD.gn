@@ -49,5 +49,7 @@ ohos_unittest("remote_file_share_test") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "safwk:system_ability_fwk",
+    "storage_service:storage_manager_sa_proxy",
   ]
 }

@@ -164,6 +164,9 @@ ohos_shared_library("remote_file_share_native") {
     "hilog:libhilog",
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
+    "ipc:ipc_core",
   ]
 
   if (defined(global_parts_info) &&
