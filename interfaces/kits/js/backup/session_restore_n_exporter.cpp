@@ -841,7 +841,8 @@ napi_value SessionRestoreNExporter::Cancel(napi_env env, napi_callback_info info
     return nResult;
 }
 
-static NContextCBExec CleanBundleTempDirCBExec(napi_env env, const NFuncArg &funcArg, std::unique_ptr<char[]> bundleName)
+static NContextCBExec CleanBundleTempDirCBExec(napi_env env, const NFuncArg &funcArg,
+                                               std::unique_ptr<char[]> bundleName)
 {
     auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
     if (!(restoreEntity && (restoreEntity->sessionWhole || restoreEntity->sessionSheet))) {

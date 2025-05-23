@@ -1041,4 +1041,70 @@ ErrCode Service::Cancel(const std::string& bundleName, int32_t &result)
     }
     return BError(BError::Codes::OK);
 }
+
+ErrCode Service::TryToConnectExt(const std::string& bundleName, sptr<SvcBackupConnection>& extConnection)
+{
+    extConnection = session_->GetExtConnection(bundleName);
+    if (extConnection != nullptr && extConnection->IsExtAbilityConnected()) {
+        return BError(BError::Codes::OK);
+    }
+    if (extConnection == nullptr) {
+        extConnection = session_->CreateBackupConnection(bundleName);
+        if (extConnection == nullptr) {
+            HILOGE("backupConnection is null, bundleName: %{public}s", bundleName.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+    }
+    auto callConnected = GetBackupInfoConnectDone(wptr(this), bundleName);
+    auto callDied = GetBackupInfoConnectDied(wptr(this), bundleName);
+    extConnection->SetCallback(callConnected);
+    extConnection->SetCallDied(callDied);
+    AAFwk::Want want = CreateConnectWant(bundleName);
+    ErrCode err = extConnection->ConnectBackupExtAbility(want, GetUserIdDefault(), false);
+    if (err != BError(BError::Codes::OK)) {
+        HILOGE("ConnectBackupExtAbility failed, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), err);
+        return BError(BError::Codes::SA_BOOT_EXT_FAIL);
+    }
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::CleanBundleTempDir(const string &bundleName)
+{
+    HILOGI("Service::CleanBundleTempDir");
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+
+    if (session_ == nullptr) {
+        HILOGE("session is empty.");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    sptr<SvcBackupConnection> backupConnection;
+    ErrCode err = TryToConnectExt(bundleName, backupConnection);
+    if (err != BError(BError::Codes::OK)) {return err;}
+
+    std::unique_lock<std::mutex> lock(getBackupInfoSyncLock_);
+    getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
+    if (isConnectDied_.load()) {
+        HILOGE("GetBackupInfoConnectDied, please check bundleName: %{public}s", bundleName.c_str());
+        isConnectDied_.store(false);
+        return BError(BError::Codes::EXT_ABILITY_DIED);
+    }
+
+    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+    if (backupConnection == nullptr) {
+        HILOGE("backupConnection is empty.");
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    auto proxy = backupConnection->GetBackupExtProxy();
+    if (!proxy) {
+        HILOGE("Extension backup Proxy is empty.");
+        backupConnection->DisconnectBackupExtAbility();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    proxy->CleanBundleTempDir();
+    backupConnection->DisconnectBackupExtAbility();
+    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

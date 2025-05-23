@@ -2210,7 +2210,7 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
 
 ErrCode BackupExtExtension::CleanBundleTempDir()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);    
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("BackupExtExtension::CleanBundleTempDir begin");
     if (extension_ == nullptr) {
         HILOGE("Failed to CleanBundleTempDir, extension is nullptr");

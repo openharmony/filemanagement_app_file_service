@@ -2374,7 +2374,8 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0100, testing::ext::TestSize.L
         EXPECT_CALL(*session, CreateBackupConnection(_)).WillRepeatedly(Return(nullptr));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
-        EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
+        EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _))
+            .WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
         auto res = service->TryToConnectExt(bundleName, extConnection);
         EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
@@ -2442,7 +2443,8 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0300, testing::ext::TestSize.L
         EXPECT_CALL(*skeleton, GetCallingUid()).WillRepeatedly(Return(BConstants::XTS_UID));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
-        EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::SA_BOOT_EXT_FAIL).GetCode()));
+        EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _))
+            .WillOnce(Return(BError(BError::Codes::SA_BOOT_EXT_FAIL).GetCode()));
         auto res = service->TryToConnectExt(bundleName, extConnection);
         EXPECT_EQ(res, BError(BError::Codes::SA_BOOT_EXT_FAIL).GetCode());
     } catch (...) {

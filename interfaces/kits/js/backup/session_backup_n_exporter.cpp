@@ -655,7 +655,8 @@ napi_value SessionBackupNExporter::Cancel(napi_env env, napi_callback_info info)
     return nResult;
 }
 
-static NContextCBExec CleanBundleTempDirCBExec(napi_env env, const NFuncArg &funcArg, std::unique_ptr<char[]> bundleName)
+static NContextCBExec CleanBundleTempDirCBExec(napi_env env,
+                                               const NFuncArg &funcArg, std::unique_ptr<char[]> bundleName)
 {
     auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
     if (!(backupEntity && (backupEntity->session))) {
@@ -677,7 +678,7 @@ napi_value SessionBackupNExporter::CleanBundleTempDir(napi_env env, napi_callbac
     if (!SAUtils::CheckBackupPermission()) {
         HILOGE("Has not permission!");
         NError(E_PERMISSION).ThrowErr(env);
-        return nullptr;        
+        return nullptr;
     }
     if (!SAUtils::IsSystemApp()) {
         HILOGE("System App check fail!");

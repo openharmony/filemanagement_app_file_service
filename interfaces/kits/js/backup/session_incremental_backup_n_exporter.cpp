@@ -654,7 +654,8 @@ napi_value SessionIncrementalBackupNExporter::Cancel(napi_env env, napi_callback
     return nResult;
 }
 
-static NContextCBExec CleanBundleTempDirCBExec(napi_env env, const NFuncArg &funcArg, std::unique_ptr<char[]> bundleName)
+static NContextCBExec CleanBundleTempDirCBExec(napi_env env, const NFuncArg &funcArg,
+                                               std::unique_ptr<char[]> bundleName)
 {
     auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
     if (!(backupEntity && (backupEntity->session))) {
