@@ -72,7 +72,6 @@ namespace {
 const int32_t MAX_FILE_READY_REPORT_TIME = 2;
 const int32_t WAIT_SCANNING_INFO_SEND_TIME = 5;
 const int ERR_SIZE = -1;
-const int32_t CONNECT_WAIT_TIME_S = 15;
 } // namespace
 
 void Service::AppendBundles(const std::vector<std::string> &bundleNames)

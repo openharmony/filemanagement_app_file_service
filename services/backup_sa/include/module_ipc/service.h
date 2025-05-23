@@ -45,6 +45,7 @@ struct BundleTaskInfo {
     ErrCode errCode;
 };
 const int INVALID_FD = -1;
+constexpr const int32_t CONNECT_WAIT_TIME_S = 15;
 
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(Service);

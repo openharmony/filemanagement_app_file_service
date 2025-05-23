@@ -867,7 +867,7 @@ napi_value SessionRestoreNExporter::CleanBundleTempDir(napi_env env, napi_callba
     if (!SAUtils::CheckBackupPermission()) {
         HILOGE("Has not permission!");
         NError(E_PERMISSION).ThrowErr(env);
-        return nullptr;        
+        return nullptr;
     }
     if (!SAUtils::IsSystemApp()) {
         HILOGE("System App check fail!");

@@ -81,7 +81,6 @@ constexpr int32_t MS_1000 = 1000;
 const static string BROADCAST_TYPE = "broadcast";
 const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 const static string UNICAST_TYPE = "unicast";
-const int32_t CONNECT_WAIT_TIME_S = 15;
 const std::string BACKUPSERVICE_WORK_STATUS_KEY = "persist.backupservice.workstatus";
 const std::string BACKUPSERVICE_WORK_STATUS_ON = "true";
 const std::string BACKUPSERVICE_WORK_STATUS_OFF = "false";
