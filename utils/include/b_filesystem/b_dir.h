@@ -59,8 +59,7 @@ public:
      * @return 错误码、大文件名集合
      */
     static std::tuple<ErrCode, std::map<std::string, struct stat>, std::map<std::string, size_t>> GetBigFiles(
-        const std::vector<std::string> &includes, const std::vector<std::string> &excludes,
-        std::shared_ptr<RadarAppStatistic> appStatistic);
+        const std::vector<std::string> &includes, const std::vector<std::string> &excludes);
 
     /**
      * @brief Get the Dirs object
@@ -119,6 +118,11 @@ public:
      * @return 是否存在软连接
      */
     static bool CheckAndRmSoftLink(const EndFileInfo &filePaths);
+
+    /**
+     * @brief 判断目录列表是否包含路径
+     */
+    static bool IsDirsMatch(const std::vector<std::string> &exludePaths, const std::string &path);
 };
 } // namespace OHOS::FileManagement::Backup
 

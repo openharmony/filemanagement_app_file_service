@@ -26,31 +26,39 @@ RadarTotalStatistic::RadarTotalStatistic(BizScene bizScene, std::string callerNa
     uniqId_ = TimeUtils::GetTimeUS();
 }
 
-void RadarTotalStatistic::Report(const std::string &func, int32_t error)
+void RadarTotalStatistic::Report(const std::string &func, int32_t error, std::string errMsg)
 {
     HiSysEventWrite(
         DOMAIN,
         BACKUP_RESTORE_STATISTIC,
-        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
         ORG_PKG, DOMAIN_NAME,
         FUNC, func,
-        UNIQUE_ID, uniqId_,
+        CONCURRENT_ID, uniqId_,
         BIZ_SCENE, static_cast<int32_t>(bizScene_),
         HOST_PKG, hostPkg_,
         MODE, static_cast<uint32_t>(mode_),
-        FAIL_BUNDLE_CNT, failBundleCount_,
-        SUCC_BUNDLE_CNT, succBundleCount_,
+        FAIL_BUNDLE_CNT, failBundleCount_ - lastFailCnt_.load(),
+        SUCC_BUNDLE_CNT, succBundleCount_ - lastSuccCnt_.load(),
+        GET_BUNDLE_INFO_SPEND, getBundleInfoSpend_.GetSpan(),
         TOTAL_SPEND, totalSpendTime_.GetSpan(),
-        ERROR_CODE, error);
+        ERROR_MSG, errMsg,
+        ERROR_CODE, error,
+        BIZ_STAGE, DEFAULT_STAGE,
+        STAGE_RES, error == 0 ? STAGE_RES_SUCCESS : STAGE_RES_FAIL);
+        lastSuccCnt_.store(succBundleCount_);
+        lastFailCnt_.store(failBundleCount_);
 }
 
 void RadarTotalStatistic::Report(const std::string &func, uint32_t moduleId, uint16_t moduleErr)
 {
-    Report(func, RadarErrorCode(moduleId, moduleErr).GenCode());
+    RadarError err(moduleId, moduleErr);
+    Report(func, err.GenCode());
 }
 
 void RadarTotalStatistic::Report(const std::string &func, BError errCode, uint32_t moduleId)
 {
-    Report(func, RadarErrorCode(moduleId, errCode).GenCode());
+    RadarError err(moduleId, errCode);
+    Report(func, err.GenCode(), err.errMsg_);
 }
 } // namespace OHOS::FileManagement::Backup

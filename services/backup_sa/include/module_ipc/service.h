@@ -25,6 +25,7 @@
 #include "b_json/b_json_entity_caps.h"
 #include "b_json/b_json_service_disposal_config.h"
 #include "b_radar/radar_total_statistic.h"
+#include "b_radar/radar_app_statistic.h"
 #include "iservice_reverse.h"
 #include "iremote_stub.h"
 #include "module_sched/sched_scheduler.h"
@@ -687,6 +688,31 @@ private:
                                                   const std::vector<std::string> &infos);
 
     ErrCode HelpToAppIncrementalFileReady(const string &bundleName, const string &fileName, sptr<IExtension> proxy);
+    vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd, sptr<SvcSessionManager> session,
+        const vector<BundleName> &bundleNames, std::string &oldBackupVersion);
+    void AppStatReportErr(const string &bundleName, const string &func, RadarError err);
+    void SaStatReport(const string &bundleName, const string &func, RadarError err);
+    void TotalStart()
+    {
+        if (totalStatistic_ != nullptr) {
+            totalStatistic_->totalSpendTime_.Start();
+        }
+    }
+
+    void GetBundleInfoStart()
+    {
+        if (totalStatistic_ != nullptr) {
+            totalStatistic_->getBundleInfoSpend_.Start();
+        }
+    }
+
+    void GetBundleInfoEnd()
+    {
+        if (totalStatistic_ != nullptr) {
+            totalStatistic_->getBundleInfoSpend_.End();
+        }
+    }
+
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -722,6 +748,7 @@ private:
     std::atomic<bool> isScannedEnd_ {false};
     std::atomic<bool> onScanning_ {false};
     std::shared_ptr<RadarTotalStatistic> totalStatistic_ = nullptr;
+    std::shared_ptr<RadarAppStatistic> saStatistic_ = nullptr;
 public:
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
     std::map<BundleName, BundleTaskInfo> failedBundles_;

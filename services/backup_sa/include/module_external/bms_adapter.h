@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "b_radar/radar_const.h"
 #include "b_json/b_json_entity_caps.h"
 #include "bundlemgr/bundle_mgr_interface.h"
 #include "b_incremental_data.h"
@@ -26,6 +27,16 @@
 
 namespace OHOS::FileManagement::Backup {
 class InnerReceiverImpl;
+
+struct BundleExtInfo {
+    BundleExtInfo(const std::string& bundleName) : bundleName_(bundleName),
+        error_(RadarError(BError(BError::Codes::OK))) {}
+    AppExecFwk::BundleInfo bundleInfo_;
+    const std::string bundleName_;
+    std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos_;
+    RadarError error_;
+    uint32_t getExtSpend_ = 0;
+};
 
 class BundleMgrAdapter {
 public:
@@ -83,9 +94,7 @@ public:
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForAppendBundles(
         const std::vector<BIncrementalData> &incrementalDataList, int32_t userId);
 private:
-    static bool GetCurBundleExtenionInfo(AppExecFwk::BundleInfo &installedBundle, const std::string &bundleName,
-        std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos, sptr<AppExecFwk::IBundleMgr> bms,
-        int32_t userId);
+    static bool GetCurBundleExtenionInfo(BundleExtInfo &bundleExtInfo, sptr<AppExecFwk::IBundleMgr> bms, int32_t userId);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_BUNDLE_MGR_ADAPTER_H

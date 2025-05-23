@@ -47,7 +47,11 @@ uint32_t TimeUtils::GetSpendSecond(int64_t startTime)
     if (startTime == 0) {
         return 0;
     }
-    return static_cast<uint32_t>(GetTimeS() - startTime);
+    int64_t endTime = GetTimeS();
+    if (endTime < startTime) {
+        return 0;
+    }
+    return static_cast<uint32_t>(endTime - startTime);
 }
 
 uint32_t TimeUtils::GetSpendMS(int64_t startTime)
@@ -55,7 +59,11 @@ uint32_t TimeUtils::GetSpendMS(int64_t startTime)
     if (startTime == 0) {
         return 0;
     }
-    return static_cast<uint32_t>(GetTimeMS() - startTime);
+    int64_t endTime = GetTimeMS();
+    if (endTime < startTime) {
+        return 0;
+    }
+    return static_cast<uint32_t>(endTime - startTime);
 }
 
 uint32_t TimeUtils::GetSpendUS(int64_t startTime)
@@ -63,7 +71,11 @@ uint32_t TimeUtils::GetSpendUS(int64_t startTime)
     if (startTime == 0) {
         return 0;
     }
-    return static_cast<uint32_t>(GetTimeUS() - startTime);
+    int64_t endTime = GetTimeUS();
+    if (endTime < startTime) {
+        return 0;
+    }
+    return static_cast<uint32_t>(endTime - startTime);
 }
 
 std::string TimeUtils::GetCurrentTime()

@@ -63,26 +63,31 @@ constexpr uint8_t MOVE_BIT_MODULE = 16;
 constexpr uint8_t MOVE_BIT_SYS = MOVE_BIT_MODULE + 5;
 
 constexpr int32_t DIVIDE_BASE = 1000;
+constexpr int32_t ADDITION_DIVIDE_BASE = 10;
 constexpr int32_t MOD_BASE = 100;
+constexpr int32_t TRANSFER_BOUND = 30000;
 
 // ERROR CODE
-constexpr uint32_t SUB_SYSTEM_ID = 800;
+constexpr uint32_t SUB_SYSTEM_ID = 231;
 constexpr uint32_t MODULE_UNKNOWN = 0;
 constexpr uint32_t MODULE_INIT = 1;
 constexpr uint32_t MODULE_BACKUP = 2;
 constexpr uint32_t MODULE_RESTORE = 3;
-constexpr uint32_t MODULE_OTHER = 4;
-
-constexpr int32_t ERROR_OK = 0;
+constexpr uint32_t MODULE_BMS = 4;
+constexpr uint32_t MODULE_AMS = 5;
+constexpr uint32_t MODULE_KERNEL = 6;
+constexpr uint32_t MODULE_HAP = 7;
+constexpr uint32_t MODULE_OTHER = 9;
 
 constexpr uint16_t ERR_VERIFY_CALLER_FAIL = 1000;
 constexpr uint16_t ERR_ACTIVE_SESSION_FAIL = 1001;
+constexpr uint16_t ERR_EXT_CONNECT_FAIL = 5001;
 
-struct RadarErrorCode {
-    RadarErrorCode(BError errCode) { SetByErrCode(errCode); }
-    RadarErrorCode(uint32_t moduleId, BError errCode) : moduleId_(moduleId) { SetByErrCode(errCode); }
-    RadarErrorCode(uint32_t moduleId) : moduleId_(moduleId) {}
-    RadarErrorCode(uint32_t moduleId, uint16_t error) : moduleId_(moduleId), error_(error) {}
+struct RadarError {
+    RadarError(BError errCode) { UpdateByBError(errCode); }
+    RadarError(uint32_t moduleId, BError errCode) : moduleId_(moduleId) { UpdateByBError(errCode); }
+    RadarError(uint32_t moduleId) : moduleId_(moduleId) {}
+    RadarError(uint32_t moduleId, uint16_t error) : moduleId_(moduleId), error_(error) {}
     int32_t GenCode()
     {
         if (error_ == 0) {
@@ -91,15 +96,31 @@ struct RadarErrorCode {
         return static_cast<int32_t>(((SUB_SYSTEM_ID & MASK_SYS) << MOVE_BIT_SYS)
             | ((moduleId_ & MASK_MODULE) << MOVE_BIT_MODULE) | (error_ & MASK_ERROR));
     }
-    void SetByErrCode(BError errCode)
+    void UpdateByBError(BError errCode)
     {
         int32_t code = errCode.GetCode();
-        error_ = static_cast<int16_t>(code / DIVIDE_BASE + code % MOD_BASE);
+        errMsg_ = errCode.ToString();
+        if (code == 0) {
+            error_ = 0;
+            return;
+        }
+        int32_t errBase = code / DIVIDE_BASE;
+        while (errBase > TRANSFER_BOUND) {
+            errBase /= ADDITION_DIVIDE_BASE;
+        }
+        error_ = static_cast<int16_t>(errBase + code % MOD_BASE);
     }
 
     uint32_t moduleId_ = MODULE_UNKNOWN;
     uint16_t error_ = 0;
+    std::string errMsg_ = "";
 };
+
+constexpr int32_t DEFAULT_STAGE = 1;
+constexpr int32_t STAGE_RES_IDLE = 0;
+constexpr int32_t STAGE_RES_SUCCESS = 1;
+constexpr int32_t STAGE_RES_FAIL = 2;
+constexpr int32_t STAGE_RES_CANCEL = 3;
 
 constexpr char DOMAIN[] = "APP_FILE_SVC";
 const std::string DOMAIN_NAME = "APP_FILE_SVC";
@@ -109,8 +130,11 @@ const std::string BACKUP_RESTORE_STATISTIC = "BACKUP_RESTORE_STATISTIC";
 const std::string ORG_PKG = "ORG_PKG";
 const std::string FUNC = "FUNC";
 const std::string BIZ_SCENE = "BIZ_SCENE";
-const std::string UNIQUE_ID = "UNIQUE_ID";
+const std::string BIZ_STAGE = "BIZ_STAGE";
+const std::string STAGE_RES = "STAGE_RES";
+const std::string CONCURRENT_ID = "CONCURRENT_ID";
 const std::string ERROR_CODE = "ERROR_CODE";
+const std::string ERROR_MSG = "ERROR_MSG";
 
 const std::string HOST_PKG = "HOST_PKG";
 const std::string APP_CALLER = "APP_CALLER";
@@ -127,6 +151,7 @@ const std::string TAR_BOUND_SIZE = "TAR_BOUND_SIZE";
 const std::string DIR_DEPTH = "DIR_DEPTH";
 const std::string MANAGE_JSON_SIZE = "MANAGE_JSON_SIZE";
 const std::string EXTENSION_CONNECT_SPEND = "EXTENSION_CONNECT_SPEND";
+const std::string GET_EXT_INFO_SPEND = "GET_EXT_INFO_SPEND";
 
 const std::string ON_BACKUP_SPEND = "ON_BACKUP_SPEND";
 const std::string ON_BACKUPEX_SPEND = "ON_BACKUPEX_SPEND";
@@ -142,6 +167,7 @@ const std::string DO_RESTORE_SPEND = "DO_RESTORE_SPEND";
 const std::string UNTAR_SPEND = "UNTAR_SPEND";
 const std::string BIG_FILE_SPEND = "BIG_FILE_SPEND";
 
+const std::string GET_BUNDLE_INFO_SPEND = "GET_BUNDLE_INFO_SPEND";
 const std::string TOTAL_SPEND = "TOTAL_SPEND";
 const std::string SUCC_BUNDLE_CNT = "SUCC_BUNDLE_CNT";
 const std::string FAIL_BUNDLE_CNT = "FAIL_BUNDLE_CNT";

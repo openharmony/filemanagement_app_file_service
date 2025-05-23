@@ -114,9 +114,10 @@ public:
     uint64_t bigFileSize_ = 0;
     uint32_t tarFileCount_ = 0;
     uint64_t tarFileSize_ = 0;
-    uint32_t dirDepth_ = 0;
+    uint32_t dirDepth_ = BConstants::APP_BASE_PATH_DEPTH;
     uint64_t tarBoundSize_ = BConstants::BIG_FILE_BOUNDARY;
     uint64_t manageJsonSize_ = 0;
+    Duration getExtInfoSpend_ = {0, 0};
     uint32_t extConnectSpend_ = 0;
 
     Duration onBackupSpend_ = {0, 0};
@@ -132,9 +133,12 @@ public:
     Duration onRestoreexSpend_ = {0, 0};
     uint32_t untarSpend_ = 0;
     uint32_t bigFileSpend_ = 0;
+    uint64_t doRestoreStart_ = 0;
     uint32_t doRestoreSpend_ = 0;
 
     RadarAppStatistic() {};
+    RadarAppStatistic(std::string appCaller, int64_t uniqId, BizScene bizScene)
+        : appCaller_(appCaller), uniqId_(uniqId), bizScene_(bizScene) {}
     ~RadarAppStatistic() = default;
     RadarAppStatistic(const RadarAppStatistic &) = delete;
     RadarAppStatistic &operator=(const RadarAppStatistic &) = delete;
@@ -144,15 +148,18 @@ public:
     void SetUniqId(int64_t uniqId) { uniqId_ = uniqId; };
     void UpdateSendRateZeroSpend();
     void UpdateFileDist(std::string fileExtension, uint64_t fileSize);
-    void ReportBackup(const std::string &func, int32_t errorCode = ERROR_OK);
+    void ReportBackup(const std::string &func, int32_t errorCode, std::string errMsg = "");
     void ReportBackup(const std::string &func, BError errCode);
-    void ReportRestore(const std::string &func, int32_t errorCode = ERROR_OK);
+    void ReportRestore(const std::string &func, int32_t errorCode, std::string errMsg = "");
     void ReportRestore(const std::string &func, BError errCode);
+    void ReportError(const std::string &func, RadarError error);
+    void ReportSA(const std::string &func, RadarError error);
 
 private:
     FileSizeStat fileSizeDist_;
     FileTypeStat fileTypeDist_;
     int64_t uniqId_ = 0;
+    BizScene bizScene_ = BizScene::UNKNOWN;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_RADAR_APP_STATISTIC_H

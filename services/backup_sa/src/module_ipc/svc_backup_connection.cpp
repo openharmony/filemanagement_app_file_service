@@ -89,6 +89,7 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
     }
     bundleName = bundleNameIndexInfo_;
     if (isConnectCalled_ == true) {
+        error_ = BError(resultCode, BError::Codes::EXT_ABILITY_DIED);
         if (isCleanCalled_ == true) {
             HILOGE("It's error that the backup extension clean died before the backup sa. name : %{public}s",
                 bundleName.data());

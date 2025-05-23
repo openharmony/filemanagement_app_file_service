@@ -771,7 +771,8 @@ HWTEST_F(ServiceTest, SUB_Service_GetRestoreBundleNames_0100, TestSize.Level1)
         std::string backupVersion;
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillOnce(Return(bundleInfos));
-        EXPECT_THROW(GetRestoreBundleNames(UniqueFd(-1), service->session_, bundleNames, backupVersion), BError);
+        EXPECT_THROW(service->GetRestoreBundleNames(UniqueFd(-1), service->session_, bundleNames, backupVersion),
+            BError);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetRestoreBundleNames.";

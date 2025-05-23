@@ -45,6 +45,7 @@
 #include "b_ohos/startup/backup_para.h"
 #include "b_process/b_multiuser.h"
 #include "b_radar/b_radar.h"
+#include "b_radar/radar_app_statistic.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
 #include "b_utils/b_time.h"
@@ -549,6 +550,8 @@ void Service::HandleNotSupportBundleNames(const std::vector<std::string> &srcBun
             continue;
         }
         HILOGE("bundleName:%{public}s, can not find from supportBundleNames", bundleName.c_str());
+        AppStatReportErr(bundleName, "HandleNotSupportBundleNames",
+            RadarError(MODULE_HAP, BError(BError::Codes::SA_BUNDLE_INFO_EMPTY)));
         if (isIncBackup) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
                 BError(BError::Codes::SA_BUNDLE_INFO_EMPTY), bundleName);
@@ -609,6 +612,33 @@ void Service::GetOldDeviceBackupVersion()
     HILOGI("backupVersion of old device = %{public}s", oldBackupVersion.c_str());
 }
 
+void Service::AppStatReportErr(const string &bundleName, const string &func, RadarError error)
+{
+    if (totalStatistic_ == nullptr) {
+        HILOGE("totalStat is null. appStatReport func:%{public}s, err: %{public}s", func.c_str(),
+            error.errMsg_.c_str());
+        return;
+    }
+    RadarAppStatistic appStatistic(bundleName, totalStatistic_->GetUniqId(), totalStatistic_->GetBizScene());
+    appStatistic.ReportError(func, error);
+}
+
+void Service::SaStatReport(const string &bundleName, const string &func, RadarError err)
+{
+    if (totalStatistic_ == nullptr) {
+        HILOGE("totalStat is null. appStatReport func:%{public}s, err: %{public}s", func.c_str(),
+            err.errMsg_.c_str());
+        return;
+    }
+    if (saStatistic_ == nullptr) {
+        saStatistic_ = std::make_shared<RadarAppStatistic>(bundleName, totalStatistic_->GetUniqId(),
+            totalStatistic_->GetBizScene());
+    }
+    saStatistic_->doBackupSpend_.End();
+    saStatistic_->doRestoreSpend_ = TimeUtils::GetSpendMS(saStatistic_->doRestoreStart_);
+    saStatistic_->ReportSA(func, err);
+}
+
 void Service::ExtConnectDied(const string &callName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -626,6 +656,7 @@ void Service::ExtConnectDied(const string &callName)
         auto backUpConnection = session_->GetExtConnection(callName);
         if (backUpConnection != nullptr && backUpConnection->IsExtAbilityConnected()) {
             backUpConnection->DisconnectBackupExtAbility();
+            AppStatReportErr(callName, "ExtConnectDied", RadarError(MODULE_AMS, backUpConnection->GetError()));
         }
         bool needCleanData = session_->GetClearDataFlag(callName);
         if (!needCleanData || SAUtils::IsSABundleName(callName)) {
