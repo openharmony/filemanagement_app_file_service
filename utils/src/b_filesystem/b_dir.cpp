@@ -35,6 +35,7 @@
 #include "errors.h"
 #include "filemgmt_libhilog.h"
 #include "sandbox_helper.h"
+#include "b_utils/scan_file_singleton.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -93,6 +94,12 @@ static uint32_t CheckOverLongPath(const string &path)
     return len;
 }
 
+static void InsertSmallFiles(std::map<string, size_t> &smallFiles, std::string fileName, size_t size)
+{
+    ScanFileSingleton::GetInstance().AddSmallFile(fileName, size);
+    smallFiles.emplace(make_pair(fileName, size));
+}
+
 static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFilesDetail(const string &path,
                                                                                        bool recursion,
                                                                                        off_t size = -1)
@@ -105,7 +112,7 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFiles
         if (path.at(path.size()-1) != BConstants::FILE_SEPARATOR_CHAR) {
             newPath += BConstants::FILE_SEPARATOR_CHAR;
         }
-        smallFiles.emplace(make_pair(newPath, 0));
+        InsertSmallFiles(smallFiles, newPath, 0);
         return {ERR_OK, files, smallFiles};
     }
 
@@ -126,10 +133,10 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFiles
                 continue;
             }
             if (sta.st_size <= size) {
-                smallFiles.emplace(make_pair(fileName, sta.st_size));
+                InsertSmallFiles(smallFiles, fileName, sta.st_size);
                 continue;
             }
-
+            ScanFileSingleton::GetInstance().AddBigFile(fileName, sta);
             files.try_emplace(fileName, sta);
             continue;
         } else if (ptr->d_type != DT_DIR) {
