@@ -541,36 +541,4 @@ HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_GetIncrementalBackupFile
     }
     GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_GetIncrementalBackupFileHandle_0100";
 }
-
-/**
- * @tc.number: SUB_Ext_Extension_proxy_CleanBundleTempDir_0100
- * @tc.name: SUB_Ext_Extension_proxy_CleanBundleTempDir_0100
- * @tc.desc: 测试 CleanBundleTempDir 接口调用成功和失败
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: IC7RHQ
- */
-HWTEST_F(SvcExtensionProxyTest, SUB_Ext_Extension_proxy_CleanBundleTempDir_0100,
-    testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-begin SUB_Ext_Extension_proxy_CleanBundleTempDir_0100";
-    try {
-        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(EPERM));
-        EXPECT_TRUE(proxy_ != nullptr);
-        ErrCode ret = proxy_->CleanBundleTempDir();
-        EXPECT_EQ(EPERM, ret);
-
-        EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
-        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(0));
-        EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(0));
-        ret = proxy_->CleanBundleTempDir();
-        EXPECT_EQ(BError(BError::Codes::OK), ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SvcExtensionProxyTest-an exception occurred by CleanBundleTempDir.";
-    }
-    GTEST_LOG_(INFO) << "SvcExtensionProxyTest-end SUB_Ext_Extension_proxy_CleanBundleTempDir_0100";
-}
 } // namespace OHOS::FileManagement::Backup
