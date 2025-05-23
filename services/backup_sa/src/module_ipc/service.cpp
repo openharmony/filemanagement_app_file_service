@@ -584,7 +584,6 @@ vector<BJsonEntityCaps::BundleInfo> Service::GetRestoreBundleNames(UniqueFd fd, 
     const vector<BundleName> &bundleNames, std::string &oldBackupVersion)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    // BundleMgrAdapter::GetBundleInfos可能耗时
     GetBundleInfoStart();
     auto restoreInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session->GetSessionUserId());
     GetBundleInfoEnd();
@@ -598,19 +597,16 @@ vector<BJsonEntityCaps::BundleInfo> Service::GetRestoreBundleNames(UniqueFd fd, 
     if (!bundleInfos.size()) {
         throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
     }
-    HILOGI("restoreInfos size is:%{public}zu", restoreInfos.size());
     vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {};
     for (const auto &restoreInfo : restoreInfos) {
         if (SAUtils::IsSABundleName(restoreInfo.name)) {
-            BJsonEntityCaps::BundleInfo info = {.name = restoreInfo.name,
-                                                .appIndex = restoreInfo.appIndex,
-                                                .versionCode = restoreInfo.versionCode,
-                                                .versionName = restoreInfo.versionName,
-                                                .spaceOccupied = restoreInfo.spaceOccupied,
-                                                .allToBackup = restoreInfo.allToBackup,
-                                                .fullBackupOnly = restoreInfo.fullBackupOnly,
-                                                .extensionName = restoreInfo.extensionName,
-                                                .restoreDeps = restoreInfo.restoreDeps};
+            BJsonEntityCaps::BundleInfo info = {
+                .name = restoreInfo.name, .appIndex = restoreInfo.appIndex,
+                .versionCode = restoreInfo.versionCode, .versionName = restoreInfo.versionName,
+                .spaceOccupied = restoreInfo.spaceOccupied, .allToBackup = restoreInfo.allToBackup,
+                .fullBackupOnly = restoreInfo.fullBackupOnly, .extensionName = restoreInfo.extensionName,
+                .restoreDeps = restoreInfo.restoreDeps
+            };
             restoreBundleInfos.emplace_back(info);
             continue;
         }
@@ -621,15 +617,13 @@ vector<BJsonEntityCaps::BundleInfo> Service::GetRestoreBundleNames(UniqueFd fd, 
             HILOGE("Bundle not need restore, bundleName is %{public}s.", restoreInfo.name.c_str());
             continue;
         }
-        BJsonEntityCaps::BundleInfo info = {.name = (*it).name,
-                                            .appIndex = (*it).appIndex,
-                                            .versionCode = (*it).versionCode,
-                                            .versionName = (*it).versionName,
-                                            .spaceOccupied = (*it).spaceOccupied,
-                                            .allToBackup = (*it).allToBackup,
-                                            .fullBackupOnly = (*it).fullBackupOnly,
-                                            .extensionName = restoreInfo.extensionName,
-                                            .restoreDeps = restoreInfo.restoreDeps};
+        BJsonEntityCaps::BundleInfo info = {
+            .name = (*it).name, .appIndex = (*it).appIndex,
+            .versionCode = (*it).versionCode, .versionName = (*it).versionName,
+            .spaceOccupied = (*it).spaceOccupied, .allToBackup = (*it).allToBackup,
+            .fullBackupOnly = (*it).fullBackupOnly, .extensionName = restoreInfo.extensionName,
+            .restoreDeps = restoreInfo.restoreDeps
+        };
         restoreBundleInfos.emplace_back(info);
     }
     HILOGI("restoreBundleInfos size is:%{public}zu", restoreInfos.size());
@@ -834,7 +828,7 @@ void Service::SetCurrentSessProperties(
         });
         if (it == restoreBundleNames.end()) {
             HILOGE("Can not find current bundle, bundleName:%{public}s, appIndex:%{public}d", restoreInfo.name.c_str(),
-                   restoreInfo.appIndex);
+                restoreInfo.appIndex);
             continue;
         }
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
@@ -857,15 +851,11 @@ void Service::SetCurrentSessProperties(
         }
         BJsonUtil::BundleDetailInfo broadCastInfo;
         BJsonUtil::BundleDetailInfo uniCastInfo;
-        bool broadCastRet =
-            BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, BROADCAST_TYPE, broadCastInfo);
-        if (broadCastRet) {
+        if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, BROADCAST_TYPE, broadCastInfo)) {
             bool notifyRet = DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(broadCastInfo);
             HILOGI("Publish event end, notify result is:%{public}d", notifyRet);
         }
-        bool uniCastRet =
-            BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo);
-        if (uniCastRet) {
+        if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {
             HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
             session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }

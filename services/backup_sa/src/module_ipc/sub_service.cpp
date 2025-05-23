@@ -656,7 +656,8 @@ void Service::ExtConnectDied(const string &callName)
         auto backUpConnection = session_->GetExtConnection(callName);
         if (backUpConnection != nullptr && backUpConnection->IsExtAbilityConnected()) {
             backUpConnection->DisconnectBackupExtAbility();
-            AppStatReportErr(callName, "ExtConnectDied", RadarError(MODULE_AMS, backUpConnection->GetError()));
+            AppStatReportErr(callName, "ExtConnectDied", RadarError(MODULE_ABILITY_MGR_SVC,
+                backUpConnection->GetError()));
         }
         bool needCleanData = session_->GetClearDataFlag(callName);
         if (!needCleanData || SAUtils::IsSABundleName(callName)) {

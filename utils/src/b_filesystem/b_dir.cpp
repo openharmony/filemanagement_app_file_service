@@ -556,12 +556,12 @@ bool BDir::CheckAndRmSoftLink(const EndFileInfo &filePaths)
     return isSoftLink;
 }
 
-bool BDir::IsDirsMatch(const vector<string> &exludePaths, const string &path)
+bool BDir::IsDirsMatch(const vector<string> &excludePaths, const string &path)
 {
     if (path.empty()) {
         return false;
     }
-    for (const string &item : exludePaths) {
+    for (const string &item : excludePaths) {
         if (fnmatch(item.data(), path.data(), FNM_LEADING_DIR) == 0) {
             return true;
         }

@@ -23,7 +23,7 @@ namespace OHOS::FileManagement::Backup {
 
 class HiSysEventMock {
 public:
-    static void HiSysEventWriteMock(std::string) {}
+    static void HiSysEventWriteMock(const std::string&) {}
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_HISYSEVENT_MOCK_H

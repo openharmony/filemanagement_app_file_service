@@ -122,7 +122,7 @@ public:
     /**
      * @brief 判断目录列表是否包含路径
      */
-    static bool IsDirsMatch(const std::vector<std::string> &exludePaths, const std::string &path);
+    static bool IsDirsMatch(const std::vector<std::string> &excludePaths, const std::string &path);
 };
 } // namespace OHOS::FileManagement::Backup
 

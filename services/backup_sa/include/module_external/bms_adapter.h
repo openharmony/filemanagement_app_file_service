@@ -94,7 +94,8 @@ public:
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForAppendBundles(
         const std::vector<BIncrementalData> &incrementalDataList, int32_t userId);
 private:
-    static bool GetCurBundleExtenionInfo(BundleExtInfo &bundleExtInfo, sptr<AppExecFwk::IBundleMgr> bms, int32_t userId);
+    static bool GetCurBundleExtenionInfo(BundleExtInfo &bundleExtInfo, sptr<AppExecFwk::IBundleMgr> bms,
+        int32_t userId);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_BUNDLE_MGR_ADAPTER_H

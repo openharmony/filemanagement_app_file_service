@@ -76,9 +76,9 @@ HWTEST_F(BRadarTest, RadarErrorCode_0100, testing::ext::TestSize.Level1)
             | ((MODULE_UNKNOWN & MASK_MODULE) << MOVE_BIT_MODULE) | (13920 & MASK_ERROR)));
         err.UpdateByBError(BError(139000020));
         EXPECT_EQ(err.error_, 13942);
-        RadarError err2(MODULE_AMS, BError(BError::Codes::OK));
+        RadarError err2(MODULE_ABILITY_MGR_SVC, BError(BError::Codes::OK));
         EXPECT_EQ(err2.GenCode(), 0);
-        EXPECT_EQ(err2.moduleId_, MODULE_AMS);
+        EXPECT_EQ(err2.moduleId_, MODULE_ABILITY_MGR_SVC);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BRadarTest-an exception occurred.";
@@ -131,9 +131,9 @@ HWTEST_F(BRadarTest, TOTAL_REPORT_0100, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "BRadarTest-end TOTAL_REPORT_0100";
 }
 
-HWTEST_F(BRadarTest, FileStat001, testing::ext::TestSize.Level1)
+HWTEST_F(BRadarTest, FileTypeStat001, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BRadarTest-begin FileStat001";
+    GTEST_LOG_(INFO) << "BRadarTest-begin FileTypeStat001";
     try {
         FileTypeStat fileTypeStat;
         EXPECT_EQ(fileTypeStat.GetListSize(), TYPE_DEF_COUNT);
@@ -158,7 +158,17 @@ HWTEST_F(BRadarTest, FileStat001, testing::ext::TestSize.Level1)
         fileTypeStat.UpdateStat("com", 1024);
         EXPECT_EQ(fileTypeStat.GetListPtr()[6].count, 1);
         EXPECT_EQ(fileTypeStat.GetListPtr()[6].size, 1024);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BRadarTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BRadarTest-end FileTypeStat001";
+}
 
+HWTEST_F(BRadarTest, FileSizeStat001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BRadarTest-begin FileSizeStat001";
+    try {
         FileSizeStat fileSizeStat;
         EXPECT_EQ(fileSizeStat.GetListSize(), SIZE_DEF_COUNT);
         fileSizeStat.UpdateStat(1024);
@@ -186,7 +196,7 @@ HWTEST_F(BRadarTest, FileStat001, testing::ext::TestSize.Level1)
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BRadarTest-an exception occurred.";
     }
-    GTEST_LOG_(INFO) << "BRadarTest-end FileStat001";
+    GTEST_LOG_(INFO) << "BRadarTest-end FileSizeStat001";
 }
 
 HWTEST_F(BRadarTest, RADAR_APP_STAT_0100, testing::ext::TestSize.Level1)
