@@ -979,6 +979,7 @@ ErrCode Service::ServiceResultReport(const std::string& restoreRetInfo, BackupRe
 {
     string callerName;
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    UpdateHandleCnt(errCode);
     try {
         ErrCode ret = VerifyCallerAndGetCallerName(callerName);
         if (ret != ERR_OK) {
@@ -1015,6 +1016,7 @@ ErrCode Service::ServiceResultReport(const std::string& restoreRetInfo, BackupRe
 ErrCode Service::SAResultReport(const std::string bundleName, const std::string restoreRetInfo,
                                 const ErrCode errCode, const BackupRestoreScenario sennario)
 {
+    UpdateHandleCnt(errCode);
     SADone(errCode, bundleName);
     if (sennario == BackupRestoreScenario::FULL_RESTORE) {
         session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, bundleName, ERR_OK);

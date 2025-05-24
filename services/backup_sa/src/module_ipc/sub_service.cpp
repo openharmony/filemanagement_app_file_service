@@ -753,8 +753,6 @@ void Service::TotalStatReport(ErrCode errCode)
         return;
     }
     totalStatistic_->totalSpendTime_.End();
-    totalStatistic_->succBundleCount_ = successBundlesNum_.load();
-    totalStatistic_->failBundleCount_ = failedBundles_.size();
     totalStatistic_->Report("OnAllBundlesFinished", errCode);
 }
 

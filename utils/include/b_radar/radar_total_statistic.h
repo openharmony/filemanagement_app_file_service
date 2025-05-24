@@ -24,8 +24,8 @@ namespace OHOS::FileManagement::Backup {
 
 class RadarTotalStatistic {
 public:
-    uint32_t succBundleCount_ = 0;
-    uint32_t failBundleCount_ = 0;
+    atomic<uint32_t> succBundleCount_ = 0;
+    atomic<uint32_t> failBundleCount_ = 0;
     Duration getBundleInfoSpend_ = {0, 0};
     Duration totalSpendTime_ = {0, 0};
 
