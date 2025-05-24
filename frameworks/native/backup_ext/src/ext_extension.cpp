@@ -469,7 +469,11 @@ ErrCode BackupExtExtension::IndexFileReady(const TarMap &pkgInfo, sptr<IService>
     cache.SetExtManage(pkgInfo);
     cachedEntity.Persist();
     close(cachedEntity.GetFd().Release());
-    appStatistic_->manageJsonSize_ = BFile::GetFileSize(INDEX_FILE_BACKUP);
+    int32_t err = 0;
+    appStatistic_->manageJsonSize_ = BFile::GetFileSize(INDEX_FILE_BACKUP, err);
+    if (err != 0) {
+        HILOGE("get index size fail err:%{public}d", err);
+    }
     int fdval = open(INDEX_FILE_BACKUP.data(), O_RDONLY);
     ErrCode ret =
        proxy->AppFileReady(string(BConstants::EXT_BACKUP_MANAGE), fdval,
@@ -647,7 +651,7 @@ pair<TarMap, map<string, size_t>> BackupExtExtension::GetFileInfos(const vector<
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     appStatistic_->scanFileSpend_.Start();
-    auto [errCode, files, smallFiles] = BDir::GetBigFiles(includes, excludes, appStatistic_);
+    auto [errCode, files, smallFiles] = BDir::GetBigFiles(includes, excludes);
     appStatistic_->scanFileSpend_.End();
     if (errCode != 0) {
         return {};
@@ -674,6 +678,7 @@ pair<TarMap, map<string, size_t>> BackupExtExtension::GetFileInfos(const vector<
     for (const auto &item : files) {
         int64_t hashStart = TimeUtils::GetTimeUS();
         string md5Name = getStringHash(bigFiles, item.first);
+        UpdateFileStat(item.first, item.second.st_size);
         appStatistic_->hashSpendUS_ += TimeUtils::GetSpendUS(hashStart);
         if (!md5Name.empty()) {
             bigFiles.emplace(md5Name, make_tuple(item.first, item.second, true));
@@ -851,6 +856,7 @@ tuple<ErrCode, uint32_t, uint32_t> BackupExtExtension::CalculateDataSize(const B
     appStatistic_->bigFileSize_ = totalSize;
     HILOGI("bigfile size = %{public}" PRId64 "", totalSize);
     for (const auto &item : smallFiles) {
+        UpdateFileStat(item.first, item.second);
         totalSize += static_cast<int64_t>(item.second);
     }
     appStatistic_->smallFileSize_ = totalSize - appStatistic_->bigFileSize_;
@@ -1819,11 +1825,11 @@ void BackupExtExtension::DoClearInner()
     }
 }
 
-void BackupExtExtension::ReportAppStatistic(ErrCode errCode)
+void BackupExtExtension::ReportAppStatistic(const std::string &func, ErrCode errCode)
 {
     if (curScenario_ == BackupRestoreScenario::FULL_BACKUP ||
         curScenario_ == BackupRestoreScenario::INCREMENTAL_BACKUP) {
-        appStatistic_->ReportBackup("AppDone", errCode);
+        appStatistic_->ReportBackup(func, errCode);
     } else {
         appStatistic_->untarSpend_ = static_cast<uint32_t>(radarRestoreInfo_.tarFileSpendTime);
         appStatistic_->bigFileSpend_ = static_cast<uint32_t>(radarRestoreInfo_.bigFileSpendTime);
@@ -1832,7 +1838,7 @@ void BackupExtExtension::ReportAppStatistic(ErrCode errCode)
         appStatistic_->tarFileCount_ = radarRestoreInfo_.tarFileNum;
         appStatistic_->bigFileSize_ = radarRestoreInfo_.bigFileSize;
         appStatistic_->tarFileSize_ = radarRestoreInfo_.tarFileSize;
-        appStatistic_->ReportRestore("AppDone", errCode);
+        appStatistic_->ReportRestore(func, errCode);
     }
 }
 
@@ -1840,7 +1846,7 @@ void BackupExtExtension::AppDone(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("AppDone Begin.");
-    ReportAppStatistic(errCode);
+    ReportAppStatistic("AppDone", errCode);
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to obtain the ServiceClient handle");
@@ -1999,13 +2005,13 @@ static bool IfEquality(const ReportFileInfo &info, const ReportFileInfo &infoAd)
     return info.filePath < infoAd.filePath;
 }
 
-static void AdDeduplication(vector<struct ReportFileInfo> &FilesList)
+static void AdDeduplication(vector<struct ReportFileInfo> &filesList)
 {
-    sort(FilesList.begin(), FilesList.end(), IfEquality);
-    auto it = unique(FilesList.begin(), FilesList.end(), [](const ReportFileInfo &info, const ReportFileInfo &infoAd) {
+    sort(filesList.begin(), filesList.end(), IfEquality);
+    auto it = unique(filesList.begin(), filesList.end(), [](const ReportFileInfo &info, const ReportFileInfo &infoAd) {
         return info.filePath == infoAd.filePath;
         });
-    FilesList.erase(it, FilesList.end());
+    filesList.erase(it, filesList.end());
 }
 
 void BackupExtExtension::FillFileInfos(UniqueFd incrementalFd,
@@ -2018,14 +2024,19 @@ void BackupExtExtension::FillFileInfos(UniqueFd incrementalFd,
     BReportEntity cloudRp(move(manifestFd));
     unordered_map<string, struct ReportFileInfo> cloudFiles;
     cloudRp.GetReportInfos(cloudFiles);
+    appStatistic_->scanFileSpend_.Start();
     if (cloudFiles.empty()) {
         FillFileInfosWithoutCmp(allFiles, smallFiles, bigFiles, move(incrementalFd));
     } else {
         FillFileInfosWithCmp(allFiles, smallFiles, bigFiles, cloudFiles, move(incrementalFd));
     }
+
     AdDeduplication(allFiles);
     AdDeduplication(smallFiles);
     AdDeduplication(bigFiles);
+    appStatistic_->smallFileCount_ = smallFiles.size();
+    appStatistic_->bigFileCount_ = bigFiles.size();
+    appStatistic_->scanFileSpend_.End();
     HILOGI("End Compare, allfile is %{public}zu, smallfile is %{public}zu, bigfile is %{public}zu",
         allFiles.size(), smallFiles.size(), bigFiles.size());
 }

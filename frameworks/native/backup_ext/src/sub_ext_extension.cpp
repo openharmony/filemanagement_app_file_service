@@ -326,14 +326,14 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
                 ss << R"("spendTime": )"<< spendTime << "ms";
                 AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
                 AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreExCallback",
-                    AppRadar::GetInstance().GetUserId(),
-                    BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+                    AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
             }
         }
         extensionPtr->FinishOnProcessTask();
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
         if (errCode == ERR_OK) {
             if (restoreRetInfo.size()) {
+                extensionPtr->ReportAppStatistic("IncreOnRestoreExCallback", errCode);
                 extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
             }
             return;
@@ -344,6 +344,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
         } else {
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, restoreRetInfo);
+            extensionPtr->ReportAppStatistic("IncreOnRestoreExCallback", errCode);
             extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::INCREMENTAL_RESTORE, errCode);
             extensionPtr->DoClear();
         }
@@ -380,6 +381,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreCall
         } else {
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, errMsg);
+            extensionPtr->ReportAppStatistic("IncreOnRestoreCallback", errCode);
             extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::INCREMENTAL_RESTORE, errCode);
         }
         extensionPtr->DoClear();
@@ -779,7 +781,7 @@ void BackupExtExtension::CloseOnProcessTimeOutTimer()
 void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
 {
     HILOGI("Begin");
-    ReportAppStatistic(errCode);
+    ReportAppStatistic("AppIncrementalDone", errCode);
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to obtain the ServiceClient handle");
@@ -1002,10 +1004,28 @@ int BackupExtExtension::User0DoBackup(const BJsonEntityExtensionConfig &usrConfi
     return ERR_OK;
 }
 
+void BackupExtExtension::UpdateFileStat(std::string filePath, uint64_t fileSize)
+{
+    appStatistic_->UpdateFileDist(ExtractFileExt(filePath), fileSize);
+    uint32_t dirDepth = 0;
+    const char* pstr = filePath.c_str();
+    char pre = '-';
+    uint32_t pathLen = filePath.size();
+    for (uint32_t i = 0; i < pathLen; i++) {
+        if (pstr[i] == '/' && pre != '/') {
+            dirDepth++;
+        }
+        pre = pstr[i];
+    }
+    if (dirDepth > appStatistic_->dirDepth_) {
+        appStatistic_->dirDepth_ = dirDepth;
+    }
+}
+
 /**
  * 获取增量的大文件的信息
  */
-static TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files)
+TarMap BackupExtExtension::GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files)
 {
     auto getStringHash = [](const TarMap &tarMap, const string &str) -> string {
         ostringstream strHex;
@@ -1031,7 +1051,11 @@ static TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files)
             HILOGE("Failed to stat file %{public}s, err = %{public}d", item.filePath.c_str(), errno);
             throw errno;
         }
+        appStatistic_->bigFileSize_ += sta.st_size;
+        UpdateFileStat(item.filePath, sta.st_size);
+        uint64_t hashStart = TimeUtils::GetTimeUS();
         string md5Name = getStringHash(bigFiles, item.filePath);
+        appStatistic_->hashSpendUS_ += TimeUtils::GetSpendUS(hashStart);
         if (!md5Name.empty()) {
             bigFiles.emplace(md5Name, make_tuple(item.filePath, sta, true));
         }
@@ -1046,8 +1070,10 @@ int BackupExtExtension::DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd
     vector<struct ReportFileInfo> allFiles;
     vector<struct ReportFileInfo> smallFiles;
     vector<struct ReportFileInfo> bigFiles;
+    appStatistic_->doBackupSpend_.Start();
     FillFileInfos(move(incrementalFd), move(manifestFd), allFiles, smallFiles, bigFiles);
     auto ret = DoIncrementalBackup(allFiles, smallFiles, bigFiles);
+    appStatistic_->doBackupSpend_.End();
     if (ret == ERR_OK) {
         auto end = std::chrono::system_clock::now();
         auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -1161,6 +1187,12 @@ static string GetIncrmentPartName()
     return to_string(milliseconds.count()) + "_part";
 }
 
+void BackupExtExtension::UpdateTarStat(uint64_t tarFileSize)
+{
+    appStatistic_->tarFileCount_++;
+    appStatistic_->tarFileSize_ += tarFileSize;
+}
+
 void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &infos, TarMap &tar,
     sptr<IService> proxy)
 {
@@ -1175,7 +1207,10 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
     int fdNum = 0;
     string partName = GetIncrmentPartName();
     auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
+    uint64_t tarStart = TimeUtils::GetTimeMS();
     for (const auto &small : infos) {
+        appStatistic_->smallFileSize_ += small.size;
+        UpdateFileStat(small.filePath, small.size);
         totalSize += static_cast<uint64_t>(small.size);
         fileCount += 1;
         packFiles.emplace_back(small.filePath);
@@ -1183,6 +1218,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
         if (totalSize >= BConstants::DEFAULT_SLICE_SIZE || fileCount >= BConstants::MAX_FILE_COUNT) {
             TarMap tarMap {};
             TarFile::GetInstance().Packet(packFiles, partName, path, tarMap, reportCb);
+            UpdateTarStat(TarFile::GetInstance().GetTarFileSize());
             tar.insert(tarMap.begin(), tarMap.end());
             // 执行tar包回传功能
             WaitToSendFd(startTime, fdNum);
@@ -1199,6 +1235,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
         // 打包回传
         TarMap tarMap {};
         TarFile::GetInstance().Packet(packFiles, partName, path, tarMap, reportCb);
+        UpdateTarStat(TarFile::GetInstance().GetTarFileSize());
         IncrementalTarFileReady(tarMap, tarInfos, proxy);
         fdNum = 1;
         WaitToSendFd(startTime, fdNum);
@@ -1207,6 +1244,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
         tarInfos.clear();
         RefreshTimeInfo(startTime, fdNum);
     }
+    appStatistic_->tarSpend_ = TimeUtils::GetSpendMS(tarStart);
 }
 
 int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> &allFiles,

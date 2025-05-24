@@ -92,6 +92,7 @@ public:
 
     uint32_t GetConnectSpan() { return connectSpend_.GetSpan(); }
 
+    BError GetError() { return error_; }
 public:
     SvcBackupConnection(std::function<void(const std::string &&, bool)> callDied,
                         std::function<void(const std::string &&)> callConnected,
@@ -115,6 +116,7 @@ private:
     std::function<void(const std::string &&)> callConnected_;
     std::string bundleNameIndexInfo_;
     Duration connectSpend_;
+    BError error_;
 };
 } // namespace OHOS::FileManagement::Backup
 

@@ -385,9 +385,12 @@ private:
     void PreDealExcludes(std::vector<std::string> &excludes);
     template <typename T>
     map<string, T> MatchFiles(map<string, T> files, vector<string> endExcludes);
+    void UpdateTarStat(uint64_t tarFileSize);
 private:
     pair<TarMap, map<string, size_t>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes);
-    void ReportAppStatistic(ErrCode errCode);
+    TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files);
+    void UpdateFileStat(std::string filePath, uint64_t fileSize);
+    void ReportAppStatistic(const std::string &func, ErrCode errCode);
     ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy);
 
     std::shared_mutex lock_;
