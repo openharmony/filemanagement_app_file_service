@@ -63,6 +63,8 @@ public:
     void AsyncTaskIncrementalRestoreForUpgrade(void);
     ErrCode User0OnBackup() override;
     ErrCode UpdateDfxInfo(int64_t uniqId, uint32_t extConnectSpend, const std::string &bundleName) override;
+    ErrCode CleanBundleTempDir() override;
+
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
         const std::string &bundleName) : extension_(extension)
@@ -132,6 +134,9 @@ private:
 
     /** @brief clear backup restore data */
     void DoClear();
+
+    /** @brief inner of doing clear backup restore data */
+    void DoClearInner();
 
     /**
      * @brief extension backup restore is done

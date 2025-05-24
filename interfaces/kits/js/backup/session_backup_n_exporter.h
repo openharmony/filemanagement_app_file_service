@@ -31,6 +31,7 @@ public:
     static napi_value AppendBundles(napi_env env, napi_callback_info cbinfo);
     static napi_value Release(napi_env env, napi_callback_info cbinfo);
     static napi_value Cancel(napi_env env, napi_callback_info cbinfo);
+    static napi_value CleanBundleTempDir(napi_env env, napi_callback_info cbinfo);
 
     SessionBackupNExporter(napi_env env, napi_value exports);
     ~SessionBackupNExporter() override;

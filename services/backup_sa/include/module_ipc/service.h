@@ -45,6 +45,7 @@ struct BundleTaskInfo {
     ErrCode errCode;
 };
 const int INVALID_FD = -1;
+constexpr const int32_t CONNECT_WAIT_TIME_S = 15;
 
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(Service);
@@ -110,6 +111,7 @@ public:
     void StartGetFdTask(std::string bundleName, wptr<Service> ptr);
 
     ErrCode GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList) override;
+    ErrCode CleanBundleTempDir(const std::string &bundleName) override;
 
     // 以下都是非IPC接口
 public:
@@ -565,6 +567,15 @@ private:
      *
      */
     void SetOccupySession(bool isOccupyingSession);
+
+    /**
+     * @brief 尝试拉起某个应用的extension
+     *
+     * @param bundleName 目标应用
+     * @param extConnection 框架和应用的连接
+     *
+     */
+    ErrCode TryToConnectExt(const std::string& bundleName, sptr<SvcBackupConnection>& extConnection);
 
     void ReportOnExtConnectFailed(const IServiceReverseType::Scenario scenario,
         const std::string &bundleName, const ErrCode ret);

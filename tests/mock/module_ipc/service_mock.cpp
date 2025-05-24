@@ -396,6 +396,11 @@ ErrCode Service::GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrem
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::CleanBundleTempDir(const std::string& bundleName)
+{
+    return BError(BError::Codes::OK);
+}
+
 void Service::GetDataSizeStepByStep(bool isPreciseScan, vector<BIncrementalData> bundleNameList, string &scanning) {}
 
 void Service::GetPresumablySize(vector<BIncrementalData> bundleNameList, string &scanning) {}

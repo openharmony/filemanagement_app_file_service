@@ -935,4 +935,38 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2800, testing::e
     }
     GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2800";
 }
+
+/**
+ * @tc.number: SUB_b_incremental_session_test_2900
+ * @tc.name: SUB_b_incremental_session_test_2900
+ * @tc.desc: 测试 CleanBundleTempDir 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2900, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_b_incremental_session_test_2900";
+    try {
+        std::string bundleName;
+        ServiceClient::serviceProxy_ = nullptr;
+        ASSERT_TRUE(backupSession != nullptr);
+        auto err = backupSession->CleanBundleTempDir(bundleName);
+        EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
+
+        ServiceClient::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, CleanBundleTempDir(_)).WillOnce(Return(BError(BError::Codes::SDK_BROKEN_IPC).GetCode()));
+        err = backupSession->CleanBundleTempDir(bundleName);
+        EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
+
+        EXPECT_CALL(*proxy, CleanBundleTempDir(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        err = backupSession->CleanBundleTempDir(bundleName);
+        EXPECT_EQ(err, ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by CleanBundleTempDir.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2900";
+}
 } // namespace OHOS::FileManagement::Backup

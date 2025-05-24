@@ -1772,6 +1772,15 @@ void BackupExtExtension::DoClear()
             HILOGI("configured not clear data.");
             return;
         }
+        DoClearInner();
+    } catch (...) {
+        HILOGE("Failed to clear");
+    }
+}
+
+void BackupExtExtension::DoClearInner()
+{
+    try {
         string backupCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
         string restoreCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         string specialRestoreCache = GetRestoreTempPath(bundleName_);
@@ -2196,5 +2205,26 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
         HILOGI("successfully but the IncrementalAllFileReady interface fails to be invoked: %{public}d", ret);
     }
     return ret;
+}
+
+ErrCode BackupExtExtension::CleanBundleTempDir()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("BackupExtExtension::CleanBundleTempDir begin");
+    if (extension_ == nullptr) {
+        HILOGE("Failed to CleanBundleTempDir, extension is nullptr");
+        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
+    }
+    if (extension_->GetExtensionAction() == BConstants::ExtensionAction::INVALID) {
+        return BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid").GetCode();
+    }
+    try {
+        VerifyCaller();
+        DoClearInner();
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to CleanBundleTempDir");
+        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
+    }
 }
 } // namespace OHOS::FileManagement::Backup

@@ -75,6 +75,7 @@ public:
     virtual ErrCode HandleCurAppDone(ErrCode, const std::string&, bool) = 0;
     virtual UniqueFd GetLocalCapabilitiesForBundleInfos() = 0;
     virtual ErrCode GetBackupDataSize(bool, const std::vector<BIncrementalData>&) = 0;
+    virtual ErrCode CleanBundleTempDir(const std::string& bundleName) = 0;
 public:
     virtual bool UpdateToRestoreBundleMap(const string&, const string&) = 0;
 public:
@@ -129,6 +130,7 @@ public:
     MOCK_METHOD(ErrCode, HandleCurAppDone, (ErrCode, const std::string&, bool));
     MOCK_METHOD(UniqueFd, GetLocalCapabilitiesForBundleInfos, ());
     MOCK_METHOD(ErrCode, GetBackupDataSize, (bool, const std::vector<BIncrementalData>&));
+    MOCK_METHOD(ErrCode, CleanBundleTempDir, (const std::string&));
 public:
     MOCK_METHOD(bool, UpdateToRestoreBundleMap, (const string&, const string&));
 };
@@ -432,6 +434,11 @@ void Service::AppendBundles(const std::vector<std::string> &bundleNames) {}
 ErrCode Service::GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList)
 {
     return BService::serviceMock->GetBackupDataSize(isPreciseScan, bundleNameList);
+}
+
+ErrCode Service::CleanBundleTempDir(const std::string& bundleName)
+{
+    return BService::serviceMock->CleanBundleTempDir(bundleName);
 }
 } // namespace OHOS::FileManagement::Backup
 

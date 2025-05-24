@@ -87,4 +87,9 @@ ErrCode ExtensionProxy::UpdateDfxInfo(int64_t uniqId, uint32_t extConnectSpend, 
 {
     return 0;
 }
+
+ErrCode ExtensionProxy::CleanBundleTempDir()
+{
+    return 0;
+}
 } // namespace OHOS::FileManagement::Backup
