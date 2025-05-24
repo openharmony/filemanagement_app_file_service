@@ -123,6 +123,9 @@ private:
     /** @brief clear backup restore data */
     void DoClear();
 
+    /** @brief inner of doing clear backup restore data */
+    void DoClearInner();
+
     /**
      * @brief extension backup restore is done
      *

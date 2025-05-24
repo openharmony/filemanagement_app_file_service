@@ -1768,6 +1768,15 @@ void BackupExtExtension::DoClear()
             HILOGI("configured not clear data.");
             return;
         }
+        DoClearInner();
+    } catch (...) {
+        HILOGE("Failed to clear");
+    }
+}
+
+void BackupExtExtension::DoClearInner()
+{
+    try {
         string backupCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
         string restoreCache = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         string specialRestoreCache = GetRestoreTempPath(bundleName_);
@@ -2221,10 +2230,7 @@ ErrCode BackupExtExtension::CleanBundleTempDir()
     }
     try {
         VerifyCaller();
-        bool isClearFlag = isClearData_;
-        isClearData_ = true;
-        DoClear();
-        isClearData_ = isClearFlag;
+        DoClearInner();
         return ERR_OK;
     } catch (...) {
         HILOGE("Failed to CleanBundleTempDir");
