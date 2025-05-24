@@ -717,9 +717,9 @@ private:
     {
         if (totalStatistic_ != nullptr) {
             if (errCode == ERR_OK) {
-                totalStatistic_->succBundleCount_.fetch_and(1);
+                totalStatistic_->succBundleCount_.fetch_add(1);
             } else {
-                totalStatistic_->failBundleCount_.fetch_and(1);
+                totalStatistic_->failBundleCount_.fetch_add(1);
             }
         }
     }

@@ -49,7 +49,7 @@ void RadarTotalStatistic::Report(const std::string &func, int32_t error, std::st
         BIZ_STAGE, DEFAULT_STAGE,
         STAGE_RES, error == 0 ? STAGE_RES_SUCCESS : STAGE_RES_FAIL);
         lastSuccCnt_.store(succCount);
-        lastFailCnt_.store(succCount);
+        lastFailCnt_.store(failCount);
 }
 
 void RadarTotalStatistic::Report(const std::string &func, uint32_t moduleId, uint16_t moduleErr)

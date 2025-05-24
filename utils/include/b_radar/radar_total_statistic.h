@@ -24,8 +24,8 @@ namespace OHOS::FileManagement::Backup {
 
 class RadarTotalStatistic {
 public:
-    atomic<uint32_t> succBundleCount_ = 0;
-    atomic<uint32_t> failBundleCount_ = 0;
+    std::atomic<uint32_t> succBundleCount_ = 0;
+    std::atomic<uint32_t> failBundleCount_ = 0;
     Duration getBundleInfoSpend_ = {0, 0};
     Duration totalSpendTime_ = {0, 0};
 
@@ -47,8 +47,8 @@ private:
     std::string hostPkg_ = "";
     Mode mode_ = Mode::FULL;
     int64_t uniqId_ = 0;
-    std::atomic<int> lastSuccCnt_ = 0;
-    std::atomic<int> lastFailCnt_ = 0;
+    std::atomic<uint32_t> lastSuccCnt_ = 0;
+    std::atomic<uint32_t> lastFailCnt_ = 0;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_RADAR_TOTAL_STATISTIC_H

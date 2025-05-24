@@ -870,6 +870,7 @@ ErrCode Service::IncrementalBackupSA(std::string bundleName)
 
 void Service::NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string &callerName)
 {
+    UpdateHandleCnt(errCode);
     IServiceReverseType::Scenario scenario = session_->GetScenario();
     if (scenario == IServiceReverseType::Scenario::BACKUP) {
         HILOGI("will notify clone data, scenario is incremental backup");
