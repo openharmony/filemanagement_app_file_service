@@ -389,11 +389,11 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForNorm
 }
 
 ErrCode BackupExtExtension::GetIncrementalFileHandle(const std::string &fileName,
-                                                     int &fd, int &reportFd, int &errCode)
+                                                     int &fd, int &reportFd, int32_t &fdErrCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     auto [errCode, fdval, reportFdVal] = GetIncrementalFileHandle(fileName);
-    errCode = errCode;
+    fdErrCode = errCode;
     fd = dup(fdval.Get());
     reportFd = dup(reportFdVal.Get());
     return ERR_OK;
@@ -2082,20 +2082,6 @@ ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
     }
     AsyncTaskOnIncrementalBackup();
     return ERR_OK;
-}
-
-ErrCode BackupExtExtension::GetIncrementalBackupFileHandle(int &fd, int &reportFd)
-{
-    auto [fd, reportFd] = GetIncrementalBackupFileHandle();
-    fd = dup(fd.Get());
-    reportFd = dup(reportFd.Get());
-    return BError(BError::Codes::OK).GetCode();
-}
-
-tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    return {UniqueFd(-1), UniqueFd(-1)};
 }
 
 static void WriteFile(const string &filename, const vector<struct ReportFileInfo> &srcFiles)

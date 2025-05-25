@@ -762,9 +762,9 @@ ErrCode Service::SendIncrementalFileHandle(const std::string &bundleName, const 
         HILOGE("GetIncrementalFileHandle failed, bundleName:%{public}s", bundleName.c_str());
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    int fdVal = -1;
-    int reportFdVal = -1;
-    int errCode = -1;
+    int fdVal = BConstants::INVALID_FD_NUM;
+    int reportFdVal = BConstants::INVALID_FD_NUM;
+    int errCode = BConstants::INVALID_FD_NUM;
     proxy->GetIncrementalFileHandle(fileName, fdVal, reportFdVal, errCode);
     UniqueFd fd(fdVal);
     UniqueFd reportFd(reportFdVal);
@@ -831,9 +831,9 @@ bool Service::IncrementalBackup(const string &bundleName)
 }
 ErrCode Service::HelpToAppIncrementalFileReady(const string &bundleName, const string &fileName, sptr<IExtension> proxy)
 {
-    int fdVal = -1;
-    int reportFdVal = -1;
-    int errCode = -1;
+    int fdVal = BConstants::INVALID_FD_NUM;
+    int reportFdVal = BConstants::INVALID_FD_NUM;
+    int errCode = BConstants::INVALID_FD_NUM;
     proxy->GetIncrementalFileHandle(fileName, fdVal, reportFdVal, errCode);
     UniqueFd fd(fdVal);
     UniqueFd reportFd(reportFdVal);

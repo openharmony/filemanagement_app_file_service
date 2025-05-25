@@ -111,7 +111,8 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    ErrCode GetIncrementalFileHandle(const std::string &fileName, UniqueFdGroup &fdGroup) override
+    ErrCode GetIncrementalFileHandle(const std::string &fileName,
+                                     int &fd, int &reportFd, int32_t &fdErrCode) override
     {
         return BError(BError::Codes::OK);
     }
@@ -139,7 +140,7 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    ErrCode GetIncrementalBackupFileHandle(UniqueFdGroup &fdGroup) override
+    ErrCode GetIncrementalBackupFileHandle(int &fd, int &reportFd) override
     {
         return BError(BError::Codes::OK);
     };

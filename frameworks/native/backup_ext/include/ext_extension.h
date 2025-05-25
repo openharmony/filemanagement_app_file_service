@@ -51,7 +51,7 @@ public:
     ErrCode PublishFile(const std::string &fileName) override;
     ErrCode HandleBackup(bool isClearData) override;
     ErrCode HandleRestore(bool isClearData) override;
-    ErrCode GetIncrementalFileHandle(const std::string &fileName, int &fd, int &reportFd, int &errCode) override;
+    ErrCode GetIncrementalFileHandle(const std::string &fileName, int &fd, int &reportFd, int32_t &fdErrCode) override;
     ErrCode PublishIncrementalFile(const std::string &fileName) override;
     ErrCode HandleIncrementalBackup(int incrementalFd, int manifestFd) override;
     ErrCode IncrementalOnBackup(bool isClearData) override;

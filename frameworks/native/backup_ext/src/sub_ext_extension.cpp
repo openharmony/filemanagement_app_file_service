@@ -1668,11 +1668,11 @@ void BackupExtExtension::PreDealExcludes(std::vector<std::string> &excludes)
     excludes.resize(j);
 }
 
-ErrCode BackupExtExtension::GetIncrementalBackupFileHandle(UniqueFdGroup& fdGroup)
+ErrCode BackupExtExtension::GetIncrementalBackupFileHandle((int &fd, int &reportFd)
 {
-    auto [fd, reportFd] = GetIncrementalBackupFileHandle();
-    fdGroup.fd = fd.Release();
-    fdGroup.reportFd = reportFd.Release();
+    auto [fdval, reportFdval] = GetIncrementalBackupFileHandle();
+    fd = dup(fdval.Get());
+    reportFd = dup(reportFd.Get());
     return BError(BError::Codes::OK).GetCode();
 }
 

@@ -20,7 +20,7 @@ interface OHOS.FileManagement.Backup.IExtension{
     [ipccode 4] void PublishFile([in] String fileName);
     [ipccode 5] void HandleRestore([in] boolean isClearData);
     [ipccode 6] void GetIncrementalFileHandle([in] String fileName,
-                                              [out] FileDescriptor fd, [out] FileDescriptor reportFd, [out] int errCode);
+                                              [out] FileDescriptor fd, [out] FileDescriptor reportFd, [out] int fdErrCode);
     [ipccode 7] void PublishIncrementalFile([in] String fileName);
     [ipccode 8] void HandleIncrementalBackup([in] FileDescriptor incrementalFd, [in] FileDescriptor manifestFd);
     [ipccode 9] void IncrementalOnBackup([in] boolean isClearData);
