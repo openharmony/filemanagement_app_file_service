@@ -655,6 +655,63 @@ napi_value SessionBackupNExporter::Cancel(napi_env env, napi_callback_info info)
     return nResult;
 }
 
+static NContextCBExec CleanBundleTempDirCBExec(napi_env env,
+                                               const NFuncArg &funcArg, std::unique_ptr<char[]> bundleName)
+{
+    auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
+    if (!(backupEntity && (backupEntity->session))) {
+        HILOGE("Failed to get BackupSession entity.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get BackupSession entity.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    return [entity {backupEntity}, bundleName {std::string(bundleName.get())}]() -> NError {
+        if (!(entity && (entity->session))) {
+            return NError(BError(BError::Codes::SDK_INVAL_ARG, "Backup session is nullptr").GetCode());
+        }
+        return NError(entity->session->CleanBundleTempDir(bundleName));
+    };
+}
+
+napi_value SessionBackupNExporter::CleanBundleTempDir(napi_env env, napi_callback_info cbinfo)
+{
+    HILOGI("Called SessionBackupNExporter::CleanBundleTempDir begin.");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+    NFuncArg funcArg(env, cbinfo);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        HILOGE("Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    NVal jsBundleStr(env, funcArg[NARG_POS::FIRST]);
+    auto [succ, bundleName, sizeStr] = jsBundleStr.ToUTF8String();
+    if (!succ) {
+        HILOGE("First arguments is not string.");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto cbExec = CleanBundleTempDirCBExec(env, funcArg, std::move(bundleName));
+    if (cbExec == nullptr) {
+        HILOGE("CleanBundleTempDirCBExec fail!");
+        return nullptr;
+    }
+    auto cbCompl = [](napi_env env, NError err) -> NVal {
+        return err ? NVal::CreateBool(env, false) : NVal::CreateBool(env, true);
+    };
+
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+}
+
 bool SessionBackupNExporter::Export()
 {
     HILOGD("called SessionBackupNExporter::Export begin");
@@ -664,6 +721,7 @@ bool SessionBackupNExporter::Export()
         NVal::DeclareNapiFunction("appendBundles", AppendBundles),
         NVal::DeclareNapiFunction("release", Release),
         NVal::DeclareNapiFunction("cancel", Cancel),
+        NVal::DeclareNapiFunction("cleanBundleTempDir", CleanBundleTempDir),
     };
 
     auto [succ, classValue] = NClass::DefineClass(exports_.env_, className, Constructor, std::move(props));

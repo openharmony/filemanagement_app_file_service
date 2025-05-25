@@ -83,6 +83,7 @@ ohos_shared_library("backup_utils") {
     "src/b_tarball/b_tarball_cmdline.cpp",
     "src/b_tarball/b_tarball_factory.cpp",
     "src/b_utils/b_time.cpp",
+    "src/b_utils/scan_file_singleton.cpp",
   ]
 
   configs = [

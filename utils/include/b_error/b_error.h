@@ -42,6 +42,8 @@ namespace OHOS::FileManagement::Backup {
 using ErrCode = int;
 using ErrParam = std::function<std::tuple<uint32_t, std::string>()>;
 
+constexpr int32_t ERROR_OK = 0;
+
 class BError : public std::exception {
 public:
     /**
@@ -162,6 +164,25 @@ public:
         return msg_.c_str();
     }
 
+    int32_t GetExternalErr()
+    {
+        return externalErr_;
+    }
+
+    std::string GetExtraInfo()
+    {
+        return extraInfo_;
+    }
+
+    std::string ToString()
+    {
+        std::string msg = "externalErr=" + std::to_string(externalErr_);
+        if (!extraInfo_.empty()) {
+            msg += ", extraInfo=" + extraInfo_;
+        }
+        return msg;
+    }
+
     /**
      * @brief 归一返回备份恢复错误码
      *
@@ -207,6 +228,12 @@ public:
      * @param functionName 构造错误对象的函数（不要自己填写）
      */
     explicit BError(Codes code = Codes::OK, DEFINE_SOURCE_LOCATION) : code_(code)
+    {
+        msg_ = WrapMessageWithExtraInfos(fileName, lineNo, functionName, code_, {mpErrToMsg_.at(code_)});
+    }
+
+    explicit BError(int32_t externalErr, Codes code, std::string extraInfo = "", DEFINE_SOURCE_LOCATION)
+        : code_(code), externalErr_(externalErr), extraInfo_(extraInfo)
     {
         msg_ = WrapMessageWithExtraInfos(fileName, lineNo, functionName, code_, {mpErrToMsg_.at(code_)});
     }
@@ -377,6 +404,8 @@ private:
 private:
     Codes code_ {Codes::OK};
     std::string msg_;
+    int32_t externalErr_ = ERROR_OK;
+    std::string extraInfo_;
 
 private:
     /**

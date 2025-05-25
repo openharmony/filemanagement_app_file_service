@@ -73,15 +73,15 @@ void FileSizeStat::UpdateStat(uint64_t fileSize)
     }
 }
 
-void RadarAppStatistic::ReportBackup(const std::string &func, int32_t errorCode)
+void RadarAppStatistic::ReportBackup(const std::string &func, int32_t errorCode, std::string errMsg)
 {
     HiSysEventWrite(
         DOMAIN,
         BACKUP_RESTORE_APP_STATISTIC,
-        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
         ORG_PKG, DOMAIN_NAME,
         FUNC, func,
-        UNIQUE_ID, uniqId_,
+        CONCURRENT_ID, uniqId_,
         BIZ_SCENE, static_cast<int32_t>(BizScene::BACKUP),
         APP_CALLER, appCaller_,
         FILE_SIZE_DIST, fileSizeDist_.ToJsonString(),
@@ -103,23 +103,27 @@ void RadarAppStatistic::ReportBackup(const std::string &func, int32_t errorCode)
         SCAN_FILE_SPEND, scanFileSpend_.GetSpan(),
         SEND_RATE_ZERO_SPAN, sendRateZeroSpendUS_ / MS_TO_US,
         DO_BACKUP_SPEND, doBackupSpend_.GetSpan(),
-        ERROR_CODE, errorCode);
+        ERROR_MSG, errMsg,
+        ERROR_CODE, errorCode,
+        BIZ_STAGE, DEFAULT_STAGE,
+        STAGE_RES, errorCode == 0 ? STAGE_RES_SUCCESS : STAGE_RES_FAIL);
 }
 
 void RadarAppStatistic::ReportBackup(const std::string &func, BError errCode)
 {
-    ReportBackup(func, RadarErrorCode(MODULE_BACKUP, errCode).GenCode());
+    RadarError err(MODULE_BACKUP, errCode);
+    ReportBackup(func, err.GenCode(), err.errMsg_);
 }
 
-void RadarAppStatistic::ReportRestore(const std::string &func, int32_t errorCode)
+void RadarAppStatistic::ReportRestore(const std::string &func, int32_t errorCode, std::string errMsg)
 {
     HiSysEventWrite(
         DOMAIN,
         BACKUP_RESTORE_APP_STATISTIC,
-        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
         ORG_PKG, DOMAIN_NAME,
         FUNC, func,
-        UNIQUE_ID, uniqId_,
+        CONCURRENT_ID, uniqId_,
         BIZ_SCENE, static_cast<int32_t>(BizScene::RESTORE),
         APP_CALLER, appCaller_,
         BIG_FILE_COUNT, bigFileCount_,
@@ -133,12 +137,16 @@ void RadarAppStatistic::ReportRestore(const std::string &func, int32_t errorCode
         UNTAR_SPEND, untarSpend_,
         BIG_FILE_SPEND, bigFileSpend_,
         DO_RESTORE_SPEND, doRestoreSpend_,
-        ERROR_CODE, errorCode);
+        ERROR_MSG, errMsg,
+        ERROR_CODE, errorCode,
+        BIZ_STAGE, DEFAULT_STAGE,
+        STAGE_RES, errorCode == 0 ? STAGE_RES_SUCCESS : STAGE_RES_FAIL);
 }
 
 void RadarAppStatistic::ReportRestore(const std::string &func, BError errCode)
 {
-    ReportRestore(func, RadarErrorCode(MODULE_RESTORE, errCode).GenCode());
+    RadarError err(MODULE_RESTORE, errCode);
+    ReportRestore(func, err.GenCode(), err.errMsg_);
 }
 
 void RadarAppStatistic::UpdateSendRateZeroSpend()
@@ -151,6 +159,42 @@ void RadarAppStatistic::UpdateFileDist(std::string fileExtension, uint64_t fileS
 {
     fileSizeDist_.UpdateStat(fileSize);
     fileTypeDist_.UpdateStat(fileExtension, fileSize);
+}
+
+void RadarAppStatistic::ReportError(const std::string &func, RadarError error)
+{
+    HiSysEventWrite(
+        DOMAIN,
+        BACKUP_RESTORE_APP_STATISTIC,
+        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+        ORG_PKG, DOMAIN_NAME,
+        FUNC, func,
+        CONCURRENT_ID, uniqId_,
+        BIZ_SCENE, static_cast<int32_t>(bizScene_),
+        APP_CALLER, appCaller_,
+        ERROR_MSG, error.errMsg_,
+        ERROR_CODE, error.GenCode(),
+        BIZ_STAGE, DEFAULT_STAGE,
+        STAGE_RES, error.error_ == 0 ? STAGE_RES_SUCCESS : STAGE_RES_FAIL);
+}
+
+void RadarAppStatistic::ReportSA(const std::string &func, RadarError error)
+{
+    HiSysEventWrite(
+        DOMAIN,
+        BACKUP_RESTORE_APP_STATISTIC,
+        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+        ORG_PKG, DOMAIN_NAME,
+        FUNC, func,
+        CONCURRENT_ID, uniqId_,
+        BIZ_SCENE, static_cast<int32_t>(bizScene_),
+        APP_CALLER, appCaller_,
+        DO_BACKUP_SPEND, doBackupSpend_.GetSpan(),
+        DO_RESTORE_SPEND, doRestoreSpend_,
+        ERROR_MSG, error.errMsg_,
+        ERROR_CODE, error.GenCode(),
+        BIZ_STAGE, DEFAULT_STAGE,
+        STAGE_RES, error.error_ == 0 ? STAGE_RES_SUCCESS : STAGE_RES_FAIL);
 }
 
 } // namespace OHOS::FileManagement::Backup

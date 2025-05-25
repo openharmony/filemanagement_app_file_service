@@ -69,4 +69,5 @@ interface OHOS.FileManagement.Backup.IService{
     [ipccode 37] void ServiceResultReport([in]String restoreRetInfo, [in] BackupRestoreScenario sennario,
         [in] int serviceResultReportErrCode);
     [ipccode 38] void GetBackupDataSize([in] boolean isPreciseScan,[in] BIncrementalData[] bundleNameList);
+    [ipccode 40] void CleanBundleTempDir([in] String bundleName);
  }

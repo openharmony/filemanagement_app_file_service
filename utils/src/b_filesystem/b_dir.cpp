@@ -35,6 +35,7 @@
 #include "errors.h"
 #include "filemgmt_libhilog.h"
 #include "sandbox_helper.h"
+#include "b_utils/scan_file_singleton.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -93,6 +94,12 @@ static uint32_t CheckOverLongPath(const string &path)
     return len;
 }
 
+static void InsertSmallFiles(std::map<string, size_t> &smallFiles, std::string fileName, size_t size)
+{
+    ScanFileSingleton::GetInstance().AddSmallFile(fileName, size);
+    smallFiles.emplace(make_pair(fileName, size));
+}
+
 static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFilesDetail(const string &path,
                                                                                        bool recursion,
                                                                                        off_t size = -1)
@@ -105,7 +112,7 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFiles
         if (path.at(path.size()-1) != BConstants::FILE_SEPARATOR_CHAR) {
             newPath += BConstants::FILE_SEPARATOR_CHAR;
         }
-        smallFiles.emplace(make_pair(newPath, 0));
+        InsertSmallFiles(smallFiles, newPath, 0);
         return {ERR_OK, files, smallFiles};
     }
 
@@ -126,10 +133,10 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFiles
                 continue;
             }
             if (sta.st_size <= size) {
-                smallFiles.emplace(make_pair(fileName, sta.st_size));
+                InsertSmallFiles(smallFiles, fileName, sta.st_size);
                 continue;
             }
-
+            ScanFileSingleton::GetInstance().AddBigFile(fileName, sta);
             files.try_emplace(fileName, sta);
             continue;
         } else if (ptr->d_type != DT_DIR) {
@@ -299,30 +306,10 @@ bool BDir::CheckAndCreateDirectory(const string &filePath)
     return true;
 }
 
-static void UpdateFileStat(std::shared_ptr<RadarAppStatistic> appStatistic, std::string filePath, uint64_t fileSize,
-    uint32_t& maxDirDepth)
-{
-    appStatistic->UpdateFileDist(ExtractFileExt(filePath), fileSize);
-    uint32_t dirDepth = 0;
-    const char* pstr = filePath.c_str();
-    char pre = '-';
-    uint32_t pathLen = filePath.size();
-    for (int i = 0; i < pathLen; i++) {
-        if (pstr[i] == '/' && pre != '/') {
-            dirDepth++;
-        }
-        pre = pstr[i];
-    }
-    if (dirDepth > maxDirDepth) {
-        maxDirDepth = dirDepth;
-    }
-}
-
 tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(const vector<string> &includes,
-    const vector<string> &excludes, std::shared_ptr<RadarAppStatistic> appStatistic)
+    const vector<string> &excludes)
 {
     set<string> inc = ExpandPathWildcard(includes, true);
-
     map<string, struct stat> incFiles;
     map<string, size_t> incSmallFiles;
     for (const auto &item : inc) {
@@ -334,40 +321,26 @@ tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(
             incSmallFiles.merge(move(smallFiles));
         }
     }
-    vector<string> endExcludes = excludes;
-    PreDealExcludes(endExcludes);
     if (excludes.empty()) {
         return {ERR_OK, move(incFiles), move(incSmallFiles)};
     }
-    auto isMatch = [](const vector<string> &s, const string &str) -> bool {
-        if (str.empty()) {
-            return false;
-        }
-        for (const string &item : s) {
-            if (fnmatch(item.data(), str.data(), FNM_LEADING_DIR) == 0) {
-                return true;
-            }
-        }
-        return false;
-    };
+
+    vector<string> endExcludes = excludes;
+    PreDealExcludes(endExcludes);
 
     map<string, size_t> resSmallFiles;
-    uint32_t maxDirDepth = BConstants::APP_BASE_PATH_DEPTH;
     for (const auto &item : incSmallFiles) {
-        if (!isMatch(endExcludes, item.first)) {
+        if (!IsDirsMatch(endExcludes, item.first)) {
             resSmallFiles.emplace(item);
-            UpdateFileStat(appStatistic, item.first, item.second, maxDirDepth);
         }
     }
 
     map<string, struct stat> bigFiles;
     for (const auto &item : incFiles) {
-        if (!isMatch(endExcludes, item.first)) {
+        if (!IsDirsMatch(endExcludes, item.first)) {
             bigFiles.emplace(item);
-            UpdateFileStat(appStatistic, item.first, item.second.st_size, maxDirDepth);
         }
     }
-    appStatistic->dirDepth_ = maxDirDepth - BConstants::APP_BASE_PATH_DEPTH;
     HILOGW("total number of big files is %{public}zu", bigFiles.size());
     HILOGW("total number of small files is %{public}zu", resSmallFiles.size());
     return {ERR_OK, move(bigFiles), move(resSmallFiles)};
@@ -581,5 +554,18 @@ bool BDir::CheckAndRmSoftLink(const EndFileInfo &filePaths)
         }
     }
     return isSoftLink;
+}
+
+bool BDir::IsDirsMatch(const vector<string> &excludePaths, const string &path)
+{
+    if (path.empty()) {
+        return false;
+    }
+    for (const string &item : excludePaths) {
+        if (fnmatch(item.data(), path.data(), FNM_LEADING_DIR) == 0) {
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace OHOS::FileManagement::Backup

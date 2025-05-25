@@ -219,11 +219,12 @@ bool BFile::EndsWith(const string &str, const string &suffix)
     return (str.rfind(suffix) == (str.length() - suffix.length()));
 }
 
-uint64_t BFile::GetFileSize(const string &path)
+uint64_t BFile::GetFileSize(const string &path, int32_t &error)
 {
     struct stat sta = {};
+    error = errno;
     if (stat(path.data(), &sta) == -1) {
-        HILOGE("get file size fail error:%{public}s", strerror(errno));
+        HILOGE("get file size fail error:%{public}s", strerror(error));
         return 0;
     }
     return sta.st_size;

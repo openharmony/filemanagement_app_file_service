@@ -390,6 +390,77 @@ ohos_unittest("b_json_clear_data_test") {
   use_exceptions = true
 }
 
+ohos_unittest("b_utils_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "b_utils\scan_file_singleton_test.cpp"
+  ]
+
+  include_dirs = [ "${path_backup}/utils/src/b_utils" ]
+
+  deps = [
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "jsoncpp:jsoncpp",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("b_radar_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/tests/unittests/backup_utils/b_radar/b_radar_test.cpp",
+  ]
+  sources += backup_mock_parameter_src
+
+  include_dirs = [
+    "${path_backup}/utils",
+    "${path_backup}/tests/mock/b_radar/include",
+  ]
+  include_dirs += backup_mock_parameter_include_dirs
+
+  deps = [
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+  ]
+
+  external_deps = [
+    "cJSON:cjson",
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "jsoncpp:jsoncpp",
+  ]
+
+  defines = [
+    "LOG_TAG=\"app_file_service\"",
+    "LOG_DOMAIN=0xD004303",
+    "private = public",
+    "protected = public",
+  ]
+
+  use_exceptions = true
+}
+
 group("backup_utils_test") {
   testonly = true
 
@@ -403,7 +474,9 @@ group("backup_utils_test") {
     ":b_jsonutil_other_test",
     ":b_jsonutil_test",
     ":b_process_test",
+    ":b_radar_test",
     ":b_tarball_cmdline_test",
     ":b_tarball_factory_test",
+    ":b_utils_test",
   ]
 }

@@ -70,6 +70,7 @@ public:
     MOCK_METHOD4(AppendBundlesRestoreSessionData,
                  ErrCode(int32_t, const std::vector<std::string> &, int32_t, int32_t));
     MOCK_METHOD2(GetBackupDataSize, ErrCode(bool isPreciseScan, const std::vector<BIncrementalData> &bundleNameList));
+    MOCK_METHOD1(CleanBundleTempDir, ErrCode(const std::string &bundleName));
 };
 } // End of namespace OHOS::FileManagement::Backup
 #endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H

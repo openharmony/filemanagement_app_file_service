@@ -63,6 +63,8 @@ public:
     void AsyncTaskIncrementalRestoreForUpgrade(void);
     ErrCode User0OnBackup() override;
     ErrCode UpdateDfxInfo(int64_t uniqId, uint32_t extConnectSpend, const std::string &bundleName) override;
+    ErrCode CleanBundleTempDir() override;
+
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
         const std::string &bundleName) : extension_(extension)
@@ -74,6 +76,7 @@ public:
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         onProcessTaskPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         reportOnProcessRetPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        doBackupPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         SetStagingPathProperties();
         appStatistic_ = std::make_shared<RadarAppStatistic>();
     }
@@ -83,6 +86,7 @@ public:
         threadPool_.Stop();
         onProcessTaskPool_.Stop();
         reportOnProcessRetPool_.Stop();
+        doBackupPool_.Stop();
         if (callJsOnProcessThread_.joinable()) {
             callJsOnProcessThread_.join();
         }
@@ -99,11 +103,21 @@ private:
      * @brief backup
      *
      * @param bigFileInfo bigfiles to be backup
+     * @param bigFileInfoBackuped bigfiles have been backuped
      * @param smallFiles smallfiles to be backup
      * @param includesNum sizeof includes
      * @param excludesNum sizeof excludes
      */
-    int DoBackup(TarMap &bigFileInfo, map<string, size_t> &smallFiles, uint32_t includesNum, uint32_t excludesNum);
+    int DoBackup(TarMap &bigFileInfo, TarMap &bigFileInfoBackuped, map<string, size_t> &smallFiles,
+                 uint32_t includesNum, uint32_t excludesNum);
+
+    /**
+     * @brief backup
+     *
+     * @param bigFileInfo bigfiles to be backup
+     * @param backupedFileSize backuped file size
+     */
+    int DoBackupBigFiles(TarMap &bigFileInfo, uint32_t backupedFileSize);
 
     /**
      * @brief restore
@@ -120,6 +134,9 @@ private:
 
     /** @brief clear backup restore data */
     void DoClear();
+
+    /** @brief inner of doing clear backup restore data */
+    void DoClearInner();
 
     /**
      * @brief extension backup restore is done
@@ -210,7 +227,7 @@ private:
     int DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd manifestFd);
     ErrCode IncrementalBigFileReady(TarMap &pkgInfo, const vector<struct ReportFileInfo> &bigInfos,
         sptr<IService> proxy);
-    ErrCode BigFileReady(TarMap &bigFileInfo, sptr<IService> proxy);
+    ErrCode BigFileReady(TarMap &bigFileInfo, sptr<IService> proxy, int backupedFileSize);
     void WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
     void RefreshTimeInfo(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
     void IncrementalPacket(const vector<struct ReportFileInfo> &infos, TarMap &tar, sptr<IService> proxy);
@@ -362,9 +379,18 @@ private:
     void OnRestoreExFinish();
     void DoBackupStart();
     void DoBackupEnd();
+    void CalculateDataSizeTask(const string &config);
+    void DoBackUpTask(const string &config);
+    TarMap convertFileToBigFiles(std::map<std::string, struct stat> files);
+    void PreDealExcludes(std::vector<std::string> &excludes);
+    template <typename T>
+    map<string, T> MatchFiles(map<string, T> files, vector<string> endExcludes);
+    void UpdateTarStat(uint64_t tarFileSize);
 private:
     pair<TarMap, map<string, size_t>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes);
-    void ReportAppStatistic(ErrCode errCode);
+    TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files);
+    void UpdateFileStat(std::string filePath, uint64_t fileSize);
+    void ReportAppStatistic(const std::string &func, ErrCode errCode);
     ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy);
 
     std::shared_mutex lock_;
@@ -399,6 +425,7 @@ private:
     std::atomic<bool> isFirstCallOnProcess_ {false};
     std::atomic<bool> isExecAppDone_ {false};
     OHOS::ThreadPool reportOnProcessRetPool_;
+    OHOS::ThreadPool doBackupPool_;
 
     std::mutex reportHashLock_;
     std::map<std::string, std::string> reportHashSrcPathMap_;

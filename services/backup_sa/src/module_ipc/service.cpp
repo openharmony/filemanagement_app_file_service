@@ -81,7 +81,6 @@ constexpr int32_t MS_1000 = 1000;
 const static string BROADCAST_TYPE = "broadcast";
 const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 const static string UNICAST_TYPE = "unicast";
-const int32_t CONNECT_WAIT_TIME_S = 15;
 const std::string BACKUPSERVICE_WORK_STATUS_KEY = "persist.backupservice.workstatus";
 const std::string BACKUPSERVICE_WORK_STATUS_ON = "true";
 const std::string BACKUPSERVICE_WORK_STATUS_OFF = "false";
@@ -145,7 +144,7 @@ void Service::BundleEndRadarReport(const std::string &bundleName, ErrCode errCod
     const IServiceReverseType::Scenario scenario)
 {
     if (errCode == ERR_OK) {
-        successBundlesNum_++;
+        successBundlesNum_.fetch_add(1);
         return;
     }
     if (!IsReportBundleExecFail(bundleName)) {
@@ -580,14 +579,13 @@ void Service::OnBundleStarted(BError error, sptr<SvcSessionManager> session, con
     BundleBeginRadarReport(bundleName, error.GetCode(), scenario);
 }
 
-static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
-                                                                 sptr<SvcSessionManager> session,
-                                                                 const vector<BundleName> &bundleNames,
-                                                                 std::string &oldBackupVersion)
+vector<BJsonEntityCaps::BundleInfo> Service::GetRestoreBundleNames(UniqueFd fd, sptr<SvcSessionManager> session,
+    const vector<BundleName> &bundleNames, std::string &oldBackupVersion)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    // BundleMgrAdapter::GetBundleInfos可能耗时
+    GetBundleInfoStart();
     auto restoreInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session->GetSessionUserId());
+    GetBundleInfoEnd();
     BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
     oldBackupVersion = cache.GetBackupVersion();
@@ -598,19 +596,16 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
     if (!bundleInfos.size()) {
         throw BError(BError::Codes::SA_INVAL_ARG, "Json entity caps is empty");
     }
-    HILOGI("restoreInfos size is:%{public}zu", restoreInfos.size());
     vector<BJsonEntityCaps::BundleInfo> restoreBundleInfos {};
     for (const auto &restoreInfo : restoreInfos) {
         if (SAUtils::IsSABundleName(restoreInfo.name)) {
-            BJsonEntityCaps::BundleInfo info = {.name = restoreInfo.name,
-                                                .appIndex = restoreInfo.appIndex,
-                                                .versionCode = restoreInfo.versionCode,
-                                                .versionName = restoreInfo.versionName,
-                                                .spaceOccupied = restoreInfo.spaceOccupied,
-                                                .allToBackup = restoreInfo.allToBackup,
-                                                .fullBackupOnly = restoreInfo.fullBackupOnly,
-                                                .extensionName = restoreInfo.extensionName,
-                                                .restoreDeps = restoreInfo.restoreDeps};
+            BJsonEntityCaps::BundleInfo info = {
+                .name = restoreInfo.name, .appIndex = restoreInfo.appIndex,
+                .versionCode = restoreInfo.versionCode, .versionName = restoreInfo.versionName,
+                .spaceOccupied = restoreInfo.spaceOccupied, .allToBackup = restoreInfo.allToBackup,
+                .fullBackupOnly = restoreInfo.fullBackupOnly, .extensionName = restoreInfo.extensionName,
+                .restoreDeps = restoreInfo.restoreDeps
+            };
             restoreBundleInfos.emplace_back(info);
             continue;
         }
@@ -621,15 +616,13 @@ static vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd,
             HILOGE("Bundle not need restore, bundleName is %{public}s.", restoreInfo.name.c_str());
             continue;
         }
-        BJsonEntityCaps::BundleInfo info = {.name = (*it).name,
-                                            .appIndex = (*it).appIndex,
-                                            .versionCode = (*it).versionCode,
-                                            .versionName = (*it).versionName,
-                                            .spaceOccupied = (*it).spaceOccupied,
-                                            .allToBackup = (*it).allToBackup,
-                                            .fullBackupOnly = (*it).fullBackupOnly,
-                                            .extensionName = restoreInfo.extensionName,
-                                            .restoreDeps = restoreInfo.restoreDeps};
+        BJsonEntityCaps::BundleInfo info = {
+            .name = (*it).name, .appIndex = (*it).appIndex,
+            .versionCode = (*it).versionCode, .versionName = (*it).versionName,
+            .spaceOccupied = (*it).spaceOccupied, .allToBackup = (*it).allToBackup,
+            .fullBackupOnly = (*it).fullBackupOnly, .extensionName = restoreInfo.extensionName,
+            .restoreDeps = restoreInfo.restoreDeps
+        };
         restoreBundleInfos.emplace_back(info);
     }
     HILOGI("restoreBundleInfos size is:%{public}zu", restoreInfos.size());
@@ -648,6 +641,8 @@ void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
                               [&bundleName](const auto &obj) { return obj == bundleName; });
             if (it == restoreBundleNames.end()) {
                 HILOGE("AppendBundles failed, bundleName = %{public}s.", bundleName.c_str());
+                AppStatReportErr(bundleName, "HandleExceptionOnAppendBundles",
+                    RadarError(MODULE_BMS, BError(BError::Codes::SA_BUNDLE_INFO_EMPTY)));
                 OnBundleStarted(BError(BError::Codes::SA_BUNDLE_INFO_EMPTY), session, bundleName);
             }
         }
@@ -672,9 +667,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    if (totalStatistic_ != nullptr) {
-        totalStatistic_->totalSpendTime_.Start();
-    }
+    TotalStart();
     HILOGI("Begin");
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
@@ -740,6 +733,8 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
         if ((!restoreInfo.allToBackup && !SpecialVersion(restoreInfo.versionName)) ||
             (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) {
+            AppStatReportErr(restoreInfo.name, "SetCurrentSessProperties",
+                RadarError(MODULE_BMS, BError(BError::Codes::SA_FORBID_BACKUP_RESTORE)));
             OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, bundleNameIndexInfo);
             session_->RemoveExtInfo(bundleNameIndexInfo);
             continue;
@@ -773,9 +768,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    if (totalStatistic_ != nullptr) {
-        totalStatistic_->totalSpendTime_.Start();
-    }
+    TotalStart();
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("AppendBundles restore session error, session is empty");
@@ -834,12 +827,14 @@ void Service::SetCurrentSessProperties(
         });
         if (it == restoreBundleNames.end()) {
             HILOGE("Can not find current bundle, bundleName:%{public}s, appIndex:%{public}d", restoreInfo.name.c_str(),
-                   restoreInfo.appIndex);
+                restoreInfo.appIndex);
             continue;
         }
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
         if ((!restoreInfo.allToBackup && !SpecialVersion(restoreInfo.versionName)) ||
             (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) {
+            AppStatReportErr(restoreInfo.name, "SetCurrentSessProperties",
+                RadarError(MODULE_BMS, BError(BError::Codes::SA_FORBID_BACKUP_RESTORE)));
             OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, bundleNameIndexInfo);
             session_->RemoveExtInfo(bundleNameIndexInfo);
             continue;
@@ -855,15 +850,11 @@ void Service::SetCurrentSessProperties(
         }
         BJsonUtil::BundleDetailInfo broadCastInfo;
         BJsonUtil::BundleDetailInfo uniCastInfo;
-        bool broadCastRet =
-            BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, BROADCAST_TYPE, broadCastInfo);
-        if (broadCastRet) {
+        if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, BROADCAST_TYPE, broadCastInfo)) {
             bool notifyRet = DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(broadCastInfo);
             HILOGI("Publish event end, notify result is:%{public}d", notifyRet);
         }
-        bool uniCastRet =
-            BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo);
-        if (uniCastRet) {
+        if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {
             HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
             session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }
@@ -876,9 +867,7 @@ void Service::SetCurrentSessProperties(
 ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    if (totalStatistic_ != nullptr) {
-        totalStatistic_->totalSpendTime_.Start();
-    }
+    TotalStart();
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("AppendBundles backup session error, session is empty");
@@ -893,8 +882,10 @@ ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleName
             return ret;
         }
         auto bundleDetails = MakeDetailList(bundleNames);
+        GetBundleInfoStart();
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundleDetails,
             session_->GetSessionUserId());
+        GetBundleInfoEnd();
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false, bundleNames);
         AppendBundles(supportBackupNames);
         SetCurrentBackupSessProperties(supportBackupNames, session_->GetSessionUserId(), backupInfos, false);
@@ -918,9 +909,7 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
                                                    const vector<std::string> &bundleInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    if (totalStatistic_ != nullptr) {
-        totalStatistic_->totalSpendTime_.Start();
-    }
+    TotalStart();
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("AppendBundles backup session with infos error, session is empty");
@@ -940,8 +929,10 @@ ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bun
             BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
             session_->GetSessionUserId(), isClearDataFlags);
         auto bundleDetails = MakeDetailList(bundleNames);
+        GetBundleInfoStart();
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundleDetails,
             session_->GetSessionUserId());
+        GetBundleInfoEnd();
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false, bundleNames);
         AppendBundles(supportBackupNames);
         HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
@@ -987,6 +978,7 @@ ErrCode Service::ServiceResultReport(const std::string& restoreRetInfo, BackupRe
 {
     string callerName;
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    UpdateHandleCnt(errCode);
     try {
         ErrCode ret = VerifyCallerAndGetCallerName(callerName);
         if (ret != ERR_OK) {
@@ -1023,6 +1015,7 @@ ErrCode Service::ServiceResultReport(const std::string& restoreRetInfo, BackupRe
 ErrCode Service::SAResultReport(const std::string bundleName, const std::string restoreRetInfo,
                                 const ErrCode errCode, const BackupRestoreScenario sennario)
 {
+    UpdateHandleCnt(errCode);
     SADone(errCode, bundleName);
     if (sennario == BackupRestoreScenario::FULL_RESTORE) {
         session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, bundleName, ERR_OK);
@@ -1471,7 +1464,7 @@ void Service::ClearDisposalOnSaStart()
     if (!bundleNameList.empty()) {
         for (vector<string>::iterator it = bundleNameList.begin(); it != bundleNameList.end(); ++it) {
             string bundleName = *it;
-            HILOGE("dispose has residual, clear now, bundelName =%{public}s", bundleName.c_str());
+            HILOGE("dispose has residual, clear now, bundleName =%{public}s", bundleName.c_str());
             TryToClearDispose(bundleName);
         }
     }
@@ -1824,6 +1817,11 @@ AAFwk::Want Service::CreateConnectWant(const BundleName &bundleName)
 ErrCode Service::BackupSA(std::string bundleName)
 {
     HILOGI("BackupSA begin %{public}s", bundleName.c_str());
+    if (totalStatistic_ != nullptr) {
+        saStatistic_ = std::make_shared<RadarAppStatistic>(bundleName, totalStatistic_->GetUniqId(),
+            totalStatistic_->GetBizScene());
+        saStatistic_->doBackupSpend_.Start();
+    }
     IServiceReverseType::Scenario scenario = session_->GetScenario();
     auto backUpConnection = session_->GetSAExtConnection(bundleName);
     std::shared_ptr<SABackupConnection> saConnection = backUpConnection.lock();
@@ -1848,11 +1846,12 @@ ErrCode Service::BackupSA(std::string bundleName)
 }
 
 void Service::OnSABackup(const std::string &bundleName, const int &fd, const std::string &result,
-                         const ErrCode &errCode)
+    const ErrCode &errCode)
 {
+    SaStatReport(bundleName, "OnSABackup", RadarError(MODULE_BACKUP, errCode));
     auto task = [bundleName, fd, result, errCode, this]() {
         HILOGI("OnSABackup bundleName: %{public}s, fd: %{public}d, result: %{public}s, err: %{public}d",
-               bundleName.c_str(), fd, result.c_str(), errCode);
+            bundleName.c_str(), fd, result.c_str(), errCode);
         BackupRestoreScenario scenario = BackupRestoreScenario::FULL_BACKUP;
         if (session_->GetIsIncrementalBackup()) {
             scenario = BackupRestoreScenario::INCREMENTAL_BACKUP;
@@ -1875,6 +1874,7 @@ void Service::OnSABackup(const std::string &bundleName, const int &fd, const std
 
 void Service::OnSARestore(const std::string &bundleName, const std::string &result, const ErrCode &errCode)
 {
+    SaStatReport(bundleName, "OnSARestore", RadarError(MODULE_BACKUP, errCode));
     auto task = [bundleName, result, errCode, this]() {
         HILOGI("OnSARestore bundleName: %{public}s, result: %{public}s, err: %{public}d", bundleName.c_str(),
                result.c_str(), errCode);

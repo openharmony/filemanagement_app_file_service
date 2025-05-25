@@ -25,6 +25,7 @@
 #include "b_json/b_json_entity_caps.h"
 #include "b_json/b_json_service_disposal_config.h"
 #include "b_radar/radar_total_statistic.h"
+#include "b_radar/radar_app_statistic.h"
 #include "iservice_reverse.h"
 #include "iremote_stub.h"
 #include "module_sched/sched_scheduler.h"
@@ -45,6 +46,7 @@ struct BundleTaskInfo {
     ErrCode errCode;
 };
 const int INVALID_FD = -1;
+constexpr const int32_t CONNECT_WAIT_TIME_S = 15;
 
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(Service);
@@ -110,6 +112,7 @@ public:
     void StartGetFdTask(std::string bundleName, wptr<Service> ptr);
 
     ErrCode GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList) override;
+    ErrCode CleanBundleTempDir(const std::string &bundleName) override;
 
     // 以下都是非IPC接口
 public:
@@ -566,6 +569,15 @@ private:
      */
     void SetOccupySession(bool isOccupyingSession);
 
+    /**
+     * @brief 尝试拉起某个应用的extension
+     *
+     * @param bundleName 目标应用
+     * @param extConnection 框架和应用的连接
+     *
+     */
+    ErrCode TryToConnectExt(const std::string& bundleName, sptr<SvcBackupConnection>& extConnection);
+
     void ReportOnExtConnectFailed(const IServiceReverseType::Scenario scenario,
         const std::string &bundleName, const ErrCode ret);
 
@@ -687,6 +699,42 @@ private:
                                                   const std::vector<std::string> &infos);
 
     ErrCode HelpToAppIncrementalFileReady(const string &bundleName, const string &fileName, sptr<IExtension> proxy);
+    vector<BJsonEntityCaps::BundleInfo> GetRestoreBundleNames(UniqueFd fd, sptr<SvcSessionManager> session,
+        const vector<BundleName> &bundleNames, std::string &oldBackupVersion);
+    void AppStatReportErr(const string &bundleName, const string &func, RadarError err);
+    void SaStatReport(const string &bundleName, const string &func, RadarError err);
+    void TotalStart()
+    {
+        if (totalStatistic_ != nullptr) {
+            totalStatistic_->totalSpendTime_.Start();
+        }
+    }
+
+    void GetBundleInfoStart()
+    {
+        if (totalStatistic_ != nullptr) {
+            totalStatistic_->getBundleInfoSpend_.Start();
+        }
+    }
+
+    void GetBundleInfoEnd()
+    {
+        if (totalStatistic_ != nullptr) {
+            totalStatistic_->getBundleInfoSpend_.End();
+        }
+    }
+
+    void UpdateHandleCnt(ErrCode errCode)
+    {
+        if (totalStatistic_ != nullptr) {
+            if (errCode == ERR_OK) {
+                totalStatistic_->succBundleCount_.fetch_add(1);
+            } else {
+                totalStatistic_->failBundleCount_.fetch_add(1);
+            }
+        }
+    }
+
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -722,6 +770,7 @@ private:
     std::atomic<bool> isScannedEnd_ {false};
     std::atomic<bool> onScanning_ {false};
     std::shared_ptr<RadarTotalStatistic> totalStatistic_ = nullptr;
+    std::shared_ptr<RadarAppStatistic> saStatistic_ = nullptr;
 public:
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
     std::map<BundleName, BundleTaskInfo> failedBundles_;

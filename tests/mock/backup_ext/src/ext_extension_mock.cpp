@@ -217,4 +217,9 @@ void BackupExtExtension::WaitToSendFd(std::chrono::system_clock::time_point &sta
 void BackupExtExtension::RefreshTimeInfo(std::chrono::system_clock::time_point &startTime, int &fdSendNum)
 {
 }
+
+ErrCode BackupExtExtension::CleanBundleTempDir()
+{
+    return BExtExtension::extExtension->CleanBundleTempDir();
+}
 } // namespace OHOS::FileManagement::Backup

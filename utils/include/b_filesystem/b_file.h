@@ -97,10 +97,11 @@ public:
      * @brief get file size by path
      *
      * @param path file path
+     * @param error 错误码
      * @return 0 if path is invalid
      * @return file size in byte if path is valid
      */
-    static uint64_t GetFileSize(const string &path);
+    static uint64_t GetFileSize(const string &path, int32_t &error);
 private:
 };
 } // namespace OHOS::FileManagement::Backup

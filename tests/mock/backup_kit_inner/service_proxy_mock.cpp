@@ -255,4 +255,9 @@ ErrCode ServiceProxy::GetBackupDataSize(bool isPreciseScan, const vector<BIncrem
 {
     return BError(BError::Codes::OK);
 }
+
+ErrCode ServiceProxy::CleanBundleTempDir(const std::string& bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

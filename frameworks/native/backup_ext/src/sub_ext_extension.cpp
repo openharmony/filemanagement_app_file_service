@@ -19,6 +19,7 @@
 #include <chrono>
 #include <cinttypes>
 #include <fstream>
+#include <fnmatch.h>
 #include <iomanip>
 #include <map>
 #include <regex>
@@ -50,6 +51,7 @@
 #include "b_ohos/startup/backup_para.h"
 #include "b_radar/b_radar.h"
 #include "b_tarball/b_tarball_factory.h"
+#include "b_utils/scan_file_singleton.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
 #include "sandbox_helper.h"
@@ -324,14 +326,14 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
                 ss << R"("spendTime": )"<< spendTime << "ms";
                 AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
                 AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreExCallback",
-                    AppRadar::GetInstance().GetUserId(),
-                    BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+                    AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
             }
         }
         extensionPtr->FinishOnProcessTask();
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
         if (errCode == ERR_OK) {
             if (restoreRetInfo.size()) {
+                extensionPtr->ReportAppStatistic("IncreOnRestoreExCallback", errCode);
                 extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
             }
             return;
@@ -342,6 +344,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
         } else {
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, restoreRetInfo);
+            extensionPtr->ReportAppStatistic("IncreOnRestoreExCallback", errCode);
             extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::INCREMENTAL_RESTORE, errCode);
             extensionPtr->DoClear();
         }
@@ -378,6 +381,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreCall
         } else {
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, errMsg);
+            extensionPtr->ReportAppStatistic("IncreOnRestoreCallback", errCode);
             extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::INCREMENTAL_RESTORE, errCode);
         }
         extensionPtr->DoClear();
@@ -777,7 +781,7 @@ void BackupExtExtension::CloseOnProcessTimeOutTimer()
 void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
 {
     HILOGI("Begin");
-    ReportAppStatistic(errCode);
+    ReportAppStatistic("AppIncrementalDone", errCode);
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to obtain the ServiceClient handle");
@@ -1000,10 +1004,28 @@ int BackupExtExtension::User0DoBackup(const BJsonEntityExtensionConfig &usrConfi
     return ERR_OK;
 }
 
+void BackupExtExtension::UpdateFileStat(std::string filePath, uint64_t fileSize)
+{
+    appStatistic_->UpdateFileDist(ExtractFileExt(filePath), fileSize);
+    uint32_t dirDepth = 0;
+    const char* pstr = filePath.c_str();
+    char pre = '-';
+    uint32_t pathLen = filePath.size();
+    for (uint32_t i = 0; i < pathLen; i++) {
+        if (pstr[i] == '/' && pre != '/') {
+            dirDepth++;
+        }
+        pre = pstr[i];
+    }
+    if (dirDepth > appStatistic_->dirDepth_) {
+        appStatistic_->dirDepth_ = dirDepth;
+    }
+}
+
 /**
  * 获取增量的大文件的信息
  */
-static TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files)
+TarMap BackupExtExtension::GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files)
 {
     auto getStringHash = [](const TarMap &tarMap, const string &str) -> string {
         ostringstream strHex;
@@ -1029,7 +1051,11 @@ static TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files)
             HILOGE("Failed to stat file %{public}s, err = %{public}d", item.filePath.c_str(), errno);
             throw errno;
         }
+        appStatistic_->bigFileSize_ += sta.st_size;
+        UpdateFileStat(item.filePath, sta.st_size);
+        uint64_t hashStart = TimeUtils::GetTimeUS();
         string md5Name = getStringHash(bigFiles, item.filePath);
+        appStatistic_->hashSpendUS_ += TimeUtils::GetSpendUS(hashStart);
         if (!md5Name.empty()) {
             bigFiles.emplace(md5Name, make_tuple(item.filePath, sta, true));
         }
@@ -1044,8 +1070,10 @@ int BackupExtExtension::DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd
     vector<struct ReportFileInfo> allFiles;
     vector<struct ReportFileInfo> smallFiles;
     vector<struct ReportFileInfo> bigFiles;
+    appStatistic_->doBackupSpend_.Start();
     FillFileInfos(move(incrementalFd), move(manifestFd), allFiles, smallFiles, bigFiles);
     auto ret = DoIncrementalBackup(allFiles, smallFiles, bigFiles);
+    appStatistic_->doBackupSpend_.End();
     if (ret == ERR_OK) {
         auto end = std::chrono::system_clock::now();
         auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -1159,6 +1187,12 @@ static string GetIncrmentPartName()
     return to_string(milliseconds.count()) + "_part";
 }
 
+void BackupExtExtension::UpdateTarStat(uint64_t tarFileSize)
+{
+    appStatistic_->tarFileCount_++;
+    appStatistic_->tarFileSize_ += tarFileSize;
+}
+
 void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &infos, TarMap &tar,
     sptr<IService> proxy)
 {
@@ -1173,7 +1207,10 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
     int fdNum = 0;
     string partName = GetIncrmentPartName();
     auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
+    uint64_t tarStart = TimeUtils::GetTimeMS();
     for (const auto &small : infos) {
+        appStatistic_->smallFileSize_ += small.size;
+        UpdateFileStat(small.filePath, small.size);
         totalSize += static_cast<uint64_t>(small.size);
         fileCount += 1;
         packFiles.emplace_back(small.filePath);
@@ -1181,6 +1218,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
         if (totalSize >= BConstants::DEFAULT_SLICE_SIZE || fileCount >= BConstants::MAX_FILE_COUNT) {
             TarMap tarMap {};
             TarFile::GetInstance().Packet(packFiles, partName, path, tarMap, reportCb);
+            UpdateTarStat(TarFile::GetInstance().GetTarFileSize());
             tar.insert(tarMap.begin(), tarMap.end());
             // 执行tar包回传功能
             WaitToSendFd(startTime, fdNum);
@@ -1197,6 +1235,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
         // 打包回传
         TarMap tarMap {};
         TarFile::GetInstance().Packet(packFiles, partName, path, tarMap, reportCb);
+        UpdateTarStat(TarFile::GetInstance().GetTarFileSize());
         IncrementalTarFileReady(tarMap, tarInfos, proxy);
         fdNum = 1;
         WaitToSendFd(startTime, fdNum);
@@ -1205,6 +1244,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
         tarInfos.clear();
         RefreshTimeInfo(startTime, fdNum);
     }
+    appStatistic_->tarSpend_ = TimeUtils::GetSpendMS(tarStart);
 }
 
 int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> &allFiles,
@@ -1466,5 +1506,179 @@ void BackupExtExtension::RmBigFileReportForSpecialCloneCloud(const std::string &
             GetAnonyPath(reportHashFilePath).c_str(), errno);
     }
     reportHashSrcPathMap_.erase(iter);
+}
+
+void BackupExtExtension::CalculateDataSizeTask(const string &config)
+{
+    if (!StopExtTimer()) {
+        throw BError(BError::Codes::EXT_TIMER_ERROR, "Failed to stop extTimer");
+    }
+    int64_t totalSize = 0;
+    TarMap bigFileInfo;
+    map<string, size_t> smallFiles;
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
+    auto cache = cachedEntity.Structuralize();
+    DoBackupStart();
+    auto [err, includeSize, excludeSize] = CalculateDataSize(cache, totalSize, bigFileInfo, smallFiles);
+    ScanFileSingleton::GetInstance().SetIncludeSize(includeSize);
+    ScanFileSingleton::GetInstance().SetExcludeSize(excludeSize);
+    if (err != ERR_OK) {
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to mkdir");
+    }
+    if (!RefreshDataSize(totalSize)) {
+        throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to RefreshDataSize");
+    }
+    bool isFwkStart;
+    StartFwkTimer(isFwkStart);
+    if (!isFwkStart) {
+        HILOGE("Do backup, start fwk timer fail.");
+        throw BError(BError::Codes::EXT_TIMER_ERROR, "Failed to start fwkTimer");
+    }
+}
+
+void BackupExtExtension::DoBackUpTask(const string &config)
+{
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
+    auto cache = cachedEntity.Structuralize();
+    vector<string> excludes = cache.GetExcludes();
+    vector<string> endExcludes = excludes;
+    PreDealExcludes(endExcludes);
+
+    int ret = 0;
+    TarMap fileBackupedInfo;
+    while (!ScanFileSingleton::GetInstance().GetCompeletedFlag()) {
+        ScanFileSingleton::GetInstance().WaitForFiles();
+        std::map<std::string, struct stat> incFiles = ScanFileSingleton::GetInstance().GetAllBigFiles();
+        if (incFiles.empty()) {
+            continue;
+        }
+        map<string, struct stat> bigFiles = MatchFiles(incFiles, endExcludes);
+        TarMap bigFileInfo = convertFileToBigFiles(bigFiles);
+        ret = DoBackupBigFiles(bigFileInfo, fileBackupedInfo.size());
+        fileBackupedInfo.insert(bigFileInfo.begin(), bigFileInfo.end());
+    }
+
+    map<string, size_t> incSmallFiles = ScanFileSingleton::GetInstance().GetAllSmallFiles();
+    map<string, size_t> smallFiles = MatchFiles(incSmallFiles, endExcludes);
+
+    std::map<std::string, struct stat> incFiles = ScanFileSingleton::GetInstance().GetAllBigFiles();
+    map<string, struct stat> bigFiles = MatchFiles(incFiles, endExcludes);
+    TarMap bigFileInfo = convertFileToBigFiles(bigFiles);
+    uint32_t includeSize = ScanFileSingleton::GetInstance().GetIncludeSize();
+    uint32_t excludeSize = ScanFileSingleton::GetInstance().GetExcludeSize();
+
+    ret = DoBackup(bigFileInfo, fileBackupedInfo, smallFiles, includeSize, excludeSize);
+    DoBackupEnd();
+    AppDone(ret);
+    HILOGI("backup app done %{public}d", ret);
+}
+
+template <typename T>
+std::map<string, T> BackupExtExtension::MatchFiles(map<string, T> files, vector<string> endExcludes)
+{
+    auto isMatch = [](const vector<string> &s, const string &str) -> bool {
+        if (str.empty() || s.empty()) {
+            return false;
+        }
+        for (const string &item : s) {
+            if (fnmatch(item.data(), str.data(), FNM_LEADING_DIR) == 0) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    std::map<std::string, T> excludesFiles;
+    for (const auto &item : files) {
+        if (!isMatch(endExcludes, item.first)) {
+            excludesFiles.emplace(item);
+        }
+    }
+    return excludesFiles;
+}
+
+int BackupExtExtension::DoBackupBigFiles(TarMap &bigFileInfo, uint32_t backupedFileSize)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("Start do backup big files, bigFileInfo size: %{public}zu", bigFileInfo.size());
+    if (extension_ == nullptr) {
+        HILOGE("Failed to do backup big files, extension is nullptr.");
+        return EPERM;
+    }
+    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
+        HILOGE("Failed to do backup big files, extension action is not back up.");
+        return EPERM;
+    }
+
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to do backup big files, proxy is nullptr.");
+        return EPERM;
+    }
+
+    auto res = BigFileReady(bigFileInfo, proxy, backupedFileSize);
+    HILOGI("HandleBackup finish, ret = %{public}d", res);
+    return res;
+}
+
+TarMap BackupExtExtension::convertFileToBigFiles(std::map<std::string, struct stat> files)
+{
+    auto getStringHash = [](const TarMap &m, const string &str) -> string {
+        ostringstream strHex;
+        strHex << hex;
+
+        hash<string> strHash;
+        size_t szHash = strHash(str);
+        strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
+        string name = strHex.str();
+        for (int i = 0; m.find(name) != m.end(); ++i, strHex.str("")) {
+            szHash = strHash(str + to_string(i));
+            strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
+            name = strHex.str();
+        }
+        return name;
+    };
+
+    TarMap bigFileInfo;
+    for (const auto& item : files) {
+        string md5Name = getStringHash(bigFileInfo, item.first);
+        if (!md5Name.empty()) {
+            bigFileInfo.emplace(md5Name, make_tuple(item.first, item.second, true));
+        }
+    }
+    return bigFileInfo;
+}
+
+void BackupExtExtension::PreDealExcludes(std::vector<std::string> &excludes)
+{
+    size_t lenEx = excludes.size();
+    int j = 0;
+    for (size_t i = 0; i < lenEx; ++i) {
+        if (!excludes[i].empty()) {
+            if (excludes[i].at(excludes[i].size() - 1) == BConstants::FILE_SEPARATOR_CHAR) {
+                excludes[i] += "*";
+            }
+            if (excludes[i].find(BConstants::FILE_SEPARATOR_CHAR) != string::npos &&
+                excludes[i].at(0) != BConstants::FILE_SEPARATOR_CHAR) {
+                excludes[i] = BConstants::FILE_SEPARATOR_CHAR + excludes[i];
+            }
+            excludes[j++] = excludes[i];
+        }
+    }
+    excludes.resize(j);
+}
+
+ErrCode BackupExtExtension::GetIncrementalBackupFileHandle(UniqueFdGroup& fdGroup)
+{
+    auto [fd, reportFd] = GetIncrementalBackupFileHandle();
+    fdGroup.fd = fd.Release();
+    fdGroup.reportFd = reportFd.Release();
+    return BError(BError::Codes::OK).GetCode();
+}
+
+tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    return {UniqueFd(-1), UniqueFd(-1)};
 }
 } // namespace OHOS::FileManagement::Backup

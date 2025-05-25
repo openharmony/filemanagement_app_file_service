@@ -475,4 +475,38 @@ HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_1200, testing::ext::Tes
     }
     GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_1200";
 }
+
+/**
+ * @tc.number: SUB_backup_b_session_backup_1300
+ * @tc.name: SUB_backup_b_session_backup_1300
+ * @tc.desc: 测试 CleanBundleTempDir 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(BSessionBackupTest, SUB_backup_b_session_backup_1300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionBackupTest-begin SUB_backup_b_session_backup_1300";
+    try {
+        if (backupPtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_backup_1300 backupPtr_ == nullptr";
+            return;
+        }
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        std::string bundleName;
+        SetMockGetInstance(false);
+        auto err = backupPtr_->CleanBundleTempDir(bundleName);
+        EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
+
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        SetMockGetInstance(true);
+        err = backupPtr_->CleanBundleTempDir(bundleName);
+        EXPECT_EQ(err, ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionBackupTest-an exception occurred by CleanBundleTempDir.";
+    }
+    GTEST_LOG_(INFO) << "BSessionBackupTest-end SUB_backup_b_session_backup_1300";
+}
 } // namespace OHOS::FileManagement::Backup

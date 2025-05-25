@@ -209,4 +209,14 @@ ErrCode BIncrementalBackupSession::Cancel(std::string bundleName)
     }
     return result;
 }
+
+ErrCode BIncrementalBackupSession::CleanBundleTempDir(const std::string &bundleName)
+{
+    HILOGI("BIncrementalBackupSession::CleanBundleTempDir");
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+    return proxy->CleanBundleTempDir(bundleName);
+}
 } // namespace OHOS::FileManagement::Backup
