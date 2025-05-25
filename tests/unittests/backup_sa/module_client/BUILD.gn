@@ -30,15 +30,12 @@ ohos_unittest("service_client_test") {
   ]
 
   sources = [
-    "${path_backup}/frameworks/native/backup_kit_inner/src/b_file_info.cpp",
-    "${path_backup}/frameworks/native/backup_kit_inner/src/service_client.cpp",
-    "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
-    "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
     "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
     "service_client_test.cpp",
   ]
 
   deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",
   ]
