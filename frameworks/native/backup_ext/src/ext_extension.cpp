@@ -222,7 +222,7 @@ ErrCode BackupExtExtension::GetFileHandleWithUniqueFd(const std::string &fileNam
                                                       int &fd)
 {
     UniqueFd fileHandleFd(GetFileHandle(fileName, getFileHandleErrCode));
-    fd = fileHandleFd.Release();
+    fd = dup(fileHandleFd.Get());
     return ERR_OK;
 }
 
@@ -388,13 +388,14 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForNorm
     return {errCode, move(fd), move(reportFd)};
 }
 
-ErrCode BackupExtExtension::GetIncrementalFileHandle(const std::string &fileName, UniqueFdGroup &fdGroup)
+ErrCode BackupExtExtension::GetIncrementalFileHandle(const std::string &fileName,
+                                                     int &fd, int &reportFd, int &errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    auto [errCode, fd, reportFd] = GetIncrementalFileHandle(fileName);
-    fdGroup.errCode = errCode;
-    fdGroup.fd = fd.Release();
-    fdGroup.reportFd = reportFd.Release();
+    auto [errCode, fdval, reportFdVal] = GetIncrementalFileHandle(fileName);
+    errCode = errCode;
+    fd = dup(fdval.Get());
+    reportFd = dup(reportFdVal.Get());
     return ERR_OK;
 }
 
@@ -532,6 +533,7 @@ ErrCode BackupExtExtension::BigFileReady(TarMap &bigFileInfo, sptr<IService> pro
         } else {
             HILOGW("Current file execute app file ready interface failed, ret is:%{public}d", ret);
         }
+        close(fdval);
         fdNum++;
         RefreshTimeInfo(startTime, fdNum);
     }
@@ -713,6 +715,7 @@ static ErrCode TarFileReady(const TarMap &tarFileInfo, sptr<IService> proxy)
     } else {
         HILOGE("TarFileReady AppFileReady fail to be invoked for %{public}s: ret = %{public}d", tarName.c_str(), ret);
     }
+    close(fdval);
     return ret;
 }
 
@@ -2081,6 +2084,20 @@ ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
     return ERR_OK;
 }
 
+ErrCode BackupExtExtension::GetIncrementalBackupFileHandle(int &fd, int &reportFd)
+{
+    auto [fd, reportFd] = GetIncrementalBackupFileHandle();
+    fd = dup(fd.Get());
+    reportFd = dup(reportFd.Get());
+    return BError(BError::Codes::OK).GetCode();
+}
+
+tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    return {UniqueFd(-1), UniqueFd(-1)};
+}
+
 static void WriteFile(const string &filename, const vector<struct ReportFileInfo> &srcFiles)
 {
     fstream f;
@@ -2215,6 +2232,8 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
     } else {
         HILOGI("successfully but the IncrementalAllFileReady interface fails to be invoked: %{public}d", ret);
     }
+    close(fdval);
+    close(manifestFdval);
     return ret;
 }
 

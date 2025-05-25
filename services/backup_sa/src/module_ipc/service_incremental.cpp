@@ -762,11 +762,13 @@ ErrCode Service::SendIncrementalFileHandle(const std::string &bundleName, const 
         HILOGE("GetIncrementalFileHandle failed, bundleName:%{public}s", bundleName.c_str());
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    UniqueFdGroup fdGroup;
-    proxy->GetIncrementalFileHandle(fileName, fdGroup);
-    UniqueFd fd(fdGroup.fd);
-    UniqueFd reportFd(fdGroup.reportFd);
-    auto err = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), fdGroup.errCode);
+    int fdVal = -1;
+    int reportFdVal = -1;
+    int errCode = -1;
+    proxy->GetIncrementalFileHandle(fileName, fdVal, reportFdVal, errCode);
+    UniqueFd fd(fdVal);
+    UniqueFd reportFd(reportFdVal);
+    auto err = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
     if (err != ERR_OK) {
         HILOGE("Failed to send file handle, bundleName:%{public}s, fileName:%{public}s",
             bundleName.c_str(), GetAnonyPath(fileName).c_str());
@@ -829,11 +831,13 @@ bool Service::IncrementalBackup(const string &bundleName)
 }
 ErrCode Service::HelpToAppIncrementalFileReady(const string &bundleName, const string &fileName, sptr<IExtension> proxy)
 {
-    UniqueFdGroup fdGroup;
-    proxy->GetIncrementalFileHandle(fileName, fdGroup);
-    UniqueFd fd(fdGroup.fd);
-    UniqueFd reportFd(fdGroup.reportFd);
-    auto ret = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), fdGroup.errCode);
+    int fdVal = -1;
+    int reportFdVal = -1;
+    int errCode = -1;
+    proxy->GetIncrementalFileHandle(fileName, fdVal, reportFdVal, errCode);
+    UniqueFd fd(fdVal);
+    UniqueFd reportFd(reportFdVal);
+    auto ret = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
     return ret;
 }
 

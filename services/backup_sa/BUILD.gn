@@ -22,7 +22,6 @@ idl_gen_interface("backup_idl") {
     "IServiceReverse.idl",
   ]
   sources_common = [
-    "ExtensionType.idl",
     "ServiceReverseType.idl",
     "ServiceType.idl",
   ]
