@@ -1679,6 +1679,6 @@ ErrCode BackupExtExtension::GetIncrementalBackupFileHandle((int &fd, int &report
 tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    return {UniqueFd(-1), UniqueFd(-1)};
+    return {UniqueFd(BConstants::INVALID_FD_NUM), UniqueFd(BConstants::INVALID_FD_NUM)};
 }
 } // namespace OHOS::FileManagement::Backup
