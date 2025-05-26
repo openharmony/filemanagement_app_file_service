@@ -48,7 +48,8 @@ ErrCode ExtensionProxy::GetBackupInfo(std::string &result)
     return 0;
 }
 
-ErrCode ExtensionProxy::GetIncrementalFileHandle(const string &fileName, UniqueFdGroup &fdGroup)
+ErrCode ExtensionProxy::GetIncrementalFileHandle(const string &fileName,
+                                                 int &fd, int &reportFd, int32_t &fdErrCode)
 {
     return 0;
 }
@@ -78,7 +79,7 @@ ErrCode ExtensionProxy::User0OnBackup()
     return 0;
 }
 
-ErrCode ExtensionProxy::GetIncrementalBackupFileHandle(UniqueFdGroup &fdGroup)
+ErrCode ExtensionProxy::GetIncrementalBackupFileHandle(int &fd, int &reportFd)
 {
     return 0;
 }

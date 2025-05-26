@@ -1668,17 +1668,17 @@ void BackupExtExtension::PreDealExcludes(std::vector<std::string> &excludes)
     excludes.resize(j);
 }
 
-ErrCode BackupExtExtension::GetIncrementalBackupFileHandle(UniqueFdGroup& fdGroup)
+ErrCode BackupExtExtension::GetIncrementalBackupFileHandle(int &fd, int &reportFd)
 {
-    auto [fd, reportFd] = GetIncrementalBackupFileHandle();
-    fdGroup.fd = fd.Release();
-    fdGroup.reportFd = reportFd.Release();
+    auto [fdval, reportFdval] = GetIncrementalBackupFileHandle();
+    fd = dup(fdval.Get());
+    reportFd = dup(reportFdval.Get());
     return BError(BError::Codes::OK).GetCode();
 }
 
 tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    return {UniqueFd(-1), UniqueFd(-1)};
+    return {UniqueFd(BConstants::INVALID_FD_NUM), UniqueFd(BConstants::INVALID_FD_NUM)};
 }
 } // namespace OHOS::FileManagement::Backup
