@@ -42,6 +42,7 @@ bool ServiceClient::CheckServiceProxy()
 sptr<IService> ServiceClient::GetServiceProxyPointer()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    unique_lock<mutex> lock(proxyMutex_);
     return serviceProxy_;
 }
 

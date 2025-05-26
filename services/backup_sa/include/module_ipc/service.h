@@ -649,6 +649,8 @@ private:
 
     void CancelTask(std::string bundleName, wptr<Service> ptr);
 
+    bool CancelSessionClean(sptr<SvcSessionManager> session, std::string bundleName);
+
     void SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId);
 
     ErrCode VerifySendRateParam();
