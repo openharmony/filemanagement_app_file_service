@@ -25,7 +25,7 @@ ScanFileSingleton& ScanFileSingleton::GetInstance()
 
 ScanFileSingleton::~ScanFileSingleton()
 {
-    isCalculateCompeleted_ = false;
+    isCalculateCompleted_ = false;
 }
 
 void ScanFileSingleton::AddBigFile(const std::string& key, const struct stat& value)
@@ -55,13 +55,13 @@ std::map<std::string, struct stat> ScanFileSingleton::GetAllBigFiles()
 bool ScanFileSingleton::GetCompeletedFlag()
 {
     std::lock_guard<std::mutex> lock(mutexLock_);
-    return isCalculateCompeleted_;
+    return isCalculateCompleted_;
 }
 
 void ScanFileSingleton::SetCompeletedFlag(bool value)
 {
     std::lock_guard<std::mutex> lock(mutexLock_);
-    isCalculateCompeleted_ = value;
+    isCalculateCompleted_ = value;
     if (value) {
         waitForFilesAddCv_.notify_all();
     }
@@ -101,7 +101,7 @@ void ScanFileSingleton::WaitForFiles()
 {
     HILOGI("calculate is uncompleted, need to wait");
     std::unique_lock<std::mutex> lock(mutexLock_);
-    waitForFilesAddCv_.wait(lock, [this] {return !bigFileQueue_.empty() || isCalculateCompeleted_; });
+    waitForFilesAddCv_.wait(lock, [this] {return !bigFileQueue_.empty() || isCalculateCompleted_; });
 }
 
 } // namespace OHOS::FileManagement::Backup

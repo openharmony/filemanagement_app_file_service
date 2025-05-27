@@ -58,7 +58,7 @@ private:
     std::map<std::string, size_t> smallFiles_;
     std::mutex mutexLock_;
     std::condition_variable waitForFilesAddCv_;
-    bool isCalculateCompeleted_ = false;
+    bool isCalculateCompleted_ = false;
     uint32_t includeSize_ = 0;
     uint32_t excludeSize_ = 0;
 };
