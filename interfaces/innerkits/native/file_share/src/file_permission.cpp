@@ -340,7 +340,7 @@ int32_t FilePermission::GrantPermission(const vector<UriPolicyInfo> &uriPolicies
 #ifdef SANDBOX_MANAGER
     if (uriPolicies.size() == 0 || uriPolicies.size() > MAX_ARRAY_SIZE) {
         LOGE("The number of result codes exceeds the maximum");
-        return FileManagement::LibN::E_PARAMS;
+        return EPERM;
     }
     vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, false);
     if (pathPolicies.size() == 0) {
