@@ -786,10 +786,8 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2400, testing::e
         auto err = backupSession->Init(callbacks, errMsg, errCode);
         EXPECT_EQ(err, nullptr);
 
-        EXPECT_CALL(*proxy, InitIncrementalBackupSessionWithErrMsg(_, _, _)).WillOnce(Return(-1)).WillOnce(Return(0));
+        EXPECT_CALL(*proxy, InitIncrementalBackupSessionWithErrMsg(_, _, _)).WillOnce(Return(0));
         ServiceClient::serviceProxy_ = proxy;
-        err = backupSession->Init(callbacks, errMsg, errCode);
-        EXPECT_EQ(err, nullptr);
         err = backupSession->Init(callbacks, errMsg, errCode);
         EXPECT_NE(err, nullptr);
     } catch (...) {

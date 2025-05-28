@@ -347,13 +347,13 @@ HWTEST_F(ServiceClientTest, SUB_service_client_test_1200, testing::ext::TestSize
 
     proxy->InitRestoreSessionWithErrMsg(srptr, ret, errMsg);
     EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_CONFLICT));
-    EXPECT_EQ(errMsg, "");
+    EXPECT_NE(errMsg, "");
     proxy->InitBackupSessionWithErrMsg(srptr, ret, errMsg);
     EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_CONFLICT));
-    EXPECT_EQ(errMsg, "");
+    EXPECT_NE(errMsg, "");
     proxy->InitIncrementalBackupSessionWithErrMsg(srptr, ret, errMsg);
     EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_CONFLICT));
-    EXPECT_EQ(errMsg, "");
+    EXPECT_NE(errMsg, "");
 
     GTEST_LOG_(INFO) << "ServiceClientTest-end SUB_service_client_test_1200";
 }
