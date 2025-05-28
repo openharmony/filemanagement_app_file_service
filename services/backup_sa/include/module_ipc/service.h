@@ -55,9 +55,10 @@ class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
 public:
     ErrCode InitRestoreSession(const sptr<IServiceReverse>& remote) override;
     ErrCode InitRestoreSessionWithErrMsg(const sptr<IServiceReverse>& reverseIpcRemoteObject,
-        std::string& errMsg) override;
+                                         int32_t &errCodeForMsg, std::string& errMsg) override;
     ErrCode InitBackupSession(const sptr<IServiceReverse>& remote) override;
-    ErrCode InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg) override;
+    ErrCode InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote,
+                                        int32_t &errCodeForMsg, std::string &errMsg) override;
     ErrCode Start() override;
     ErrCode GetLocalCapabilities(int& fd) override;
 
@@ -87,7 +88,8 @@ public:
     ErrCode GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData>& bundleNames, int& fd) override;
     ErrCode GetAppLocalListAndDoIncrementalBackup() override;
     ErrCode InitIncrementalBackupSession(const sptr<IServiceReverse>& remote) override;
-    ErrCode InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg) override;
+    ErrCode InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, int32_t &errCodeForMsg,
+                                                   std::string &errMsg) override;
     ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup) override;
     ErrCode AppendBundlesIncrementalBackupSessionWithBundleInfos(const std::vector<BIncrementalData>& bundlesToBackup,
                                                                  const std::vector<std::string>& bundleInfos) override;
@@ -682,7 +684,8 @@ private:
     void SetScanningInfo(string &scanning, string name);
 
     ErrCode InitRestoreSession(const sptr<IServiceReverse>& remote, std::string &errMsg);
-
+    ErrCode InitBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg);
+    ErrCode InitIncrementalBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg);
     UniqueFd GetLocalCapabilities();
     UniqueFd GetLocalCapabilitiesForBundleInfos();
     ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode);

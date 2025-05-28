@@ -71,7 +71,7 @@ unique_ptr<BIncrementalBackupSession> BIncrementalBackupSession::Init(Callbacks 
             HILOGI("Failed to get backup service");
             return nullptr;
         }
-        errCode = proxy->InitIncrementalBackupSessionWithErrMsg(sptr(new ServiceReverse(callbacks)), errMsg);
+        proxy->InitIncrementalBackupSessionWithErrMsg(sptr(new ServiceReverse(callbacks)), errCode, errMsg);
         if (errCode != ERR_OK) {
             HILOGE("Failed to Backup because of %{public}d", errCode);
             AppRadar::Info info("", "", "");

@@ -86,8 +86,9 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse> &)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>&, std::string &)
+ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>&, int32_t &errCodeForMsg, std::string &)
 {
+    errCodeForMsg = BError(BError::Codes::OK);
     return BError(BError::Codes::OK);
 }
 

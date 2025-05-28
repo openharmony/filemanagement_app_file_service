@@ -330,11 +330,11 @@ HWTEST_F(ServiceClientTest, SUB_service_client_test_1200, testing::ext::TestSize
     EXPECT_NE(ret, BError(BError::Codes::OK));
     std::string errMsg = "";
     std::string result = "err";
-    ret = proxy->InitRestoreSessionWithErrMsg(srptr, errMsg);
+    proxy->InitRestoreSessionWithErrMsg(srptr, ret, errMsg);
     EXPECT_NE(ret, BError(BError::Codes::OK));
-    ret = proxy->InitBackupSessionWithErrMsg(srptr, errMsg);
+    proxy->InitBackupSessionWithErrMsg(srptr, ret, errMsg);
     EXPECT_NE(ret, BError(BError::Codes::OK));
-    ret = proxy->InitIncrementalBackupSessionWithErrMsg(srptr, errMsg);
+    proxy->InitIncrementalBackupSessionWithErrMsg(srptr, ret, errMsg);
     EXPECT_NE(ret, BError(BError::Codes::OK));
     BSessionRestore::Callbacks callback;
     srptr = sptr<IServiceReverse>(new ServiceReverse(callback));
@@ -345,13 +345,13 @@ HWTEST_F(ServiceClientTest, SUB_service_client_test_1200, testing::ext::TestSize
     ret = proxy->InitIncrementalBackupSession(srptr);
     EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_CONFLICT));
 
-    ret = proxy->InitRestoreSessionWithErrMsg(srptr, errMsg);
+    proxy->InitRestoreSessionWithErrMsg(srptr, ret, errMsg);
     EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_CONFLICT));
     EXPECT_EQ(errMsg, "");
-    ret = proxy->InitBackupSessionWithErrMsg(srptr, errMsg);
+    proxy->InitBackupSessionWithErrMsg(srptr, ret, errMsg);
     EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_CONFLICT));
     EXPECT_EQ(errMsg, "");
-    ret = proxy->InitIncrementalBackupSessionWithErrMsg(srptr, errMsg);
+    proxy->InitIncrementalBackupSessionWithErrMsg(srptr, ret, errMsg);
     EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_CONFLICT));
     EXPECT_EQ(errMsg, "");
 

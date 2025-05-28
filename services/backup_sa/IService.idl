@@ -20,9 +20,11 @@ sequenceable BackupFileInfo..OHOS.FileManagement.Backup.BFileInfo;
 sequenceable BackupIncrementalData..OHOS.FileManagement.Backup.BIncrementalData;
 interface OHOS.FileManagement.Backup.IService{
     [ipccode 39] void InitRestoreSession([in] IServiceReverse reverseIpcRemoteObject);
-    [ipccode 1] void InitRestoreSessionWithErrMsg([in] IServiceReverse reverseIpcRemoteObject, [out] String errMsg);
+    [ipccode 1] void InitRestoreSessionWithErrMsg([in] IServiceReverse reverseIpcRemoteObject,
+                                                  [out] int errCodeForMsg, [out] String errMsg);
     [ipccode 2] void InitBackupSession([in] IServiceReverse reverseIpcRemoteObject);
-    [ipccode 3] void InitBackupSessionWithErrMsg([in] IServiceReverse reverseIpcRemoteObject, [out] String errMsg);
+    [ipccode 3] void InitBackupSessionWithErrMsg([in] IServiceReverse reverseIpcRemoteObject,
+                                                 [out] int errCodeForMsg, [out] String errMsg);
     [ipccode 4] void Start();
     [ipccode 5] void GetLocalCapabilities([out] FileDescriptor fd);
     [ipccode 6] void GetLocalCapabilitiesForBundleInfos([out] FileDescriptor fd);
@@ -53,14 +55,14 @@ interface OHOS.FileManagement.Backup.IService{
     [ipccode 24] void GetLocalCapabilitiesIncremental([in] BIncrementalData[] bundleNames, [out] FileDescriptor fd);
     [ipccode 25] void InitIncrementalBackupSession([in] IServiceReverse reverseIpcRemoteObject);
     [ipccode 26] void InitIncrementalBackupSessionWithErrMsg([in] IServiceReverse reverseIpcRemoteObject,
-        [out] String errMsg);
+                                                             [out] int errCodeForMsg, [out] String errMsg);
     [ipccode 27] void AppendBundlesIncrementalBackupSession([in] BIncrementalData[] bundlesToBackup);
     [ipccode 28] void AppendBundlesIncrementalBackupSessionWithBundleInfos([in] BIncrementalData[] bundlesToBackup,
         [in]String[] bundleInfos);
     [ipccode 29] void PublishIncrementalFile([in] BFileInfo fileInfo);
     [ipccode 30] void PublishSAIncrementalFile([in] BFileInfo fileInfo, [in] FileDescriptor fd);
     [ipccode 31] void AppIncrementalFileReady([in] String fileName, [in] FileDescriptor fd, [in] FileDescriptor manifestFd,
-        [in] int appIncrementalFileReadyErrCode);
+                                              [in] int appIncrementalFileReadyErrCode);
     [ipccode 32] void AppIncrementalDone([in] int appIncrementalDoneErrCode);
     [ipccode 33] void ReportAppProcessInfo([in] String processInfo, [in] BackupRestoreScenario scenario);
     [ipccode 34] void RefreshDataSize([in] long totalDataSize);

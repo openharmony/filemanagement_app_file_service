@@ -338,7 +338,14 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
     return errCode;
 }
 
-ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg)
+ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, int32_t &errCodeForMsg,
+                                                        std::string &errMsg)
+{
+    errCodeForMsg = InitIncrementalBackupSession(remote, errMsg);
+    return ERR_OK;
+}
+
+ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::BACKUP, GetCallerName(), Mode::INCREMENTAL);

@@ -175,29 +175,30 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0200, testing::e
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     sptr<IServiceReverse> reverseNUll = nullptr;
-    auto ret = service->InitRestoreSessionWithErrMsg(reverseNUll, errMsg);
-    EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+    ErrCode errCode;
+    service->InitRestoreSessionWithErrMsg(reverseNUll, errCode, errMsg);
+    EXPECT_EQ(errCode, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
-    ret = service->InitRestoreSessionWithErrMsg(reverseNUll, errMsg);
-    EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+    service->InitRestoreSessionWithErrMsg(reverseNUll, errCode, errMsg);
+    EXPECT_EQ(errCode, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_SESSION_CONFLICT)));
-    ret = service->InitRestoreSessionWithErrMsg(reverseNUll, errMsg);
-    EXPECT_EQ(ret, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
+    service->InitRestoreSessionWithErrMsg(reverseNUll, errCode, errMsg);
+    EXPECT_EQ(errCode, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
-    ret = service->InitRestoreSessionWithErrMsg(reverseNUll, errMsg);
-    EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    service->InitRestoreSessionWithErrMsg(reverseNUll, errCode, errMsg);
+    EXPECT_EQ(errCode, BError(BError::Codes::OK).GetCode());
     GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_InitRestoreSession_0200";
 }
 
@@ -257,29 +258,30 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0200, testing::ex
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     sptr<IServiceReverse> reverseNUll = nullptr;
-    auto ret = service->InitBackupSessionWithErrMsg(reverseNUll, errMsg);
-    EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+    ErrCode errCode;
+    service->InitBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+    EXPECT_EQ(errCode, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
-    ret = service->InitBackupSessionWithErrMsg(reverseNUll, errMsg);
-    EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+    service->InitBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+    EXPECT_EQ(errCode, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_SESSION_CONFLICT)));
-    ret = service->InitBackupSessionWithErrMsg(reverseNUll, errMsg);
-    EXPECT_EQ(ret, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
+    service->InitBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+    EXPECT_EQ(errCode, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
-    ret = service->InitBackupSessionWithErrMsg(reverseNUll, errMsg);
-    EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    service->InitBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+    EXPECT_EQ(errCode, BError(BError::Codes::OK).GetCode());
     GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_InitBackupSession_0200";
 }
 
@@ -990,29 +992,30 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0200, 
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     sptr<IServiceReverse> reverseNUll = nullptr;
-    auto ret = service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg);
-    EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+    ErrCode errCode;
+    service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+    EXPECT_EQ(errCode, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
-    ret = service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg);
-    EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+    service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+    EXPECT_EQ(errCode, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::SA_SESSION_CONFLICT)));
-    ret = service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg);
-    EXPECT_EQ(ret, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
+    service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+    EXPECT_EQ(errCode, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 
     EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
-    ret = service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg);
-    EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+    EXPECT_EQ(errCode, BError(BError::Codes::OK).GetCode());
     GTEST_LOG_(INFO) << "ServiceThrowTest-end SUB_Service_throw_InitIncrementalBackupSession_0200";
 }
 

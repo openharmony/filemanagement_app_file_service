@@ -36,9 +36,9 @@ public:
     virtual ErrCode GetLocalCapabilities(int& fd) = 0;
     virtual ErrCode VerifyCallerAndGetCallerName(std::string&) = 0;
     virtual ErrCode InitRestoreSession(const sptr<IServiceReverse>&) = 0;
-    virtual ErrCode InitRestoreSessionWithErrMsg(const sptr<IServiceReverse>&, std::string&) = 0;
+    virtual ErrCode InitRestoreSessionWithErrMsg(const sptr<IServiceReverse>&, int32_t&, std::string&) = 0;
     virtual ErrCode InitBackupSession(const sptr<IServiceReverse>&) = 0;
-    virtual ErrCode InitBackupSessionWithErrMsg(const sptr<IServiceReverse>&, std::string&) = 0;
+    virtual ErrCode InitBackupSessionWithErrMsg(const sptr<IServiceReverse>&, int32_t&, std::string&) = 0;
     virtual ErrCode Start() = 0;
     virtual ErrCode PublishFile(const BFileInfo&) = 0;
     virtual ErrCode AppFileReady(const std::string &, int, int32_t) = 0;
@@ -90,9 +90,9 @@ public:
     MOCK_METHOD(ErrCode, GetLocalCapabilities, (int&));
     MOCK_METHOD(ErrCode, VerifyCallerAndGetCallerName, (std::string&));
     MOCK_METHOD(ErrCode, InitRestoreSession, (const sptr<IServiceReverse>&));
-    MOCK_METHOD(ErrCode, InitRestoreSessionWithErrMsg, (const sptr<IServiceReverse>&, std::string&));
+    MOCK_METHOD(ErrCode, InitRestoreSessionWithErrMsg, (const sptr<IServiceReverse>&, int32_t &, std::string&));
     MOCK_METHOD(ErrCode, InitBackupSession, (const sptr<IServiceReverse>&));
-    MOCK_METHOD(ErrCode, InitBackupSessionWithErrMsg, (const sptr<IServiceReverse>&, std::string&));
+    MOCK_METHOD(ErrCode, InitBackupSessionWithErrMsg, (const sptr<IServiceReverse>&, int32_t &, std::string&));
     MOCK_METHOD(ErrCode, Start, ());
     MOCK_METHOD(ErrCode, PublishFile, (const BFileInfo&));
     MOCK_METHOD(ErrCode, AppFileReady, (const string&, int, int32_t));
@@ -143,8 +143,10 @@ ErrCode Service::GetLocalCapabilitiesForBundleInfos(int &fd)
 {
     return BError(BError::Codes::OK);
 }
-ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
+ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote,
+                                             int32_t& errCodeForMsg, std::string &errMsg)
 {
+    errCodeForMsg = BError(BError::Codes::OK);
     return BError(BError::Codes::OK);
 }
 
@@ -165,9 +167,10 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
     return BService::serviceMock->InitRestoreSession(remote);
 }
 
-ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
+ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remote,
+                                              int32_t& errCodeForMsg, std::string &errMsg)
 {
-    return BService::serviceMock->InitRestoreSessionWithErrMsg(remote, errMsg);
+    return BService::serviceMock->InitRestoreSessionWithErrMsg(remote, errCodeForMsg, errMsg);
 }
 
 ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
@@ -803,24 +806,25 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
     try {
         std::string errMsg;
         sptr<IServiceReverse> reverseNUll = nullptr;
+        ErrCode errCode;
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
         EXPECT_CALL(*srvMock, GetCallerName()).WillRepeatedly(Return(""));
-        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
-            BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+        EXPECT_EQ(errCode, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         auto session_ = service->session_;
         service->session_ = nullptr;
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
-            BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+        EXPECT_EQ(errCode, BError(BError::Codes::SA_INVAL_ARG).GetCode());
         service->session_ = session_;
 
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
-        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
-            BError(BError::Codes::OK).GetCode());
+        service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+        EXPECT_EQ(errCode, BError(BError::Codes::OK).GetCode());
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
@@ -829,15 +833,15 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         EXPECT_CALL(*session, GetSessionCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, GetSessionActiveTime()).WillOnce(Return(""));
         EXPECT_CALL(*jsonUtil, BuildInitSessionErrInfo(_, _, _)).WillOnce(Return(""));
-        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
-            BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
+        service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+        EXPECT_EQ(errCode, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
-        EXPECT_EQ(service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errMsg),
-            BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
+        EXPECT_EQ(errCode, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by InitIncrementalBackupSession.";

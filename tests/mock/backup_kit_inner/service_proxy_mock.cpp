@@ -39,10 +39,12 @@ int32_t ServiceProxy::InitRestoreSession(const sptr<IServiceReverse>& remote)
     return 0;
 }
 
-int32_t ServiceProxy::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg)
+int32_t ServiceProxy::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse>& remote,
+                                                   int32_t &errCodeForMsg, std::string &errMsg)
 {
     if (!GetMockInitBackupOrRestoreSession()) {
-        return 1;
+        errCodeForMsg = 1;
+        return 0;
     }
     return 0;
 }
@@ -55,10 +57,12 @@ int32_t ServiceProxy::InitBackupSession(const sptr<IServiceReverse>& remote)
     return 0;
 }
 
-int32_t ServiceProxy::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg)
+int32_t ServiceProxy::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote,
+                                                  int32_t &errCodeForMsg, std::string &errMsg)
 {
     if (!GetMockInitBackupOrRestoreSession()) {
-        return 1;
+        errCodeForMsg = 1;
+        return 0;
     }
     return 0;
 }
@@ -163,8 +167,10 @@ ErrCode ServiceProxy::InitIncrementalBackupSession(const sptr<IServiceReverse>& 
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
+ErrCode ServiceProxy::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote,
+                                                             int32_t &errCodeForMsg, std::string &errMsg)
 {
+    errCodeForMsg = BError(BError::Codes::OK);
     return BError(BError::Codes::OK);
 }
 
