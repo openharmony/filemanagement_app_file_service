@@ -280,6 +280,22 @@ bool CmdGetIncrementalBackupFileHandleFuzzTest(shared_ptr<BackupExtExtension> ex
     extension->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
+
+bool OnRemoteRequestFuzzTest(shared_ptr<BackupExtExtension> extension,  const uint8_t *data, size_t size)
+{
+    uint32_t codeMax = 15;
+    for (uint32_t code = 1; code < codeMax; code++) {
+        MessageParcel datas;
+        MessageParcel reply;
+        MessageOption option;
+
+        datas.WriteInterfaceToken(ExtensionStub::GetDescriptor());
+        datas.WriteBuffer(reinterpret_cast<const char*>(data), size);
+        datas.RewindRead(0);
+        extension->OnRemoteRequest(code, datas, reply, option);
+    }
+    return true;
+}
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -314,6 +330,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         OHOS::CmdHandleIncrementalBackupFuzzTest(extension, data, size);
         OHOS::CmdIncrementalOnBackupFuzzTest(extension, data, size);
         OHOS::CmdGetIncrementalBackupFileHandleFuzzTest(extension, data, size);
+        OHOS::OnRemoteRequestFuzzTest(extension, data, size);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }

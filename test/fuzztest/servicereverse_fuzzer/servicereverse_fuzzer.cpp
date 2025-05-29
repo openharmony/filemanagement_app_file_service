@@ -654,6 +654,32 @@ bool IncrementalRestoreOnProcessInfoFuzzTest(sptr<ServiceReverse> service, const
     }
     return true;
 }
+
+bool OnRemoteRequestFuzzTest(sptr<ServiceReverse> service, const uint8_t *data, size_t size)
+{
+    uint32_t codeMax = 26;
+    for (uint32_t code = 1; code < codeMax; code++) {
+        MessageParcel datas;
+        MessageParcel reply;
+        MessageOption option;
+
+        datas.WriteInterfaceToken(ServiceReverseStub::GetDescriptor());
+        datas.WriteBuffer(reinterpret_cast<const char*>(data), size);
+        datas.RewindRead(0);
+        service->OnRemoteRequest(code, datas, reply, option);
+    }
+    {
+        MessageParcel datas;
+        MessageParcel reply;
+        MessageOption option;
+        datas.WriteInterfaceToken(ServiceReverseStub::GetDescriptor());
+        datas.WriteBuffer(reinterpret_cast<const char*>(data), size);
+        datas.RewindRead(0);
+        service->OnRemoteRequest(static_cast<uint32_t>(IServiceReverseIpcCode::COMMAND_BACKUP_ON_BUNDLE_STARTED),
+            datas, reply, option);
+    }
+    return true;
+}
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -661,22 +687,14 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     OHOS::FileManagement::Backup::BSessionBackup::Callbacks backupCallbacks;
     OHOS::sptr backupService(new OHOS::FileManagement::Backup::ServiceReverse(backupCallbacks));
-    if (backupService == nullptr) {
-        return 0;
-    }
     OHOS::FileManagement::Backup::BSessionRestore::Callbacks restoreCallbacks;
     OHOS::sptr restoreService(new OHOS::FileManagement::Backup::ServiceReverse(restoreCallbacks));
-    if (restoreService == nullptr) {
-        return 0;
-    }
     OHOS::FileManagement::Backup::BIncrementalBackupSession::Callbacks incrementalBackupCallbacks;
     OHOS::sptr incrementalBackupService(new OHOS::FileManagement::Backup::ServiceReverse(incrementalBackupCallbacks));
-    if (incrementalBackupService == nullptr) {
-        return 0;
-    }
     OHOS::FileManagement::Backup::BIncrementalRestoreSession::Callbacks incrementalRestoreCallbacks;
     OHOS::sptr incrementalRestoreService(new OHOS::FileManagement::Backup::ServiceReverse(incrementalRestoreCallbacks));
-    if (incrementalRestoreService == nullptr) {
+    if (!backupService || !restoreService || !incrementalBackupService || !incrementalRestoreService) {
+        printf("service handler is nullptr");
         return 0;
     }
 
@@ -687,6 +705,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::BackupOnAllBundlesFinishedFuzzTest(backupService, data, size);
     OHOS::BackupOnProcessInfoFuzzTest(backupService, data, size);
     OHOS::BackupOnScanningInfoFuzzTest(backupService, data, size);
+    OHOS::OnRemoteRequestFuzzTest(backupService, data, size);
 
     OHOS::RestoreOnBundleStartedFuzzTest(restoreService, data, size);
     OHOS::RestoreOnBundleFinishedFuzzTest(restoreService, data, size);
@@ -694,6 +713,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RestoreOnFileReadyFuzzTest(restoreService, data, size);
     OHOS::RestoreOnResultReportFuzzTest(restoreService, data, size);
     OHOS::RestoreOnProcessInfoFuzzTest(restoreService, data, size);
+    OHOS::OnRemoteRequestFuzzTest(restoreService, data, size);
 
     OHOS::IncrementalBackupOnFileReadyFuzzTest(incrementalBackupService, data, size);
     OHOS::IncrementalBackupOnBundleStartedFuzzTest(incrementalBackupService, data, size);
@@ -702,6 +722,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::IncrementalBackupOnAllBundlesFinishedFuzzTest(incrementalBackupService, data, size);
     OHOS::IncrementalBackupOnProcessInfoFuzzTest(incrementalBackupService, data, size);
     OHOS::IncrementalBackupOnScanningInfoFuzzTest(incrementalBackupService, data, size);
+    OHOS::OnRemoteRequestFuzzTest(incrementalBackupService, data, size);
 
     OHOS::IncrementalRestoreOnBundleStartedFuzzTest(incrementalRestoreService, data, size);
     OHOS::IncrementalRestoreOnBundleFinishedFuzzTest(incrementalRestoreService, data, size);
@@ -709,5 +730,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::IncrementalRestoreOnFileReadyFuzzTest(incrementalRestoreService, data, size);
     OHOS::IncrementalRestoreOnResultReportFuzzTest(incrementalRestoreService, data, size);
     OHOS::IncrementalRestoreOnProcessInfoFuzzTest(incrementalRestoreService, data, size);
+    OHOS::OnRemoteRequestFuzzTest(incrementalRestoreService, data, size);
+
     return 0;
 }
