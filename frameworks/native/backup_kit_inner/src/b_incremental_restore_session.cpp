@@ -73,9 +73,9 @@ unique_ptr<BIncrementalRestoreSession> BIncrementalRestoreSession::Init(Callback
             HILOGE("Init IncrementalRestoreSession failed, %{public}s", errMsg.c_str());
             return nullptr;
         }
-        errCode = proxy->InitRestoreSessionWithErrMsg(sptr(new ServiceReverse(callbacks)), errCode, errMsg);
+        proxy->InitRestoreSessionWithErrMsg(sptr(new ServiceReverse(callbacks)), errCode, errMsg);
         if (errCode != ERR_OK) {
-            HILOGE("Failed to Restore because of %{public}d", errCode);
+            HILOGE("Failed to Restore because of %{public}d, %{public}s", errCode, errMsg.c_str());
             AppRadar::Info info ("", "", "create restore session failed");
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "BIncrementalRestoreSession::Init",
                 AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_CREATE_RESTORE_SESSION_FAIL, errCode);

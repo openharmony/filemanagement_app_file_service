@@ -73,7 +73,7 @@ unique_ptr<BSessionBackup> BSessionBackup::Init(Callbacks callbacks,
         }
         proxy->InitBackupSessionWithErrMsg(sptr(new ServiceReverse(callbacks)), errCode, errMsg);
         if (errCode != ERR_OK) {
-            HILOGE("Failed to Backup because of %{public}d", errCode);
+            HILOGE("Failed to Backup because of %{public}d, %{public}s", errCode, errMsg.c_str());
             AppRadar::Info info("", "", "");
             AppRadar::GetInstance().RecordBackupFuncRes(info, "BSessionBackup::Init",
                 AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_CREATE_BACKUP_SESSION_FAIL, errCode);

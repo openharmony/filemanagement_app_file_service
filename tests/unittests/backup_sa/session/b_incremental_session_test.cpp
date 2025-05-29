@@ -822,7 +822,9 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2500, testing::e
         auto err = restoreSession->Init(callbacks, errMsg, errCode);
         EXPECT_EQ(err, nullptr);
 
-        EXPECT_CALL(*proxy, InitRestoreSessionWithErrMsg(_, _, _)).WillOnce(Return(-1)).WillOnce(Return(0));
+        EXPECT_CALL(*proxy, InitRestoreSessionWithErrMsg(_, _, _))
+                    .WillOnce(DoAll(SetArgReferee<1>(-1), Return(0)))
+                    .WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
         ServiceClient::serviceProxy_ = proxy;
         err = restoreSession->Init(callbacks, errMsg, errCode);
         EXPECT_EQ(err, nullptr);

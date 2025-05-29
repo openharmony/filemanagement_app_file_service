@@ -897,8 +897,9 @@ std::string Service::GetCallerName()
 ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remote,
                                               int32_t &errCodeForMsg, std::string &errMsg)
 {
-    HILOGI("Start InitRestoreSessionWithErrMsg,Msg :%{public}s", errMsg.c_str());
     errCodeForMsg = InitRestoreSession(remote, errMsg);
+    HILOGI("Start InitRestoreSessionWithErrMsg, errCode:%{public}d, Msg :%{public}s",
+            errCodeForMsg, errMsg.c_str());
     return ERR_OK;
 }
 
@@ -944,6 +945,8 @@ ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote
                                              int32_t &errCodeForMsg, std::string &errMsg)
 {
     errCodeForMsg = InitBackupSession(remote, errMsg);
+    HILOGI("Start InitBackupSessionWithErrMsg, errCode:%{public}d, Msg :%{public}s",
+            errCodeForMsg, errMsg.c_str());
     return ERR_OK;
 }
 
