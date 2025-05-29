@@ -899,7 +899,8 @@ ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remot
 {
     errCodeForMsg = InitRestoreSession(remote, errMsg);
     HILOGI("Start InitRestoreSessionWithErrMsg, errCode:%{public}d, Msg :%{public}s",
-            errCodeForMsg, errMsg.c_str());
+           errCodeForMsg,
+           errMsg.c_str());
     return ERR_OK;
 }
 
@@ -946,7 +947,8 @@ ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote
 {
     errCodeForMsg = InitBackupSession(remote, errMsg);
     HILOGI("Start InitBackupSessionWithErrMsg, errCode:%{public}d, Msg :%{public}s",
-            errCodeForMsg, errMsg.c_str());
+           errCodeForMsg,
+           errMsg.c_str());
     return ERR_OK;
 }
 

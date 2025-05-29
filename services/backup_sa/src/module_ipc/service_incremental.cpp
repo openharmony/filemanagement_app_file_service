@@ -343,7 +343,8 @@ ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceRever
 {
     errCodeForMsg = InitIncrementalBackupSession(remote, errMsg);
     HILOGI("Start InitIncrementalBackupSessionWithErrMsg, errCode:%{public}d, Msg :%{public}s",
-            errCodeForMsg, errMsg.c_str());
+           errCodeForMsg,
+           errMsg.c_str());
     return ERR_OK;
 }
 
