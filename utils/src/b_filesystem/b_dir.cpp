@@ -63,6 +63,12 @@ static bool IsEmptyDirectory(const string &path)
     return isEmpty;
 }
 
+static void InsertSmallFiles(std::map<string, size_t> &smallFiles, std::string fileName, size_t size)
+{
+    ScanFileSingleton::GetInstance().AddSmallFile(fileName, size);
+    smallFiles.emplace(make_pair(fileName, size));
+}
+
 static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetFile(const string &path, off_t size = -1)
 {
     map<string, struct stat> files;
@@ -77,7 +83,9 @@ static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetFile(con
     }
     if (sta.st_size <= size) {
         smallFiles.emplace(make_pair(path, sta.st_size));
+        InsertSmallFiles(smallFiles, path, sta.st_size);
     } else {
+        ScanFileSingleton::GetInstance().AddBigFile(path, sta);
         files.try_emplace(path, sta);
     }
     return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
@@ -92,12 +100,6 @@ static uint32_t CheckOverLongPath(const string &path)
         HILOGE("Path over long, length:%{public}d, fileName:%{private}s.", len, sub.c_str());
     }
     return len;
-}
-
-static void InsertSmallFiles(std::map<string, size_t> &smallFiles, std::string fileName, size_t size)
-{
-    ScanFileSingleton::GetInstance().AddSmallFile(fileName, size);
-    smallFiles.emplace(make_pair(fileName, size));
 }
 
 static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFilesDetail(const string &path,
