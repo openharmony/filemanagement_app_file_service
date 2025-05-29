@@ -894,10 +894,14 @@ std::string Service::GetCallerName()
     return callerName;
 }
 
-ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
+ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remote,
+                                              int32_t &errCodeForMsg, std::string &errMsg)
 {
-    HILOGI("Start InitRestoreSessionWithErrMsg,Msg :%{public}s", errMsg.c_str());
-    return InitRestoreSession(remote, errMsg);
+    errCodeForMsg = InitRestoreSession(remote, errMsg);
+    HILOGI("Start InitRestoreSessionWithErrMsg, errCode:%{public}d, Msg :%{public}s",
+           errCodeForMsg,
+           errMsg.c_str());
+    return ERR_OK;
 }
 
 ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::string &errMsg)
@@ -938,7 +942,17 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::st
     return ret;
 }
 
-ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg)
+ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote,
+                                             int32_t &errCodeForMsg, std::string &errMsg)
+{
+    errCodeForMsg = InitBackupSession(remote, errMsg);
+    HILOGI("Start InitBackupSessionWithErrMsg, errCode:%{public}d, Msg :%{public}s",
+           errCodeForMsg,
+           errMsg.c_str());
+    return ERR_OK;
+}
+
+ErrCode Service::InitBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::BACKUP, GetCallerName());
