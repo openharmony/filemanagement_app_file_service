@@ -143,6 +143,7 @@ string FileUri::GetRealPath()
             realPath = pathShare + MODE_R + bundleName + sandboxPath;
         }
     }
+    LOGD("GetRealPath return path is ,%{private}s", realPath.c_str());
     return realPath;
 }
 
