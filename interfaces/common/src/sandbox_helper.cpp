@@ -376,7 +376,7 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
                                        std::string &physicalPath)
 {
     if (!IsValidPath(fileUri)) {
-        LOGE("fileUri is ValidUri, The fileUri contains '/./' or '../'characters");
+        LOGE("fileUri is ValidUri, The fileUri contains '../' characters");
         return -EINVAL;
     }
     Uri uri(fileUri);
@@ -416,7 +416,7 @@ int32_t SandboxHelper::GetBackupPhysicalPath(const std::string &fileUri, const s
                                              std::string &physicalPath)
 {
     if (!IsValidPath(fileUri)) {
-        LOGE("fileUri is ValidUri, The fileUri contains '/./' or '../'characters");
+        LOGE("fileUri is ValidUri, The fileUri contains '../' characters");
         return -EINVAL;
     }
     Uri uri(fileUri);
@@ -454,9 +454,6 @@ int32_t SandboxHelper::GetBackupPhysicalPath(const std::string &fileUri, const s
 
 bool SandboxHelper::IsValidPath(const std::string &filePath)
 {
-    if (filePath.find("/./") != std::string::npos) {
-        return false;
-    }
     size_t pos = filePath.find(PATH_INVALID_FLAG1);
     while (pos != string::npos) {
         if (pos == 0 || filePath[pos - 1] == BACKSLASH) {
