@@ -111,7 +111,7 @@ static void NormalizePath(string &path)
 string CommonFunc::GetUriFromPath(const string &path)
 {
     if (!SandboxHelper::IsValidPath(path)) {
-        LOGE("path is ValidPath, The path contains '/./' or '../'characters");
+        LOGE("path is ValidPath, The path contains '../' characters");
         return "";
     }
     if (path.find(FILE_SCHEME_PREFIX) == 0) {
