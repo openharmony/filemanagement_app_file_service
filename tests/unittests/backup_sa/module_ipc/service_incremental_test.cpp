@@ -1768,12 +1768,17 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0000, TestSiz
         service->CancelTask("", service);
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        std::string bundleName = "123";
+        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+        auto callConnected = [](const string &&bundleName) {};
+        auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connectPtr)));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
         service->CancelTask("", service);
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connectPtr)));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
@@ -1783,7 +1788,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0000, TestSiz
         service->CancelTask("", service);
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connectPtr)));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
@@ -1813,7 +1818,12 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0100, TestSiz
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_CancelTask_0100";
     try {
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        std::string bundleName = "123";
+        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+        auto callConnected = [](const string &&bundleName) {};
+        auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connectPtr)));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
@@ -1825,7 +1835,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0100, TestSiz
         service->CancelTask("", service);
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connectPtr)));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
@@ -1836,7 +1846,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0100, TestSiz
         service->CancelTask("", service);
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connectPtr))).WillOnce(Return(nullptr));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
