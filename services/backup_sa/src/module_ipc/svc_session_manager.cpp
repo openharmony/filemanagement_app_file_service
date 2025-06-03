@@ -1079,6 +1079,7 @@ ErrCode SvcSessionManager::ClearSessionData()
             if (impl_.restoreDataType != RestoreTypeEnum::RESTORE_DATA_READDY) {
                 ret = proxy->HandleClear();
             }
+            proxy->HandleOnRelease(true);
             backUpConnection->DisconnectBackupExtAbility();
         }
         if (ret != BError(BError::Codes::OK)) {
@@ -1243,6 +1244,7 @@ bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::s
             } else {
                 ret = retTmp;
             }
+            proxy->HandleOnRelease(true);
             backUpConnection->DisconnectBackupExtAbility();
             it = impl_.backupExtNameMap.erase(it);
         } else {

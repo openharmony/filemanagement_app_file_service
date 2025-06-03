@@ -113,6 +113,8 @@ public:
 
     ErrCode GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList) override;
     ErrCode CleanBundleTempDir(const std::string &bundleName) override;
+    ErrCode HandleExtDisconnect(bool isIncBackup) override;
+    ErrCode GetExtOnRelease(bool &isExtOnRelease) override;
 
     // 以下都是非IPC接口
 public:
@@ -327,6 +329,8 @@ public:
         UniqueFd manifestFd, int32_t errCode);
     ErrCode SendFileHandle(const std::string &bundleName, const std::string &fileName);
     ErrCode SendIncrementalFileHandle(const std::string &bundleName, const std::string &fileName);
+    void SetExtOnRelease(const BundleName &bundleName, bool isOnRelease);
+    void RemoveExtOnRelease(const BundleName &bundleName);
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {
@@ -771,6 +775,7 @@ private:
     std::atomic<bool> onScanning_ {false};
     std::shared_ptr<RadarTotalStatistic> totalStatistic_ = nullptr;
     std::shared_ptr<RadarAppStatistic> saStatistic_ = nullptr;
+    std::map<BundleName, std::atomic<bool>> backupExtOnReleaseMap_;
 public:
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
     std::map<BundleName, BundleTaskInfo> failedBundles_;

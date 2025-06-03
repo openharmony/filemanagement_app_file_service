@@ -222,4 +222,9 @@ ErrCode BackupExtExtension::CleanBundleTempDir()
 {
     return BExtExtension::extExtension->CleanBundleTempDir();
 }
+
+ErrCode BackupExtExtension::HandleOnRelease(bool isNeedWait)
+{
+    return BExtExtension::extExtension->HandleOnRelease(isNeedWait);
+}
 } // namespace OHOS::FileManagement::Backup

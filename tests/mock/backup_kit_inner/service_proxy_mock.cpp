@@ -260,4 +260,14 @@ ErrCode ServiceProxy::CleanBundleTempDir(const std::string& bundleName)
 {
     return BError(BError::Codes::OK);
 }
+
+ErrCode ServiceProxy::HandleExtDisconnect(bool isIncBackup)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::GetExtOnRelease(bool &isExtOnRelease)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

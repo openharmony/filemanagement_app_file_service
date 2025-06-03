@@ -174,6 +174,11 @@ public:
     {
         return BError(BError::Codes::OK);
     };
+
+    ErrCode HandleOnRelease(bool isNeedWait)
+    {
+        return BError(BError::Codes::OK);
+    };
 private:
     int32_t nHandleBackupNum_ = 0;
 };

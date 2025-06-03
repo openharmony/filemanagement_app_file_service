@@ -1860,6 +1860,9 @@ void BackupExtExtension::AppDone(ErrCode errCode)
     if (ret != ERR_OK) {
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
     }
+    if (HandleGetExtOnRelease()) {
+        HandleOnRelease();
+    }
 }
 
 void BackupExtExtension::AppResultReport(const std::string restoreRetInfo,

@@ -50,6 +50,8 @@ public:
     virtual ErrCode CallJsOnBackupEx() = 0;
     virtual ErrCode CallJsOnBackup() = 0;
     virtual void ExportJsContext() = 0;
+    virtual ErrCode OnRelease(std::function<void(ErrCode, std::string)>, int32_t scenario) = 0;
+    virtual std::function<bool(napi_env, std::vector<napi_value> &argv) ParseReleaseInfo() = 0;
 public:
     virtual bool GetProfileFromAbility(const OHOS::AppExecFwk::AbilityInfo &, const std::string &,
         std::vector<std::string> &) const = 0;

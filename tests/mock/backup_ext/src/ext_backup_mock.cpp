@@ -138,4 +138,9 @@ ErrCode ExtBackup::OnProcess(function<void(ErrCode, std::string)> callback)
 {
     return BExtBackup::extBackup->OnProcess(callback);
 }
+
+ErrCode ExtBackup::OnRelease(function<void(ErrCode, std::string)> callback, int32_t scenario)
+{
+    return BExtBackup::extBackup->OnRelease(callback, scenario);
+}
 } // namespace OHOS::FileManagement::Backup

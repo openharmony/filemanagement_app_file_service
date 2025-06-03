@@ -137,6 +137,14 @@ public:
     */
     ErrCode OnProcess(std::function<void(ErrCode, const std::string)> callback) override;
 
+    /**
+     * @brief Call the app's onRelease
+     * 
+     * @param callback The callBack.
+     * @param scenario The scenario: backup = 1, restore = 2.
+     */
+    ErrCode OnRelease(std::function<void(ErrCode, const std::string)> callback, int32_t scenario) override;
+
 public:
     explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime);
     ~ExtBackupJs();
@@ -152,6 +160,8 @@ private:
 
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseBackupExInfo();
 
+    std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseReleaseInfo();
+
     ErrCode CallJSRestoreEx();
     ErrCode CallJSRestore();
     ErrCode CallJsOnBackupEx();
@@ -166,10 +176,12 @@ private:
     std::shared_ptr<CallbackInfoEx> callbackInfoEx_;
     std::shared_ptr<CallbackInfo> callbackInfo_;
     std::shared_ptr<OnProcessCallBackInfo> onProcessCallback_;
+    std::shared_ptr<CallbackInfo> onReleaseCallback_;
     std::condition_variable callJsCon_;
     std::mutex callJsMutex_;
     std::atomic<bool> callExtDefaultFunc_ {false}; // extension default method, onBackup or onRestore
     std::atomic<bool> callJsExMethodDone_ {false};
+    int32_t scenario_;
 };
 } // namespace OHOS::FileManagement::Backup
 

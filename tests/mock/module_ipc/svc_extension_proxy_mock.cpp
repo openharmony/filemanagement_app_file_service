@@ -93,4 +93,9 @@ ErrCode ExtensionProxy::CleanBundleTempDir()
 {
     return 0;
 }
+
+ErrCode ExtensionProxy::HandleOnRelease(bool isNeedWait)
+{
+    return 0;
+}
 } // namespace OHOS::FileManagement::Backup

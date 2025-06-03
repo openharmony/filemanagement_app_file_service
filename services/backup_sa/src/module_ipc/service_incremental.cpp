@@ -688,11 +688,8 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
-            ret = HandleCurAppDone(errCode, callerName, true);
-            if (ret != ERR_OK) {
-                HILOGE("Handle current app done error, bundleName:%{public}s", callerName.c_str());
-                return ret;
-            }
+            SetExtOnRelease(callerName, true);
+            return BError(BError::Codes::OK);
         }
         RemoveExtensionMutex(callerName);
         OnAllBundlesFinished(BError(BError::Codes::OK));
@@ -1000,6 +997,7 @@ void Service::CancelTask(std::string bundleName, wptr<Service> ptr)
         proxy->HandleClear();
         session->StopFwkTimer(bundleName);
         session->StopExtTimer(bundleName);
+        proxy->HandleOnRelease(true);
         backUpConnection->DisconnectBackupExtAbility();
         thisPtr->ClearSessionAndSchedInfo(bundleName);
         IServiceReverseType::Scenario scenario = session->GetScenario();

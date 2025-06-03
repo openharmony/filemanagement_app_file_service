@@ -383,11 +383,8 @@ ErrCode Service::AppDone(ErrCode errCode)
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
-            ret = HandleCurAppDone(errCode, callerName, false);
-            if (ret != ERR_OK) {
-                HILOGE("Handle current app done error, bundleName:%{public}s", callerName.c_str());
-                return ret;
-            }
+            SetExtOnRelease(callerName, true);
+            return BError(BError::Codes::OK);
         }
         RemoveExtensionMutex(callerName);
         OnAllBundlesFinished(BError(BError::Codes::OK));
@@ -1415,5 +1412,72 @@ ErrCode Service::CleanBundleTempDir(const string &bundleName)
     backupConnection->DisconnectBackupExtAbility();
     session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     return BError(BError::Codes::OK);
+}
+
+ErrCode Service::HandleExtDisconnect(bool isIncBackup)
+{
+    HILOGI("begin, isIncBackup: %{public}d", isIncBackup);
+    std::string callerName;
+    auto ret = VerifyCallerAndGetCallerName(callerName);
+    if (ret != ERR_OK) {
+        HILOGE("HandleExtDisconnect VerifyCaller failed, get bundle failed, ret:%{public}d", ret);
+        return ret;
+    }
+    std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
+    if(mutexPtr == nullptr) {
+        HILOGE("extension mutex ptr is nullptr, bundleName:%{public}s", callerName.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
+    ret = HandleCurAppDone(ret, callerName, isIncBackup);
+    if (ret != ERR_OK) {
+        HILOGE("Handle current app done error, bundleName:%{public}s", callerName.c_str());
+        return ret;
+    }
+    RemoveExtensionMutex(callerName);
+    RemoveExtOnRelease(callerName);
+    OnAllBundlesFinished(BError(BError::Codes::OK));
+    return ret;
+}
+
+ErrCode Service::GetExtOnRelease(bool &isExtOnRelease)
+{
+    std::string bundleName;
+    auto ret = VerifyCallerAndGetCallerName(bundleName);
+    if (ret != ERR_OK) {
+        HILOGE("GetExtOnRelease VerifyCaller failed, get bundle failed, ret:%{public}d", ret);
+        return ret;
+    }
+    auto it = backupExtOnReleaseMap_.find(bundleName);
+    if (it == backupExtOnReleaseMap_.end()) {
+        HILOGI("BackupExtOnReleaseMap not contain %{public}s", bundleName.c_str());
+        backupExtOnReleaseMap_[bundleName] = false;
+        isExtOnRelease = backupExtOnReleaseMap_[bundleName].load();
+        return ret;
+    }
+    HILOGI("BackupExtOnReleaseMap contain %{public}s", bundleName.c_str());
+    isExtOnRelease = backupExtOnReleaseMap_[bundleName].load();
+    return ret;
+}
+
+void Service::SetExtOnRelease(const BundleName &bundleName, bool isOnRelease)
+{
+    HILOGI("Set bundleName:%{public}s isOnRelease:%{public}d", bundleName.c_str(), isOnRelease);
+    auto it = backupExtOnReleaseMap_.find(bundleName);
+    if (it == backupExtOnReleaseMap_.end()) {
+        backupExtOnReleaseMap_[bundleName] = isOnRelease;
+        return;
+    }
+    it->second.store(isOnRelease);
+}
+
+void Service::RemoveExtOnRelease(const BundleName &bundleName)
+{
+    auto it = backupExtOnReleaseMap_.find(bundleName);
+    if (it == backupExtOnReleaseMap_.end()) {
+        HILOGI("BackupExtOnReleaseMap not contain %{public}s", bundleName.c_str());
+        return;
+    }
+    backupExtOnReleaseMap_.erase(it);
 }
 }
