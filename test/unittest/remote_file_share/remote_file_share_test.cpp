@@ -252,7 +252,7 @@ namespace {
     HWTEST_F(RemoteFileShareTest, Remote_file_share_GetDfsUriFromLocal_0007, testing::ext::TestSize.Level1)
     {
         GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_GetDfsUriFromLocal_0007";
-        const string uriStr = "file://com.demo.a/./data/storage/el2/base/remote_file_share_test.txt";
+        const string uriStr = "file://com.demo.a/../data/storage/el2/base/remote_file_share_test.txt";
         const int userId = 100;
         HmdfsUriInfo hui;
         int ret = RemoteFileShare::GetDfsUriFromLocal(uriStr, userId, hui);
@@ -732,7 +732,7 @@ namespace {
     HWTEST_F(RemoteFileShareTest, remote_file_share_test_0017, testing::ext::TestSize.Level1)
     {
         GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  remote_file_share_test_0017";
-        vector<string> uriList = {"file://docs/storage/Users/currentUser/./Document/1.txt"};
+        vector<string> uriList = {"file://docs/storage/Users/currentUser/../Document/1.txt"};
         const string networkId = "100";
         const string deviceId = "001";
         vector<string> resultList;
