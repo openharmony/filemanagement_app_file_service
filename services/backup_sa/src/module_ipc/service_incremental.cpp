@@ -338,7 +338,17 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
     return errCode;
 }
 
-ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, std::string &errMsg)
+ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, int32_t &errCodeForMsg,
+                                                        std::string &errMsg)
+{
+    errCodeForMsg = InitIncrementalBackupSession(remote, errMsg);
+    HILOGI("Start InitIncrementalBackupSessionWithErrMsg, errCode:%{public}d, Msg :%{public}s",
+           errCodeForMsg,
+           errMsg.c_str());
+    return ERR_OK;
+}
+
+ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::BACKUP, GetCallerName(), Mode::INCREMENTAL);
@@ -963,6 +973,34 @@ void Service::SetBundleIncDataInfo(const std::vector<BIncrementalData>& bundlesT
     }
 }
 
+bool Service::CancelSessionClean(sptr<SvcSessionManager> session, std::string bundleName)
+{
+    if (session == nullptr) {
+        HILOGE("Session is nullptr");
+        return false;
+    }
+    auto connectionWptr = session->GetExtConnection(bundleName);
+    if (connectionWptr == nullptr) {
+        HILOGE("connectionWptr is null.");
+        return false;
+    }
+    auto backUpConnection = connectionWptr.promote();
+    if (backUpConnection == nullptr) {
+        HILOGE("Promote backUpConnection ptr is null.");
+        return false;
+    }
+    auto proxy = backUpConnection->GetBackupExtProxy();
+    if (!proxy) {
+        HILOGE("Extension backup Proxy is empty.");
+        return false;
+    }
+    proxy->HandleClear();
+    session->StopFwkTimer(bundleName);
+    session->StopExtTimer(bundleName);
+    backUpConnection->DisconnectBackupExtAbility();
+    return true;
+}
+
 void Service::CancelTask(std::string bundleName, wptr<Service> ptr)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -984,21 +1022,9 @@ void Service::CancelTask(std::string bundleName, wptr<Service> ptr)
     }
     do {
         std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
-        auto backUpConnection = session->GetExtConnection(bundleName);
-        if (backUpConnection == nullptr) {
-            HILOGE("Promote backUpConnection ptr is null.");
+        if (!CancelSessionClean(session, bundleName)) {
             break;
         }
-        auto proxy = backUpConnection->GetBackupExtProxy();
-        if (!proxy) {
-            HILOGE("Extension backup Proxy is empty.");
-            break;
-        }
-        proxy->HandleClear();
-        session->StopFwkTimer(bundleName);
-        session->StopExtTimer(bundleName);
-        proxy->HandleOnRelease(true);
-        backUpConnection->DisconnectBackupExtAbility();
         thisPtr->ClearSessionAndSchedInfo(bundleName);
         IServiceReverseType::Scenario scenario = session->GetScenario();
         if ((scenario == IServiceReverseType::Scenario::BACKUP && session->GetIsIncrementalBackup()) ||

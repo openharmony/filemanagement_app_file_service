@@ -57,8 +57,10 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &reverseIpcRemoteObject, std::string &errMsg)
+ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &reverseIpcRemoteObject,
+                                              int32_t &errCodeForMsg, std::string &errMsg)
 {
+    errCodeForMsg = BError(BError::Codes::OK);
     return BError(BError::Codes::OK);
 }
 
@@ -67,8 +69,10 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
+ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote,
+                                             int32_t &errCodeForMsg, std::string &errMsg)
 {
+    errCodeForMsg = BError(BError::Codes::OK);
     return BError(BError::Codes::OK);
 }
 
@@ -210,8 +214,10 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse> &remot
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote, std::string &errMsg)
+ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote,
+                                                        int32_t &errCodeForMsg, std::string &errMsg)
 {
+    errCodeForMsg = BError(BError::Codes::OK);
     return BError(BError::Codes::OK);
 }
 

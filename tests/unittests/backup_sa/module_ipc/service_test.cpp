@@ -91,7 +91,7 @@ ErrCode ServiceTest::Init(IServiceReverseType::Scenario scenario)
         sptr<IServiceReverse> srptr_=static_cast<sptr<IServiceReverse>>(remote_);
         ret = servicePtr_->InitRestoreSession(srptr_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-        ret = servicePtr_->InitRestoreSessionWithErrMsg(srptr_, errMsg);
+        servicePtr_->InitRestoreSessionWithErrMsg(srptr_, ret, errMsg);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
@@ -101,7 +101,7 @@ ErrCode ServiceTest::Init(IServiceReverseType::Scenario scenario)
         sptr<IServiceReverse> srptr_ = static_cast<sptr<IServiceReverse>>(remote_);
         ret = servicePtr_->InitBackupSession(srptr_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
-        ret = servicePtr_->InitBackupSessionWithErrMsg(srptr_, errMsg);
+        servicePtr_->InitBackupSessionWithErrMsg(srptr_, ret, errMsg);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->AppendBundlesBackupSession(bundleNames);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
