@@ -2027,6 +2027,7 @@ void Service::DoTimeout(wptr<Service> ptr, std::string bundleName)
                 HILOGE("Extension backup Proxy is empty");
                 return;
             }
+            proxy->HandleOnRelease(true);
             sessionConnection->DisconnectBackupExtAbility();
         }
         TimeoutRadarReport(scenario, bundleName);

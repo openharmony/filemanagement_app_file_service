@@ -1703,14 +1703,11 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnReleaseCal
             HILOGE("App onRelease timeout");
             return;
         }
-        if (errCode == ERR_OK) {
-            HILOGI("OnReleaseCallback: App onReleased successfully");
-            extPtr->CloseOnReleaseTimeOutTimer();
-            extPtr->stopWaitOnRelease_.store(true);
-            extPtr->execOnReleaseCon_.notify_all();
-            return;
-        }
-        HILOGE("Call extension onRelease failed, errInfo = %{public}s", errMsg.c_str());
+        extPtr->CloseOnReleaseTimeOutTimer();
+        std::unique_lock<std::mutex> lock(extPtr->onReleaseLock_);
+        extPtr->stopWaitOnRelease_.store(true);
+        extPtr->execOnReleaseCon_.notify_all();
+        HILOGI("Extension onRelease end, errCode: %{public}d, errInfo: %{public}s", errCode, errMsg.c_str());
     };
 }
 
@@ -1779,6 +1776,7 @@ void BackupExtExtension::StartOnReleaseTimeOutTimer(wptr<BackupExtExtension> obj
             return;
         }
         HILOGI("OnRelease time out, need to stop wait");
+        std::unique_lock<std::mutex> lock(extPtr->onReleaseLock_);
         extPtr->stopWaitOnRelease_.store(true);
         extPtr->execOnReleaseCon_.notify_all();
         return;

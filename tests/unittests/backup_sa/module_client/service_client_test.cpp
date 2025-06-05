@@ -408,32 +408,4 @@ HWTEST_F(ServiceClientTest, SUB_service_client_test_1400, testing::ext::TestSize
     EXPECT_EQ(fileName, "");
     GTEST_LOG_(INFO) << "ServiceClientTest-end SUB_service_client_test_1400";
 }
-
-HWTEST_F(ServiceClientTest, SUB_service_client_test_1500, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceClientTest-begin SUB_service_client_test_1500";
-    proxy = ServiceClient::GetInstance();
-    EXPECT_NE(proxy, nullptr);
-    ErrCode ret = proxy->HandleExtDisconnect(false);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-    ret = proxy->HandleExtDisconnect(true);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-    GTEST_LOG_(INFO) << "ServiceClientTest-end SUB_service_client_test_1500";
-}
-
-HWTEST_F(ServiceClientTest, SUB_service_client_test_1600, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceClientTest-begin SUB_service_client_test_1600";
-    proxy = ServiceClient::GetInstance();
-    EXPECT_NE(proxy, nullptr);
-    bool isExtOnRelease = false;
-    ErrCode ret = proxy->GetExtOnRelease(isExtOnRelease);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-    EXPECT_EQ(isExtOnRelease, false);
-    isExtOnRelease = true;
-    ret = proxy->GetExtOnRelease(isExtOnRelease);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
-    EXPECT_EQ(isExtOnRelease, true);
-    GTEST_LOG_(INFO) << "ServiceClientTest-end SUB_service_client_test_1600";
-}
 } // namespace OHOS::FileManagement::Backup

@@ -997,6 +997,7 @@ bool Service::CancelSessionClean(sptr<SvcSessionManager> session, std::string bu
     proxy->HandleClear();
     session->StopFwkTimer(bundleName);
     session->StopExtTimer(bundleName);
+    proxy->HandleOnRelease(true);
     backUpConnection->DisconnectBackupExtAbility();
     return true;
 }

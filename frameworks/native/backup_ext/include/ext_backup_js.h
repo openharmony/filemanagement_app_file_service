@@ -181,7 +181,7 @@ private:
     std::mutex callJsMutex_;
     std::atomic<bool> callExtDefaultFunc_ {false}; // extension default method, onBackup or onRestore
     std::atomic<bool> callJsExMethodDone_ {false};
-    int32_t scenario_;
+    int32_t scenario_ { 0 };
 };
 } // namespace OHOS::FileManagement::Backup
 
