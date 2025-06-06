@@ -95,14 +95,8 @@ HWTEST_F(ServiceClientTest, SUB_service_client_test_0300, testing::ext::TestSize
     EXPECT_NE(proxy, nullptr);
     std::string bundleName;
     int32_t result = -1;
-    ErrCode ret = proxy->Cancel(bundleName, result);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK));
-    bundleName = "";
-    ret = proxy->Cancel(bundleName, result);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK));
     bundleName = "test";
-    ret = proxy->Cancel(bundleName, result);
-    EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK));
+    proxy->CancelForResult(bundleName, result);
     EXPECT_NE(result, 0);
     GTEST_LOG_(INFO) << "ServiceClientTest-end SUB_service_client_test_0300";
 }

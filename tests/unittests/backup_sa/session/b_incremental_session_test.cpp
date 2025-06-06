@@ -694,7 +694,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2100, testing::e
         auto err = backupSession->Cancel(bundleName);
         EXPECT_EQ(err, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
 
-        EXPECT_CALL(*proxy, Cancel(_, _)).WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
+        EXPECT_CALL(*proxy, CancelForResult(_, _)).WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
         ServiceClient::serviceProxy_ = proxy;
         err = backupSession->Cancel(bundleName);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
@@ -724,7 +724,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2200, testing::e
         auto err = restoreSession->Cancel(bundleName);
         EXPECT_EQ(err, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
 
-        EXPECT_CALL(*proxy, Cancel(_, _)).WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
+        EXPECT_CALL(*proxy, CancelForResult(_, _)).WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
         ServiceClient::serviceProxy_ = proxy;
         err = restoreSession->Cancel(bundleName);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());
@@ -754,7 +754,7 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2300, testing::e
         auto err = restoreAsyncSession->Cancel(bundleName);
         EXPECT_EQ(err, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
 
-        EXPECT_CALL(*proxy, Cancel(_, _)).WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
+        EXPECT_CALL(*proxy, CancelForResult(_, _)).WillOnce(DoAll(SetArgReferee<1>(0), Return(0)));
         ServiceClient::serviceProxy_ = proxy;
         err = restoreAsyncSession->Cancel(bundleName);
         EXPECT_EQ(err, BError(BError::Codes::OK).GetCode());

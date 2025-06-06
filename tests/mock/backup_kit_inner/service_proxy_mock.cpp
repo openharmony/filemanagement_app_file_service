@@ -91,6 +91,11 @@ ErrCode ServiceProxy::AppFileReady(const string &fileName, int fd, int32_t errCo
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::AppFileReadyWithoutFd(const string &fileName, int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceProxy::AppDone(ErrCode errCode)
 {
     return BError(BError::Codes::OK);
@@ -145,7 +150,7 @@ ErrCode ServiceProxy::Release()
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::Cancel(const std::string &bundleName, int32_t &result)
+ErrCode ServiceProxy::CancelForResult(const std::string &bundleName, int32_t &result)
 {
     result = BError(BError::Codes::OK);
     return BError(BError::Codes::OK);
@@ -197,6 +202,11 @@ ErrCode ServiceProxy::PublishSAIncrementalFile(const BFileInfo &fileInfo, int fd
 }
 
 ErrCode ServiceProxy::AppIncrementalFileReady(const string &fileName, int fd, int manifestFd, int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::AppIncrementalFileReadyWithoutFd(const string &fileName, int32_t errCode)
 {
     return BError(BError::Codes::OK);
 }

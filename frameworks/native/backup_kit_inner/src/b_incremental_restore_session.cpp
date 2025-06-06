@@ -224,11 +224,7 @@ ErrCode BIncrementalRestoreSession::Cancel(std::string bundleName)
         return result;
     }
 
-    ErrCode errCode = proxy->Cancel(bundleName, result);
-    if (errCode != 0) {
-        HILOGE("proxy->Cancel failed, errCode:%{public}d.", errCode);
-        return result;
-    }
+    proxy->CancelForResult(bundleName, result);
     return result;
 }
 

@@ -49,6 +49,19 @@ ErrCode ServiceReverse::IncrementalSaBackupOnFileReady(const std::string &bundle
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceReverse::IncrementalBackupOnFileReadyWithoutFd(const std::string &bundleName,
+                                                              const std::string &fileName,
+                                                              int32_t errCode)
+{
+    if (scenario_ != Scenario::BACKUP || !callbacksIncrementalBackup_.onFileReady) {
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
+        return BError(BError::Codes::OK);
+    }
+    BFileInfo bFileInfo(bundleName, fileName, 0);
+    callbacksIncrementalBackup_.onFileReady(bFileInfo, UniqueFd(INVALID_FD), UniqueFd(INVALID_FD), errCode);
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceReverse::IncrementalBackupOnBundleStarted(int32_t errCode, const std::string &bundleName)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksIncrementalBackup_.onBundleStarted) {

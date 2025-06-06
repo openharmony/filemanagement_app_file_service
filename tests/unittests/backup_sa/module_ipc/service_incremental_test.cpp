@@ -42,6 +42,7 @@ public:
     virtual ErrCode Start() = 0;
     virtual ErrCode PublishFile(const BFileInfo&) = 0;
     virtual ErrCode AppFileReady(const std::string &, int, int32_t) = 0;
+    virtual ErrCode AppFileReadyWithoutFd(const std::string &, int32_t) = 0;
     virtual ErrCode AppDone(ErrCode) = 0;
     virtual ErrCode ServiceResultReport(const std::string, BackupRestoreScenario, ErrCode) = 0;
     virtual ErrCode AppendBundlesRestoreSessionDataByDetail(int, const std::vector<std::string>&,
@@ -96,6 +97,7 @@ public:
     MOCK_METHOD(ErrCode, Start, ());
     MOCK_METHOD(ErrCode, PublishFile, (const BFileInfo&));
     MOCK_METHOD(ErrCode, AppFileReady, (const string&, int, int32_t));
+    MOCK_METHOD(ErrCode, AppFileReadyWithoutFd, (const string&, int32_t));
     MOCK_METHOD(ErrCode, AppDone, (ErrCode));
     MOCK_METHOD(ErrCode, ServiceResultReport, (const std::string, BackupRestoreScenario, ErrCode));
     MOCK_METHOD(ErrCode, AppendBundlesRestoreSessionDataByDetail, (int, (const std::vector<std::string>&),
@@ -191,6 +193,11 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
 ErrCode Service::AppFileReady(const std::string &fileName, int fd, int32_t appFileReadyErrCode)
 {
     return BService::serviceMock->AppFileReady(fileName, fd, appFileReadyErrCode);
+}
+
+ErrCode Service::AppFileReadyWithoutFd(const std::string &fileName, int32_t appFileReadyErrCode)
+{
+    return BService::serviceMock->AppFileReadyWithoutFd(fileName, appFileReadyErrCode);
 }
 
 ErrCode Service::AppDone(int32_t appDoneErrCode)
@@ -538,7 +545,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetLocalCapabilitiesIncr
         int fd = -1;
         service->GetLocalCapabilitiesIncremental({}, fd);
         service->session_ = session_;
-        EXPECT_EQ(static_cast<int>(fd), -ENOENT);
+        EXPECT_EQ(static_cast<int>(fd), BConstants::INVALID_FD_NUM);
 
         service->isOccupyingSession_ = true;
         fd = service->GetLocalCapabilitiesIncremental({});
@@ -1884,20 +1891,10 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Cancel_0000, TestSize.Le
         int32_t result;
 
         auto session_ = service->session_;
-        service->session_ = nullptr;
-        EXPECT_EQ(service->Cancel(bundleName, result),
-            BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
-        service->session_ = session_;
-
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
-        EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
-        auto ret = service->Cancel(bundleName, result);
-        EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
-
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetImpl()).WillOnce(Return(impl));
-        service->Cancel(bundleName, result);
+        service->CancelForResult(bundleName, result);
         EXPECT_EQ(result, BError(BError::BackupErrorCode::E_CANCEL_NO_TASK).GetCode());
 
         impl.backupExtNameMap.insert(make_pair(bundleName, info));
@@ -1905,14 +1902,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Cancel_0000, TestSize.Le
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetImpl()).WillOnce(Return(impl));
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::UNKNOWN));
-        service->Cancel(bundleName, result);
+        service->CancelForResult(bundleName, result);
         EXPECT_EQ(result, BError(BError::BackupErrorCode::E_CANCEL_NO_TASK).GetCode());
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetImpl()).WillOnce(Return(impl));
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::CLEAN));
-        service->Cancel(bundleName, result);
+        service->CancelForResult(bundleName, result);
         EXPECT_EQ(result, BError(BError::BackupErrorCode::E_CANCEL_NO_TASK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1945,14 +1942,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Cancel_0100, TestSize.Le
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetImpl()).WillOnce(Return(impl));
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::START));
-        service->Cancel(bundleName, result);
+        service->CancelForResult(bundleName, result);
         EXPECT_EQ(result, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK).GetCode());
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetImpl()).WillOnce(Return(impl));
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::RUNNING));
-        service->Cancel(bundleName, result);
+        service->CancelForResult(bundleName, result);
         EXPECT_EQ(result, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);

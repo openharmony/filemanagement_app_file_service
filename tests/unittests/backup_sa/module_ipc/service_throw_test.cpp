@@ -871,7 +871,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_GetLocalCapabilitiesIncremental_010
         EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         int fd = -1;
         ErrCode ret = service->GetLocalCapabilitiesIncremental(bundleNames, fd);
-        EXPECT_EQ(-fd, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
+        EXPECT_EQ(fd, BConstants::INVALID_FD_NUM);
 
         EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw runtime_error("运行时错误");

@@ -476,9 +476,9 @@ ErrCode BackupExtExtension::IndexFileReady(const TarMap &pkgInfo, sptr<IService>
         HILOGE("get index size fail err:%{public}d", err);
     }
     int fdval = open(INDEX_FILE_BACKUP.data(), O_RDONLY);
-    ErrCode ret =
-       proxy->AppFileReady(string(BConstants::EXT_BACKUP_MANAGE), fdval,
-           ERR_OK);
+    ErrCode ret = fdval < 0 ?
+            proxy->AppFileReadyWithoutFd(string(BConstants::EXT_BACKUP_MANAGE), ERR_OK) :
+            proxy->AppFileReady(string(BConstants::EXT_BACKUP_MANAGE), fdval, ERR_OK);
     if (SUCCEEDED(ret)) {
         HILOGI("The application is packaged successfully");
     } else {
@@ -527,7 +527,8 @@ ErrCode BackupExtExtension::BigFileReady(TarMap &bigFileInfo, sptr<IService> pro
                 continue;
             }
         }
-        ret = proxy->AppFileReady(item.first, fdval, errCode);
+        ret = fdval < 0 ? proxy->AppFileReadyWithoutFd(item.first, errCode) :
+                          proxy->AppFileReady(item.first, fdval, errCode);
         if (SUCCEEDED(ret)) {
             HILOGI("The application is packaged successfully, package name is %{public}s", item.first.c_str());
         } else {
@@ -707,7 +708,8 @@ static ErrCode TarFileReady(const TarMap &tarFileInfo, sptr<IService> proxy)
         HILOGE("TarFileReady open file failed, file name is %{public}s, err = %{public}d", tarName.c_str(), errno);
         errCode = errno;
     }
-    int ret = proxy->AppFileReady(tarName, fdval, errCode);
+    int ret = fdval < 0 ? proxy->AppFileReadyWithoutFd(tarName, errCode) :
+              proxy->AppFileReady(tarName, fdval, errCode);
     if (SUCCEEDED(ret)) {
         HILOGI("TarFileReady: AppFileReady success for %{public}s", tarName.c_str());
         // 删除文件
@@ -2003,75 +2005,6 @@ ErrCode BackupExtExtension::HandleRestore(bool isClearData)
     }
 }
 
-static bool IfEquality(const ReportFileInfo &info, const ReportFileInfo &infoAd)
-{
-    return info.filePath < infoAd.filePath;
-}
-
-static void AdDeduplication(vector<struct ReportFileInfo> &filesList)
-{
-    sort(filesList.begin(), filesList.end(), IfEquality);
-    auto it = unique(filesList.begin(), filesList.end(), [](const ReportFileInfo &info, const ReportFileInfo &infoAd) {
-        return info.filePath == infoAd.filePath;
-        });
-    filesList.erase(it, filesList.end());
-}
-
-void BackupExtExtension::FillFileInfos(UniqueFd incrementalFd,
-                                       UniqueFd manifestFd,
-                                       vector<struct ReportFileInfo> &allFiles,
-                                       vector<struct ReportFileInfo> &smallFiles,
-                                       vector<struct ReportFileInfo> &bigFiles)
-{
-    HILOGI("Begin Compare");
-    BReportEntity cloudRp(move(manifestFd));
-    unordered_map<string, struct ReportFileInfo> cloudFiles;
-    cloudRp.GetReportInfos(cloudFiles);
-    appStatistic_->scanFileSpend_.Start();
-    if (cloudFiles.empty()) {
-        FillFileInfosWithoutCmp(allFiles, smallFiles, bigFiles, move(incrementalFd));
-    } else {
-        FillFileInfosWithCmp(allFiles, smallFiles, bigFiles, cloudFiles, move(incrementalFd));
-    }
-
-    AdDeduplication(allFiles);
-    AdDeduplication(smallFiles);
-    AdDeduplication(bigFiles);
-    appStatistic_->smallFileCount_ = smallFiles.size();
-    appStatistic_->bigFileCount_ = bigFiles.size();
-    appStatistic_->scanFileSpend_.End();
-    HILOGI("End Compare, allfile is %{public}zu, smallfile is %{public}zu, bigfile is %{public}zu",
-        allFiles.size(), smallFiles.size(), bigFiles.size());
-}
-
-ErrCode BackupExtExtension::HandleIncrementalBackup(int incrementalFd, int manifestFd)
-{
-    HILOGI("Start HandleIncrementalBackup. incrementalFd:%{public}d, manifestFd:%{public}d", incrementalFd, manifestFd);
-    UniqueFd incrementalFdUnique(dup(incrementalFd));
-    UniqueFd manifestFdUnique(dup(manifestFd));
-    ErrCode ret = HandleIncrementalBackup(std::move(incrementalFdUnique), std::move(manifestFdUnique));
-    close(incrementalFd);
-    close(manifestFd);
-    return ret;
-}
-
-ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    try {
-        HILOGI("Start HandleIncrementalBackup");
-        if (!IfAllowToBackupRestore()) {
-            return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
-                .GetCode();
-        }
-        AsyncTaskDoIncrementalBackup(move(incrementalFd), move(manifestFd));
-        return ERR_OK;
-    } catch (...) {
-        HILOGE("Failed to handle incremental backup");
-        return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
-    }
-}
-
 ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -2125,7 +2058,9 @@ ErrCode BackupExtExtension::IncrementalTarFileReady(const TarMap &bigFileInfo,
     string tarName = string(INDEX_FILE_INCREMENTAL_BACKUP).append(tarFile);
     int fd = open(tarName.data(), O_RDONLY);
     int manifestFd = open(file.data(), O_RDONLY);
-    ErrCode ret = proxy->AppIncrementalFileReady(tarFile, fd, manifestFd, ERR_OK);
+    ErrCode ret = (fd < 0 || manifestFd < 0) ?
+                  proxy->AppIncrementalFileReadyWithoutFd(tarFile, ERR_OK) :
+                  proxy->AppIncrementalFileReady(tarFile, fd, manifestFd, ERR_OK);
     if (SUCCEEDED(ret)) {
         HILOGI("IncrementalTarFileReady: The application is packaged successfully");
         // 删除文件
@@ -2175,7 +2110,9 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
         string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append(item.first));
         WriteFile(file, bigInfo);
         int manifestFdval = open(file.data(), O_RDONLY);
-        ret = proxy->AppIncrementalFileReady(item.first, fdval, manifestFdval, errCode);
+        bool fdFlag = (fdval < 0 || manifestFdval < 0) ? false : true;
+        ErrCode ret = fdFlag ? proxy->AppIncrementalFileReady(item.first, fdval, manifestFdval, errCode) :
+                      proxy->AppIncrementalFileReadyWithoutFd(item.first, errCode);
         if (SUCCEEDED(ret)) {
             HILOGI("IncrementalBigFileReady: The application is packaged successfully, package name is %{public}s",
                    item.first.c_str());
@@ -2209,9 +2146,9 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
     WriteFile(file, srcFiles);
     int fdval = open(INDEX_FILE_BACKUP.data(), O_RDONLY);
     int manifestFdval = open(file.data(), O_RDONLY);
-    ErrCode ret =
-        proxy->AppIncrementalFileReady(string(BConstants::EXT_BACKUP_MANAGE), fdval,
-            manifestFdval, ERR_OK);
+    ErrCode ret = fdval < 0 ?
+            proxy->AppIncrementalFileReadyWithoutFd(string(BConstants::EXT_BACKUP_MANAGE), ERR_OK) :
+            proxy->AppIncrementalFileReady(string(BConstants::EXT_BACKUP_MANAGE), fdval, manifestFdval, ERR_OK);
     if (SUCCEEDED(ret)) {
         HILOGI("IncrementalAllFileReady successfully");
         RemoveFile(file);

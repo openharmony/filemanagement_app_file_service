@@ -26,6 +26,7 @@ class ServiceReverseProxyMock : public IRemoteProxy<IServiceReverse> {
 public:
     MOCK_METHOD(int, SendRequest, (uint32_t, MessageParcel &, MessageParcel &, MessageOption &));
     MOCK_METHOD(ErrCode, BackupOnFileReady, (const std::string &, const std::string &, int, int32_t));
+    MOCK_METHOD(ErrCode, BackupOnFileReadyWithoutFd, (const std::string &, const std::string &, int32_t));
     MOCK_METHOD(ErrCode, BackupOnBundleStarted, (int32_t, const std::string &));
     MOCK_METHOD(ErrCode, BackupOnResultReport, (const std::string &, const std::string &));
     ;
@@ -38,11 +39,13 @@ public:
     MOCK_METHOD(ErrCode, RestoreOnBundleFinished, (int32_t, const std::string &));
     MOCK_METHOD(ErrCode, RestoreOnAllBundlesFinished, (int32_t));
     MOCK_METHOD(ErrCode, RestoreOnFileReady, (const std::string &, const std::string &, int32_t, int32_t));
+    MOCK_METHOD(ErrCode, RestoreOnFileReadyWithoutFd, (const std::string &, const std::string &, int32_t));
     MOCK_METHOD(ErrCode, RestoreOnResultReport, (const std::string &, const std::string &, ErrCode));
     MOCK_METHOD(ErrCode, RestoreOnProcessInfo, (const std::string &, const std::string &));
 
     MOCK_METHOD(ErrCode, IncrementalBackupOnFileReady, (const std::string &, const std::string &, int, int, int32_t));
     MOCK_METHOD(ErrCode, IncrementalSaBackupOnFileReady, (const std::string &, const std::string &, int, int32_t));
+    MOCK_METHOD(ErrCode, IncrementalBackupOnFileReadyWithoutFd, (const std::string &, const std::string &, int32_t));
     MOCK_METHOD(ErrCode, IncrementalBackupOnBundleStarted, (int32_t, const std::string &));
     MOCK_METHOD(ErrCode, IncrementalBackupOnResultReport, (const std::string &, const std::string &));
     MOCK_METHOD(ErrCode, IncrementalBackupOnBundleFinished, (int32_t, const std::string &));

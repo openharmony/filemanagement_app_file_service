@@ -1681,4 +1681,73 @@ tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     return {UniqueFd(BConstants::INVALID_FD_NUM), UniqueFd(BConstants::INVALID_FD_NUM)};
 }
+
+static bool IfEquality(const ReportFileInfo &info, const ReportFileInfo &infoAd)
+{
+    return info.filePath < infoAd.filePath;
+}
+
+static void AdDeduplication(vector<struct ReportFileInfo> &filesList)
+{
+    sort(filesList.begin(), filesList.end(), IfEquality);
+    auto it = unique(filesList.begin(), filesList.end(), [](const ReportFileInfo &info, const ReportFileInfo &infoAd) {
+        return info.filePath == infoAd.filePath;
+        });
+    filesList.erase(it, filesList.end());
+}
+
+void BackupExtExtension::FillFileInfos(UniqueFd incrementalFd,
+                                       UniqueFd manifestFd,
+                                       vector<struct ReportFileInfo> &allFiles,
+                                       vector<struct ReportFileInfo> &smallFiles,
+                                       vector<struct ReportFileInfo> &bigFiles)
+{
+    HILOGI("Begin Compare");
+    BReportEntity cloudRp(move(manifestFd));
+    unordered_map<string, struct ReportFileInfo> cloudFiles;
+    cloudRp.GetReportInfos(cloudFiles);
+    appStatistic_->scanFileSpend_.Start();
+    if (cloudFiles.empty()) {
+        FillFileInfosWithoutCmp(allFiles, smallFiles, bigFiles, move(incrementalFd));
+    } else {
+        FillFileInfosWithCmp(allFiles, smallFiles, bigFiles, cloudFiles, move(incrementalFd));
+    }
+
+    AdDeduplication(allFiles);
+    AdDeduplication(smallFiles);
+    AdDeduplication(bigFiles);
+    appStatistic_->smallFileCount_ = smallFiles.size();
+    appStatistic_->bigFileCount_ = bigFiles.size();
+    appStatistic_->scanFileSpend_.End();
+    HILOGI("End Compare, allfile is %{public}zu, smallfile is %{public}zu, bigfile is %{public}zu",
+        allFiles.size(), smallFiles.size(), bigFiles.size());
+}
+
+ErrCode BackupExtExtension::HandleIncrementalBackup(int incrementalFd, int manifestFd)
+{
+    HILOGI("Start HandleIncrementalBackup. incrementalFd:%{public}d, manifestFd:%{public}d", incrementalFd, manifestFd);
+    UniqueFd incrementalFdUnique(dup(incrementalFd));
+    UniqueFd manifestFdUnique(dup(manifestFd));
+    ErrCode ret = HandleIncrementalBackup(std::move(incrementalFdUnique), std::move(manifestFdUnique));
+    close(incrementalFd);
+    close(manifestFd);
+    return ret;
+}
+
+ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        HILOGI("Start HandleIncrementalBackup");
+        if (!IfAllowToBackupRestore()) {
+            return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+                .GetCode();
+        }
+        AsyncTaskDoIncrementalBackup(move(incrementalFd), move(manifestFd));
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to handle incremental backup");
+        return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+    }
+}
 } // namespace OHOS::FileManagement::Backup

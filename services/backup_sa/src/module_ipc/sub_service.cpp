@@ -320,6 +320,11 @@ ErrCode Service::AppFileReady(const std::string &fileName, int fd, int32_t errCo
     return AppFileReady(fileName, std::move(fdUnique), errCode);
 }
 
+ErrCode Service::AppFileReadyWithoutFd(const std::string &fileName, int32_t errCode)
+{
+    return AppFileReady(fileName, UniqueFd(INVALID_FD), errCode);
+}
+
 ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -341,7 +346,9 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
             fd = session_->OnBundleExtManageInfo(callerName, move(fd));
         }
-        session_->GetServiceReverseProxy()->BackupOnFileReady(callerName, fileName, move(fd), errCode);
+        bool fdFlag = fd < 0 ? false : true;
+        fdFlag ? session_->GetServiceReverseProxy()->BackupOnFileReady(callerName, fileName, move(fd), errCode) :
+                 session_->GetServiceReverseProxy()->BackupOnFileReadyWithoutFd(callerName, fileName, errCode);
         FileReadyRadarReport(callerName, fileName, errCode, session_->GetScenario());
         if (session_->OnBundleFileReady(callerName, fileName)) {
             ret = HandleCurBundleFileReady(callerName, fileName, false);
