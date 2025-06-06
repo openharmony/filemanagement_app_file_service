@@ -130,6 +130,7 @@ ohos_unittest("tar_file_test") {
 
   sources = [
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_ani.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
@@ -181,6 +182,7 @@ ohos_unittest("tar_file_test") {
     "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
+    "runtime_core:ani",
     "samgr:samgr_proxy",
   ]
 
@@ -203,6 +205,7 @@ ohos_unittest("untar_file_sup_test") {
 
   sources = [
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_ani.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
@@ -259,6 +262,7 @@ ohos_unittest("untar_file_sup_test") {
     "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
+    "runtime_core:ani",
     "samgr:samgr_proxy",
   ]
 
@@ -280,6 +284,7 @@ ohos_unittest("untar_file_test") {
 
   sources = [
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_ani.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
@@ -331,6 +336,7 @@ ohos_unittest("untar_file_test") {
     "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
+    "runtime_core:ani",
     "samgr:samgr_proxy",
   ]
 
