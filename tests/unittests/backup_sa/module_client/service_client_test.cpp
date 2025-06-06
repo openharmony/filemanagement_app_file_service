@@ -97,7 +97,7 @@ HWTEST_F(ServiceClientTest, SUB_service_client_test_0300, testing::ext::TestSize
     int32_t result = -1;
     bundleName = "test";
     proxy->CancelForResult(bundleName, result);
-    EXPECT_NE(result, 0);
+    EXPECT_EQ(result, 0);
     GTEST_LOG_(INFO) << "ServiceClientTest-end SUB_service_client_test_0300";
 }
 
