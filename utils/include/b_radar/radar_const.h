@@ -87,7 +87,7 @@ struct RadarError {
     RadarError(BError errCode) { UpdateByBError(errCode); }
     RadarError(uint32_t moduleId, BError errCode) : moduleId_(moduleId) { UpdateByBError(errCode); }
     RadarError(uint32_t moduleId) : moduleId_(moduleId) {}
-    RadarError(uint32_t moduleId, uint32_t error) : moduleId_(moduleId) 
+    RadarError(uint32_t moduleId, uint32_t error) : moduleId_(moduleId)
     {
         error_ = TransferErrCode(error);
     }

@@ -62,6 +62,46 @@
 namespace OHOS::FileManagement::Backup {
 const uint32_t MAX_FD_GROUP_USE_TIME = 1000; // 每组打开最大时间1000ms
 
+ErrCode BackupExtExtension::HandleIncrementalBackup(int incrementalFd, int manifestFd)
+{
+    HILOGI("Start HandleIncrementalBackup. incrementalFd:%{public}d, manifestFd:%{public}d", incrementalFd, manifestFd);
+    UniqueFd incrementalFdUnique(dup(incrementalFd));
+    UniqueFd manifestFdUnique(dup(manifestFd));
+    ErrCode ret = HandleIncrementalBackup(std::move(incrementalFdUnique), std::move(manifestFdUnique));
+    close(incrementalFd);
+    close(manifestFd);
+    return ret;
+}
+
+ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        HILOGI("Start HandleIncrementalBackup");
+        if (!IfAllowToBackupRestore()) {
+            return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+                .GetCode();
+        }
+        AsyncTaskDoIncrementalBackup(move(incrementalFd), move(manifestFd));
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to handle incremental backup");
+        return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+    }
+}
+
+ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    SetClearDataFlag(isClearData);
+    if (!IfAllowToBackupRestore()) {
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+            .GetCode();
+    }
+    AsyncTaskOnIncrementalBackup();
+    return ERR_OK;
+}
+
 void BackupExtExtension::WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum)
 {
     HILOGD("WaitToSendFd Begin");
