@@ -746,7 +746,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
     auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
-    uint32_t totalTarUs = 0;
+    uint64_t totalTarUs = 0;
     for (const auto &small : srcFiles) {
         totalSize += small.second;
         fileCount += 1;
@@ -784,7 +784,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
         packFiles.clear();
         RefreshTimeInfo(startTime, fdNum);
     }
-    appStatistic_->tarSpend_ = totalTarUs / MS_TO_US;
+    appStatistic_->tarSpend_ = static_cast<uint32_t>(totalTarUs / MS_TO_US);
 }
 
 int BackupExtExtension::DoBackup(TarMap &bigFileInfo, TarMap &fileBackupedInfo, map<string, size_t> &smallFiles,
