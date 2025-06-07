@@ -357,6 +357,9 @@ int32_t FilePermission::GrantPermission(const vector<UriPolicyInfo> &uriPolicies
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
+#else
+    LOGW("Sandbox manager bundle not exist, device not support.");
+    return FileManagement::LibN::E_DEVICENOTSUPPORT;
 #endif
     return errorCode;
 }
