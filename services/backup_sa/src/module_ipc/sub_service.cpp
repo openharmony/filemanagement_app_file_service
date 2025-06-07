@@ -630,13 +630,20 @@ void Service::SaStatReport(const string &bundleName, const string &func, RadarEr
             err.errMsg_.c_str());
         return;
     }
-    if (saStatistic_ == nullptr) {
-        saStatistic_ = std::make_shared<RadarAppStatistic>(bundleName, totalStatistic_->GetUniqId(),
-            totalStatistic_->GetBizScene());
+
+    std::shared_ptr<RadarAppStatistic> saStatistic = nullptr;
+    {
+        std::shared_lock<std::shared_mutex> mapLock(statMapMutex_);
+        if (saStatisticMap_.count(bundleName) > 0) {
+            saStatistic = saStatisticMap_[bundleName];
+            saStatistic->doBackupSpend_.End();
+            saStatistic->doRestoreSpend_ = TimeUtils::GetSpendMS(saStatistic->doRestoreStart_);
+        } else {
+            saStatistic = std::make_shared<RadarAppStatistic>(bundleName, totalStatistic_->GetUniqId(),
+                totalStatistic_->GetBizScene());
+        }
     }
-    saStatistic_->doBackupSpend_.End();
-    saStatistic_->doRestoreSpend_ = TimeUtils::GetSpendMS(saStatistic_->doRestoreStart_);
-    saStatistic_->ReportSA(func, err);
+    saStatistic->ReportSA(func, err);
 }
 
 void Service::ExtConnectDied(const string &callName)
@@ -911,7 +918,7 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::st
     ErrCode ret = VerifyCaller();
     if (ret != ERR_OK) {
         HILOGE("Init restore session failed, verify caller failed");
-        totalStatistic_->Report("InitRestoreSession", ret, MODULE_INIT);
+        totalStatistic_->Report("InitRestoreSession", MODULE_INIT, ret);
         return ret;
     }
     ret = session_->Active({
@@ -929,7 +936,7 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::st
         ClearFileReadyRadarReport();
         return ret;
     }
-    totalStatistic_->Report("InitRestoreSession", ret, MODULE_INIT);
+    totalStatistic_->Report("InitRestoreSession", MODULE_INIT, ret);
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),
@@ -959,7 +966,7 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse>& remote, std::str
     ErrCode ret = VerifyCaller();
     if (ret != ERR_OK) {
         HILOGE("Init full backup session fail, verify caller failed");
-        totalStatistic_->Report("InitBackupSessionWithErrMsg", ret, MODULE_INIT);
+        totalStatistic_->Report("InitBackupSessionWithErrMsg", MODULE_INIT, ret);
         return ret;
     }
     int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
@@ -980,7 +987,7 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse>& remote, std::str
         ClearFileReadyRadarReport();
         return ret;
     }
-    totalStatistic_->Report("InitBackupSessionWithErrMsg", ret, MODULE_INIT);
+    totalStatistic_->Report("InitBackupSessionWithErrMsg", MODULE_INIT, ret);
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),

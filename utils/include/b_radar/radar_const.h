@@ -87,7 +87,11 @@ struct RadarError {
     RadarError(BError errCode) { UpdateByBError(errCode); }
     RadarError(uint32_t moduleId, BError errCode) : moduleId_(moduleId) { UpdateByBError(errCode); }
     RadarError(uint32_t moduleId) : moduleId_(moduleId) {}
-    RadarError(uint32_t moduleId, uint16_t error) : moduleId_(moduleId), error_(error) {}
+    RadarError(uint32_t moduleId, uint32_t error) : moduleId_(moduleId) 
+    {
+        error_ = TransferErrCode(error);
+    }
+
     int32_t GenCode()
     {
         if (error_ == 0) {
@@ -100,15 +104,22 @@ struct RadarError {
     {
         int32_t code = errCode.GetCode();
         errMsg_ = errCode.ToString();
+        error_ = TransferErrCode(code);
+    }
+
+    int16_t TransferErrCode(int32_t code)
+    {
         if (code == 0) {
-            error_ = 0;
-            return;
+            return 0;
+        }
+        if (code < 0) {
+            code = -code;
         }
         int32_t errBase = code / DIVIDE_BASE;
         while (errBase > TRANSFER_BOUND) {
             errBase /= ADDITION_DIVIDE_BASE;
         }
-        error_ = static_cast<int16_t>(errBase + code % MOD_BASE);
+        return static_cast<uint16_t>(errBase + code % MOD_BASE);
     }
 
     uint32_t moduleId_ = MODULE_UNKNOWN;

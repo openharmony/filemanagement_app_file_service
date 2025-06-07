@@ -2177,8 +2177,7 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
         int manifestFdval = open(file.data(), O_RDONLY);
         ret = proxy->AppIncrementalFileReady(item.first, fdval, manifestFdval, errCode);
         if (SUCCEEDED(ret)) {
-            HILOGI("IncrementalBigFileReady: The application is packaged successfully, package name is %{public}s",
-                   item.first.c_str());
+            HILOGI("IncreBigFileReady: The app is packaged success, package name is %{public}s", item.first.c_str());
             RemoveFile(file);
         } else {
             HILOGE("IncrementalBigFileReady interface fails to be invoked: %{public}d", ret);

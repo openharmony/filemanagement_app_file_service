@@ -79,6 +79,12 @@ HWTEST_F(BRadarTest, RadarErrorCode_0100, testing::ext::TestSize.Level1)
         RadarError err2(MODULE_ABILITY_MGR_SVC, BError(BError::Codes::OK));
         EXPECT_EQ(err2.GenCode(), 0);
         EXPECT_EQ(err2.moduleId_, MODULE_ABILITY_MGR_SVC);
+        RadarError err3(MODULE_INIT, 139000041);
+        EXPECT_EQ(err3.error_, 13941);
+        RadarError err4(MODULE_INIT, 1390000043);
+        EXPECT_EQ(err4.error_, 13943);
+        EXPECT_EQ(0, err4.TransferErrCode(0));
+        EXPECT_EQ(3099, err4.TransferErrCode(300000099));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BRadarTest-an exception occurred.";

@@ -473,7 +473,7 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
     ErrCode ret = VerifyCaller();
     if (ret != ERR_OK) {
         HILOGE("Init restore session failed, verify caller failed");
-        totalStatistic_->Report("InitRestoreSession", ret, MODULE_INIT);
+        totalStatistic_->Report("InitRestoreSession", MODULE_INIT, ret);
         return ret;
     }
     ret = session_->Active({
@@ -491,7 +491,7 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
         ClearFileReadyRadarReport();
         return ret;
     }
-    totalStatistic_->Report("InitRestoreSession", ret, MODULE_INIT);
+    totalStatistic_->Report("InitRestoreSession", MODULE_INIT, ret);
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         HILOGE("Active restore session error, Already have a session");
         return ret;
@@ -508,7 +508,7 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
     ErrCode ret = VerifyCaller();
     if (ret != ERR_OK) {
         HILOGE("Init full backup session fail, verify caller failed");
-        totalStatistic_->Report("InitBackupSession", ret, MODULE_INIT);
+        totalStatistic_->Report("InitBackupSession", MODULE_INIT, ret);
         return ret;
     }
     int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
@@ -529,7 +529,7 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
         ClearFileReadyRadarReport();
         return ret;
     }
-    totalStatistic_->Report("InitBackupSession", ret, MODULE_INIT);
+    totalStatistic_->Report("InitBackupSession", MODULE_INIT, ret);
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         HILOGE("Active backup session error, Already have a session");
         return ret;
@@ -625,7 +625,6 @@ vector<BJsonEntityCaps::BundleInfo> Service::GetRestoreBundleNames(UniqueFd fd, 
         };
         restoreBundleInfos.emplace_back(info);
     }
-    HILOGI("restoreBundleInfos size is:%{public}zu", restoreInfos.size());
     return restoreBundleInfos;
 }
 
@@ -990,10 +989,12 @@ ErrCode Service::ServiceResultReport(const std::string& restoreRetInfo, BackupRe
         }
         SendEndAppGalleryNotify(callerName);
         if (sennario == BackupRestoreScenario::FULL_RESTORE) {
+            UpdateHandleCnt(errCode);
             HandleCurBundleEndWork(callerName, sennario);
             session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, callerName, errCode);
             OnAllBundlesFinished(BError(BError::Codes::OK));
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
+            UpdateHandleCnt(errCode);
             HandleCurBundleEndWork(callerName, sennario);
             session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, callerName, errCode);
             OnAllBundlesFinished(BError(BError::Codes::OK));
@@ -1818,9 +1819,11 @@ ErrCode Service::BackupSA(std::string bundleName)
 {
     HILOGI("BackupSA begin %{public}s", bundleName.c_str());
     if (totalStatistic_ != nullptr) {
-        saStatistic_ = std::make_shared<RadarAppStatistic>(bundleName, totalStatistic_->GetUniqId(),
-            totalStatistic_->GetBizScene());
-        saStatistic_->doBackupSpend_.Start();
+        std::unique_lock<std::shared_mutex> mapLock(statMapMutex_);
+        std::shared_ptr<RadarAppStatistic> saStatistic = std::make_shared<RadarAppStatistic>(bundleName,
+            totalStatistic_->GetUniqId(), totalStatistic_->GetBizScene());
+        saStatistic->doBackupSpend_.Start();
+        saStatisticMap_[bundleName] = saStatistic;
     }
     IServiceReverseType::Scenario scenario = session_->GetScenario();
     auto backUpConnection = session_->GetSAExtConnection(bundleName);
@@ -1918,6 +1921,7 @@ ErrCode Service::SADone(ErrCode errCode, std::string bundleName)
 
 void Service::NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerName)
 {
+    UpdateHandleCnt(errCode);
     IServiceReverseType::Scenario scenario = session_->GetScenario();
     if (scenario == IServiceReverseType::Scenario::BACKUP) {
         HILOGI("will notify clone data, scenario is Backup");
