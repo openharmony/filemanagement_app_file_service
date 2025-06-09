@@ -748,7 +748,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
     auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
-    uint32_t totalTarUs = 0;
+    uint64_t totalTarUs = 0;
     for (const auto &small : srcFiles) {
         totalSize += small.second;
         fileCount += 1;
@@ -786,7 +786,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
         packFiles.clear();
         RefreshTimeInfo(startTime, fdNum);
     }
-    appStatistic_->tarSpend_ = totalTarUs / MS_TO_US;
+    appStatistic_->tarSpend_ = static_cast<uint32_t>(totalTarUs / MS_TO_US);
 }
 
 int BackupExtExtension::DoBackup(TarMap &bigFileInfo, TarMap &fileBackupedInfo, map<string, size_t> &smallFiles,
@@ -2114,8 +2114,7 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
         ErrCode ret = fdFlag ? proxy->AppIncrementalFileReady(item.first, fdval, manifestFdval, errCode) :
                       proxy->AppIncrementalFileReadyWithoutFd(item.first, errCode);
         if (SUCCEEDED(ret)) {
-            HILOGI("IncrementalBigFileReady: The application is packaged successfully, package name is %{public}s",
-                   item.first.c_str());
+            HILOGI("IncreBigFileReady: The app is packaged success, package name is %{public}s", item.first.c_str());
             RemoveFile(file);
         } else {
             HILOGE("IncrementalBigFileReady interface fails to be invoked: %{public}d", ret);

@@ -66,7 +66,7 @@ uint32_t TimeUtils::GetSpendMS(int64_t startTime)
     return static_cast<uint32_t>(endTime - startTime);
 }
 
-uint32_t TimeUtils::GetSpendUS(int64_t startTime)
+uint64_t TimeUtils::GetSpendUS(int64_t startTime)
 {
     if (startTime == 0) {
         return 0;
@@ -75,7 +75,7 @@ uint32_t TimeUtils::GetSpendUS(int64_t startTime)
     if (endTime < startTime) {
         return 0;
     }
-    return static_cast<uint32_t>(endTime - startTime);
+    return endTime - startTime;
 }
 
 std::string TimeUtils::GetCurrentTime()

@@ -743,7 +743,6 @@ private:
             }
         }
     }
-
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -779,7 +778,8 @@ private:
     std::atomic<bool> isScannedEnd_ {false};
     std::atomic<bool> onScanning_ {false};
     std::shared_ptr<RadarTotalStatistic> totalStatistic_ = nullptr;
-    std::shared_ptr<RadarAppStatistic> saStatistic_ = nullptr;
+    std::shared_mutex statMapMutex_;
+    std::map<std::string, std::shared_ptr<RadarAppStatistic>> saStatisticMap_;
 public:
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
     std::map<BundleName, BundleTaskInfo> failedBundles_;

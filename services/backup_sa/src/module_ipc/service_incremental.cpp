@@ -307,7 +307,7 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
     ErrCode errCode = VerifyCaller();
     if (errCode != ERR_OK) {
         HILOGE("Init incremental backup session fail, Verify caller failed, errCode:%{public}d", errCode);
-        totalStatistic_->Report("InitIncrementalBackupSession", errCode, MODULE_INIT);
+        totalStatistic_->Report("InitIncrementalBackupSession", MODULE_INIT, errCode);
         return errCode;
     }
     if (session_ == nullptr) {
@@ -328,7 +328,7 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
         ClearFileReadyRadarReport();
         return errCode;
     }
-    totalStatistic_->Report("InitIncrementalBackupSession", errCode, MODULE_INIT);
+    totalStatistic_->Report("InitIncrementalBackupSession", MODULE_INIT, errCode);
     if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         HILOGE("Active restore session error, Already have a session");
         return errCode;
@@ -355,7 +355,7 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
     ErrCode errCode = VerifyCaller();
     if (errCode != ERR_OK) {
         HILOGE("Init incremental backup session fail, Verify caller failed, errCode:%{public}d", errCode);
-        totalStatistic_->Report("InitIncrementalBackupSessionWithErrMsg", errCode, MODULE_INIT);
+        totalStatistic_->Report("InitIncrementalBackupSessionWithErrMsg", MODULE_INIT, errCode);
         return errCode;
     }
     if (session_ == nullptr) {
@@ -376,7 +376,7 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
         ClearFileReadyRadarReport();
         return errCode;
     }
-    totalStatistic_->Report("InitIncrementalBackupSessionWithErrMsg", errCode, MODULE_INIT);
+    totalStatistic_->Report("InitIncrementalBackupSessionWithErrMsg", MODULE_INIT, errCode);
     if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),
@@ -563,9 +563,11 @@ ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd
 {
     std::string bundleName = fileInfo.owner;
     if (totalStatistic_ != nullptr) {
-        saStatistic_ = std::make_shared<RadarAppStatistic>(bundleName, totalStatistic_->GetUniqId(),
-            totalStatistic_->GetBizScene());
-        saStatistic_->doRestoreStart_ = TimeUtils::GetTimeMS();
+        std::unique_lock<std::shared_mutex> mapLock(statMapMutex_);
+        std::shared_ptr<RadarAppStatistic> saStatistic = std::make_shared<RadarAppStatistic>(bundleName,
+            totalStatistic_->GetUniqId(), totalStatistic_->GetBizScene());
+        saStatistic->doRestoreStart_ = TimeUtils::GetTimeMS();
+        saStatisticMap_[bundleName] = saStatistic;
     }
     ErrCode errCode = VerifyCaller();
     if (errCode != ERR_OK) {
@@ -868,9 +870,11 @@ ErrCode Service::IncrementalBackupSA(std::string bundleName)
 {
     HILOGI("IncrementalBackupSA begin %{public}s", bundleName.c_str());
     if (totalStatistic_ != nullptr) {
-        saStatistic_ = std::make_shared<RadarAppStatistic>(bundleName, totalStatistic_->GetUniqId(),
-            totalStatistic_->GetBizScene());
-        saStatistic_->doBackupSpend_.Start();
+        std::unique_lock<std::shared_mutex> mapLock(statMapMutex_);
+        std::shared_ptr<RadarAppStatistic> saStatistic = std::make_shared<RadarAppStatistic>(bundleName,
+            totalStatistic_->GetUniqId(), totalStatistic_->GetBizScene());
+        saStatistic->doBackupSpend_.Start();
+        saStatisticMap_[bundleName] = saStatistic;
     }
     IServiceReverseType::Scenario scenario = session_->GetScenario();
     auto backUpConnection = session_->GetSAExtConnection(bundleName);
