@@ -566,7 +566,7 @@ ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd
         std::unique_lock<std::shared_mutex> mapLock(statMapMutex_);
         std::shared_ptr<RadarAppStatistic> saStatistic = std::make_shared<RadarAppStatistic>(bundleName,
             totalStatistic_->GetUniqId(), totalStatistic_->GetBizScene());
-        saStatistic->doRestoreStart_ = TimeUtils::GetTimeMS();
+        saStatistic->doRestoreStart_ = static_cast<uint64_t>(TimeUtils::GetTimeMS());
         saStatisticMap_[bundleName] = saStatistic;
     }
     ErrCode errCode = VerifyCaller();

@@ -1094,9 +1094,9 @@ TarMap BackupExtExtension::GetIncrmentBigInfos(const vector<struct ReportFileInf
             HILOGE("Failed to stat file %{public}s, err = %{public}d", item.filePath.c_str(), errno);
             throw errno;
         }
-        appStatistic_->bigFileSize_ += sta.st_size;
+        appStatistic_->bigFileSize_ += static_cast<uint64_t>(sta.st_size);
         UpdateFileStat(item.filePath, sta.st_size);
-        uint64_t hashStart = TimeUtils::GetTimeUS();
+        uint64_t hashStart = static_cast<uint64_t>(TimeUtils::GetTimeUS());
         string md5Name = getStringHash(bigFiles, item.filePath);
         appStatistic_->hashSpendUS_ += TimeUtils::GetSpendUS(hashStart);
         if (!md5Name.empty()) {
@@ -1250,7 +1250,7 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
     int fdNum = 0;
     string partName = GetIncrmentPartName();
     auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
-    uint64_t tarStart = TimeUtils::GetTimeMS();
+    uint64_t tarStart = static_cast<uint64_t>(TimeUtils::GetTimeMS());
     for (const auto &small : infos) {
         appStatistic_->smallFileSize_ += small.size;
         UpdateFileStat(small.filePath, small.size);

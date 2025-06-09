@@ -486,6 +486,7 @@ ErrCode BackupExtExtension::IndexFileReady(const TarMap &pkgInfo, sptr<IService>
             "The application is packaged successfully but the AppFileReady interface fails to be invoked: "
             "%{public}d",
             ret);
+        close(fdval);
     }
     HILOGI("End notify Appfile Ready");
     return ret;
@@ -856,13 +857,13 @@ tuple<ErrCode, uint32_t, uint32_t> BackupExtExtension::CalculateDataSize(const B
         HILOGD("bigfile size = %{public}" PRId64 "", fileSize);
         totalSize += fileSize;
     }
-    appStatistic_->bigFileSize_ = totalSize;
+    appStatistic_->bigFileSize_ = static_cast<uint64_t>(totalSize);
     HILOGI("bigfile size = %{public}" PRId64 "", totalSize);
     for (const auto &item : smallFiles) {
         UpdateFileStat(item.first, item.second);
         totalSize += static_cast<int64_t>(item.second);
     }
-    appStatistic_->smallFileSize_ = totalSize - appStatistic_->bigFileSize_;
+    appStatistic_->smallFileSize_ = static_cast<uint64_t>(totalSize - appStatistic_->bigFileSize_);
     HILOGI("scanning end, Datasize = %{public}" PRId64 "", totalSize);
     return {ERR_OK, static_cast<uint32_t>(includes.size()), static_cast<uint32_t>(excludes.size())};
 }
