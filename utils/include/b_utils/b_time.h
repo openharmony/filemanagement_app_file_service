@@ -29,7 +29,7 @@ public:
     static int64_t GetTimeUS();
     static uint32_t GetSpendSecond(int64_t startSecond);
     static uint32_t GetSpendMS(int64_t startMS);
-    static uint32_t GetSpendUS(int64_t startUS);
+    static uint64_t GetSpendUS(int64_t startUS);
     static std::string GetCurrentTime();
 };
 } // namespace OHOS::FileManagement::TimeUtils

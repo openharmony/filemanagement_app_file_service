@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_RADAR_TOTAL_STATISTIC_H
 
 #include <atomic>
+#include <mutex>
 #include "radar_const.h"
 #include "b_error/b_error.h"
 
@@ -37,7 +38,7 @@ public:
     ~RadarTotalStatistic() = default;
 
     void Report(const std::string &func, int32_t error, std::string errMsg = "");
-    void Report(const std::string &func, uint32_t moduleId, uint16_t moduleErr);
+    void Report(const std::string &func, uint32_t moduleId, uint32_t moduleErr);
     void Report(const std::string &func, BError errCode, uint32_t moduleId = MODULE_UNKNOWN);
     BizScene GetBizScene() { return bizScene_; }
     int64_t GetUniqId() { return uniqId_; }
@@ -47,8 +48,9 @@ private:
     std::string hostPkg_ = "";
     Mode mode_ = Mode::FULL;
     int64_t uniqId_ = 0;
-    std::atomic<uint32_t> lastSuccCnt_ = 0;
-    std::atomic<uint32_t> lastFailCnt_ = 0;
+    std::mutex lastCntMutex_;
+    uint32_t lastSuccCnt_ = 0;
+    uint32_t lastFailCnt_ = 0;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_RADAR_TOTAL_STATISTIC_H

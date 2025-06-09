@@ -62,6 +62,46 @@
 namespace OHOS::FileManagement::Backup {
 const uint32_t MAX_FD_GROUP_USE_TIME = 1000; // 每组打开最大时间1000ms
 
+ErrCode BackupExtExtension::HandleIncrementalBackup(int incrementalFd, int manifestFd)
+{
+    HILOGI("Start HandleIncrementalBackup. incrementalFd:%{public}d, manifestFd:%{public}d", incrementalFd, manifestFd);
+    UniqueFd incrementalFdUnique(dup(incrementalFd));
+    UniqueFd manifestFdUnique(dup(manifestFd));
+    ErrCode ret = HandleIncrementalBackup(std::move(incrementalFdUnique), std::move(manifestFdUnique));
+    close(incrementalFd);
+    close(manifestFd);
+    return ret;
+}
+
+ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        HILOGI("Start HandleIncrementalBackup");
+        if (!IfAllowToBackupRestore()) {
+            return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+                .GetCode();
+        }
+        AsyncTaskDoIncrementalBackup(move(incrementalFd), move(manifestFd));
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to handle incremental backup");
+        return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+    }
+}
+
+ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    SetClearDataFlag(isClearData);
+    if (!IfAllowToBackupRestore()) {
+        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
+            .GetCode();
+    }
+    AsyncTaskOnIncrementalBackup();
+    return ERR_OK;
+}
+
 void BackupExtExtension::WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum)
 {
     HILOGD("WaitToSendFd Begin");
@@ -230,6 +270,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreCallback(
         } else {
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, errMsg);
+            extensionPtr->ReportAppStatistic("OnRestoreCallback", errCode);
             extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::FULL_RESTORE, errCode);
         }
         extensionPtr->DoClear();
@@ -269,6 +310,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreExCallbac
         if (errCode == ERR_OK) {
             if (restoreRetInfo.size()) {
                 HILOGI("Will notify restore result report");
+                extensionPtr->ReportAppStatistic("OnRestoreExCallback1", errCode);
                 extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::FULL_RESTORE);
             }
             return;
@@ -279,6 +321,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreExCallbac
         } else {
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, restoreRetInfo);
+            extensionPtr->ReportAppStatistic("OnRestoreExCallback2", errCode);
             extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::FULL_RESTORE, errCode);
             extensionPtr->DoClear();
         }
@@ -333,7 +376,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
         if (errCode == ERR_OK) {
             if (restoreRetInfo.size()) {
-                extensionPtr->ReportAppStatistic("IncreOnRestoreExCallback", errCode);
+                extensionPtr->ReportAppStatistic("IncreOnRestoreExCallback1", errCode);
                 extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
             }
             return;
@@ -344,7 +387,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
         } else {
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, restoreRetInfo);
-            extensionPtr->ReportAppStatistic("IncreOnRestoreExCallback", errCode);
+            extensionPtr->ReportAppStatistic("IncreOnRestoreExCallback2", errCode);
             extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::INCREMENTAL_RESTORE, errCode);
             extensionPtr->DoClear();
         }
@@ -743,7 +786,7 @@ void BackupExtExtension::StartOnProcessTimeOutTimer(wptr<BackupExtExtension> obj
         }
         if (extPtr->onProcessTimeoutCnt_.load() >= BConstants::APP_ON_PROCESS_TIMEOUT_MAX_COUNT ||
             extPtr->isFirstCallOnProcess_.load()) {
-            HILOGE("The extension invokes the onProcess for more than three times or the first invoking of the"
+            HILOGE("The extension invokes the onProcess for more than three times or the first invoking of the "
                 "onProcess times out, timeoutCnt:%{public}d", extPtr->onProcessTimeoutCnt_.load());
             std::unique_lock<std::mutex> lock(extPtr->onProcessLock_);
             extPtr->stopCallJsOnProcess_.store(true);
