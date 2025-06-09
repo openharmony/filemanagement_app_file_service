@@ -62,18 +62,6 @@
 namespace OHOS::FileManagement::Backup {
 const uint32_t MAX_FD_GROUP_USE_TIME = 1000; // 每组打开最大时间1000ms
 
-ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    SetClearDataFlag(isClearData);
-    if (!IfAllowToBackupRestore()) {
-        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
-            .GetCode();
-    }
-    AsyncTaskOnIncrementalBackup();
-    return ERR_OK;
-}
-
 void BackupExtExtension::WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum)
 {
     HILOGD("WaitToSendFd Begin");
