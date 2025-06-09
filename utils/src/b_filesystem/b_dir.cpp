@@ -267,7 +267,8 @@ static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
         }
     }
 
-    set<string> expandPath, filteredPath;
+    set<string> expandPath;
+    set<string> filteredPath;
     for (size_t i = 0; i < gl->gl_pathc; ++i) {
         std::string tmpPath = gl->gl_pathv[i];
         auto pos = tmpPath.find(BConstants::FILE_SEPARATOR_CHAR);
