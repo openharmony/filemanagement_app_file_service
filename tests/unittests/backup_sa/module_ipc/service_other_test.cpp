@@ -1929,6 +1929,7 @@ HWTEST_F(ServiceTest, SUB_Service_DoTimeout_0000, TestSize.Level1)
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
@@ -2657,7 +2658,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetExtOnRelease_0000, testing::ext::TestSize.L
         EXPECT_EQ(isExtOnRelease, false);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleExtDisconnect.";
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetExtOnRelease.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetExtOnRelease_0000";
 }
@@ -2685,7 +2686,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetExtOnRelease_0100, testing::ext::TestSize.L
         EXPECT_EQ(isExtOnRelease, false);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleExtDisconnect.";
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetExtOnRelease.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetExtOnRelease_0100";
 }
@@ -2715,7 +2716,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetExtOnRelease_0200, testing::ext::TestSize.L
         service->RemoveExtOnRelease("bundleName");
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleExtDisconnect.";
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetExtOnRelease.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetExtOnRelease_0200";
 }

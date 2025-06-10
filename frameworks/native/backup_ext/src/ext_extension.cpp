@@ -1862,7 +1862,7 @@ void BackupExtExtension::AppDone(ErrCode errCode)
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
     }
     if (HandleGetExtOnRelease()) {
-        HandleOnRelease();
+        HandleExtOnRelease();
     }
 }
 

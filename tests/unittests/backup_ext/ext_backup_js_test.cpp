@@ -1609,7 +1609,7 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_InitTempPath_0100, testing::ext::Tes
 /**
  * @tc.number: SUB_backup_ext_js_OnRelease_0100
  * @tc.name: SUB_backup_ext_js_OnRelease_0100
- * @tc.desc: 测试 OnProcess 各个分支成功与失败
+ * @tc.desc: 测试 OnRelease 各个分支成功与失败
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -1636,7 +1636,7 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_OnRelease_0100, testing::ext::TestSi
 /**
  * @tc.number: SUB_backup_ext_js_OnRelease_0200
  * @tc.name: SUB_backup_ext_js_OnRelease_0200
- * @tc.desc: 测试 OnProcess 各个分支成功与失败
+ * @tc.desc: 测试 OnRelease 各个分支成功与失败
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1

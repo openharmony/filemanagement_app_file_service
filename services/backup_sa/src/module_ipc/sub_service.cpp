@@ -1445,7 +1445,7 @@ ErrCode Service::HandleExtDisconnect(bool isIncBackup)
         return ret;
     }
     std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
-    if(mutexPtr == nullptr) {
+    if (mutexPtr == nullptr) {
         HILOGE("extension mutex ptr is nullptr, bundleName:%{public}s", callerName.c_str());
         return BError(BError::Codes::SA_INVAL_ARG);
     }
@@ -1500,5 +1500,25 @@ void Service::RemoveExtOnRelease(const BundleName &bundleName)
         return;
     }
     backupExtOnReleaseMap_.erase(it);
+}
+
+void Service::HandleOnReleaseAndDisconnect(sptr<SvcSessionManager> sessionPtr, const std::string &bundleName)
+{
+    if (sessionPtr == nullptr) {
+        HILOGE("SessionPtr is nullptr.");
+        return;
+    }
+    auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
+    if (sessionConnection == nullptr) {
+        HILOGE("Error, sessionConnection is empty, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    auto proxy = sessionConnection->GetBackupExtProxy();
+    if (!proxy) {
+        HILOGE("Extension backup Proxy is empty");
+        return;
+    }
+    proxy->HandleOnRelease(static_cast<int32_t>(sessionPtr->GetScenario()));
+    sessionConnection->DisconnectBackupExtAbility();
 }
 }

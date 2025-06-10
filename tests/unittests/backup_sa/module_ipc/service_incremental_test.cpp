@@ -1802,7 +1802,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0000, TestSiz
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         service->CancelTask("", service);
         EXPECT_TRUE(true);
 
@@ -1812,7 +1813,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0000, TestSiz
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP))
+            .WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
         EXPECT_CALL(*session, GetIsIncrementalBackup()).WillOnce(Return(false));
         service->CancelTask("", service);
         EXPECT_TRUE(true);
@@ -1859,7 +1861,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0100, TestSiz
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE))
+            .WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
         EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(false));
         service->CancelTask("", service);
         EXPECT_TRUE(true);
@@ -1871,6 +1874,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0100, TestSiz
         EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE))
+            .WillOnce(Return(IServiceReverseType::Scenario::RESTORE))
             .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(true));
         service->CancelTask("", service);

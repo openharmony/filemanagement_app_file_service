@@ -139,7 +139,7 @@ public:
 
     /**
      * @brief Call the app's onRelease
-     * 
+     *
      * @param callback The callBack.
      * @param scenario The scenario: backup = 1, restore = 2.
      */

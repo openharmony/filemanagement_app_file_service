@@ -64,7 +64,7 @@ public:
     ErrCode User0OnBackup() override;
     ErrCode UpdateDfxInfo(int64_t uniqId, uint32_t extConnectSpend, const std::string &bundleName) override;
     ErrCode CleanBundleTempDir() override;
-    ErrCode HandleOnRelease(bool isNeedWait = false) override;
+    ErrCode HandleOnRelease(int32_t scenario) override;
 
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
@@ -85,12 +85,12 @@ public:
     ~BackupExtExtension()
     {
         onProcessTimeoutTimer_.Shutdown();
-        onReleaseTimeoutTimer_.Shutdown();
         threadPool_.Stop();
         onProcessTaskPool_.Stop();
         reportOnProcessRetPool_.Stop();
         doBackupPool_.Stop();
         onReleaseTaskPool_.Stop();
+        onReleaseTimeoutTimer_.Shutdown();
         if (callJsOnProcessThread_.joinable()) {
             callJsOnProcessThread_.join();
         }
@@ -397,6 +397,7 @@ private:
     void CallJsOnReleaseTask(wptr<BackupExtExtension> obj, int32_t scenario, bool isNeedDisconnect);
     bool HandleGetExtOnRelease();
     void SetAppResultReport(const std::string resultInfo, ErrCode errCode);
+    void HandleExtOnRelease();
     std::function<void(ErrCode, const std::string)> OnReleaseCallback(wptr<BackupExtExtension> obj);
 private:
     pair<TarMap, map<string, size_t>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes);

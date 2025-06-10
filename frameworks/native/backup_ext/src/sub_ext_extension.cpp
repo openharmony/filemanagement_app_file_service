@@ -475,7 +475,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupCall
         if (!errMsg.empty()) {
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, errMsg);
-            extensionPtr->SetAppResultReport(errInfo, errCode);
+            extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::FULL_BACKUP, errCode);
         }
         extensionPtr->AppDone(errCode);
         extensionPtr->DoClear();
@@ -515,7 +515,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
                 HILOGI("Will notify backup result report");
                 extensionPtr->FinishOnProcessTask();
                 extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
-                extensionPtr->SetAppResultReport(backupExRetInfo, errCode);
+                extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::FULL_BACKUP);
             }
             return;
         }
@@ -524,7 +524,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
         if (!backupExRetInfo.empty()) {
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, backupExRetInfo);
-            extensionPtr->SetAppResultReport(errInfo, errCode);
+            extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::FULL_BACKUP, errCode);
         }
         extensionPtr->AppDone(errCode);
         extensionPtr->DoClear();
@@ -568,7 +568,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupC
         if (!errMsg.empty()) {
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, errMsg);
-            extPtr->SetAppResultReport(errInfo, errCode);
+            extPtr->AppResultReport(errInfo, BackupRestoreScenario::INCREMENTAL_BACKUP, errCode);
         }
         extPtr->AppIncrementalDone(errCode);
         extPtr->DoClear();
@@ -612,7 +612,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupE
                 extensionPtr->FinishOnProcessTask();
                 proxy->GetAppLocalListAndDoIncrementalBackup();
                 HILOGI("Will notify backup result report");
-                extensionPtr->SetAppResultReport(backupExRetInfo, errCode);
+                extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::INCREMENTAL_BACKUP);
             }
             return;
         }
@@ -621,7 +621,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupE
         if (!backupExRetInfo.empty()) {
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, backupExRetInfo);
-            extensionPtr->SetAppResultReport(errInfo, errCode);
+            extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::INCREMENTAL_BACKUP, errCode);
         }
         extensionPtr->AppIncrementalDone(errCode);
         extensionPtr->DoClear();
@@ -836,7 +836,7 @@ void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
     }
     if (HandleGetExtOnRelease()) {
-        HandleOnRelease();
+        HandleExtOnRelease();
     }
 }
 
@@ -1746,33 +1746,32 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnReleaseCal
             HILOGE("App onRelease timeout");
             return;
         }
-        extPtr->CloseOnReleaseTimeOutTimer();
         std::unique_lock<std::mutex> lock(extPtr->onReleaseLock_);
+        extPtr->CloseOnReleaseTimeOutTimer();
         extPtr->stopWaitOnRelease_.store(true);
         extPtr->execOnReleaseCon_.notify_all();
         HILOGI("Extension onRelease end, errCode: %{public}d, errInfo: %{public}s", errCode, errMsg.c_str());
     };
 }
 
-ErrCode BackupExtExtension::HandleOnRelease(bool isNeedWait)
+ErrCode BackupExtExtension::HandleOnRelease(int32_t scenario)
 {
-    HILOGI("HandleOnRelease Begin");
-    auto ptr = wptr<BackupExtExtension>(this);
-    onReleaseTimeoutTimer_.Setup();
-    StartOnReleaseTimeOutTimer(ptr);
-    int32_t scenario = static_cast<int32_t>(BConstants::ExtensionScenario::RESTORE);
-    if (curScenario_ == BackupRestoreScenario::FULL_BACKUP ||
-        curScenario_ == BackupRestoreScenario::INCREMENTAL_BACKUP) {
-        scenario = static_cast<int32_t>(BConstants::ExtensionScenario::BACKUP);
-    }
-    // service主动release场景，等待onRelease完成或超时，备份/恢复完成场景不需等待
-    CallJsOnReleaseTask(ptr, scenario, !isNeedWait);
-    if (isNeedWait) {
+    try {
+        HILOGI("HandleOnRelease Begin, scenario: %{public}d", scenario);
+        VerifyCaller();
+        auto ptr = wptr<BackupExtExtension>(this);
+        onReleaseTimeoutTimer_.Setup();
+        StartOnReleaseTimeOutTimer(ptr);
+        // service主动release场景，等待onRelease完成或超时，备份/恢复完成场景不需等待
+        CallJsOnReleaseTask(ptr, scenario, false);
         HILOGI("Wait onRelease to do");
         std::unique_lock<std::mutex> lock(serviceCallReleaseLock_);
         execOnReleaseCon_.wait(lock, [this] { return stopWaitOnRelease_.load(); });
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to HandleOnRelease");
+        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
     }
-    return ERR_OK;
 }
 
 void BackupExtExtension::HandleExtDisconnect()
@@ -1793,7 +1792,8 @@ void BackupExtExtension::HandleExtDisconnect()
     }
 }
 
-bool BackupExtExtension::HandleGetExtOnRelease() {
+bool BackupExtExtension::HandleGetExtOnRelease()
+{
     HILOGI("HandleGetExtOnRelease begin");
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
@@ -1822,6 +1822,7 @@ void BackupExtExtension::StartOnReleaseTimeOutTimer(wptr<BackupExtExtension> obj
         std::unique_lock<std::mutex> lock(extPtr->onReleaseLock_);
         extPtr->stopWaitOnRelease_.store(true);
         extPtr->execOnReleaseCon_.notify_all();
+        extPtr->CloseOnReleaseTimeOutTimer();
         return;
     };
     uint32_t timerId = onReleaseTimeoutTimer_.Register(timeoutCallback, timeout, true);
@@ -1863,9 +1864,24 @@ void BackupExtExtension::CallJsOnReleaseTask(wptr<BackupExtExtension> obj, int32
 
 void BackupExtExtension::SetAppResultReport(const std::string resultInfo, ErrCode errCode)
 {
+    HILOGI("SetAppResultReport begin");
     needAppResultReport_.store(true);
     appResultReportInfo_ = resultInfo;
     appResultReportErrCode_ = errCode;
-    HandleOnRelease();
+    HandleExtOnRelease();
+}
+
+void BackupExtExtension::HandleExtOnRelease()
+{
+    HILOGI("HandleExtOnRelease begin");
+    int32_t scenario = static_cast<int32_t>(BConstants::ExtensionScenario::RESTORE);
+    if (curScenario_ == BackupRestoreScenario::FULL_BACKUP ||
+        curScenario_ == BackupRestoreScenario::INCREMENTAL_BACKUP) {
+        scenario = static_cast<int32_t>(BConstants::ExtensionScenario::BACKUP);
+    }
+    auto ptr = wptr<BackupExtExtension>(this);
+    onReleaseTimeoutTimer_.Setup();
+    StartOnReleaseTimeOutTimer(ptr);
+    CallJsOnReleaseTask(ptr, scenario, true);
 }
 } // namespace OHOS::FileManagement::Backup

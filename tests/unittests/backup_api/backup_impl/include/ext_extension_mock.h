@@ -175,7 +175,7 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    ErrCode HandleOnRelease(bool isNeedWait)
+    ErrCode HandleOnRelease(int32_t scenario)
     {
         return BError(BError::Codes::OK);
     };

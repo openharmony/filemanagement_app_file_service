@@ -67,7 +67,7 @@ public:
     virtual std::function<void(ErrCode, const std::string)> HandleTaskBackupEx(wptr<BackupExtExtension>) = 0;
     virtual void WaitToSendFd(std::chrono::system_clock::time_point&, int&) = 0;
     virtual void RefreshTimeInfo(std::chrono::system_clock::time_point&, int&) = 0;
-    virtual ErrCode HandleOnRelease(bool) = 0;
+    virtual ErrCode HandleOnRelease(int32_t) = 0;
 public:
     BExtExtension() = default;
     virtual ~BExtExtension() = default;
@@ -122,7 +122,7 @@ public:
     MOCK_METHOD(void, WaitToSendFd, ((std::chrono::system_clock::time_point&), int&));
     MOCK_METHOD(void, RefreshTimeInfo, ((std::chrono::system_clock::time_point&), int&));
     MOCK_METHOD(ErrCode, CleanBundleTempDir, ());
-    MOCK_METHOD(ErrCode, HandleOnRelease, (bool));
+    MOCK_METHOD(ErrCode, HandleOnRelease, (int32_t));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_EXT_EXTENSION_MOCK_H

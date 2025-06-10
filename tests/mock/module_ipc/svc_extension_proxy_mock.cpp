@@ -94,7 +94,7 @@ ErrCode ExtensionProxy::CleanBundleTempDir()
     return 0;
 }
 
-ErrCode ExtensionProxy::HandleOnRelease(bool isNeedWait)
+ErrCode ExtensionProxy::HandleOnRelease(int32_t scenario)
 {
     return 0;
 }

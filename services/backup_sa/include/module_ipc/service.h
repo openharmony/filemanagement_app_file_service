@@ -689,6 +689,8 @@ private:
 
     void SetScanningInfo(string &scanning, string name);
 
+    void HandleOnReleaseAndDisconnect(sptr<SvcSessionManager> sessionPtr, const std::string &bundleName);
+
     ErrCode InitRestoreSession(const sptr<IServiceReverse>& remote, std::string &errMsg);
     ErrCode InitBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg);
     ErrCode InitIncrementalBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg);
