@@ -52,10 +52,10 @@ export namespace fileShare {
 
   export function grantUriPermission(uri: string, bundleName: string, flag: wantConstant.Flags): Promise<void> {
     hilog.info(0x0000, 'grantUriPermission', "Start grantUriPermission in promise main thread");
-    let p = new Promise<void>((resolve: (value: undefined) => void, reject: (error: Object) => void): void => {
+    let p = new Promise<void>((resolve: (value: PromiseLike<void>) => void, reject: (error: Error) => void): void => {
       let p1 = taskpool.execute(grantUriPermissionSync, uri, bundleName, flag);
       p1.then((e: NullishType): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       });
       p1.catch((e: Error): void => {
         hilog.info(0x0000, 'grantUriPermission', "grantUriPermission catch in promise thread.");
