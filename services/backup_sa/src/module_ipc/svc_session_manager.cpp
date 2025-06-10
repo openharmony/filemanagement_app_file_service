@@ -1211,6 +1211,7 @@ bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::s
 {
     unique_lock<shared_mutex> lock(lock_);
     for (auto it = impl_.backupExtNameMap.begin(); it != impl_.backupExtNameMap.end();) {
+        HILOGI("BundleName: %{public}s, schedAction: %{public}d", it->first.c_str(), it->second.schedAction);
         if (it->second.schedAction == BConstants::ServiceSchedAction::WAIT) {
             it = impl_.backupExtNameMap.erase(it);
         } else if (it->second.schedAction == BConstants::ServiceSchedAction::START ||
@@ -1222,14 +1223,14 @@ bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::s
             }
             auto backUpConnection = it->second.backUpConnection;
             if (backUpConnection == nullptr) {
-                HILOGE("Clear session error, backUpConnection is empty");
+                HILOGE("Clear session error, backUpConnection is empty, bundleName: %{public}s", it->first.c_str());
                 it = impl_.backupExtNameMap.erase(it);
                 continue;
             }
             auto proxy = backUpConnection->GetBackupExtProxy();
             // start action
             if (proxy == nullptr) {
-                HILOGE("Clear session error, backUpConnection is empty");
+                HILOGE("Clear session error, BackupExtProxy is empty, bundleName: %{public}s", it->first.c_str());
                 backUpConnection->DisconnectBackupExtAbility();
                 it = impl_.backupExtNameMap.erase(it);
                 continue;
@@ -1246,6 +1247,7 @@ bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::s
             }
             proxy->HandleOnRelease(true);
             backUpConnection->DisconnectBackupExtAbility();
+            HILOGI("Disconnect extensionAbility, bundleName: %{public}s", it->first.c_str());
             it = impl_.backupExtNameMap.erase(it);
         } else {
             ++it;

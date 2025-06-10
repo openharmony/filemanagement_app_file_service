@@ -529,11 +529,8 @@ napi_value GrantDecUriPermission(napi_env env, FileManagement::LibN::NFuncArg &f
 
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
-        LOGE("Make_shared is failed");
-        std::tuple<uint32_t, std::string> errInfo =
-            std::make_tuple(E_UNKNOWN_ERROR, "Out of memory, execute make_shared function failed");
-        ErrParam errorParam = [errInfo]() { return errInfo; };
-        NError(errorParam).ThrowErr(env);
+        LOGE("PolicyInfoResultArgs make_shared is failed");
+        NError(E_NOMEM).ThrowErr(env);
         return nullptr;
     }
     auto cbExec = [uriPolicies, targetBundleName, appCloneIndex {move(appCloneIndex)}, arg]() -> NError {

@@ -486,6 +486,7 @@ ErrCode BackupExtExtension::IndexFileReady(const TarMap &pkgInfo, sptr<IService>
             "The application is packaged successfully but the AppFileReady interface fails to be invoked: "
             "%{public}d",
             ret);
+        close(fdval);
     }
     HILOGI("End notify Appfile Ready");
     return ret;
@@ -746,7 +747,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
     auto startTime = std::chrono::system_clock::now();
     int fdNum = 0;
     auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
-    uint32_t totalTarUs = 0;
+    uint64_t totalTarUs = 0;
     for (const auto &small : srcFiles) {
         totalSize += small.second;
         fileCount += 1;
@@ -784,7 +785,7 @@ void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &t
         packFiles.clear();
         RefreshTimeInfo(startTime, fdNum);
     }
-    appStatistic_->tarSpend_ = totalTarUs / MS_TO_US;
+    appStatistic_->tarSpend_ = static_cast<uint32_t>(totalTarUs / MS_TO_US);
 }
 
 int BackupExtExtension::DoBackup(TarMap &bigFileInfo, TarMap &fileBackupedInfo, map<string, size_t> &smallFiles,
@@ -856,13 +857,13 @@ tuple<ErrCode, uint32_t, uint32_t> BackupExtExtension::CalculateDataSize(const B
         HILOGD("bigfile size = %{public}" PRId64 "", fileSize);
         totalSize += fileSize;
     }
-    appStatistic_->bigFileSize_ = totalSize;
+    appStatistic_->bigFileSize_ = static_cast<uint64_t>(totalSize);
     HILOGI("bigfile size = %{public}" PRId64 "", totalSize);
     for (const auto &item : smallFiles) {
         UpdateFileStat(item.first, item.second);
         totalSize += static_cast<int64_t>(item.second);
     }
-    appStatistic_->smallFileSize_ = totalSize - appStatistic_->bigFileSize_;
+    appStatistic_->smallFileSize_ = static_cast<uint64_t>(totalSize - appStatistic_->bigFileSize_);
     HILOGI("scanning end, Datasize = %{public}" PRId64 "", totalSize);
     return {ERR_OK, static_cast<uint32_t>(includes.size()), static_cast<uint32_t>(excludes.size())};
 }
@@ -2047,46 +2048,6 @@ void BackupExtExtension::FillFileInfos(UniqueFd incrementalFd,
         allFiles.size(), smallFiles.size(), bigFiles.size());
 }
 
-ErrCode BackupExtExtension::HandleIncrementalBackup(int incrementalFd, int manifestFd)
-{
-    HILOGI("Start HandleIncrementalBackup. incrementalFd:%{public}d, manifestFd:%{public}d", incrementalFd, manifestFd);
-    UniqueFd incrementalFdUnique(dup(incrementalFd));
-    UniqueFd manifestFdUnique(dup(manifestFd));
-    ErrCode ret = HandleIncrementalBackup(std::move(incrementalFdUnique), std::move(manifestFdUnique));
-    close(incrementalFd);
-    close(manifestFd);
-    return ret;
-}
-
-ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    try {
-        HILOGI("Start HandleIncrementalBackup");
-        if (!IfAllowToBackupRestore()) {
-            return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
-                .GetCode();
-        }
-        AsyncTaskDoIncrementalBackup(move(incrementalFd), move(manifestFd));
-        return ERR_OK;
-    } catch (...) {
-        HILOGE("Failed to handle incremental backup");
-        return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
-    }
-}
-
-ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    SetClearDataFlag(isClearData);
-    if (!IfAllowToBackupRestore()) {
-        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
-            .GetCode();
-    }
-    AsyncTaskOnIncrementalBackup();
-    return ERR_OK;
-}
-
 static void WriteFile(const string &filename, const vector<struct ReportFileInfo> &srcFiles)
 {
     fstream f;
@@ -2180,8 +2141,7 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
         int manifestFdval = open(file.data(), O_RDONLY);
         ret = proxy->AppIncrementalFileReady(item.first, fdval, manifestFdval, errCode);
         if (SUCCEEDED(ret)) {
-            HILOGI("IncrementalBigFileReady: The application is packaged successfully, package name is %{public}s",
-                   item.first.c_str());
+            HILOGI("IncreBigFileReady: The app is packaged success, package name is %{public}s", item.first.c_str());
             RemoveFile(file);
         } else {
             HILOGE("IncrementalBigFileReady interface fails to be invoked: %{public}d", ret);

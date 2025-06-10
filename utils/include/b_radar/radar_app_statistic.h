@@ -43,7 +43,7 @@ enum FileType : uint8_t {
 };
 
 const std::unordered_map<std::string, FileType> FileTypeDef = {
-    {"txt", TXT}, {"log", TXT}, {"json", TXT}, {"xml", TXT},
+    {"txt", TXT}, {"log", TXT}, {"json", TXT}, {"xml", TXT}, {"db", TXT}, {"db-compare", TXT},
     {"jpg", PIC}, {"jpeg", PIC}, {"png", PIC}, {"bmp", PIC}, {"gif", PIC}, {"svg", PIC}, {"webp", PIC}, {"tif", PIC},
     {"raw", PIC},
     {"wav", AUDIO}, {"flac", AUDIO}, {"wma", AUDIO}, {"acc", AUDIO}, {"mp3", AUDIO}, {"ogg", AUDIO}, {"opus", AUDIO},
@@ -124,9 +124,9 @@ public:
     Duration onBackupexSpend_ = {0, 0};
     Duration scanFileSpend_ = {0, 0};
     int64_t sendRateZeroStart_ = 0;
-    uint32_t sendRateZeroSpendUS_ = 0;
+    uint64_t sendRateZeroSpendUS_ = 0;
     uint32_t tarSpend_ = 0;
-    uint32_t hashSpendUS_ = 0;
+    uint64_t hashSpendUS_ = 0;
     Duration doBackupSpend_ = {0, 0};
 
     Duration onRestoreSpend_ = {0, 0};
