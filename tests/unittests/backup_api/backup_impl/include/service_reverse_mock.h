@@ -198,6 +198,13 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode IncrementalRestoreOnFileReadyWithoutFd(const std::string &bundleName,
+                                                   const std::string &fileName,
+                                                   int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode IncrementalRestoreOnResultReport(const std::string &result,
                                              const std::string &bundleName,
                                              int32_t errCode) override

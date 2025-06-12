@@ -82,6 +82,9 @@ public:
                                           int fd,
                                           int manifestFd,
                                           int32_t errCode) override;
+    ErrCode IncrementalRestoreOnFileReadyWithoutFd(const std::string &bundleName,
+                                                   const std::string &fileName,
+                                                   int32_t errCode) override;
     ErrCode IncrementalRestoreOnResultReport(const std::string &result,
                                              const std::string &bundleName,
                                              ErrCode errCode) override;
