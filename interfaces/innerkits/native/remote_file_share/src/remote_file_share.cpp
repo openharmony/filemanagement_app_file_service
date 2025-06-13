@@ -28,8 +28,11 @@
 #include "device_manager.h"
 #include "device_manager_callback.h"
 #endif
+#include "iservice_registry.h"
+#include "istorage_manager.h"
 #include "sandbox_helper.h"
 #include "securec.h"
+#include "system_ability_definition.h"
 #include "unique_fd.h"
 #include "uri.h"
 
@@ -49,8 +52,8 @@ const std::string BACKSLASH = "/";
 const std::string DISTRIBUTED_DIR_PATH = "/data/storage/el2/distributedfiles";
 const std::string DST_PATH_HEAD = "/data/service/el2/";
 const std::string DST_PATH_MID = "/hmdfs/account/data/";
-const std::string SHAER_PATH_HEAD = "/mnt/hmdfs/";
-const std::string SHAER_PATH_MID = "/account/merge_view/services/";
+const std::string SHARE_PATH_HEAD = "/mnt/hmdfs/";
+const std::string SHARE_PATH_MID = "/account/merge_view/services/";
 const std::string LOWER_SHARE_PATH_HEAD = "/mnt/hmdfs/";
 const std::string LOWER_SHARE_PATH_MID = "/account/device_view/local/services/";
 const std::string SHARE_PATH_DIR = "/.share";
@@ -62,6 +65,13 @@ const std::string NETWORK_PARA = "?networkid=";
 const std::string MEDIA_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
 const std::string FILE_MANAGER_URI_HEAD = "/storage/";
 const std::string REMOTE_SHARE_PATH_MID = "hmdfs/";
+const std::string SANDBOX_BASE_DIR = "/data/storage/el2/base";
+const std::string SANDBOX_CLOUD_DIR = "/data/storage/el2/cloud";
+const std::string MEDIA_PHOTO_PATH = "/Photo";
+const std::string MEDIA_PATH_PREFIX_ONE = "/account/cloud_merge_view/files";
+const std::string MEDIA_PATH_PREFIX_TWO = "/account/merge_view/files";
+constexpr int32_t GET_CLIENT_RETRY_TIMES = 5;
+constexpr int32_t SLEEP_TIME = 1;
 } //namespace
 
 #define HMDFS_IOC_SET_SHARE_PATH _IOW(HMDFS_IOC, 1, struct HmdfsShareControl)
@@ -145,7 +155,7 @@ static int CreateShareDir(const std::string &path)
 
 static std::string GetSharePath(const int &userId, const std::string &packageName)
 {
-    return SHAER_PATH_HEAD + std::to_string(userId) + SHAER_PATH_MID + packageName;
+    return SHARE_PATH_HEAD + std::to_string(userId) + SHARE_PATH_MID + packageName;
 }
 
 static std::string GetLowerSharePath(const int &userId, const std::string &packageName)
@@ -283,6 +293,76 @@ static int GetDistributedPath(Uri &uri,
     return E_OK;
 }
 
+static int GetMediaDistributedDir(const int &userId, std::string &distributedDir, const std::string &networkId)
+{
+    distributedDir = DST_PATH_HEAD + std::to_string(userId) + DST_PATH_MID + MEDIA_BUNDLE_NAME +
+        REMOTE_SHARE_PATH_DIR + BACKSLASH + networkId + MEDIA_PHOTO_PATH;
+    if (distributedDir.size() >= PATH_MAX) {
+        LOGE("Path is too long with %{public}zu", distributedDir.size());
+        return -EINVAL;
+    }
+    LOGI("media distributedDir: %{private}s", distributedDir.c_str());
+    return E_OK;
+}
+
+static int GetDistributedDir(const int &userId, std::string &distributedDir, const std::string &bundleName,
+    const std::string &networkId, Uri uri)
+{
+    std::string sandboxPath = SandboxHelper::Decode(uri.GetPath());
+    std::string sandboxDir = "";
+    if (sandboxPath.rfind(DISTRIBUTED_DIR_PATH, 0) == 0) {
+        sandboxDir = DISTRIBUTED_DIR_PATH;
+    } else if (sandboxPath.rfind(SANDBOX_BASE_DIR, 0) == 0) {
+        sandboxDir = SANDBOX_BASE_DIR;
+    } else if (sandboxPath.rfind(SANDBOX_CLOUD_DIR, 0) == 0) {
+        sandboxDir = SANDBOX_CLOUD_DIR;
+    } else {
+        LOGE("Get distributed dir failed.");
+        return -EINVAL;
+    }
+    
+    distributedDir = DST_PATH_HEAD + std::to_string(userId) + DST_PATH_MID + bundleName + REMOTE_SHARE_PATH_DIR +
+        BACKSLASH + networkId + sandboxDir;
+    if (distributedDir.size() >= PATH_MAX) {
+        LOGE("Path is too long with %{public}zu", distributedDir.size());
+        return -EINVAL;
+    }
+    LOGI("bundleName: %{public}s, distributedDir: %{private}s", bundleName.c_str(), distributedDir.c_str());
+    return E_OK;
+}
+
+static int32_t GetMediaPhysicalDir(const int32_t &userId, std::string &physicalDir, const std::string &bundleName)
+{
+    if (bundleName != MEDIA_BUNDLE_NAME) {
+        LOGE("bundleName is not media type.");
+        return -EINVAL;
+    }
+    physicalDir = SHARE_PATH_HEAD + std::to_string(userId) + MEDIA_PATH_PREFIX_TWO + MEDIA_PHOTO_PATH;
+    if (physicalDir.size() >= PATH_MAX) {
+        LOGE("Path is too long with %{public}zu", physicalDir.size());
+        return -EINVAL;
+    }
+    LOGI("bundleName: %{public}s, physicalDir: %{private}s", bundleName.c_str(), physicalDir.c_str());
+    return E_OK;
+}
+
+static std::string GetPhysicalDir(Uri &uri, const int32_t &userId)
+{
+    std::string sandboxPath = SandboxHelper::Decode(uri.GetPath());
+    if (!SandboxHelper::IsValidPath(sandboxPath) || uri.GetScheme() != FILE_SCHEME) {
+        LOGE("Sandbox path from uri is error");
+        return "";
+    }
+
+    std::string physicalDir = "";
+    int ret = SandboxHelper::GetPhysicalDir(uri.ToString(), std::to_string(userId), physicalDir);
+    if (ret != E_OK) {
+        LOGE("Get physical path failed with %{public}d", ret);
+        return "";
+    }
+    return physicalDir;
+}
+
 static std::string GetPhysicalPath(Uri &uri, const std::string &userId)
 {
     std::string sandboxPath = SandboxHelper::Decode(uri.GetPath());
@@ -368,7 +448,7 @@ static int32_t SetPublicDirHmdfsInfo(const std::string &physicalPath, const std:
 static int32_t GetMergePathFd(HmdfsDstInfo &hdi, UniqueFd &dirFd, const int32_t &userId)
 {
     LOGI("Open merge path start");
-    std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + SHAER_PATH_MID;
+    std::string ioctlDir = SHARE_PATH_HEAD + std::to_string(userId) + SHARE_PATH_MID;
     UniqueFd dirMergeFd(open(ioctlDir.c_str(), O_RDONLY));
     if (dirFd < 0) {
         LOGE("Open merge path failed with %{public}d", errno);
@@ -413,7 +493,7 @@ int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int
     struct HmdfsDstInfo hdi;
     InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
     LOGI("open ioctlDir Create ioctl start");
-    std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
+    std::string ioctlDir = SHARE_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
     UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
     if (dirFd < 0) {
         LOGE("Open share path failed with %{public}d", errno);
@@ -455,7 +535,7 @@ static int32_t GetMediaDfsUrisFromLocal(const std::vector<std::string> &uriList,
                                         std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
 {
     LOGI("GetMediaDfsUrisFromLocal start");
-    std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
+    std::string ioctlDir = SHARE_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
     UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
     if (dirFd < 0) {
         LOGE("Open share path failed with %{public}d", errno);
@@ -503,7 +583,7 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
     if (ret != E_OK) {
         return ret;
     }
-    std::string ioctlDir = SHAER_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
+    std::string ioctlDir = SHARE_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
     UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
     if (dirFd < 0) {
         LOGE("Open share path failed with %{public}d", errno);
@@ -542,6 +622,235 @@ int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uri
         uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
     }
     LOGI("GetDfsUrisFromLocal successfully");
+    return E_OK;
+}
+
+static sptr<StorageManager::IStorageManager> GetStorageManager()
+{
+    auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saMgr == nullptr) {
+        LOGI("Get samgr failed.");
+        return nullptr;
+    }
+
+    int32_t count = 0;
+    sptr<StorageManager::IStorageManager> storageManager = nullptr;
+    while (storageManager == nullptr && count++ < GET_CLIENT_RETRY_TIMES) {
+        auto storageObj = saMgr->GetSystemAbility(STORAGE_MANAGER_MANAGER_ID);
+        if (storageObj == nullptr) {
+            LOGE("Get starage manger failed.");
+            sleep(SLEEP_TIME);
+            continue;
+        }
+
+        storageManager = iface_cast<StorageManager::IStorageManager>(storageObj);
+        if (storageManager == nullptr) {
+            LOGE("Iface_cast failed.");
+            sleep(SLEEP_TIME);
+            continue;
+        }
+    }
+    return storageManager;
+}
+
+static int32_t MountDisFileShare(const int32_t &userId, const std::string &distributedDir,
+    const std::string &physicalDir)
+{
+    if (distributedDir == "" || physicalDir == "") {
+        LOGE("Invalid distributedDir or physicalDir.");
+        return -EINVAL;
+    }
+    auto storageMgr = GetStorageManager();
+    if (storageMgr == nullptr) {
+        LOGE("Get storage manager failed.");
+        return -EINVAL;
+    }
+
+    std::map<std::string, std::string> shareFiles = {
+        {distributedDir, physicalDir}
+    };
+    int32_t ret = storageMgr->MountDisShareFile(userId, shareFiles);
+    if (ret != E_OK) {
+        LOGE("MountDisShareFile failed.");
+        return ret;
+    }
+    return E_OK;
+}
+
+static std::string GetMediaSandboxPath(const std::string &physicalPath, const std::string &usrId)
+{
+    const std::vector<std::string> prefixList = {
+        SHARE_PATH_HEAD + usrId + MEDIA_PATH_PREFIX_ONE,
+        SHARE_PATH_HEAD + usrId + MEDIA_PATH_PREFIX_TWO
+    };
+    std::string mediaSandboxPath = "";
+    for (size_t i = 0; i < prefixList.size(); i++) {
+        std::string sandboxPathPrefix = prefixList[i];
+        std::string::size_type prefixMatchLen = sandboxPathPrefix.length();
+        if (physicalPath.length() >= prefixMatchLen) {
+            std::string sandboxPathTemp = physicalPath.substr(0, prefixMatchLen);
+            if (sandboxPathTemp == sandboxPathPrefix) {
+                mediaSandboxPath = physicalPath.substr(prefixMatchLen);
+                LOGI("mediaSandboxPath: %{private}s", mediaSandboxPath.c_str());
+                return mediaSandboxPath;
+            }
+        }
+    }
+    return mediaSandboxPath;
+}
+
+static int32_t SetHmdfsUriDirInfo(struct HmdfsUriInfo &hui, Uri &uri, const std::string &physicalPath,
+    const std::string &networkId, const std::string &bundleName)
+{
+    hui.uriStr = FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH + REMOTE_SHARE_PATH_DIR + BACKSLASH +
+        networkId + uri.GetPath() + NETWORK_PARA + networkId;
+    struct stat buf = {};
+    if (stat(physicalPath.c_str(), &buf) != E_OK) {
+        int32_t ret = -errno;
+        LOGE("Failed to get physical path stat with %{public}d", ret);
+        return ret;
+    }
+    hui.fileSize = static_cast<size_t>(buf.st_size);
+    return E_OK;
+}
+
+static int32_t SetMediaHmdfsUriDirInfo(struct HmdfsUriInfo &hui, Uri &uri, const std::string &physicalPath,
+    const std::string &networkId, const std::string &usrId)
+{
+    std::string authority = uri.GetAuthority();
+    if (authority != MEDIA_AUTHORITY) {
+        LOGE("not meida authority.");
+        return -EINVAL;
+    }
+    std::string mediaSandboxPath = GetMediaSandboxPath(physicalPath, usrId);
+    if (mediaSandboxPath == "") {
+        LOGE("mediaSandboxPath is null.");
+        return -EINVAL;
+    }
+    hui.uriStr = FILE_SCHEME + "://" + MEDIA_BUNDLE_NAME + DISTRIBUTED_DIR_PATH + REMOTE_SHARE_PATH_DIR + BACKSLASH +
+        networkId + mediaSandboxPath + NETWORK_PARA + networkId;
+
+    struct stat buf = {};
+    if (stat(physicalPath.c_str(), &buf) != E_OK) {
+        LOGE("Failed to get physical path stat with %{public}d", -errno);
+        return -errno;
+    }
+    hui.fileSize = static_cast<size_t>(buf.st_size);
+    return E_OK;
+}
+
+
+static int32_t GetMediaDfsUrisDirFromLocal(const std::vector<std::string> &uriList, const int32_t &userId,
+    std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
+{
+    if (uriList.size() <= 0) {
+        LOGE("Failed to uri GetMediaDfsDirFromLocal, list is null or empty");
+        return -EINVAL;
+    }
+
+    std::string networkId = GetLocalNetworkId();
+    std::string distributedDir;
+    int ret = GetMediaDistributedDir(userId, distributedDir, networkId);
+    if (ret != E_OK) {
+        LOGE("Failed to uri get distribute dir.");
+        return ret;
+    }
+
+    std::string physicalDir = "";
+    ret = GetMediaPhysicalDir(userId, physicalDir, MEDIA_BUNDLE_NAME);
+    if (ret != E_OK) {
+        LOGE("Failed to uri get physical dir.");
+        return ret;
+    }
+
+    ret = MountDisFileShare(userId, distributedDir, physicalDir);
+    if (ret != E_OK) {
+        LOGE("Failed to mount.");
+        return ret;
+    }
+
+    std::vector<std::string> physicalPaths;
+    int getPhysicalPathRet = SandboxHelper::GetMediaSharePath(uriList, physicalPaths);
+    if (getPhysicalPathRet != E_OK) {
+        LOGE("Failed to get physical path.");
+        return -EINVAL;
+    }
+    for (size_t i = 0; i < uriList.size(); i++) {
+        Uri uri(uriList[i]);
+        HmdfsUriInfo dfsUriInfo;
+        SetMediaHmdfsUriDirInfo(dfsUriInfo, uri, physicalPaths[i], networkId, std::to_string(userId));
+        uriToDfsUriMaps.insert({uriList[i], dfsUriInfo});
+        LOGI("dfsUri: %{private}s", dfsUriInfo.uriStr.c_str());
+    }
+    return E_OK;
+}
+
+static int32_t CheckIfNeedMount(const int &userId, const std::string &bundleName, const std::string &networkId, Uri uri)
+{
+    std::string distributedDir;
+    int32_t ret = GetDistributedDir(userId, distributedDir, bundleName, networkId, uri);
+    if (ret != E_OK) {
+        LOGE("Failed to get distributed dir.");
+        return ret;
+    }
+
+    std::string physicalDir = GetPhysicalDir(uri, userId);
+    if (physicalDir == "") {
+        LOGE("Failed to get physicalDir dir.");
+        return -EINVAL;
+    }
+
+    ret = MountDisFileShare(userId, distributedDir, physicalDir);
+    if (ret != E_OK) {
+        LOGE("Failed to mount, errno: %{public}d.", ret);
+        return ret;
+    }
+    return E_OK;
+}
+
+int32_t RemoteFileShare::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList, const int32_t &userId,
+    std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
+{
+    std::vector<std::string> otherUriList;
+    std::vector<std::string> mediaUriList;
+    int ret = UriCategoryByType(uriList, mediaUriList, otherUriList);
+    if (ret == E_OK && mediaUriList.size() != 0) {
+        ret = GetMediaDfsUrisDirFromLocal(mediaUriList, userId, uriToDfsUriMaps);
+    }
+    if (ret != E_OK) {
+        LOGE("uri category failed or process media uri failed.");
+        return ret;
+    }
+    std::string networkId = GetLocalNetworkId();
+    for (const auto &uriStr : otherUriList) {
+        Uri uri(uriStr);
+        std::string physicalPath = GetPhysicalPath(uri, std::to_string(userId));
+        if (physicalPath == "") {
+            LOGE("Failed to get physical path");
+            return -EINVAL;
+        }
+
+        std::string bundleName = uri.GetAuthority();
+        if (bundleName == FILE_MANAGER_AUTHORITY) {
+            HmdfsUriInfo dfsUriInfo;
+            (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, dfsUriInfo, networkId);
+            uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
+            LOGI("localUri: %{private}s, dfsUri: %{private}s", uriStr.c_str(), dfsUriInfo.uriStr.c_str());
+            continue;
+        }
+
+        ret = CheckIfNeedMount(userId, bundleName, networkId, uri);
+        if (ret != E_OK) {
+            LOGE("Failed to mount, %{public}d", ret);
+            return ret;
+        }
+
+        HmdfsUriInfo dfsUriInfo;
+        (void)SetHmdfsUriDirInfo(dfsUriInfo, uri, physicalPath, networkId, bundleName);
+        uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
+        LOGI("bundleName: %{public}s, dfsUri: %{private}s", bundleName.c_str(), dfsUriInfo.uriStr.c_str());
+    }
+    LOGI("GetDfsUrisDirFromLocal successfully");
     return E_OK;
 }
 

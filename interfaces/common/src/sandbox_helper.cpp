@@ -135,6 +135,26 @@ static string GetLowerPath(string &lowerPathHead, const string &lowerPathTail,
     return lowerPathHead + lowerPathTail;
 }
 
+string SandboxHelper::GetLowerDir(string &lowerPathHead, const string &userId, const string &bundleName,
+    const string &networkId)
+{
+    if (lowerPathHead.find(CURRENT_USER_ID_FLAG) != string::npos) {
+        lowerPathHead = lowerPathHead.replace(lowerPathHead.find(CURRENT_USER_ID_FLAG),
+            CURRENT_USER_ID_FLAG.length(), userId);
+    }
+
+    if (lowerPathHead.find(PACKAGE_NAME_FLAG) != string::npos) {
+        lowerPathHead = lowerPathHead.replace(lowerPathHead.find(PACKAGE_NAME_FLAG),
+            PACKAGE_NAME_FLAG.length(), bundleName);
+    }
+
+    if (lowerPathHead.find(NETWORK_ID_FLAG) != string::npos) {
+        lowerPathHead = lowerPathHead.replace(lowerPathHead.find(NETWORK_ID_FLAG),
+            NETWORK_ID_FLAG.length(), networkId);
+    }
+    return lowerPathHead;
+}
+
 bool SandboxHelper::GetSandboxPathMap()
 {
     lock_guard<mutex> lock(mapMutex_);
@@ -370,6 +390,47 @@ static void DoGetPhysicalPath(string &lowerPathTail, string &lowerPathHead, cons
             }
         }
     }
+}
+
+int32_t SandboxHelper::GetPhysicalDir(const std::string &fileUri, const std::string &userId,
+                                      std::string &physicalDir)
+{
+    if (!IsValidPath(fileUri)) {
+        LOGE("fileUri is ValidUri, The fileUri contains '/./' or '../'characters");
+        return -EINVAL;
+    }
+    Uri uri(fileUri);
+    string bundleName = uri.GetAuthority();
+    if (bundleName == MEDIA) {
+        LOGE("Media not support.");
+        return -EINVAL;
+    }
+
+    string sandboxPath = SandboxHelper::Decode(uri.GetPath());
+    if ((sandboxPath.find(FILE_MANAGER_URI_HEAD) == 0 && bundleName != FILE_MANAGER_AUTHORITY) ||
+        (sandboxPath.find(FUSE_URI_HEAD) == 0 && bundleName != DLP_MANAGER_BUNDLE_NAME)) {
+        return -EINVAL;
+    }
+
+    if (!GetSandboxPathMap()) {
+        LOGE("GetSandboxPathMap failed");
+        return -EINVAL;
+    }
+
+    string lowerPathTail = "";
+    string lowerPathHead = "";
+    DoGetPhysicalPath(lowerPathTail, lowerPathHead, sandboxPath, sandboxPathMap_);
+
+    if (lowerPathHead == "") {
+        LOGE("lowerPathHead is invalid");
+        return -EINVAL;
+    }
+
+    string networkId = LOCAL;
+    GetNetworkIdFromUri(fileUri, networkId);
+
+    physicalDir = GetLowerDir(lowerPathHead, userId, bundleName, networkId);
+    return 0;
 }
 
 int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::string &userId,

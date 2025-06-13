@@ -53,6 +53,12 @@ const string EXTERNAL_PATH = "file://docs/storage/External";
 const string NETWORK_PARA = "networkid=";
 const int32_t DLP_COMMON = 0;
 const std::string BACKSLASH = "/";
+const string DOCS_TYPE = "docs";
+const string FILE_DEFAULT_PATH = "/storage/Users/currentUser/";
+const string FILE_PATH_TAIL = "/files/Docs";
+const string FILE_PATH_HEAD = "/mnt/hmdfs/";
+const string FILE_PATH_MID = "/account/device_view/";
+const string FILE_MANAGER_BUNDLE_NAME = "hmos.filemanager";
 }
 
 struct FileShareInfo {
@@ -95,6 +101,9 @@ static void GetProviderInfo(string uriStr, FileShareInfo &info)
     Uri uri(uriStr);
     info.providerBundleName_ = uri.GetAuthority();
     info.providerSandboxPath_ = SandboxHelper::Decode(uri.GetPath());
+    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_.find(FILE_MANAGER_BUNDLE_NAME) == 0) {
+        info.providerSandboxPath_ = FILE_DEFAULT_PATH;
+    }
 }
 
 static bool IsExistDir(const string &path, FileShareInfo &info)
@@ -208,6 +217,32 @@ static int32_t GetShareFileType(FileShareInfo &info)
     return -ENOENT;
 }
 
+static int32_t GetDocsDir(const string &uri, FileShareInfo &info)
+{
+    string networkId = "";
+    SandboxHelper::GetNetworkIdFromUri(uri, networkId);
+    if (networkId == "") {
+        LOGE("get network id failed.");
+        return -EINVAL;
+    }
+
+    const string filePathPrefix = FILE_PATH_HEAD + info.currentUid_ + FILE_PATH_MID + networkId + FILE_PATH_TAIL;
+    string tmpPath = info.providerLowerPath_;
+    string::size_type prefixMatchLen = filePathPrefix.length();
+    if (tmpPath.length() < prefixMatchLen) {
+        LOGE("get docs dir failed");
+        return -EINVAL;
+    }
+
+    string filePathTemp = tmpPath.substr(0, prefixMatchLen);
+    if (filePathTemp == filePathPrefix) {
+        info.providerLowerPath_ = filePathTemp;
+        LOGI("docs dir: %{private}s", info.providerLowerPath_.c_str());
+        return 0;
+    }
+    return -EINVAL;
+}
+
 static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t flag, FileShareInfo &info)
 {
     int32_t ret = 0;
@@ -217,6 +252,14 @@ static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t fl
     if (ret != 0) {
         LOGE("Failed to get lower path %{public}d", ret);
         return ret;
+    }
+
+    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_.find(FILE_MANAGER_BUNDLE_NAME) == 0) {
+        ret = GetDocsDir(uri, info);
+        if (ret != 0) {
+            LOGE("Failed to get docs dir, errno: %{public}d", ret);
+            return ret;
+        }
     }
 
     ret = GetShareFileType(info);

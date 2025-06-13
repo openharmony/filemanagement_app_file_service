@@ -37,10 +37,13 @@ public:
     static int32_t GetMediaSharePath(const std::vector<std::string> &fileUris, std::vector<std::string> &physicalPaths);
     static int32_t GetPhysicalPath(const std::string &fileUri, const std::string &userId,
                                    std::string &physicalPath);
+    static int32_t GetPhysicalDir(const std::string &fileUri, const std::string &userId, std::string &physicalDir);
     static int32_t GetBackupPhysicalPath(const std::string &fileUri, const std::string &userId,
                                          std::string &physicalPath);
     static bool IsValidPath(const std::string &path);
     static void GetNetworkIdFromUri(const std::string &fileUri, std::string &networkId);
+    static std::string GetLowerDir(std::string &lowerPathHead, const std::string &userId, const std::string &bundleName,
+                                   const std::string &networkId);
 };
 } // namespace AppFileService
 } // namespace OHOS
