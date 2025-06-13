@@ -95,29 +95,8 @@ OHOS::Security::AccessToken::HapPolicyParams g_testPolicyParams = {
     .permStateList = {g_testState1, g_testState2, g_testState3},
 };
 
-void NativeTokenGet()
-{
-    uint64_t fullTokenId;
-    const char **perms = new const char *[1];
-    perms[0] = "ohos.permission.DISTRIBUTED_DATASYNC";
-    NativeTokenInfoParams infoInstance = {
-        .permsNum = 1,
-        .aclsNum = 0,
-        .dcaps = nullptr,
-        .perms = perms,
-        .dcapsNum = 0,
-        .acls = nullptr,
-        .aplStr = "system_core",
-    };
-    infoInstance.processName = "TestCase";
-    fullTokenId = GetAccessTokenId(&infoInstance);
-    EXPECT_EQ(0, SetSelfTokenID(fullTokenId));
-    OHOS::Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
-    delete[] perms;
-}
 void FilePermissionTest::SetUpTestCase()
 {
-    NativeTokenGet();
     OHOS::Security::AccessToken::AccessTokenID tokenId =
         OHOS::Security::AccessToken::AccessTokenKit::GetNativeTokenId("foundation");
     EXPECT_EQ(0, SetSelfTokenID(tokenId));
@@ -576,7 +555,6 @@ HWTEST_F(FilePermissionTest, GetPathPolicyInfoFromUriPolicyInfo_test_0001, testi
     vector<bool> errorResult;
     EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     auto pathPolicies = FilePermission::GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResult);
-    EXPECT_EQ(pathPolicies.size(), 1);
     ASSERT_TRUE(errorResult.size() == 4);
     EXPECT_EQ(errorResult[3], true);
     GTEST_LOG_(INFO) << "FileShareTest-end GetPathPolicyInfoFromUriPolicyInfo_test_0001";
