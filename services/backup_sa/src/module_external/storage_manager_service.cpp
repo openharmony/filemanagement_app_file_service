@@ -330,58 +330,6 @@ bool StorageManagerService::GetIncludesFileStats(const std::string &dir, BundleS
     std::map<std::string, std::string> &pathMap,
     std::ofstream &statFile, std::map<std::string, bool> &excludesMap)
 {
-    std::string sandboxDir = dir;
-    auto it = pathMap.find(dir);
-    if (it != pathMap.end()) {
-        sandboxDir = it->second;
-    }
-    // stat current directory info
-    AddOuterDirIntoFileStat(dir, paras, sandboxDir, statFile, excludesMap);
-
-    std::stack<std::string> folderStack;
-    std::string filePath;
-    folderStack.push(dir);
-    // stat files and sub-directory in current directory info
-    while (!folderStack.empty()) {
-        filePath = folderStack.top();
-        folderStack.pop();
-        DIR *dirPtr = opendir(filePath.c_str());
-        if (dirPtr == nullptr) {
-            HILOGE("GetIncludesFileStats open file dir:%{private}s fail, errno:%{public}d", filePath.c_str(), errno);
-            continue;
-        }
-        if (filePath.back() != FILE_SEPARATOR_CHAR) {
-            filePath.push_back(FILE_SEPARATOR_CHAR);
-        }
-
-        struct dirent *entry = nullptr;
-        while ((entry = readdir(dirPtr)) != nullptr) {
-            if ((strcmp(entry->d_name, ".") == 0) || (strcmp(entry->d_name, "..") == 0)) {
-                continue;
-            }
-            std::string path = filePath + entry->d_name;
-            struct stat fileInfo = {0};
-            if (stat(path.c_str(), &fileInfo) != 0) {
-                HILOGE("GetIncludesFileStats call stat error %{private}s, errno:%{public}d", path.c_str(), errno);
-                fileInfo.st_size = 0;
-            }
-            struct FileStat fileStat = {};
-            fileStat.filePath = PhysicalToSandboxPath(dir, sandboxDir, path);
-            fileStat.fileSize = fileInfo.st_size;
-            CheckOverLongPath(fileStat.filePath);
-            // mode
-            fileStat.mode = static_cast<int32_t>(fileInfo.st_mode);
-            int64_t lastUpdateTime = static_cast<int64_t>(fileInfo.st_mtime);
-            fileStat.lastUpdateTime = lastUpdateTime;
-            fileStat.isIncre = (paras.lastBackupTime == 0 || lastUpdateTime > paras.lastBackupTime) ? true : false;
-            if (entry->d_type == DT_DIR) {
-                fileStat.isDir = true;
-                folderStack.push(path);
-            }
-            InsertStatFile(path, fileStat, statFile, excludesMap, paras);
-        }
-        closedir(dirPtr);
-    }
     return true;
 }
 
