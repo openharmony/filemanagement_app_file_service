@@ -38,11 +38,6 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 std::recursive_mutex mMountsLock;
 
-static bool PathSortFunc(const std::string &path1, const std::string &path2)
-{
-    return path1 < path2;
-}
-
 static std::string GetQuotaSrcMountPath(const std::string &target)
 {
     std::lock_guard<std::recursive_mutex> lock(mMountsLock);
