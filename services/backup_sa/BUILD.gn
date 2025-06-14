@@ -177,6 +177,7 @@ ohos_shared_library("backup_sa") {
     "src/module_ipc/svc_session_manager.cpp",
     "src/module_notify/notify_work_service.cpp",
     "src/module_sched/sched_scheduler.cpp",
+    "src/module_external/storage_manager_service.cpp",
   ]
 
   defines = [
@@ -194,6 +195,8 @@ ohos_shared_library("backup_sa") {
     ":backup_sa_ipc",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/utils:backup_utils",
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/interfaces/innerkits/native:fileuri_native",
   ]
 
   external_deps = [
@@ -215,6 +218,8 @@ ohos_shared_library("backup_sa") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "data_share:datashare_consumer",
+    "data_share:datashare_common",
   ]
 
   cflags_cc = [
