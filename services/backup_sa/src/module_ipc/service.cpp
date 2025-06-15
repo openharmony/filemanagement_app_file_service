@@ -1593,6 +1593,7 @@ ErrCode Service::ClearResidualBundleData(const std::string &bundleName)
     HILOGI("Current bundle will clean extension data, bundleName:%{public}s", bundleName.c_str());
     ErrCode res = proxy->HandleClear();
     if (backUpConnection->IsExtAbilityConnected()) {
+        proxy->HandleOnRelease(static_cast<int32_t>(session_->GetScenario()));
         backUpConnection->DisconnectBackupExtAbility();
     }
     ClearSessionAndSchedInfo(bundleName);
@@ -2020,12 +2021,7 @@ void Service::DoTimeout(wptr<Service> ptr, std::string bundleName)
             }
             saConnection->DisconnectBackupSAExt();
         } else {
-            auto sessionConnection = sessionPtr->GetExtConnection(bundleName);
-            if (sessionConnection == nullptr) {
-                HILOGE("Error, sessionConnection is empty, bundleName:%{public}s", bundleName.c_str());
-                return;
-            }
-            sessionConnection->DisconnectBackupExtAbility();
+            HandleOnReleaseAndDisconnect(sessionPtr, bundleName);
         }
         TimeoutRadarReport(scenario, bundleName);
         sessionPtr->StopFwkTimer(bundleName);

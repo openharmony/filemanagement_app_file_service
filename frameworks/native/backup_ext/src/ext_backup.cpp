@@ -317,4 +317,10 @@ ErrCode ExtBackup::OnProcess(std::function<void(ErrCode, std::string)> callback)
     return ERR_OK;
 }
 
+ErrCode ExtBackup::OnRelease(std::function<void(ErrCode, std::string)> callback, int32_t scenario)
+{
+    HILOGI("BackupExtensionAbility(base) OnRelease.");
+    return ERR_OK;
+}
+
 } // namespace OHOS::FileManagement::Backup

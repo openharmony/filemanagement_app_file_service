@@ -33,6 +33,10 @@ class BackupExtensionAbility {
     onProcess() {
         console.log();
     }
+
+    onRelease(scenario) {
+        console.log();
+    }
 }
 
 export default BackupExtensionAbility;

@@ -76,6 +76,10 @@ public:
     virtual UniqueFd GetLocalCapabilitiesForBundleInfos() = 0;
     virtual ErrCode GetBackupDataSize(bool, const std::vector<BIncrementalData>&) = 0;
     virtual ErrCode CleanBundleTempDir(const std::string& bundleName) = 0;
+    virtual ErrCode HandleExtDisconnect(bool) = 0;
+    virtual ErrCode GetExtOnRelease(bool&) = 0;
+    virtual void SetExtOnRelease(const BundleName&, bool) = 0;
+    virtual void RemoveExtOnRelease(const BundleName&) = 0;
 public:
     virtual bool UpdateToRestoreBundleMap(const string&, const string&) = 0;
 public:
@@ -131,6 +135,10 @@ public:
     MOCK_METHOD(UniqueFd, GetLocalCapabilitiesForBundleInfos, ());
     MOCK_METHOD(ErrCode, GetBackupDataSize, (bool, const std::vector<BIncrementalData>&));
     MOCK_METHOD(ErrCode, CleanBundleTempDir, (const std::string&));
+    MOCK_METHOD(ErrCode, HandleExtDisconnect, (bool));
+    MOCK_METHOD(ErrCode, GetExtOnRelease, (bool&));
+    MOCK_METHOD(void, SetExtOnRelease, (const BundleName&, bool));
+    MOCK_METHOD(void, RemoveExtOnRelease, (const BundleName&));
 public:
     MOCK_METHOD(bool, UpdateToRestoreBundleMap, (const string&, const string&));
 };
@@ -442,6 +450,26 @@ ErrCode Service::GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrem
 ErrCode Service::CleanBundleTempDir(const std::string& bundleName)
 {
     return BService::serviceMock->CleanBundleTempDir(bundleName);
+}
+
+ErrCode Service::HandleExtDisconnect(bool isIncBackup)
+{
+    return BService::serviceMock->HandleExtDisconnect(isIncBackup);
+}
+
+ErrCode Service::GetExtOnRelease(bool &isExtOnRelease)
+{
+    return BService::serviceMock->GetExtOnRelease(isExtOnRelease);
+}
+
+void Service::SetExtOnRelease(const BundleName &bundleName, bool isOnRelease)
+{
+    return BService::serviceMock->SetExtOnRelease(bundleName, isOnRelease);
+}
+
+void Service::RemoveExtOnRelease(const BundleName &bundleName)
+{
+    return BService::serviceMock->RemoveExtOnRelease(bundleName);
 }
 } // namespace OHOS::FileManagement::Backup
 
@@ -1266,21 +1294,11 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalDone_0000,
         service->backupExtMutexMap_.clear();
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
-        EXPECT_CALL(*srvMock, HandleCurAppDone(_, _, _))
-            .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
-        ret = service->AppIncrementalDone(BError(BError::Codes::SA_INVAL_ARG).GetCode());
-        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
-
-        service->backupExtMutexMap_.clear();
-        EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
-        EXPECT_CALL(*srvMock, HandleCurAppDone(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         ret = service->AppIncrementalDone(BError(BError::Codes::SA_INVAL_ARG).GetCode());
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
-        EXPECT_CALL(*srvMock, HandleCurAppDone(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         ret = service->AppIncrementalDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -1784,7 +1802,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0000, TestSiz
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         service->CancelTask("", service);
         EXPECT_TRUE(true);
 
@@ -1794,7 +1813,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0000, TestSiz
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP))
+            .WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
         EXPECT_CALL(*session, GetIsIncrementalBackup()).WillOnce(Return(false));
         service->CancelTask("", service);
         EXPECT_TRUE(true);
@@ -1841,7 +1861,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0100, TestSiz
         EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE))
+            .WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
         EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(false));
         service->CancelTask("", service);
         EXPECT_TRUE(true);
@@ -1853,6 +1874,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0100, TestSiz
         EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE))
+            .WillOnce(Return(IServiceReverseType::Scenario::RESTORE))
             .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*session, ValidRestoreDataType(_)).WillOnce(Return(true));
         service->CancelTask("", service);

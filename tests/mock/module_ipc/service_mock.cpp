@@ -429,4 +429,14 @@ bool Service::GetScanningInfo(wptr<Service> obj, size_t scannedSize, string &sca
 }
 
 void Service::SetScanningInfo(string &scanning, string name) {}
+
+ErrCode Service::HandleExtDisconnect(bool isIncBackup)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::GetExtOnRelease(bool &isExtOnRelease)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

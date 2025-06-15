@@ -64,6 +64,7 @@ public:
     ErrCode User0OnBackup() override;
     ErrCode UpdateDfxInfo(int64_t uniqId, uint32_t extConnectSpend, const std::string &bundleName) override;
     ErrCode CleanBundleTempDir() override;
+    ErrCode HandleOnRelease(int32_t scenario) override;
 
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
@@ -77,6 +78,7 @@ public:
         onProcessTaskPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         reportOnProcessRetPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         doBackupPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        onReleaseTaskPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         SetStagingPathProperties();
         appStatistic_ = std::make_shared<RadarAppStatistic>();
     }
@@ -87,6 +89,8 @@ public:
         onProcessTaskPool_.Stop();
         reportOnProcessRetPool_.Stop();
         doBackupPool_.Stop();
+        onReleaseTaskPool_.Stop();
+        onReleaseTimeoutTimer_.Shutdown();
         if (callJsOnProcessThread_.joinable()) {
             callJsOnProcessThread_.join();
         }
@@ -386,6 +390,15 @@ private:
     template <typename T>
     map<string, T> MatchFiles(map<string, T> files, vector<string> endExcludes);
     void UpdateTarStat(uint64_t tarFileSize);
+
+    void HandleExtDisconnect();
+    void StartOnReleaseTimeOutTimer(wptr<BackupExtExtension> obj);
+    void CloseOnReleaseTimeOutTimer();
+    void CallJsOnReleaseTask(wptr<BackupExtExtension> obj, int32_t scenario, bool isNeedDisconnect);
+    bool HandleGetExtOnRelease();
+    void SetAppResultReport(const std::string resultInfo, ErrCode errCode);
+    void HandleExtOnRelease();
+    std::function<void(ErrCode, const std::string)> OnReleaseCallback(wptr<BackupExtExtension> obj);
 private:
     pair<TarMap, map<string, size_t>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes);
     TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files);
@@ -432,6 +445,17 @@ private:
 
     std::shared_ptr<RadarAppStatistic> appStatistic_ = nullptr;
     BackupRestoreScenario curScenario_ { BackupRestoreScenario::FULL_BACKUP };
+
+    OHOS::ThreadPool onReleaseTaskPool_;
+    Utils::Timer onReleaseTimeoutTimer_ {"onReleaseTimeoutTimer"};
+    uint32_t onReleaseTimeoutTimerId_ { 0 };
+    std::atomic<bool> stopWaitOnRelease_ {false};
+    std::mutex onReleaseLock_;
+    std::condition_variable execOnReleaseCon_;
+    std::atomic<bool> needAppResultReport_ {false};
+    std::string appResultReportInfo_;
+    ErrCode appResultReportErrCode_ { 0 };
+    std::mutex serviceCallReleaseLock_;
 };
 } // namespace OHOS::FileManagement::Backup
 

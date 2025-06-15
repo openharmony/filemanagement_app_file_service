@@ -72,4 +72,6 @@ interface OHOS.FileManagement.Backup.IService{
         [in] int serviceResultReportErrCode);
     [ipccode 38] void GetBackupDataSize([in] boolean isPreciseScan,[in] BIncrementalData[] bundleNameList);
     [ipccode 40] void CleanBundleTempDir([in] String bundleName);
+    [ipccode 41] void HandleExtDisconnect([in] boolean isIncBackup);
+    [ipccode 42] void GetExtOnRelease([out] boolean isExtOnRelease);
  }
