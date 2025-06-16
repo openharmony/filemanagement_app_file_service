@@ -43,7 +43,7 @@ const std::string MEDIA_AUTHORITY = "file://media";
 std::string g_bundleName = "";
 std::mutex g_globalMutex;
 }
-static sptr<BundleMgrProxy> GetBundleMgrProxy()
+static sptr<AppExecFwk::IBundleMgr> GetBundleMgrProxy()
 {
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -58,7 +58,7 @@ static sptr<BundleMgrProxy> GetBundleMgrProxy()
         return nullptr;
     }
 
-    return iface_cast<BundleMgrProxy>(remoteObject);
+    return iface_cast<AppExecFwk::IBundleMgr>(remoteObject);
 }
 
 bool CommonFunc::GetDirByBundleNameAndAppIndex(const std::string &bundleName, int32_t appIndex, std::string &dirName)
@@ -78,7 +78,7 @@ bool CommonFunc::GetDirByBundleNameAndAppIndex(const std::string &bundleName, in
 
 string CommonFunc::GetSelfBundleName()
 {
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<AppExecFwk::IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         LOGE("GetSelfBundleName: bundle mgr proxy is nullptr.");
         return "";

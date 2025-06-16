@@ -41,6 +41,8 @@ public:
     static int32_t GetDfsUrisFromLocal(const std::vector<std::string> &uriList,
                                        const int32_t &userId,
                                        std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps);
+    static int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList, const int32_t &userId,
+                                            std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps);
     static int32_t TransRemoteUriToLocal(const std::vector<std::string> &uriList,
                                          const std::string &networkId,
                                          const std::string &deviceId,

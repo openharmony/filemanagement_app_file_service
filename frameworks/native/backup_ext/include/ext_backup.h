@@ -152,6 +152,11 @@ public:
      */
     virtual ErrCode OnProcess(std::function<void(ErrCode, std::string)> callback);
 
+    /*
+    * @brief Called do onRelease.
+    */
+    virtual ErrCode OnRelease(std::function<void(ErrCode, std::string)> callback, int32_t scenario);
+
     /**
      * @brief 数据迁移判断
      *

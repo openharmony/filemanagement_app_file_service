@@ -1079,6 +1079,7 @@ ErrCode SvcSessionManager::ClearSessionData()
             if (impl_.restoreDataType != RestoreTypeEnum::RESTORE_DATA_READDY) {
                 ret = proxy->HandleClear();
             }
+            proxy->HandleOnRelease(static_cast<int32_t>(GetScenario()));
             backUpConnection->DisconnectBackupExtAbility();
         }
         if (ret != BError(BError::Codes::OK)) {
@@ -1244,6 +1245,7 @@ bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::s
             } else {
                 ret = retTmp;
             }
+            proxy->HandleOnRelease(static_cast<int32_t>(GetScenario()));
             backUpConnection->DisconnectBackupExtAbility();
             HILOGI("Disconnect extensionAbility, bundleName: %{public}s", it->first.c_str());
             it = impl_.backupExtNameMap.erase(it);

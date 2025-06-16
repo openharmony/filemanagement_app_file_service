@@ -566,7 +566,7 @@ ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd
         std::unique_lock<std::shared_mutex> mapLock(statMapMutex_);
         std::shared_ptr<RadarAppStatistic> saStatistic = std::make_shared<RadarAppStatistic>(bundleName,
             totalStatistic_->GetUniqId(), totalStatistic_->GetBizScene());
-        saStatistic->doRestoreStart_ = TimeUtils::GetTimeMS();
+        saStatistic->doRestoreStart_ = static_cast<uint64_t>(TimeUtils::GetTimeMS());
         saStatisticMap_[bundleName] = saStatistic;
     }
     ErrCode errCode = VerifyCaller();
@@ -719,11 +719,8 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
                 return BError(BError::Codes::SA_INVAL_ARG);
             }
             std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
-            ret = HandleCurAppDone(errCode, callerName, true);
-            if (ret != ERR_OK) {
-                HILOGE("Handle current app done error, bundleName:%{public}s", callerName.c_str());
-                return ret;
-            }
+            SetExtOnRelease(callerName, true);
+            return BError(BError::Codes::OK);
         }
         RemoveExtensionMutex(callerName);
         OnAllBundlesFinished(BError(BError::Codes::OK));
@@ -1023,6 +1020,7 @@ bool Service::CancelSessionClean(sptr<SvcSessionManager> session, std::string bu
     proxy->HandleClear();
     session->StopFwkTimer(bundleName);
     session->StopExtTimer(bundleName);
+    proxy->HandleOnRelease(static_cast<int32_t>(session->GetScenario()));
     backUpConnection->DisconnectBackupExtAbility();
     return true;
 }

@@ -22,6 +22,7 @@
 #include "filemgmt_libhilog.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
+#include "module_external/storage_manager_service.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -29,32 +30,14 @@ using namespace std;
 namespace {
 const string MEDIA_LIBRARY_HAP = "com.ohos.medialibrary.medialibrarydata";
 const string EXTERNAL_FILE_HAP = "com.ohos.UserFile.ExternalFileManager";
-const string MEDIA_TYPE = "media";
-const string FILE_TYPE = "file";
 const int64_t ERR_SIZE = -1;
 } // namespace
-
-static sptr<StorageManager::IStorageManager> GetStorageManager()
-{
-    auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (saMgr == nullptr) {
-        throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get system ability manager");
-    }
-
-    auto storageObj = saMgr->GetSystemAbility(STORAGE_MANAGER_MANAGER_ID);
-    if (storageObj == nullptr) {
-        throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get storage manager service");
-    }
-
-    return iface_cast<StorageManager::IStorageManager>(storageObj);
-}
 
 StorageManager::BundleStats StorageMgrAdapter::GetBundleStats(const string &bundleName)
 {
     StorageManager::BundleStats bundleStats;
-    auto storageMgr = GetStorageManager();
-    if (storageMgr->GetBundleStats(bundleName, bundleStats, 0, 0)) {
-        throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle stats");
+    if (!StorageManagerService::GetInstance().GetBundleStats(bundleName, bundleStats)) {
+        HILOGE("An error occured StorageMgrAdapter GetBundleStats");
     }
     return bundleStats;
 }
@@ -62,15 +45,14 @@ StorageManager::BundleStats StorageMgrAdapter::GetBundleStats(const string &bund
 int64_t StorageMgrAdapter::GetUserStorageStats(const std::string &bundleName, int32_t userId)
 {
     StorageManager::StorageStats bundleStats;
-    auto storageMgr = GetStorageManager();
     if (bundleName == MEDIA_LIBRARY_HAP) {
-        if (storageMgr->GetUserStorageStatsByType(userId, bundleStats, MEDIA_TYPE)) {
+        if (StorageManagerService::GetInstance().GetUserStorageStatsByType(userId, bundleStats, MEDIA_TYPE) != E_OK) {
             HILOGE("Failed to get user media storage stats");
             return ERR_SIZE;
         }
         return bundleStats.image_ + bundleStats.video_;
     } else if (bundleName == EXTERNAL_FILE_HAP) {
-        if (storageMgr->GetUserStorageStatsByType(userId, bundleStats, FILE_TYPE)) {
+        if (StorageManagerService::GetInstance().GetUserStorageStatsByType(userId, bundleStats, FILE_TYPE) != E_OK) {
             HILOGE("Failed to get user file storage stats");
             return ERR_SIZE;
         }
@@ -81,9 +63,8 @@ int64_t StorageMgrAdapter::GetUserStorageStats(const std::string &bundleName, in
 
 int32_t StorageMgrAdapter::UpdateMemPara(int32_t size)
 {
-    auto storageMgr = GetStorageManager();
     int32_t oldSize = BConstants::DEFAULT_VFS_CACHE_PRESSURE;
-    if (storageMgr->UpdateMemoryPara(size, oldSize)) {
+    if (StorageManagerService::GetInstance().UpdateMemoryPara(size, oldSize) != E_OK) {
         HILOGE("An error occured StorageMgrAdapter UpdateMemPara");
         return BConstants::DEFAULT_VFS_CACHE_PRESSURE;
     }
@@ -94,11 +75,11 @@ int32_t StorageMgrAdapter::GetBundleStatsForIncrease(uint32_t userId, const std:
     const std::vector<int64_t> &incrementalBackTimes, std::vector<int64_t> &pkgFileSizes,
     std::vector<int64_t> &incPkgFileSizes)
 {
-    auto storageMgr = GetStorageManager();
-    if (storageMgr->GetBundleStatsForIncrease(userId, bundleNames, incrementalBackTimes, pkgFileSizes,
-        incPkgFileSizes)) {
-        throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get user storage stats");
+    if (StorageManagerService::GetInstance().GetBundleStatsForIncrease(userId, bundleNames, incrementalBackTimes,
+        pkgFileSizes, incPkgFileSizes) != E_OK) {
+        HILOGE("An error occured StorageManagerService GetBundleStatsForIncrease");
+        return E_ERR;
     }
-    return 0;
+    return E_OK;
 }
 } // namespace OHOS::FileManagement::Backup

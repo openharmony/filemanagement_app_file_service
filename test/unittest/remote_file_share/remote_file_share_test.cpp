@@ -25,6 +25,7 @@
 
 #include "remote_file_share.h"
 #include "remote_file_share.cpp"
+#include "uri.h"
 
 namespace {
     using namespace std;
@@ -33,6 +34,7 @@ namespace {
     const int E_INVALID_ARGUMENT = 22;
     const int E_OK = 0;
     const int USER_ID = 100;
+    const int32_t TEST_CHAR = 95;
 
     class RemoteFileShareTest : public testing::Test {
     public:
@@ -776,5 +778,482 @@ namespace {
         string sharePath = "/data/filetest";
         EXPECT_EQ(true, DeleteShareDir(packagePath, sharePath));
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_DeleteShareDir_0000";
-}
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetMediaDistributedDir_0001
+     * @tc.desc: Test function of GetMediaDistributedDir() for ok
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetMediaDistributedDir_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetMediaDistributedDir_0001";
+        int32_t userId = USER_ID;
+        string distributedDir;
+        string networkId = "network123";
+
+        int32_t ret = GetMediaDistributedDir(userId, distributedDir, networkId);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(distributedDir, DST_PATH_HEAD + std::to_string(userId) + DST_PATH_MID + MEDIA_BUNDLE_NAME +
+            REMOTE_SHARE_PATH_DIR + BACKSLASH + networkId + MEDIA_PHOTO_PATH);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetMediaDistributedDir_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetMediaDistributedDir_0002
+     * @tc.desc: Test function of GetMediaDistributedDir()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetMediaDistributedDir_0002, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetMediaDistributedDir_0002";
+        int32_t userId = USER_ID;
+        string distributedDir;
+        char networkId[PATH_MAX];
+        int32_t ret = memset_s(networkId, sizeof(networkId), TEST_CHAR, sizeof(networkId));
+        ASSERT_TRUE(ret == E_OK);
+
+        string networkIdStr = networkId;
+        ret = GetMediaDistributedDir(userId, distributedDir, networkIdStr);
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetMediaDistributedDir_0002";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetDistributedDir_0001
+     * @tc.desc: Test function of GetDistributedDir()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetDistributedDir_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetDistributedDir_0001";
+        int32_t userId = USER_ID;
+        string distributedDir;
+        string networkId = "network123";
+        string bundleName = "com.demo.a";
+        OHOS::Uri uri("file://com.demo.a/data/storage/el2/base/remote_share.txt");
+
+        int32_t ret = GetDistributedDir(userId, distributedDir, bundleName, networkId, uri);
+        EXPECT_EQ(ret, E_OK);
+
+        char networkIdArray[PATH_MAX];
+        ret = memset_s(networkIdArray, sizeof(networkIdArray), TEST_CHAR, sizeof(networkIdArray));
+        ASSERT_TRUE(ret == E_OK);
+
+        networkId = networkIdArray;
+        ret = GetDistributedDir(userId, distributedDir, bundleName, networkId, uri);
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDistributedDir_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetDistributedDir_0002
+     * @tc.desc: Test function of GetDistributedDir()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetDistributedDir_0002, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetDistributedDir_0002";
+        int32_t userId = USER_ID;
+        string distributedDir;
+        string networkId = "network123";
+        string bundleName = "com.demo.a";
+        OHOS::Uri uri("file://com.demo.a/data/storage/el2/distributedfiles/remote_share.txt");
+
+        int32_t ret = GetDistributedDir(userId, distributedDir, bundleName, networkId, uri);
+        EXPECT_EQ(ret, E_OK);
+
+        char networkIdArray[PATH_MAX];
+        ret = memset_s(networkIdArray, sizeof(networkIdArray), TEST_CHAR, sizeof(networkIdArray));
+        ASSERT_TRUE(ret == E_OK);
+
+        networkId = networkIdArray;
+        ret = GetDistributedDir(userId, distributedDir, bundleName, networkId, uri);
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDistributedDir_0002";
+    }
+
+        /**
+     * @tc.name: Remote_file_share_GetDistributedDir_0003
+     * @tc.desc: Test function of GetDistributedDir()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetDistributedDir_0003, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetDistributedDir_0003";
+        int32_t userId = USER_ID;
+        string distributedDir;
+        string networkId = "network123";
+        string bundleName = "com.ohos.medialibrary.medialibrarydata";
+        OHOS::Uri uri("file://media/Photo/16/IMG_202506061600_000/screenshot_20250522_223718.jpg");
+
+        int32_t ret = GetDistributedDir(userId, distributedDir, bundleName, networkId, uri);
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDistributedDir_0003";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetMediaPhysicalDir_0001
+     * @tc.desc: Test function of GetMediaPhysicalDir()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetMediaPhysicalDir_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetMediaPhysicalDir_0001";
+        int32_t userId = USER_ID;
+        string physicalDir;
+        string bundleName = "com.ohos.medialibrary.medialibrarydata";
+
+        int32_t ret = GetMediaPhysicalDir(userId, physicalDir, bundleName);
+        EXPECT_EQ(ret, E_OK);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetMediaPhysicalDir_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetMediaPhysicalDir_0002
+     * @tc.desc: Test function of GetMediaPhysicalDir()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetMediaPhysicalDir_0002, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetMediaPhysicalDir_0002";
+        int32_t userId = USER_ID;
+        string physicalDir;
+        string bundleName = "com.demo.a";
+
+        int32_t ret = GetMediaPhysicalDir(userId, physicalDir, bundleName);
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetMediaPhysicalDir_0002";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetPhysicalDir_0001
+     * @tc.desc: Test function of GetPhysicalDir()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetPhysicalDir_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetPhysicalDir_0001";
+        OHOS::Uri uri("file://media/Photo/16/IMG_202506061600_000/screenshot_20250522_223718.jpg");
+        int32_t userId = USER_ID;
+
+        string physicalDir = GetPhysicalDir(uri, userId);
+        int32_t ret = (physicalDir == "") ? -EINVAL : E_OK;
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetPhysicalDir_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetPhysicalDir_0002
+     * @tc.desc: Test function of GetPhysicalDir()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetPhysicalDir_0002, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetPhysicalDir_0002";
+
+        const vector<string> uriList = {"FILE://docs/storage/Users/currentUser/Document/1.txt",
+            "files://docs/storage/Users/currentUser/Download/Subject/2.jpg",
+            "file://com.demo.a/data/storage/el2/distributedfiles/..",
+            "file://docs/storage/100/account/Document/Subject1/../1.txt"};
+
+        int32_t userId = USER_ID;
+        for (size_t i = 0; i < uriList.size(); i++) {
+            OHOS::Uri uri(uriList[i]);
+            string physicalDir = GetPhysicalDir(uri, userId);
+            int32_t ret = (physicalDir == "") ? -EINVAL : E_OK;
+            EXPECT_EQ(ret, -EINVAL);
+        }
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetPhysicalDir_0002";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetPhysicalDir_0003
+     * @tc.desc: Test function of GetPhysicalDir()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetPhysicalDir_0003, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetPhysicalDir_0003";
+
+        const vector<string> uriList = {
+            "file://com.demo.a/data/storage/el2/base/remote_share.txt",
+            "file://com.demo.a/data/storage/el2/distributedfiles/remote_share.txt"};
+
+        int32_t userId = USER_ID;
+        for (size_t i = 0; i < uriList.size(); i++) {
+            OHOS::Uri uri(uriList[i]);
+            string physicalDir = GetPhysicalDir(uri, userId);
+            int32_t ret = (physicalDir == "") ? -EINVAL : E_OK;
+            EXPECT_EQ(ret, E_OK);
+        }
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetPhysicalDir_0003";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_ModuleDisFileShare_0001
+     * @tc.desc: Test function of ModuleDisFileShare()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_ModuleDisFileShare_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_ModuleDisFileShare_0001";
+
+        string distributedDir = "";
+        string physicalDir = "";
+        int32_t userId = USER_ID;
+
+        int32_t ret = MountDisFileShare(userId, distributedDir, physicalDir);
+        EXPECT_EQ(ret, -EINVAL);
+
+        distributedDir = "/data/service/el2/100/hmdfs/account/data/com.demo.a/.remote_share/123456789";
+        ret = MountDisFileShare(userId, distributedDir, physicalDir);
+        EXPECT_EQ(ret, -EINVAL);
+
+        physicalDir = "data/app/el2/100/base/com.demo.a";
+        ret = MountDisFileShare(userId, distributedDir, physicalDir);
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_ModuleDisFileShare_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetMediaSandboxPath_0001
+     * @tc.desc: Test function of GetMediaSandboxPath()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetMediaSandboxPath_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetMediaSandboxPath_0001";
+
+        string physicalPath = "/mnt/hmdfs/100/account/cloud_merge_view/files/Photo/16/IMG_1747924738_000.jpg";
+        string mediaSandboxPath = GetMediaSandboxPath(physicalPath, to_string(USER_ID));
+        int32_t ret = (mediaSandboxPath == "/Photo/16/IMG_1747924738_000.jpg") ? E_OK : -EINVAL;
+        EXPECT_EQ(ret, E_OK);
+
+        physicalPath = "/mnt/hmdfs/100/account/merge_view/files/Photo/16/IMG_1747924738_000.jpg";
+        mediaSandboxPath = GetMediaSandboxPath(physicalPath, to_string(USER_ID));
+        ret = (mediaSandboxPath == "/Photo/16/IMG_1747924738_000.jpg") ? E_OK : -EINVAL;
+        EXPECT_EQ(ret, E_OK);
+
+        physicalPath = "/mnt/hmdfs/100/account";
+        mediaSandboxPath = GetMediaSandboxPath(physicalPath, to_string(USER_ID));
+        ret = (mediaSandboxPath == "") ? E_OK : -EINVAL;
+        EXPECT_EQ(ret, E_OK);
+
+        physicalPath = "/mnt/hmdfs/100/account/device_view/files/Photo/16/IMG_1747924738_000.jpg";
+        mediaSandboxPath = GetMediaSandboxPath(physicalPath, to_string(USER_ID));
+        ret = (mediaSandboxPath == "") ? E_OK : -EINVAL;
+        EXPECT_EQ(ret, E_OK);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetMediaSandboxPath_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_SetMediaHmdfsUriDirInfo_0001
+     * @tc.desc: Test function of SetMediaHmdfsUriDirInfo()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_SetMediaHmdfsUriDirInfo_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_SetMediaHmdfsUriDirInfo_0001";
+
+        HmdfsUriInfo hui;
+        OHOS::Uri uri("file://media/Photo/16/IMG_202506061600_000/screenshot_20250522_223718.jpg");
+        string physicalPath = "/mnt/hmdfs/100/account/cloud_merge_view/files/Photo/16/IMG_1747924738_000.jpg";
+        string networkId = "network123";
+        string usrId = to_string(USER_ID);
+
+        int32_t ret = SetMediaHmdfsUriDirInfo(hui, uri, physicalPath, networkId, usrId);
+        ASSERT_TRUE(ret != E_OK);
+        ret = (hui.uriStr == "") ? -EINVAL : E_OK;
+        EXPECT_EQ(ret, E_OK);
+
+        physicalPath = "/mnt/hmdfs/100/account";
+        ret = SetMediaHmdfsUriDirInfo(hui, uri, physicalPath, networkId, usrId);
+        EXPECT_EQ(ret, -EINVAL);
+
+        physicalPath = "com.demo.a";
+        OHOS::Uri uri1("file://com.demo.a/data/storage/el2/base/remote_share.txt");
+        ret = SetMediaHmdfsUriDirInfo(hui, uri1, physicalPath, networkId, usrId);
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_SetMediaHmdfsUriDirInfo_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_SetHmdfsUriDirInfo_0001
+     * @tc.desc: Test function of SetHmdfsUriDirInfo()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_SetHmdfsUriDirInfo_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_SetHmdfsUriDirInfo_0001";
+
+        HmdfsUriInfo hui;
+        OHOS::Uri uri("file://com.demo.a/data/storage/el2/base/remote_share.txt");
+        string physicalPath = "/data/app/el2/100/base/com.demo.a/remote_share.txt";
+        string networkId = "network123";
+        string bundleName = "com.demo.a";
+
+        int32_t ret = SetHmdfsUriDirInfo(hui, uri, physicalPath, networkId, bundleName);
+        ASSERT_TRUE(ret != E_OK);
+        ret = (hui.uriStr == "") ? -EINVAL : E_OK;
+        EXPECT_EQ(ret, E_OK);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_SetHmdfsUriDirInfo_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetMediaDfsUrisDirFromLocal_0001
+     * @tc.desc: Test function of GetMediaDfsUrisDirFromLocal()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetMediaDfsUrisDirFromLocal_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetMediaDfsUrisDirFromLocal_0001";
+
+        vector<string> uriList = {};
+        int32_t usrId = USER_ID;
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+        int32_t ret = GetMediaDfsUrisDirFromLocal(uriList, usrId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, -EINVAL);
+
+        uriList.push_back("file://media/Photo/16/IMG_202506061600_000/screenshot_20250522_223718.jpg");
+        uriList.push_back("file://media/Photo/1/IMG_202506061600_000/screenshot_20250522_223718.jpg");
+        ret = GetMediaDfsUrisDirFromLocal(uriList, usrId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetMediaDfsUrisDirFromLocal_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetDfsUrisDirFromLocal_0001
+     * @tc.desc: Test function of GetDfsUrisDirFromLocal()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetDfsUrisDirFromLocal_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetDfsUrisDirFromLocal_0001";
+
+        vector<string> uriList = {};
+        int32_t usrId = USER_ID;
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+        int32_t ret = RemoteFileShare::GetDfsUrisDirFromLocal(uriList, usrId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, -EINVAL);
+
+        uriList.push_back("file://com.demo.a/data/storage/el2/base/remote_share.txt");
+        ret = RemoteFileShare::GetDfsUrisDirFromLocal(uriList, usrId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, -EINVAL);
+
+        uriList.push_back("file://media/Photo/16/IMG_202506061600_000/screenshot_20250522_223718.jpg");
+        uriList.push_back("file://media/Photo/1/IMG_202506061600_000/screenshot_20250522_223718.jpg");
+        ret = RemoteFileShare::GetDfsUrisDirFromLocal(uriList, usrId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUrisDirFromLocal_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_GetDfsUrisDirFromLocal_0002
+     * @tc.desc: Test function of GetDfsUrisDirFromLocal()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_GetDfsUrisDirFromLocal_0002, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_GetDfsUrisDirFromLocal_0002";
+
+        vector<string> uriList = {};
+        int32_t usrId = USER_ID;
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+
+        uriList.push_back("file://com.demo.a/data/storage/el2/base/remote_share.txt");
+        int32_t ret = RemoteFileShare::GetDfsUrisDirFromLocal(uriList, usrId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, -EINVAL);
+
+        uriList.push_back("file://com.demo.a/data/storage/el2/../remote_share.txt");
+        ret = RemoteFileShare::GetDfsUrisDirFromLocal(uriList, usrId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, -EINVAL);
+
+        uriList.clear();
+        uriList.push_back("file://docs/storage/Users/currentUser/Document/Subject1/Subject2/1.txt");
+        ret = RemoteFileShare::GetDfsUrisDirFromLocal(uriList, usrId, uriToDfsUriMaps);
+        EXPECT_EQ(ret, E_OK);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_GetDfsUrisDirFromLocal_0002";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_CheckIfNeedMount_0001
+     * @tc.desc: Test function of CheckIfNeedMount()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_CheckIfNeedMount_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_CheckIfNeedMount_0001";
+
+        OHOS::Uri uri("file://com.demo.a/data/storage/el2/base/remote_share.txt");
+        string bundleName = "com.demo.a";
+        string networkId = "network123";
+        int32_t usrId = USER_ID;
+
+        int32_t ret = CheckIfNeedMount(usrId, bundleName, networkId, uri);
+        EXPECT_EQ(ret, -EINVAL);
+
+        OHOS::Uri uri1("file://com.demo.a/data/storage/el22/base/remote_share.txt");
+        ret = CheckIfNeedMount(usrId, bundleName, networkId, uri1);
+        EXPECT_EQ(ret, -EINVAL);
+
+        OHOS::Uri uri2("file://meida/data/storage/el2/base/remote_share.txt");
+        ret = CheckIfNeedMount(usrId, bundleName, networkId, uri2);
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_CheckIfNeedMount_0001";
+    }
 }

@@ -1018,6 +1018,58 @@ ErrCode ExtBackupJs::OnProcess(std::function<void(ErrCode, const std::string)> c
     return errCode;
 }
 
+ErrCode ExtBackupJs::OnRelease(std::function<void(ErrCode, const std::string)> callback, int32_t scenario)
+{
+    HILOGI("BackupExtensionAbility(JS) OnRelease begin.");
+    BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                          "The app does not provide the OnProcess interface.");
+    scenario_ = scenario;
+    onReleaseCallback_ = std::make_shared<CallbackInfo>(callback);
+    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {onReleaseCallback_}](napi_env env,
+        napi_value result) -> bool {
+        if (!CheckPromise(env, result)) {
+            string str;
+            bool isExceptionPending;
+            napi_is_exception_pending(env, &isExceptionPending);
+            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (!callbackInfo) {
+                HILOGE("callbackInfo is nullptr");
+                return false;
+            }
+            if (isExceptionPending) {
+                napi_value exception;
+                DealNapiException(env, exception, str);
+                napi_fatal_exception(env, exception);
+                callbackInfo->callback(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
+            } else {
+                callbackInfo->callback(BError(BError::Codes::OK), str);
+            }
+            return true;
+        }
+        HILOGI("CheckPromise Js Method onRelease ok.");
+        return CallPromise(*jsRuntime, result, callbackInfo.get());
+    };
+    auto errCode = CallJsMethod("onRelease", jsRuntime_, jsObj_.get(), ParseReleaseInfo(), retParser);
+    if (errCode != ERR_OK) {
+        HILOGE("CallJsMethod error, code:%{public}d.", errCode);
+    }
+    HILOGI("BackupExtensionAbility(JS) OnRelease end.");
+    return errCode;
+}
+
+std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::ParseReleaseInfo()
+{
+    auto onReleaseFun = [scenario(scenario_)](napi_env env, vector<napi_value> &argv) -> bool {
+        int32_t scenarioFlag = scenario;
+        HILOGI("ParseReleaseInfo, scenario:%{public}d", scenarioFlag);
+        napi_value scenarioValue = nullptr;
+        napi_create_int32(env, scenarioFlag, &scenarioValue);
+        argv.emplace_back(scenarioValue);
+        return true;
+    };
+    return onReleaseFun;
+}
+
 void ExtBackupJs::InitTempPath(const std::string &bundleName)
 {
     std::string el2BackupDir(BConstants::PATH_BUNDLE_BACKUP_HOME);

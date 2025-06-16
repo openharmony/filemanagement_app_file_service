@@ -98,4 +98,14 @@ ErrCode ExtBackupJs::InvokeAppExtMethod(ErrCode errCode, const string result)
 {
     return BExtBackupJs::extBackupJs->InvokeAppExtMethod(errCode, result);
 }
+
+function<bool(napi_env env, vector<napi_value> &argv)> ExtBackupJs::ParseReleaseInfo()
+{
+    return BExtBackupJs::extBackupJs->ParseReleaseInfo();
+}
+
+ErrCode ExtBackupJs::OnRelease(function<void(ErrCode, string)> callback, int32_t scenario)
+{
+    return BExtBackupJs::extBackupJs->OnRelease(callback, scenario);
+}
 } // namespace OHOS::FileManagement::Backup

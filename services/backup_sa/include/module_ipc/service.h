@@ -118,6 +118,8 @@ public:
 
     ErrCode GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList) override;
     ErrCode CleanBundleTempDir(const std::string &bundleName) override;
+    ErrCode HandleExtDisconnect(bool isIncBackup) override;
+    ErrCode GetExtOnRelease(bool &isExtOnRelease) override;
 
     // 以下都是非IPC接口
 public:
@@ -332,6 +334,8 @@ public:
         UniqueFd manifestFd, int32_t errCode);
     ErrCode SendFileHandle(const std::string &bundleName, const std::string &fileName);
     ErrCode SendIncrementalFileHandle(const std::string &bundleName, const std::string &fileName);
+    void SetExtOnRelease(const BundleName &bundleName, bool isOnRelease);
+    void RemoveExtOnRelease(const BundleName &bundleName);
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {
@@ -689,6 +693,8 @@ private:
     void SetScanningInfo(string &scanning, string name);
 
     ErrCode Cancel(const std::string& bundleName, int32_t &result);
+    void HandleOnReleaseAndDisconnect(sptr<SvcSessionManager> sessionPtr, const std::string &bundleName);
+
     ErrCode InitRestoreSession(const sptr<IServiceReverse>& remote, std::string &errMsg);
     ErrCode InitBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg);
     ErrCode InitIncrementalBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg);
@@ -780,6 +786,7 @@ private:
     std::shared_ptr<RadarTotalStatistic> totalStatistic_ = nullptr;
     std::shared_mutex statMapMutex_;
     std::map<std::string, std::shared_ptr<RadarAppStatistic>> saStatisticMap_;
+    std::map<BundleName, std::atomic<bool>> backupExtOnReleaseMap_;
 public:
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
     std::map<BundleName, BundleTaskInfo> failedBundles_;

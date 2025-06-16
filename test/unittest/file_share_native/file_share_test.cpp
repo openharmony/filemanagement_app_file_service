@@ -25,6 +25,7 @@
 
 #include "access_token_error.h"
 #include "accesstoken_kit.h"
+#include "file_share.cpp"
 #include "file_share.h"
 #include "ipc_skeleton.h"
 #include "log.h"
@@ -829,6 +830,138 @@ HWTEST_F(FileShareTest, File_share_GetNetworkIdFromUri_005, testing::ext::TestSi
     SandboxHelper::GetNetworkIdFromUri(fileUri, networkId);
     EXPECT_EQ(result, networkId);
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetNetworkIdFromUri_005";
+}
+
+/**
+ * @tc.name: File_share_GetDocsDir_001
+ * @tc.desc: Test function of GetDocsDir()
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetDocsDir_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetDocsDir_001";
+    std::string uri = "file://docs/storage/Users/currentUser/test.jpg?networkid=123456";
+    FileShareInfo info;
+    info.providerBundleName_ = "docs";
+    info.targetBundleName_ = "com.demo.a";
+    info.providerLowerPath_ = "/mnt/hmdfs/100/account/device_view/123456/files/docs/test.jpg";
+    info.currentUid_ = "100";
+
+    int32_t ret = GetDocsDir(uri, info);
+    EXPECT_EQ(ret, -EINVAL);
+
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetDocsDir_001";
+}
+
+/**
+ * @tc.name: File_share_GetDocsDir_002
+ * @tc.desc: Test function of GetDocsDir()
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetDocsDir_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetDocsDir_002";
+    std::string uri = "file://docs/storage/Users/currentUser/test.jpg";
+    FileShareInfo info;
+    info.providerBundleName_ = "docs";
+    info.targetBundleName_ = "com.demo.a";
+    info.providerLowerPath_ = "/mnt/hmdfs/100/account/device_view/123456/files/docs/test.jpg";
+    info.currentUid_ = "100";
+
+    int32_t ret = GetDocsDir(uri, info);
+    EXPECT_EQ(ret, -EINVAL);
+
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetDocsDir_002";
+}
+
+/**
+ * @tc.name: File_share_GetDocsDir_003
+ * @tc.desc: Test function of GetDocsDir()
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetDocsDir_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetDocsDir_003";
+    std::string uri = "/mnt/hmdfs/100/account/device_view";
+    FileShareInfo info;
+    info.providerBundleName_ = "docs";
+    info.targetBundleName_ = "com.demo.a";
+    info.providerLowerPath_ = "/mnt/hmdfs/100/account/device_view/123456/files/docs/test.jpg";
+    info.currentUid_ = "100";
+
+    int32_t ret = GetDocsDir(uri, info);
+    EXPECT_EQ(ret, -EINVAL);
+
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetDocsDir_003";
+}
+
+/**
+ * @tc.name: File_share_GetLowerDir_001
+ * @tc.desc: Test function of GetLowerDir()
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetLowerDir_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetLowerDir_001";
+    std::string lowerPathHead = "/data/app/el5/<currentUserId>/database/<PackageName>/<networkId>";
+    std::string usrId = "100";
+    std::string bundleName = "com.demo.a";
+    std::string networkId = "123456";
+
+    std::string ret = SandboxHelper::GetLowerDir(lowerPathHead, usrId, bundleName, networkId);
+    EXPECT_EQ(ret, "/data/app/el5/100/database/com.demo.a/123456");
+
+    lowerPathHead = "/data/app/el5";
+    ret = SandboxHelper::GetLowerDir(lowerPathHead, usrId, bundleName, networkId);
+    EXPECT_EQ(ret, lowerPathHead);
+
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetLowerDir_001";
+}
+
+/**
+ * @tc.name: File_share_GetPhysicalDir_001
+ * @tc.desc: Test function of GetPhysicalDir()
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetPhysicalDir_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalDir_001";
+    std::string uri = "file://com.demo.a/data/storage/el2/distributedfiles/remote_share.txt";
+    std::string usrId = "100";
+    std::string physicalDir;
+
+    int32_t ret = SandboxHelper::GetPhysicalDir(uri, usrId, physicalDir);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(physicalDir, "/mnt/hmdfs/100/account/device_view/local/data/com.demo.a/");
+
+    uri = "file://com.demo.a/data/storage/el2/distributedfiles/../remote_share.txt";
+    ret = SandboxHelper::GetPhysicalDir(uri, usrId, physicalDir);
+    EXPECT_EQ(ret, -EINVAL);
+
+    uri = "file://media/data/storage/el2/distributedfiles/remote_share.txt";
+    ret = SandboxHelper::GetPhysicalDir(uri, usrId, physicalDir);
+    EXPECT_EQ(ret, -EINVAL);
+
+    uri = "file://com.demo.a/data/storage/el12/distributedfiles/remote_share.txt";
+    ret = SandboxHelper::GetPhysicalDir(uri, usrId, physicalDir);
+    EXPECT_EQ(ret, -EINVAL);
+
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalDir_001";
 }
 
 } // namespace

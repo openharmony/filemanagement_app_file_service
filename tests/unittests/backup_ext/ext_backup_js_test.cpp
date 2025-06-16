@@ -1605,4 +1605,65 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_InitTempPath_0100, testing::ext::Tes
     }
     GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_InitTempPath_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_ext_js_OnRelease_0100
+ * @tc.name: SUB_backup_ext_js_OnRelease_0100
+ * @tc.desc: 测试 OnRelease 各个分支成功与失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAFBOS
+ */
+HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_OnRelease_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_OnRelease_0100";
+    try {
+        int32_t scenario = 1;
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, napi_send_cancelable_event(_, _, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        auto ret = extBackupJs->OnRelease([](ErrCode, std::string){}, scenario);
+        EXPECT_EQ(ret, EINVAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by OnRelease.";
+    }
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_OnRelease_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ext_js_OnRelease_0200
+ * @tc.name: SUB_backup_ext_js_OnRelease_0200
+ * @tc.desc: 测试 OnRelease 各个分支成功与失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAFBOS
+ */
+HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_OnRelease_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_OnRelease_0200";
+    try {
+        int32_t scenario = 1;
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_ok))
+        .WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_send_cancelable_event(_, _, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        auto ret = extBackupJs->OnRelease([](ErrCode, std::string){}, scenario);
+        EXPECT_EQ(ret, EINVAL);
+
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_send_cancelable_event(_, _, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        ret = extBackupJs->OnRelease([](ErrCode, std::string){}, scenario);
+        EXPECT_EQ(ret, EINVAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by OnRelease.";
+    }
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_OnRelease_0200";
+}
 } // namespace OHOS::FileManagement::Backup
