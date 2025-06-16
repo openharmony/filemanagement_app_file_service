@@ -1288,8 +1288,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReadyW
             .WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
-
-        EXPECT_CALL(*srProxy, IncrementalRestoreOnFileReadyWithoutFd(_, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnFileReady(_, _, _, _, _)).WillOnce(Return(0));
         auto ret = service->AppIncrementalFileReadyWithoutFd(fileName, errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
@@ -1297,7 +1296,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReadyW
             .WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
-        EXPECT_CALL(*srProxy, IncrementalBackupOnFileReadyWithoutFd(_, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return(0));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
         ret = service->AppIncrementalFileReadyWithoutFd(fileName, errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
@@ -1308,7 +1307,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReadyW
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
         EXPECT_CALL(*session, OnBundleExtManageInfo(_, _)).WillOnce(Return(UniqueFd(-1)));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
-        EXPECT_CALL(*srProxy, IncrementalBackupOnFileReadyWithoutFd(_, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*srProxy, IncrementalBackupOnFileReady(_, _, _, _, _)).WillOnce(Return(0));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
         ret = service->AppIncrementalFileReadyWithoutFd(fileName, errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
