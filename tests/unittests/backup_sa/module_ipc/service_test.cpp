@@ -380,7 +380,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0103, testing::ext::TestSize.Leve
         string fileName = "/manage.json";
         EXPECT_TRUE(servicePtr_ != nullptr);
         auto ret = servicePtr_->AppFileReady(fileName, UniqueFd(-1), 0);
-        EXPECT_EQ(ret, BError(BError::Codes::E_INVAL));
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
@@ -404,7 +404,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReadyWithoutFd_0100, testing::ext::Test
         string fileName = "/manage.json";
         EXPECT_TRUE(servicePtr_ != nullptr);
         auto ret = servicePtr_->AppFileReadyWithoutFd(fileName, 0);
-        EXPECT_EQ(ret, BError(BError::Codes::I));
+        EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
