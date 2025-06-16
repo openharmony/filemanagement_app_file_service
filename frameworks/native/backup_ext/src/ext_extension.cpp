@@ -2149,7 +2149,7 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
     WriteFile(file, srcFiles);
     int fdval = open(INDEX_FILE_BACKUP.data(), O_RDONLY);
     int manifestFdval = open(file.data(), O_RDONLY);
-    ErrCode ret = fdval < 0 ?
+    ErrCode ret = (fdval < 0 || manifestFdval < 0) ?
             proxy->AppIncrementalFileReadyWithoutFd(string(BConstants::EXT_BACKUP_MANAGE), ERR_OK) :
             proxy->AppIncrementalFileReady(string(BConstants::EXT_BACKUP_MANAGE), fdval, manifestFdval, ERR_OK);
     if (SUCCEEDED(ret)) {
