@@ -1947,3 +1947,145 @@ HWTEST_F(ServiceTest, SUB_Service_SendScannedInfo_0000, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SendScannedInfo_0000";
 }
+
+/**
+ * @tc.number: SUB_Service_SetExtOnRelease_0000
+ * @tc.name: SUB_Service_SetExtOnRelease_0000
+ * @tc.desc: 测试 SetExtOnRelease 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(ServiceTest, SUB_Service_SetExtOnRelease_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetExtOnRelease_0000";
+    try {
+        std::string bundleName = "123";
+        bool isExtOnRelease = true;
+        service->SetExtOnRelease(bundleName, isExtOnRelease);
+        auto it = service->backupExtOnReleaseMap_.find(bundleName);
+        EXPECT_NE(it, service->backupExtOnReleaseMap_.end());
+        EXPECT_EQ(it->second.load(), isExtOnRelease);
+
+        isExtOnRelease = false;
+        service->SetExtOnRelease(bundleName, isExtOnRelease);
+        it = service->backupExtOnReleaseMap_.find(bundleName);
+        EXPECT_NE(it, service->backupExtOnReleaseMap_.end());
+        EXPECT_EQ(it->second.load(), isExtOnRelease);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetExtOnRelease.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetExtOnRelease_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_SetExtOnRelease_0100
+ * @tc.name: SUB_Service_SetExtOnRelease_0100
+ * @tc.desc: 测试 SetExtOnRelease 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(ServiceTest, SUB_Service_SetExtOnRelease_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetExtOnRelease_0100";
+    try {
+        std::string bundleName = "123";
+        bool isExtOnRelease = true;
+        bool updateIsExtOnRelease = false;
+        service->backupExtOnReleaseMap_[bundleName] = isExtOnRelease;
+        service->SetExtOnRelease(bundleName, updateIsExtOnRelease);
+        auto it = service->backupExtOnReleaseMap_.find(bundleName);
+        EXPECT_NE(it, service->backupExtOnReleaseMap_.end());
+        EXPECT_EQ(it->second.load(), updateIsExtOnRelease);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetExtOnRelease.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetExtOnRelease_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_RemoveExtOnRelease_0000
+ * @tc.name: SUB_Service_RemoveExtOnRelease_0000
+ * @tc.desc: 测试 RemoveExtOnRelease 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(ServiceTest, SUB_Service_RemoveExtOnRelease_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_RemoveExtOnRelease_0000";
+    try {
+        std::string bundleName = "123";
+        bool isExtOnRelease = true;
+        service->backupExtOnReleaseMap_[bundleName] = isExtOnRelease;
+        EXPECT_NE(service->backupExtOnReleaseMap_.find(bundleName), service->backupExtOnReleaseMap_.end());
+        service->RemoveExtOnRelease(bundleName);
+        EXPECT_EQ(service->backupExtOnReleaseMap_.find(bundleName), service->backupExtOnReleaseMap_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by RemoveExtOnRelease.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_RemoveExtOnRelease_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_RemoveExtOnRelease_0100
+ * @tc.name: SUB_Service_RemoveExtOnRelease_0100
+ * @tc.desc: 测试 RemoveExtOnRelease 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(ServiceTest, SUB_Service_RemoveExtOnRelease_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_RemoveExtOnRelease_0100";
+    try {
+        std::string bundleName = "123";
+        EXPECT_EQ(service->backupExtOnReleaseMap_.find(bundleName), service->backupExtOnReleaseMap_.end());
+        service->RemoveExtOnRelease(bundleName);
+        EXPECT_EQ(service->backupExtOnReleaseMap_.find(bundleName), service->backupExtOnReleaseMap_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by RemoveExtOnRelease.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_RemoveExtOnRelease_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_HandleOnReleaseAndDisconnect_0000
+ * @tc.name: SUB_Service_HandleOnReleaseAndDisconnect_0000
+ * @tc.desc: 测试 HandleOnReleaseAndDisconnect 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(ServiceTest, SUB_Service_HandleOnReleaseAndDisconnect_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_HandleOnReleaseAndDisconnect_0000";
+    try {
+        std::string bundleName = "123";
+        sptr<SvcSessionManager> sessionPtr = nullptr;
+        service->HandleOnReleaseAndDisconnect(sessionPtr, bundleName);
+
+        sessionPtr = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
+        service->HandleOnReleaseAndDisconnect(sessionPtr, bundleName);
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        service->HandleOnReleaseAndDisconnect(sessionPtr, bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleOnReleaseAndDisconnect.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleOnReleaseAndDisconnect_0000";
+}

@@ -2338,15 +2338,18 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0000, testing::ext::TestSize.L
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TryToConnectExt_0000";
     try {
-        BundleName bundleName;
-        sptr<SvcBackupConnection> extConnection;
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        std::string bundleName = "123";
+        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+        auto callConnected = [](const string &&bundleName) {};
+        auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connectPtr)));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
+        EXPECT_CALL(*session, CreateBackupConnection(_)).WillOnce(Return(connectPtr));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        auto res = service->TryToConnectExt(bundleName, extConnection);
+        auto res = service->TryToConnectExt(bundleName, connectPtr);
         EXPECT_EQ(res, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2368,8 +2371,10 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0100, testing::ext::TestSize.L
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TryToConnectExt_0100";
     try {
-        BundleName bundleName;
-        sptr<SvcBackupConnection> extConnection;
+        std::string bundleName = "123";
+        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+        auto callConnected = [](const string &&bundleName) {};
+        auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
@@ -2378,7 +2383,7 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0100, testing::ext::TestSize.L
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _))
             .WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
-        auto res = service->TryToConnectExt(bundleName, extConnection);
+        auto res = service->TryToConnectExt(bundleName, connectPtr);
         EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2400,9 +2405,11 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0200, testing::ext::TestSize.L
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TryToConnectExt_0200";
     try {
-        BundleName bundleName;
-        sptr<SvcBackupConnection> extConnection;
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        std::string bundleName = "123";
+        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+        auto callConnected = [](const string &&bundleName) {};
+        auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connect)));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
         EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(0));
@@ -2412,8 +2419,8 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0200, testing::ext::TestSize.L
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        auto res = service->TryToConnectExt(bundleName, extConnection);
-        EXPECT_EQ(res, BError(BError::Codes::OK).GetCode());
+        auto res = service->TryToConnectExt(bundleName, connectPtr);
+        EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by TryToConnectExt.";
@@ -2434,9 +2441,11 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0300, testing::ext::TestSize.L
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_TryToConnectExt_0300";
     try {
-        BundleName bundleName;
-        sptr<SvcBackupConnection> extConnection;
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        std::string bundleName = "123";
+        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+        auto callConnected = [](const string &&bundleName) {};
+        auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connect)));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
         EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(0));
@@ -2447,8 +2456,8 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0300, testing::ext::TestSize.L
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _))
             .WillOnce(Return(BError(BError::Codes::SA_BOOT_EXT_FAIL).GetCode()));
-        auto res = service->TryToConnectExt(bundleName, extConnection);
-        EXPECT_EQ(res, BError(BError::Codes::SA_BOOT_EXT_FAIL).GetCode());
+        auto res = service->TryToConnectExt(bundleName, connectPtr);
+        EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by TryToConnectExt.";
@@ -2469,9 +2478,11 @@ HWTEST_F(ServiceTest, SUB_Service_CleanBundleTempDir_0000, testing::ext::TestSiz
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_CleanBundleTempDir_0000";
     try {
-        BundleName bundleName;
-        sptr<SvcBackupConnection> extConnection;
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        std::string bundleName = "123";
+        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+        auto callConnected = [](const string &&bundleName) {};
+        auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connect)));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
@@ -2499,9 +2510,11 @@ HWTEST_F(ServiceTest, SUB_Service_CleanBundleTempDir_0100, testing::ext::TestSiz
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_CleanBundleTempDir_0100";
     try {
-        BundleName bundleName;
-        sptr<SvcBackupConnection> extConnection;
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        std::string bundleName = "123";
+        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+        auto callConnected = [](const string &&bundleName) {};
+        auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connect)));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
