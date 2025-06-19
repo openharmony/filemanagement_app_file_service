@@ -2143,8 +2143,7 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
         string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append(item.first));
         WriteFile(file, bigInfo);
         int manifestFdval = open(file.data(), O_RDONLY);
-        bool fdFlag = (fdval < 0 || manifestFdval < 0) ? true : false;
-        ErrCode ret = fdFlag ? proxy->AppIncrementalFileReadyWithoutFd(item.first, errCode) :
+        ErrCode ret = (fdval < 0 || manifestFdval < 0) ? proxy->AppIncrementalFileReadyWithoutFd(item.first, errCode) :
                       proxy->AppIncrementalFileReady(item.first, fdval, manifestFdval, errCode);
         if (SUCCEEDED(ret)) {
             HILOGI("IncreBigFileReady: The app is packaged success, package name is %{public}s", item.first.c_str());
