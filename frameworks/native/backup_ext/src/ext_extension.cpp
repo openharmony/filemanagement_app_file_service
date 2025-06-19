@@ -2152,12 +2152,8 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
         } else {
             HILOGE("IncrementalBigFileReady interface fails to be invoked: %{public}d", ret);
         }
-        if (fdval >= 0) {
-            close(fdval);
-        }
-        if (manifestFdval >=0) {
-            close(manifestFdval);
-        }
+        fdval >= 0 && close(fdval);
+        manifestFdval >= 0 && close(manifestFdval);
         fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
         RefreshTimeInfo(startTime, fdNum);
     }
