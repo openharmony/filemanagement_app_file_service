@@ -2082,10 +2082,99 @@ HWTEST_F(ServiceTest, SUB_Service_HandleOnReleaseAndDisconnect_0000, testing::ex
 
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         service->HandleOnReleaseAndDisconnect(sessionPtr, bundleName);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleOnReleaseAndDisconnect.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleOnReleaseAndDisconnect_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_GetExtOnRelease_0000
+ * @tc.name: SUB_Service_GetExtOnRelease_0000
+ * @tc.desc: 测试 GetExtOnRelease 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetExtOnRelease_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetExtOnRelease_0000";
+    try {
+        bool isExtOnRelease = false;
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(1));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, -1)));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        auto ret = service->GetExtOnRelease(isExtOnRelease);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        EXPECT_EQ(isExtOnRelease, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetExtOnRelease.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetExtOnRelease_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_GetExtOnRelease_0100
+ * @tc.name: SUB_Service_GetExtOnRelease_0100
+ * @tc.desc: 测试 GetExtOnRelease 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetExtOnRelease_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetExtOnRelease_0100";
+    try {
+        bool isExtOnRelease = false;
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
+        auto ret = service->GetExtOnRelease(isExtOnRelease);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+        EXPECT_EQ(isExtOnRelease, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetExtOnRelease.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetExtOnRelease_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_GetExtOnRelease_0200
+ * @tc.name: SUB_Service_GetExtOnRelease_0200
+ * @tc.desc: 测试 GetExtOnRelease 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC7RHQ
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetExtOnRelease_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetExtOnRelease_0200";
+    try {
+        bool isExtOnRelease = false;
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
+        service->SetExtOnRelease("bundleName", true);
+        auto ret = service->GetExtOnRelease(isExtOnRelease);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+        EXPECT_EQ(isExtOnRelease, true);
+        service->RemoveExtOnRelease("bundleName");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetExtOnRelease.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetExtOnRelease_0200";
 }
