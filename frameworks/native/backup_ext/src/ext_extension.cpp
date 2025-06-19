@@ -2009,16 +2009,45 @@ ErrCode BackupExtExtension::HandleRestore(bool isClearData)
     }
 }
 
-ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
+static bool IfEquality(const ReportFileInfo &info, const ReportFileInfo &infoAd)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    SetClearDataFlag(isClearData);
-    if (!IfAllowToBackupRestore()) {
-        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
-            .GetCode();
+    return info.filePath < infoAd.filePath;
+}
+
+static void AdDeduplication(vector<struct ReportFileInfo> &filesList)
+{
+    sort(filesList.begin(), filesList.end(), IfEquality);
+    auto it = unique(filesList.begin(), filesList.end(), [](const ReportFileInfo &info, const ReportFileInfo &infoAd) {
+        return info.filePath == infoAd.filePath;
+        });
+    filesList.erase(it, filesList.end());
+}
+
+void BackupExtExtension::FillFileInfos(UniqueFd incrementalFd,
+                                       UniqueFd manifestFd,
+                                       vector<struct ReportFileInfo> &allFiles,
+                                       vector<struct ReportFileInfo> &smallFiles,
+                                       vector<struct ReportFileInfo> &bigFiles)
+{
+    HILOGI("Begin Compare");
+    BReportEntity cloudRp(move(manifestFd));
+    unordered_map<string, struct ReportFileInfo> cloudFiles;
+    cloudRp.GetReportInfos(cloudFiles);
+    appStatistic_->scanFileSpend_.Start();
+    if (cloudFiles.empty()) {
+        FillFileInfosWithoutCmp(allFiles, smallFiles, bigFiles, move(incrementalFd));
+    } else {
+        FillFileInfosWithCmp(allFiles, smallFiles, bigFiles, cloudFiles, move(incrementalFd));
     }
-    AsyncTaskOnIncrementalBackup();
-    return ERR_OK;
+
+    AdDeduplication(allFiles);
+    AdDeduplication(smallFiles);
+    AdDeduplication(bigFiles);
+    appStatistic_->smallFileCount_ = smallFiles.size();
+    appStatistic_->bigFileCount_ = bigFiles.size();
+    appStatistic_->scanFileSpend_.End();
+    HILOGI("End Compare, allfile is %{public}zu, smallfile is %{public}zu, bigfile is %{public}zu",
+        allFiles.size(), smallFiles.size(), bigFiles.size());
 }
 
 static void WriteFile(const string &filename, const vector<struct ReportFileInfo> &srcFiles)
@@ -2122,6 +2151,12 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
             RemoveFile(file);
         } else {
             HILOGE("IncrementalBigFileReady interface fails to be invoked: %{public}d", ret);
+        }
+        if (fdval >= 0) {
+            close(fdval);
+        }
+        if (manifestFdval >=0) {
+            close(manifestFdval);
         }
         fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
         RefreshTimeInfo(startTime, fdNum);
