@@ -2145,20 +2145,29 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
         int manifestFdval = open(file.data(), O_RDONLY);
         ErrCode ret = (fdval < 0 || manifestFdval < 0) ? proxy->AppIncrementalFileReadyWithoutFd(item.first, errCode) :
                       proxy->AppIncrementalFileReady(item.first, fdval, manifestFdval, errCode);
-        if (SUCCEEDED(ret)) {
-            HILOGI("IncreBigFileReady: The app is packaged success, package name is %{public}s", item.first.c_str());
-            RemoveFile(file);
-        } else {
-            HILOGE("IncrementalBigFileReady interface fails to be invoked: %{public}d", ret);
+        CheckAppIncrementalFileReadyResult(ret, item.first, file);
+        if (fdval >= 0) {
+            close(fdval);
         }
-        fdval >= 0 && close(fdval);
-        manifestFdval >= 0 && close(manifestFdval);
+        if (manifestFdval >=0) {
+            close(manifestFdval);
+        }
         fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
         RefreshTimeInfo(startTime, fdNum);
     }
     ClearNoPermissionFiles(pkgInfo, noPermissionFiles);
     HILOGI("IncrementalBigFileReady End");
     return ret;
+}
+
+void BackupExtExtension::CheckAppIncrementalFileReadyResult(int32_t ret, std::string packageName, std::string file)
+{
+    if (SUCCEEDED(ret)) {
+        HILOGI("IncreBigFileReady: The app is packaged success, package name is %{public}s", packageName.c_str());
+        RemoveFile(file);
+    } else {
+        HILOGE("IncrementalBigFileReady interface fails to be invoked: %{public}d", ret);
+    }
 }
 
 ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
