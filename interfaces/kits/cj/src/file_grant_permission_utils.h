@@ -28,8 +28,6 @@ namespace OHOS {
 namespace CJSystemapi {
 namespace FileGrantPermission {
 
-using namespace std;
-
 struct CPolicyInfo {
     char* uri;
     uint32_t mode;
@@ -41,13 +39,13 @@ struct CArrCPolicyInfo {
 };
 
 struct PolicyErrorArgs {
-    deque<AppFileService::PolicyErrorResult> errorResults;
+    std::deque<AppFileService::PolicyErrorResult> errorResults;
     int32_t errNo = 0;
     ~PolicyErrorArgs() = default;
 };
 
 struct PolicyInfoResultArgs {
-    vector<bool> resultData;
+    std::vector<bool> resultData;
     int32_t errNo = 0;
     ~PolicyInfoResultArgs() = default;
 };
@@ -74,8 +72,7 @@ struct CJError {
 };
 
 enum CommonErrCode {
-    E_UNKNOWN_ERROR = 13900042,
-    E_PARAMS = 401,
+    E_UNKNOWN_ERROR = 13900042
 };
 
 } // namespace FileGrantPermission

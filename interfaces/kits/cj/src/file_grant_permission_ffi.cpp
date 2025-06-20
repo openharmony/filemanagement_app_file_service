@@ -47,7 +47,13 @@ int ConvertUVCode2ErrorCode(int errCode)
     if (errCode >= 0) {
         return errCode;
     }
-    auto uvCode = string_view(uv_err_name(errCode));
+
+    const char* uvErrName = uv_err_name(errCode);
+    if (uvErrName == nullptr) {
+        LOGE("uvErrName is nullptr");
+        return UNKROWN_ERR;
+    }
+    auto uvCode = string_view(uvErrName);
     if (uvCode2ErrCodeTable.find(uvCode) != uvCode2ErrCodeTable.end()) {
         return uvCode2ErrCodeTable.at(uvCode);
     }
@@ -73,16 +79,13 @@ extern "C" {
 CArrCPolicyErrorResult FfiOHOSFileGPPersistPermission(CArrCPolicyInfo policies, int32_t* code)
 {
     CArrCPolicyErrorResult res = { nullptr, 0 };
-    if (policies.size > MAX_ARRAY_SIZE) {
-        LOGE("The length of the array is extra-long");
-        *code = E_PARAMS;
+    if (policies.head == nullptr || code == nullptr) {
+        LOGE("input is nullptr");
         return res;
     }
+    *code = E_UNKNOWN_ERROR;
     std::vector<UriPolicyInfo> uriPolicies;
-    if (policies.head == nullptr) {
-        return res;
-    }
-    for (int i = 0; i < policies.size; i++) {
+    for (int64_t i = 0; i < policies.size; i++) {
         auto head = policies.head + i;
         std::string uriStr(head->uri);
         UriPolicyInfo uriPolicy { .uri = uriStr, .mode = head->mode };
@@ -92,44 +95,43 @@ CArrCPolicyErrorResult FfiOHOSFileGPPersistPermission(CArrCPolicyInfo policies, 
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("Make_shared is failed");
-        *code = E_UNKNOWN_ERROR;
         return res;
     }
     arg->errNo = FilePermission::PersistPermission(uriPolicies, arg->errorResults);
     CJError err = ConvertError(arg->errNo);
     if (err.errorcode != 0) {
-        *code = err.errorcode;
-        res.size = static_cast<int32_t>(arg->errorResults.size());
+        res.size = static_cast<int64_t>(arg->errorResults.size());
+        if (res.size <= 0) {
+            LOGE("size is less than 0");
+            return res;
+        }
         CPolicyErrorResult* retArrValue =
             static_cast<CPolicyErrorResult*>(malloc(sizeof(CPolicyErrorResult) * res.size));
         if (retArrValue == nullptr) {
             LOGE("malloc is failed");
-            *code = E_UNKNOWN_ERROR;
             return res;
         }
-        for (int i = 0; i < res.size; i++) {
+        for (int64_t i = 0; i < res.size; i++) {
             retArrValue[i].uri = MallocCString(arg->errorResults[i].uri);
             retArrValue[i].code = arg->errorResults[i].code;
             retArrValue[i].message = MallocCString(arg->errorResults[i].message);
         }
         res.head = retArrValue;
     }
+    *code = err.errorcode;
     return res;
 }
 
 CArrCPolicyErrorResult FfiOHOSFileGPRevokePermission(CArrCPolicyInfo policies, int32_t* code)
 {
     CArrCPolicyErrorResult res = { nullptr, 0 };
-    if (policies.size > MAX_ARRAY_SIZE) {
-        LOGE("The length of the array is extra-long");
-        *code = E_PARAMS;
+    if (policies.head == nullptr || code == nullptr) {
+        LOGE("input is nullptr");
         return res;
     }
+    *code = E_UNKNOWN_ERROR;
     std::vector<UriPolicyInfo> uriPolicies;
-    if (policies.head == nullptr) {
-        return res;
-    }
-    for (int i = 0; i < policies.size; i++) {
+    for (int64_t i = 0; i < policies.size; i++) {
         auto head = policies.head + i;
         std::string uriStr(head->uri);
         UriPolicyInfo uriPolicy { .uri = uriStr, .mode = head->mode };
@@ -139,43 +141,43 @@ CArrCPolicyErrorResult FfiOHOSFileGPRevokePermission(CArrCPolicyInfo policies, i
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("Make_shared is failed");
-        *code = E_UNKNOWN_ERROR;
         return res;
     }
     arg->errNo = FilePermission::RevokePermission(uriPolicies, arg->errorResults);
     CJError err = ConvertError(arg->errNo);
-    if (arg->errNo != 0) {
-        *code = err.errorcode;
-        res.size = static_cast<int32_t>(arg->errorResults.size());
+    if (err.errorcode != 0) {
+        res.size = static_cast<int64_t>(arg->errorResults.size());
+        if (res.size <= 0) {
+            LOGE("size is less than 0");
+            return res;
+        }
         CPolicyErrorResult* retArrValue =
             static_cast<CPolicyErrorResult*>(malloc(sizeof(CPolicyErrorResult) * res.size));
         if (retArrValue == nullptr) {
             LOGE("malloc is failed");
-            *code = E_UNKNOWN_ERROR;
             return res;
         }
-        for (int i = 0; i < res.size; i++) {
+        for (int64_t i = 0; i < res.size; i++) {
             retArrValue[i].uri = MallocCString(arg->errorResults[i].uri);
             retArrValue[i].code = arg->errorResults[i].code;
             retArrValue[i].message = MallocCString(arg->errorResults[i].message);
         }
+        res.head = retArrValue;
     }
+    *code = err.errorcode;
     return res;
 }
 
 CArrCPolicyErrorResult FfiOHOSFileGPActivatePermission(CArrCPolicyInfo policies, int32_t* code)
 {
     CArrCPolicyErrorResult res = { nullptr, 0 };
-    if (policies.size > MAX_ARRAY_SIZE) {
-        LOGE("The length of the array is extra-long");
-        *code = E_PARAMS;
+    if (policies.head == nullptr || code == nullptr) {
+        LOGE("input is nullptr");
         return res;
     }
+    *code = E_UNKNOWN_ERROR;
     std::vector<UriPolicyInfo> uriPolicies;
-    if (policies.head == nullptr) {
-        return res;
-    }
-    for (int i = 0; i < policies.size; i++) {
+    for (int64_t i = 0; i < policies.size; i++) {
         auto head = policies.head + i;
         std::string uriStr(head->uri);
         UriPolicyInfo uriPolicy { .uri = uriStr, .mode = head->mode };
@@ -185,43 +187,43 @@ CArrCPolicyErrorResult FfiOHOSFileGPActivatePermission(CArrCPolicyInfo policies,
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("Make_shared is failed");
-        *code = E_UNKNOWN_ERROR;
         return res;
     }
     arg->errNo = FilePermission::ActivatePermission(uriPolicies, arg->errorResults);
     CJError err = ConvertError(arg->errNo);
-    if (arg->errNo != 0) {
-        *code = err.errorcode;
-        res.size = static_cast<int32_t>(arg->errorResults.size());
+    if (err.errorcode != 0) {
+        res.size = static_cast<int64_t>(arg->errorResults.size());
+        if (res.size <= 0) {
+            LOGE("size is less than 0");
+            return res;
+        }
         CPolicyErrorResult* retArrValue =
             static_cast<CPolicyErrorResult*>(malloc(sizeof(CPolicyErrorResult) * res.size));
         if (retArrValue == nullptr) {
             LOGE("malloc is failed");
-            *code = E_UNKNOWN_ERROR;
             return res;
         }
-        for (int i = 0; i < res.size; i++) {
+        for (int64_t i = 0; i < res.size; i++) {
             retArrValue[i].uri = MallocCString(arg->errorResults[i].uri);
             retArrValue[i].code = arg->errorResults[i].code;
             retArrValue[i].message = MallocCString(arg->errorResults[i].message);
         }
+        res.head = retArrValue;
     }
+    *code = err.errorcode;
     return res;
 }
 
 CArrCPolicyErrorResult FfiOHOSFileGPDeactivatePermission(CArrCPolicyInfo policies, int32_t* code)
 {
     CArrCPolicyErrorResult res = { nullptr, 0 };
-    if (policies.size > MAX_ARRAY_SIZE) {
-        LOGE("The length of the array is extra-long");
-        *code = E_PARAMS;
+    if (policies.head == nullptr || code == nullptr) {
+        LOGE("input is nullptr");
         return res;
     }
+    *code = E_UNKNOWN_ERROR;
     std::vector<UriPolicyInfo> uriPolicies;
-    if (policies.head == nullptr) {
-        return res;
-    }
-    for (int i = 0; i < policies.size; i++) {
+    for (int64_t i = 0; i < policies.size; i++) {
         auto head = policies.head + i;
         std::string uriStr(head->uri);
         UriPolicyInfo uriPolicy { .uri = uriStr, .mode = head->mode };
@@ -231,43 +233,43 @@ CArrCPolicyErrorResult FfiOHOSFileGPDeactivatePermission(CArrCPolicyInfo policie
     shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("Make_shared is failed");
-        *code = E_UNKNOWN_ERROR;
         return res;
     }
     arg->errNo = FilePermission::DeactivatePermission(uriPolicies, arg->errorResults);
     CJError err = ConvertError(arg->errNo);
-    if (arg->errNo != 0) {
-        *code = err.errorcode;
-        res.size = static_cast<int32_t>(arg->errorResults.size());
+    if (err.errorcode != 0) {
+        res.size = static_cast<int64_t>(arg->errorResults.size());
+        if (res.size <= 0) {
+            LOGE("size is 0");
+            return res;
+        }
         CPolicyErrorResult* retArrValue =
             static_cast<CPolicyErrorResult*>(malloc(sizeof(CPolicyErrorResult) * res.size));
         if (retArrValue == nullptr) {
             LOGE("malloc is failed");
-            *code = E_UNKNOWN_ERROR;
             return res;
         }
-        for (int i = 0; i < res.size; i++) {
+        for (int64_t i = 0; i < res.size; i++) {
             retArrValue[i].uri = MallocCString(arg->errorResults[i].uri);
             retArrValue[i].code = arg->errorResults[i].code;
             retArrValue[i].message = MallocCString(arg->errorResults[i].message);
         }
+        res.head = retArrValue;
     }
+    *code = err.errorcode;
     return res;
 }
 
 CArrBool FfiOHOSFileGPCheckPersistentPermission(CArrCPolicyInfo policies, int32_t* code)
 {
     CArrBool res = { nullptr, 0 };
-    if (policies.size > MAX_ARRAY_SIZE) {
-        LOGE("The length of the array is extra-long");
-        *code = E_PARAMS;
+    if (policies.head == nullptr || code == nullptr) {
+        LOGE("input is nullptr");
         return res;
     }
+    *code = E_UNKNOWN_ERROR;
     std::vector<UriPolicyInfo> uriPolicies;
-    if (policies.head == nullptr) {
-        return res;
-    }
-    for (int i = 0; i < policies.size; i++) {
+    for (int64_t i = 0; i < policies.size; i++) {
         auto head = policies.head + i;
 
         std::string uriStr(head->uri);
@@ -278,27 +280,55 @@ CArrBool FfiOHOSFileGPCheckPersistentPermission(CArrCPolicyInfo policies, int32_
     shared_ptr<PolicyInfoResultArgs> arg = make_shared<PolicyInfoResultArgs>();
     if (arg == nullptr) {
         LOGE("Make_shared is failed");
-        *code = E_UNKNOWN_ERROR;
         return res;
     }
     arg->errNo = FilePermission::CheckPersistentPermission(uriPolicies, arg->resultData);
     CJError err = ConvertError(arg->errNo);
-    if (err.errorcode != 0) {
-        *code = err.errorcode;
-    } else {
-        res.size = static_cast<int32_t>(arg->resultData.size());
-        bool* retArrValue = static_cast<bool*>(malloc(sizeof(bool) * res.size));
-        if (retArrValue == nullptr) {
-            LOGE("malloc is failed");
-            *code = E_UNKNOWN_ERROR;
-            return res;
-        }
-        for (int i = 0; i < res.size; i++) {
-            retArrValue[i] = arg->resultData[i];
-        }
-        res.head = retArrValue;
+    res.size = static_cast<int64_t>(arg->resultData.size());
+    if (res.size <= 0) {
+        LOGE("size is 0");
+        return res;
     }
+    bool* retArrValue = static_cast<bool*>(malloc(sizeof(bool) * res.size));
+    if (retArrValue == nullptr) {
+        LOGE("malloc is failed");
+        return res;
+    }
+    for (int64_t i = 0; i < res.size; i++) {
+        retArrValue[i] = arg->resultData[i];
+    }
+    res.head = retArrValue;
+    *code = err.errorcode;
     return res;
+}
+
+void FfiOHOSFreeArrBool(CArrBool* tags)
+{
+    if (tags == nullptr || tags->head == nullptr) {
+        LOGE("input is nullptr");
+        return;
+    }
+
+    free(tags->head);
+    tags->head = nullptr;
+    tags->size = 0;
+}
+
+void FfiOHOSFreeArrPolicyErrorResult(CArrCPolicyErrorResult* policies)
+{
+    if (policies == nullptr || policies->head == nullptr) {
+        LOGE("input is nullptr");
+        return;
+    }
+
+    for (int64_t i = 0; i < policies->size; i++) {
+        free(policies->head[i].uri);
+        free(policies->head[i].message);
+    }
+
+    free(policies->head);
+    policies->head = nullptr;
+    policies->size = 0;
 }
 }
 } // namespace FileGrantPermission

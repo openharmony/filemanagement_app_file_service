@@ -31,6 +31,8 @@ FFI_EXPORT CArrCPolicyErrorResult FfiOHOSFileGPRevokePermission(CArrCPolicyInfo 
 FFI_EXPORT CArrCPolicyErrorResult FfiOHOSFileGPActivatePermission(CArrCPolicyInfo policies, int32_t* code);
 FFI_EXPORT CArrCPolicyErrorResult FfiOHOSFileGPDeactivatePermission(CArrCPolicyInfo policies, int32_t* code);
 FFI_EXPORT CArrBool FfiOHOSFileGPCheckPersistentPermission(CArrCPolicyInfo policies, int32_t* code);
+FFI_EXPORT void FfiOHOSFreeArrPolicyErrorResult(CArrCPolicyErrorResult* policise);
+FFI_EXPORT void FfiOHOSFreeArrBool(CArrBool* tags);
 }
 } // namespace FileGrantPermission
 } // namespace CJSystemapi
