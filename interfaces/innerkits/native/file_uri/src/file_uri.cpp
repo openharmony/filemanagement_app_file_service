@@ -134,13 +134,17 @@ string FileUri::GetRealPath()
         uri_.ToString().find(NETWORK_PARA) != string::npos) {
         string networkId = "";
         SandboxHelper::GetNetworkIdFromUri(uri_.ToString(), networkId);
-        string pathShare = PATH_SHARE;
         if (!networkId.empty()) {
-            pathShare = PATH_SHARE + BACKSLASH + networkId;
+            realPath = PATH_SHARE + MODE_RW + networkId + BACKSLASH + bundleName + sandboxPath;
+        } else {
+            realPath = PATH_SHARE + MODE_RW + bundleName + sandboxPath;
         }
-        realPath = pathShare + MODE_RW + bundleName + sandboxPath;
         if (access(realPath.c_str(), F_OK) != 0) {
-            realPath = pathShare + MODE_R + bundleName + sandboxPath;
+            if (!networkId.empty()) {
+                realPath = PATH_SHARE + MODE_R + networkId + BACKSLASH + bundleName + sandboxPath;
+            } else {
+                realPath = PATH_SHARE + MODE_R + bundleName + sandboxPath;
+            }
         }
     }
     LOGD("GetRealPath return path is ,%{private}s", realPath.c_str());
