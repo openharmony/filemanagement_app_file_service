@@ -16,6 +16,7 @@
 #include "fileshare_taihe.h"
 #include <iostream>
 #include "ability.h"
+#include "accesstoken_kit.h"
 #include "ani.h"
 #include "datashare_helper.h"
 #include "datashare_values_bucket.h"
@@ -56,6 +57,12 @@ ohos::fileshare::fileShare::PolicyInfo MakePolicyInfo(taihe::string_view uri, in
     return {uri, operationMode};
 }
 
+ohos::fileshare::fileShare::PathPolicyInfo MakePathPolicyInfo(taihe::string_view path,
+    ohos::fileshare::fileShare::OperationMode operationMode)
+{
+    return {path, operationMode};
+}
+
 static int32_t GetUriPoliciesArg(taihe::array_view<ohos::fileshare::fileShare::PolicyInfo> policies,
     std::vector<OHOS::AppFileService::UriPolicyInfo> &uriPolicies)
 {
@@ -78,6 +85,32 @@ static int32_t GetUriPoliciesArg(taihe::array_view<ohos::fileshare::fileShare::P
             return E_PARAMS;
         }
         uriPolicies.emplace_back(uriPolicy);
+    }
+    return E_NO_ERROR;
+}
+
+static int32_t GetPathPoliciesArg(taihe::array_view<ohos::fileshare::fileShare::PathPolicyInfo> policies,
+    std::vector<OHOS::AppFileService::PathPolicyInfo> &pathPolicies)
+{
+    uint32_t count = policies.size();
+    if (count > OHOS::AppFileService::MAX_ARRAY_SIZE) {
+        LOGE("The length of the array is extra-long");
+        return E_PARAMS;
+    }
+    for (uint32_t i = 0; i < count; i++) {
+        OHOS::AppFileService::PathPolicyInfo pathPolicie;
+        pathPolicie.path = policies[i].path;
+        pathPolicie.mode = policies[i].operationMode;
+        if (pathPolicie.path == FILE_NOPS) {
+            LOGE("path is empty");
+            return E_PARAMS;
+        }
+        if (pathPolicie.mode != READ_MODE && pathPolicie.mode != WRITE_MODE &&
+            pathPolicie.mode != (READ_MODE | WRITE_MODE)) {
+            LOGE("Invalid operation mode");
+            return E_PARAMS;
+        }
+        pathPolicies.emplace_back(pathPolicie);
     }
     return E_NO_ERROR;
 }
@@ -133,6 +166,12 @@ static bool IsSystemApp()
 {
     uint64_t fullTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
     return OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
+}
+
+static bool CheckTokenIdPermission(uint32_t tokenCaller, const std::string &permission)
+{
+    return OHOS::Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, permission) ==
+           OHOS::Security::AccessToken::PermissionState::PERMISSION_GRANTED;
 }
 
 static int32_t GetIdFromUri(std::string uri)
@@ -294,11 +333,56 @@ void GrantUriPermissionSync(taihe::string_view uri, taihe::string_view bundleNam
         taihe::set_business_error(-ret, "fileShare::GrantUriPermission failed");
     }
 }
+
+taihe::array<bool> CheckPathPermissionSync(int32_t tokenID,
+    taihe::array_view<ohos::fileshare::fileShare::PathPolicyInfo> policies,
+    ohos::fileshare::fileShare::PolicyType policyType)
+{
+    if (!IsSystemApp()) {
+        LOGE("fileShare::CheckPathPermissionSync is not System App!");
+        taihe::set_business_error(E_PERMISSION_SYS, "fileShare::CheckPathPermissionSync is not System App!");
+        return taihe::array<bool>::make(0);
+    }
+
+    int32_t callerTokenId = static_cast<int32_t>(OHOS::IPCSkeleton::GetCallingTokenID());
+    if (tokenID != callerTokenId) {
+        if (!CheckTokenIdPermission(callerTokenId, "ohos.permission.CHECK_SANDBOX_POLICY")) {
+            taihe::set_business_error(E_PERMISSION, "fileShare::CheckPathPermissionSync checkPermission failed!");
+            return taihe::array<bool>::make(0);
+        }
+    }
+
+    std::vector<OHOS::AppFileService::PathPolicyInfo> pathPolicies;
+    if (GetPathPoliciesArg(policies, pathPolicies)) {
+        LOGE("Failed to get pathPolicies.");
+        taihe::set_business_error(E_PARAMS, "Failed to get pathPolicies.");
+        return taihe::array<bool>::make(0);
+    }
+
+    std::shared_ptr<PolicyInfoResultArgs> arg = std::make_shared<PolicyInfoResultArgs>();
+    if (arg == nullptr) {
+        LOGE("PolicyInfoResultArgs make make_shared failed.");
+        taihe::set_business_error(E_UNKNOWN_ERROR, "PolicyInfoResultArgs make make_shared failed.");
+        return taihe::array<bool>::make(0);
+    }
+
+    arg->errNo = OHOS::AppFileService::FilePermission::CheckPathPermission(tokenID,
+        pathPolicies, policyType, arg->resultData);
+    if (arg->errNo) {
+        LOGE("Activation failed.");
+        taihe::set_business_error(arg->errNo, "Activation failed.");
+        return taihe::array<bool>::make(0);
+    }
+    taihe::array<bool> result(taihe::copy_data_t{}, arg->resultData.begin(), arg->resultData.size());
+    return result;
+}
 } // namespace
 
 // NOLINTBEGIN
 TH_EXPORT_CPP_API_MakePolicyInfo(ANI::FileShare::MakePolicyInfo);
+TH_EXPORT_CPP_API_MakePathPolicyInfo(ANI::FileShare::MakePathPolicyInfo);
 TH_EXPORT_CPP_API_ActivatePermissionSync(ANI::FileShare::ActivatePermissionSync);
 TH_EXPORT_CPP_API_DeactivatePermissionSync(ANI::FileShare::DeactivatePermissionSync);
 TH_EXPORT_CPP_API_GrantUriPermissionSync(ANI::FileShare::GrantUriPermissionSync);
+TH_EXPORT_CPP_API_CheckPathPermissionSync(ANI::FileShare::CheckPathPermissionSync);
  // NOLINTEND
