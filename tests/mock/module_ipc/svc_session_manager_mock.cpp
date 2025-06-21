@@ -18,13 +18,13 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <gtest/gtest.h>
 #include <memory>
 #include <sstream>
 #include <string>
 
 #include "b_resources/b_constants.h"
 #include "ext_extension_mock.h"
+#include "../common/include/test_common.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -64,7 +64,7 @@ ErrCode SvcSessionManager::VerifyBundleName(string &bundleName)
 
 sptr<IServiceReverse> SvcSessionManager::GetServiceReverseProxy()
 {
-    GTEST_LOG_(INFO) << "GetServiceReverseProxy";
+    GTEST_LOG_(INFO) << "GetServiceReverseProxy, clientProxy is null:" << (impl_.clientProxy == nullptr);
     return impl_.clientProxy;
 }
 
@@ -95,6 +95,7 @@ UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, Uniq
 void SvcSessionManager::RemoveExtInfo(const string &bundleName)
 {
     GTEST_LOG_(INFO) << "RemoveExtInfo";
+    impl_.clientToken = CLEARED_CLIENT_TOKEN;
 }
 
 wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &bundleName)
@@ -102,9 +103,11 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
     GTEST_LOG_(INFO) << "GetExtConnection";
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
+        GTEST_LOG_(INFO) << "GetExtConnection not find bundle";
         return nullptr;
     }
     if (!it->second.backUpConnection) {
+        GTEST_LOG_(INFO) << "connection is null, init now!";
         auto callDied = [](const string &&bundleName, bool isCleanCalled = false) {};
         auto callConnected = [](const string &&bundleName) {};
         it->second.backUpConnection = sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnected,
@@ -201,7 +204,7 @@ void SvcSessionManager::SetServiceSchedAction(const string &bundleName, BConstan
 string SvcSessionManager::GetBackupExtName(const string &bundleName)
 {
     GTEST_LOG_(INFO) << "GetBackupExtName " << bundleName;
-    return "com.example.app2backup";
+    return BUNDLE_NAME;
 }
 
 void SvcSessionManager::SetBackupExtInfo(const string &bundleName, const string &extInfo)
@@ -224,8 +227,10 @@ std::string SvcSessionManager::GetBackupExtInfo(const string &bundleName)
 
 void SvcSessionManager::SetBackupExtName(const string &bundleName, const string &backupExtName)
 {
+    GTEST_LOG_(INFO) << "call SetBackupExtName bundleName=" << bundleName << ",extName=" << backupExtName;
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
+        GTEST_LOG_(INFO) << "not find";
         return;
     }
     it->second.backupExtName = backupExtName;
@@ -233,6 +238,7 @@ void SvcSessionManager::SetBackupExtName(const string &bundleName, const string 
 
 std::weak_ptr<SABackupConnection> SvcSessionManager::GetSAExtConnection(const BundleName &bundleName)
 {
+    GTEST_LOG_(INFO) << "call GetSAExtConnection";
     auto it = impl_.backupExtNameMap.find(bundleName);
     if (it == impl_.backupExtNameMap.end()) {
         return std::weak_ptr<SABackupConnection>();
@@ -253,8 +259,13 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames, vec
 {
     GTEST_LOG_(INFO) << "AppendBundles";
     BackupExtInfo info {};
-    info.backupExtName = "com.example.app2backup";
-    impl_.backupExtNameMap.insert(make_pair("com.example.app2backup", info));
+    info.backupExtName = BUNDLE_NAME;
+    impl_.backupExtNameMap.insert(make_pair(BUNDLE_NAME, info));
+    for (auto bundleName : bundleNames) {
+        if (bundleName == BUNDLE_NAME_FALSE) {
+            failedBundles.push_back(BUNDLE_NAME_FALSE);
+        }
+    }
 }
 
 sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(const BundleName &bundleName)
@@ -265,6 +276,12 @@ sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(const Bundle
 
 ErrCode SvcSessionManager::Start()
 {
+    if (sessionCnt_.load() == START_RETURN_FALSE) {
+        GTEST_LOG_(INFO) << "call Start false";
+        sessionCnt_.store(0);
+        return BError(BError::Codes::EXT_INVAL_ARG);
+    }
+    GTEST_LOG_(INFO) << "call Start ok";
     return BError(BError::Codes::OK);
 }
 
@@ -440,6 +457,10 @@ ErrCode SvcSessionManager::ClearSessionData()
 
 bool SvcSessionManager::GetIsIncrementalBackup()
 {
+    GTEST_LOG_(INFO) << "call GetIsIncrementalBackup, callerName: " << impl_.callerName;
+    if (impl_.callerName == BUNDLE_NAME_FALSE) {
+        return false;
+    }
     return true;
 }
 
@@ -467,6 +488,9 @@ void SvcSessionManager::SetClearDataFlag(const std::string &bundleName, bool isN
 
 bool SvcSessionManager::GetClearDataFlag(const std::string &bundleName)
 {
+    if (bundleName == BUNDLE_NAME_FALSE) {
+        return false;
+    }
     return true;
 }
 

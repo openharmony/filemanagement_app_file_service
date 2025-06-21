@@ -14,9 +14,8 @@
  */
 
 #include "module_ipc/svc_backup_connection.h"
-
+#include <gtest/gtest.h>
 #include <string>
-
 #include "extension_proxy.h"
 #include "module_ipc/svc_session_manager.h"
 
@@ -79,6 +78,7 @@ void SvcBackupConnection::SetCallDied(function<void(const std::string &&, bool)>
 
 sptr<IExtension> SvcBackupConnection::GetBackupExtProxy()
 {
+    GTEST_LOG_(INFO) << "call GetBackupExtProxy, backupProxy is null:" << (backupProxy_ == nullptr) ;
     return backupProxy_;
 }
 } // namespace OHOS::FileManagement::Backup

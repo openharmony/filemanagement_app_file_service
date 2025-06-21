@@ -26,6 +26,9 @@ namespace OHOS::FileManagement::Backup {
 class ServiceReverseMock : public IRemoteStub<IServiceReverse> {
 public:
     int code_ = 0;
+    bool restoreBundleStartCalled_ = false;
+    bool incRestoreBundleStartCalled_ = false;
+    bool backupOnBundleStartedCalled_ = false;
     ServiceReverseMock() : code_(0) {}
     virtual ~ServiceReverseMock() {}
 
@@ -46,6 +49,7 @@ public:
 
     ErrCode BackupOnBundleStarted(int32_t errCode, const std::string &bundleName) override
     {
+        backupOnBundleStartedCalled_ = true;
         return BError(BError::Codes::OK);
     }
 
@@ -76,6 +80,8 @@ public:
 
     ErrCode RestoreOnBundleStarted(int32_t errCode, const std::string &bundleName) override
     {
+        GTEST_LOG_(INFO) << "call RestoreOnBundleStarted";
+        restoreBundleStartCalled_ = true;
         return BError(BError::Codes::OK);
     }
 
@@ -156,6 +162,8 @@ public:
 
     ErrCode IncrementalRestoreOnBundleStarted(int32_t errCode, const std::string &bundleName) override
     {
+        GTEST_LOG_(INFO) << "call IncrementalRestoreOnBundleStarted";
+        incRestoreBundleStartCalled_ = true;
         return BError(BError::Codes::OK);
     }
 
