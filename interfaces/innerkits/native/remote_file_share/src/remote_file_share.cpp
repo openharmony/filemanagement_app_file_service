@@ -52,6 +52,7 @@ const std::string BACKSLASH = "/";
 const std::string DISTRIBUTED_DIR_PATH = "/data/storage/el2/distributedfiles";
 const std::string DST_PATH_HEAD = "/data/service/el2/";
 const std::string DST_PATH_MID = "/hmdfs/account/data/";
+const std::string DST_PATH_MID_FILES = "/hmdfs/account/files/";
 const std::string SHARE_PATH_HEAD = "/mnt/hmdfs/";
 const std::string SHARE_PATH_MID = "/account/merge_view/services/";
 const std::string LOWER_SHARE_PATH_HEAD = "/mnt/hmdfs/";
@@ -305,8 +306,7 @@ static int GetMediaDistributedDir(const int &userId, std::string &distributedDir
     return E_OK;
 }
 
-static int GetDistributedDir(const int &userId, std::string &distributedDir, const std::string &bundleName,
-    const std::string &networkId, Uri uri)
+static std::string GetSandboxDir(Uri uri)
 {
     std::string sandboxPath = SandboxHelper::Decode(uri.GetPath());
     std::string sandboxDir = "";
@@ -318,9 +318,32 @@ static int GetDistributedDir(const int &userId, std::string &distributedDir, con
         sandboxDir = SANDBOX_CLOUD_DIR;
     } else {
         LOGE("Get distributed dir failed.");
+        return "";
+    }
+    return sandboxDir;
+}
+
+static bool IsDistributedFileDir(Uri uri)
+{
+    std::string sandboxDir = GetSandboxDir(uri);
+    return sandboxDir == DISTRIBUTED_DIR_PATH ? true : false;
+}
+
+static bool IsCloudFileDir(Uri uri)
+{
+    std::string sandboxDir = GetSandboxDir(uri);
+    return sandboxDir == SANDBOX_CLOUD_DIR ? true : false;
+}
+
+static int GetDistributedDir(const int &userId, std::string &distributedDir, const std::string &bundleName,
+    const std::string &networkId, Uri uri)
+{
+    std::string sandboxDir = GetSandboxDir(uri);
+    if (sandboxDir == "") {
+        LOGE("Get sandbox dir failed");
         return -EINVAL;
     }
-    
+
     distributedDir = DST_PATH_HEAD + std::to_string(userId) + DST_PATH_MID + bundleName + REMOTE_SHARE_PATH_DIR +
         BACKSLASH + networkId + sandboxDir;
     if (distributedDir.size() >= PATH_MAX) {
@@ -337,7 +360,7 @@ static int32_t GetMediaPhysicalDir(const int32_t &userId, std::string &physicalD
         LOGE("bundleName is not media type.");
         return -EINVAL;
     }
-    physicalDir = SHARE_PATH_HEAD + std::to_string(userId) + MEDIA_PATH_PREFIX_TWO + MEDIA_PHOTO_PATH;
+    physicalDir = DST_PATH_HEAD + std::to_string(userId) + DST_PATH_MID_FILES + MEDIA_PHOTO_PATH;
     if (physicalDir.size() >= PATH_MAX) {
         LOGE("Path is too long with %{public}zu", physicalDir.size());
         return -EINVAL;
@@ -430,6 +453,18 @@ static void SetHmdfsUriInfo(struct HmdfsUriInfo &hui,
 
     hui.fileSize = fileSize;
     return;
+}
+
+static int32_t SetFileSize(const std::string &physicalPath, struct HmdfsUriInfo &hui)
+{
+    struct stat buf = {};
+    if (stat(physicalPath.c_str(), &buf) != E_OK) {
+        int32_t ret = -errno;
+        LOGE("Failed to get physical path stat with %{public}d", ret);
+        return ret;
+    }
+    hui.fileSize = static_cast<size_t>(buf.st_size);
+    return E_OK;
 }
 
 static int32_t SetPublicDirHmdfsInfo(const std::string &physicalPath, const std::string &uriStr,
@@ -704,14 +739,13 @@ static int32_t SetHmdfsUriDirInfo(struct HmdfsUriInfo &hui, Uri &uri, const std:
 {
     hui.uriStr = FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH + REMOTE_SHARE_PATH_DIR + BACKSLASH +
         networkId + uri.GetPath() + NETWORK_PARA + networkId;
-    struct stat buf = {};
-    if (stat(physicalPath.c_str(), &buf) != E_OK) {
-        int32_t ret = -errno;
-        LOGE("Failed to get physical path stat with %{public}d", ret);
-        return ret;
-    }
-    hui.fileSize = static_cast<size_t>(buf.st_size);
-    return E_OK;
+    return SetFileSize(physicalPath, hui);
+}
+
+static int32_t SetDistributedfilesHmdfsUriDirInfo(struct HmdfsUriInfo &hui, Uri &uri, const std::string &physicalPath)
+{
+    hui.uriStr = uri.ToString();
+    return SetFileSize(physicalPath, hui);
 }
 
 static int32_t SetMediaHmdfsUriDirInfo(struct HmdfsUriInfo &hui, Uri &uri, const std::string &physicalPath,
@@ -729,14 +763,7 @@ static int32_t SetMediaHmdfsUriDirInfo(struct HmdfsUriInfo &hui, Uri &uri, const
     }
     hui.uriStr = FILE_SCHEME + "://" + MEDIA_BUNDLE_NAME + DISTRIBUTED_DIR_PATH + REMOTE_SHARE_PATH_DIR + BACKSLASH +
         networkId + mediaSandboxPath + NETWORK_PARA + networkId;
-
-    struct stat buf = {};
-    if (stat(physicalPath.c_str(), &buf) != E_OK) {
-        LOGE("Failed to get physical path stat with %{public}d", -errno);
-        return -errno;
-    }
-    hui.fileSize = static_cast<size_t>(buf.st_size);
-    return E_OK;
+    return SetFileSize(physicalPath, hui);
 }
 
 
@@ -785,7 +812,7 @@ static int32_t GetMediaDfsUrisDirFromLocal(const std::vector<std::string> &uriLi
     return E_OK;
 }
 
-static int32_t CheckIfNeedMount(const int &userId, const std::string &bundleName, const std::string &networkId, Uri uri)
+static int32_t DoMount(const int &userId, const std::string &bundleName, const std::string &networkId, Uri uri)
 {
     std::string distributedDir;
     int32_t ret = GetDistributedDir(userId, distributedDir, bundleName, networkId, uri);
@@ -808,12 +835,32 @@ static int32_t CheckIfNeedMount(const int &userId, const std::string &bundleName
     return E_OK;
 }
 
+static int32_t CheckIfNeedMount(const std::string &bundleName, const std::string &networkId, Uri uri,
+    const std::string &physicalPath, std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
+{
+    HmdfsUriInfo dfsUriInfo;
+    std::string uriStr = uri.ToString();
+    if (bundleName == FILE_MANAGER_AUTHORITY) {
+        (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, dfsUriInfo, networkId);
+        uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
+        LOGI("bundleName: %{public}s, dfsUri: %{private}s", uriStr.c_str(), dfsUriInfo.uriStr.c_str());
+        return E_OK;
+    }
+    if (IsDistributedFileDir(uri) || IsCloudFileDir(uri)) {
+        (void)SetDistributedfilesHmdfsUriDirInfo(dfsUriInfo, uri, physicalPath);
+        uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
+        LOGI("bundleName: %{public}s, dfsUri: %{private}s", uriStr.c_str(), dfsUriInfo.uriStr.c_str());
+        return E_OK;
+    }
+    return -EINVAL;
+}
+
 int32_t RemoteFileShare::GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList, const int32_t &userId,
     std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
 {
     std::vector<std::string> otherUriList;
     std::vector<std::string> mediaUriList;
-    int ret = UriCategoryByType(uriList, mediaUriList, otherUriList);
+    int32_t ret = UriCategoryByType(uriList, mediaUriList, otherUriList);
     if (ret == E_OK && mediaUriList.size() != 0) {
         ret = GetMediaDfsUrisDirFromLocal(mediaUriList, userId, uriToDfsUriMaps);
     }
@@ -831,20 +878,16 @@ int32_t RemoteFileShare::GetDfsUrisDirFromLocal(const std::vector<std::string> &
         }
 
         std::string bundleName = uri.GetAuthority();
-        if (bundleName == FILE_MANAGER_AUTHORITY) {
-            HmdfsUriInfo dfsUriInfo;
-            (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, dfsUriInfo, networkId);
-            uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
-            LOGI("localUri: %{private}s, dfsUri: %{private}s", uriStr.c_str(), dfsUriInfo.uriStr.c_str());
+        ret = CheckIfNeedMount(bundleName, networkId, uri, physicalPath, uriToDfsUriMaps);
+        if (ret == E_OK) {
             continue;
         }
 
-        ret = CheckIfNeedMount(userId, bundleName, networkId, uri);
+        ret = DoMount(userId, bundleName, networkId, uri);
         if (ret != E_OK) {
             LOGE("Failed to mount, %{public}d", ret);
             return ret;
         }
-
         HmdfsUriInfo dfsUriInfo;
         (void)SetHmdfsUriDirInfo(dfsUriInfo, uri, physicalPath, networkId, bundleName);
         uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
