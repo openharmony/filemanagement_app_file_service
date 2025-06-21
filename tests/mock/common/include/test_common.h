@@ -24,8 +24,6 @@
 
 namespace OHOS::FileManagement::Backup {
 
-#define SLEEP(second) std::this_thread::sleep_for(std::chrono::seconds(second))
-
 const std::string EMPTY_BUNDLE_NAME = "";
 const std::string BUNDLE_NAME = "com.example.app2backup";
 const std::string SA_BUNDLE_NAME = "1234";
