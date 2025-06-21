@@ -86,7 +86,7 @@ BundleMgrClient::~BundleMgrClient() {}
 
 bool BundleMgrClient::GetResConfigFile(const ExtensionAbilityInfo &extensionInfo,
                                        const string &metadataName,
-                                       vector<string> &profileInfos) const
+                                       vector<string> &profileInfos, bool includeSysRes) const
 {
     GTEST_LOG_(INFO) << "GetResConfigFile is ok";
     string str = "{\"allowToBackupRestore\":true}";
