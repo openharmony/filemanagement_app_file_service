@@ -77,3 +77,52 @@ ohos_shared_library("cj_file_fileuri_ffi") {
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
 }
+
+ohos_shared_library("cj_file_grant_permission_ffi") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "${app_file_service_path}/interfaces",
+    "${app_file_service_path}/interfaces/common/include",
+    "${app_file_service_path}/interfaces/innerkits/native/file_share/include",
+  ]
+
+  sources = [ "src/file_grant_permission_ffi.cpp" ]
+
+  deps = [
+    "${app_file_service_path}/interfaces/innerkits/native:fileshare_native",
+    "${app_file_service_path}/interfaces/innerkits/native:fileuri_native",
+  ]
+
+  external_deps = [
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:extensionkit_native",
+    "ability_runtime:uri_permission_mgr",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "bundle_framework:appexecfwk_base",
+    "c_utils:utils",
+    "data_share:datashare_common",
+    "data_share:datashare_consumer",
+    "file_api:filemgmt_libhilog",
+    "file_api:filemgmt_libn",
+    "file_api:remote_uri_native",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "napi:ace_napi",
+    "napi:cj_bind_ffi",
+    "napi:cj_bind_native",
+  ]
+  defines = []
+
+  innerapi_tags = [ "platformsdk" ]
+  part_name = "app_file_service"
+  subsystem_name = "filemanagement"
+}

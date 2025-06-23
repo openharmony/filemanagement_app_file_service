@@ -1406,13 +1406,17 @@ ErrCode Service::CleanBundleTempDir(const string &bundleName)
 {
     HILOGI("Service::CleanBundleTempDir");
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-
+    ErrCode err = VerifyCaller();
+    if (err != ERR_OK) {
+        HILOGE("VerifyCaller failed");
+        return err;
+    }
     if (session_ == nullptr) {
         HILOGE("session is empty.");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     sptr<SvcBackupConnection> backupConnection;
-    ErrCode err = TryToConnectExt(bundleName, backupConnection);
+    err = TryToConnectExt(bundleName, backupConnection);
     if (err != BError(BError::Codes::OK)) {return err;}
 
     std::unique_lock<std::mutex> lock(getBackupInfoSyncLock_);

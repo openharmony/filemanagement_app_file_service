@@ -35,6 +35,7 @@ namespace {
     const int E_OK = 0;
     const int USER_ID = 100;
     const int32_t TEST_CHAR = 95;
+    const int32_t NO_SUCH_FILE_ERROR = -2;
 
     class RemoteFileShareTest : public testing::Test {
     public:
@@ -1228,6 +1229,80 @@ namespace {
     }
 
     /**
+     * @tc.name: Remote_file_share_DoMount_0001
+     * @tc.desc: Test function of DoMount()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_DoMount_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_DoMount_0001";
+
+        OHOS::Uri uri("file://com.demo.a/data/storage/el2/base/remote_share.txt");
+        string bundleName = "com.demo.a";
+        string networkId = "network123";
+        int32_t usrId = USER_ID;
+
+        int32_t ret = DoMount(usrId, bundleName, networkId, uri);
+        EXPECT_EQ(ret, -EINVAL);
+
+        OHOS::Uri uri1("file://com.demo.a/data/storage/el22/base/remote_share.txt");
+        ret = DoMount(usrId, bundleName, networkId, uri1);
+        EXPECT_EQ(ret, -EINVAL);
+
+        OHOS::Uri uri2("file://media/data/storage/el2/base/remote_share.txt");
+        ret = DoMount(usrId, bundleName, networkId, uri2);
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_DoMount_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_SetFileSize_0001
+     * @tc.desc: Test function of SetFileSize()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_SetFileSize_0001, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_SetFileSize_0001";
+
+        HmdfsUriInfo hui;
+        hui.fileSize = 0;
+        string physicalPath = "/data/app/el2/100/base/com.demo.a/remote_share.txt";
+
+        int32_t ret = SetFileSize(physicalPath, hui);
+        EXPECT_EQ(ret, NO_SUCH_FILE_ERROR);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_SetFileSize_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_SetDistributedfilesHmdfsUriDirInfo_0001
+     * @tc.desc: Test function of SetDistributedfilesHmdfsUriDirInfo()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_SetDistributedfilesHmdfsUriDirInfo_0001,
+        testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_SetDistributedfilesHmdfsUriDirInfo_0001";
+
+        HmdfsUriInfo hui;
+        OHOS::Uri uri("file://com.demo.a/data/storage/el2/base/remote_share.txt");
+        string physicalPath = "/data/app/el2/100/base/com.demo.a/remote_share.txt";
+
+        int32_t ret = SetDistributedfilesHmdfsUriDirInfo(hui, uri, physicalPath);
+        EXPECT_EQ(hui.uriStr, uri.ToString());
+        EXPECT_EQ(ret, NO_SUCH_FILE_ERROR);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_SetDistributedfilesHmdfsUriDirInfo_0001";
+    }
+
+    /**
      * @tc.name: Remote_file_share_CheckIfNeedMount_0001
      * @tc.desc: Test function of CheckIfNeedMount()
      * @tc.size: MEDIUM
@@ -1238,22 +1313,84 @@ namespace {
     {
         GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_CheckIfNeedMount_0001";
 
-        OHOS::Uri uri("file://com.demo.a/data/storage/el2/base/remote_share.txt");
-        string bundleName = "com.demo.a";
-        string networkId = "network123";
-        int32_t usrId = USER_ID;
+        string bundleName = "docs";
+        string networkId = "networkId123";
+        OHOS::Uri uri("file://docs/storage/Users/currentUser/Document/Subject1/Subject2/1.txt");
+        string physicalPath = "/data/app/el2/100/base/docs/remote_share.txt";
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
 
-        int32_t ret = CheckIfNeedMount(usrId, bundleName, networkId, uri);
-        EXPECT_EQ(ret, -EINVAL);
-
-        OHOS::Uri uri1("file://com.demo.a/data/storage/el22/base/remote_share.txt");
-        ret = CheckIfNeedMount(usrId, bundleName, networkId, uri1);
-        EXPECT_EQ(ret, -EINVAL);
-
-        OHOS::Uri uri2("file://meida/data/storage/el2/base/remote_share.txt");
-        ret = CheckIfNeedMount(usrId, bundleName, networkId, uri2);
-        EXPECT_EQ(ret, -EINVAL);
+        int32_t ret = CheckIfNeedMount(bundleName, networkId, uri, physicalPath, uriToDfsUriMaps);
+        EXPECT_EQ(ret, E_OK);
 
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_CheckIfNeedMount_0001";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_CheckIfNeedMount_0002
+     * @tc.desc: Test function of CheckIfNeedMount()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_CheckIfNeedMount_0002, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_CheckIfNeedMount_0002";
+
+        string bundleName = "com.demo.a";
+        string networkId = "networkId123";
+        OHOS::Uri uri("file://com.demo.a/data/storage/el2/distributedfiles/remote_share.txt");
+        string physicalPath = "/data/app/el2/100/base/com.demo.a/remote_share.txt";
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+
+        int32_t ret = CheckIfNeedMount(bundleName, networkId, uri, physicalPath, uriToDfsUriMaps);
+        EXPECT_EQ(ret, E_OK);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_CheckIfNeedMount_0002";
+    }
+
+    /**
+     * @tc.name: Remote_file_share_CheckIfNeedMount_0003
+     * @tc.desc: Test function of CheckIfNeedMount()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_CheckIfNeedMount_0003, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_CheckIfNeedMount_0003";
+
+        string bundleName = "com.demo.a";
+        string networkId = "networkId123";
+        OHOS::Uri uri("file://docs/data/storage/el2/cloud/remote_share.txt");
+        string physicalPath = "/data/app/el2/100/cloud/com.demo.a/remote_share.txt";
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+
+        int32_t ret = CheckIfNeedMount(bundleName, networkId, uri, physicalPath, uriToDfsUriMaps);
+        EXPECT_EQ(ret, E_OK);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_CheckIfNeedMount_0003";
+    }
+
+        /**
+     * @tc.name: Remote_file_share_CheckIfNeedMount_0004
+     * @tc.desc: Test function of CheckIfNeedMount()
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     */
+    HWTEST_F(RemoteFileShareTest, Remote_file_share_CheckIfNeedMount_0004, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_CheckIfNeedMount_0004";
+
+        string bundleName = "com.demo.a";
+        string networkId = "networkId123";
+        OHOS::Uri uri("file://com.demo.a/data/storage/el2/base/remote_share.txt");
+        string physicalPath = "/data/app/el2/100/base/com.demo.a/remote_share.txt";
+        unordered_map<string, HmdfsUriInfo> uriToDfsUriMaps;
+
+        int32_t ret = CheckIfNeedMount(bundleName, networkId, uri, physicalPath, uriToDfsUriMaps);
+        EXPECT_EQ(ret, -EINVAL);
+
+        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_CheckIfNeedMount_0004";
     }
 }

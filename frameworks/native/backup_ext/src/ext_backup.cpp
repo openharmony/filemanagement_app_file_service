@@ -31,6 +31,7 @@
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_resources/b_constants.h"
+#include "ext_backup_ani.h"
 #include "ext_backup_js.h"
 #include "ext_extension.h"
 #include "filemgmt_libhilog.h"
@@ -76,7 +77,9 @@ ExtBackup *ExtBackup::Create(const unique_ptr<AbilityRuntime::Runtime> &runtime)
         case AbilityRuntime::Runtime::Language::JS:
             HILOGD("Create as BackupExtensionAbility(JS)");
             return ExtBackupJs::Create(runtime);
-
+        case AbilityRuntime::Runtime::Language::ETS:
+            HILOGD("Create as BackupExtensionAbility(ETS)");
+            return ExtBackupAni::Create(runtime);
         default:
             HILOGD("Create as BackupExtensionAbility(base)");
             return new ExtBackup();
