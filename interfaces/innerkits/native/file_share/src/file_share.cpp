@@ -176,10 +176,10 @@ static int32_t GetSharePath(const string &uri, FileShareInfo &info, uint32_t fla
                          SHARE_RW_PATH + info.providerBundleName_ + info.providerSandboxPath_;
 
     if (!networkId.empty()) {
-        shareRPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH + info.targetBundleName_ + BACKSLASH +
-                            networkId + SHARE_R_PATH + info.providerBundleName_ + info.providerSandboxPath_;
-        shareRWPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH + info.targetBundleName_ + BACKSLASH +
-                            networkId + SHARE_RW_PATH + info.providerBundleName_ + info.providerSandboxPath_;
+        shareRPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH + info.targetBundleName_ + SHARE_R_PATH +
+                            networkId + BACKSLASH + info.providerBundleName_ + info.providerSandboxPath_;
+        shareRWPath = DATA_APP_EL2_PATH + info.currentUid_ + SHARE_PATH + info.targetBundleName_ + SHARE_RW_PATH +
+                            networkId + BACKSLASH + info.providerBundleName_ + info.providerSandboxPath_;
     }
     if (!SandboxHelper::IsValidPath(shareRPath) || !SandboxHelper::IsValidPath(shareRWPath)) {
         LOGE("Invalid share path");

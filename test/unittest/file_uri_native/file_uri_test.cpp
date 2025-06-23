@@ -272,6 +272,40 @@ namespace OHOS::AppFileService::ModuleFileUri {
         EXPECT_EQ(fileUri.GetRealPath(), fileStr);
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0005";
     }
+    /**
+     * @tc.name: file_uri_test_00011
+     * @tc.desc: Test function of GetPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7LW57
+     */
+    HWTEST_F(FileUriTest, File_uri_GetPath_0009, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0009";
+        string uri = "file://docs/storage/Users/currentUser/Documents/1.txt?networkid=***";
+        string fileStr = "/data/storage/el2/share/r/***/docs/storage/Users/currentUser/Documents/1.txt";
+        FileUri fileUri(uri);
+        EXPECT_EQ(fileUri.GetRealPath(), fileStr);
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0009";
+    }
+    /**
+     * @tc.name: file_uri_test_00012
+     * @tc.desc: Test function of GetPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7LW57
+     */
+    HWTEST_F(FileUriTest, File_uri_GetPath_0010, testing::ext::TestSize.Level1)
+    {
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0010";
+        string uri = "file://docs/storage/Users/currentUser/Documents/1.txt?networkid=";
+        string fileStr = "/data/storage/el2/share/r/docs/storage/Users/currentUser/Documents/1.txt";
+        FileUri fileUri(uri);
+        EXPECT_EQ(fileUri.GetRealPath(), fileStr);
+        GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0010";
+    }
 
     /**
      * @tc.name: File_uri_GetPathBySA_0001
