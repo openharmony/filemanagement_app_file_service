@@ -239,6 +239,7 @@ private:
     void CheckTmpDirFileInfos(bool isSpecialVersion = false);
     std::map<std::string, off_t> GetIdxFileInfos(bool isSpecialVersion = false);
     tuple<bool, vector<string>> CheckRestoreFileInfos();
+    void CheckAppIncrementalFileReadyResult(int32_t ret, std::string packageName, std::string file);
     /**
      * @brief extension incremental backup restore is done
      *

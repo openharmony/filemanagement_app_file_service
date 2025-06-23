@@ -58,12 +58,18 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName,
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::AppIncrementalFileReadyWithoutFd(const std::string &fileName,
+                                                  int32_t appIncrementalFileReadyErrCode)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::Release()
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::Cancel(const std::string& bundleName, int32_t &result)
+ErrCode Service::CancelForResult(const std::string& bundleName, int32_t &result)
 {
     result = BError(BError::Codes::OK);
     return BError(BError::Codes::OK);

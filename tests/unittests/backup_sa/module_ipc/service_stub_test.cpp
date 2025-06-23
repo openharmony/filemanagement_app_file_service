@@ -81,6 +81,7 @@ public:
     MOCK_METHOD2(PublishSAIncrementalFile, ErrCode(const BFileInfo &fileInfo, UniqueFd fd));
     MOCK_METHOD4(AppIncrementalFileReady, ErrCode(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd,
         int32_t errCode));
+    MOCK_METHOD2(AppIncrementalFileReadyWithoutFd, ErrCode(const std::string &fileName, int32_t errCode));
     MOCK_METHOD1(AppIncrementalDone, ErrCode(ErrCode errCode));
     MOCK_METHOD2(GetIncrementalFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
     MOCK_METHOD2(GetBackupInfo, ErrCode(string &bundleName, string &result));
@@ -832,19 +833,13 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_Cancel_0100, testing::ext::T
         EXPECT_EQ(err, BError(BError::Codes::SA_INVAL_ARG));
 
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*service, Cancel(_, _)).WillOnce(Return(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK));
-        EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
-        err = service->CmdCancel(data, reply);
-        EXPECT_EQ(err, BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK));
-
-        EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*service, Cancel(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*service, CancelForResult(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
         err = service->CmdCancel(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
         EXPECT_CALL(*messageParcelMock, ReadString(_)).WillOnce(Return(true));
-        EXPECT_CALL(*service, Cancel(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*service, CancelForResult(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
         err = service->CmdCancel(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::OK));

@@ -62,4 +62,14 @@ interface OHOS.FileManagement.Backup.IServiceReverse{
         [in] String bundleName);
     [ipccode 24] void IncrementalRestoreOnAllBundlesFinished([in] int incrementalRestoreOnAllBundlesFinishedErrCode);
     [ipccode 25] void IncrementalRestoreOnProcessInfo( [in] String bundleName, [in] String processInfo);
+    [ipccode 27] void BackupOnFileReadyWithoutFd([in] String bundleName, [in] String fileName,
+                                                 [in] int backupOnFileReadyErrCode);
+    [ipccode 28] void RestoreOnFileReadyWithoutFd([in] String bundleName, [in] String fileName,
+                                                  [in] int restoreOnFileReadyErrCode);
+    [ipccode 29] void IncrementalBackupOnFileReadyWithoutFd([in] String bundleName,
+                                                            [in] String fileName,
+                                                            [in] int incrementalBackupOnFileReadyErrCode);
+    [ipccode 30] void IncrementalRestoreOnFileReadyWithoutFd([in] String bundleName,
+                                                             [in] String fileName,
+                                                             [in] int incrementalRestoreOnFileReadyErrCode);
 }

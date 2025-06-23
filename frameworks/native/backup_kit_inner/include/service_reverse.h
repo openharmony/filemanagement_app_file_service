@@ -32,6 +32,9 @@ public:
                               const std::string &fileName,
                               int fd,
                               int32_t errCode) override;
+    ErrCode BackupOnFileReadyWithoutFd(const std::string &bundleName,
+                                       const std::string &fileName,
+                                       int32_t errCode) override;
     ErrCode BackupOnBundleStarted(int32_t errCode, const std::string &bundleName) override;
     ErrCode BackupOnResultReport(const std::string &result, const std::string &bundleName) override;
     ErrCode BackupOnBundleFinished(int32_t errCode, const std::string &bundleName) override;
@@ -46,6 +49,9 @@ public:
                                const std::string &fileName,
                                int fd,
                                int32_t errCode) override;
+    ErrCode RestoreOnFileReadyWithoutFd(const std::string &bundleName,
+                                        const std::string &fileName,
+                                        int32_t errCode) override;
     ErrCode RestoreOnResultReport(const std::string &result,
                                   const std::string &bundleName,
                                   ErrCode errCode = 0) override;
@@ -58,6 +64,9 @@ public:
                                          int32_t errCode) override;
     ErrCode IncrementalSaBackupOnFileReady(const std::string &bundleName, const std::string &fileName,
                                            int fd, int32_t errCode) override;
+    ErrCode IncrementalBackupOnFileReadyWithoutFd(const std::string &bundleName,
+                                         const std::string &fileName,
+                                         int32_t errCode) override;
     ErrCode IncrementalBackupOnBundleStarted(int32_t errCode, const std::string &bundleName) override;
     ErrCode IncrementalBackupOnResultReport(const std::string &result, const std::string &bundleName) override;
     ErrCode IncrementalBackupOnBundleFinished(int32_t errCode, const std::string &bundleName) override;
@@ -73,6 +82,9 @@ public:
                                           int fd,
                                           int manifestFd,
                                           int32_t errCode) override;
+    ErrCode IncrementalRestoreOnFileReadyWithoutFd(const std::string &bundleName,
+                                                   const std::string &fileName,
+                                                   int32_t errCode) override;
     ErrCode IncrementalRestoreOnResultReport(const std::string &result,
                                              const std::string &bundleName,
                                              ErrCode errCode) override;

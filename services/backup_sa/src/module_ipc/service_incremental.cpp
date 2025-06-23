@@ -126,7 +126,7 @@ ErrCode Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalD
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     UniqueFd fdResult(GetLocalCapabilitiesIncremental(bundleNames));
-    fd = fdResult.Release();
+    fd = dup(fdResult.Get());
     return BError(BError::Codes::OK); // anytime return OK
 }
 
@@ -594,17 +594,23 @@ ErrCode Service::AppIncrementalFileReady(const std::string &bundleName, const st
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        bool fdFlag = (fd < 0 || manifestFd < 0) ? true : false;
         if (session_->GetScenario() == IServiceReverseType::Scenario::RESTORE) {
-            session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(bundleName, fileName, move(fd),
-                                                                              move(manifestFd), errCode);
+            fdFlag ? session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReadyWithoutFd(bundleName, fileName,
+                                                                                                errCode) :
+                     session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(bundleName, fileName, move(fd),
+                                                                                       move(manifestFd), errCode);
             FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverseType::Scenario::RESTORE);
             return BError(BError::Codes::OK);
         }
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
             fd = session_->OnBundleExtManageInfo(bundleName, move(fd));
         }
-        session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName, fileName, move(fd),
-            move(manifestFd), errCode);
+        fdFlag = (fd < 0 || manifestFd < 0) ? true : false;
+        fdFlag ? session_->GetServiceReverseProxy()->IncrementalBackupOnFileReadyWithoutFd(bundleName, fileName,
+                                                                                           errCode) :
+                 session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(bundleName, fileName, move(fd),
+                                                                                  move(manifestFd), errCode);
         FileReadyRadarReport(bundleName, fileName, errCode, IServiceReverseType::Scenario::BACKUP);
         if (session_->OnBundleFileReady(bundleName, fileName)) {
             ErrCode ret = HandleCurBundleFileReady(bundleName, fileName, true);
@@ -636,6 +642,13 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, int fd, in
                                    appIncrementalFileReadyErrCode);
 }
 
+ErrCode Service::AppIncrementalFileReadyWithoutFd(const std::string &fileName, int32_t appIncrementalFileReadyErrCode)
+{
+    return AppIncrementalFileReady(fileName, UniqueFd(BConstants::INVALID_FD_NUM),
+                                   UniqueFd(BConstants::INVALID_FD_NUM),
+                                   appIncrementalFileReadyErrCode);
+}
+
 ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -646,17 +659,23 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, UniqueFd f
             HILOGE("Verify caller failed, ret:%{public}d", ret);
             return ret;
         }
+        bool fdFlag = (fd < 0 || manifestFd < 0) ? true : false;
         if (session_->GetScenario() == IServiceReverseType::Scenario::RESTORE) {
-            session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(callerName, fileName, move(fd),
-                                                                              move(manifestFd), errCode);
+            fdFlag ? session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReadyWithoutFd(callerName, fileName,
+                                                                                                errCode) :
+                     session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReady(callerName, fileName, move(fd),
+                                                                                       move(manifestFd), errCode);
             FileReadyRadarReport(callerName, fileName, errCode, IServiceReverseType::Scenario::RESTORE);
             return BError(BError::Codes::OK);
         }
         if (fileName == BConstants::EXT_BACKUP_MANAGE) {
             fd = session_->OnBundleExtManageInfo(callerName, move(fd));
         }
-        session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(callerName, fileName, move(fd),
-            move(manifestFd), errCode);
+        fdFlag = (fd < 0 || manifestFd < 0) ? true : false;
+        fdFlag ? session_->GetServiceReverseProxy()->IncrementalBackupOnFileReadyWithoutFd(callerName, fileName,
+                                                                                           errCode) :
+                 session_->GetServiceReverseProxy()->IncrementalBackupOnFileReady(callerName, fileName, move(fd),
+                                                                                  move(manifestFd), errCode);
         FileReadyRadarReport(callerName, fileName, errCode, IServiceReverseType::Scenario::BACKUP);
         if (session_->OnBundleFileReady(callerName, fileName)) {
             ErrCode ret = HandleCurBundleFileReady(callerName, fileName, true);
@@ -1042,6 +1061,15 @@ void Service::CancelTask(std::string bundleName, wptr<Service> ptr)
     } while (0);
     thisPtr->RemoveExtensionMutex(bundleName);
     thisPtr->OnAllBundlesFinished(BError(BError::Codes::OK));
+}
+
+ErrCode Service::CancelForResult(const std::string& bundleName, int32_t &result)
+{
+    ErrCode errCode = Cancel(bundleName, result);
+    if (errCode != 0) {
+        HILOGE("Cancel failed, errCode:%{public}d.", errCode);
+    }
+    return BError(BError::Codes::OK);
 }
 
 ErrCode Service::Cancel(const std::string& bundleName, int32_t &result)

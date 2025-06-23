@@ -46,6 +46,12 @@ public:
     {
         return BError(BError::Codes::OK);
     }
+    ErrCode BackupOnFileReadyWithoutFd(const std::string &bundleName,
+                                       const std::string &fileName,
+                                       int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
 
     ErrCode BackupOnBundleStarted(int32_t errCode, const std::string &bundleName) override
     {
@@ -103,6 +109,13 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode RestoreOnFileReadyWithoutFd(const std::string &bundleName,
+                                        const std::string &fileName,
+                                        int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode RestoreOnResultReport(const std::string &result, const std::string &bundleName, ErrCode errCode) override
     {
         return BError(BError::Codes::OK);
@@ -130,6 +143,13 @@ public:
         return BError(BError::Codes::OK);
     }
     
+    ErrCode IncrementalBackupOnFileReadyWithoutFd(const std::string &bundleName,
+                                                  const std::string &fileName,
+                                                  int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode IncrementalBackupOnBundleStarted(int32_t errCode, const std::string &bundleName) override
     {
         return BError(BError::Codes::OK);
@@ -182,6 +202,13 @@ public:
                                           int fd,
                                           int manifestFd,
                                           int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode IncrementalRestoreOnFileReadyWithoutFd(const std::string &bundleName,
+                                                   const std::string &fileName,
+                                                   int32_t errCode) override
     {
         return BError(BError::Codes::OK);
     }

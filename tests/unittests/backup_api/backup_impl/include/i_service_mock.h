@@ -107,6 +107,11 @@ public:
         return BError(BError::Codes::OK);
     }
 
+    ErrCode AppFileReadyWithoutFd(const std::string &fileName, int32_t errCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode AppDone(ErrCode errCode) override
     {
         return BError(BError::Codes::OK);
@@ -196,7 +201,7 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode Cancel(std::string bundleName, int32_t &result) override
+    ErrCode CancelForResult(std::string bundleName, int32_t &result) override
     {
         result = BError(BError::Codes::OK);
         return BError(BError::Codes::OK);
@@ -244,6 +249,11 @@ public:
     }
 
     ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode AppIncrementalFileReadyWithoutFd(const std::string &fileName, int32_t errCode)
     {
         return BError(BError::Codes::OK);
     }

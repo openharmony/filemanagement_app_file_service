@@ -435,6 +435,30 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0103, testing::ext::TestSize.Leve
 }
 
 /**
+ * @tc.number: SUB_Service_AppFileReadyWithoutFd_0100
+ * @tc.name: SUB_Service_AppFileReadyWithoutFd_0100
+ * @tc.desc: 测试 AppFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppFileReadyWithoutFd_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppFileReady_0103";
+    try {
+        string fileName = "/manage.json";
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        auto ret = servicePtr_->AppFileReadyWithoutFd(fileName, 0);
+        EXPECT_EQ(ret, BError(BError::BackupErrorCode::E_INVAL));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppFileReady_0103";
+}
+
+/**
  * @tc.number: SUB_Service_AppDone_0100
  * @tc.name: SUB_Service_AppDone_0100
  * @tc.desc: 测试 AppDone 接口

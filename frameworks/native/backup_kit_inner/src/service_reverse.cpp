@@ -35,6 +35,19 @@ ErrCode ServiceReverse::BackupOnFileReady(const std::string &bundleName,
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceReverse::BackupOnFileReadyWithoutFd(const std::string &bundleName,
+                                                   const std::string &fileName,
+                                                   int32_t errCode)
+{
+    if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onFileReady) {
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
+        return BError(BError::Codes::OK);
+    }
+    BFileInfo bFileInfo(bundleName, fileName, 0);
+    callbacksBackup_.onFileReady(bFileInfo, UniqueFd(INVALID_FD), errCode);
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceReverse::BackupOnBundleStarted(int32_t errCode, const std::string &bundleName)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onBundleStarted) {
@@ -142,6 +155,20 @@ ErrCode ServiceReverse::RestoreOnFileReady(const std::string &bundleName,
     }
     BFileInfo bFileInfo(bundleName, fileName, 0);
     callbacksRestore_.onFileReady(bFileInfo, UniqueFd(fd), errCode);
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceReverse::RestoreOnFileReadyWithoutFd(const std::string &bundleName,
+                                                    const std::string &fileName,
+                                                    int32_t errCode)
+{
+    HILOGD("begin, bundleName is:%{public}s", bundleName.c_str());
+    if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onFileReady) {
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
+        return BError(BError::Codes::OK);
+    }
+    BFileInfo bFileInfo(bundleName, fileName, 0);
+    callbacksRestore_.onFileReady(bFileInfo, UniqueFd(INVALID_FD), errCode);
     return BError(BError::Codes::OK);
 }
 

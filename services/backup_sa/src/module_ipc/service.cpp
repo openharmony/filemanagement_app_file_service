@@ -1157,7 +1157,9 @@ void Service::StartCurBundleBackupOrRestore(const std::string &bundleName)
             int fdCode = 0;
             proxy->GetFileHandleWithUniqueFd(fileName, errCode, fdCode);
             UniqueFd fd(fdCode);
-            session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd), errCode);
+            bool fdFlag = fd < 0 ? true : false;
+            fdFlag ? session_->GetServiceReverseProxy()->BackupOnFileReadyWithoutFd(bundleName, fileName, errCode) :
+                     session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd), errCode);
             FileReadyRadarReport(bundleName, fileName, errCode, scenario);
         }
     }
@@ -1856,13 +1858,18 @@ void Service::OnSABackup(const std::string &bundleName, const int &fd, const std
     auto task = [bundleName, fd, result, errCode, this]() {
         HILOGI("OnSABackup bundleName: %{public}s, fd: %{public}d, result: %{public}s, err: %{public}d",
             bundleName.c_str(), fd, result.c_str(), errCode);
+        bool fdFlag = fd < 0  ? true : false;
         BackupRestoreScenario scenario = BackupRestoreScenario::FULL_BACKUP;
         if (session_->GetIsIncrementalBackup()) {
             scenario = BackupRestoreScenario::INCREMENTAL_BACKUP;
-            session_->GetServiceReverseProxy()->IncrementalSaBackupOnFileReady(bundleName, "", move(fd), errCode);
+            fdFlag ? session_->GetServiceReverseProxy()->IncrementalBackupOnFileReadyWithoutFd(bundleName, "",
+                                                                                               errCode) :
+                     session_->GetServiceReverseProxy()->IncrementalSaBackupOnFileReady(bundleName, "",
+                                                                                        move(fd), errCode);
         } else {
             scenario = BackupRestoreScenario::FULL_BACKUP;
-            session_->GetServiceReverseProxy()->BackupOnFileReady(bundleName, "", move(fd), errCode);
+            fdFlag ? session_->GetServiceReverseProxy()->BackupOnFileReadyWithoutFd(bundleName, "", errCode) :
+                     session_->GetServiceReverseProxy()->BackupOnFileReady(bundleName, "", move(fd), errCode);
         }
         FileReadyRadarReport(bundleName, "", errCode, IServiceReverseType::Scenario::BACKUP);
         SAResultReport(bundleName, result, errCode, scenario);

@@ -25,6 +25,11 @@ ErrCode ServiceProxy::AppFileReady(const std::string &fileName, int fd, int32_t 
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::AppFileReadyWithoutFd(const std::string &fileName, int32_t appFileReadyErrCode)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceProxy::AppDone(int32_t appDoneErrCode)
 {
     return BError(BError::Codes::OK);
@@ -41,6 +46,11 @@ ErrCode ServiceProxy::AppIncrementalDone(int32_t appIncrementalDoneErrCode)
 }
 
 ErrCode ServiceProxy::AppIncrementalFileReady(const std::string &fileName, int fd, int manifestFd, int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::AppIncrementalFileReadyWithoutFd(const std::string &fileName, int32_t errCode)
 {
     return BError(BError::Codes::OK);
 }
@@ -93,7 +103,7 @@ ErrCode ServiceProxy::AppendBundlesIncrementalBackupSession(const std::vector<BI
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::Cancel(const std::string &bundleName, int32_t &cancelResult)
+ErrCode ServiceProxy::CancelForResult(const std::string &bundleName, int32_t &cancelResult)
 {
     return BError(BError::Codes::OK);
 }

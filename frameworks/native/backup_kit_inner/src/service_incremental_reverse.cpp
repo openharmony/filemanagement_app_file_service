@@ -49,6 +49,19 @@ ErrCode ServiceReverse::IncrementalSaBackupOnFileReady(const std::string &bundle
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceReverse::IncrementalBackupOnFileReadyWithoutFd(const std::string &bundleName,
+                                                              const std::string &fileName,
+                                                              int32_t errCode)
+{
+    if (scenario_ != Scenario::BACKUP || !callbacksIncrementalBackup_.onFileReady) {
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
+        return BError(BError::Codes::OK);
+    }
+    BFileInfo bFileInfo(bundleName, fileName, 0);
+    callbacksIncrementalBackup_.onFileReady(bFileInfo, UniqueFd(INVALID_FD), UniqueFd(INVALID_FD), errCode);
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceReverse::IncrementalBackupOnBundleStarted(int32_t errCode, const std::string &bundleName)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksIncrementalBackup_.onBundleStarted) {
@@ -150,16 +163,25 @@ ErrCode ServiceReverse::IncrementalRestoreOnFileReady(const std::string &bundleN
                                                       int manifestFd,
                                                       int32_t errCode)
 {
-    if (fd < 0 || manifestFd < 0) {
-        HILOGE("Error fd or manifestFd, fd = %{public}d, manifestFd = %{public}d", fd, manifestFd);
-        return BError(BError::Codes::SA_INVAL_ARG);
-    }
     if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onFileReady) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return BError(BError::Codes::OK);
     }
     BFileInfo bFileInfo(bundleName, fileName, 0);
     callbacksIncrementalRestore_.onFileReady(bFileInfo, UniqueFd(fd), UniqueFd(manifestFd), errCode);
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceReverse::IncrementalRestoreOnFileReadyWithoutFd(const std::string &bundleName,
+                                                               const std::string &fileName,
+                                                               int32_t errCode)
+{
+    if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onFileReady) {
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
+        return BError(BError::Codes::OK);
+    }
+    BFileInfo bFileInfo(bundleName, fileName, 0);
+    callbacksIncrementalRestore_.onFileReady(bFileInfo, UniqueFd(INVALID_FD), UniqueFd(INVALID_FD), errCode);
     return BError(BError::Codes::OK);
 }
 

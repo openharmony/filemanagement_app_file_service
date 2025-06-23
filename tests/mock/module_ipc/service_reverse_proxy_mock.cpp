@@ -156,6 +156,13 @@ ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReady(const std::string &bu
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReadyWithoutFd(const std::string &bundleName,
+                                                                    const std::string &fileName,
+                                                                    int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceReverseProxy::IncrementalRestoreOnResultReport(const std::string &result,
                                                               const std::string &bundleName,
                                                               int32_t errCode)

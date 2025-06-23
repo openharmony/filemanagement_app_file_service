@@ -249,6 +249,77 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_BackupOnFileReady_0102, t
 }
 
 /**
+ * @tc.number: SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0100
+ * @tc.name: SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0100
+ * @tc.desc: 测试 BackupOnFileReadyWithoutFd 正常分支（回调非空且场景为BACKUP）
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0100";
+    Init(IServiceReverseType::Scenario::BACKUP, 0);
+    ASSERT_NE(service_, nullptr);
+    bool called = false;
+    service_->callbacksBackup_.onFileReady = [&](const BFileInfo&, UniqueFd, int32_t) {
+        called = true;
+    };
+    auto ret = service_->BackupOnFileReadyWithoutFd("bundle", "file", 123);
+    EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(called);
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0101
+ * @tc.name: SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0101
+ * @tc.desc: 测试 BackupOnFileReadyWithoutFd 回调为nullptr分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0101,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0101";
+    Init(IServiceReverseType::Scenario::BACKUP, 0);
+    ASSERT_NE(service_, nullptr);
+    service_->callbacksBackup_.onFileReady = nullptr;
+    auto ret = service_->BackupOnFileReadyWithoutFd("bundle", "file", 123);
+    EXPECT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0102
+ * @tc.name: SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0102
+ * @tc.desc: 测试 BackupOnFileReadyWithoutFd 场景非BACKUP分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0102,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0102";
+    Init(IServiceReverseType::Scenario::RESTORE, 0); // 场景非BACKUP
+    ASSERT_NE(service_, nullptr);
+    bool called = false;
+    service_->callbacksBackup_.onFileReady = [&](const BFileInfo&, UniqueFd, int32_t) {
+        called = true;
+    };
+    auto ret = service_->BackupOnFileReadyWithoutFd("bundle", "file", 123);
+    EXPECT_EQ(ret, 0);
+    EXPECT_FALSE(called);
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_BackupOnFileReadyWithoutFd_0102";
+}
+
+/**
  * @tc.number: SUB_backup_ServiceReverse_BackupOnBundleStarted_0100
  * @tc.name: SUB_backup_ServiceReverse_BackupOnBundleStarted_0100
  * @tc.desc: 测试 BackupOnBundleStarted 接口
@@ -574,6 +645,78 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_RestoreOnFileReady_0102, 
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by RestoreOnFileReady.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_RestoreOnFileReady_0102";
+}
+
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0100
+ * @tc.name: SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0100
+ * @tc.desc: 测试 RestoreOnFileReadyWithoutFd 正常分支（回调非空且场景为RESTORE）
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0100";
+    Init(IServiceReverseType::Scenario::RESTORE, 0);
+    ASSERT_NE(service_, nullptr);
+    bool called = false;
+    service_->callbacksRestore_.onFileReady = [&](const BFileInfo&, UniqueFd, int32_t) {
+        called = true;
+    };
+    auto ret = service_->RestoreOnFileReadyWithoutFd("bundle", "file", 123);
+    EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(called);
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0101
+ * @tc.name: SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0101
+ * @tc.desc: 测试 RestoreOnFileReadyWithoutFd 回调为nullptr分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0101,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0101";
+    Init(IServiceReverseType::Scenario::RESTORE, 0);
+    ASSERT_NE(service_, nullptr);
+    service_->callbacksRestore_.onFileReady = nullptr;
+    auto ret = service_->RestoreOnFileReadyWithoutFd("bundle", "file", 123);
+    EXPECT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0102
+ * @tc.name: SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0102
+ * @tc.desc: 测试 RestoreOnFileReadyWithoutFd 场景非RESTORE分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0102,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0102";
+    Init(IServiceReverseType::Scenario::BACKUP, 0); // 场景非RESTORE
+    ASSERT_NE(service_, nullptr);
+    bool called = false;
+    service_->callbacksRestore_.onFileReady = [&](const BFileInfo&, UniqueFd, int32_t) {
+        called = true;
+    };
+    auto ret = service_->RestoreOnFileReadyWithoutFd("bundle", "file", 123);
+    EXPECT_EQ(ret, 0);
+    EXPECT_FALSE(called);
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_RestoreOnFileReadyWithoutFd_0102";
 }
 
 /**
@@ -1039,7 +1182,8 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_0301, testing::ext::TestS
  * @tc.level Level 1
  * @tc.require: I9116W
  */
-HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0100, testing::ext::TestSize.Level1)
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0100,
+    testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0100";
     try {
@@ -1067,7 +1211,8 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnFileRe
  * @tc.level Level 1
  * @tc.require: I9116W
  */
-HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0101, testing::ext::TestSize.Level1)
+HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0101,
+    testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0101";
     try {
@@ -1086,6 +1231,90 @@ HWTEST_F(ServiceReverseTest, SUB_backup_ServiceReverse_IncrementalBackupOnFileRe
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalBackupOnFileReady.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnFileReady_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0100
+ * @tc.desc: 测试 IncrementalBackupOnFileReadyWithoutFd 正常分支（回调非空且场景为BACKUP）
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) <<
+        "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0100";
+    bool called = false;
+    IncrementalInit(IServiceReverseType::Scenario::BACKUP, 0);
+    if (service_ == nullptr) {
+        GTEST_LOG_(INFO) << "service_ == nullptr";
+        return;
+    }
+    // 设置回调
+    service_->callbacksIncrementalBackup_.onFileReady = [&](const BFileInfo&, UniqueFd, UniqueFd, int32_t) {
+        called = true;
+    };
+    auto ret = service_->IncrementalBackupOnFileReadyWithoutFd("bundle", "file", 123);
+    EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(called);
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0101
+ * @tc.desc: 测试 IncrementalBackupOnFileReadyWithoutFd 回调为nullptr分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0101,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) <<
+        "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0101";
+    IncrementalInit(IServiceReverseType::Scenario::BACKUP, 0);
+    if (service_ == nullptr) {
+        GTEST_LOG_(INFO) << "service_ == nullptr";
+        return;
+    }
+    service_->callbacksIncrementalBackup_.onFileReady = nullptr;
+    auto ret = service_->IncrementalBackupOnFileReadyWithoutFd("bundle", "file", 123);
+    EXPECT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0102
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0102
+ * @tc.desc: 测试 IncrementalBackupOnFileReadyWithoutFd 场景非BACKUP分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0102,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) <<
+        "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0102";
+    IncrementalInit(IServiceReverseType::Scenario::RESTORE, 0); // 场景非BACKUP
+    if (service_ == nullptr) {
+        GTEST_LOG_(INFO) << "service_ == nullptr";
+        return;
+    }
+    bool called = false;
+    service_->callbacksIncrementalBackup_.onFileReady = [&](const BFileInfo&, UniqueFd, UniqueFd, int32_t) {
+        called = true;
+    };
+    auto ret = service_->IncrementalBackupOnFileReadyWithoutFd("bundle", "file", 123);
+    EXPECT_EQ(ret, 0);
+    EXPECT_FALSE(called);
+    GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalBackupOnFileReadyWithoutFd_0102";
 }
 
 /**
@@ -1334,6 +1563,92 @@ HWTEST_F(ServiceReverseTest,
         GTEST_LOG_(INFO) << "ServiceReverseTest-an exception occurred by IncrementalRestoreOnFileReady.";
     }
     GTEST_LOG_(INFO) << "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnFileReady_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0100
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0100
+ * @tc.desc: 测试 IncrementalRestoreOnFileReadyWithoutFd 正常分支（回调非空且场景为RESTORE）
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) <<
+        "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0100";
+    bool called = false;
+    IncrementalInit(IServiceReverseType::Scenario::RESTORE, 0);
+    if (service_ == nullptr) {
+        GTEST_LOG_(INFO) << "service_ == nullptr";
+        return;
+    }
+    service_->callbacksIncrementalRestore_.onFileReady = [&](const BFileInfo&, UniqueFd, UniqueFd, int32_t) {
+        called = true;
+    };
+    auto ret = service_->IncrementalRestoreOnFileReadyWithoutFd("bundle", "file", 123);
+    EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(called);
+    GTEST_LOG_(INFO) <<
+        "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0101
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0101
+ * @tc.desc: 测试 IncrementalRestoreOnFileReadyWithoutFd 回调为nullptr分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0101,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) <<
+        "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0101";
+    IncrementalInit(IServiceReverseType::Scenario::RESTORE, 0);
+    if (service_ == nullptr) {
+        GTEST_LOG_(INFO) << "service_ == nullptr";
+        return;
+    }
+    service_->callbacksIncrementalRestore_.onFileReady = nullptr;
+    auto ret = service_->IncrementalRestoreOnFileReadyWithoutFd("bundle", "file", 123);
+    EXPECT_EQ(ret, 0);
+    GTEST_LOG_(INFO) <<
+        "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0102
+ * @tc.name: SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0102
+ * @tc.desc: 测试 IncrementalRestoreOnFileReadyWithoutFd 场景非RESTORE分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceReverseTest,
+    SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0102,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) <<
+        "ServiceReverseTest-begin SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0102";
+    IncrementalInit(IServiceReverseType::Scenario::BACKUP, 0); // 场景非RESTORE
+    if (service_ == nullptr) {
+        GTEST_LOG_(INFO) << "service_ == nullptr";
+        return;
+    }
+    bool called = false;
+    service_->callbacksIncrementalRestore_.onFileReady = [&](const BFileInfo&, UniqueFd, UniqueFd, int32_t) {
+        called = true;
+    };
+    auto ret = service_->IncrementalRestoreOnFileReadyWithoutFd("bundle", "file", 123);
+    EXPECT_EQ(ret, 0);
+    EXPECT_FALSE(called);
+    GTEST_LOG_(INFO) <<
+        "ServiceReverseTest-end SUB_backup_ServiceReverse_IncrementalRestoreOnFileReadyWithoutFd_0102";
 }
 
 /**
