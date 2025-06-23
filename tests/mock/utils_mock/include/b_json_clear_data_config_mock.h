@@ -17,7 +17,6 @@
 #define OHOS_FILEMGMT_BACKUP_B_JSON_CLEAR_DATA_CONFIG_MOCK_H
 
 #include <gmock/gmock.h>
-
 #include "b_json/b_json_clear_data_config.h"
 
 namespace OHOS::FileManagement::Backup {
