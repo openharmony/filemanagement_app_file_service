@@ -1698,13 +1698,13 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0100, testing::ext
         GTEST_LOG_(INFO) << "1. AppendBundlesRestoreSession fail nullptr";
         servicePtr_->session_ = nullptr;
         int ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, restoreType, userId);
-        EXPECT_EQ(ret, 13900020);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         GTEST_LOG_(INFO) << "2. AppendBundlesRestoreSession fail false";
         servicePtr_->session_ = session_;
         servicePtr_->isOccupyingSession_.store(true);
         ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, restoreType, userId);
-        EXPECT_EQ(ret, 13900020);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         GTEST_LOG_(INFO) << "3. AppendBundlesRestoreSession succ";
         servicePtr_->isOccupyingSession_.store(false);
@@ -1759,13 +1759,13 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0101, testing::ext
         GTEST_LOG_(INFO) << "1. AppendBundlesRestoreSession fail nullptr";
         servicePtr_->session_ = nullptr;
         int ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos, restoreType, userId);
-        EXPECT_EQ(ret, 13900020);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         GTEST_LOG_(INFO) << "2. AppendBundlesRestoreSession fail false";
         servicePtr_->session_ = session_;
         servicePtr_->isOccupyingSession_.store(true);
         ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos, restoreType, userId);
-        EXPECT_EQ(ret, 13900020);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         GTEST_LOG_(INFO) << "3. AppendBundlesRestoreSession succ";
         servicePtr_->isOccupyingSession_.store(false);
@@ -1802,13 +1802,13 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesBackupSession_0100, testing::ext:
     GTEST_LOG_(INFO) << "1. AppendBundlesBackupSession fail nullptr";
     servicePtr_->session_ = nullptr;
     int ret = servicePtr_->AppendBundlesBackupSession(bundleNames);
-    EXPECT_EQ(ret, 13900020);
+    EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
     GTEST_LOG_(INFO) << "2. AppendBundlesBackupSession fail false";
     servicePtr_->session_ = session_;
     servicePtr_->isOccupyingSession_.store(true);
     ret = servicePtr_->AppendBundlesBackupSession(bundleNames);
-    EXPECT_EQ(ret, 13900020);
+    EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
     GTEST_LOG_(INFO) << "3. AppendBundlesBackupSession succ";
     servicePtr_->isOccupyingSession_.store(false);
@@ -1987,12 +1987,12 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupSAExtension_0100, testing::ext::Te
         GTEST_LOG_(INFO) << "2. LaunchBackupSAExtension BACKUP";
         servicePtr_->session_->impl_.scenario = IServiceReverseType::Scenario::BACKUP;
         ret = servicePtr_->LaunchBackupSAExtension(bundleName);
-        EXPECT_EQ(ret, 13900020);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         GTEST_LOG_(INFO) << "3. LaunchBackupSAExtension RESTORE";
         servicePtr_->session_->impl_.scenario = IServiceReverseType::Scenario::RESTORE;
         ret = servicePtr_->LaunchBackupSAExtension(bundleName);
-        EXPECT_EQ(ret, 13900020);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by LaunchBackupSAExtension.";
