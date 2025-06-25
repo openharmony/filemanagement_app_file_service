@@ -29,7 +29,19 @@ struct PolicyInfo {
     operationMode: i32;
 }
 
+struct PathPolicyInfo {
+    path: String;
+    operationMode: OperationMode;
+}
+
+enum PolicyType: i32 {
+    TEMPORARY_TYPE = 0,
+    PERSISTENT_TYPE = 1,
+}
+
 function MakePolicyInfo(uri: String, operationMode: i32): PolicyInfo;
+
+function MakePathPolicyInfo(path: String, operationMode: OperationMode): PathPolicyInfo;
 
 @gen_promise("activatePermission")
 function ActivatePermissionSync(
@@ -48,3 +60,10 @@ function GrantUriPermissionSync(
     bundleName:String,
     flag: @sts_type("wantConstant.Flags") Opaque,
 ): void;
+
+@gen_promise("checkPathPermission")
+function CheckPathPermissionSync(
+    tokenID: i32,
+    policies: Array<PathPolicyInfo>,
+    policyType: PolicyType,
+): Array<bool>;
