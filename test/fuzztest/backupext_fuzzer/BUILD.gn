@@ -60,6 +60,7 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:abilitykit_native",
+    "ability_runtime:ani_common",
     "ability_runtime:app_context",
     "ability_runtime:appkit_native",
     "ability_runtime:runtime",

@@ -19,6 +19,7 @@
 #include "ext_backup_context.h"
 #include "ext_backup.h"
 #include "runtime.h"
+#include "ets_native_reference.h"
 #include "ets_runtime.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -49,7 +50,7 @@ private:
 
 private:
     AbilityRuntime::ETSRuntime &stsRuntime_;
-    std::unique_ptr<AbilityRuntime::ETSNativeReference> etsObj_;
+    std::unique_ptr<AppExecFwk::ETSNativeReference> etsObj_;
 };
 
 } // namespace OHOS::FileManagement::Backup
