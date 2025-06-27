@@ -72,11 +72,14 @@ ohos_unittest("storage_manager_service_test") {
     "${path_backup}/utils/include",
     "${path_backup}/utils/include/b_hilog",
     "${path_backup_mock}/utils_mock/include",
+    "${path_backup_mock}/module_external/include",
   ]
 
   sources = [
     "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
     "${path_backup_mock}/utils_mock/src/b_sa_utils_mock.cpp",
+    "${path_backup_mock}/module_external/src/datashare_helper_mock.cpp",
+    "${path_backup_mock}/module_external/src/datashare_result_set_mock .cpp",
     "storage_manager_service_test.cpp",
   ]
 
@@ -90,7 +93,7 @@ ohos_unittest("storage_manager_service_test") {
 
   defines = [
     "LOG_TAG=\"app_file_service\"",
-    "LOG_DOMAIN=0xD200000",
+    "LOG_DOMAIN=0xD04303",
     "private = public",
     "protected = public",
   ]
