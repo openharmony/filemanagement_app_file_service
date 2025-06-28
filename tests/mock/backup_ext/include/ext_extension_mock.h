@@ -68,6 +68,7 @@ public:
     virtual void WaitToSendFd(std::chrono::system_clock::time_point&, int&) = 0;
     virtual void RefreshTimeInfo(std::chrono::system_clock::time_point&, int&) = 0;
     virtual ErrCode HandleOnRelease(int32_t) = 0;
+    virtual ErrCode HandleGetCompatibilityInfo(const std::string &, int32_t, std::string &) = 0;
 public:
     BExtExtension() = default;
     virtual ~BExtExtension() = default;
@@ -123,6 +124,7 @@ public:
     MOCK_METHOD(void, RefreshTimeInfo, ((std::chrono::system_clock::time_point&), int&));
     MOCK_METHOD(ErrCode, CleanBundleTempDir, ());
     MOCK_METHOD(ErrCode, HandleOnRelease, (int32_t));
+    MOCK_METHOD(ErrCode, HandleGetCompatibilityInfo, (const std::string &, int32_t, std::string &));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_EXT_EXTENSION_MOCK_H

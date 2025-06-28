@@ -185,6 +185,18 @@ public:
      * @brief Invoke the extended function of the APP
      */
     virtual ErrCode InvokeAppExtMethod(ErrCode, const std::string);
+    
+    /**
+     * @brief Called do getBackupCompatibilityInfo.
+     */
+    virtual ErrCode GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+        std::string extInfo);
+
+    /**
+     * @brief Called do getRestoreCompatibilityInfo.
+     */
+    virtual ErrCode GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+        std::string extInfo);
 
 public:
     ExtBackup() = default;

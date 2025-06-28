@@ -145,6 +145,24 @@ public:
      */
     ErrCode OnRelease(std::function<void(ErrCode, const std::string)> callback, int32_t scenario) override;
 
+    /**
+     * @brief Call the app's GetBackupCompatibilityInfo
+     *
+     * @param callbackEx The callBackEx.
+     * @param extInfo The extInfo: json string.
+     */
+    ErrCode GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+        std::string extInfo) override;
+
+    /**
+     * @brief Call the app's GetRestoreCompatibilityInfo
+     *
+     * @param callbackEx The callBackEx.
+     * @param extInfo The extInfo: json string.
+     */
+    ErrCode GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+        std::string extInfo) override;
+
 public:
     explicit ExtBackupJs(AbilityRuntime::JsRuntime &jsRuntime);
     ~ExtBackupJs();
@@ -161,6 +179,7 @@ private:
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseBackupExInfo();
 
     std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseReleaseInfo();
+    std::function<bool(napi_env env, std::vector<napi_value> &argv)> ParseCompatibilityInfo();
 
     ErrCode CallJSRestoreEx();
     ErrCode CallJSRestore();
@@ -182,6 +201,9 @@ private:
     std::atomic<bool> callExtDefaultFunc_ {false}; // extension default method, onBackup or onRestore
     std::atomic<bool> callJsExMethodDone_ {false};
     int32_t scenario_ { 0 };
+
+    std::shared_ptr<CallbackInfoEx> getComInfoCallbackEx_;
+    std::string extInfo_;
 };
 } // namespace OHOS::FileManagement::Backup
 

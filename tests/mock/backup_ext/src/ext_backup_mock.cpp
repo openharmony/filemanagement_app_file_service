@@ -143,4 +143,16 @@ ErrCode ExtBackup::OnRelease(function<void(ErrCode, std::string)> callback, int3
 {
     return BExtBackup::extBackup->OnRelease(callback, scenario);
 }
+
+ErrCode ExtBackup::GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+    std::string extInfo)
+{
+    return BExtBackup::extBackup->GetBackupCompatibilityInfo(callbackEx, extInfo);
+}
+
+ErrCode ExtBackup::GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+    std::string extInfo)
+{
+    return BExtBackup::extBackup->GetRestoreCompatibilityInfo(callbackEx, extInfo);
+}
 } // namespace OHOS::FileManagement::Backup

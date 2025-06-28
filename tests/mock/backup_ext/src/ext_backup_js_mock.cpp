@@ -108,4 +108,21 @@ ErrCode ExtBackupJs::OnRelease(function<void(ErrCode, string)> callback, int32_t
 {
     return BExtBackupJs::extBackupJs->OnRelease(callback, scenario);
 }
+
+ErrCode ExtBackupJs::GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+    std::string extInfo)
+{
+    return BExtBackupJs::extBackupJs->GetBackupCompatibilityInfo(callbackEx, extInfo);
+}
+
+ErrCode ExtBackupJs::GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+    std::string extInfo)
+{
+    return BExtBackupJs::extBackupJs->GetRestoreCompatibilityInfo(callbackEx, extInfo);
+}
+
+std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::ParseCompatibilityInfo()
+{
+    return BExtBackupJs::extBackupJs->ParseCompatibilityInfo();
+}
 } // namespace OHOS::FileManagement::Backup

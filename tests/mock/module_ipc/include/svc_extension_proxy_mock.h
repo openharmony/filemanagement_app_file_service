@@ -41,6 +41,7 @@ MOCK_METHOD(ErrCode, User0OnBackup, ());
 MOCK_METHOD(ErrCode, UpdateDfxInfo, (int64_t, uint32_t, const std::string &));
 MOCK_METHOD(ErrCode, CleanBundleTempDir, ());
 MOCK_METHOD(ErrCode, HandleOnRelease, (int32_t));
+MOCK_METHOD(ErrCode, HandleGetCompatibilityInfo, (const std::string &, int32_t, std::string &));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_SVC_BACKUP_CONNECTION_MOCK_H

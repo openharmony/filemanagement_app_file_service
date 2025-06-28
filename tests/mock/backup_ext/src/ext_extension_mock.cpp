@@ -227,4 +227,10 @@ ErrCode BackupExtExtension::HandleOnRelease(int32_t scenario)
 {
     return BExtExtension::extExtension->HandleOnRelease(scenario);
 }
+
+ErrCode BackupExtExtension::HandleGetCompatibilityInfo(const std::string &extInfo, int32_t scenario,
+    std::string &compatibilityInfo)
+{
+    return BExtExtension::extExtension->HandleGetCompatibilityInfo(extInfo, scenario, compatibilityInfo);
+}
 } // namespace OHOS::FileManagement::Backup

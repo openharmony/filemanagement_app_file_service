@@ -37,6 +37,14 @@ class BackupExtensionAbility {
     onRelease(scenario) {
         console.log();
     }
+
+    getBackupCompatibilityInfo(extInfo) {
+        console.log();
+    }
+
+    getRestoreCompatibilityInfo(extInfo) {
+        console.log();
+    }
 }
 
 export default BackupExtensionAbility;

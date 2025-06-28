@@ -98,4 +98,10 @@ ErrCode ExtensionProxy::HandleOnRelease(int32_t scenario)
 {
     return 0;
 }
+
+ErrCode ExtensionProxy::HandleGetCompatibilityInfo(const std::string &extInfo, int32_t scenario,
+    std::string &compatibilityInfo)
+{
+    return 0;
+}
 } // namespace OHOS::FileManagement::Backup
