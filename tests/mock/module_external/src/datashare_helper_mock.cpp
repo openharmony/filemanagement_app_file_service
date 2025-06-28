@@ -14,6 +14,7 @@
  */
 
 #include "datashare_helper.h"
+#include "datashare_helper_mock.h"
 
 namespace OHOS {
 namespace DataShare {
@@ -28,7 +29,7 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(const sptr<IRemoteObje
 }
 
 std::shared_ptr<DataShareResultSet> Query(Uri &uri, const DataSharePredicates &predicates,
-    std::vector<std::string> &colums, DataShareBusinessError *businessError)
+    std::vector<std::string> &colums, DatashareBusinessError *businessError)
 {
     GTEST_LOG_(INFO) << "DataShareResultSet Query is OK";
     return IDataShareHelper::idsh->Query(uri, predicates, colums, businessError);

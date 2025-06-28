@@ -93,7 +93,7 @@ ohos_unittest("storage_manager_service_test") {
 
   defines = [
     "LOG_TAG=\"app_file_service\"",
-    "LOG_DOMAIN=0xD04303",
+    "LOG_DOMAIN=0xD004303",
     "private = public",
     "protected = public",
   ]

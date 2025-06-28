@@ -142,7 +142,7 @@ public:
         const string &strUri, const string &extUri, const int waitTime, bool isSystem));
 
     MOCK_METHOD(std::shared_ptr<DataShareResultSet>, Query, (Uri &uri, const DataSharePredicates &predicates,
-        std::vector<string> &colums, DataShareBusinessError *businessError));
+        std::vector<string> &colums, DatashareBusinessError *businessError));
 };
 }
 } // namespace OHOS::FileManagement::Backup

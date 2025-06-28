@@ -436,7 +436,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetUserStorageSt
     testing::ext::TestSize.Level1)
 {
     int32_t userId = 100;
-    string basePath = "/data/storage/el2/" + to_string(useId);
+    string basePath = "/data/storage/el2/" + to_string(userId);
     string path = basePath + "/base";
     EXPECT_TRUE(OHOS::ForceCreateDirectory(path));
 
@@ -683,7 +683,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddOuterDirIntoF
     testing::ext::TestSize.Level1)
 {
     std::string bundleName = MMS_BUNDLENAME;
-    std::string dir = "/data/app/el1/100/base/" + bundleName +"/.backup"
+    std::string dir = "/data/app/el1/100/base/" + bundleName + "/.backup";
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::vector<std::string> sandboxDir = {"/path/to/sandboxDir"};
@@ -693,11 +693,11 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddOuterDirIntoF
     StorageManagerService::GetInstance().AddOuterDirIntoFileStat(dir, paras, sandboxDir, statFile, excludesMap);
     EXPECT_TRUE(true);
 
-    dir = ""
+    dir = "";
     StorageManagerService::GetInstance().AddOuterDirIntoFileStat(dir, paras, sandboxDir, statFile, excludesMap);
     EXPECT_TRUE(true);
 
     statFile.close();
-    remove(statfile.txt);
+    remove("statfile.txt");
 }
 }
