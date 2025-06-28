@@ -24,31 +24,31 @@ using namespace FileManageMent::Backup;
 int GetRowCount(int &count)
 {
     GTEST_LOG_(INFO) << "DataShareResultSet GetRowCount is OK";
-    return IDataShareResultSet::idrsr->GetRowCount(count);
+    return IDataShareResultSet::idsrs->GetRowCount(count);
 }
 
 int GoToNextRow()
 {
     GTEST_LOG_(INFO) << "DataShareResultSet GoToNextRow is OK";
-    return IDataShareResultSet::idrsr->GoToNextRow();
+    return IDataShareResultSet::idsrs->GoToNextRow();
 }
 
 int GetColumIndex(const std::string &columnName, int &columnIndex)
 {
     GTEST_LOG_(INFO) << "DataShareResultSet GetColumIndex is OK";
-    return IDataShareResultSet::idrsr->GetColumIndex(columnName, columnIndex);
+    return IDataShareResultSet::idsrs->GetColumIndex(columnName, columnIndex);
 }
 
 int GetInt(int columnIndex, int &value)
 {
     GTEST_LOG_(INFO) << "DataShareResultSet GetInt is OK";
-    return IDataShareResultSet::idrsr->GetInt(columnIndex, value);
+    return IDataShareResultSet::idsrs->GetInt(columnIndex, value);
 }
 
 int GetLong(int columnIndex, int64_t &value)
 {
     GTEST_LOG_(INFO) << "DataShareResultSet GetLong is OK";
-    return IDataShareResultSet::idrsr->GetLong(columnIndex, value);
+    return IDataShareResultSet::idsrs->GetLong(columnIndex, value);
 }
 }
 }

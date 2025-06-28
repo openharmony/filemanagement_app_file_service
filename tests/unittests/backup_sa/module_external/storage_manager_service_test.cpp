@@ -107,8 +107,8 @@ void StorageManagerServiceTest::SetUpTestCase(void)
     sam = sptr<SystemAbilityManagerMock>(new SystemAbilityManagerMock());
     dsh = make_shared<DataShareHelperMock>();
     DataShareHelperMock::idsh = dsh;
-    dsrs = make_shared<DataShareResultMock>();
-    DataShareResultMock::idrs = dsrs;
+    dsrs = make_shared<DataShareResultSetMock>();
+    DataShareResultSetMock::idsrs = dsrs;
     dhelper = make_shared<DataShareHelperImpl>();
     dset = std::make_shared<DataShare::DataShareResultSet>();
 }
@@ -435,9 +435,9 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ExcludeFilter_00
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetUserStorageStatsByType_001,
     testing::ext::TestSize.Level1)
 {
-    int_32 userId = 100;
-    string basePath = "data/storage/el2/" + to_string(useId);
-    string path = basePath + "/base"
+    int32_t userId = 100;
+    string basePath = "/data/storage/el2/" + to_string(useId);
+    string path = basePath + "/base";
     EXPECT_TRUE(OHOS::ForceCreateDirectory(path));
 
     StorageManager::StorageStats storageStats;
@@ -445,7 +445,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetUserStorageSt
     EXPECT_CALL(*sam, GetSystemAbility(_)).WillRepeatedly(Return(bms));
     EXPECT_CALL(*dsh, Creator(_, _, _, _, _)).WillRepeatedly(Return(dhelper));
     EXPECT_CALL(*dhelper, Query(_, _, _, _)).WillOnce(Return(dset));
-    EXPECT_CALL(*dsrs, GetRowCount(_)).WillOnce(SetArgReferee<0>(100), Return(0));
+    EXPECT_CALL(*dsrs, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(100), Return(0)));
     int64_t result = StorageManagerService::GetInstance().GetUserStorageStatsByType(userId, storageStats, type);
     EXPECT_EQ(result, E_GETROWCOUNT);
 }
@@ -485,7 +485,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetUserStorageSt
 /**
  * @tc.name: Storage_Manager_ServiceTest_GetMediaStorageStats_001
  * @tc.number: GetMediaStorageStats_001
- * @tc.desc: FUNC
+ * @tc.desc: 测试返回E_MEDIALIBRARY_ERROR
  */
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaStorageStats_001,
     testing::ext::TestSize.Level1) {
@@ -499,12 +499,12 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaStorageS
 /**
  * @tc.name: Storage_Manager_ServiceTest_GetMediaStorageStats_002
  * @tc.number: GetMediaStorageStats_002
- * @tc.desc: FUNC
+ * @tc.desc: 测试返回E_MEDIALIBRARY_ERROR
  */
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaStorageStats_002,
     testing::ext::TestSize.Level1) {
     StorageManager::StorageStats storageStats;
-    EXPECT_CALL(*sam, GetSystemAbility(_)).WillOnce(Return(nullptr)).WillRepeatedly(Return(bms));
+    EXPECT_CALL(*dsh, Creator(_, _, _, _, _)).WillRepeatedly(Return(dhelper));
     int32_t result = StorageManagerService::GetInstance().GetMediaStorageStats(storageStats);
     EXPECT_EQ(result, E_MEDIALIBRARY_ERROR);
 }
@@ -512,7 +512,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaStorageS
 /**
  * @tc.name: Storage_Manager_ServiceTest_GetMediaStorageStats_002
  * @tc.number: GetMediaStorageStats_002
- * @tc.desc: FUNC
+ * @tc.desc: 测试返回E_QUERY
  */
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaStorageStats_003,
     testing::ext::TestSize.Level1) {
@@ -550,7 +550,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaTypeAndS
 {
     auto resultSet = std::make_shared<DataShare::DataShareResultSet>();
     StorageManager::StorageStats storageStats;
-    EXPECT_CALL(*dsrs, GoToNextRow(_, _, _, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*dsrs, GoToNextRow()).WillRepeatedly(Return(true));
     StorageManagerService::GetInstance().GetMediaTypeAndSize(resultSet, storageStats);
     EXPECT_EQ(storageStats.image_, 0);
     EXPECT_EQ(storageStats.audio_, 0);
@@ -626,7 +626,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetBundleStats_0
 
 /**
  * @tc.name: Storage_Manager_ServiceTest_DeduplicationPath_001
- * @tc.desc: DeduplicationPathTest_001
+ * @tc.number: DeduplicationPathTest_001
  * @tc.desc: 测试configPath为空时，不执行任何操作
  */
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DeduplicationPath_001,
@@ -634,12 +634,12 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DeduplicationPat
 {
     std::vector<std::string> configPaths;
     StorageManagerService::GetInstance().DeduplicationPath(configPaths);
-    EXPECT_TRUE(result);
+    EXPECT_TRUE(true);
 }
 
 /**
  * @tc.name: Storage_Manager_ServiceTest_DeduplicationPath_002
- * @tc.desc: DeduplicationPathTest_002
+ * @tc.number: DeduplicationPathTest_002
  * @tc.desc: 测试configPath不为空时，执行去重
  */
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DeduplicationPath_002,
@@ -647,12 +647,12 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DeduplicationPat
 {
     std::vector<std::string> configPaths = {"path1", "path2", "path3"};
     StorageManagerService::GetInstance().DeduplicationPath(configPaths);
-    EXPECT_TRUE(result);
+    EXPECT_TRUE(true);
 }
 
 /**
  * @tc.name: Storage_Manager_ServiceTest_ScanExtensionPath_001
- * @tc.desc: ScanExtensionPathTest_001
+ * @tc.number: ScanExtensionPathTest_001
  * @tc.desc: ScanExtensionPath 有效路径正确扫描
  */
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ScanExtensionPath_001,
@@ -661,8 +661,8 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ScanExtensionPat
     std::string bundleName = MMS_BUNDLENAME;
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 123456789, .fileSizeSum = 0, .incFileSizeSum = 0};
-    std::vector<std::string> includes = {"path/to/include"};
-    std::vector<std::string> excludes = {"path/to/exclude"};
+    std::vector<std::string> includes = {"/path/to/include"};
+    std::vector<std::string> excludes = {"/path/to/exclude"};
     std::map<std::string, std::string> pathMap;
     std::ofstream statFile("statfile.txt");
 
@@ -671,12 +671,12 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ScanExtensionPat
     EXPECT_TRUE(statFile.good());
 
     statFile.close();
-    remove(statfile.txt);
+    remove("statfile.txt");
 }
 
 /**
  * @tc.name: Storage_Manager_ServiceTest_AddOuterDirIntoFileStat_001
- * @tc.desc: AddOuterDirIntoFileStat_001
+ * @tc.number: AddOuterDirIntoFileStat_001
  * @tc.desc: AddOuterDirIntoFileStat 调用时正常返回
  */
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddOuterDirIntoFileStat_001,
@@ -685,10 +685,10 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddOuterDirIntoF
     std::string bundleName = MMS_BUNDLENAME;
     std::string dir = "/data/app/el1/100/base/" + bundleName +"/.backup"
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
-                            .lastBackupTime = 123456789, .fileSizeSum = 0, .incFileSizeSum = 0};
-    std::vector<std::string> sandboxDir = {"path/to/sandboxDir"};
-    std::map<std::string, std::string> pathMap;
+                            .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
+    std::vector<std::string> sandboxDir = {"/path/to/sandboxDir"};
     std::ofstream statFile("statfile.txt");
+    std::map<std::string, bool> excludesMap;
 
     StorageManagerService::GetInstance().AddOuterDirIntoFileStat(dir, paras, sandboxDir, statFile, excludesMap);
     EXPECT_TRUE(true);

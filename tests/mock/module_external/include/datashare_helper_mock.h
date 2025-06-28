@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef DATASHARE_HELPER_MOCK_H
-#define DATASHARE_HELPER_MOCK_H
+#ifndef OHOS_FILEMGMT_BACKUP_DATASHARE_HELPER_MOCK_H
+#define OHOS_FILEMGMT_BACKUP_DATASHARE_HELPER_MOCK_H
 
-#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 #include "gmock/gmock.h"
 #include "datashare_helper.h"
-#include "datashare_helper_mock.h"
+#include "datashare_result_set_mock.h"
 
 namespace OHOS {
 using namespace DataShare;
-namespace FileManageMent::Backup {
+namespace FileManagement::Backup {
 class IDataShareHelper {
 public:
     IDataShareHelper() = default;
@@ -31,15 +31,16 @@ public:
     virtual std::shared_ptr<DataShareHelper> Creator(const sptr<IRemoteObject> &token,
         const string &strUri, const string &extUri, const int waitTime, bool isSystem) = 0;
     virtual std::shared_ptr<DataShareResultSet> Query(Uri &uri, const DataSharePredicates &predicates,
-        std::vector<string> &colums, DataShareBusinessError *businessError) = 0;;
+        std::vector<string> &columns, DatashareBusinessError *businessError) = 0;
 public:
     static inline std::shared_ptr<IDataShareHelper> idsh = nullptr;
 };
 
 class DataShareHelperImpl : public DataShareHelper {
 public:
-    MOCK_METHOD(std::shared_ptr<DataShareResultSet>, Query, (Uri &uri, const DataSharePredicates& predicates,
-        std::vector<string> &colums, DataShareBusinessError *businessError), (override));
+    MOCK_METHOD(std::shared_ptr<DataShareResultSet>, Query, (Uri &uri,
+        const DataShare::DataSharePredicates& predicates, std::vector<string> &columns,
+        DatashareBusinessError *businessError), (override));
 
     MOCK_METHOD(bool, Release, (), (override));
 
@@ -98,7 +99,7 @@ public:
 
     MOCK_METHOD(std::vector<OperationResult>, SubscribeRdbData, (const std::vector<std::string> &uris,
         const TemplateId &templateId,
-        const std::function<void(const RdbChangeNode &changeNode)> &callback), (override));
+        const std::function<void(const RdbChangeNode &)> &callback), (override));
 
     MOCK_METHOD(std::vector<OperationResult>, UnsubscribeRdbData, (const std::vector<std::string> &uris,
         const TemplateId &templateId), (override));
@@ -111,7 +112,7 @@ public:
 
     MOCK_METHOD(std::vector<OperationResult>, SubscribePublishedData,
         (const std::vector<std::string> &uris, int64_t subscriberId,
-        const std::function<void(const PublishedDataChangeNode &changeNode)> &callback), (override));
+        const std::function<void(const PublishedDataChangeNode &)> &callback), (override));
 
     MOCK_METHOD(std::vector<OperationResult>, UnsubscribePublishedData, (const std::vector<std::string> &uris,
         int64_t subscriberId), (override));
@@ -122,10 +123,10 @@ public:
     MOCK_METHOD(std::vector<OperationResult>, DisablePubSubs,
         (const std::vector<std::string> &uris, int64_t subscriberId), (override));
 
-    MOCK_METHOD(std::pair<int32_t, int32_t>, InsertEx,
+    MOCK_METHOD((std::pair<int32_t, int32_t>), InsertEx,
         (Uri &uri, const DataShareValuesBucket &value), (override));
 
-    MOCK_METHOD(std::pair<int32_t, int32_t>, UpdateEx, (Uri &uri, const DataSharePredicates &predicates,
+    MOCK_METHOD((std::pair<int32_t, int32_t>), UpdateEx, (Uri &uri, const DataSharePredicates &predicates,
         const DataShareValuesBucket &value), (override));
 
     MOCK_METHOD((std::pair<int32_t, int32_t>), DeleteEx,
@@ -142,7 +143,7 @@ public:
 
     MOCK_METHOD(std::shared_ptr<DataShareResultSet>, Query, (Uri &uri, const DataSharePredicates &predicates,
         std::vector<string> &colums, DataShareBusinessError *businessError));
-}
+};
 }
 } // namespace OHOS::FileManagement::Backup
 #endif

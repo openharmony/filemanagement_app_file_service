@@ -13,17 +13,14 @@
  * limitations under the License.
  */
 
-#include <gmock/gmock.h>
-#include "gmock/gmock.h"
 #include "datashare_helper.h"
-#include "datashare_helper_mock.h"
 
 namespace OHOS {
 namespace DataShare {
 using namespace std;
-using namespace FileManageMent::Backup;
+using namespace FileManagement::Backup;
 
-std:shared_ptr<DataShareHelper> DataShareHelper::Creator(const sptr<IRemoteObject> &token,
+std::shared_ptr<DataShareHelper> DataShareHelper::Creator(const sptr<IRemoteObject> &token,
         const std::string &strUri, const std::string &extUri, const int waitTime, bool isSystem)
 {
     GTEST_LOG_(INFO) << "DataShareHelperMock Creator is OK";
@@ -31,10 +28,10 @@ std:shared_ptr<DataShareHelper> DataShareHelper::Creator(const sptr<IRemoteObjec
 }
 
 std::shared_ptr<DataShareResultSet> Query(Uri &uri, const DataSharePredicates &predicates,
-    std::vector<string> &colums, DataShareBusinessError *businessError)
+    std::vector<std::string> &colums, DataShareBusinessError *businessError)
 {
-    GTEST_LOG_(INFO) << "DataShareHelperMock Query is OK";
+    GTEST_LOG_(INFO) << "DataShareResultSet Query is OK";
     return IDataShareHelper::idsh->Query(uri, predicates, colums, businessError);
 }
 }
-} // using namespace OHOS::DataShare
+}
