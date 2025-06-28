@@ -19,7 +19,7 @@
 namespace OHOS {
 namespace DataShare {
 using namespace std;
-using namespace FileManageMent::Backup;
+using namespace FileManagement::Backup;
 
 int GetRowCount(int &count)
 {
@@ -33,10 +33,10 @@ int GoToNextRow()
     return IDataShareResultSet::idsrs->GoToNextRow();
 }
 
-int GetColumIndex(const std::string &columnName, int &columnIndex)
+int GetColumnIndex(const std::string &columnName, int &columnIndex)
 {
-    GTEST_LOG_(INFO) << "DataShareResultSet GetColumIndex is OK";
-    return IDataShareResultSet::idsrs->GetColumIndex(columnName, columnIndex);
+    GTEST_LOG_(INFO) << "DataShareResultSet GetColumnIndex is OK";
+    return IDataShareResultSet::idsrs->GetColumnIndex(columnName, columnIndex);
 }
 
 int GetInt(int columnIndex, int &value)

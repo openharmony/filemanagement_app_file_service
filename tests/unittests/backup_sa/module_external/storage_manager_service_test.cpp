@@ -686,7 +686,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddOuterDirIntoF
     std::string dir = "/data/app/el1/100/base/" + bundleName + "/.backup";
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
-    std::vector<std::string> sandboxDir = {"/path/to/sandboxDir"};
+    std::string sandboxDir = "/path/to/sandboxDir";
     std::ofstream statFile("statfile.txt");
     std::map<std::string, bool> excludesMap;
 
