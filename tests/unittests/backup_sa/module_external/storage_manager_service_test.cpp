@@ -504,7 +504,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaStorageS
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaStorageStats_002,
     testing::ext::TestSize.Level1) {
     StorageManager::StorageStats storageStats;
-    EXPECT_CALL(*dsh, Creator(_, _, _, _, _)).WillRepeatedly(Return(dhelper));
+    EXPECT_CALL(*dsh, Creator(_, _, _, _, _)).WillRepeatedly(Return(nullptr));
     int32_t result = StorageManagerService::GetInstance().GetMediaStorageStats(storageStats);
     EXPECT_EQ(result, E_MEDIALIBRARY_ERROR);
 }
@@ -618,9 +618,9 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_PathSortFunc_001
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetBundleStats_001, testing::ext::TestSize.Level1)
 {
     string bundleName = MMS_BUNDLENAME;
-    StorageManager::StorageStats storageStats;
+    StorageManager::BundleStats bundleStats;
 
-    bool result = StorageManagerService::GetInstance().GetBundleStats(bundleName, storageStats);
+    bool result = StorageManagerService::GetInstance().GetBundleStats(bundleName, bundleStats);
     EXPECT_TRUE(result);
 }
 
