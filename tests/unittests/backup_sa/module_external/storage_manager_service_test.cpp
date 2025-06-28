@@ -113,7 +113,7 @@ void StorageManagerServiceTest::SetUpTestCase(void)
     dset = std::make_shared<DataShare::DataShareResultSet>();
 }
 
-void StorageManagerServiceTest::TearDownTestCase(void) 
+void StorageManagerServiceTest::TearDownTestCase(void)
 {
     bms = nullptr;
     sam = nullptr;
@@ -619,7 +619,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetBundleStats_0
 {
     string bundleName = MMS_BUNDLENAME;
     StorageManager::StorageStats storageStats;
-    
+
     bool result = StorageManagerService::GetInstance().GetBundleStats(bundleName, storageStats);
     EXPECT_TRUE(result);
 }

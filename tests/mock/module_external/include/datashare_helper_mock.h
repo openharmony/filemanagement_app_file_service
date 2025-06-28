@@ -40,7 +40,7 @@ class DataShareHelperImpl : public DataShareHelper {
 public:
     MOCK_METHOD(std::shared_ptr<DataShareResultSet>, Query, (Uri &uri, const DataSharePredicates& predicates,
         std::vector<string> &colums, DataShareBusinessError *businessError), (override));
-    
+
     MOCK_METHOD(bool, Release, (), (override));
 
     MOCK_METHOD(std::vector<string>, GetFileTypes, (Uri &uri, const string &mimeTypeFilter), (override));

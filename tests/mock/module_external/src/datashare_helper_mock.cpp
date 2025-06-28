@@ -30,12 +30,11 @@ std:shared_ptr<DataShareHelper> DataShareHelper::Creator(const sptr<IRemoteObjec
     return IDataShareHelper::idsh->Creator(token, strUri, extUri, waitTime, isSystem);
 }
 
-std::shared_ptr<DataShareResultSet> Query(Uri &uri,const DataSharePredicates &predicates,
+std::shared_ptr<DataShareResultSet> Query(Uri &uri, const DataSharePredicates &predicates,
         std::vector<string> &colums, DataShareBusinessError *businessError)
 {
     GTEST_LOG(INFO) << "DataShareHelperMock Query is OK";
     return IDataShareHelper::idsh->Query(uri, predicates, colums, businessError);
 }
-}
+} 
 } // using namespace OHOS::DataShare
-#endif
