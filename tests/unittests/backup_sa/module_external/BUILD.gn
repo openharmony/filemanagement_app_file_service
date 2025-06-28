@@ -79,7 +79,7 @@ ohos_unittest("storage_manager_service_test") {
     "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
     "${path_backup_mock}/utils_mock/src/b_sa_utils_mock.cpp",
     "${path_backup_mock}/module_external/src/datashare_helper_mock.cpp",
-    "${path_backup_mock}/module_external/src/datashare_result_set_mock .cpp",
+    "${path_backup_mock}/module_external/src/datashare_result_set_mock.cpp",
     "storage_manager_service_test.cpp",
   ]
 

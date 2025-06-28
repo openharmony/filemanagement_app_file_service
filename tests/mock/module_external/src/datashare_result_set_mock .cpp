@@ -51,4 +51,4 @@ int GetLong(int columnIndex, int64_t &value)
     return IDataShareResultSet::idrsr->GetLong(columnIndex, value);
 }
 }
-}
+}// namespace OHOS::FileManagement::Backup

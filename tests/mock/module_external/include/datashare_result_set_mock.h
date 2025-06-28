@@ -21,8 +21,9 @@
 #include "datashare_result_set.h"
 
 namespace OHOS {
-namespace FileManageMent::Backup {
 using namespace DataShare;
+namespace FileManageMent::Backup {
+
 class IDataShareResultSet {
 public:
     IDataShareResultSet() = default;
@@ -38,12 +39,12 @@ public:
 
 class DataShareResultSetMock : public IDataShareResultSet {
 public:
-    MOCK_METHOD(int, GetRowCount, (int &count), (override)) = 0;
+    MOCK_METHOD(int, GetRowCount, (int &count), (override));
     MOCK_METHOD(int, GoToNextRow, ());
     MOCK_METHOD(int, GetColumIndex, (const std::string &columnName, int &columnIndex));;
     MOCK_METHOD(int, GetInt, (int columnIndex, int &value), (override));
     MOCK_METHOD(int, GetLong, (int columnIndex, int64_t &value), (override));
-}
+};
 }
 } // namespace OHOS::FileManagement::Backup
 #endif
