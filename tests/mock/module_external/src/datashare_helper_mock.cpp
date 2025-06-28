@@ -22,7 +22,7 @@ using namespace std;
 using namespace FileManagement::Backup;
 
 std::shared_ptr<DataShareHelper> DataShareHelper::Creator(const sptr<IRemoteObject> &token,
-        const std::string &strUri, const std::string &extUri, const int waitTime, bool isSystem)
+    const std::string &strUri, const std::string &extUri, const int waitTime, bool isSystem)
 {
     GTEST_LOG_(INFO) << "DataShareHelperMock Creator is OK";
     return IDataShareHelper::idsh->Creator(token, strUri, extUri, waitTime, isSystem);
