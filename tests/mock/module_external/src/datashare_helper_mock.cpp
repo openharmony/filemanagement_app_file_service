@@ -36,5 +36,5 @@ std::shared_ptr<DataShareResultSet> Query(Uri &uri, const DataSharePredicates &p
     GTEST_LOG_(INFO) << "DataShareHelperMock Query is OK";
     return IDataShareHelper::idsh->Query(uri, predicates, colums, businessError);
 }
-}
+} 
 } // using namespace OHOS::DataShare
