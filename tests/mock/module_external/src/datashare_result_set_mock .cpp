@@ -23,32 +23,32 @@ using namespace FileManageMent::Backup;
 
 int GetRowCount(int &count)
 {
-    GTEST_LOG(INFO) << "DataShareResultSet GetRowCount is OK";
+    GTEST_LOG_(INFO) << "DataShareResultSet GetRowCount is OK";
     return IDataShareResultSet::idrsr->GetRowCount(count);
 }
 
 int GoToNextRow()
 {
-    GTEST_LOG(INFO) << "DataShareResultSet GoToNextRow is OK";
+    GTEST_LOG_(INFO) << "DataShareResultSet GoToNextRow is OK";
     return IDataShareResultSet::idrsr->GoToNextRow();
 }
 
 int GetColumIndex(const std::string &columnName, int &columnIndex)
 {
-    GTEST_LOG(INFO) << "DataShareResultSet GetColumIndex is OK";
+    GTEST_LOG_(INFO) << "DataShareResultSet GetColumIndex is OK";
     return IDataShareResultSet::idrsr->GetColumIndex(columnName, columnIndex);
 }
 
 int GetInt(int columnIndex, int &value)
 {
-    GTEST_LOG(INFO) << "DataShareResultSet GetInt is OK";
+    GTEST_LOG_(INFO) << "DataShareResultSet GetInt is OK";
     return IDataShareResultSet::idrsr->GetInt(columnIndex, value);
 }
 
 int GetLong(int columnIndex, int64_t &value)
 {
-    GTEST_LOG(INFO) << "DataShareResultSet GetLong is OK";
+    GTEST_LOG_(INFO) << "DataShareResultSet GetLong is OK";
     return IDataShareResultSet::idrsr->GetLong(columnIndex, value);
 }
 }
-}// namespace OHOS::FileManagement::Backup
+}

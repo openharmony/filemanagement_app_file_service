@@ -22,8 +22,8 @@
 #include "datashare_helper_mock.h"
 
 namespace OHOS {
-namespace FileManageMent::Backup {
 using namespace DataShare;
+namespace FileManageMent::Backup {
 class IDataShareHelper {
 public:
     IDataShareHelper() = default;
