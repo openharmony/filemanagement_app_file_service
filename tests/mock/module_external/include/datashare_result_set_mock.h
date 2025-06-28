@@ -20,16 +20,16 @@
 #include "gmock/gmock.h"
 #include "datashare_result_set.h"
 
-namespace OHOS{
-using namespace DataShare;
+namespace OHOS {
 namespace FileManageMent::Backup {
+using namespace DataShare;
 class IDataShareResultSet {
 public:
     IDataShareResultSet() = default;
     virtual ~IDataShareResultSet() = default;
     virtual int GetRowCount(int &count) = 0;
     virtual int GoToNextRow() = 0;
-    virtual int GetColumIndex(const std::string &columnName, int columnIndex) = 0;
+    virtual int GetColumIndex(const std::string &columnName, int &columnIndex) = 0;
     virtual int GetInt(int columnIndex, int &value) = 0;
     virtual int GetLong(int columnIndex, int64_t &value) = 0;
 public:
@@ -40,10 +40,10 @@ class DataShareResultSetMock : public IDataShareResultSet {
 public:
     MOCK_METHOD(int, GetRowCount, (int &count), (override)) = 0;
     MOCK_METHOD(int, GoToNextRow, ());
-    MOCK_METHOD(int, GetColumIndex, (const std::string &columnName, int columnIndex));;
+    MOCK_METHOD(int, GetColumIndex, (const std::string &columnName, int &columnIndex));;
     MOCK_METHOD(int, GetInt, (int columnIndex, int &value), (override));
     MOCK_METHOD(int, GetLong, (int columnIndex, int64_t &value), (override));
 }
-} // using namespace OHOS::FileManageMent::Backup 
-} // namespace OHOS
+}
+} // namespace OHOS::FileManagement::Backup
 #endif

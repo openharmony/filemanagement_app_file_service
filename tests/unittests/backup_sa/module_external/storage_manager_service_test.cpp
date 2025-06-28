@@ -36,7 +36,7 @@
 
 namespace OHOS {
 const std::string CAMERA_BUNDLENAME = "file";
-const std::string CALENDAR_BUNDLENAME = "com.huawei.hmos.calendar";
+const std::string MMS_BUNDLENAME = "com.ohos.mms";
 using namespace std;
 using namespace testing;
 using namespace FileManagement::Backup;
@@ -101,7 +101,8 @@ public:
     static inline shared_ptr<DataShare::DataShareResultSet> dset = nullptr;
 };
 
-void StorageManagerServiceTest::SetUpTestCase(void) {
+void StorageManagerServiceTest::SetUpTestCase(void)
+{
     bms = sptr<BundleMgrMock>(new BundleMgrMock());
     sam = sptr<SystemAbilityManagerMock>(new SystemAbilityManagerMock());
     dsh = make_shared<DataShareHelperMock>();
@@ -136,7 +137,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetBundleStatsFo
     testing::ext::TestSize.Level1)
 {
     uint32_t userId = 100;
-    std::vector<std::string> bundleNames = {"com.example.app1", "com.huawei.hmos.calendar"};
+    std::vector<std::string> bundleNames = {"com.example.app1", "com.example.app2"};
     std::vector<int64_t> incrementalBackTimes = {123456789};
     std::vector<int64_t> pkgFileSizes;
     std::vector<int64_t> incPkgFileSizes;
@@ -155,7 +156,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetBundleStatsFo
     testing::ext::TestSize.Level1)
 {
     uint32_t userId = 100;
-    std::vector<std::string> bundleNames = {"com.example.app1", "com.huawei.hmos.calendar"};
+    std::vector<std::string> bundleNames = {"com.example.app1", "com.example.app2"};
     std::vector<int64_t> incrementalBackTimes = {123456789, 987654321};
     std::vector<int64_t> pkgFileSizes;
     std::vector<int64_t> incPkgFileSizes;
@@ -174,7 +175,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetBundleStatsFo
     testing::ext::TestSize.Level1)
 {
     uint32_t userId = 100;
-    std::string bundleName = CALENDAR_BUNDLENAME;
+    std::string bundleName = MMS_BUNDLENAME;
     int64_t lastBackupTime = 123456789;
     std::vector<int64_t> pkgFileSizes;
     std::vector<int64_t> incPkgFileSizes;
@@ -195,7 +196,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetBundleStatsFo
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ReadIncludesExcludesPath_001,
     testing::ext::TestSize.Level1)
 {
-    std::string bundleName = CALENDAR_BUNDLENAME;
+    std::string bundleName = MMS_BUNDLENAME;
     int64_t lastBackupTime = 123456789;
     uint32_t userId = 100;
     auto result = StorageManagerService::GetInstance().ReadIncludesExcludesPath(bundleName, lastBackupTime, userId);
@@ -212,7 +213,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ReadIncludesExcl
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ReadIncludesExcludesPath_002,
     testing::ext::TestSize.Level1)
 {
-    std::string bundleName = CALENDAR_BUNDLENAME;
+    std::string bundleName = MMS_BUNDLENAME;
     int64_t lastBackupTime = 123456789;
     uint32_t userId = 100;
     // Assuming the file does not exist or cannot be opened
@@ -230,7 +231,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ReadIncludesExcl
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DealWithIncludeFiles_001,
     testing::ext::TestSize.Level1)
 {
-    std::string bundleName = CALENDAR_BUNDLENAME;
+    std::string bundleName = MMS_BUNDLENAME;
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::vector<std::string> includes = {"data/storage/el1/base/" + DEFAULT_PATH_WITH_WILDCARD};
@@ -249,7 +250,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DealWithIncludeF
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DealWithIncludeFiles_002,
     testing::ext::TestSize.Level1)
 {
-    std::string bundleName = CALENDAR_BUNDLENAME;
+    std::string bundleName = MMS_BUNDLENAME;
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::vector<std::string> includes = {NORMAL_SAND_PREFIX};
@@ -268,7 +269,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DealWithIncludeF
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DealWithIncludeFiles_003,
     testing::ext::TestSize.Level1)
 {
-    std::string bundleName = CALENDAR_BUNDLENAME;
+    std::string bundleName = MMS_BUNDLENAME;
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::vector<std::string> includes = {};
@@ -288,7 +289,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ConvertSandboxRe
     testing::ext::TestSize.Level1)
 {
     uint32_t userId = 100;
-    std::string bundleName = CALENDAR_BUNDLENAME;
+    std::string bundleName = MMS_BUNDLENAME;
     std::string sandboxPathStr = NORMAL_SAND_PREFIX + "/path/to/file";
     std::vector<std::string> realPaths;
     std::map<std::string, std::string> pathMap;
@@ -332,7 +333,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_CheckIfDirForInc
     testing::ext::TestSize.Level1)
 {
     ofstream closedStatFile;
-    std::string bundleName = CALENDAR_BUNDLENAME;
+    std::string bundleName = MMS_BUNDLENAME;
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::map<std::string, std::string> pathMap;
@@ -352,7 +353,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_CheckIfDirForInc
     testing::ext::TestSize.Level1)
 {
     ofstream statFile;
-    std::string bundleName = CALENDAR_BUNDLENAME;
+    std::string bundleName = MMS_BUNDLENAME;
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::map<std::string, std::string> pathMap;
@@ -446,7 +447,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetUserStorageSt
     EXPECT_CALL(*dhelper, Query(_, _, _, _)).WillOnce(Return(dset));
     EXPECT_CALL(*dsrs, GetRowCount(_)).WillOnce(SetArgReferee<0>(100), Return(0));
     int64_t result = StorageManagerService::GetInstance().GetUserStorageStatsByType(userId, storageStats, type);
-    EXPECT_EQ(result, E_GETROWCOUNT);   
+    EXPECT_EQ(result, E_GETROWCOUNT);
 }
 
 /**
@@ -481,26 +482,6 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetUserStorageSt
     EXPECT_EQ(result, E_ERR);
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-// /**
-//  * @tc.name: Storage_Manager_ServiceTest_GetUserStorageStatsByType_003
-//  * @tc.desc: check the GetUserStorageStatsByType function
-//  * @tc.type: FUNC
-//  */
-// HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetUserStorageStatsByType_003,
-//     testing::ext::TestSize.Level1) {
-//     StorageManager::StorageStats storageStats;
-//     sam = nullptr;
-//     int64_t result = StorageManagerService::GetInstance().GetMediaStorageStats(storageStats);
-//     sanm = ;
-//     EXPECT_EQ(result, E_ERR);
-// }
-
->>>>>>> df18e2da (add ut for storage manager service)
-=======
->>>>>>> f9bba3bd (add ut)
 /**
  * @tc.name: Storage_Manager_ServiceTest_GetMediaStorageStats_001
  * @tc.number: GetMediaStorageStats_001
@@ -636,7 +617,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_PathSortFunc_001
  */
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetBundleStats_001, testing::ext::TestSize.Level1)
 {
-    string bundleName = CALENDAR_BUNDLENAME;
+    string bundleName = MMS_BUNDLENAME;
     StorageManager::StorageStats storageStats;
     
     bool result = StorageManagerService::GetInstance().GetBundleStats(bundleName, storageStats);
@@ -677,7 +658,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DeduplicationPat
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ScanExtensionPath_001,
     testing::ext::TestSize.Level1)
 {
-    std::string bundleName = CALENDAR_BUNDLENAME;
+    std::string bundleName = MMS_BUNDLENAME;
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 123456789, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::vector<std::string> includes = {"path/to/include"};
@@ -691,7 +672,6 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ScanExtensionPat
 
     statFile.close();
     remove(statfile.txt);
-
 }
 
 /**
@@ -702,7 +682,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ScanExtensionPat
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddOuterDirIntoFileStat_001,
     testing::ext::TestSize.Level1)
 {
-    std::string bundleName = CALENDAR_BUNDLENAME;
+    std::string bundleName = MMS_BUNDLENAME;
     std::string dir = "/data/app/el1/100/base/" + bundleName +"/.backup"
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 123456789, .fileSizeSum = 0, .incFileSizeSum = 0};

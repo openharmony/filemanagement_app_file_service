@@ -16,10 +16,10 @@
 #include "datashare_result_set.h"
 #include "datashare_result_set_mock.h"
 
-namespace OHOS{
+namespace OHOS {
 namespace DataShare {
 using namespace std;
-using namespace FileManageMent::Backup 
+using namespace FileManageMent::Backup;
 
 int GetRowCount(int &count)
 {
@@ -50,6 +50,5 @@ int GetLong(int columnIndex, int64_t &value)
     GTEST_LOG(INFO) << "DataShareResultSet GetLong is OK";
     return IDataShareResultSet::idrsr->GetLong(columnIndex, value);
 }
-} 
-} 
-
+}
+}
