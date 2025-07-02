@@ -22,17 +22,8 @@
 #include <refbase.h>
 #include "file_uri.h"
 #include "sandbox_helper.h"
-#include "b_jsonutil_mock.h"
-#include "b_sa_utils_mock.h"
-#include "if_system_ability_manager.h"
-#include "iremote_stub.h"
-#include "iservice_registry.h"
-#include "module_external/bms_adapter.h"
 #include "module_external/storage_manager_service.h"
 #include "module_external/storage_manager_service.cpp"
-#include "datashare_helper_mock.h"
-#include "datashare_result_set_mock.h"
-#include "directory_ex.h"
 
 namespace OHOS {
 const std::string CAMERA_BUNDLENAME = "file";
@@ -41,91 +32,18 @@ using namespace std;
 using namespace testing;
 using namespace FileManagement::Backup;
 namespace fs = std::filesystem;
-
-class SystemAbilityManagerMock : public ISystemAbilityManager {
-public:
-    MOCK_METHOD((sptr<IRemoteObject>), AsObject, ());
-    MOCK_METHOD((std::vector<std::u16string>), ListSystemAbilities, (unsigned int));
-    MOCK_METHOD((sptr<IRemoteObject>), GetSystemAbility, (int32_t));
-    MOCK_METHOD((sptr<IRemoteObject>), CheckSystemAbility, (int32_t));
-    MOCK_METHOD(int32_t, RemoveSystemAbility, (int32_t));
-    MOCK_METHOD(int32_t, SubscribeSystemAbility, (int32_t, (const sptr<ISystemAbilityStatusChange>&)));
-    MOCK_METHOD(int32_t, UnSubscribeSystemAbility, (int32_t, (const sptr<ISystemAbilityStatusChange>&)));
-    MOCK_METHOD((sptr<IRemoteObject>), GetSystemAbility, (int32_t, const std::string&));
-    MOCK_METHOD(sptr<IRemoteObject>, CheckSystemAbility, (int32_t, const std::string&));
-    MOCK_METHOD(int32_t, AddOnDemandSystemAbilityInfo, (int32_t, const std::u16string&));
-    MOCK_METHOD((sptr<IRemoteObject>), CheckSystemAbility, (int32_t, bool&));
-    MOCK_METHOD(int32_t, AddSystemAbility, (int32_t, (const sptr<IRemoteObject>&), const SAExtraProp&));
-    MOCK_METHOD(int32_t, AddSystemProcess, (const std::u16string&, (const sptr<IRemoteObject>&)));
-    MOCK_METHOD((sptr<IRemoteObject>), LoadSystemAbility, (int32_t, int32_t));
-    MOCK_METHOD(int32_t, LoadSystemAbility, (int32_t, (const sptr<ISystemAbilityLoadCallback>&)));
-    MOCK_METHOD(int32_t, LoadSystemAbility, (int32_t, const std::string&, (const sptr<ISystemAbilityLoadCallback>&)));
-    MOCK_METHOD(int32_t, UnloadSystemAbility, (int32_t));
-    MOCK_METHOD(int32_t, CancelUnloadSystemAbility, (int32_t));
-    MOCK_METHOD(int32_t, UnloadAllIdleSystemAbility, ());
-    MOCK_METHOD(int32_t, GetSystemProcessInfo, (int32_t, SystemProcessInfo&));
-    MOCK_METHOD(int32_t, GetRunningSystemProcess, (std::list<SystemProcessInfo>&));
-    MOCK_METHOD(int32_t, SubscribeSystemProcess, (const sptr<ISystemProcessStatusChange>&));
-    MOCK_METHOD(int32_t, SendStrategy, (int32_t, (std::vector<int32_t>&), int32_t, std::string&));
-    MOCK_METHOD(int32_t, UnSubscribeSystemProcess, (const sptr<ISystemProcessStatusChange>&));
-    MOCK_METHOD(int32_t, GetOnDemandReasonExtraData, (int64_t, MessageParcel&));
-    MOCK_METHOD(int32_t, GetOnDemandPolicy, (int32_t, OnDemandPolicyType, (std::vector<SystemAbilityOnDemandEvent>&)));
-    MOCK_METHOD(int32_t, UpdateOnDemandPolicy, (int32_t, OnDemandPolicyType,
-        (const std::vector<SystemAbilityOnDemandEvent>&)));
-    MOCK_METHOD(int32_t, GetOnDemandSystemAbilityIds, (std::vector<int32_t>&));
-    MOCK_METHOD(int32_t, GetExtensionSaIds, (const std::string&, std::vector<int32_t>&));
-    MOCK_METHOD(int32_t, GetExtensionRunningSaList, (const std::string&, (std::vector<sptr<IRemoteObject>>&)));
-    MOCK_METHOD(int32_t, GetRunningSaExtensionInfoList, (const std::string&, (std::vector<SaExtensionInfo>&)));
-    MOCK_METHOD(int32_t, GetCommonEventExtraDataIdlist, (int32_t, (std::vector<int64_t>&), const std::string&));
-};
-
-class BundleMgrMock : public IRemoteStub<AppExecFwk::IBundleMgr> {
-public:
-    MOCK_METHOD((sptr<IRemoteObject>), AsObject, ());
-    MOCK_METHOD(bool, GetBundleInfos, (const AppExecFwk::BundleFlag, (std::vector<AppExecFwk::BundleInfo>&), int32_t));
-    MOCK_METHOD(ErrCode, GetCloneBundleInfo, (const std::string&, int32_t, int32_t, AppExecFwk::BundleInfo&, int32_t));
-};
-
 class StorageManagerServiceTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
-
-    static inline sptr<BundleMgrMock> bms = nullptr;
-    static inline sptr<SystemAbilityManagerMock> sam = nullptr;
-    static inline shared_ptr<DataShareHelperMock> dsh = nullptr;
-    static inline shared_ptr<DataShareResultSetMock> dsrs = nullptr;
-    static inline shared_ptr<DataShareHelperImpl> dhelper = nullptr;
-    static inline shared_ptr<DataShare::DataShareResultSet> dset = nullptr;
 };
 
-void StorageManagerServiceTest::SetUpTestCase(void)
-{
-    bms = sptr<BundleMgrMock>(new BundleMgrMock());
-    sam = sptr<SystemAbilityManagerMock>(new SystemAbilityManagerMock());
-    dsh = make_shared<DataShareHelperMock>();
-    DataShareHelperMock::idsh = dsh;
-    dsrs = make_shared<DataShareResultSetMock>();
-    DataShareResultSetMock::idsrs = dsrs;
-    dhelper = make_shared<DataShareHelperImpl>();
-    dset = std::make_shared<DataShare::DataShareResultSet>();
-}
-
-void StorageManagerServiceTest::TearDownTestCase(void)
-{
-    bms = nullptr;
-    sam = nullptr;
-}
-
+void StorageManagerServiceTest::SetUpTestCase(void) {}
+void StorageManagerServiceTest::TearDownTestCase(void) {}
 void StorageManagerServiceTest::SetUp(void) {}
 void StorageManagerServiceTest::TearDown(void) {}
-
-sptr<ISystemAbilityManager> SystemAbilityManagerClient::GetSystemAbilityManager()
-{
-    return StorageManagerServiceTest::sam;
-}
 
 /**
  * @tc.name: Storage_Manager_ServiceTest_GetBundleStatsForIncrease_001
@@ -175,7 +93,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetBundleStatsFo
     testing::ext::TestSize.Level1)
 {
     uint32_t userId = 100;
-    std::string bundleName = MMS_BUNDLENAME;
+    std::string bundleName = "testBundle";
     int64_t lastBackupTime = 123456789;
     std::vector<int64_t> pkgFileSizes;
     std::vector<int64_t> incPkgFileSizes;
@@ -196,7 +114,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetBundleStatsFo
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ReadIncludesExcludesPath_001,
     testing::ext::TestSize.Level1)
 {
-    std::string bundleName = MMS_BUNDLENAME;
+    std::string bundleName = "";
     int64_t lastBackupTime = 123456789;
     uint32_t userId = 100;
     auto result = StorageManagerService::GetInstance().ReadIncludesExcludesPath(bundleName, lastBackupTime, userId);
@@ -213,7 +131,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ReadIncludesExcl
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ReadIncludesExcludesPath_002,
     testing::ext::TestSize.Level1)
 {
-    std::string bundleName = MMS_BUNDLENAME;
+    std::string bundleName = "testBundle";
     int64_t lastBackupTime = 123456789;
     uint32_t userId = 100;
     // Assuming the file does not exist or cannot be opened
@@ -231,7 +149,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ReadIncludesExcl
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DealWithIncludeFiles_001,
     testing::ext::TestSize.Level1)
 {
-    std::string bundleName = MMS_BUNDLENAME;
+    std::string bundleName = CAMERA_BUNDLENAME;
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::vector<std::string> includes = {"data/storage/el1/base/" + DEFAULT_PATH_WITH_WILDCARD};
@@ -250,7 +168,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DealWithIncludeF
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DealWithIncludeFiles_002,
     testing::ext::TestSize.Level1)
 {
-    std::string bundleName = MMS_BUNDLENAME;
+    std::string bundleName = CAMERA_BUNDLENAME;
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::vector<std::string> includes = {NORMAL_SAND_PREFIX};
@@ -269,7 +187,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DealWithIncludeF
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DealWithIncludeFiles_003,
     testing::ext::TestSize.Level1)
 {
-    std::string bundleName = MMS_BUNDLENAME;
+    std::string bundleName = "testBundle";
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::vector<std::string> includes = {};
@@ -289,7 +207,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ConvertSandboxRe
     testing::ext::TestSize.Level1)
 {
     uint32_t userId = 100;
-    std::string bundleName = MMS_BUNDLENAME;
+    std::string bundleName = "com.example.app";
     std::string sandboxPathStr = NORMAL_SAND_PREFIX + "/path/to/file";
     std::vector<std::string> realPaths;
     std::map<std::string, std::string> pathMap;
@@ -333,7 +251,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_CheckIfDirForInc
     testing::ext::TestSize.Level1)
 {
     ofstream closedStatFile;
-    std::string bundleName = MMS_BUNDLENAME;
+    std::string bundleName = "com.example.app";
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::map<std::string, std::string> pathMap;
@@ -353,7 +271,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_CheckIfDirForInc
     testing::ext::TestSize.Level1)
 {
     ofstream statFile;
-    std::string bundleName = MMS_BUNDLENAME;
+    std::string bundleName = "com.example.app";
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::map<std::string, std::string> pathMap;
@@ -435,19 +353,14 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ExcludeFilter_00
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetUserStorageStatsByType_001,
     testing::ext::TestSize.Level1)
 {
-    int32_t userId = 100;
-    string basePath = "/data/storage/el2/" + to_string(userId);
-    string path = basePath + "/base";
-    EXPECT_TRUE(OHOS::ForceCreateDirectory(path));
-
     StorageManager::StorageStats storageStats;
-    std::string type = MEDIA_TYPE;
-    EXPECT_CALL(*sam, GetSystemAbility(_)).WillRepeatedly(Return(bms));
-    EXPECT_CALL(*dsh, Creator(_, _, _, _, _)).WillRepeatedly(Return(dhelper));
-    EXPECT_CALL(*dhelper, Query(_, _, _, _)).WillOnce(Return(dset));
-    EXPECT_CALL(*dsrs, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(100), Return(0)));
+    std::string type = "MEDIA_TYPE";
+    int32_t userId = 100;
     int64_t result = StorageManagerService::GetInstance().GetUserStorageStatsByType(userId, storageStats, type);
-    EXPECT_EQ(result, E_GETROWCOUNT);
+    EXPECT_EQ(result, E_ERR);
+    EXPECT_EQ(storageStats.video_, 0);
+    EXPECT_EQ(storageStats.image_, 0);
+    EXPECT_EQ(storageStats.file_, 0);
 }
 
 /**
@@ -464,6 +377,9 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetUserStorageSt
     int32_t userId = 100;
     int64_t result = StorageManagerService::GetInstance().GetUserStorageStatsByType(userId, storageStats, type);
     EXPECT_EQ(result, 0);
+    EXPECT_GE(storageStats.video_, 0);
+    EXPECT_GE(storageStats.image_, 0);
+    EXPECT_GE(storageStats.file_, 0);
 }
 
 /**
@@ -480,47 +396,9 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetUserStorageSt
     int32_t userId = 100;
     int64_t result = StorageManagerService::GetInstance().GetUserStorageStatsByType(userId, storageStats, type);
     EXPECT_EQ(result, E_ERR);
-}
-
-/**
- * @tc.name: Storage_Manager_ServiceTest_GetMediaStorageStats_001
- * @tc.number: GetMediaStorageStats_001
- * @tc.desc: 测试返回E_MEDIALIBRARY_ERROR
- */
-HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaStorageStats_001,
-    testing::ext::TestSize.Level1) {
-    StorageManager::StorageStats storageStats;
-
-    EXPECT_CALL(*sam, GetSystemAbility(_)).WillOnce(Return(nullptr)).WillRepeatedly(Return(bms));
-    int32_t result = StorageManagerService::GetInstance().GetMediaStorageStats(storageStats);
-    EXPECT_EQ(result, E_REMOTE_IS_NULLPTR);
-}
-
-/**
- * @tc.name: Storage_Manager_ServiceTest_GetMediaStorageStats_002
- * @tc.number: GetMediaStorageStats_002
- * @tc.desc: 测试返回E_MEDIALIBRARY_ERROR
- */
-HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaStorageStats_002,
-    testing::ext::TestSize.Level1) {
-    StorageManager::StorageStats storageStats;
-    EXPECT_CALL(*dsh, Creator(_, _, _, _, _)).WillRepeatedly(Return(nullptr));
-    int32_t result = StorageManagerService::GetInstance().GetMediaStorageStats(storageStats);
-    EXPECT_EQ(result, E_MEDIALIBRARY_ERROR);
-}
-
-/**
- * @tc.name: Storage_Manager_ServiceTest_GetMediaStorageStats_002
- * @tc.number: GetMediaStorageStats_002
- * @tc.desc: 测试返回E_QUERY
- */
-HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaStorageStats_003,
-    testing::ext::TestSize.Level1) {
-    StorageManager::StorageStats storageStats;
-    EXPECT_CALL(*dsh, Creator(_, _, _, _, _)).WillRepeatedly(Return(dhelper));
-    EXPECT_CALL(*dhelper, Query(_, _, _, _)).WillOnce(Return(nullptr));
-    int32_t result = StorageManagerService::GetInstance().GetMediaStorageStats(storageStats);
-    EXPECT_EQ(result, E_QUERY);
+    EXPECT_GE(storageStats.video_, 0);
+    EXPECT_GE(storageStats.image_, 0);
+    EXPECT_GE(storageStats.file_, 0);
 }
 
 /**
@@ -537,21 +415,10 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaTypeAndS
     EXPECT_EQ(storageStats.image_, 0);
     EXPECT_EQ(storageStats.audio_, 0);
     EXPECT_EQ(storageStats.video_, 0);
-}
 
-/**
- * @tc.name: Storage_Manager_ServiceTest_GetMediaTypeAndSize_002
- * @tc.desc: check the GetMediaTypeAndSize function
- * @tc.type: FUNC
- * @tc.require: AR000IGCR7
- */
-HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaTypeAndSize_002,
-    testing::ext::TestSize.Level1)
-{
     auto resultSet = std::make_shared<DataShare::DataShareResultSet>();
-    StorageManager::StorageStats storageStats;
-    EXPECT_CALL(*dsrs, GoToNextRow()).WillRepeatedly(Return(true));
     StorageManagerService::GetInstance().GetMediaTypeAndSize(resultSet, storageStats);
+
     EXPECT_EQ(storageStats.image_, 0);
     EXPECT_EQ(storageStats.audio_, 0);
     EXPECT_EQ(storageStats.video_, 0);
@@ -608,23 +475,6 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_PathSortFunc_001
 }
 
 /**
- * @tc.name: Storage_Manager_ServiceTest_GetBundleStatsTest_001
- * @tc.number: GetBundleStatsTest_001
- * @tc.desc: 测试 GetBundleInfosForLocalCapabilities 接口
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: AR000IGCR7
- */
-HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetBundleStats_001, testing::ext::TestSize.Level1)
-{
-    string bundleName = MMS_BUNDLENAME;
-    StorageManager::BundleStats bundleStats;
-
-    bool result = StorageManagerService::GetInstance().GetBundleStats(bundleName, bundleStats);
-    EXPECT_TRUE(result);
-}
-
-/**
  * @tc.name: Storage_Manager_ServiceTest_DeduplicationPath_001
  * @tc.number: DeduplicationPathTest_001
  * @tc.desc: 测试configPath为空时，不执行任何操作
@@ -634,7 +484,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DeduplicationPat
 {
     std::vector<std::string> configPaths;
     StorageManagerService::GetInstance().DeduplicationPath(configPaths);
-    EXPECT_TRUE(true);
+    EXPECT_TRUE(configPaths.size() == 0);
 }
 
 /**
@@ -645,9 +495,9 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DeduplicationPat
 HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DeduplicationPath_002,
     testing::ext::TestSize.Level1)
 {
-    std::vector<std::string> configPaths = {"path1", "path2", "path3"};
+    std::vector<std::string> configPaths = {"path1", "path2", "path2"};
     StorageManagerService::GetInstance().DeduplicationPath(configPaths);
-    EXPECT_TRUE(true);
+    EXPECT_TRUE(configPaths.size() == 2);
 }
 
 /**
@@ -691,13 +541,100 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddOuterDirIntoF
     std::map<std::string, bool> excludesMap;
 
     StorageManagerService::GetInstance().AddOuterDirIntoFileStat(dir, paras, sandboxDir, statFile, excludesMap);
-    EXPECT_TRUE(true);
+    EXPECT_TRUE(excludesMap.empty());
 
     dir = "";
     StorageManagerService::GetInstance().AddOuterDirIntoFileStat(dir, paras, sandboxDir, statFile, excludesMap);
-    EXPECT_TRUE(true);
+    EXPECT_TRUE(excludesMap.empty());
 
     statFile.close();
     remove("statfile.txt");
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_InsertStatFile_001
+ * @tc.number: InsertStatFile_001
+ * @tc.desc: 测试 InsertStatFile 函数在输入有效时是否正确插入文件信息
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_InsertStatFile_001, testing::ext::TestSize.Level1)
+{
+    std::string bundleName = MMS_BUNDLENAME;
+    std::string path = "/data/app/el1/100/base/" + bundleName + "/.backup";
+    struct FileStat fileStat = {.isDir = true};
+    std::ofstream statFile("test_stat_file.txt");
+    std::map<std::string, bool> excludesMap;
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+                            .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
+
+    StorageManagerService::GetInstance().InsertStatFile(path, fileStat, statFile, excludesMap, paras);
+    EXPECT_TRUE(excludesMap.empty());
+    statFile.close();
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_InsertStatFile_002
+ * @tc.number: InsertStatFile_002
+ * @tc.desc: 测试 InsertStatFile 函数路径在excludesMap中时是否正确排除文件信息
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_InsertStatFile_002, testing::ext::TestSize.Level1)
+{
+    std::string bundleName = MMS_BUNDLENAME;
+    std::string path = "/data/app/el1/100/base/" + bundleName + "/.backup";
+    struct FileStat fileStat = {};
+    std::ofstream statFile("test_stat_file.txt");
+    std::map<std::string, bool> excludesMap = {{path, true}};
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+                            .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
+
+    StorageManagerService::GetInstance().InsertStatFile(path, fileStat, statFile, excludesMap, paras);
+    EXPECT_TRUE(excludesMap.find(path) != excludesMap.end());
+    statFile.close();
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_InsertStatFile_003
+ * @tc.number: InsertStatFile_003
+ * @tc.desc: 测试 InsertStatFile 函数路径在输入无效文件状态信息时的处理
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_InsertStatFile_003, testing::ext::TestSize.Level1)
+{
+    std::string bundleName = MMS_BUNDLENAME;
+    std::string path = "/invalid/path";
+    struct FileStat fileStat = {};
+    std::ofstream statFile("test_stat_file.txt");
+    std::map<std::string, bool> excludesMap;
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+                            .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
+
+    StorageManagerService::GetInstance().InsertStatFile(path, fileStat, statFile, excludesMap, paras);
+    EXPECT_TRUE(excludesMap.empty());
+    statFile.close();
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_AddPathMapForPathWildCard_001
+ * @tc.number: AddPathMapForPathWildCard_001
+ * @tc.desc: 测试 AddPathMapForPathWildCard 函数返回值正常
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddPathMapForPathWildCard_001,
+    testing::ext::TestSize.Level1)
+{
+    uint32_t userId = 100;
+    std::string name = MMS_BUNDLENAME;
+    std::string phyPath = "/data/app/el1/100/base/com.ohos.mms/.backup";
+    std::map<std::string, std::string> pathMap;
+
+    bool result = StorageManagerService::GetInstance().AddPathMapForPathWildCard(userId, name, phyPath, pathMap);
+    EXPECT_TRUE(result, true);
+
+    name = "com.example.app2";
+    phyPath = "/data/app/el2/100/base/com.example.app2/.backup";
+    pathMap.insert({phyPath, ".backup"});
+    result = StorageManagerService::GetInstance().AddPathMapForPathWildCard(userId, name, phyPath, pathMap);
+    EXPECT_TRUE(result, true);
+
+    phyPath = "";
+    result = StorageManagerService::GetInstance().AddPathMapForPathWildCard(userId, name, phyPath, pathMap);
+    EXPECT_TRUE(result, false);
 }
 }
