@@ -625,16 +625,16 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddPathMapForPat
     std::map<std::string, std::string> pathMap;
 
     bool result = StorageManagerService::GetInstance().AddPathMapForPathWildCard(userId, name, phyPath, pathMap);
-    EXPECT_TRUE(result, true);
+    EXPECT_EQ(result, true);
 
     name = "com.example.app2";
     phyPath = "/data/app/el2/100/base/com.example.app2/.backup";
     pathMap.insert({phyPath, ".backup"});
     result = StorageManagerService::GetInstance().AddPathMapForPathWildCard(userId, name, phyPath, pathMap);
-    EXPECT_TRUE(result, true);
+    EXPECT_EQ(result, true);
 
     phyPath = "";
     result = StorageManagerService::GetInstance().AddPathMapForPathWildCard(userId, name, phyPath, pathMap);
-    EXPECT_TRUE(result, false);
+    EXPECT_EQ(result, false);
 }
 }
