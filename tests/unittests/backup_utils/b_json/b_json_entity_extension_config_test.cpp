@@ -1037,4 +1037,47 @@ HWTEST_F(BJsonEntityExtensionConfigTest, b_json_entity_extension_config_3700, te
     }
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end b_json_entity_extension_config_3700";
 }
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_3800
+ * @tc.name: backup_b_json_entity_extension_config_3800
+ * @tc.desc: 测试GetRequireCompatibility接口能否成功返回
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, backup_b_json_entity_extension_config_3800, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin backup_b_json_entity_extension_config_3800";
+    try {
+        string_view sv1 = R"({"":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+        auto cache1 = cachedEntity1.Structuralize();
+        bool ret = cache1.GetRequireCompatibility();
+        EXPECT_FALSE(ret);
+
+        string_view sv2 = R"({"requireCompatibility1":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity2(sv2);
+        auto cache2 = cachedEntity2.Structuralize();
+        ret = cache2.GetRequireCompatibility();
+        EXPECT_FALSE(ret);
+
+        string_view sv3 = R"({"requireCompatibility":123})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity3(sv3);
+        auto cache3 = cachedEntity3.Structuralize();
+        ret = cache3.GetRequireCompatibility();
+        EXPECT_FALSE(ret);
+
+        string_view sv4 = R"({"requireCompatibility":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity4(sv4);
+        auto cache4 = cachedEntity4.Structuralize();
+        ret = cache4.GetRequireCompatibility();
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetRequireCompatibility.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end backup_b_json_entity_extension_config_3800";
+}
 } // namespace OHOS::FileManagement::Backup

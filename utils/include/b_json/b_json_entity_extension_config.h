@@ -76,6 +76,13 @@ public:
      */
     Json::Value GetExtraInfo() const;
 
+    /**
+     * @brief 从JSon对象中获取兼容能力标志
+     *
+     * @return 兼容标志: 应用是否要做兼容处理
+     */
+    bool GetRequireCompatibility() const;
+
 public:
     std::string GetJSonSource(std::string_view jsonFromRealWorld, std::any option);
 

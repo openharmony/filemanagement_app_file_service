@@ -76,4 +76,5 @@ interface OHOS.FileManagement.Backup.IService{
     [ipccode 42] void GetExtOnRelease([out] boolean isExtOnRelease);
     [ipccode 43] void AppFileReadyWithoutFd([in]String fileName, [in] int appFileReadyErrCode);
     [ipccode 44] void AppIncrementalFileReadyWithoutFd([in] String fileName, [in] int appIncrementalFileReadyErrCode);
+    [ipccode 45] void GetCompatibilityInfo([in] String bundleName, [in] String extInfo, [out] String compatInfo);
  }

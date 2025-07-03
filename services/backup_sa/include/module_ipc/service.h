@@ -120,6 +120,8 @@ public:
     ErrCode CleanBundleTempDir(const std::string &bundleName) override;
     ErrCode HandleExtDisconnect(bool isIncBackup) override;
     ErrCode GetExtOnRelease(bool &isExtOnRelease) override;
+    ErrCode GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo,
+        std::string &compatInfo) override;
 
     // 以下都是非IPC接口
 public:

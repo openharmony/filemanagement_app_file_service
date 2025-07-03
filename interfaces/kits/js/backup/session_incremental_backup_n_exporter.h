@@ -32,6 +32,7 @@ public:
     static napi_value Release(napi_env env, napi_callback_info cbinfo);
     static napi_value Cancel(napi_env env, napi_callback_info cbinfo);
     static napi_value CleanBundleTempDir(napi_env env, napi_callback_info cbinfo);
+    static napi_value GetCompatibilityInfo(napi_env env, napi_callback_info cbinfo);
 
     SessionIncrementalBackupNExporter(napi_env env, napi_value exports);
     ~SessionIncrementalBackupNExporter() override;

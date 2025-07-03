@@ -282,6 +282,11 @@ public:
     {
         return BError(BError::Codes::OK);
     };
+
+    ErrCode GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo, std::string &compatInfo)
+    {
+        return BError(BError::Codes::OK);
+    }
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // MOCK_I_SERVICE_MOCK_H

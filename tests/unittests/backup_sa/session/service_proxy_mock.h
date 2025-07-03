@@ -77,6 +77,7 @@ public:
     MOCK_METHOD1(CleanBundleTempDir, ErrCode(const std::string &bundleName));
     MOCK_METHOD1(HandleExtDisconnect, ErrCode(bool isIncBackup));
     MOCK_METHOD1(GetExtOnRelease, ErrCode(bool &isExtOnRelease));
+    MOCK_METHOD3(GetCompatibilityInfo, ErrCode(const std::string&, const std::string&, std::string&));
 };
 } // End of namespace OHOS::FileManagement::Backup
 #endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H

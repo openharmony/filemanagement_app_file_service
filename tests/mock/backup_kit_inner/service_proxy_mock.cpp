@@ -286,4 +286,10 @@ ErrCode ServiceProxy::GetExtOnRelease(bool &isExtOnRelease)
 {
     return BError(BError::Codes::OK);
 }
+
+ErrCode ServiceProxy::GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo,
+    std::string &compatInfo)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

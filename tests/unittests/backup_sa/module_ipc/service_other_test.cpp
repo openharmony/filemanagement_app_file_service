@@ -947,7 +947,7 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0100, TestSize.Level1
         service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
         service->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
 
-        info = BJsonEntityCaps::BundleInfo{BUNDLE_NAME, 0, {}, {}, 0, 0, true, false, BUNDLE_NAME};
+        info = BJsonEntityCaps::BundleInfo {BUNDLE_NAME, 0, {}, {}, 0, 0, true, false, false, BUNDLE_NAME};
         isClearDataFlags = {{BUNDLE_NAME, true}};
         service->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
     } catch (...) {

@@ -1921,6 +1921,7 @@ ErrCode BackupExtExtension::HandleGetCompatibilityInfo(const string &extInfo, in
         auto ptr = wptr<BackupExtExtension>(this);
         auto callback = GetComInfoCallback(ptr);
         ErrCode ret = ERR_OK;
+        compatibilityInfo = "";
         if (scenario == BConstants::ExtensionScenario::BACKUP) {
             ret = extension_->GetBackupCompatibilityInfo(callback, extInfo);
         } else if (scenario == BConstants::ExtensionScenario::RESTORE) {
@@ -1933,11 +1934,11 @@ ErrCode BackupExtExtension::HandleGetCompatibilityInfo(const string &extInfo, in
             return ret;
         }
         HILOGI("wait GetCompatibilityInfo");
-        compatibilityInfo = "";
         std::unique_lock<std::mutex> lock(getCompatibilityInfoLock_);
-        auto isTimeout = getCompatibilityInfoCon_.wait_for(lock,
-            std::chrono::milliseconds(BConstants::APP_GETCOMINFO_MAX_TIMEOUT));
-        if (isTimeout == std::cv_status::no_timeout) {
+        auto noTimeout = getCompatibilityInfoCon_.wait_for(lock,
+            std::chrono::milliseconds(BConstants::APP_GETCOMINFO_MAX_TIMEOUT),
+            [this] { return this->stopGetComInfo_.load(); });
+        if (noTimeout) {
             compatibilityInfo = compatibilityInfo_;
         }
         HILOGI("getCompatibilityInfo size: %{public}zu", compatibilityInfo.size());

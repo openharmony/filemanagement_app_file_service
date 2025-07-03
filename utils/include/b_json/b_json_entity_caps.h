@@ -31,6 +31,7 @@ public:
         int64_t increSpaceOccupied;
         bool allToBackup;
         bool fullBackupOnly;
+        bool requireCompatibility;
         std::string extensionName;
         std::string restoreDeps;
         std::string supportScene;
@@ -39,6 +40,7 @@ public:
     struct BundleBackupConfigPara {
         bool allToBackup;
         bool fullBackupOnly;
+        bool requireCompatibility;
         std::string extensionName;
         std::string restoreDeps;
         std::string supportScene;
@@ -84,6 +86,7 @@ public:
             }
             arrObj["allToBackup"] = item.allToBackup;
             arrObj["fullBackupOnly"] = item.fullBackupOnly;
+            arrObj["requireCompatibility"] = item.requireCompatibility;
             arrObj["extensionName"] = item.extensionName;
             arrObj["restoreDeps"] = item.restoreDeps;
             arrObj["supportScene"] = item.supportScene;
@@ -233,6 +236,10 @@ public:
             if (item.isMember("fullBackupOnly") && item["fullBackupOnly"].isBool()) {
                 fullBackupOnly = item["fullBackupOnly"].asBool();
             }
+            bool requireCompatibility = false;
+            if (item.isMember("requireCompatibility") && item["requireCompatibility"].isBool()) {
+                requireCompatibility = item["requireCompatibility"].asBool();
+            }
             int appIndex = 0;
             if (item.isMember("appIndex") && item["appIndex"].isInt()) {
                 appIndex = item["appIndex"].asInt();
@@ -244,7 +251,7 @@ public:
             bundleInfos.emplace_back(BundleInfo {item["name"].asString(), appIndex, item["versionCode"].asInt64(),
                                                  item["versionName"].asString(), item["spaceOccupied"].asInt64(),
                                                  increSpaceOccupied, item["allToBackup"].asBool(), fullBackupOnly,
-                                                 item["extensionName"].asString(),
+                                                 requireCompatibility, item["extensionName"].asString(),
                                                  restoreDeps, supportScene, extraInfo});
         }
         return bundleInfos;

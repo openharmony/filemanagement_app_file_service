@@ -215,4 +215,15 @@ ErrCode BSessionRestore::CleanBundleTempDir(const std::string &bundleName)
     }
     return proxy->CleanBundleTempDir(bundleName);
 }
+
+ErrCode BSessionRestore::GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo,
+    std::string &compatInfo)
+{
+    HILOGI("BSessionRestore::GetCompatibilityInfo");
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+    return proxy->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+}
 } // namespace OHOS::FileManagement::Backup
