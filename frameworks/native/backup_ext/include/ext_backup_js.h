@@ -203,7 +203,7 @@ private:
     int32_t scenario_ { 0 };
 
     std::shared_ptr<CallbackInfoEx> getComInfoCallbackEx_;
-    std::string extInfo_;
+    std::string extInfo_ {};
 };
 } // namespace OHOS::FileManagement::Backup
 

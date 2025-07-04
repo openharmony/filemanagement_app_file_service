@@ -460,10 +460,10 @@ private:
     ErrCode appResultReportErrCode_ { 0 };
     std::mutex serviceCallReleaseLock_;
 
-    std::mutex getCompatibilityInfoLock_;
-    std::condition_variable getCompatibilityInfoCon_;
+    std::mutex getCompatibilityInfoLock_ {};
+    std::condition_variable getCompatibilityInfoCon_ {};
     std::atomic<bool> stopGetComInfo_ {false};
-    std::string compatibilityInfo_;
+    std::string compatibilityInfo_ {};
 };
 } // namespace OHOS::FileManagement::Backup
 
