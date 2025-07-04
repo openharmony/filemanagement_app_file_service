@@ -143,4 +143,9 @@ ErrCode ExtBackup::OnRelease(function<void(ErrCode, std::string)> callback, int3
 {
     return BExtBackup::extBackup->OnRelease(callback, scenario);
 }
+
+void ExtBackup::SetBackupExtExtension(const wptr<BackupExtExtension> &extExtension)
+{
+    BExtBackup::extBackup->SetBackupExtExtension(extExtension);
+}
 } // namespace OHOS::FileManagement::Backup
