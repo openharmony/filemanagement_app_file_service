@@ -155,4 +155,9 @@ ErrCode ExtBackup::GetRestoreCompatibilityInfo(std::function<void(ErrCode, const
 {
     return BExtBackup::extBackup->GetRestoreCompatibilityInfo(callbackEx, extInfo);
 }
+
+void ExtBackup::SetBackupExtExtension(const wptr<BackupExtExtension> &extExtension)
+{
+    BExtBackup::extBackup->SetBackupExtExtension(extExtension);
+}
 } // namespace OHOS::FileManagement::Backup

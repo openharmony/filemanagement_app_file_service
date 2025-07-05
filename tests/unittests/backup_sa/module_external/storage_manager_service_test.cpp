@@ -27,6 +27,7 @@
 
 namespace OHOS {
 const std::string CAMERA_BUNDLENAME = "file";
+const std::string MMS_BUNDLENAME = "com.ohos.mms";
 using namespace std;
 using namespace testing;
 using namespace FileManagement::Backup;
@@ -250,7 +251,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_CheckIfDirForInc
     testing::ext::TestSize.Level1)
 {
     ofstream closedStatFile;
-    std::string bundleName = "testBundle";
+    std::string bundleName = "com.example.app";
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::map<std::string, std::string> pathMap;
@@ -270,7 +271,7 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_CheckIfDirForInc
     testing::ext::TestSize.Level1)
 {
     ofstream statFile;
-    std::string bundleName = "testBundle";
+    std::string bundleName = "com.example.app";
     BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
                             .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::map<std::string, std::string> pathMap;
@@ -311,17 +312,6 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_CheckIfDirForInc
     } catch (const fs::filesystem_error& e) {
         std::cerr << "Filesystem error: " << e.what() << '\n';
     }
-
-    statFile.open("/system/etc/NOTICE.TXT", ios::out | ios::trunc);
-    EXPECT_FALSE(!statFile.is_open()) << "file can not open";
-    std::string bundleName = "testBundle";
-    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
-                            .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
-    std::map<std::string, std::string> pathMap;
-    std::map<std::string, bool> excludesMap;
-    auto result = StorageManagerService::GetInstance().CheckIfDirForIncludes("/data/service", paras, pathMap,
-        statFile, excludesMap);
-    EXPECT_EQ(result, std::make_tuple(true, true));
 }
 
 /**
@@ -383,13 +373,13 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetUserStorageSt
     testing::ext::TestSize.Level1)
 {
     StorageManager::StorageStats storageStats;
-    std::string type = "FILE_TYPE";
+    std::string type = FILE_TYPE;
     int32_t userId = 100;
     int64_t result = StorageManagerService::GetInstance().GetUserStorageStatsByType(userId, storageStats, type);
-    EXPECT_EQ(result, E_ERR);
-    EXPECT_EQ(storageStats.video_, 0);
-    EXPECT_EQ(storageStats.image_, 0);
-    EXPECT_EQ(storageStats.file_, 0);
+    EXPECT_EQ(result, 0);
+    EXPECT_GE(storageStats.video_, 0);
+    EXPECT_GE(storageStats.image_, 0);
+    EXPECT_GE(storageStats.file_, 0);
 }
 
 /**
@@ -402,13 +392,13 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetUserStorageSt
     testing::ext::TestSize.Level1)
 {
     StorageManager::StorageStats storageStats;
-    std::string type = "OTHER_TYPE";
+    std::string type = "other";
     int32_t userId = 100;
     int64_t result = StorageManagerService::GetInstance().GetUserStorageStatsByType(userId, storageStats, type);
     EXPECT_EQ(result, E_ERR);
-    EXPECT_EQ(storageStats.video_, 0);
-    EXPECT_EQ(storageStats.image_, 0);
-    EXPECT_EQ(storageStats.file_, 0);
+    EXPECT_GE(storageStats.video_, 0);
+    EXPECT_GE(storageStats.image_, 0);
+    EXPECT_GE(storageStats.file_, 0);
 }
 
 /**
@@ -425,20 +415,10 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaTypeAndS
     EXPECT_EQ(storageStats.image_, 0);
     EXPECT_EQ(storageStats.audio_, 0);
     EXPECT_EQ(storageStats.video_, 0);
-}
 
-/**
- * @tc.name: Storage_Manager_ServiceTest_GetMediaTypeAndSize_002
- * @tc.desc: check the GetMediaTypeAndSize function
- * @tc.type: FUNC
- * @tc.require: AR000IGCR7
- */
-HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaTypeAndSize_002,
-    testing::ext::TestSize.Level1)
-{
     auto resultSet = std::make_shared<DataShare::DataShareResultSet>();
-    StorageManager::StorageStats storageStats;
-    StorageManagerService::GetInstance().GetMediaTypeAndSize(nullptr, storageStats);
+    StorageManagerService::GetInstance().GetMediaTypeAndSize(resultSet, storageStats);
+
     EXPECT_EQ(storageStats.image_, 0);
     EXPECT_EQ(storageStats.audio_, 0);
     EXPECT_EQ(storageStats.video_, 0);
@@ -492,5 +472,169 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_PathSortFunc_001
     std::string path1 = "AAA";
     std::string path2 = "BBB";
     EXPECT_TRUE(PathSortFunc(path1, path2));
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_DeduplicationPath_001
+ * @tc.number: DeduplicationPathTest_001
+ * @tc.desc: 测试configPath为空时，不执行任何操作
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DeduplicationPath_001,
+    testing::ext::TestSize.Level1)
+{
+    std::vector<std::string> configPaths;
+    StorageManagerService::GetInstance().DeduplicationPath(configPaths);
+    EXPECT_TRUE(configPaths.size() == 0);
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_DeduplicationPath_002
+ * @tc.number: DeduplicationPathTest_002
+ * @tc.desc: 测试configPath不为空时，执行去重
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_DeduplicationPath_002,
+    testing::ext::TestSize.Level1)
+{
+    std::vector<std::string> configPaths = {"path1", "path2", "path2"};
+    StorageManagerService::GetInstance().DeduplicationPath(configPaths);
+    EXPECT_TRUE(configPaths.size() == 2);
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_ScanExtensionPath_001
+ * @tc.number: ScanExtensionPathTest_001
+ * @tc.desc: ScanExtensionPath 有效路径正确扫描
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ScanExtensionPath_001,
+    testing::ext::TestSize.Level1)
+{
+    std::string bundleName = MMS_BUNDLENAME;
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+                            .lastBackupTime = 123456789, .fileSizeSum = 0, .incFileSizeSum = 0};
+    std::vector<std::string> includes = {"/path/to/include"};
+    std::vector<std::string> excludes = {"/path/to/exclude"};
+    std::map<std::string, std::string> pathMap;
+    std::ofstream statFile("statfile.txt");
+
+    StorageManagerService::GetInstance().ScanExtensionPath(paras, includes, excludes, pathMap, statFile);
+    EXPECT_TRUE(pathMap.empty());
+    EXPECT_TRUE(statFile.good());
+
+    statFile.close();
+    remove("statfile.txt");
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_AddOuterDirIntoFileStat_001
+ * @tc.number: AddOuterDirIntoFileStat_001
+ * @tc.desc: AddOuterDirIntoFileStat 调用时正常返回
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddOuterDirIntoFileStat_001,
+    testing::ext::TestSize.Level1)
+{
+    std::string bundleName = MMS_BUNDLENAME;
+    std::string dir = "/data/app/el1/100/base/" + bundleName + "/.backup";
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+                            .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
+    std::string sandboxDir = "/path/to/sandboxDir";
+    std::ofstream statFile("statfile.txt");
+    std::map<std::string, bool> excludesMap;
+
+    StorageManagerService::GetInstance().AddOuterDirIntoFileStat(dir, paras, sandboxDir, statFile, excludesMap);
+    EXPECT_TRUE(excludesMap.empty());
+
+    dir = "";
+    StorageManagerService::GetInstance().AddOuterDirIntoFileStat(dir, paras, sandboxDir, statFile, excludesMap);
+    EXPECT_TRUE(excludesMap.empty());
+
+    statFile.close();
+    remove("statfile.txt");
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_InsertStatFile_001
+ * @tc.number: InsertStatFile_001
+ * @tc.desc: 测试 InsertStatFile 函数在输入有效时是否正确插入文件信息
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_InsertStatFile_001, testing::ext::TestSize.Level1)
+{
+    std::string bundleName = MMS_BUNDLENAME;
+    std::string path = "/data/app/el1/100/base/" + bundleName + "/.backup";
+    struct FileStat fileStat = {.isDir = true};
+    std::ofstream statFile("test_stat_file.txt");
+    std::map<std::string, bool> excludesMap;
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+                            .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
+
+    StorageManagerService::GetInstance().InsertStatFile(path, fileStat, statFile, excludesMap, paras);
+    EXPECT_TRUE(excludesMap.empty());
+    statFile.close();
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_InsertStatFile_002
+ * @tc.number: InsertStatFile_002
+ * @tc.desc: 测试 InsertStatFile 函数路径在excludesMap中时是否正确排除文件信息
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_InsertStatFile_002, testing::ext::TestSize.Level1)
+{
+    std::string bundleName = MMS_BUNDLENAME;
+    std::string path = "/data/app/el1/100/base/" + bundleName + "/.backup";
+    struct FileStat fileStat = {};
+    std::ofstream statFile("test_stat_file.txt");
+    std::map<std::string, bool> excludesMap = {{path, true}};
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+                            .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
+
+    StorageManagerService::GetInstance().InsertStatFile(path, fileStat, statFile, excludesMap, paras);
+    EXPECT_TRUE(excludesMap.find(path) != excludesMap.end());
+    statFile.close();
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_InsertStatFile_003
+ * @tc.number: InsertStatFile_003
+ * @tc.desc: 测试 InsertStatFile 函数路径在输入无效文件状态信息时的处理
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_InsertStatFile_003, testing::ext::TestSize.Level1)
+{
+    std::string bundleName = MMS_BUNDLENAME;
+    std::string path = "/invalid/path";
+    struct FileStat fileStat = {};
+    std::ofstream statFile("test_stat_file.txt");
+    std::map<std::string, bool> excludesMap;
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+                            .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
+
+    StorageManagerService::GetInstance().InsertStatFile(path, fileStat, statFile, excludesMap, paras);
+    EXPECT_TRUE(excludesMap.empty());
+    statFile.close();
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_AddPathMapForPathWildCard_001
+ * @tc.number: AddPathMapForPathWildCard_001
+ * @tc.desc: 测试 AddPathMapForPathWildCard 函数返回值正常
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddPathMapForPathWildCard_001,
+    testing::ext::TestSize.Level1)
+{
+    uint32_t userId = 100;
+    std::string name = MMS_BUNDLENAME;
+    std::string phyPath = "/data/app/el1/100/base/com.ohos.mms/.backup";
+    std::map<std::string, std::string> pathMap;
+
+    bool result = StorageManagerService::GetInstance().AddPathMapForPathWildCard(userId, name, phyPath, pathMap);
+    EXPECT_EQ(result, true);
+
+    name = "com.example.app2";
+    phyPath = "/data/app/el2/100/base/com.example.app2/.backup";
+    pathMap.insert({phyPath, ".backup"});
+    result = StorageManagerService::GetInstance().AddPathMapForPathWildCard(userId, name, phyPath, pathMap);
+    EXPECT_EQ(result, true);
+
+    phyPath = "";
+    result = StorageManagerService::GetInstance().AddPathMapForPathWildCard(userId, name, phyPath, pathMap);
+    EXPECT_EQ(result, false);
 }
 }

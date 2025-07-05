@@ -27,9 +27,10 @@ UniqueFd BackupExtExtension::GetFileHandle(const string &fileName, int32_t &errC
     return BExtExtension::extExtension->GetFileHandle(fileName, errCode);
 }
 
-ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
+ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName,
+    int &fd, int &reportFd, int32_t &fdErrCode)
 {
-    return BExtExtension::extExtension->GetIncrementalFileHandle(fileName);
+    return BExtExtension::extExtension->GetIncrementalFileHandle(fileName, fd, reportFd, fdErrCode);
 }
 
 ErrCode BackupExtExtension::HandleClear()
@@ -37,9 +38,9 @@ ErrCode BackupExtExtension::HandleClear()
     return BExtExtension::extExtension->HandleClear();
 }
 
-ErrCode BackupExtExtension::BigFileReady(sptr<IService> proxy)
+ErrCode BackupExtExtension::BigFileReady(TarMap &bigFileInfo, sptr<IService> proxy, int backupedFileSize)
 {
-    return BExtExtension::extExtension->BigFileReady(proxy);
+    return BExtExtension::extExtension->BigFileReady(bigFileInfo, proxy, backupedFileSize);
 }
 
 ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
@@ -52,19 +53,21 @@ ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
     return BExtExtension::extExtension->PublishIncrementalFile(fileName);
 }
 
-ErrCode BackupExtExtension::HandleBackup()
+ErrCode BackupExtExtension::HandleBackup(bool isClearData)
 {
-    return BExtExtension::extExtension->HandleBackup();
+    return BExtExtension::extExtension->HandleBackup(isClearData);
 }
 
-int BackupExtExtension::DoBackup(const BJsonEntityExtensionConfig &usrConfig)
+int BackupExtExtension::DoBackup(TarMap &bigFileInfo, TarMap &bigFileInfoBackuped,
+    map<string, size_t> &smallFiles, uint32_t includesNum, uint32_t excludesNum)
 {
-    return BExtExtension::extExtension->DoBackup(usrConfig);
+    return BExtExtension::extExtension->DoBackup(bigFileInfo, bigFileInfoBackuped, smallFiles,
+        includesNum, excludesNum);
 }
 
-int BackupExtExtension::DoRestore(const string &fileName)
+int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
 {
-    return BExtExtension::extExtension->DoRestore(fileName);
+    return BExtExtension::extExtension->DoRestore(fileName, fileSize);
 }
 
 int BackupExtExtension::DoIncrementalRestore()
@@ -89,14 +92,6 @@ void BackupExtExtension::AsyncTaskIncreRestoreSpecialVersion()
 {
 }
 
-void BackupExtExtension::AsyncTaskRestoreForUpgrade()
-{
-}
-
-void BackupExtExtension::ExtClear()
-{
-}
-
 void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
 {
 }
@@ -118,119 +113,66 @@ void BackupExtExtension::AsyncTaskOnBackup()
 {
 }
 
-ErrCode BackupExtExtension::HandleRestore()
+ErrCode BackupExtExtension::HandleRestore(bool isClearData)
 {
-    return BExtExtension::extExtension->HandleRestore();
+    return BExtExtension::extExtension->HandleRestore(isClearData);
 }
 
-void BackupExtExtension::PreparaBackupFiles(UniqueFd incrementalFd,
-                                            UniqueFd manifestFd,
-                                            vector<struct ReportFileInfo> &allFiles,
-                                            vector<struct ReportFileInfo> &smallFiles,
-                                            vector<struct ReportFileInfo> &bigFiles)
-{
-}
-
-ErrCode BackupExtExtension::HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
-{
-    return BExtExtension::extExtension->HandleIncrementalBackup(std::move(incrementalFd), std::move(manifestFd));
-}
-
-ErrCode BackupExtExtension::IncrementalOnBackup()
-{
-    return BExtExtension::extExtension->IncrementalOnBackup();
-}
-
-tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
-{
-    return BExtExtension::extExtension->GetIncrementalBackupFileHandle();
-}
-
-ErrCode BackupExtExtension::IncrementalBigFileReady(const TarMap &pkgInfo,
+ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
     const vector<struct ReportFileInfo> &bigInfos, sptr<IService> proxy)
 {
     return BExtExtension::extExtension->IncrementalBigFileReady(pkgInfo, bigInfos, proxy);
 }
 
-void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd)
+void BackupExtExtension::StartFwkTimer(bool &isFwkStart)
 {
 }
 
-void BackupExtExtension::AsyncTaskOnIncrementalBackup()
+ErrCode BackupExtExtension::GetFileHandleWithUniqueFd(const std::string &fileName, int32_t &errCode, int& fd)
+{
+    return BExtExtension::extExtension->GetFileHandleWithUniqueFd(fileName, errCode, fd);
+}
+
+void BackupExtExtension::FillFileInfos(UniqueFd incrementalFd,
+                                       UniqueFd manifestFd,
+                                       vector<struct ReportFileInfo> &allFiles,
+                                       vector<struct ReportFileInfo> &smallFiles,
+                                       vector<struct ReportFileInfo> &bigFiles)
 {
 }
 
-void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &, TarMap &, sptr<IService>)
+void BackupExtExtension::ReportAppStatistic(const std::string &func, ErrCode errCode)
 {
 }
 
-int BackupExtExtension::DoIncrementalBackup(const vector<struct ReportFileInfo> &allFiles,
-                                            const vector<struct ReportFileInfo> &smallFiles,
-                                            const vector<struct ReportFileInfo> &bigFiles)
-{
-    return BExtExtension::extExtension->DoIncrementalBackup(allFiles, smallFiles, bigFiles);
-}
-
-void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
+void BackupExtExtension::UpdateOnStartTime()
 {
 }
 
-ErrCode BackupExtExtension::GetBackupInfo(std::string &result)
+ErrCode BackupExtExtension::IncrementalTarFileReady(const TarMap &bigFileInfo,
+    const vector<struct ReportFileInfo> &srcFiles, sptr<IService> proxy)
 {
-    return BExtExtension::extExtension->GetBackupInfo(result);
+    return BExtExtension::extExtension->IncrementalTarFileReady(bigFileInfo, srcFiles, proxy);
 }
 
-ErrCode BackupExtExtension::UpdateFdSendRate(std::string &bundleName, int32_t sendRate)
+ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
+    const vector<struct ReportFileInfo> &srcFiles, sptr<IService> proxy)
 {
-    return BExtExtension::extExtension->UpdateFdSendRate(bundleName, sendRate);
+    return BExtExtension::extExtension->IncrementalAllFileReady(pkgInfo, srcFiles, proxy);
 }
 
-std::function<void(ErrCode, std::string)> BackupExtExtension::RestoreResultCallbackEx(wptr<BackupExtExtension> obj)
+std::function<void(std::string, int)> BackupExtExtension::ReportErrFileByProc(wptr<BackupExtExtension> obj,
+    BackupRestoreScenario scenario)
 {
-    return BExtExtension::extExtension->RestoreResultCallbackEx(obj);
+    return BExtExtension::extExtension->ReportErrFileByProc(obj, scenario);
 }
 
-std::function<void(ErrCode, std::string)> BackupExtExtension::AppDoneCallbackEx(wptr<BackupExtExtension> obj)
-{
-    return BExtExtension::extExtension->AppDoneCallbackEx(obj);
-}
-
-std::function<void(ErrCode, std::string)> BackupExtExtension::IncRestoreResultCallbackEx(wptr<BackupExtExtension> obj)
-{
-    return BExtExtension::extExtension->IncRestoreResultCallbackEx(obj);
-}
-
-std::function<void(ErrCode, const std::string)> BackupExtExtension::HandleBackupEx(wptr<BackupExtExtension> obj)
-{
-    return BExtExtension::extExtension->HandleBackupEx(obj);
-}
-
-std::function<void(ErrCode, const std::string)> BackupExtExtension::HandleTaskBackupEx(wptr<BackupExtExtension> obj)
-{
-    return BExtExtension::extExtension->HandleTaskBackupEx(obj);
-}
-
-void BackupExtExtension::WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum)
-{
-}
-
-void BackupExtExtension::RefreshTimeInfo(std::chrono::system_clock::time_point &startTime, int &fdSendNum)
+void BackupExtExtension::DoClearInner()
 {
 }
 
 ErrCode BackupExtExtension::CleanBundleTempDir()
 {
     return BExtExtension::extExtension->CleanBundleTempDir();
-}
-
-ErrCode BackupExtExtension::HandleOnRelease(int32_t scenario)
-{
-    return BExtExtension::extExtension->HandleOnRelease(scenario);
-}
-
-ErrCode BackupExtExtension::HandleGetCompatibilityInfo(const std::string &extInfo, int32_t scenario,
-    std::string &compatibilityInfo)
-{
-    return BExtExtension::extExtension->HandleGetCompatibilityInfo(extInfo, scenario, compatibilityInfo);
 }
 } // namespace OHOS::FileManagement::Backup
