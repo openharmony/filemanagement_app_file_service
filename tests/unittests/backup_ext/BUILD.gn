@@ -489,12 +489,93 @@ ohos_unittest("installd_un_tar_file_test") {
   use_exceptions = true
 }
 
+ohos_unittest("ext_extension_sub_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+    blocklist = "${path_backup}/cfi_blocklist.txt"
+  }
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/tests/mock/backup_ext/src/ext_backup_mock.cpp",
+    "${path_backup}/tests/mock/backup_ext/src/ext_extension_mock.cpp",
+    "${path_backup}/tests/mock/backup_kit_inner/service_proxy_mock.cpp",
+    "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
+    "${path_backup}/tests/utils/src/test_manager.cpp",
+    "ext_extension_sub_test.cpp",
+  ]
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
+  include_dirs = [
+    "${path_backup}/frameworks/native/backup_ext/include",
+    "${path_backup}/frameworks/native/backup_ext/src",
+    "${path_backup}/frameworks/native/backup_kit_inner/src",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/interfaces/common/include",
+    "${path_backup}/tests/mock/backup_ext/src",
+    "${path_backup}/tests/mock/backup_ext/include",
+    "${path_backup}/tests/mock/utils_mock/include",
+    "${path_backup}/tests/mock/backup_kit_inner",
+    "${path_backup}/tests/utils/include",
+    "${path_backup}/tests/utils_mock/include",
+    "${path_backup}/utils/include",
+  ]
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
+    "${path_backup}/utils:backup_utils",
+  ]
+
+  cflags = [ "--coverage" ]
+  ldflags = [ "--coverage" ]
+  cflags_cc = [ "--coverage" ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:appkit_native",
+    "ability_runtime:runtime",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "ipc:ipc_napi",
+    "jsoncpp:jsoncpp",
+    "napi:ace_napi",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "LOG_TAG=\"app_file_service\"",
+    "LOG_DOMAIN=0xD004303",
+    "private=public",
+  ]
+
+  use_exceptions = true
+}
+
 group("backup_ext_test") {
   testonly = true
   if (!use_libfuzzer) {
     deps = [
       ":ext_backup_js_test",
       ":ext_extension_test",
+      ":ext_extension_sub_test",
       ":installd_un_tar_file_test",
       ":tar_file_sub_test",
       ":tar_file_test",
