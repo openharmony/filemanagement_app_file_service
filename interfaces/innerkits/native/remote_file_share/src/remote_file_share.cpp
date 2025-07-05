@@ -670,7 +670,8 @@ static sptr<StorageManager::IStorageManager> GetStorageManager()
 
     int32_t count = 0;
     sptr<StorageManager::IStorageManager> storageManager = nullptr;
-    while (storageManager == nullptr && count++ < GET_CLIENT_RETRY_TIMES) {
+    while (storageManager == nullptr && count < GET_CLIENT_RETRY_TIMES) {
+        count++;
         auto storageObj = saMgr->GetSystemAbility(STORAGE_MANAGER_MANAGER_ID);
         if (storageObj == nullptr) {
             LOGE("Get starage manger failed.");
