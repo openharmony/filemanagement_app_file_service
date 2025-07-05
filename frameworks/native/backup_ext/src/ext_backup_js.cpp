@@ -1095,4 +1095,102 @@ void ExtBackupJs::InitTempPath(const std::string &bundleName)
         }
     }
 }
+
+ErrCode ExtBackupJs::GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+    std::string extInfo)
+{
+    HILOGI("BackupExtensionAbility(JS) GetBackupCompatibilityInfo begin.");
+    BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                          "The app does not provide the GetBackupCompatibilityInfo interface.");
+    extInfo_ = extInfo;
+    getComInfoCallbackEx_ = std::make_shared<CallbackInfoEx>(callbackEx);
+    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfoEx {getComInfoCallbackEx_}](napi_env env,
+        napi_value result) -> bool {
+        if (!CheckPromise(env, result)) {
+            string str;
+            bool isExceptionPending;
+            napi_is_exception_pending(env, &isExceptionPending);
+            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (!callbackInfoEx) {
+                HILOGE("callbackInfoEx is nullptr");
+                return false;
+            }
+            if (isExceptionPending) {
+                napi_value exception;
+                DealNapiException(env, exception, str);
+                napi_fatal_exception(env, exception);
+                callbackInfoEx->callbackParam(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
+            } else {
+                callbackInfoEx->callbackParam(BError(BError::Codes::OK), str);
+            }
+            return true;
+        }
+        HILOGI("CheckPromise Js Method GetBackupCompatibilityInfo ok.");
+        return CallPromiseEx(*jsRuntime, result, callbackInfoEx.get());
+    };
+    auto errCode = CallJsMethod("getBackupCompatibilityInfo", jsRuntime_, jsObj_.get(),
+                                ParseCompatibilityInfo(), retParser);
+    if (errCode != ERR_OK) {
+        HILOGE("CallJsMethod error, code:%{public}d.", errCode);
+    }
+    HILOGI("BackupExtensionAbility(JS) GetBackupCompatibilityInfo end.");
+    return errCode;
+}
+
+ErrCode ExtBackupJs::GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+    std::string extInfo)
+{
+    HILOGI("BackupExtensionAbility(JS) GetRestoreCompatibilityInfo begin.");
+    BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
+                          "The app does not provide the GetRestoreCompatibilityInfo interface.");
+    extInfo_ = extInfo;
+    getComInfoCallbackEx_ = std::make_shared<CallbackInfoEx>(callbackEx);
+    auto retParser = [jsRuntime {&jsRuntime_}, callbackInfoEx {getComInfoCallbackEx_}](napi_env env,
+        napi_value result) -> bool {
+        if (!CheckPromise(env, result)) {
+            string str;
+            bool isExceptionPending;
+            napi_is_exception_pending(env, &isExceptionPending);
+            HILOGI("napi exception pending = %{public}d.", isExceptionPending);
+            if (!callbackInfoEx) {
+                HILOGE("callbackInfoEx is nullptr");
+                return false;
+            }
+            if (isExceptionPending) {
+                napi_value exception;
+                DealNapiException(env, exception, str);
+                napi_fatal_exception(env, exception);
+                callbackInfoEx->callbackParam(BError(BError::Codes::EXT_THROW_EXCEPTION), str);
+            } else {
+                callbackInfoEx->callbackParam(BError(BError::Codes::OK), str);
+            }
+            return true;
+        }
+        HILOGI("CheckPromise Js Method GetRestoreCompatibilityInfo ok.");
+        return CallPromiseEx(*jsRuntime, result, callbackInfoEx.get());
+    };
+    auto errCode = CallJsMethod("getRestoreCompatibilityInfo", jsRuntime_, jsObj_.get(),
+                                ParseCompatibilityInfo(), retParser);
+    if (errCode != ERR_OK) {
+        HILOGE("CallJsMethod error, code:%{public}d.", errCode);
+    }
+    HILOGI("BackupExtensionAbility(JS) GetRestoreCompatibilityInfo end.");
+    return errCode;
+}
+
+std::function<bool(napi_env env, std::vector<napi_value> &argv)> ExtBackupJs::ParseCompatibilityInfo()
+{
+    auto getCompatibilityInfoFun = [extInfo(extInfo_)](napi_env env, vector<napi_value> &argv) -> bool {
+        napi_value extInfoValue = nullptr;
+        napi_create_object(env, &extInfoValue);
+        HILOGI("ParseCompatibilityInfo, extInfo is:%{public}s", GetAnonyString(extInfo).c_str());
+        if (napi_create_string_utf8(env, extInfo.c_str(), extInfo.size(), &extInfoValue) != napi_ok) {
+            HILOGE("create napi string failed");
+            return false;
+        }
+        argv.emplace_back(extInfoValue);
+        return true;
+    };
+    return getCompatibilityInfoFun;
+}
 } // namespace OHOS::FileManagement::Backup

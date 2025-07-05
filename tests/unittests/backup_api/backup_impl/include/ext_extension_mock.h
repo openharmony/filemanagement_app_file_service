@@ -179,6 +179,12 @@ public:
     {
         return BError(BError::Codes::OK);
     };
+
+    ErrCode HandleGetCompatibilityInfo(const std::string &extInfo, int32_t scenario,
+        std::string &compatibilityInfo) override
+    {
+        return BError(BError::Codes::OK);
+    }
 private:
     int32_t nHandleBackupNum_ = 0;
 };

@@ -179,4 +179,15 @@ string BJsonEntityExtensionConfig::GetRestoreDeps() const
     return obj_["restoreDeps"].asString();
 }
 
+bool BJsonEntityExtensionConfig::GetRequireCompatibility() const
+{
+    if (!obj_ || !obj_.isMember("requireCompatibility") || !obj_["requireCompatibility"].isBool()) {
+        HILOGD("Failed to get field requireCompatibility");
+        return false;
+    }
+
+    return obj_["requireCompatibility"].asBool();
+}
+
+
 } // namespace OHOS::FileManagement::Backup

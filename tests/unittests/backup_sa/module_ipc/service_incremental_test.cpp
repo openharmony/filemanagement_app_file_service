@@ -81,6 +81,7 @@ public:
     virtual ErrCode GetExtOnRelease(bool&) = 0;
     virtual void SetExtOnRelease(const BundleName&, bool) = 0;
     virtual void RemoveExtOnRelease(const BundleName&) = 0;
+    virtual ErrCode GetCompatibilityInfo(const std::string&, const std::string&, std::string&) = 0;
 public:
     virtual bool UpdateToRestoreBundleMap(const string&, const string&) = 0;
 public:
@@ -141,6 +142,7 @@ public:
     MOCK_METHOD(ErrCode, GetExtOnRelease, (bool&));
     MOCK_METHOD(void, SetExtOnRelease, (const BundleName&, bool));
     MOCK_METHOD(void, RemoveExtOnRelease, (const BundleName&));
+    MOCK_METHOD(ErrCode, GetCompatibilityInfo, (const std::string&, const std::string&, std::string&));
 public:
     MOCK_METHOD(bool, UpdateToRestoreBundleMap, (const string&, const string&));
 };
@@ -477,6 +479,12 @@ void Service::SetExtOnRelease(const BundleName &bundleName, bool isOnRelease)
 void Service::RemoveExtOnRelease(const BundleName &bundleName)
 {
     return BService::serviceMock->RemoveExtOnRelease(bundleName);
+}
+
+ErrCode Service::GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo,
+    std::string &compatInfo)
+{
+    return BService::serviceMock->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
 }
 } // namespace OHOS::FileManagement::Backup
 

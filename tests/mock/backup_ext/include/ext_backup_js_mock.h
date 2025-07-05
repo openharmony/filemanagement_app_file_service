@@ -52,6 +52,9 @@ public:
     virtual void ExportJsContext() = 0;
     virtual ErrCode OnRelease(std::function<void(ErrCode, std::string)>, int32_t scenario) = 0;
     virtual std::function<bool(napi_env, std::vector<napi_value> &argv) ParseReleaseInfo() = 0;
+    virtual ErrCode GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)>, std::string) = 0;
+    virtual ErrCode GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)>, std::string) = 0;
+    virtual std::function<bool(napi_env, std::vector<napi_value> &argv) ParseCompatibilityInfo() = 0;
 public:
     virtual bool GetProfileFromAbility(const OHOS::AppExecFwk::AbilityInfo &, const std::string &,
         std::vector<std::string> &) const = 0;

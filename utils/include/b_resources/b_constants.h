@@ -103,6 +103,8 @@ constexpr int FIRST_CALL_APP_ON_PROCESS_MAX_TIMEOUT = 15000; // 首次调用应�
 constexpr int APP_ON_PROCESS_TIMEOUT_MAX_COUNT = 3; // 应用的onProcess接口超时的上限次数
 
 constexpr int APP_ON_RELEASE_MAX_TIMEOUT = 5000; // 应用的onRelease接口最大超时时间为5秒
+// 应用的getBackupCompatibilityInfo/getRestoreCompatibilityInfo接口最大超时时间为1秒
+constexpr int APP_GETCOMINFO_MAX_TIMEOUT = 1000;
 
 // backup.para内配置项的名称，该配置项值为true时可在不更新hap包的情况下，可以读取包管理元数据配置文件的内容
 static inline std::string BACKUP_DEBUG_OVERRIDE_EXTENSION_CONFIG_KEY = "backup.debug.overrideExtensionConfig";

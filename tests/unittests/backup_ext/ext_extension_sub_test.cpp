@@ -141,4 +141,83 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_Test_0001, testing::ext::TestSiz
     }
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_Test_0001";
 }
+
+/**
+ * @tc.number: Ext_Extension_Sub_GetComInfoCallback_Test_0100
+ * @tc.name: Ext_Extension_Sub_GetComInfoCallback_Test_0100
+ * @tc.desc: 测试GetComInfoCallback
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_GetComInfoCallback_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_GetComInfoCallback_Test_0100";
+    try {
+        std::string compatibilityInfo = "test";
+        extExtension->GetComInfoCallback(nullptr)(BError(BError::Codes::OK).GetCode(), compatibilityInfo);
+        EXPECT_NE(extExtension->compatibilityInfo_, compatibilityInfo);
+
+        auto extensionTmp = extExtension->extension_;
+        extExtension->extension_ = nullptr;
+        auto ptr = wptr<BackupExtExtension>(extExtension);
+        extExtension->GetComInfoCallback(ptr)(BError(BError::Codes::OK).GetCode(), compatibilityInfo);
+        extExtension->extension_ = extensionTmp;
+        EXPECT_NE(extExtension->compatibilityInfo_, compatibilityInfo);
+
+        bool stopGetComInfo = extExtension->stopGetComInfo_.load();
+        extExtension->stopGetComInfo_.store(true);
+        extExtension->GetComInfoCallback(ptr)(BError(BError::Codes::OK).GetCode(), compatibilityInfo);
+        extExtension->stopGetComInfo_.store(stopGetComInfo);
+        EXPECT_NE(extExtension->compatibilityInfo_, compatibilityInfo);
+
+        extExtension->stopGetComInfo_.store(false);
+        extExtension->GetComInfoCallback(ptr)(BError(BError::Codes::OK).GetCode(), compatibilityInfo);
+        extExtension->stopGetComInfo_.store(stopGetComInfo);
+        EXPECT_EQ(extExtension->compatibilityInfo_, compatibilityInfo);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_GetComInfoCallback_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_HandleGetCompatibilityInfo_Test_0100
+ * @tc.name: Ext_Extension_Sub_HandleGetCompatibilityInfo_Test_0100
+ * @tc.desc: 测试HandleGetCompatibilityInfo
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_HandleGetCompatibilityInfo_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_HandleGetCompatibilityInfo_Test_0100";
+    try {
+        std::string extInfo = "test";
+        std::string compatibilityInfo = "";
+        int32_t scenario = BConstants::ExtensionScenario::BACKUP;
+        auto ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, compatibilityInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        scenario = BConstants::ExtensionScenario::RESTORE;
+        ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, compatibilityInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        scenario = BConstants::ExtensionScenario::INVALID;
+        ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, compatibilityInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*extBackupMock, GetBackupCompatibilityInfo(_, _))
+            .WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
+        ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, compatibilityInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_HandleGetCompatibilityInfo_Test_0100";
+}
 }

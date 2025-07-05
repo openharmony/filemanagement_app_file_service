@@ -1532,4 +1532,51 @@ void Service::HandleOnReleaseAndDisconnect(sptr<SvcSessionManager> sessionPtr, c
     proxy->HandleOnRelease(static_cast<int32_t>(sessionPtr->GetScenario()));
     sessionConnection->DisconnectBackupExtAbility();
 }
+
+ErrCode Service::GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo,
+    std::string &compatInfo)
+{
+    HILOGI("Service::GetCompatibilityInfo begin bundleName: %{public}s", bundleName.c_str());
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    ErrCode err = VerifyCaller();
+    if (err != ERR_OK) {
+        HILOGE("VerifyCaller failed");
+        return err;
+    }
+    if (SAUtils::IsSABundleName(bundleName)) {
+        HILOGE("SA not support");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    if (session_ == nullptr) {
+        HILOGE("session is empty or busy");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    sptr<SvcBackupConnection> backupConnection;
+    err = TryToConnectExt(bundleName, backupConnection);
+    if (err != BError(BError::Codes::OK)) {
+        return err;
+    }
+    std::unique_lock<std::mutex> lock(getBackupInfoSyncLock_);
+    getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
+    if (isConnectDied_.load()) {
+        HILOGE("backupConnection connect timeout");
+        isConnectDied_.store(false);
+        return BError(BError::Codes::EXT_ABILITY_DIED);
+    }
+    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+    auto proxy = backupConnection->GetBackupExtProxy();
+    if (!proxy) {
+        HILOGE("Extension backup Proxy is empty.");
+        backupConnection->DisconnectBackupExtAbility();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    err = proxy->HandleGetCompatibilityInfo(extInfo, static_cast<int32_t>(session_->GetScenario()), compatInfo);
+    if (err != BError(BError::Codes::OK)) {
+        HILOGE("HandleGetCompatibilityInfo failed");
+    }
+    backupConnection->DisconnectBackupExtAbility();
+    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+    return err;
+}
 }

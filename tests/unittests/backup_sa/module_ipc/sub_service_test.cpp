@@ -2178,3 +2178,144 @@ HWTEST_F(ServiceTest, SUB_Service_GetExtOnRelease_0200, testing::ext::TestSize.L
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetExtOnRelease_0200";
 }
+
+/**
+ * @tc.number: SUB_Service_GetCompatibilityInfo_0000
+ * @tc.name: SUB_Service_GetCompatibilityInfo_0000
+ * @tc.desc: 测试 GetCompatibilityInfo 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetCompatibilityInfo_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetCompatibilityInfo_0000";
+    try {
+        std::string bundleName = "com.ohos.test";
+        std::string extInfo = "";
+        std::string compatInfo = "";
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_DENIED))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillRepeatedly(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
+
+        int res = service->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(res, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+
+        res = service->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetCompatibilityInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetCompatibilityInfo_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_GetCompatibilityInfo_0100
+ * @tc.name: SUB_Service_GetCompatibilityInfo_0100
+ * @tc.desc: 测试 GetCompatibilityInfo 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetCompatibilityInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetCompatibilityInfo_0100";
+    try {
+        std::string bundleName = "com.ohos.test";
+        std::string extInfo = "";
+        std::string compatInfo = "";
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillRepeatedly(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillRepeatedly(Return(false));
+
+        auto session_ = service->session_;
+        service->session_ = nullptr;
+        int res = service->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = session_;
+
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*session, CreateBackupConnection(_)).WillOnce(Return(nullptr));
+        res = service->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetCompatibilityInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetCompatibilityInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_GetCompatibilityInfo_0200
+ * @tc.name: SUB_Service_GetCompatibilityInfo_0200
+ * @tc.desc: 测试 GetCompatibilityInfo 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetCompatibilityInfo_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetCompatibilityInfo_0200";
+    try {
+        std::string bundleName = "com.ohos.test";
+        std::string extInfo = "";
+        std::string compatInfo = "";
+
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillRepeatedly(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillRepeatedly(Return(false));
+
+        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+        auto callConnected = [](const string &&bundleName) {};
+        auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(wptr(connectPtr)));
+        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillRepeatedly(Return(true));
+        service->isConnectDied_ = true;
+        int res = service->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(res, BError(BError::Codes::EXT_ABILITY_DIED).GetCode());
+
+        service->isConnectDied_ = false;
+        EXPECT_CALL(*connect, GetBackupExtProxy())
+            .WillOnce(Return(nullptr))
+            .WillRepeatedly(Return(svcProxy));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillRepeatedly(Return(BError(BError::Codes::OK).GetCode()));
+        res = service->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*svcProxy, HandleGetCompatibilityInfo(_, _, _))
+            .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        res = service->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*svcProxy, HandleGetCompatibilityInfo(_, _, _))
+            .WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        res = service->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(res, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetCompatibilityInfo.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetCompatibilityInfo_0200";
+}

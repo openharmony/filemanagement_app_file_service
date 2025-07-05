@@ -123,6 +123,16 @@ public:
      */
     ErrCode CleanBundleTempDir(const std::string &bundleName);
 
+    /**
+     * @brief 获取备份或恢复的应用的兼容性信息
+     *
+     * @param bundleName 应用名称
+     * @param extInfo 导入给应用的信息
+     * @param compatInfo 应用返回的兼容信息
+     * @return ErrCode 规范错误码
+     */
+    ErrCode GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo, std::string &compatInfo);
+
 public:
     ~BIncrementalBackupSession();
 

@@ -65,6 +65,7 @@ public:
     ErrCode UpdateDfxInfo(int64_t uniqId, uint32_t extConnectSpend, const std::string &bundleName) override;
     ErrCode CleanBundleTempDir() override;
     ErrCode HandleOnRelease(int32_t scenario) override;
+    ErrCode HandleGetCompatibilityInfo(const string &extInfo, int32_t scenario, string &compatibilityInfo) override;
 
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
@@ -400,6 +401,7 @@ private:
     void SetAppResultReport(const std::string resultInfo, ErrCode errCode);
     void HandleExtOnRelease();
     std::function<void(ErrCode, const std::string)> OnReleaseCallback(wptr<BackupExtExtension> obj);
+    std::function<void(ErrCode, const std::string)> GetComInfoCallback(wptr<BackupExtExtension> obj);
 private:
     pair<TarMap, map<string, size_t>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes);
     TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files);
@@ -457,6 +459,11 @@ private:
     std::string appResultReportInfo_;
     ErrCode appResultReportErrCode_ { 0 };
     std::mutex serviceCallReleaseLock_;
+
+    std::mutex getCompatibilityInfoLock_ {};
+    std::condition_variable getCompatibilityInfoCon_ {};
+    std::atomic<bool> stopGetComInfo_ {false};
+    std::string compatibilityInfo_ {};
 };
 } // namespace OHOS::FileManagement::Backup
 

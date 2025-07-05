@@ -53,6 +53,8 @@ public:
     virtual ErrCode GetParament(const AAFwk::Want &) = 0;
     virtual ErrCode OnProcess(std::function<void(ErrCode, std::string)> callback) = 0;
     virtual ErrCode OnRelease(std::function<void(ErrCode, std::string)> callback, int32_t scenario) = 0;
+    virtual ErrCode GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)>, std::string) = 0;
+    virtual ErrCode GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)>, std::string) = 0;
     virtual void SetBackupExtExtension(const wptr<BackupExtExtension> &) = 0;
 public:
     virtual std::unique_ptr<NativeReference> LoadSystemModuleByEngine(napi_env, const std::string&, const napi_value*,
@@ -100,6 +102,8 @@ public:
     MOCK_METHOD(ErrCode, GetParament, (const AAFwk::Want &));
     MOCK_METHOD(napi_value, CreateExtBackupJsContext, (napi_env, std::shared_ptr<ExtBackupContext>));
     MOCK_METHOD(ErrCode, OnRelease, (std::function<void(ErrCode, std::string)>, int32_t));
+    MOCK_METHOD(ErrCode, GetBackupCompatibilityInfo, (std::function<void(ErrCode, const std::string)>, std::string));
+    MOCK_METHOD(ErrCode, GetRestoreCompatibilityInfo, (std::function<void(ErrCode, const std::string)>, std::string));
     MOCK_METHOD(void, SetBackupExtExtension, (const wptr<BackupExtExtension> &));
 public:
     MOCK_METHOD((std::unique_ptr<NativeReference>), LoadSystemModuleByEngine, (napi_env, const std::string&,

@@ -973,4 +973,80 @@ HWTEST_F(IncrementalSessionTest, SUB_b_incremental_session_test_2900, testing::e
     }
     GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_b_incremental_session_test_2900";
 }
+
+/**
+ * @tc.number: SUB_BIncrementalBackupSession_GetCompatibilityInfo_0000
+ * @tc.name: SUB_BIncrementalBackupSession_GetCompatibilityInfo_0000
+ * @tc.desc: 测试 GetCompatibilityInfo 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(IncrementalSessionTest, SUB_BIncrementalBackupSession_GetCompatibilityInfo_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_BIncrementalBackupSession_GetCompatibilityInfo_0000";
+    try {
+        std::string bundleName = "com.example.app";
+        std::string extInfo = "";
+        std::string compatInfo = "";
+
+        ServiceClient::serviceProxy_ = nullptr;
+        ASSERT_TRUE(backupSession != nullptr);
+        auto err = backupSession->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
+
+        ServiceClient::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, GetCompatibilityInfo(_, _, _))
+            .WillOnce(Return(BError(BError::Codes::SDK_INVAL_ARG).GetCode()));
+        err = backupSession->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(err, BError(BError::Codes::SDK_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*proxy, GetCompatibilityInfo(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        err = backupSession->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(err, ERROR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by GetCompatibilityInfo.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_BIncrementalBackupSession_GetCompatibilityInfo_0000";
+}
+
+/**
+ * @tc.number: SUB_BIncrementalStoreSession_GetCompatibilityInfo_0000
+ * @tc.name: SUB_BIncrementalStoreSession_GetCompatibilityInfo_0000
+ * @tc.desc: 测试 GetCompatibilityInfo 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(IncrementalSessionTest, SUB_BIncrementalStoreSession_GetCompatibilityInfo_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-begin SUB_BIncrementalStoreSession_GetCompatibilityInfo_0000";
+    try {
+        std::string bundleName = "com.example.app";
+        std::string extInfo = "";
+        std::string compatInfo = "";
+
+        ServiceClient::serviceProxy_ = nullptr;
+        ASSERT_TRUE(restoreSession != nullptr);
+        auto err = restoreSession->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
+
+        ServiceClient::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, GetCompatibilityInfo(_, _, _))
+            .WillOnce(Return(BError(BError::Codes::SDK_INVAL_ARG).GetCode()));
+        err = restoreSession->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(err, BError(BError::Codes::SDK_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*proxy, GetCompatibilityInfo(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        err = restoreSession->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(err, ERROR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IncrementalSessionTest-an exception occurred by GetCompatibilityInfo.";
+    }
+    GTEST_LOG_(INFO) << "IncrementalSessionTest-end SUB_BIncrementalStoreSession_GetCompatibilityInfo_0000";
+}
 } // namespace OHOS::FileManagement::Backup

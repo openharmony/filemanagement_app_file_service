@@ -1884,4 +1884,68 @@ void BackupExtExtension::HandleExtOnRelease()
     StartOnReleaseTimeOutTimer(ptr);
     CallJsOnReleaseTask(ptr, scenario, true);
 }
+
+std::function<void(ErrCode, const std::string)> BackupExtExtension::GetComInfoCallback(wptr<BackupExtExtension> obj)
+{
+    HILOGI("Begin get GetComInfoCallback");
+    return [obj](ErrCode errCode, std::string compatibilityInfo) {
+        HILOGI("GetComInfoCallback: App getCompatibilityInfo end");
+        auto extPtr = obj.promote();
+        if (extPtr == nullptr) {
+            HILOGE("Ext extension handle have been released");
+            return;
+        }
+        if (extPtr->extension_ == nullptr) {
+            HILOGE("Extension handle have been released");
+            return;
+        }
+        if (extPtr->stopGetComInfo_.load()) {
+            HILOGE("App getCompatibilityInfo timeout");
+            return;
+        }
+        HILOGI("GetCompatibilityInfo end, errCode: %{public}d, compatibilityInfo size is %{public}zu",
+            errCode, compatibilityInfo.size());
+        std::unique_lock<std::mutex> lock(extPtr->getCompatibilityInfoLock_);
+        extPtr->compatibilityInfo_ = compatibilityInfo;
+        extPtr->stopGetComInfo_.store(true);
+        extPtr->getCompatibilityInfoCon_.notify_all();
+    };
+}
+
+ErrCode BackupExtExtension::HandleGetCompatibilityInfo(const string &extInfo, int32_t scenario,
+    string &compatibilityInfo)
+{
+    try {
+        HILOGI("Begin, scenario: %{public}d, extInfo size: %{public}zu", scenario, extInfo.size());
+        VerifyCaller();
+        auto ptr = wptr<BackupExtExtension>(this);
+        auto callback = GetComInfoCallback(ptr);
+        ErrCode ret = ERR_OK;
+        compatibilityInfo = "";
+        if (scenario == BConstants::ExtensionScenario::BACKUP) {
+            ret = extension_->GetBackupCompatibilityInfo(callback, extInfo);
+        } else if (scenario == BConstants::ExtensionScenario::RESTORE) {
+            ret = extension_->GetRestoreCompatibilityInfo(callback, extInfo);
+        } else {
+            return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+        }
+        if (ret != ERR_OK) {
+            HILOGE("Call GetCompatibilityInfo failed, ret = %{public}d", ret);
+            return ret;
+        }
+        HILOGI("wait GetCompatibilityInfo");
+        std::unique_lock<std::mutex> lock(getCompatibilityInfoLock_);
+        auto noTimeout = getCompatibilityInfoCon_.wait_for(lock,
+            std::chrono::milliseconds(BConstants::APP_GETCOMINFO_MAX_TIMEOUT),
+            [this] { return this->stopGetComInfo_.load(); });
+        if (noTimeout) {
+            compatibilityInfo = compatibilityInfo_;
+        }
+        HILOGI("getCompatibilityInfo size: %{public}zu", compatibilityInfo.size());
+        return ret;
+    } catch (...) {
+        HILOGE("Failed to HandleGetCompatibilityInfo");
+        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
+    }
+}
 } // namespace OHOS::FileManagement::Backup

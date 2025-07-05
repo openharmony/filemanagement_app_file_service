@@ -215,4 +215,15 @@ ErrCode BIncrementalBackupSession::CleanBundleTempDir(const std::string &bundleN
     }
     return proxy->CleanBundleTempDir(bundleName);
 }
+
+ErrCode BIncrementalBackupSession::GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo,
+    std::string &compatInfo)
+{
+    HILOGI("BIncrementalBackupSession::GetCompatibilityInfo");
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+    return proxy->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+}
 } // namespace OHOS::FileManagement::Backup

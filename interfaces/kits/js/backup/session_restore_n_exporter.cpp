@@ -905,6 +905,84 @@ napi_value SessionRestoreNExporter::CleanBundleTempDir(napi_env env, napi_callba
     return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
 }
 
+static NContextCBExec GetCompatibilityInfoCBExec(napi_env env, const NFuncArg &funcArg, string bundleName,
+    string extInfo, shared_ptr<string> compatInfo)
+{
+    auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
+    if (!(restoreEntity && (restoreEntity->sessionWhole || restoreEntity->sessionSheet))) {
+        HILOGE("Failed to get RestoreSession entity.");
+        return nullptr;
+    }
+    return [entity {restoreEntity}, bundleName, extInfo, compatInfo]() -> NError {
+        if (!(entity && (entity->sessionWhole || entity->sessionSheet))) {
+            return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
+        }
+        if (entity->sessionWhole) {
+            return NError(entity->sessionWhole->GetCompatibilityInfo(bundleName, extInfo, *compatInfo));
+        }
+        return NError(entity->sessionSheet->GetCompatibilityInfo(bundleName, extInfo, *compatInfo));
+    };
+}
+
+static bool ParseCompatInfoParam(napi_env env, NFuncArg &funcArg, string &bundleName, string &extInfo)
+{
+    if (!funcArg.InitArgs(NARG_CNT::TWO)) {
+        HILOGE("Number of arguments unmatched");
+        return false;
+    }
+    NVal jsBundleName(env, funcArg[NARG_POS::FIRST]);
+    auto [succ, bundleNamePtr, sizeStr] = jsBundleName.ToUTF8String();
+    if (!succ) {
+        HILOGE("First arguments is not string.");
+        return false;
+    }
+    NVal jsExtInfo(env, funcArg[NARG_POS::SECOND]);
+    auto [succ1, extInfoPtr, sizeStr1] = jsExtInfo.ToUTF8String();
+    if (!succ1) {
+        HILOGE("Second arguments is not string.");
+        return false;
+    }
+    bundleName = string(bundleNamePtr.get());
+    extInfo = string(extInfoPtr.get());
+    return true;
+}
+
+napi_value SessionRestoreNExporter::GetCompatibilityInfo(napi_env env, napi_callback_info cbinfo)
+{
+    HILOGI("Called SessionRestore::GetCompatibilityInfo begin.");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+
+    NFuncArg funcArg(env, cbinfo);
+    string bundleName;
+    string extInfo;
+    if (!ParseCompatInfoParam(env, funcArg, bundleName, extInfo)) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto compatInfo = std::make_shared<string>();
+    auto cbExec = GetCompatibilityInfoCBExec(env, funcArg, bundleName, extInfo, compatInfo);
+    if (cbExec == nullptr) {
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    auto cbCompl = [compatInfo](napi_env env, NError err) -> NVal {
+        return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUTF8String(env, *compatInfo);
+    };
+
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+}
+
 bool SessionRestoreNExporter::Export()
 {
     HILOGD("called SessionRestoreNExporter::Export begin");
@@ -916,6 +994,7 @@ bool SessionRestoreNExporter::Export()
         NVal::DeclareNapiFunction("release", Release),
         NVal::DeclareNapiFunction("cancel", Cancel),
         NVal::DeclareNapiFunction("cleanBundleTempDir", CleanBundleTempDir),
+        NVal::DeclareNapiFunction("getCompatibilityInfo", GetCompatibilityInfo),
     };
 
     auto [succ, classValue] = NClass::DefineClass(exports_.env_, className, Constructor, std::move(props));

@@ -545,4 +545,35 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_1200, testing::ext::T
     }
     GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_1200";
 }
+
+/**
+ * @tc.number: SUB_BSessionRestore_GetCompatibilityInfo_0000
+ * @tc.name: SUB_BSessionRestore_GetCompatibilityInfo_0000
+ * @tc.desc: 测试 GetCompatibilityInfo 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BSessionRestoreTest, SUB_BSessionRestore_GetCompatibilityInfo_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_BSessionRestore_GetCompatibilityInfo_0000";
+    try {
+        ASSERT_TRUE(restorePtr_ != nullptr);
+        std::string bundleName = "com.example.app";
+        std::string extInfo = "";
+        std::string compatInfo = "";
+        SetMockGetInstance(false);
+        auto err = restorePtr_->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(err, BError(BError::Codes::SDK_BROKEN_IPC).GetCode());
+
+        SetMockGetInstance(true);
+        err = restorePtr_->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+        EXPECT_EQ(err, ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionRestoreTest-an exception occurred by GetCompatibilityInfo.";
+    }
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_BSessionRestore_GetCompatibilityInfo_0000";
+}
 } // namespace OHOS::FileManagement::Backup

@@ -326,4 +326,17 @@ ErrCode ExtBackup::OnRelease(std::function<void(ErrCode, std::string)> callback,
     return ERR_OK;
 }
 
+ErrCode ExtBackup::GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+    std::string extInfo)
+{
+    HILOGI("BackupExtensionAbility(base) GetBackupCompatibilityInfo.");
+    return ERR_OK;
+}
+
+ErrCode ExtBackup::GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+    std::string extInfo)
+{
+    HILOGI("BackupExtensionAbility(base) GetRestoreCompatibilityInfo.");
+    return ERR_OK;
+}
 } // namespace OHOS::FileManagement::Backup

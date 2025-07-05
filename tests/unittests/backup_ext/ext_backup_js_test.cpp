@@ -1666,4 +1666,165 @@ HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_OnRelease_0200, testing::ext::TestSi
     }
     GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_OnRelease_0200";
 }
+
+/**
+ * @tc.number: SUB_backup_ext_js_GetBackupCompatibilityInfo_0100
+ * @tc.name: SUB_backup_ext_js_GetBackupCompatibilityInfo_0100
+ * @tc.desc: 测试 GetBackupCompatibilityInfo 各个分支成功与失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAFBOS
+ */
+HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_GetBackupCompatibilityInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_GetBackupCompatibilityInfo_0100";
+    try {
+        std::string extInfo = "";
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, napi_send_cancelable_event(_, _, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        auto ret = extBackupJs->GetBackupCompatibilityInfo([](ErrCode, std::string){}, extInfo);
+        EXPECT_EQ(ret, EINVAL);
+
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _))
+            .WillOnce(DoAll(SetArgPointee<ARG_INDEX_FIRST>(true), Return(napi_ok)));
+        EXPECT_CALL(*napiMock, napi_get_and_clear_last_exception(_, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, napi_send_cancelable_event(_, _, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        ret = extBackupJs->GetBackupCompatibilityInfo([](ErrCode, std::string){}, extInfo);
+        EXPECT_EQ(ret, EINVAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by GetBackupCompatibilityInfo.";
+    }
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_GetBackupCompatibilityInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ext_js_GetBackupCompatibilityInfo_0200
+ * @tc.name: SUB_backup_ext_js_GetBackupCompatibilityInfo_0200
+ * @tc.desc: 测试 GetBackupCompatibilityInfo 各个分支成功与失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAFBOS
+ */
+HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_GetBackupCompatibilityInfo_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_GetBackupCompatibilityInfo_0200";
+    try {
+        std::string extInfo = "";
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*napiMock, napi_is_promise(_, _, _))
+            .WillOnce(DoAll(SetArgPointee<ARG_INDEX_SECOND>(true), Return(napi_ok)));
+        EXPECT_CALL(*napiMock, napi_open_handle_scope(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_close_handle_scope(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_get_named_property(_, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, napi_send_cancelable_event(_, _, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        auto ret = extBackupJs->GetBackupCompatibilityInfo([](ErrCode, std::string){}, extInfo);
+        EXPECT_EQ(ret, EINVAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by GetBackupCompatibilityInfo.";
+    }
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_GetBackupCompatibilityInfo_0200";
+}
+
+/**
+ * @tc.number: SUB_backup_ext_js_GetRestoreCompatibilityInfo_0100
+ * @tc.name: SUB_backup_ext_js_GetRestoreCompatibilityInfo_0100
+ * @tc.desc: 测试 GetRestoreCompatibilityInfo 各个分支成功与失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAFBOS
+ */
+HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_GetRestoreCompatibilityInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_GetRestoreCompatibilityInfo_0100";
+    try {
+        std::string extInfo = "";
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_get_value_string_utf8(_, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, napi_send_cancelable_event(_, _, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        auto ret = extBackupJs->GetRestoreCompatibilityInfo([](ErrCode, std::string){}, extInfo);
+        EXPECT_EQ(ret, EINVAL);
+
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*napiMock, napi_is_exception_pending(_, _))
+            .WillOnce(DoAll(SetArgPointee<ARG_INDEX_FIRST>(true), Return(napi_ok)));
+        EXPECT_CALL(*napiMock, napi_get_and_clear_last_exception(_, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, napi_send_cancelable_event(_, _, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        ret = extBackupJs->GetRestoreCompatibilityInfo([](ErrCode, std::string){}, extInfo);
+        EXPECT_EQ(ret, EINVAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by GetRestoreCompatibilityInfo.";
+    }
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_GetRestoreCompatibilityInfo_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_ext_js_GetRestoreCompatibilityInfo_0200
+ * @tc.name: SUB_backup_ext_js_GetRestoreCompatibilityInfo_0200
+ * @tc.desc: 测试 GetRestoreCompatibilityInfo 各个分支成功与失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAFBOS
+ */
+HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_GetRestoreCompatibilityInfo_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_GetRestoreCompatibilityInfo_0200";
+    try {
+        std::string extInfo = "";
+        EXPECT_CALL(*extBackupMock, GetNapiEnv()).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*napiMock, napi_is_promise(_, _, _))
+            .WillOnce(DoAll(SetArgPointee<ARG_INDEX_SECOND>(true), Return(napi_ok)));
+        EXPECT_CALL(*napiMock, napi_open_handle_scope(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_close_handle_scope(_, _)).WillOnce(Return(napi_ok));
+        EXPECT_CALL(*napiMock, napi_get_named_property(_, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        EXPECT_CALL(*napiMock, napi_send_cancelable_event(_, _, _, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        auto ret = extBackupJs->GetRestoreCompatibilityInfo([](ErrCode, std::string){}, extInfo);
+        EXPECT_EQ(ret, EINVAL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by GetRestoreCompatibilityInfo.";
+    }
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_GetRestoreCompatibilityInfo_0200";
+}
+
+/**
+ * @tc.number: SUB_backup_ext_js_ParseCompatibilityInfo_0100
+ * @tc.name: SUB_backup_ext_js_ParseCompatibilityInfo_0100
+ * @tc.desc: 测试 ParseCompatibilityInfo 各个分支成功与失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issuesIAFBOS
+ */
+HWTEST_F(ExtBackupJsTest, SUB_backup_ext_js_ParseCompatibilityInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-begin SUB_backup_ext_js_ParseCompatibilityInfo_0100";
+    try {
+        std::vector<napi_value> argv;
+        auto ext = extBackupJs->extInfo_;
+        extBackupJs->extInfo_ = "ext_info";
+        EXPECT_CALL(*napiMock, napi_create_string_utf8(_, _, _, _)).WillOnce(Return(napi_ok));
+        auto ret = extBackupJs->ParseCompatibilityInfo()(nullptr, argv);
+        EXPECT_TRUE(ret);
+
+        EXPECT_CALL(*napiMock, napi_create_string_utf8(_, _, _, _)).WillOnce(Return(napi_invalid_arg));
+        ret = extBackupJs->ParseCompatibilityInfo()(nullptr, argv);
+        extBackupJs->extInfo_ = ext;
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtBackupJsTest-an exception occurred by ParseCompatibilityInfo.";
+    }
+    GTEST_LOG_(INFO) << "ExtBackupJsTest-end SUB_backup_ext_js_ParseCompatibilityInfo_0100";
+}
 } // namespace OHOS::FileManagement::Backup
