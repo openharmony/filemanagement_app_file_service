@@ -552,6 +552,12 @@ bool SandboxHelper::CheckValidPath(const std::string &filePath)
 
     return true;
 }
+
+void SandboxHelper::ClearBackupSandboxPathMap()
+{
+    lock_guard<mutex> lock(mapMutex_);
+    backupSandboxPathMap_.clear();
+}
 } // namespace AppFileService
 } // namespace OHOS
 

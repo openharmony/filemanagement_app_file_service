@@ -39,6 +39,7 @@ ohos_fuzztest("BackupSaAnotherFuzzTest") {
   deps = [
     "${app_file_service_path}/services/backup_sa:backup_sa",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
     "${path_backup}/utils:backup_utils",
   ]
 
@@ -59,5 +60,7 @@ ohos_fuzztest("BackupSaAnotherFuzzTest") {
     "LOG_TAG=\"app_file_service\"",
     "LOG_DOMAIN=0xD004303",
   ]
+
+  use_exceptions = true
 }
 ###############################################################################
