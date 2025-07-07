@@ -24,6 +24,7 @@
 #include "module_ipc/service.h"
 #include "module_ipc/svc_session_manager.h"
 #include "service_reverse_mock.h"
+#include "svc_extension_proxy_mock.h"
 #include "test_manager.h"
 
 namespace OHOS::FileManagement::Backup {

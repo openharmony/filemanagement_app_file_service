@@ -1529,7 +1529,7 @@ void Service::HandleOnReleaseAndDisconnect(sptr<SvcSessionManager> sessionPtr, c
         HILOGE("Extension backup Proxy is empty");
         return;
     }
-    proxy->HandleOnRelease(static_cast<int32_t>(sessionPtr->GetScenario()));
+    sessionPtr->HandleOnRelease(proxy);
     sessionConnection->DisconnectBackupExtAbility();
 }
 

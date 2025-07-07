@@ -1746,8 +1746,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnReleaseCal
             HILOGE("App onRelease timeout");
             return;
         }
-        std::unique_lock<std::mutex> lock(extPtr->onReleaseLock_);
-        extPtr->CloseOnReleaseTimeOutTimer();
+        std::unique_lock<std::mutex> lock(extPtr->execOnReleaseLock_);
         extPtr->stopWaitOnRelease_.store(true);
         extPtr->execOnReleaseCon_.notify_all();
         HILOGI("Extension onRelease end, errCode: %{public}d, errInfo: %{public}s", errCode, errMsg.c_str());
@@ -1759,14 +1758,30 @@ ErrCode BackupExtExtension::HandleOnRelease(int32_t scenario)
     try {
         HILOGI("HandleOnRelease Begin, scenario: %{public}d", scenario);
         VerifyCaller();
-        auto ptr = wptr<BackupExtExtension>(this);
-        onReleaseTimeoutTimer_.Setup();
-        StartOnReleaseTimeOutTimer(ptr);
-        // service主动release场景，等待onRelease完成或超时，备份/恢复完成场景不需等待
-        CallJsOnReleaseTask(ptr, scenario, false);
+        std::unique_lock<std::mutex> onReleaseLock(onReleaseLock_);
+        if (isOnReleased_.load()) {
+            HILOGE("onRelease done, not need to do again");
+            return ERR_OK;
+        }
+        auto task = [obj {wptr<BackupExtExtension>(this)}, scenario]() {
+            auto extPtr = obj.promote();
+            if (extPtr == nullptr || extPtr->extension_ == nullptr) {
+                HILOGE("Call js onRelease failed, extensionPtr is empty");
+                return;
+            }
+            auto callback = extPtr->OnReleaseCallback(obj);
+            ErrCode ret = extPtr->extension_->OnRelease(callback, scenario);
+            if (ret != ERR_OK) {
+                HILOGE("Call onRelease failed, ret = %{public}d", ret);
+            }
+        };
+        onReleaseTaskPool_.AddTask([task]() { task(); });
         HILOGI("Wait onRelease to do");
-        std::unique_lock<std::mutex> lock(serviceCallReleaseLock_);
-        execOnReleaseCon_.wait(lock, [this] { return stopWaitOnRelease_.load(); });
+        std::unique_lock<std::mutex> lock(execOnReleaseLock_);
+        execOnReleaseCon_.wait_for(lock, std::chrono::milliseconds(BConstants::APP_ON_RELEASE_MAX_TIMEOUT),
+            [this] { return stopWaitOnRelease_.load(); });
+        stopWaitOnRelease_.store(true);
+        isOnReleased_.store(true);
         return ERR_OK;
     } catch (...) {
         HILOGE("Failed to HandleOnRelease");
@@ -1808,60 +1823,6 @@ bool BackupExtExtension::HandleGetExtOnRelease()
     return isExtOnRelease;
 }
 
-void BackupExtExtension::StartOnReleaseTimeOutTimer(wptr<BackupExtExtension> obj)
-{
-    HILOGI("StartOnReleaseTimeOutTimer begin");
-    int timeout = BConstants::APP_ON_RELEASE_MAX_TIMEOUT;
-    auto timeoutCallback = [obj]() {
-        auto extPtr = obj.promote();
-        if (extPtr == nullptr) {
-            HILOGE("Start Create timeout callback failed, extPtr is empty");
-            return;
-        }
-        HILOGI("OnRelease time out, need to stop wait");
-        std::unique_lock<std::mutex> lock(extPtr->onReleaseLock_);
-        extPtr->stopWaitOnRelease_.store(true);
-        extPtr->execOnReleaseCon_.notify_all();
-        extPtr->CloseOnReleaseTimeOutTimer();
-        return;
-    };
-    uint32_t timerId = onReleaseTimeoutTimer_.Register(timeoutCallback, timeout, true);
-    onReleaseTimeoutTimerId_ = timerId;
-}
-
-void BackupExtExtension::CloseOnReleaseTimeOutTimer()
-{
-    HILOGI("CloseOnReleaseTimeOutTimer begin");
-    onReleaseTimeoutTimer_.Unregister(onReleaseTimeoutTimerId_);
-}
-
-void BackupExtExtension::CallJsOnReleaseTask(wptr<BackupExtExtension> obj, int32_t scenario, bool isNeedDisconnect)
-{
-    HILOGI("Begin CallJsOnReleaseTask, scenario: %{public}d", scenario);
-    auto task = [obj, scenario, isNeedDisconnect]() {
-        auto extPtr = obj.promote();
-        if (extPtr == nullptr || extPtr->extension_ == nullptr) {
-            HILOGE("Call js onRelease failed, extensionPtr is empty");
-            return;
-        }
-        auto callback = extPtr->OnReleaseCallback(obj);
-        ErrCode ret = extPtr->extension_->OnRelease(callback, scenario);
-        if (ret != ERR_OK) {
-            HILOGE("Call onRelease failed, ret = %{public}d", ret);
-            return;
-        }
-        std::unique_lock<std::mutex> lock(extPtr->onReleaseLock_);
-        extPtr->execOnReleaseCon_.wait(lock, [extPtr] { return extPtr->stopWaitOnRelease_.load(); });
-        if (extPtr->needAppResultReport_.load()) {
-            extPtr->AppResultReport(extPtr->appResultReportInfo_, extPtr->curScenario_,
-                                    extPtr->appResultReportErrCode_);
-        } else if (isNeedDisconnect) {
-            extPtr->HandleExtDisconnect();
-        }
-    };
-    onReleaseTaskPool_.AddTask([task]() { task(); });
-}
-
 void BackupExtExtension::SetAppResultReport(const std::string resultInfo, ErrCode errCode)
 {
     HILOGI("SetAppResultReport begin");
@@ -1879,10 +1840,37 @@ void BackupExtExtension::HandleExtOnRelease()
         curScenario_ == BackupRestoreScenario::INCREMENTAL_BACKUP) {
         scenario = static_cast<int32_t>(BConstants::ExtensionScenario::BACKUP);
     }
-    auto ptr = wptr<BackupExtExtension>(this);
-    onReleaseTimeoutTimer_.Setup();
-    StartOnReleaseTimeOutTimer(ptr);
-    CallJsOnReleaseTask(ptr, scenario, true);
+    auto task = [obj {wptr<BackupExtExtension>(this)}, scenario]() {
+        auto extPtr = obj.promote();
+        if (extPtr == nullptr || extPtr->extension_ == nullptr) {
+            HILOGE("Call js onRelease failed, extensionPtr is empty");
+            return;
+        }
+        {
+            std::unique_lock<std::mutex> onReleaseLock(extPtr->onReleaseLock_);
+            if (extPtr->isOnReleased_.load()) {
+                HILOGE("onRelease done, not need to do again");
+                return;
+            }
+            auto callback = extPtr->OnReleaseCallback(obj);
+            ErrCode ret = extPtr->extension_->OnRelease(callback, scenario);
+            if (ret != ERR_OK) {
+                HILOGE("Call onRelease failed, ret = %{public}d", ret);
+                return;
+            }
+            std::unique_lock<std::mutex> lock(extPtr->execOnReleaseLock_);
+            extPtr->execOnReleaseCon_.wait_for(lock, std::chrono::milliseconds(BConstants::APP_ON_RELEASE_MAX_TIMEOUT),
+                [extPtr] { return extPtr->stopWaitOnRelease_.load(); });
+            extPtr->stopWaitOnRelease_.store(true);
+            extPtr->isOnReleased_.store(true);
+        }
+        if (extPtr->needAppResultReport_.load()) {
+            extPtr->AppResultReport(extPtr->appResultReportInfo_, extPtr->curScenario_,
+                extPtr->appResultReportErrCode_);
+        }
+        extPtr->HandleExtDisconnect();
+    };
+    onReleaseTaskPool_.AddTask([task]() { task(); });
 }
 
 std::function<void(ErrCode, const std::string)> BackupExtExtension::GetComInfoCallback(wptr<BackupExtExtension> obj)

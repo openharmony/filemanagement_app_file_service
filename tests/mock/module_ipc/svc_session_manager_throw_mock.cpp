@@ -362,4 +362,6 @@ std::string SvcSessionManager::GetOldBackupVersion()
 {
     return BackupSvcSessionManager::session->GetOldBackupVersion();
 }
+
+void SvcSessionManager::HandleOnRelease(sptr<IExtension> proxy) {}
 } // namespace OHOS::FileManagement::Backup

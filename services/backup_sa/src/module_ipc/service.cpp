@@ -1595,7 +1595,7 @@ ErrCode Service::ClearResidualBundleData(const std::string &bundleName)
     HILOGI("Current bundle will clean extension data, bundleName:%{public}s", bundleName.c_str());
     ErrCode res = proxy->HandleClear();
     if (backUpConnection->IsExtAbilityConnected()) {
-        proxy->HandleOnRelease(static_cast<int32_t>(session_->GetScenario()));
+        session_->HandleOnRelease(proxy);
         backUpConnection->DisconnectBackupExtAbility();
     }
     ClearSessionAndSchedInfo(bundleName);

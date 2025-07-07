@@ -577,6 +577,8 @@ public:
 
     void SetIsReadyLaunch(const std::string &bundleName);
 
+    void HandleOnRelease(sptr<IExtension> proxy);
+    
 private:
     /**
      * @brief 获取backup extension ability

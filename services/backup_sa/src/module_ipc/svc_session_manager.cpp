@@ -1079,7 +1079,7 @@ ErrCode SvcSessionManager::ClearSessionData()
             if (impl_.restoreDataType != RestoreTypeEnum::RESTORE_DATA_READDY) {
                 ret = proxy->HandleClear();
             }
-            proxy->HandleOnRelease(static_cast<int32_t>(impl_.scenario));
+            HandleOnRelease(proxy);
             backUpConnection->DisconnectBackupExtAbility();
         }
         if (ret != BError(BError::Codes::OK)) {
@@ -1245,7 +1245,7 @@ bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::s
             } else {
                 ret = retTmp;
             }
-            proxy->HandleOnRelease(static_cast<int32_t>(impl_.scenario));
+            HandleOnRelease(proxy);
             backUpConnection->DisconnectBackupExtAbility();
             HILOGI("Disconnect extensionAbility, bundleName: %{public}s", it->first.c_str());
             it = impl_.backupExtNameMap.erase(it);
@@ -1316,5 +1316,20 @@ void SvcSessionManager::SetIsReadyLaunch(const std::string &bundleName)
     }
     it->second.isReadyLaunch = true;
     HILOGE("SetIsReadyLaunch success, bundleName = %{public}s", bundleName.c_str());
+}
+
+void SvcSessionManager::HandleOnRelease(sptr<IExtension> proxy)
+{
+    if (proxy == nullptr) {
+        HILOGE("HandleOnRelease error, proxy is empty");
+        return;
+    }
+    if (impl_.scenario == IServiceReverseType::Scenario::UNDEFINED ||
+        impl_.scenario == IServiceReverseType::Scenario::CLEAN) {
+        HILOGE("scenario is %{public}d, not need to HandleOnRelease", impl_.scenario);
+        return;
+    }
+    HILOGI("HandleOnRelease begin");
+    proxy->HandleOnRelease(static_cast<int32_t>(impl_.scenario));
 }
 } // namespace OHOS::FileManagement::Backup
