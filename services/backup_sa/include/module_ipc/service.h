@@ -118,7 +118,7 @@ public:
 
     ErrCode GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList) override;
     ErrCode CleanBundleTempDir(const std::string &bundleName) override;
-    ErrCode HandleExtDisconnect(bool isIncBackup) override;
+    ErrCode HandleExtDisconnect(BackupRestoreScenario scenario, bool isAppResultReport, ErrCode errCode) override;
     ErrCode GetExtOnRelease(bool &isExtOnRelease) override;
     ErrCode GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo,
         std::string &compatInfo) override;

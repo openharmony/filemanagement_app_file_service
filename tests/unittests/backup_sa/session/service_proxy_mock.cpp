@@ -251,7 +251,7 @@ ErrCode ServiceProxy::CleanBundleTempDir(const std::string& bundleName)
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::HandleExtDisconnect(bool isIncBackup)
+ErrCode ServiceProxy::HandleExtDisconnect(BackupRestoreScenario scenario, bool isAppResultReport, ErrCode errCode)
 {
     return BError(BError::Codes::OK);
 }

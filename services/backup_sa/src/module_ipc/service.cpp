@@ -982,22 +982,16 @@ ErrCode Service::ServiceResultReport(const std::string& restoreRetInfo, BackupRe
         ErrCode ret = VerifyCallerAndGetCallerName(callerName);
         if (ret != ERR_OK) {
             HILOGE("Result report fail, bundleName:%{public}s, ret:%{public}d", callerName.c_str(), ret);
-            HandleCurBundleEndWork(callerName, sennario);
             CallOnBundleEndByScenario(callerName, sennario, ret);
-            OnAllBundlesFinished(BError(BError::Codes::OK));
             return ret;
         }
         SendEndAppGalleryNotify(callerName);
         if (sennario == BackupRestoreScenario::FULL_RESTORE) {
             UpdateHandleCnt(errCode);
-            HandleCurBundleEndWork(callerName, sennario);
             session_->GetServiceReverseProxy()->RestoreOnResultReport(restoreRetInfo, callerName, errCode);
-            OnAllBundlesFinished(BError(BError::Codes::OK));
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
             UpdateHandleCnt(errCode);
-            HandleCurBundleEndWork(callerName, sennario);
             session_->GetServiceReverseProxy()->IncrementalRestoreOnResultReport(restoreRetInfo, callerName, errCode);
-            OnAllBundlesFinished(BError(BError::Codes::OK));
         } else if (sennario == BackupRestoreScenario::FULL_BACKUP) {
             session_->GetServiceReverseProxy()->BackupOnResultReport(restoreRetInfo, callerName);
         } else if (sennario == BackupRestoreScenario::INCREMENTAL_BACKUP) {

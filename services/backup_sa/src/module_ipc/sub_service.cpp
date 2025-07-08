@@ -1446,29 +1446,44 @@ ErrCode Service::CleanBundleTempDir(const string &bundleName)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::HandleExtDisconnect(bool isIncBackup)
+ErrCode Service::HandleExtDisconnect(BackupRestoreScenario scenario, bool isAppResultReport, ErrCode errCode)
 {
-    HILOGI("begin, isIncBackup: %{public}d", isIncBackup);
+    HILOGI("begin, scenario: %{public}d, isAppResultReport:%{public}d, errCode:%{public}d", scenario,
+        isAppResultReport, errCode);
     std::string callerName;
     auto ret = VerifyCallerAndGetCallerName(callerName);
     if (ret != ERR_OK) {
         HILOGE("HandleExtDisconnect VerifyCaller failed, get bundle failed, ret:%{public}d", ret);
+        if (isAppResultReport) {
+            HandleCurBundleEndWork(callerName, scenario);
+            OnAllBundlesFinished(BError(BError::Codes::OK));
+        }
         return ret;
     }
-    std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
-    if (mutexPtr == nullptr) {
-        HILOGE("extension mutex ptr is nullptr, bundleName:%{public}s", callerName.c_str());
-        return BError(BError::Codes::SA_INVAL_ARG);
+    if (isAppResultReport && (scenario == BackupRestoreScenario::FULL_RESTORE ||
+        scenario == BackupRestoreScenario::INCREMENTAL_RESTORE)) {
+        HandleCurBundleEndWork(callerName, scenario);
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+    } else if (!isAppResultReport) {
+        bool isIncBackup = true;
+        if (scenario == BackupRestoreScenario::FULL_BACKUP || scenario == BackupRestoreScenario::FULL_RESTORE) {
+            isIncBackup = false;
+        }
+        std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
+        if (mutexPtr == nullptr) {
+            HILOGE("extension mutex ptr is nullptr, bundleName:%{public}s", callerName.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
+        ret = HandleCurAppDone(errCode, callerName, isIncBackup);
+        if (ret != ERR_OK) {
+            HILOGE("Handle current app done error, bundleName:%{public}s", callerName.c_str());
+            return ret;
+        }
+        RemoveExtensionMutex(callerName);
+        RemoveExtOnRelease(callerName);
+        OnAllBundlesFinished(BError(BError::Codes::OK));
     }
-    std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
-    ret = HandleCurAppDone(ret, callerName, isIncBackup);
-    if (ret != ERR_OK) {
-        HILOGE("Handle current app done error, bundleName:%{public}s", callerName.c_str());
-        return ret;
-    }
-    RemoveExtensionMutex(callerName);
-    RemoveExtOnRelease(callerName);
-    OnAllBundlesFinished(BError(BError::Codes::OK));
     return ret;
 }
 

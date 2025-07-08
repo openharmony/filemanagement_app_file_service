@@ -392,10 +392,9 @@ private:
     map<string, T> MatchFiles(map<string, T> files, vector<string> endExcludes);
     void UpdateTarStat(uint64_t tarFileSize);
 
-    void HandleExtDisconnect();
+    void HandleExtDisconnect(bool isAppResultReport, ErrCode errCode);
     bool HandleGetExtOnRelease();
-    void SetAppResultReport(const std::string resultInfo, ErrCode errCode);
-    void HandleExtOnRelease();
+    void HandleExtOnRelease(bool isAppResultReport, ErrCode errCode);
     std::function<void(ErrCode, const std::string)> OnReleaseCallback(wptr<BackupExtExtension> obj);
     std::function<void(ErrCode, const std::string)> GetComInfoCallback(wptr<BackupExtExtension> obj);
 private:

@@ -441,7 +441,7 @@ bool Service::GetScanningInfo(wptr<Service> obj, size_t scannedSize, string &sca
 
 void Service::SetScanningInfo(string &scanning, string name) {}
 
-ErrCode Service::HandleExtDisconnect(bool isIncBackup)
+ErrCode Service::HandleExtDisconnect(BackupRestoreScenario scenario, bool isAppResultReport, ErrCode errCode)
 {
     return BError(BError::Codes::OK);
 }

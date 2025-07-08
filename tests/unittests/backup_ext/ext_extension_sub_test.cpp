@@ -274,28 +274,28 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_HandleExtOnRelease_Test_0100, te
         extExtension->curScenario_ = BackupRestoreScenario::FULL_BACKUP;
         auto ext = extExtension->extension_;
         extExtension->extension_ = nullptr;
-        extExtension->HandleExtOnRelease();
+        extExtension->HandleExtOnRelease(false, BError(BError::Codes::OK).GetCode());
         EXPECT_TRUE(true);
 
         extExtension->curScenario_ = BackupRestoreScenario::FULL_RESTORE;
-        extExtension->HandleExtOnRelease();
+        extExtension->HandleExtOnRelease(false, BError(BError::Codes::OK).GetCode());
         EXPECT_TRUE(true);
 
         extExtension->extension_ = ext;
         EXPECT_NE(extExtension->extension_, nullptr);
         bool isOnReleased = extExtension->isOnReleased_.load();
         extExtension->isOnReleased_.store(true);
-        extExtension->HandleExtOnRelease();
+        extExtension->HandleExtOnRelease(false, BError(BError::Codes::OK).GetCode());
         EXPECT_TRUE(true);
 
         extExtension->isOnReleased_.store(false);
         EXPECT_CALL(*extBackupMock, OnRelease(_, _)).WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
-        extExtension->HandleExtOnRelease();
+        extExtension->HandleExtOnRelease(false, BError(BError::Codes::OK).GetCode());
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*extBackupMock, OnRelease(_, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         extExtension->needAppResultReport_.store(false);
-        extExtension->HandleExtOnRelease();
+        extExtension->HandleExtOnRelease(false, BError(BError::Codes::OK).GetCode());
         EXPECT_TRUE(true);
 
         extExtension->isOnReleased_.store(isOnReleased);

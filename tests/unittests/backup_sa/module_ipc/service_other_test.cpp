@@ -2615,12 +2615,22 @@ HWTEST_F(ServiceTest, SUB_Service_HandleExtDisconnect_0000, testing::ext::TestSi
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_HandleExtDisconnect_0000";
     try {
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
-        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
-        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(1));
-        EXPECT_CALL(*param, GetBackupDebugOverrideAccount()).WillOnce(Return(make_pair<bool, int32_t>(false, -1)));
-        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
-        auto ret = service->HandleExtDisconnect(true);
+        BackupRestoreScenario scenario = BackupRestoreScenario::FULL_RESTORE;
+        bool isAppResultReport = false;
+        ErrCode appErrCode = BError(BError::Codes::OK).GetCode();
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillRepeatedly(Return(make_pair<bool, int32_t>(false, -1)));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillRepeatedly(Return(BConstants::SYSTEM_UID));
+        auto ret = service->HandleExtDisconnect(scenario, isAppResultReport, appErrCode);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        isAppResultReport = true;
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        ret = service->HandleExtDisconnect(scenario, isAppResultReport, appErrCode);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2642,12 +2652,21 @@ HWTEST_F(ServiceTest, SUB_Service_HandleExtDisconnect_0100, testing::ext::TestSi
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_HandleExtDisconnect_0100";
     try {
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
-        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
-        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-        auto ret = service->HandleExtDisconnect(true);
+        BackupRestoreScenario scenario = BackupRestoreScenario::FULL_RESTORE;
+        bool isAppResultReport = false;
+        ErrCode appErrCode = BError(BError::Codes::OK).GetCode();
+        std::string bundleName = "test";
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillRepeatedly(Return("test"));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(nullptr));
+        auto ret = service->HandleExtDisconnect(scenario, isAppResultReport, appErrCode);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        service->backupExtMutexMap_[bundleName] = nullptr;
+        ret = service->HandleExtDisconnect(scenario, isAppResultReport, appErrCode);
+        service->backupExtMutexMap_.clear();
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2669,13 +2688,16 @@ HWTEST_F(ServiceTest, SUB_Service_HandleExtDisconnect_0200, testing::ext::TestSi
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_HandleExtDisconnect_0200";
     try {
+        BackupRestoreScenario scenario = BackupRestoreScenario::FULL_BACKUP;
+        bool isAppResultReport = false;
+        ErrCode appErrCode = BError(BError::Codes::OK).GetCode();
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
         EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
-        auto ret = service->HandleExtDisconnect(true);
+        auto ret = service->HandleExtDisconnect(scenario, isAppResultReport, appErrCode);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2697,10 +2719,23 @@ HWTEST_F(ServiceTest, SUB_Service_HandleExtDisconnect_0300, testing::ext::TestSi
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_HandleExtDisconnect_0300";
     try {
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
-        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
-        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
-        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
+        BackupRestoreScenario scenario = BackupRestoreScenario::FULL_RESTORE;
+        bool isAppResultReport = true;
+        ErrCode appErrCode = BError(BError::Codes::OK).GetCode();
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+        EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillRepeatedly(Return(""));
+        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillRepeatedly(Return(false));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillRepeatedly(Return(false));
+        auto ret = service->HandleExtDisconnect(scenario, isAppResultReport, appErrCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        scenario = BackupRestoreScenario::FULL_RESTORE;
+        ret = service->HandleExtDisconnect(scenario, isAppResultReport, appErrCode);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        isAppResultReport = false;
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, HandleClear()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
@@ -2708,10 +2743,9 @@ HWTEST_F(ServiceTest, SUB_Service_HandleExtDisconnect_0300, testing::ext::TestSi
         EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(false));
-        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
-        auto ret = service->HandleExtDisconnect(true);
+        ret = service->HandleExtDisconnect(scenario, isAppResultReport, appErrCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
