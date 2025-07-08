@@ -44,6 +44,7 @@ public:
     static void GetNetworkIdFromUri(const std::string &fileUri, std::string &networkId);
     static std::string GetLowerDir(std::string &lowerPathHead, const std::string &userId, const std::string &bundleName,
                                    const std::string &networkId);
+    static void ClearBackupSandboxPathMap();
 };
 } // namespace AppFileService
 } // namespace OHOS

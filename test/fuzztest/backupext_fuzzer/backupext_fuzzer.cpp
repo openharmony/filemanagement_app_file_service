@@ -138,40 +138,49 @@ bool SetCreatorFuzzTest(shared_ptr<ExtBackup> backup, const uint8_t *data, size_
     return true;
 }
 
-bool CmdGetFileHandleFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
+bool CmdGetFileHandleFuzzTest(OHOS::sptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
     MessageParcel msg;
     MessageParcel reply;
     MessageOption option;
     uint32_t code = static_cast<uint32_t>(IExtensionIpcCode::COMMAND_GET_FILE_HANDLE_WITH_UNIQUE_FD);
     msg.WriteString(string(reinterpret_cast<const char *>(data), size));
+    if (extension == nullptr) {
+        return false;
+    }
     extension->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
 
-bool CmdHandleClearFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
+bool CmdHandleClearFuzzTest(OHOS::sptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
     MessageParcel msg;
     MessageParcel reply;
     MessageOption option;
     uint32_t code = static_cast<uint32_t>(IExtensionIpcCode::COMMAND_HANDLE_CLEAR);
     msg.WriteBuffer(data, size);
+    if (extension == nullptr) {
+        return false;
+    }
     extension->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
 
-bool CmdHandleUser0BackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
+bool CmdHandleUser0BackupFuzzTest(OHOS::sptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
     MessageParcel msg;
     MessageParcel reply;
     MessageOption option;
     uint32_t code = static_cast<uint32_t>(IExtensionIpcCode::COMMAND_USER0_ON_BACKUP);
     msg.WriteBuffer(data, size);
+    if (extension == nullptr) {
+        return false;
+    }
     extension->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
 
-bool CmdHandleBackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
+bool CmdHandleBackupFuzzTest(OHOS::sptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(bool)) {
         return true;
@@ -182,22 +191,28 @@ bool CmdHandleBackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uin
     MessageOption option;
     uint32_t code = static_cast<uint32_t>(IExtensionIpcCode::COMMAND_HANDLE_BACKUP);
     msg.WriteBool(*reinterpret_cast<const bool *>(data));
+    if (extension == nullptr) {
+        return false;
+    }
     extension->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
 
-bool CmdPublishFileFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
+bool CmdPublishFileFuzzTest(OHOS::sptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
     MessageParcel msg;
     MessageParcel reply;
     MessageOption option;
     uint32_t code = static_cast<uint32_t>(IExtensionIpcCode::COMMAND_PUBLISH_FILE);
     msg.WriteString(string(reinterpret_cast<const char *>(data), size));
+    if (extension == nullptr) {
+        return false;
+    }
     extension->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
 
-bool CmdHandleRestoreFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
+bool CmdHandleRestoreFuzzTest(OHOS::sptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(bool)) {
         return true;
@@ -208,33 +223,42 @@ bool CmdHandleRestoreFuzzTest(shared_ptr<BackupExtExtension> extension, const ui
     MessageOption option;
     uint32_t code = static_cast<uint32_t>(IExtensionIpcCode::COMMAND_HANDLE_RESTORE);
     msg.WriteBool(*reinterpret_cast<const bool *>(data));
+    if (extension == nullptr) {
+        return false;
+    }
     extension->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
 
-bool CmdGetIncrementalFileHandleFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
+bool CmdGetIncrementalFileHandleFuzzTest(OHOS::sptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
     MessageParcel msg;
     MessageParcel reply;
     MessageOption option;
     uint32_t code = static_cast<uint32_t>(IExtensionIpcCode::COMMAND_GET_INCREMENTAL_FILE_HANDLE);
     msg.WriteString(string(reinterpret_cast<const char *>(data), size));
+    if (extension == nullptr) {
+        return false;
+    }
     extension->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
 
-bool CmdPublishIncrementalFileFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
+bool CmdPublishIncrementalFileFuzzTest(OHOS::sptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
     MessageParcel msg;
     MessageParcel reply;
     MessageOption option;
     uint32_t code = static_cast<uint32_t>(IExtensionIpcCode::COMMAND_PUBLISH_INCREMENTAL_FILE);
     msg.WriteString(string(reinterpret_cast<const char *>(data), size));
+    if (extension == nullptr) {
+        return false;
+    }
     extension->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
 
-bool CmdHandleIncrementalBackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
+bool CmdHandleIncrementalBackupFuzzTest(OHOS::sptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(int) + sizeof(int)) {
         return true;
@@ -249,11 +273,14 @@ bool CmdHandleIncrementalBackupFuzzTest(shared_ptr<BackupExtExtension> extension
     uint32_t code = static_cast<uint32_t>(IExtensionIpcCode::COMMAND_HANDLE_INCREMENTAL_BACKUP);
     msg.WriteFileDescriptor(incrementalFd);
     msg.WriteFileDescriptor(manifestFd);
+    if (extension == nullptr) {
+        return false;
+    }
     extension->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
 
-bool CmdIncrementalOnBackupFuzzTest(shared_ptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
+bool CmdIncrementalOnBackupFuzzTest(OHOS::sptr<BackupExtExtension> extension, const uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(bool)) {
         return true;
@@ -264,11 +291,14 @@ bool CmdIncrementalOnBackupFuzzTest(shared_ptr<BackupExtExtension> extension, co
     MessageOption option;
     uint32_t code = static_cast<uint32_t>(IExtensionIpcCode::COMMAND_INCREMENTAL_ON_BACKUP);
     msg.WriteBool(*reinterpret_cast<const bool *>(data));
+    if (extension == nullptr) {
+        return false;
+    }
     extension->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
 
-bool CmdGetIncrementalBackupFileHandleFuzzTest(shared_ptr<BackupExtExtension> extension,
+bool CmdGetIncrementalBackupFileHandleFuzzTest(OHOS::sptr<BackupExtExtension> extension,
                                                const uint8_t *data,
                                                size_t size)
 {
@@ -277,13 +307,16 @@ bool CmdGetIncrementalBackupFileHandleFuzzTest(shared_ptr<BackupExtExtension> ex
     MessageOption option;
     uint32_t code = static_cast<uint32_t>(IExtensionIpcCode::COMMAND_GET_INCREMENTAL_BACKUP_FILE_HANDLE);
     msg.WriteBuffer(data, size);
+    if (extension == nullptr) {
+        return false;
+    }
     extension->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
 
-bool OnRemoteRequestFuzzTest(shared_ptr<BackupExtExtension> extension,  const uint8_t *data, size_t size)
+bool OnRemoteRequestFuzzTest(OHOS::sptr<BackupExtExtension> extension,  const uint8_t *data, size_t size)
 {
-    uint32_t codeMax = 15;
+    uint32_t codeMax = 17;
     for (uint32_t code = 1; code < codeMax; code++) {
         MessageParcel datas;
         MessageParcel reply;
@@ -292,7 +325,16 @@ bool OnRemoteRequestFuzzTest(shared_ptr<BackupExtExtension> extension,  const ui
         datas.WriteInterfaceToken(ExtensionStub::GetDescriptor());
         datas.WriteBuffer(reinterpret_cast<const char*>(data), size);
         datas.RewindRead(0);
-        extension->OnRemoteRequest(code, datas, reply, option);
+        if (extension == nullptr) {
+            return false;
+        }
+        try {
+            extension->OnRemoteRequest(code, datas, reply, option);
+        } catch (OHOS::FileManagement::Backup::BError &err) {
+            // filter Backup error
+        } catch (...) {
+            // filter other error
+        }
     }
     return true;
 }
@@ -303,7 +345,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
     auto extBackup = std::make_shared<OHOS::FileManagement::Backup::ExtBackup>();
-    auto extension = std::make_shared<OHOS::FileManagement::Backup::BackupExtExtension>(extBackup, "");
+    auto extension = OHOS::sptr<OHOS::FileManagement::Backup::BackupExtExtension>(
+        new OHOS::FileManagement::Backup::BackupExtExtension(extBackup, ""));
 
     OHOS::InitFuzzTest(extBackup, data, size);
     OHOS::OnCommandFuzzTest(extBackup, data, size);

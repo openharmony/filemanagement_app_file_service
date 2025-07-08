@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "message_parcel.h"
+#include "sandbox_helper.h"
 #include "service.h"
 #include "service_proxy.h"
 #include "service_reverse.h"
@@ -160,6 +161,7 @@ bool CmdGetLocalCapabilitiesIncrementalFuzzTest(const uint8_t *data, size_t size
     sptr service(new Service(SERVICE_ID));
     uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_LOCAL_CAPABILITIES_INCREMENTAL);
     service->OnRemoteRequest(code, datas, reply, option);
+    OHOS::AppFileService::SandboxHelper::ClearBackupSandboxPathMap();
     service = nullptr;
     return true;
 }
