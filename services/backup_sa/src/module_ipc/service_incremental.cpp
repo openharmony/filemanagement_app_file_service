@@ -1020,7 +1020,7 @@ bool Service::CancelSessionClean(sptr<SvcSessionManager> session, std::string bu
     proxy->HandleClear();
     session->StopFwkTimer(bundleName);
     session->StopExtTimer(bundleName);
-    proxy->HandleOnRelease(static_cast<int32_t>(session->GetScenario()));
+    session->HandleOnRelease(proxy);
     backUpConnection->DisconnectBackupExtAbility();
     return true;
 }

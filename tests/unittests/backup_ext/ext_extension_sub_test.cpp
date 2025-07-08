@@ -220,4 +220,90 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_HandleGetCompatibilityInfo_Test_
     }
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_HandleGetCompatibilityInfo_Test_0100";
 }
+
+/**
+ * @tc.number: Ext_Extension_Sub_HandleOnRelease_Test_0100
+ * @tc.name: Ext_Extension_Sub_HandleOnRelease_Test_0100
+ * @tc.desc: 测试HandleOnRelease
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_HandleOnRelease_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_HandleOnRelease_Test_0100";
+    try {
+        int32_t scenario = 1;
+        bool isOnReleased = extExtension->isOnReleased_.load();
+        extExtension->isOnReleased_.store(true);
+        auto ret = extExtension->HandleOnRelease(scenario);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        extExtension->isOnReleased_.store(false);
+        auto ext = extExtension->extension_;
+        extExtension->extension_ = nullptr;
+        ret = extExtension->HandleOnRelease(scenario);
+        extExtension->extension_ = ext;
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        ret = extExtension->HandleOnRelease(scenario);
+        extExtension->isOnReleased_.store(isOnReleased);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_HandleOnRelease_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_HandleExtOnRelease_Test_0100
+ * @tc.name: Ext_Extension_Sub_HandleExtOnRelease_Test_0100
+ * @tc.desc: 测试HandleExtOnRelease
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_HandleExtOnRelease_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_HandleExtOnRelease_Test_0100";
+    try {
+        auto curScenario = extExtension->curScenario_;
+        extExtension->curScenario_ = BackupRestoreScenario::FULL_BACKUP;
+        auto ext = extExtension->extension_;
+        extExtension->extension_ = nullptr;
+        extExtension->HandleExtOnRelease();
+        EXPECT_TRUE(true);
+
+        extExtension->curScenario_ = BackupRestoreScenario::FULL_RESTORE;
+        extExtension->HandleExtOnRelease();
+        EXPECT_TRUE(true);
+
+        extExtension->extension_ = ext;
+        EXPECT_NE(extExtension->extension_, nullptr);
+        bool isOnReleased = extExtension->isOnReleased_.load();
+        extExtension->isOnReleased_.store(true);
+        extExtension->HandleExtOnRelease();
+        EXPECT_TRUE(true);
+
+        extExtension->isOnReleased_.store(false);
+        EXPECT_CALL(*extBackupMock, OnRelease(_, _)).WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
+        extExtension->HandleExtOnRelease();
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*extBackupMock, OnRelease(_, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        extExtension->needAppResultReport_.store(false);
+        extExtension->HandleExtOnRelease();
+        EXPECT_TRUE(true);
+
+        extExtension->isOnReleased_.store(isOnReleased);
+        extExtension->curScenario_ = curScenario;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_HandleExtOnRelease_Test_0100";
+}
 }

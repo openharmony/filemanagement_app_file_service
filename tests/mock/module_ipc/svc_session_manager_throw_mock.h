@@ -99,6 +99,7 @@ public:
     virtual void SetOldBackupVersion(const std::string &backupVersion) = 0;
     virtual std::string GetOldBackupVersion() = 0;
     virtual void UpdateDfxInfo(const BundleName &bundleName, uint64_t uniqId) = 0;
+    virtual void HandleOnRelease(sptr<IExtension> proxy) = 0;
 public:
     static inline std::shared_ptr<BackupSvcSessionManager> session = nullptr;
 };
@@ -177,6 +178,7 @@ public:
     MOCK_METHOD(void, SetOldBackupVersion, (const std::string &));
     MOCK_METHOD(std::string, GetOldBackupVersion, ());
     MOCK_METHOD(void, UpdateDfxInfo, (const std::string &, uint64_t));
+    MOCK_METHOD(void, HandleOnRelease, (sptr<IExtension>));
 };
 
 } // namespace OHOS::FileManagement::Backup

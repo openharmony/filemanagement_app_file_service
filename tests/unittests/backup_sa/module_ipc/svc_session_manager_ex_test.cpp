@@ -294,3 +294,36 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_CleanAndCheckIfNeedWait_03
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_CleanAndCheckIfNeedWait_0300";
 }
+
+/**
+ * @tc.number: SUB_backup_sa_session_HandleOnRelease_0100
+ * @tc.name: SUB_backup_sa_session_HandleOnRelease_0100
+ * @tc.desc: 测试 HandleOnRelease
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_HandleOnRelease_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_HandleOnRelease_0100";
+    try {
+        sptr<SvcExtensionProxyMock> svcProxy = nullptr;
+        sessionManagerPtr_->HandleOnRelease(svcProxy);
+
+        svcProxy = sptr(new SvcExtensionProxyMock());
+        EXPECT_NE(svcProxy, nullptr);
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::UNDEFINED;
+        sessionManagerPtr_->HandleOnRelease(svcProxy);
+
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::CLEAN;
+        sessionManagerPtr_->HandleOnRelease(svcProxy);
+
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::BACKUP;
+        sessionManagerPtr_->HandleOnRelease(svcProxy);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by HandleOnRelease.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_HandleOnRelease_0100";
+}

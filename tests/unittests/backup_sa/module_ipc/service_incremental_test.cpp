@@ -1917,6 +1917,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_CancelTask_0100, TestSiz
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP))
             .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*session, GetIsIncrementalBackup()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnBundleFinished(_, _)).WillRepeatedly(Return(0));
         service->CancelTask("", service);
         EXPECT_TRUE(true);
 

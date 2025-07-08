@@ -264,6 +264,7 @@ ohos_unittest("backup_service_session_test") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/tests/unittests/backup_api/backup_impl/include",
     "${path_backup_mock}/bundle_manager/include",
+    "${path_backup_mock}/module_ipc/include",
   ]
 
   deps = [

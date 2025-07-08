@@ -91,7 +91,6 @@ public:
         reportOnProcessRetPool_.Stop();
         doBackupPool_.Stop();
         onReleaseTaskPool_.Stop();
-        onReleaseTimeoutTimer_.Shutdown();
         if (callJsOnProcessThread_.joinable()) {
             callJsOnProcessThread_.join();
         }
@@ -394,9 +393,6 @@ private:
     void UpdateTarStat(uint64_t tarFileSize);
 
     void HandleExtDisconnect();
-    void StartOnReleaseTimeOutTimer(wptr<BackupExtExtension> obj);
-    void CloseOnReleaseTimeOutTimer();
-    void CallJsOnReleaseTask(wptr<BackupExtExtension> obj, int32_t scenario, bool isNeedDisconnect);
     bool HandleGetExtOnRelease();
     void SetAppResultReport(const std::string resultInfo, ErrCode errCode);
     void HandleExtOnRelease();
@@ -450,15 +446,14 @@ private:
     BackupRestoreScenario curScenario_ { BackupRestoreScenario::FULL_BACKUP };
 
     OHOS::ThreadPool onReleaseTaskPool_;
-    Utils::Timer onReleaseTimeoutTimer_ {"onReleaseTimeoutTimer"};
-    uint32_t onReleaseTimeoutTimerId_ { 0 };
     std::atomic<bool> stopWaitOnRelease_ {false};
     std::mutex onReleaseLock_;
     std::condition_variable execOnReleaseCon_;
     std::atomic<bool> needAppResultReport_ {false};
     std::string appResultReportInfo_;
     ErrCode appResultReportErrCode_ { 0 };
-    std::mutex serviceCallReleaseLock_;
+    std::mutex execOnReleaseLock_ {};
+    std::atomic<bool> isOnReleased_ {false};
 
     std::mutex getCompatibilityInfoLock_ {};
     std::condition_variable getCompatibilityInfoCon_ {};

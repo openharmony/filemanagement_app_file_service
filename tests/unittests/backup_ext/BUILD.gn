@@ -504,6 +504,7 @@ ohos_unittest("ext_extension_sub_test") {
 
   sources = [
     "${path_backup}/tests/mock/backup_ext/src/ext_backup_mock.cpp",
+    "${path_backup}/tests/mock/backup_ext/src/ext_backup_js_mock.cpp",
     "${path_backup}/tests/mock/backup_ext/src/ext_extension_mock.cpp",
     "${path_backup}/tests/mock/backup_kit_inner/service_proxy_mock.cpp",
     "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
