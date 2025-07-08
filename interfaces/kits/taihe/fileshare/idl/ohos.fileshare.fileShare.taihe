@@ -1,0 +1,69 @@
+/*
+* Copyright (c) 2025 Huawei Device Co., Ltd.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
+@!namespace("@ohos.fileshare","fileShare")
+
+@!sts_inject("""
+static { loadLibrary("file_share_taihe.z"); }
+""")
+
+enum OperationMode: i32 {
+    READ_MODE = 1,
+    WRITE_MODE = 2,
+}
+
+struct PolicyInfo {
+    uri: String;
+    operationMode: i32;
+}
+
+struct PathPolicyInfo {
+    path: String;
+    operationMode: OperationMode;
+}
+
+enum PolicyType: i32 {
+    TEMPORARY_TYPE = 0,
+    PERSISTENT_TYPE = 1,
+}
+
+function MakePolicyInfo(uri: String, operationMode: i32): PolicyInfo;
+
+function MakePathPolicyInfo(path: String, operationMode: OperationMode): PathPolicyInfo;
+
+@gen_promise("activatePermission")
+function ActivatePermissionSync(
+    policies: Array<PolicyInfo>
+): void;
+
+@gen_promise("deactivatePermission")
+function DeactivatePermissionSync(
+    policies: Array<PolicyInfo>
+): void;
+
+@gen_async("grantUriPermission")
+@gen_promise("grantUriPermission")
+function GrantUriPermissionSync(
+    uri:String,
+    bundleName:String,
+    flag: @sts_type("wantConstant.Flags") Opaque,
+): void;
+
+@gen_promise("checkPathPermission")
+function CheckPathPermissionSync(
+    tokenID: i32,
+    policies: Array<PathPolicyInfo>,
+    policyType: PolicyType,
+): Array<bool>;
