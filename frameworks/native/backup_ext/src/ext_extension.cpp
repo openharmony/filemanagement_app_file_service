@@ -1864,7 +1864,7 @@ void BackupExtExtension::AppDone(ErrCode errCode)
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
     }
     if (HandleGetExtOnRelease()) {
-        HandleExtOnRelease();
+        HandleExtOnRelease(false, errCode);
     }
 }
 
@@ -1877,6 +1877,10 @@ void BackupExtExtension::AppResultReport(const std::string restoreRetInfo,
     auto ret = proxy->ServiceResultReport(restoreRetInfo, scenario, errCode);
     if (ret != ERR_OK) {
         HILOGE("Failed notify app restoreResultReport, errCode: %{public}d", ret);
+    }
+    if (curScenario_ == BackupRestoreScenario::FULL_RESTORE ||
+        curScenario_ == BackupRestoreScenario::INCREMENTAL_RESTORE) {
+        HandleExtOnRelease(true, errCode);
     }
 }
 

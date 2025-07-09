@@ -77,7 +77,7 @@ public:
     virtual UniqueFd GetLocalCapabilitiesForBundleInfos() = 0;
     virtual ErrCode GetBackupDataSize(bool, const std::vector<BIncrementalData>&) = 0;
     virtual ErrCode CleanBundleTempDir(const std::string& bundleName) = 0;
-    virtual ErrCode HandleExtDisconnect(bool) = 0;
+    virtual ErrCode HandleExtDisconnect(BackupRestoreScenario, bool, ErrCode) = 0;
     virtual ErrCode GetExtOnRelease(bool&) = 0;
     virtual void SetExtOnRelease(const BundleName&, bool) = 0;
     virtual void RemoveExtOnRelease(const BundleName&) = 0;
@@ -138,7 +138,7 @@ public:
     MOCK_METHOD(UniqueFd, GetLocalCapabilitiesForBundleInfos, ());
     MOCK_METHOD(ErrCode, GetBackupDataSize, (bool, const std::vector<BIncrementalData>&));
     MOCK_METHOD(ErrCode, CleanBundleTempDir, (const std::string&));
-    MOCK_METHOD(ErrCode, HandleExtDisconnect, (bool));
+    MOCK_METHOD(ErrCode, HandleExtDisconnect, (BackupRestoreScenario, bool, ErrCode));
     MOCK_METHOD(ErrCode, GetExtOnRelease, (bool&));
     MOCK_METHOD(void, SetExtOnRelease, (const BundleName&, bool));
     MOCK_METHOD(void, RemoveExtOnRelease, (const BundleName&));
@@ -461,9 +461,9 @@ ErrCode Service::CleanBundleTempDir(const std::string& bundleName)
     return BService::serviceMock->CleanBundleTempDir(bundleName);
 }
 
-ErrCode Service::HandleExtDisconnect(bool isIncBackup)
+ErrCode Service::HandleExtDisconnect(BackupRestoreScenario scenario, bool isAppResultReport, ErrCode errCode)
 {
-    return BService::serviceMock->HandleExtDisconnect(isIncBackup);
+    return BService::serviceMock->HandleExtDisconnect(scenario, isAppResultReport, errCode);
 }
 
 ErrCode Service::GetExtOnRelease(bool &isExtOnRelease)

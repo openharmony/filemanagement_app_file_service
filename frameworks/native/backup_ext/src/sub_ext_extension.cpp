@@ -271,7 +271,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreCallback(
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, errMsg);
             extensionPtr->ReportAppStatistic("OnRestoreCallback", errCode);
-            extensionPtr->SetAppResultReport(errInfo, errCode);
+            extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::FULL_RESTORE, errCode);
         }
         extensionPtr->DoClear();
     };
@@ -311,7 +311,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreExCallbac
             if (restoreRetInfo.size()) {
                 HILOGI("Will notify restore result report");
                 extensionPtr->ReportAppStatistic("OnRestoreExCallback1", errCode);
-                extensionPtr->SetAppResultReport(restoreRetInfo, errCode);
+                extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::FULL_RESTORE);
             }
             return;
         }
@@ -322,7 +322,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreExCallbac
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, restoreRetInfo);
             extensionPtr->ReportAppStatistic("OnRestoreExCallback2", errCode);
-            extensionPtr->SetAppResultReport(errInfo, errCode);
+            extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::FULL_RESTORE, errCode);
             extensionPtr->DoClear();
         }
     };
@@ -377,7 +377,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
         if (errCode == ERR_OK) {
             if (restoreRetInfo.size()) {
                 extensionPtr->ReportAppStatistic("IncreOnRestoreExCallback1", errCode);
-                extensionPtr->SetAppResultReport(restoreRetInfo, errCode);
+                extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
             }
             return;
         }
@@ -388,7 +388,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, restoreRetInfo);
             extensionPtr->ReportAppStatistic("IncreOnRestoreExCallback2", errCode);
-            extensionPtr->SetAppResultReport(errInfo, errCode);
+            extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::INCREMENTAL_RESTORE, errCode);
             extensionPtr->DoClear();
         }
     };
@@ -425,7 +425,7 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreCall
             std::string errInfo;
             BJsonUtil::BuildExtensionErrInfo(errInfo, errCode, errMsg);
             extensionPtr->ReportAppStatistic("IncreOnRestoreCallback", errCode);
-            extensionPtr->SetAppResultReport(errInfo, errCode);
+            extensionPtr->AppResultReport(errInfo, BackupRestoreScenario::INCREMENTAL_RESTORE, errCode);
         }
         extensionPtr->DoClear();
     };
@@ -836,7 +836,7 @@ void BackupExtExtension::AppIncrementalDone(ErrCode errCode)
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
     }
     if (HandleGetExtOnRelease()) {
-        HandleExtOnRelease();
+        HandleExtOnRelease(false, errCode);
     }
 }
 
@@ -1789,19 +1789,16 @@ ErrCode BackupExtExtension::HandleOnRelease(int32_t scenario)
     }
 }
 
-void BackupExtExtension::HandleExtDisconnect()
+void BackupExtExtension::HandleExtDisconnect(bool isAppResultReport, ErrCode errCode)
 {
-    HILOGI("Begin, curScenario:%{public}d", curScenario_);
+    HILOGI("Begin, scenario:%{public}d, isAppResultReport:%{public}d, errCode:%{public}d", curScenario_,
+        isAppResultReport, errCode);
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to obtain the ServiceClient handle");
         return;
     }
-    bool isIncBackup = true;
-    if (curScenario_ == BackupRestoreScenario::FULL_BACKUP || curScenario_ == BackupRestoreScenario::FULL_RESTORE) {
-        isIncBackup = false;
-    }
-    auto ret = proxy->HandleExtDisconnect(isIncBackup);
+    auto ret = proxy->HandleExtDisconnect(curScenario_, isAppResultReport, errCode);
     if (ret != ERR_OK) {
         HILOGE("Failed to HandleExtDisconnect. err = %{public}d", ret);
     }
@@ -1823,16 +1820,7 @@ bool BackupExtExtension::HandleGetExtOnRelease()
     return isExtOnRelease;
 }
 
-void BackupExtExtension::SetAppResultReport(const std::string resultInfo, ErrCode errCode)
-{
-    HILOGI("SetAppResultReport begin");
-    needAppResultReport_.store(true);
-    appResultReportInfo_ = resultInfo;
-    appResultReportErrCode_ = errCode;
-    HandleExtOnRelease();
-}
-
-void BackupExtExtension::HandleExtOnRelease()
+void BackupExtExtension::HandleExtOnRelease(bool isAppResultReport, ErrCode errCode)
 {
     HILOGI("HandleExtOnRelease begin");
     int32_t scenario = static_cast<int32_t>(BConstants::ExtensionScenario::RESTORE);
@@ -1840,7 +1828,7 @@ void BackupExtExtension::HandleExtOnRelease()
         curScenario_ == BackupRestoreScenario::INCREMENTAL_BACKUP) {
         scenario = static_cast<int32_t>(BConstants::ExtensionScenario::BACKUP);
     }
-    auto task = [obj {wptr<BackupExtExtension>(this)}, scenario]() {
+    auto task = [obj {wptr<BackupExtExtension>(this)}, scenario, isAppResultReport, errCode]() {
         auto extPtr = obj.promote();
         if (extPtr == nullptr || extPtr->extension_ == nullptr) {
             HILOGE("Call js onRelease failed, extensionPtr is empty");
@@ -1864,11 +1852,7 @@ void BackupExtExtension::HandleExtOnRelease()
             extPtr->stopWaitOnRelease_.store(true);
             extPtr->isOnReleased_.store(true);
         }
-        if (extPtr->needAppResultReport_.load()) {
-            extPtr->AppResultReport(extPtr->appResultReportInfo_, extPtr->curScenario_,
-                extPtr->appResultReportErrCode_);
-        }
-        extPtr->HandleExtDisconnect();
+        extPtr->HandleExtDisconnect(isAppResultReport, errCode);
     };
     onReleaseTaskPool_.AddTask([task]() { task(); });
 }

@@ -72,9 +72,7 @@ HWTEST_F(ServiceTest, SUB_Service_ServiceResultReport_0000, TestSize.Level1)
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, RestoreOnResultReport(_, _, _)).WillOnce(Return(0));
-        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
         auto ret = service->ServiceResultReport("", BackupRestoreScenario::FULL_RESTORE, 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
@@ -84,9 +82,7 @@ HWTEST_F(ServiceTest, SUB_Service_ServiceResultReport_0000, TestSize.Level1)
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalRestoreOnResultReport(_, _, _)).WillOnce(Return(0));
-        EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
         ret = service->ServiceResultReport("", BackupRestoreScenario::INCREMENTAL_RESTORE, 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 

@@ -75,7 +75,8 @@ public:
                  ErrCode(int32_t, const std::vector<std::string> &, int32_t, int32_t));
     MOCK_METHOD2(GetBackupDataSize, ErrCode(bool isPreciseScan, const std::vector<BIncrementalData> &bundleNameList));
     MOCK_METHOD1(CleanBundleTempDir, ErrCode(const std::string &bundleName));
-    MOCK_METHOD1(HandleExtDisconnect, ErrCode(bool isIncBackup));
+    MOCK_METHOD3(HandleExtDisconnect, ErrCode(BackupRestoreScenario scenario, bool isAppResultReport,
+        ErrCode errCode));
     MOCK_METHOD1(GetExtOnRelease, ErrCode(bool &isExtOnRelease));
     MOCK_METHOD3(GetCompatibilityInfo, ErrCode(const std::string&, const std::string&, std::string&));
 };
