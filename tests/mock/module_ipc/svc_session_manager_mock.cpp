@@ -534,4 +534,13 @@ void SvcSessionManager::UpdateDfxInfo(const std::string &bundleName, uint64_t un
 void SvcSessionManager::HandleOnRelease(sptr<IExtension> proxy)
 {
 }
+
+void SvcSessionManager::SetIsRestoreEnd(const std::string &bundleName)
+{
+}
+
+bool SvcSessionManager::GetIsRestoreEnd(const std::string &bundleName)
+{
+    return false;
+}
 } // namespace OHOS::FileManagement::Backup

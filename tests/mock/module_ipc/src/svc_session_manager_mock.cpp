@@ -310,4 +310,13 @@ std::string SvcSessionManager::GetOldBackupVersion()
 void SvcSessionManager::HandleOnRelease(sptr<IExtension> proxy)
 {
 }
+
+void SvcSessionManager::SetIsRestoreEnd(const std::string &bundleName)
+{
+}
+
+bool SvcSessionManager::GetIsRestoreEnd(const std::string &bundleName)
+{
+    return false;
+}
 } // namespace OHOS::FileManagement::Backup

@@ -985,6 +985,10 @@ ErrCode Service::ServiceResultReport(const std::string& restoreRetInfo, BackupRe
             CallOnBundleEndByScenario(callerName, sennario, ret);
             return ret;
         }
+        if (errCode == ERR_OK && (sennario == BackupRestoreScenario::INCREMENTAL_RESTORE ||
+            sennario == BackupRestoreScenario::FULL_RESTORE)) {
+            session_->SetIsRestoreEnd(callerName);
+        }
         SendEndAppGalleryNotify(callerName);
         if (sennario == BackupRestoreScenario::FULL_RESTORE) {
             UpdateHandleCnt(errCode);

@@ -575,6 +575,12 @@ HWTEST_F(ServiceTest, SUB_Service_ServiceResultReport_0000, testing::ext::TestSi
 
         ret = servicePtr_->ServiceResultReport("test", static_cast<BackupRestoreScenario>(1000), 0);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+        ret = servicePtr_->ServiceResultReport("test", BackupRestoreScenario::INCREMENTAL_BACKUP, 1);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+        ret = servicePtr_->ServiceResultReport("test", BackupRestoreScenario::FULL_RESTORE, 1);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by ServiceResultReport.";
@@ -2052,6 +2058,8 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0100, testing::ext::TestSize.Le
         EXPECT_TRUE(servicePtr_ != nullptr);
         servicePtr_->ExtConnectDied(callName);
         extInfo.backUpConnection->isConnected_.store(true);
+        servicePtr_->ExtConnectDied(callName);
+        extInfo.isRestoreEnd = true;
         servicePtr_->ExtConnectDied(callName);
     } catch (...) {
         EXPECT_TRUE(false);

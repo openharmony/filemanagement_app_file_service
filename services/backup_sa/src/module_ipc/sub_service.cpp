@@ -687,7 +687,9 @@ void Service::ExtConnectDied(const string &callName)
             ClearSessionAndSchedInfo(callName);
         }
         /* Notice Client Ext Ability Process Died */
-        NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
+        if (!session_->GetIsRestoreEnd(callName)) {
+            NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
+        }
     } catch (...) {
         HILOGE("Unexpected exception, bundleName: %{public}s", callName.c_str());
         SendEndAppGalleryNotify(callName);

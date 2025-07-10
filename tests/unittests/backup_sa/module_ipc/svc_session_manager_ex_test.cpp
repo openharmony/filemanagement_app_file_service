@@ -327,3 +327,79 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_HandleOnRelease_0100, test
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_HandleOnRelease_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_sa_session_SetIsRestoreEnd_0100
+ * @tc.name: SUB_backup_sa_session_SetIsRestoreEnd_0100
+ * @tc.desc: 测试 SetIsRestoreEnd
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetIsRestoreEnd_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetIsRestoreEnd_0100";
+    try {
+        std::string bundleName = "com.test.bundleName";
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        sessionManagerPtr_->SetIsRestoreEnd(bundleName);
+        EXPECT_EQ(sessionManagerPtr_->impl_.backupExtNameMap.find(bundleName),
+            sessionManagerPtr_->impl_.backupExtNameMap.end());
+        
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->SetIsRestoreEnd(bundleName);
+        EXPECT_EQ(sessionManagerPtr_->impl_.backupExtNameMap.find(bundleName),
+            sessionManagerPtr_->impl_.backupExtNameMap.end());
+        
+        BackupExtInfo backupInfo {};
+        sessionManagerPtr_->impl_.backupExtNameMap[bundleName] = backupInfo;
+        EXPECT_NE(sessionManagerPtr_->impl_.backupExtNameMap.find(bundleName),
+            sessionManagerPtr_->impl_.backupExtNameMap.end());
+        sessionManagerPtr_->SetIsRestoreEnd(bundleName);
+        bool ret = sessionManagerPtr_->impl_.backupExtNameMap[bundleName].isRestoreEnd;
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetIsRestoreEnd.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetIsRestoreEnd_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetIsRestoreEnd_0100
+ * @tc.name: SUB_backup_sa_session_GetIsRestoreEnd_0100
+ * @tc.desc: 测试 GetIsRestoreEnd
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetIsRestoreEnd_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetIsRestoreEnd_0100";
+    try {
+        std::string bundleName = "com.test.bundleName";
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        auto ret = sessionManagerPtr_->GetIsRestoreEnd(bundleName);
+        EXPECT_FALSE(ret);
+        
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        ret = sessionManagerPtr_->GetIsRestoreEnd(bundleName);
+        EXPECT_FALSE(ret);
+        
+        BackupExtInfo backupInfo {};
+        backupInfo.isRestoreEnd = true;
+        sessionManagerPtr_->impl_.backupExtNameMap[bundleName] = backupInfo;
+        EXPECT_NE(sessionManagerPtr_->impl_.backupExtNameMap.find(bundleName),
+            sessionManagerPtr_->impl_.backupExtNameMap.end());
+        ret = sessionManagerPtr_->GetIsRestoreEnd(bundleName);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetIsRestoreEnd.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetIsRestoreEnd_0100";
+}
