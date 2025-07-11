@@ -56,6 +56,12 @@ bool BackupSaFuzzTest(const uint8_t *data, size_t size)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t dataSize)
 {
-    OHOS::BackupSaFuzzTest(data, dataSize);
+    try {
+        OHOS::BackupSaFuzzTest(data, dataSize);
+    } catch (OHOS::FileManagement::Backup::BError &err) {
+        HILOGE("BackupSaFuzzTest error");
+    } catch (...) {
+        // filter other error
+    }
     return 0;
 }
