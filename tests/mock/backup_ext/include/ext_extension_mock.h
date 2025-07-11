@@ -63,6 +63,7 @@ public:
     virtual void DoClearInner() = 0;
     virtual void StartFwkTimer(bool &isFwkStart) = 0;
     virtual ErrCode CleanBundleTempDir() = 0;
+    virtual void AsyncTaskIncreRestoreSpecialVersion() = 0;
 public:
     BExtExtension() = default;
     virtual ~BExtExtension() = default;
@@ -103,6 +104,21 @@ public:
     MOCK_METHOD(ErrCode, IncrementalBigFileReady, (TarMap&, const std::vector<struct ReportFileInfo>&,
         sptr<IService>));
     MOCK_METHOD(ErrCode, CleanBundleTempDir, ());
+    MOCK_METHOD((std::tuple<ErrCode, UniqueFd, UniqueFd>), GetIncrementalFileHandle,
+        (const string &));
+    MOCK_METHOD(ErrCode, GetFileHandleWithUniqueFd, (const std::string &, int32_t &, int&));
+    MOCK_METHOD(std::string, GetBackupInfo, ());
+    MOCK_METHOD(void, UpdateOnStartTime, ());
+    MOCK_METHOD(ErrCode, IncrementalTarFileReady, (const TarMap &, const vector<struct ReportFileInfo> &,
+        sptr<IService>));
+    MOCK_METHOD(void, ReportAppStatistic, (const std::string &, ErrCode));
+    MOCK_METHOD(ErrCode, IncrementalAllFileReady, (const TarMap &, const vector<struct ReportFileInfo> &,
+        sptr<IService>));
+    MOCK_METHOD(void, VerifyCaller, ());
+    MOCK_METHOD((std::function<void(std::string, int)>), ReportErrFileByProc, (wptr<BackupExtExtension>,
+        BackupRestoreScenario));
+    MOCK_METHOD(void, DoClearInner, ());
+    MOCK_METHOD(void, StartFwkTimer, (bool &));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_EXT_EXTENSION_MOCK_H

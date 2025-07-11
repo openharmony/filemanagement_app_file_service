@@ -509,6 +509,8 @@ ohos_unittest("ext_extension_sub_test") {
     "${path_backup}/tests/mock/backup_kit_inner/service_proxy_mock.cpp",
     "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
     "${path_backup}/tests/utils/src/test_manager.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/untar_file.cpp",
     "ext_extension_sub_test.cpp",
   ]
 
