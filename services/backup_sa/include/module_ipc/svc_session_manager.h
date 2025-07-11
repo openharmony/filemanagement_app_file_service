@@ -74,6 +74,7 @@ struct BackupExtInfo {
     bool isClearData {true};
     bool isInPublishFile {false};
     bool isReadyLaunch {false};
+    bool isRestoreEnd {false};
 };
 
 class Service;
@@ -578,6 +579,10 @@ public:
     void SetIsReadyLaunch(const std::string &bundleName);
 
     void HandleOnRelease(sptr<IExtension> proxy);
+    
+    void SetIsRestoreEnd(const std::string &bundleName);
+
+    bool GetIsRestoreEnd(const std::string &bundleName);
     
 private:
     /**

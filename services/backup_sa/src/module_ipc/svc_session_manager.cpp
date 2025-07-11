@@ -1332,4 +1332,35 @@ void SvcSessionManager::HandleOnRelease(sptr<IExtension> proxy)
     HILOGI("HandleOnRelease begin");
     proxy->HandleOnRelease(static_cast<int32_t>(impl_.scenario));
 }
+
+void SvcSessionManager::SetIsRestoreEnd(const std::string &bundleName)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+    it->second.isRestoreEnd = true;
+    HILOGI("SetIsRestoreEnd success, bundleName = %{public}s", bundleName.c_str());
+}
+
+bool SvcSessionManager::GetIsRestoreEnd(const std::string &bundleName)
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
+    return it->second.isRestoreEnd;
+}
 } // namespace OHOS::FileManagement::Backup
