@@ -55,7 +55,8 @@ taihe_shared_library("file_share_taihe") {
     "${app_file_service_path}/interfaces/common/include/log.h",
     "${app_file_service_path}/interfaces/innerkits/native/file_share/include",
     "${app_file_service_path}/interfaces/kits/ndk/fileshare/include",
-    "${app_file_service_path}/interfaces/kits/ndk/fileuri/include"
+    "${app_file_service_path}/interfaces/kits/ndk/fileuri/include",
+    "${app_file_service_path}/interfaces/kits/js/file_uri/include"
   ]
 
   sources = get_target_outputs(":run_taihe")
