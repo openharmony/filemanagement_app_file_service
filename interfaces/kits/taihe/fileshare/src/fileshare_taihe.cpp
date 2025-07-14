@@ -69,7 +69,7 @@ static int32_t GetUriPoliciesArg(taihe::array_view<ohos::fileshare::fileShare::P
     uint32_t count = policies.size();
     if (count > OHOS::AppFileService::MAX_ARRAY_SIZE) {
         LOGE("The length of the array is extra-long");
-        return E_PARAMS;
+        return OHOS::FileManagement::LibN::E_PARAMS;
     }
     for (uint32_t i = 0; i < count; i++) {
         OHOS::AppFileService::UriPolicyInfo uriPolicy;
@@ -77,12 +77,12 @@ static int32_t GetUriPoliciesArg(taihe::array_view<ohos::fileshare::fileShare::P
         uriPolicy.mode = policies[i].operationMode;
         if (uriPolicy.uri == FILE_NOPS) {
             LOGE("URI is empty");
-            return E_PARAMS;
+            return OHOS::FileManagement::LibN::E_PARAMS;
         }
         if (uriPolicy.mode != READ_MODE &&
             uriPolicy.mode != (READ_MODE | WRITE_MODE)) {
             LOGE("Invalid operation mode");
-            return E_PARAMS;
+            return OHOS::FileManagement::LibN::E_PARAMS;
         }
         uriPolicies.emplace_back(uriPolicy);
     }
@@ -95,7 +95,7 @@ static int32_t GetPathPoliciesArg(taihe::array_view<ohos::fileshare::fileShare::
     uint32_t count = policies.size();
     if (count > OHOS::AppFileService::MAX_ARRAY_SIZE) {
         LOGE("The length of the array is extra-long");
-        return E_PARAMS;
+        return OHOS::FileManagement::LibN::E_PARAMS;
     }
     for (uint32_t i = 0; i < count; i++) {
         OHOS::AppFileService::PathPolicyInfo pathPolicie;
@@ -103,12 +103,12 @@ static int32_t GetPathPoliciesArg(taihe::array_view<ohos::fileshare::fileShare::
         pathPolicie.mode = policies[i].operationMode;
         if (pathPolicie.path == FILE_NOPS) {
             LOGE("path is empty");
-            return E_PARAMS;
+            return OHOS::FileManagement::LibN::E_PARAMS;
         }
         if (pathPolicie.mode != READ_MODE && pathPolicie.mode != WRITE_MODE &&
             pathPolicie.mode != (READ_MODE | WRITE_MODE)) {
             LOGE("Invalid operation mode");
-            return E_PARAMS;
+            return OHOS::FileManagement::LibN::E_PARAMS;
         }
         pathPolicies.emplace_back(pathPolicie);
     }
@@ -120,7 +120,7 @@ void ActivatePermissionSync(taihe::array_view<ohos::fileshare::fileShare::Policy
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get URI policies");
-        taihe::set_business_error(E_PARAMS, "Failed to get URI policies");
+        taihe::set_business_error(OHOS::FileManagement::LibN::E_PARAMS, "Failed to get URI policies");
         return;
     }
 
@@ -143,7 +143,7 @@ void DeactivatePermissionSync(taihe::array_view<ohos::fileshare::fileShare::Poli
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get URI policies");
-        taihe::set_business_error(E_PARAMS, "Failed to get URI policies");
+        taihe::set_business_error(OHOS::FileManagement::LibN::E_PARAMS, "Failed to get URI policies");
         return;
     }
 
@@ -355,7 +355,7 @@ taihe::array<bool> CheckPathPermissionSync(int32_t tokenID,
     std::vector<OHOS::AppFileService::PathPolicyInfo> pathPolicies;
     if (GetPathPoliciesArg(policies, pathPolicies)) {
         LOGE("Failed to get pathPolicies.");
-        taihe::set_business_error(E_PARAMS, "Failed to get pathPolicies.");
+        taihe::set_business_error(OHOS::FileManagement::LibN::E_PARAMS, "Failed to get pathPolicies.");
         return taihe::array<bool>::make(0);
     }
 
