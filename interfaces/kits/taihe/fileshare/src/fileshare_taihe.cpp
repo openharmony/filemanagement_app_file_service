@@ -30,7 +30,6 @@
 #include "n_error.h"
 
 namespace ANI::FileShare {
-constexpr int32_t E_PERMISSION_SYS = 202;
 constexpr int32_t E_PERMISSION_DENIED = -1;
 const std::string MEDIA_FILE_URI_PHOTO_PREFEX = "file://media/Photo/";
 const std::string MEDIA_FILE_URI_AUDIO_PREFEX = "file://media/Audio/";
@@ -341,7 +340,8 @@ taihe::array<bool> CheckPathPermissionSync(int32_t tokenID,
 {
     if (!IsSystemApp()) {
         LOGE("fileShare::CheckPathPermissionSync is not System App!");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS, "fileShare::CheckPathPermissionSync is not System App!");
+        taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS,
+            "fileShare::CheckPathPermissionSync is not System App!");
         return taihe::array<bool>::make(0);
     }
 
