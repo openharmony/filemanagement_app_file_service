@@ -247,7 +247,7 @@ static int32_t InsertByDatashare(const OHOS::DataShare::DataShareValuesBucket &v
     dataShareHelper = OHOS::DataShare::DataShareHelper::Creator(remote->AsObject(), MEDIALIBRARY_DATA_URI);
     if (!dataShareHelper) {
         LOGE("FileShare::InsertByDatashare connect to datashare failed!");
-        return -E_PERMISSION;
+        return -OHOS::FileManagement::LibN::E_PERMISSION;
     }
     std::string uriStr = MEDIA_GRANT_URI_PERMISSION;
     if (isApi10) {
