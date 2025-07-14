@@ -85,6 +85,7 @@ taihe_shared_library("file_share_taihe") {
     "data_share:datashare_common",
     "data_share:datashare_consumer",
     "file_api:remote_uri_native",
+    "file_api:filemgmt_libn",
   ]
 }
 
