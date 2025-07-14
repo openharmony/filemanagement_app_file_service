@@ -27,6 +27,7 @@
 #include "tokenid_kit.h"
 #include "uri_permission_manager_client.h"
 #include "want.h"
+#include "n_error.h"
 
 namespace ANI::FileShare {
 constexpr int32_t E_PERMISSION_SYS = 202;
