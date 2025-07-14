@@ -1156,7 +1156,7 @@ void Service::StartCurBundleBackupOrRestore(const std::string &bundleName)
             proxy->GetFileHandleWithUniqueFd(fileName, errCode, fdCode);
             UniqueFd fd(fdCode);
             bool fdFlag = fd < 0 ? true : false;
-            fdFlag ? session_->GetServiceReverseProxy()->BackupOnFileReadyWithoutFd(bundleName, fileName, errCode) :
+            fdFlag ? session_->GetServiceReverseProxy()->RestoreOnFileReadyWithoutFd(bundleName, fileName, errCode) :
                      session_->GetServiceReverseProxy()->RestoreOnFileReady(bundleName, fileName, move(fd), errCode);
             FileReadyRadarReport(bundleName, fileName, errCode, scenario);
         }
