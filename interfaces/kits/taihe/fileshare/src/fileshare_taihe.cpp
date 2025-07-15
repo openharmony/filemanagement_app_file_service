@@ -127,7 +127,8 @@ void ActivatePermissionSync(taihe::array_view<ohos::fileshare::fileShare::Policy
     std::shared_ptr<PolicyErrorArgs> arg = std::make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("PolicyErrorArgs make make_shared failed");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR, "PolicyErrorArgs make make_shared failed");
+        taihe::set_business_error(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR,
+                                  "PolicyErrorArgs make make_shared failed");
         return;
     }
 
@@ -150,7 +151,8 @@ void DeactivatePermissionSync(taihe::array_view<ohos::fileshare::fileShare::Poli
     std::shared_ptr<PolicyErrorArgs> arg = std::make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("PolicyErrorArgs make make_shared failed");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR, "PolicyErrorArgs make make_shared failed");
+        taihe::set_business_error(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR,
+                                  "PolicyErrorArgs make make_shared failed");
         return;
     }
 
@@ -302,7 +304,8 @@ void GrantUriPermissionSync(taihe::string_view uri, taihe::string_view bundleNam
     LOGD("fileShare::GrantUriPermission begin!");
     if (!IsSystemApp()) {
         LOGE("fileShare::GrantUriPermission is not System App!");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS, "fileShare::GrantUriPermission is not System App!");
+        taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS,
+                                  "fileShare::GrantUriPermission is not System App!");
     }
 
     std::string uri_ = std::string(uri);
@@ -348,7 +351,8 @@ taihe::array<bool> CheckPathPermissionSync(int32_t tokenID,
     int32_t callerTokenId = static_cast<int32_t>(OHOS::IPCSkeleton::GetCallingTokenID());
     if (tokenID != callerTokenId) {
         if (!CheckTokenIdPermission(callerTokenId, "ohos.permission.CHECK_SANDBOX_POLICY")) {
-            taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION, "fileShare::CheckPathPermissionSync checkPermission failed!");
+            taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION,
+                                      "fileShare::CheckPathPermissionSync checkPermission failed!");
             return taihe::array<bool>::make(0);
         }
     }
@@ -363,7 +367,8 @@ taihe::array<bool> CheckPathPermissionSync(int32_t tokenID,
     std::shared_ptr<PolicyInfoResultArgs> arg = std::make_shared<PolicyInfoResultArgs>();
     if (arg == nullptr) {
         LOGE("PolicyInfoResultArgs make make_shared failed.");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR, "PolicyInfoResultArgs make make_shared failed.");
+        taihe::set_business_error(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR,
+                                  "PolicyInfoResultArgs make make_shared failed.");
         return taihe::array<bool>::make(0);
     }
 
