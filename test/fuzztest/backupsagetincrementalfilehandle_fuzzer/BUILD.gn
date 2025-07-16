@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -18,10 +18,10 @@ import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
 ##############################fuzztest##########################################
-ohos_fuzztest("BackupSaAnotherFuzzTest") {
+ohos_fuzztest("BackupSaGetIncrementalFileHandleFuzzTest") {
   module_out_path = "app_file_service/app_file_service"
   fuzz_config_file =
-      "${app_file_service_path}/test/fuzztest/backupsaanother_fuzzer"
+      "${app_file_service_path}/test/fuzztest/backupsagetincrementalfilehandle_fuzzer"
   include_dirs = [
     "${app_file_service_path}/services/backup_sa/include/module_ipc",
     "${app_file_service_path}/services/backup_sa/include",
@@ -34,7 +34,7 @@ ohos_fuzztest("BackupSaAnotherFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "backupsaanother_fuzzer.cpp" ]
+  sources = [ "backupsagetincrementalfilehandle_fuzzer.cpp" ]
 
   deps = [
     "${app_file_service_path}/services/backup_sa:backup_sa",
