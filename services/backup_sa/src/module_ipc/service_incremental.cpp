@@ -62,6 +62,7 @@ const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 namespace {
 constexpr int32_t INDEX = 3;
 constexpr int32_t MS_1000 = 1000;
+constexpr int32_t INCREMENTAL_COUNT = 1;
 const static string UNICAST_TYPE = "unicast";
 } // namespace
 
@@ -130,24 +131,47 @@ ErrCode Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalD
     return BError(BError::Codes::OK); // anytime return OK
 }
 
+BJsonCachedEntity<BJsonEntityCaps> Service::CreateJsonEntity(UniqueFd &fd,
+    vector<BJsonEntityCaps::BundleInfo>& bundleInfos, const std::vector<BIncrementalData> &bundleNames)
+{
+    BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
+    auto cache = cachedEntity.Structuralize();
+    std::string backupVersion = BJsonUtil::ParseBackupVersion();
+    cache.SetBackupVersion(backupVersion);
+    cache.SetSystemFullName(GetOSFullName());
+    cache.SetDeviceType(GetDeviceType());
+    bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(GetUserIdDefault(), bundleNames);
+    cache.SetBundleInfos(bundleInfos, true);
+    cachedEntity.Persist();
+    HILOGI("Service GetLocalCapabilitiesIncremental persist, bundleInfos size:%{public}zu", bundleInfos.size());
+    isCreatingIncreaseFile_.fetch_sub(INCREMENTAL_COUNT);
+    if (isCreatingIncreaseFile_.load() <= 0) {
+        isCreatingIncreaseFile_.store(0);
+        const int userId = GetUserIdDefault();
+        for (const auto &bundleInfo : bundleInfos) {
+            ClearIncrementalStatFile(userId, bundleInfo.name);
+        }
+        HILOGI("do ClearIncrementalStatFile finished");
+    }
+    return cachedEntity;
+}
+
 UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        /*
-         Only called by restore app before InitBackupSession,
-           so there must be set init userId.
-        */
         HILOGI("Begin");
         if (session_ == nullptr || isOccupyingSession_.load()) {
             HILOGE("Get LocalCapabilities Incremental Error, session is empty or cleaning up the service");
             return UniqueFd(-ENOENT);
         }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        isCreatingIncreaseFile_.fetch_add(INCREMENTAL_COUNT);
         ErrCode errCode = VerifyCaller();
         if (errCode != ERR_OK) {
             HILOGE("Get local abilities info failed, Verify caller failed, errCode:%{public}d", errCode);
             session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            isCreatingIncreaseFile_.fetch_sub(INCREMENTAL_COUNT);
             return UniqueFd(-ENOENT);
         }
         string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
@@ -157,26 +181,20 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
         if (fd < 0) {
             HILOGE("GetLocalCapabilitiesIncremental: open file failed, err = %{public}d", errno);
             session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            isCreatingIncreaseFile_.fetch_sub(INCREMENTAL_COUNT);
             return UniqueFd(-ENOENT);
         }
-        BJsonCachedEntity<BJsonEntityCaps> cachedEntity(move(fd));
-        auto cache = cachedEntity.Structuralize();
-        std::string backupVersion = BJsonUtil::ParseBackupVersion();
-        cache.SetBackupVersion(backupVersion);
-        cache.SetSystemFullName(GetOSFullName());
-        cache.SetDeviceType(GetDeviceType());
-        auto bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(GetUserIdDefault(), bundleNames);
-        cache.SetBundleInfos(bundleInfos, true);
-        cachedEntity.Persist();
-        HILOGI("Service GetLocalCapabilitiesIncremental persist");
+        vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+        BJsonCachedEntity<BJsonEntityCaps> cachedEntity = CreateJsonEntity(fd, bundleInfos, bundleNames);
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        HILOGI("End, bundleInfos size:%{public}zu", bundleInfos.size());
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
+        isCreatingIncreaseFile_.fetch_sub(INCREMENTAL_COUNT);
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGE("GetLocalCapabilitiesIncremental failed, errCode = %{public}d", e.GetCode());
         return UniqueFd(-e.GetCode());
     } catch (...) {
+        isCreatingIncreaseFile_.fetch_sub(INCREMENTAL_COUNT);
         HILOGE("Unexpected exception");
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return UniqueFd(-EPERM);
@@ -712,6 +730,7 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
         }
         HILOGI("Service AppIncrementalDone start, callerName is %{public}s, errCode is: %{public}d",
             callerName.c_str(), errCode);
+        ClearIncrementalStatFile(GetUserIdDefault(), callerName);
         if (session_->OnBundleFileReady(callerName) || errCode != BError(BError::Codes::OK)) {
             std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
             if (mutexPtr == nullptr) {
@@ -1119,4 +1138,29 @@ ErrCode Service::Cancel(const std::string& bundleName, int32_t &result)
     }
     return BError(BError::Codes::OK);
 }
+
+void Service::ClearIncrementalStatFile(int32_t userId, const string &bundleName)
+{
+    BJsonUtil::BundleDetailInfo bundleDetail = BJsonUtil::ParseBundleNameIndexStr(bundleName);
+    string backupSaBundleDir;
+    if (bundleDetail.bundleIndex > 0) {
+        const std::string bundleNameIndex  = "+clone-" + std::to_string(bundleDetail.bundleIndex) + "+" +
+            bundleDetail.bundleName;
+        backupSaBundleDir = BConstants::BACKUP_PATH_PREFIX + to_string(userId) + BConstants::BACKUP_PATH_SURFFIX +
+            bundleNameIndex + BConstants::FILE_SEPARATOR_CHAR;
+    } else {
+        backupSaBundleDir = BConstants::BACKUP_PATH_PREFIX + to_string(userId) + BConstants::BACKUP_PATH_SURFFIX +
+            bundleDetail.bundleName + BConstants::FILE_SEPARATOR_CHAR;
+    }
+    if (access(backupSaBundleDir.c_str(), F_OK) != ERR_OK) {
+        HILOGD("ClearIncrementalStatFile, access dir failed errno = %{public}d", errno);
+        return;
+    }
+    if (!ForceRemoveDirectoryBMS(backupSaBundleDir.c_str())) {
+        HILOGE("Failed to delete SaBundleBackupDir cache: %{public}s",
+            backupSaBundleDir.c_str());
+        return;
+    }
+}
+
 } // namespace OHOS::FileManagement::Backup

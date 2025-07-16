@@ -1100,7 +1100,6 @@ ErrCode Service::GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrem
             session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return BError(BError::Codes::SA_INVAL_ARG, "verify caller failed");
         }
-        BundleMgrAdapter::CreatBackupEnv(bundleNameList, GetUserIdDefault());
         CyclicSendScannedInfo(isPreciseScan, bundleNameList);
         return BError(BError::Codes::OK);
     } catch (...) {

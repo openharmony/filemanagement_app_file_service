@@ -720,6 +720,9 @@ private:
         const vector<BundleName> &bundleNames, std::string &oldBackupVersion);
     void AppStatReportErr(const string &bundleName, const string &func, RadarError err);
     void SaStatReport(const string &bundleName, const string &func, RadarError err);
+    void ClearIncrementalStatFile(int32_t userId, const string &bundleName);
+    BJsonCachedEntity<BJsonEntityCaps> CreateJsonEntity(UniqueFd &fd,
+        vector<BJsonEntityCaps::BundleInfo> &bundleInfos, const std::vector<BIncrementalData> &bundleNames);
     void TotalStart()
     {
         if (totalStatistic_ != nullptr) {
@@ -760,6 +763,7 @@ private:
     static inline std::atomic<uint32_t> seed {1};
     std::atomic<bool> isConnectDied_ {false};
     std::atomic<bool> isOccupyingSession_ {false};
+    std::atomic<int> isCreatingIncreaseFile_ {0};
 
     sptr<SvcSessionManager> session_;
     sptr<SchedScheduler> sched_;
