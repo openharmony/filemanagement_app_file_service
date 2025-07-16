@@ -20,6 +20,7 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 void BackupExtExtension::VerifyCaller()
 {
+    BExtExtension::extExtension->VerifyCaller();
 }
 
 UniqueFd BackupExtExtension::GetFileHandle(const string &fileName, int32_t &errCode)
@@ -77,40 +78,49 @@ int BackupExtExtension::DoIncrementalRestore()
 
 void BackupExtExtension::AsyncTaskBackup(const string config)
 {
+    BExtExtension::extExtension->AsyncTaskBackup(config);
 }
 
 void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
     const std::vector<ExtManageInfo> extManageInfo)
 {
+    BExtExtension::extExtension->AsyncTaskRestore(fileSet, extManageInfo);
 }
 
 void BackupExtExtension::AsyncTaskIncrementalRestore()
 {
+    BExtExtension::extExtension->AsyncTaskIncrementalRestore();
 }
 
 void BackupExtExtension::AsyncTaskIncreRestoreSpecialVersion()
 {
+    BExtExtension::extExtension->AsyncTaskIncreRestoreSpecialVersion();
 }
 
 void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
 {
+    BExtExtension::extExtension->AsyncTaskIncrementalRestoreForUpgrade();
 }
 
 void BackupExtExtension::DoClear()
 {
+    BExtExtension::extExtension->DoClear();
 }
 
 void BackupExtExtension::AppDone(ErrCode errCode)
 {
+    BExtExtension::extExtension->AppDone(errCode);
 }
 
 void BackupExtExtension::AppResultReport(const std::string restoreRetInfo,
     BackupRestoreScenario scenario, ErrCode errCode)
 {
+    BExtExtension::extExtension->AppResultReport(restoreRetInfo, scenario, errCode);
 }
 
 void BackupExtExtension::AsyncTaskOnBackup()
 {
+    BExtExtension::extExtension->AsyncTaskOnBackup();
 }
 
 ErrCode BackupExtExtension::HandleRestore(bool isClearData)
@@ -126,6 +136,7 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
 
 void BackupExtExtension::StartFwkTimer(bool &isFwkStart)
 {
+    BExtExtension::extExtension->StartFwkTimer(isFwkStart);
 }
 
 ErrCode BackupExtExtension::GetFileHandleWithUniqueFd(const std::string &fileName, int32_t &errCode, int& fd)
@@ -139,14 +150,18 @@ void BackupExtExtension::FillFileInfos(UniqueFd incrementalFd,
                                        vector<struct ReportFileInfo> &smallFiles,
                                        vector<struct ReportFileInfo> &bigFiles)
 {
+    BExtExtension::extExtension->FillFileInfos(move(incrementalFd), move(manifestFd), allFiles,
+        smallFiles, bigFiles);
 }
 
 void BackupExtExtension::ReportAppStatistic(const std::string &func, ErrCode errCode)
 {
+    BExtExtension::extExtension->ReportAppStatistic(func, errCode);
 }
 
 void BackupExtExtension::UpdateOnStartTime()
 {
+    BExtExtension::extExtension->UpdateOnStartTime();
 }
 
 ErrCode BackupExtExtension::IncrementalTarFileReady(const TarMap &bigFileInfo,
@@ -169,6 +184,7 @@ std::function<void(std::string, int)> BackupExtExtension::ReportErrFileByProc(wp
 
 void BackupExtExtension::DoClearInner()
 {
+    BExtExtension::extExtension->DoClearInner();
 }
 
 ErrCode BackupExtExtension::CleanBundleTempDir()
