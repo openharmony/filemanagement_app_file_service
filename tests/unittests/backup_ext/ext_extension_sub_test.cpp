@@ -506,6 +506,7 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_HandleGetCompatibilityInfo_Test_
         ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, compatibilityInfo);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_INVAL_ARG).GetCode());
 
+        scenario = BConstants::ExtensionScenario::BACKUP;
         EXPECT_CALL(*extBackupMock, GetBackupCompatibilityInfo(_, _))
             .WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
         ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, compatibilityInfo);
@@ -603,5 +604,711 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_HandleExtOnRelease_Test_0100, te
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_HandleExtOnRelease_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_PreDealExcludes_Test_0100
+ * @tc.name: Ext_Extension_Sub_PreDealExcludes_Test_0100
+ * @tc.desc: 测试PreDealExcludes
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PreDealExcludes_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PreDealExcludes_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        std::vector<std::string> excludes {"test1", "test2/", ""};
+        extExtension->PreDealExcludes(excludes);
+        EXPECT_EQ(excludes.size(), 2);
+        EXPECT_EQ(excludes[0], "test1");
+        EXPECT_EQ(excludes[1], "/test2/*");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PreDealExcludes_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_DoBackupBigFiles_Test_0100
+ * @tc.name: Ext_Extension_Sub_DoBackupBigFiles_Test_0100
+ * @tc.desc: 测试DoBackupBigFiles
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_DoBackupBigFiles_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_DoBackupBigFiles_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        TarMap tarMap {};
+        uint32_t backupedFileSize = 0;
+        auto ext = extExtension->extension_;
+        extExtension->extension_ = nullptr;
+        auto ret = extExtension->DoBackupBigFiles(tarMap, backupedFileSize);
+        extExtension->extension_ = ext;
+        EXPECT_EQ(ret, EPERM);
+
+        EXPECT_CALL(*extBackupMock, GetExtensionAction()).WillOnce(Return(BConstants::ExtensionAction::INVALID));
+        ret = extExtension->DoBackupBigFiles(tarMap, backupedFileSize);
+        EXPECT_EQ(ret, EPERM);
+
+        EXPECT_CALL(*extBackupMock, GetExtensionAction()).WillOnce(Return(BConstants::ExtensionAction::BACKUP));
+        EXPECT_CALL(*extExtensionMock, BigFileReady(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        ret = extExtension->DoBackupBigFiles(tarMap, backupedFileSize);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_DoBackupBigFiles_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_MatchFiles_Test_0100
+ * @tc.name: Ext_Extension_Sub_MatchFiles_Test_0100
+ * @tc.desc: 测试MatchFiles
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_MatchFiles_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_MatchFiles_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        std::map<std::string, int> files = {{"", 1}, {"test2.log", 2}, {"test3.txt", 3}, {"test4", 4}};
+        std::vector<std::string> endExcludes {};
+        std::map<std::string, int> ret = extExtension->MatchFiles(files, endExcludes);
+        EXPECT_EQ(ret.size(), 4);
+
+        endExcludes = {"*.txt"};
+        ret = extExtension->MatchFiles(files, endExcludes);
+        EXPECT_EQ(ret.size(), 3);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_MatchFiles_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_IfCloudSpecialRestore_Test_0100
+ * @tc.name: Ext_Extension_Sub_IfCloudSpecialRestore_Test_0100
+ * @tc.desc: 测试IfCloudSpecialRestore
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_IfCloudSpecialRestore_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_IfCloudSpecialRestore_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        std::string tarName = "test";
+        auto ret = extExtension->IfCloudSpecialRestore(tarName);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_IfCloudSpecialRestore_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_CompareFiles_Test_0100
+ * @tc.name: Ext_Extension_Sub_CompareFiles_Test_0100
+ * @tc.desc: 测试CompareFiles
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CompareFiles_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_CompareFiles_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        string actualPath1 = PATH + BUNDLE_NAME + FILE_NAME;
+        string actualPath2 = PATH + BUNDLE_NAME + "2.txt";
+        ReportFileInfo fileInfo1, fileInfo2, fileInfo3, fileInfo4, fileInfo5;
+        fileInfo1.filePath = "";
+        fileInfo2.filePath = "test2";
+        fileInfo2.isIncremental = true;
+        fileInfo2.isDir = true;
+        fileInfo3.filePath = actualPath1;
+        fileInfo3.isIncremental = true;
+        fileInfo4.filePath = actualPath2;
+        fileInfo4.isIncremental = true;
+        fileInfo4.size = BConstants::BIG_FILE_BOUNDARY + 1;
+        fileInfo5.filePath = "test5";
+        fileInfo5.isIncremental = true;
+        unordered_map<string, struct ReportFileInfo> localFilesInfo {{"test1", fileInfo1}, {"test2", fileInfo2},
+            {actualPath1, fileInfo3}, {actualPath2, fileInfo4}, {"test5", fileInfo5}};
+        unordered_map<string, struct ReportFileInfo> cloudFiles {{"test5", fileInfo5}};
+        vector<struct ReportFileInfo> allFiles, smallFiles, bigFiles;
+        extExtension->CompareFiles(allFiles, smallFiles, bigFiles, cloudFiles, localFilesInfo);
+        EXPECT_EQ(allFiles.size(), 4);
+        EXPECT_EQ(smallFiles.size(), 2);
+        EXPECT_EQ(bigFiles.size(), 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_CompareFiles_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_ReportOnProcessResultCallback_Test_0100
+ * @tc.name: Ext_Extension_Sub_ReportOnProcessResultCallback_Test_0100
+ * @tc.desc: 测试ReportOnProcessResultCallback
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_ReportOnProcessResultCallback_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_ReportOnProcessResultCallback_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        BackupRestoreScenario scenario = BackupRestoreScenario::FULL_BACKUP;
+        ErrCode errCode = BError(BError::Codes::OK).GetCode();
+        string processInfo = "";
+        extExtension->ReportOnProcessResultCallback(nullptr, scenario)(errCode, processInfo);
+
+        auto ptr = wptr<BackupExtExtension>(extExtension);
+        extExtension->onProcessTimeout_.store(true);
+        extExtension->ReportOnProcessResultCallback(ptr, scenario)(errCode, processInfo);
+        EXPECT_FALSE(extExtension->onProcessTimeout_.load());
+
+        extExtension->onProcessTimeoutCnt_.store(1);
+        extExtension->ReportOnProcessResultCallback(ptr, scenario)(errCode, processInfo);
+        EXPECT_EQ(extExtension->onProcessTimeoutCnt_.load(), 0);
+
+        extExtension->onProcessTimeoutCnt_.store(0);
+        processInfo = "test";
+        extExtension->ReportOnProcessResultCallback(ptr, scenario)(errCode, processInfo);
+        EXPECT_EQ(extExtension->onProcessTimeoutCnt_.load(), 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_ReportOnProcessResultCallback_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_UpdateFileStat_Test_0100
+ * @tc.name: Ext_Extension_Sub_UpdateFileStat_Test_0100
+ * @tc.desc: 测试UpdateFileStat
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_UpdateFileStat_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_UpdateFileStat_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        string actualPath = PATH + BUNDLE_NAME + FILE_NAME;
+        extExtension->UpdateFileStat(actualPath, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_UpdateFileStat_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_IfAllowToBackupRestore_Test_0100
+ * @tc.name: Ext_Extension_Sub_IfAllowToBackupRestore_Test_0100
+ * @tc.desc: 测试IfAllowToBackupRestore
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_IfAllowToBackupRestore_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_IfAllowToBackupRestore_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        auto extension = extExtension->extension_;
+        extExtension->extension_ = nullptr;
+        auto ret = extExtension->IfAllowToBackupRestore();
+        EXPECT_FALSE(ret);
+
+        extExtension->extension_ = extension;
+        string usrConfig = "{\"allowToBackupRestore\":false}";
+        EXPECT_CALL(*extBackupMock, GetUsrConfig()).WillOnce(Return(usrConfig));
+        ret = extExtension->IfAllowToBackupRestore();
+        EXPECT_FALSE(ret);
+
+        usrConfig = "{\"allowToBackupRestore\":true}";
+        EXPECT_CALL(*extBackupMock, GetUsrConfig()).WillOnce(Return(usrConfig));
+        ret = extExtension->IfAllowToBackupRestore();
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_IfAllowToBackupRestore_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_SetStagingPathProperties_Test_0100
+ * @tc.name: Ext_Extension_Sub_SetStagingPathProperties_Test_0100
+ * @tc.desc: 测试SetStagingPathProperties
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_SetStagingPathProperties_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_SetStagingPathProperties_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        auto ret = extExtension->SetStagingPathProperties();
+        EXPECT_TRUE(ret);
+
+        string dirAct = string("rm -r ") + BUNDLE_BASE_DIR;
+        system(dirAct.c_str());
+        ret = extExtension->SetStagingPathProperties();
+        dirAct = string("mkdir -p ") + BUNDLE_BASE_DIR;
+        system(dirAct.c_str());
+        EXPECT_FALSE(ret);
+
+        dirAct = string("rm -r ") + PATH_BUNDLE_BACKUP_HOME;
+        system(dirAct.c_str());
+        ret = extExtension->SetStagingPathProperties();
+        dirAct = string("mkdir -p ") + PATH_BUNDLE_BACKUP_HOME;
+        system(dirAct.c_str());
+        EXPECT_FALSE(ret);
+
+        dirAct = string("rm -r ") + PATH_BUNDLE_BACKUP_HOME_EL1;
+        system(dirAct.c_str());
+        ret = extExtension->SetStagingPathProperties();
+        dirAct = string("mkdir -p ") + PATH_BUNDLE_BACKUP_HOME_EL1;
+        system(dirAct.c_str());
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_SetStagingPathProperties_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_UpdateFdSendRate_Test_0100
+ * @tc.name: Ext_Extension_Sub_UpdateFdSendRate_Test_0100
+ * @tc.desc: 测试UpdateFdSendRate
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_UpdateFdSendRate_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_UpdateFdSendRate_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        auto ret = extExtension->UpdateFdSendRate(BUNDLE_NAME, 0);
+        EXPECT_EQ(extExtension->sendRate_, 0);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        ret = extExtension->UpdateFdSendRate(BUNDLE_NAME, 10);
+        EXPECT_EQ(extExtension->sendRate_, 10);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_UpdateFdSendRate_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_GetBackupInfo_Test_0100
+ * @tc.name: Ext_Extension_Sub_GetBackupInfo_Test_0100
+ * @tc.desc: 测试GetBackupInfo
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_GetBackupInfo_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_GetBackupInfo_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        string result = "";
+        auto ext = extExtension->extension_;
+        extExtension->extension_ = nullptr;
+        auto ret = extExtension->GetBackupInfo(result);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+
+        extExtension->extension_ = ext;
+        EXPECT_CALL(*extBackupMock, GetBackupInfo(_)).WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
+        ret = extExtension->GetBackupInfo(result);
+        EXPECT_EQ(ret, BError(BError::Codes::EXT_INVAL_ARG).GetCode());
+
+        EXPECT_CALL(*extBackupMock, GetBackupInfo(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        ret = extExtension->GetBackupInfo(result);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_GetBackupInfo_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_SyncCallJsOnProcessTask_Test_0100
+ * @tc.name: Ext_Extension_Sub_SyncCallJsOnProcessTask_Test_0100
+ * @tc.desc: 测试SyncCallJsOnProcessTask
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_SyncCallJsOnProcessTask_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_SyncCallJsOnProcessTask_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        auto obj = wptr<BackupExtExtension>(extExtension);
+        BackupRestoreScenario scenario = BackupRestoreScenario::FULL_BACKUP;
+        extExtension->stopCallJsOnProcess_.store(true);
+        extExtension->SyncCallJsOnProcessTask(obj, scenario);
+        EXPECT_TRUE(extExtension->stopCallJsOnProcess_.load());
+
+        extExtension->stopCallJsOnProcess_.store(false);
+        extExtension->SyncCallJsOnProcessTask(nullptr, scenario);
+        EXPECT_FALSE(extExtension->stopCallJsOnProcess_.load());
+
+        auto ext = extExtension->extension_;
+        extExtension->extension_ = nullptr;
+        extExtension->SyncCallJsOnProcessTask(obj, scenario);
+        EXPECT_FALSE(extExtension->stopCallJsOnProcess_.load());
+
+        extExtension->extension_ = ext;
+        EXPECT_CALL(*extBackupMock, OnProcess(_)).WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
+        extExtension->SyncCallJsOnProcessTask(obj, scenario);
+        EXPECT_FALSE(extExtension->stopCallJsOnProcess_.load());
+
+        EXPECT_CALL(*extBackupMock, OnProcess(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        extExtension->SyncCallJsOnProcessTask(obj, scenario);
+        EXPECT_FALSE(extExtension->stopCallJsOnProcess_.load());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_SyncCallJsOnProcessTask_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_IncreOnRestoreExCallback_Test_0100
+ * @tc.name: Ext_Extension_Sub_IncreOnRestoreExCallback_Test_0100
+ * @tc.desc: 测试IncreOnRestoreExCallback
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_IncreOnRestoreExCallback_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_IncreOnRestoreExCallback_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        auto obj = wptr<BackupExtExtension>(extExtension);
+        ErrCode errCode = BError(BError::Codes::OK).GetCode();
+        string restoreRetInfo = "";
+        extExtension->IncreOnRestoreExCallback(nullptr)(errCode, restoreRetInfo);
+        EXPECT_EQ(restoreRetInfo, "");
+
+        auto ext = extExtension->extension_;
+        extExtension->extension_ = nullptr;
+        extExtension->IncreOnRestoreExCallback(obj)(errCode, restoreRetInfo);
+        EXPECT_EQ(restoreRetInfo, "");
+
+        extExtension->extension_ = ext;
+        extExtension->isExecAppDone_.store(true);
+        extExtension->IncreOnRestoreExCallback(obj)(errCode, restoreRetInfo);
+        EXPECT_TRUE(extExtension->isExecAppDone_.load());
+
+        extExtension->isExecAppDone_.store(false);
+        restoreRetInfo = "test";
+        extExtension->IncreOnRestoreExCallback(obj)(errCode, restoreRetInfo);
+        EXPECT_EQ(restoreRetInfo, "test");
+
+        restoreRetInfo = "";
+        extExtension->IncreOnRestoreExCallback(obj)(errCode, restoreRetInfo);
+        EXPECT_EQ(restoreRetInfo, "");
+
+        errCode = BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+        extExtension->IncreOnRestoreExCallback(obj)(errCode, restoreRetInfo);
+        EXPECT_EQ(restoreRetInfo, "");
+
+        restoreRetInfo = "test";
+        extExtension->IncreOnRestoreExCallback(obj)(errCode, restoreRetInfo);
+        EXPECT_EQ(restoreRetInfo, "test");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_IncreOnRestoreExCallback_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_IncreOnRestoreCallback_Test_0100
+ * @tc.name: Ext_Extension_Sub_IncreOnRestoreCallback_Test_0100
+ * @tc.desc: 测试IncreOnRestoreCallback
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_IncreOnRestoreCallback_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_IncreOnRestoreCallback_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        auto obj = wptr<BackupExtExtension>(extExtension);
+        ErrCode errCode = BError(BError::Codes::OK).GetCode();
+        string errMsg = "";
+        extExtension->IncreOnRestoreCallback(nullptr)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        extExtension->isExecAppDone_.store(true);
+        extExtension->IncreOnRestoreCallback(obj)(errCode, errMsg);
+        EXPECT_TRUE(extExtension->isExecAppDone_.load());
+
+        extExtension->isExecAppDone_.store(false);
+        errMsg = "test";
+        extExtension->IncreOnRestoreCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "test");
+
+        errMsg = "";
+        extExtension->IncreOnRestoreCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        errCode = BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+        extExtension->IncreOnRestoreCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_IncreOnRestoreCallback_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_OnBackupCallback_Test_0100
+ * @tc.name: Ext_Extension_Sub_OnBackupCallback_Test_0100
+ * @tc.desc: 测试OnBackupCallback
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_OnBackupCallback_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_OnBackupCallback_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        auto obj = wptr<BackupExtExtension>(extExtension);
+        ErrCode errCode = BError(BError::Codes::OK).GetCode();
+        string errMsg = "";
+        extExtension->OnBackupCallback(nullptr)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        auto ext = extExtension->extension_;
+        extExtension->extension_ = nullptr;
+        extExtension->OnBackupCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        extExtension->extension_ = ext;
+        extExtension->isExecAppDone_.store(true);
+        extExtension->OnBackupCallback(obj)(errCode, errMsg);
+        EXPECT_TRUE(extExtension->isExecAppDone_.load());
+
+        extExtension->isExecAppDone_.store(false);
+        errMsg = "test";
+        string usrConfig = "{\"allowToBackupRestore\":true}";
+        EXPECT_CALL(*extBackupMock, GetUsrConfig()).WillOnce(Return(usrConfig));
+        extExtension->OnBackupCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "test");
+
+        errCode = BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+        extExtension->OnBackupCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "test");
+
+        errMsg = "";
+        extExtension->OnBackupCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_OnBackupCallback_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_OnBackupExCallback_Test_0100
+ * @tc.name: Ext_Extension_Sub_OnBackupExCallback_Test_0100
+ * @tc.desc: 测试OnBackupExCallback
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_OnBackupExCallback_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_OnBackupExCallback_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        auto obj = wptr<BackupExtExtension>(extExtension);
+        ErrCode errCode = BError(BError::Codes::OK).GetCode();
+        string errMsg = "";
+        extExtension->OnBackupExCallback(nullptr)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        auto ext = extExtension->extension_;
+        extExtension->extension_ = nullptr;
+        extExtension->OnBackupExCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        extExtension->extension_ = ext;
+        extExtension->isExecAppDone_.store(true);
+        extExtension->OnBackupExCallback(obj)(errCode, errMsg);
+        EXPECT_TRUE(extExtension->isExecAppDone_.load());
+
+        extExtension->isExecAppDone_.store(false);
+        errMsg = "test";
+        string usrConfig = "{\"allowToBackupRestore\":true}";
+        EXPECT_CALL(*extBackupMock, GetUsrConfig()).WillOnce(Return(usrConfig));
+        extExtension->OnBackupExCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "test");
+
+        errMsg = "";
+        extExtension->OnBackupExCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        errCode = BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+        extExtension->OnBackupExCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        errMsg = "test";
+        extExtension->OnBackupExCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "test");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_OnBackupExCallback_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_IncOnBackupCallback_Test_0100
+ * @tc.name: Ext_Extension_Sub_IncOnBackupCallback_Test_0100
+ * @tc.desc: 测试IncOnBackupCallback
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_IncOnBackupCallback_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_IncOnBackupCallback_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        auto obj = wptr<BackupExtExtension>(extExtension);
+        ErrCode errCode = BError(BError::Codes::OK).GetCode();
+        string errMsg = "";
+        extExtension->IncOnBackupCallback(nullptr)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        extExtension->isExecAppDone_.store(true);
+        extExtension->IncOnBackupCallback(obj)(errCode, errMsg);
+        EXPECT_TRUE(extExtension->isExecAppDone_.load());
+
+        extExtension->isExecAppDone_.store(false);
+        errMsg = "test";
+        extExtension->IncOnBackupCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "test");
+
+        errCode = BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+        extExtension->IncOnBackupCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "test");
+
+        errMsg = "";
+        extExtension->IncOnBackupCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_IncOnBackupCallback_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_IncOnBackupExCallback_Test_0100
+ * @tc.name: Ext_Extension_Sub_IncOnBackupExCallback_Test_0100
+ * @tc.desc: 测试IncOnBackupExCallback
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_IncOnBackupExCallback_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_IncOnBackupExCallback_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        auto obj = wptr<BackupExtExtension>(extExtension);
+        ErrCode errCode = BError(BError::Codes::OK).GetCode();
+        string errMsg = "";
+        extExtension->IncOnBackupExCallback(nullptr)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        auto ext = extExtension->extension_;
+        extExtension->extension_ = nullptr;
+        extExtension->IncOnBackupExCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        extExtension->extension_ = ext;
+        extExtension->isExecAppDone_.store(true);
+        extExtension->IncOnBackupExCallback(obj)(errCode, errMsg);
+        EXPECT_TRUE(extExtension->isExecAppDone_.load());
+
+        extExtension->isExecAppDone_.store(false);
+        errMsg = "test";
+        extExtension->IncOnBackupExCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "test");
+
+        errMsg = "";
+        extExtension->IncOnBackupExCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        errCode = BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+        extExtension->IncOnBackupExCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "");
+
+        errMsg = "test";
+        extExtension->IncOnBackupExCallback(obj)(errCode, errMsg);
+        EXPECT_EQ(errMsg, "test");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_IncOnBackupExCallback_Test_0100";
 }
 }

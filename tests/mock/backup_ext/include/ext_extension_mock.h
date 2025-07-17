@@ -64,6 +64,7 @@ public:
     virtual void StartFwkTimer(bool &isFwkStart) = 0;
     virtual ErrCode CleanBundleTempDir() = 0;
     virtual void AsyncTaskIncreRestoreSpecialVersion() = 0;
+    virtual void GetTarIncludes(const std::string &, std::unordered_map<std::string, struct ReportFileInfo> &) = 0;
 public:
     BExtExtension() = default;
     virtual ~BExtExtension() = default;
@@ -119,6 +120,8 @@ public:
         BackupRestoreScenario));
     MOCK_METHOD(void, DoClearInner, ());
     MOCK_METHOD(void, StartFwkTimer, (bool &));
+    MOCK_METHOD(void, GetTarIncludes, (const std::string &,
+        (std::unordered_map<std::string, struct ReportFileInfo> &)));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_EXT_EXTENSION_MOCK_H
