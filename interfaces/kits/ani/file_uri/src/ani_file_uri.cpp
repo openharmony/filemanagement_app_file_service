@@ -137,18 +137,10 @@ static void FileUriConstructor(ani_env *env, ani_object obj, ani_string stringOb
         return;
     }
 
-    ani_namespace ns;
-    if (env->FindNamespace("L@ohos/file/fileuri/fileUri;", &ns) != ANI_OK) {
-        LOGE("Namespace L@ohos/file/fileuri/fileUri not found.");
-        delete holder;
-        ThrowBusinessError(env, EPERM, "Namespace L@ohos/file/fileuri/fileUri not found.");
-        return;
-    };
-
     ani_class cls;
-    static const char *className = "LFileUri;";
-    if (env->Namespace_FindClass(ns, className, &cls) != ANI_OK) {
-        LOGE("Not found class LFileUri in Namespace L@ohos/file/fileuri/fileUri.");
+    static const char *className = "@ohos.file.fileuri.fileUri.FileUri";
+    if (env->FindClass(className, &cls) != ANI_OK) {
+        LOGE("Not found class FileUri in Namespace @ohos.file.fileuri.fileUri.");
         delete holder;
         ThrowBusinessError(env, EPERM, "Class LFileUri not found.");
         return;
@@ -179,7 +171,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_ERROR;
     }
 
-    static const char *nsName = "L@ohos/file/fileuri/fileUri;";
+    static const char *nsName = "@ohos.file.fileuri.fileUri";
     ani_namespace ns;
     if (ANI_OK != env->FindNamespace(nsName, &ns)) {
         LOGE("Not found namespace %{public}s.", nsName);
@@ -193,10 +185,11 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_ERROR;
     };
 
-    static const char *className = "LFileUri;";
+    static const char *className = "FileUri";
+    const std::string fullClassName = std::string(nsName).append(".").append(className);
     ani_class fileUriClass;
-    if (ANI_OK != env->Namespace_FindClass(ns, className, &fileUriClass)) {
-        LOGE("Not found class %{public}s in %{public}s.", nsName, nsName);
+    if (ANI_OK != env->FindClass(fullClassName.c_str(), &fileUriClass)) {
+        LOGE("Not found class %{public}s in %{public}s.", className, nsName);
         return ANI_NOT_FOUND;
     }
     std::array classMethods = {
