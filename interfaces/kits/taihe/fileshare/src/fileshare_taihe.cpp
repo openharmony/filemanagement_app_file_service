@@ -306,6 +306,7 @@ void GrantUriPermissionSync(taihe::string_view uri, taihe::string_view bundleNam
         LOGE("fileShare::GrantUriPermission is not System App!");
         taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS,
                                   "fileShare::GrantUriPermission is not System App!");
+        return;
     }
 
     std::string uri_ = std::string(uri);
