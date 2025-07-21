@@ -222,7 +222,7 @@ static inline std::vector<std::string_view> DEFAULT_VERSION_NAMES_VEC = {
     DEFAULT_VERSION_NAME,         DEFAULT_VERSION_NAME_CLONE, DEFAULT_VERSION_NAME_CLONE_2,
     DEFAULT_VERSION_NAME_CLONE_3, DEFAULT_VERSION_NAME_PC,    DEFAULT_VERSION_NAME_CLOUD,
 };
-static inline std::string BACKUP_VERSION = R"({"backupVersion" : "18.0"})";
+static inline std::string BACKUP_VERSION = R"({"backupVersion" : "20.0"})";
 
 // 应用默认备份的目录，其均为相对根路径的路径。为避免模糊匹配，务必以斜线为结尾。
 static inline std::array<std::string_view, PATHES_TO_BACKUP_SIZE> PATHES_TO_BACKUP = {
