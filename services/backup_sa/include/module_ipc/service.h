@@ -338,6 +338,7 @@ public:
     ErrCode SendIncrementalFileHandle(const std::string &bundleName, const std::string &fileName);
     void SetExtOnRelease(const BundleName &bundleName, bool isOnRelease);
     void RemoveExtOnRelease(const BundleName &bundleName);
+    void DoNoticeClientFinish(const std::string &bundleName, ErrCode errCode, bool isRestoreEnd);
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {

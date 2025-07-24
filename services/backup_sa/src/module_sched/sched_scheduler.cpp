@@ -239,7 +239,9 @@ void SchedScheduler::StartExecuteBundleTask(const std::string &bundleName, BCons
         }
     } else if (action == BConstants::ServiceSchedAction::CLEAN) {
         HILOGI("Current bundle %{public}s process is cleaning", bundleName.data());
+        bool isRestoreEnd = sessionPtr_->GetIsRestoreEnd(bundleName);
         ErrCode res = reversePtr_->ClearResidualBundleData(bundleName);
+        reversePtr_->DoNoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED), isRestoreEnd);
         IServiceReverseType::Scenario scenario = sessionPtr_->GetScenario();
         ExtDiedClearFailRadarReport(bundleName, scenario, res);
     }

@@ -338,9 +338,11 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0000, TestSize.Level1)
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBackupExtensionDied_0000";
     try {
         service->isOccupyingSession_ = false;
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(true));
         service->OnBackupExtensionDied("", true);
         EXPECT_TRUE(true);
 
@@ -376,8 +378,8 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0000, TestSize.Level1)
     try {
         string callName;
         service->isOccupyingSession_ = false;
-        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, StopFwkTimer(_)).WillRepeatedly(Return(true));
+        EXPECT_CALL(*session, StopExtTimer(_)).WillRepeatedly(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
@@ -387,9 +389,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0000, TestSize.Level1)
         service->ExtConnectDied(callName);
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(connect));
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
@@ -399,16 +399,22 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0000, TestSize.Level1)
         service->ExtConnectDied(callName);
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
-        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillRepeatedly(Return(true));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillRepeatedly(Return(false));
+        service->ExtConnectDied(callName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillRepeatedly(Return(false));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillRepeatedly(Return(false));
+        EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(true));
+        EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, UpdateDfxInfo(_, _)).WillRepeatedly(Return());
+        EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(true));
         service->ExtConnectDied(callName);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -2315,4 +2321,33 @@ HWTEST_F(ServiceTest, SUB_Service_GetCompatibilityInfo_0200, testing::ext::TestS
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetCompatibilityInfo.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetCompatibilityInfo_0200";
+}
+
+/**
+ * @tc.number: SUB_Service_DoNoticeClientFinish_0000
+ * @tc.name: SUB_Service_DoNoticeClientFinish_0000
+ * @tc.desc: 测试 DoNoticeClientFinish 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_DoNoticeClientFinish_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_DoNoticeClientFinish_0000";
+    try {
+        std::string bundleName = "com.ohos.test";
+        ErrCode err = BError(BError::Codes::SA_INVAL_ARG).GetCode();
+        service->DoNoticeClientFinish(bundleName, err, true);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        service->DoNoticeClientFinish(bundleName, err, false);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by DoNoticeClientFinish.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DoNoticeClientFinish_0000";
 }

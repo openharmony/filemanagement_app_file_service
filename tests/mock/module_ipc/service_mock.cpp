@@ -456,4 +456,6 @@ ErrCode Service::GetCompatibilityInfo(const std::string &bundleName, const std::
 {
     return BError(BError::Codes::OK);
 }
+
+void Service::DoNoticeClientFinish(const std::string &bundleName, ErrCode errCode, bool isRestoreEnd) {}
 } // namespace OHOS::FileManagement::Backup

@@ -165,6 +165,8 @@ HWTEST_F(SchedSchedulerTest, SUB_Service_ExecutingQueueTasks_0100, testing::ext:
         schedPtr_->ExecutingQueueTasks(BUNDLE_NAME);
         sessionManagerPtr_->SetServiceSchedAction(BUNDLE_NAME, BConstants::ServiceSchedAction::RUNNING);
         schedPtr_->ExecutingQueueTasks(BUNDLE_NAME);
+        sessionManagerPtr_->SetServiceSchedAction(BUNDLE_NAME, BConstants::ServiceSchedAction::CLEAN);
+        schedPtr_->ExecutingQueueTasks(BUNDLE_NAME);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SchedSchedulerTest-an exception occurred by ExecutingQueueTasks.";
