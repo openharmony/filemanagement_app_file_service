@@ -684,17 +684,17 @@ void Service::ExtConnectDied(const string &callName)
             /* Clear Session before notice client finish event */
             HILOGE("Current bundle launch extension failed, bundleName:%{public}s", callName.c_str());
             SendEndAppGalleryNotify(callName);
+            bool isRestoreEnd = session_->GetIsRestoreEnd(callName);
             ClearSessionAndSchedInfo(callName);
-        }
-        /* Notice Client Ext Ability Process Died */
-        if (!session_->GetIsRestoreEnd(callName)) {
-            NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
+            /* Notice Client Ext Ability Process Died */
+            DoNoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED), isRestoreEnd);
         }
     } catch (...) {
         HILOGE("Unexpected exception, bundleName: %{public}s", callName.c_str());
         SendEndAppGalleryNotify(callName);
+        bool isRestoreEnd = session_->GetIsRestoreEnd(callName);
         ClearSessionAndSchedInfo(callName);
-        NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
+        DoNoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED), isRestoreEnd);
     }
     RemoveExtensionMutex(callName);
 }
@@ -704,7 +704,9 @@ void Service::OnBackupExtensionDied(const string &&bundleName, bool isCleanCalle
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (isCleanCalled) {
         HILOGE("Backup <%{public}s> Extension Process second Died", bundleName.c_str());
+        bool isRestoreEnd = session_->GetIsRestoreEnd(bundleName);
         ClearSessionAndSchedInfo(bundleName);
+        DoNoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED), isRestoreEnd);
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return;
     }
@@ -1595,5 +1597,12 @@ ErrCode Service::GetCompatibilityInfo(const std::string &bundleName, const std::
     backupConnection->DisconnectBackupExtAbility();
     session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     return err;
+}
+
+void Service::DoNoticeClientFinish(const std::string &bundleName, ErrCode errCode, bool isRestoreEnd)
+{
+    if (!isRestoreEnd) {
+        NoticeClientFinish(bundleName, errCode);
+    }
 }
 }
