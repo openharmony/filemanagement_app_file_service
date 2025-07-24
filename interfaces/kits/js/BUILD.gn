@@ -157,7 +157,6 @@ ohos_shared_library("backup") {
 
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
-    "${path_backup}/services/backup_sa:backup_sa_ipc",
     "${path_backup}/utils:backup_utils",
   ]
 
