@@ -1431,7 +1431,7 @@ void Service::TryToClearDispose(const BundleName &bundleName)
             userId);
         if (disposeErr == DisposeErr::OK) {
             if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
-            HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
+                HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
             }
             break;
         }
