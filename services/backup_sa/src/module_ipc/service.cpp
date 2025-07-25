@@ -1430,13 +1430,13 @@ void Service::TryToClearDispose(const BundleName &bundleName)
         HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s, userId=%{public}d", disposeErr, bundle.c_str(),
             userId);
         if (disposeErr == DisposeErr::OK) {
+            if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
+            HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
+            }
             break;
         }
         ++att;
         HILOGI("Try to clear dispose, num = %{public}d", att);
-    }
-    if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
-        HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
     }
 }
 
