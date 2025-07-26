@@ -76,7 +76,12 @@ void ExtBackupAni::Init(const std::shared_ptr<AppExecFwk::AbilityLocalRecord> &r
 ErrCode ExtBackupAni::CallEtsOnBackup()
 {
     ani_vm *vm = nullptr;
-    if (ANI_OK != stsRuntime_.GetAniEnv()->GetVM(&vm)) {
+    auto aniEnv = stsRuntime_.GetAniEnv();
+    if (aniEnv == nullptr) {
+        HILOGE("aniEnv null");
+        return EINVAL;
+    }
+    if (ANI_OK != aniEnv->GetVM(&vm)) {
         return EINVAL;
     }
     ani_env *env = nullptr;
@@ -103,7 +108,12 @@ ErrCode ExtBackupAni::CallEtsOnBackup()
 ErrCode ExtBackupAni::CallEtsOnRestore()
 {
     ani_vm *vm = nullptr;
-    if (ANI_OK != stsRuntime_.GetAniEnv()->GetVM(&vm)) {
+    auto aniEnv = stsRuntime_.GetAniEnv();
+    if (aniEnv == nullptr) {
+        HILOGE("aniEnv null");
+        return EINVAL;
+    }
+    if (ANI_OK != aniEnv->GetVM(&vm)) {
         return EINVAL;
     }
     ani_env *env = nullptr;

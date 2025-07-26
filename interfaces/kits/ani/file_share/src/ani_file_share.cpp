@@ -199,7 +199,6 @@ static int InsertByDatashare(const DataShareValuesBucket &valuesBucket, bool isA
     dataShareHelper = DataShare::DataShareHelper::Creator(remote->AsObject(), MEDIALIBRARY_DATA_URI);
     if (!dataShareHelper) {
         LOGE("%{public}s: connect to datashare failed!", __func__);
-        delete remote;
         return ret;
     }
     string uriStr = MEDIA_GRANT_URI_PERMISSION;
