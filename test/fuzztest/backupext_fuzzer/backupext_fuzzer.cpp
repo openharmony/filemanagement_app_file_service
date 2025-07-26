@@ -331,9 +331,9 @@ bool OnRemoteRequestFuzzTest(OHOS::sptr<BackupExtExtension> extension,  const ui
         try {
             extension->OnRemoteRequest(code, datas, reply, option);
         } catch (OHOS::FileManagement::Backup::BError &err) {
-            // filter Backup error
+            HILOGE("BackupSaFuzzTest error");
         } catch (...) {
-            // filter other error
+            HILOGE("BackupSaFuzzTest exception");
         }
     }
     return true;
@@ -348,6 +348,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     auto extension = OHOS::sptr<OHOS::FileManagement::Backup::BackupExtExtension>(
         new OHOS::FileManagement::Backup::BackupExtExtension(extBackup, ""));
 
+    OHOS::OnRemoteRequestFuzzTest(extension, data, size);
     OHOS::InitFuzzTest(extBackup, data, size);
     OHOS::OnCommandFuzzTest(extBackup, data, size);
     OHOS::OnConnectFuzzTest(extBackup, data, size);
@@ -373,7 +374,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         OHOS::CmdHandleIncrementalBackupFuzzTest(extension, data, size);
         OHOS::CmdIncrementalOnBackupFuzzTest(extension, data, size);
         OHOS::CmdGetIncrementalBackupFileHandleFuzzTest(extension, data, size);
-        OHOS::OnRemoteRequestFuzzTest(extension, data, size);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }

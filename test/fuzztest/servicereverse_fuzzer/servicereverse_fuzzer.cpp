@@ -657,16 +657,19 @@ bool IncrementalRestoreOnProcessInfoFuzzTest(sptr<ServiceReverse> service, const
 
 bool OnRemoteRequestFuzzTest(sptr<ServiceReverse> service, const uint8_t *data, size_t size)
 {
-    uint32_t codeMax = 26;
+    uint32_t codeMax = 31;
     for (uint32_t code = 1; code < codeMax; code++) {
         MessageParcel datas;
         MessageParcel reply;
         MessageOption option;
-
         datas.WriteInterfaceToken(ServiceReverseStub::GetDescriptor());
         datas.WriteBuffer(reinterpret_cast<const char*>(data), size);
         datas.RewindRead(0);
-        service->OnRemoteRequest(code, datas, reply, option);
+        try {
+            service->OnRemoteRequest(code, datas, reply, option);
+        } catch (BError &err) {
+            // Only filter BError errors, Other results are not expected.
+        }
     }
     {
         MessageParcel datas;
@@ -697,7 +700,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         printf("service handler is nullptr");
         return 0;
     }
-
+    OHOS::OnRemoteRequestFuzzTest(incrementalRestoreService, data, size);
     OHOS::BackupOnFileReadyFuzzTest(backupService, data, size);
     OHOS::BackupOnBundleStartedFuzzTest(backupService, data, size);
     OHOS::BackupOnResultReportFuzzTest(backupService, data, size);
@@ -730,7 +733,5 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::IncrementalRestoreOnFileReadyFuzzTest(incrementalRestoreService, data, size);
     OHOS::IncrementalRestoreOnResultReportFuzzTest(incrementalRestoreService, data, size);
     OHOS::IncrementalRestoreOnProcessInfoFuzzTest(incrementalRestoreService, data, size);
-    OHOS::OnRemoteRequestFuzzTest(incrementalRestoreService, data, size);
-
     return 0;
 }

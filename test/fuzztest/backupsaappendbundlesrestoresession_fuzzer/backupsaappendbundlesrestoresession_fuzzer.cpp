@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,17 +13,15 @@
  * limitations under the License.
  */
 
-#include "backupsaappendbundlesbackupsession_fuzzer.h"
+#include "backupsaappendbundlesrestoresession_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <climits>
-#include <fuzzer/FuzzedDataProvider.h>
 #include <vector>
 
 #include "message_parcel.h"
-#include "sandbox_helper.h"
 #include "service.h"
 #include "service_proxy.h"
 #include "service_reverse.h"
@@ -37,32 +35,44 @@ using namespace OHOS::FileManagement::Backup;
 namespace OHOS {
 constexpr int32_t SERVICE_ID = 5203;
 
-bool CmdAppendBundlesBackupSessionFuzzTest(const uint8_t *data, size_t size)
+bool CmdAppendBundlesRestoreSessionFuzzTest(const uint8_t *data, size_t size)
 {
+    if (data == nullptr || size == 0) {
+        return false;
+    }
     MessageParcel datas;
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
-    if (size > 0) {
+    size_t len = 0;
+    if (size >= len + sizeof(int)) {
+        int fd = *(reinterpret_cast<const int *>(data + len));
+        datas.WriteFileDescriptor(UniqueFd(fd));
+        len += sizeof(int);
+    }
+    int32_t type = 0;
+    if (size >= len + sizeof(int32_t)) {
+        type = *(reinterpret_cast<const int32_t *>(data + len));
+        datas.WriteInt32(type);
+        len += sizeof(int32_t);
+    }
+    int32_t userId = 0;
+    if (size >= len + sizeof(int32_t)) {
+        userId = *(reinterpret_cast<const int32_t *>(data + len));
+        datas.WriteInt32(userId);
+        len += sizeof(int32_t);
+    }
+    if (size > len) {
         vector<string> bundleNames;
-        string param(reinterpret_cast<const char*>(data), size);
-        for (size_t i = 0; i < size; i++) {
-            string name = param + to_string(i);
-            bundleNames.push_back(name);
-        }
+        string baseStr(reinterpret_cast<const char*>(data + len), size - len);
+        bundleNames.push_back(baseStr);
         datas.WriteStringVector(bundleNames);
     }
+    datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
     sptr service(new Service(SERVICE_ID));
-    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APPEND_BUNDLES_BACKUP_SESSION);
-    try {
-        service->OnRemoteRequest(code, datas, reply, option);
-    } catch (OHOS::FileManagement::Backup::BError &err) {
-        HILOGE("BackupSaFuzzTest error");
-    } catch (const std::exception& ex) {
-        HILOGE("BackupSaFuzzTest exception");
-    } catch (...) {
-        HILOGE("BackupSaFuzzTest unknown exception");
-    }
+    service->OnRemoteRequest(
+        static_cast<uint32_t>(IServiceIpcCode::COMMAND_APPEND_BUNDLES_RESTORE_SESSION_DATA),
+        datas, reply, option);
     return true;
 }
 } // namespace OHOS
@@ -70,8 +80,9 @@ bool CmdAppendBundlesBackupSessionFuzzTest(const uint8_t *data, size_t size)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+    /* Run your code on data */
     try {
-        OHOS::CmdAppendBundlesBackupSessionFuzzTest(data, size);
+        OHOS::CmdAppendBundlesRestoreSessionFuzzTest(data, size);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         HILOGE("BackupSaFuzzTest error");
     } catch (...) {
