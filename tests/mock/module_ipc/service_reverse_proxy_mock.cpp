@@ -175,4 +175,28 @@ ErrCode ServiceReverseProxy::IncrementalRestoreOnProcessInfo(const std::string &
 {
     return BError(BError::Codes::OK);
 }
+
+ErrCode ServiceReverseProxy::IncrementalSaBackupOnFileReady(const std::string &bundleName, const std::string &fileName,
+    int fd, int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceReverseProxy::IncrementalBackupOnFileReadyWithoutFd(const std::string &bundleName,
+    const std::string &fileName, int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceReverseProxy::BackupOnFileReadyWithoutFd(const std::string &bundleName, const std::string &fileName,
+    int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceReverseProxy::RestoreOnFileReadyWithoutFd(const std::string &bundleName, const std::string &fileName,
+    int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

@@ -78,7 +78,9 @@ ohos_shared_library("backup_kit_inner") {
   ]
 
   deps = [
-    "${path_backup}/services/backup_sa:backup_sa_ipc",
+    "${path_backup}/services/backup_sa:backup_extension_stub_idl",
+    "${path_backup}/services/backup_sa:backup_reverse_stub_idl",
+    "${path_backup}/services/backup_sa:backup_service_proxy_idl",
     "${path_backup}/utils:backup_utils",
   ]
 
