@@ -60,6 +60,7 @@ const char EXTENSION_HEADER = 'x';
 const uint32_t OTHER_HEADER = 78;
 const int ERR_NO_PERMISSION = 13;
 constexpr int SIZE_T_BYTE_LEN = 8;
+constexpr size_t MAX_BUFFER_SIZE = 4096;
 constexpr bool USE_COMPRESS = false;
 } // namespace
 
@@ -84,15 +85,25 @@ using TarHeader = struct {
     char pad[PADDING_LEN];
 };
 
-#define SAFE_DELETES(address)   \
-{                               \
-    if ((address) != nullptr) { \
-        delete[] (address);     \
-        (address) = nullptr;      \
-    }                           \
-}                               \
-
 using TarMap = std::map<std::string, std::tuple<std::string, struct stat, bool>>;
+
+class UniqueFile {
+public:
+    UniqueFile(FILE* file);
+    UniqueFile(const char* filePath, const char* mode);
+    ~UniqueFile();
+    FILE* file_ = nullptr;
+};
+
+template <typename T>
+class Buffer {
+public:
+    Buffer(size_t size);
+    ~Buffer();
+    T* data_ = nullptr;
+    size_t size_ = 0;
+};
+
 class TarFile {
 public:
     static TarFile &GetInstance();
@@ -114,8 +125,8 @@ public:
 
     bool Compress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize);
     bool Decompress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize);
-    void CompressFile(const std::string &srcFile, const std::string &compFile);
-    void DecompressFile(const std::string &compFile, const std::string &srcFile);
+    bool CompressFile(const std::string &srcFile, const std::string &compFile);
+    bool DecompressFile(const std::string &compFile, const std::string &srcFile);
     std::string DecompressTar(const std::string &tarPath);
 private:
     TarFile() {}

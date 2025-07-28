@@ -714,7 +714,7 @@ static ErrCode TarFileReady(const TarMap &tarFileInfo, sptr<IService> proxy)
     if (SUCCEEDED(ret)) {
         HILOGI("TarFileReady: AppFileReady success for %{public}s", tarName.c_str());
         // 删除文件
-        RemoveFile(tarPath); // TODO
+        RemoveFile(tarPath);
     } else {
         HILOGE("TarFileReady AppFileReady fail to be invoked for %{public}s: ret = %{public}d", tarName.c_str(), ret);
     }

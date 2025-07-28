@@ -40,7 +40,6 @@
                 "init",
                 "json",
                 "jsoncpp",
-                "lz4",
                 "napi",
                 "runtime_core",
                 "openssl",

@@ -25,8 +25,6 @@
 #include <stack>
 #include <sys/types.h>
 #include <unistd.h>
-#include "lz4.h"
-#include "lz4hc.h"
 #include "brotli/encode.h"
 #include "brotli/decode.h"
 
@@ -56,6 +54,54 @@ const string TAR_EXTENSION = ".tar";
 constexpr int BROTLI_QUALITY = 3;
 constexpr int MEGA_BYTE = 1024 * 1024;
 } // namespace
+
+UniqueFile::UniqueFile(FILE* file)
+{
+    if (file == nullptr) {
+        HILOGE("file is null");
+    }
+    file_ = file;
+}
+
+UniqueFile::UniqueFile(const char* filePath, const char* mode)
+{
+    file_ = fopen(filePath, mode);
+    if (file_ == nullptr) {
+        HILOGE("open file fail err: %{public}s", strerror(errno));
+    }
+}
+
+UniqueFile::~UniqueFile()
+{
+    if (file_ != nullptr) {
+        if (fclose(file_) == EOF) {
+            HILOGE("close file fail err: %{public}s", strerror(errno));
+        }
+    }
+    file_ = nullptr;
+}
+
+template <typename T>
+Buffer<T>:Buffer(size_t size)
+{
+    if (size <= 0 || size > MAX_BUFFER_SIZE) {
+        return;
+    }
+    data_ = new (std::nothrow) T[size];
+    if (data_ == nullptr) {
+        HILOGE("new fail, size=%{public}zu", size);
+        return;
+    }
+    size_ = size;
+}
+
+template <typename T>
+Buffer<T>::~Buffer()
+{
+    if (data_ != nullptr) {
+        delete[] data_;
+    }
+}
 
 TarFile &TarFile::GetInstance()
 {
@@ -691,114 +737,105 @@ bool TarFile::Decompress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* 
     return true;
 }
 
-void TarFile::CompressFile(const std::string &srcFile, const std::string &compFile)
+bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFile)
 {
-    HILOGI("testComp begin, strFile: %{public}s, compFile: %{public}s", srcFile.c_str(), compFile.c_str());
-    FILE *fin = fopen(srcFile.c_str(), "rb");
-    FILE *fout = fopen(compFile.c_str(), "wb");
-    if (fin == nullptr || fout == nullptr) {
+    HILOGI("BEGIN strF: %{public}s, compF: %{public}s", GetAnonyPath(srcFile).c_str(), GetAnonyPath(compFile).c_str());
+    UniqueFile fin(srcFile.c_str(), "rb");
+    UniqueFile fout(compFile.c_str(), "wb");
+    if (fin.file_ == nullptr || fout.file_ == nullptr) {
         HILOGE("open file fail!");
-        return;
+        return false;
     }
-    char *ori = new (std::nothrow) char[BLOCK_SIZE];
-    size_t oriSize = BLOCK_SIZE;
-    size_t maxSize = LZ4_compressBound(BLOCK_SIZE);
-    size_t compressSize = maxSize;
-    uint8_t* compressBuffer = new (std::nothrow) uint8_t[maxSize];
-    if (ori == nullptr || compressBuffer == nullptr) {
-        HILOGE("new buffer fail!");
-        SAFE_DELETES(ori);
-        SAFE_DELETES(compressBuffer);
-        fclose(fin);
-        fclose(fout);
-        return;
+    Buffer<char> ori(BLOCK_SIZE);
+    if (ori.data_ == nullptr) {
+        HILOGE("new ori buffer fail!");
+        return false;
+    }
+    size_t maxSize = BrotliEncoderMaxCompressedSize(BLOCK_SIZE);
+    Buffer<uint8_t> compressBuffer(maxSize);
+    if (compressBuffer.data_ == nullptr) {
+        HILOGE("new compress buffer fail!");
+        return false;
     }
     size_t inTotal = 0;
     size_t outTotal = 0;
     auto compSpan = std::chrono::duration<double, std::milli>(std::chrono::seconds(0));
-    while ((oriSize = fread(ori, 1, BLOCK_SIZE, fin)) > 0) {
-        compressSize = maxSize;
+    while ((ori.size_ = fread(ori.data_, 1, BLOCK_SIZE, fin.file_)) > 0) {
+        compressBuffer.size_ = maxSize;
         auto startTime = std::chrono::high_resolution_clock::now();
-        if (!Compress((const uint8_t*)(ori), oriSize, compressBuffer, &compressSize)) {
-            break;
+        if (!Compress((const uint8_t*)(ori.data_), ori.size_, compressBuffer.data_, &compressBuffer.size_)) {
+            return false;
         }
         compSpan += (std::chrono::high_resolution_clock::now() - startTime);
-        if (compressSize < 0 || compressSize >= oriSize) { // 压缩后大小大于原始大小则直接存储原始内容
-            compressSize = oriSize;
-            fwrite(&oriSize, SIZE_T_BYTE_LEN, 1, fout);
-            fwrite(&oriSize, SIZE_T_BYTE_LEN, 1, fout);
-            fwrite(ori, 1, oriSize, fout);
+        if (compressBuffer.size_ < 0 || compressBuffer.size_ >= ori.size_) { // 压缩后大小大于原始大小则直接存储原始内容
+            compressBuffer.size_ = ori.size_;
+            fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
+            fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
+            fwrite(ori.data_, 1, ori.size_, fout.file_);
         } else {
-            fwrite(&compressSize, SIZE_T_BYTE_LEN, 1, fout);
-            fwrite(&oriSize, SIZE_T_BYTE_LEN, 1, fout);
-            fwrite(compressBuffer, 1, compressSize, fout);
+            fwrite(&compressBuffer.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
+            fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
+            fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);
         }
-        inTotal += oriSize;
-        outTotal += compressSize;
+        inTotal += ori.size_;
+        outTotal += compressBuffer.size_;
     }
-    HILOGI("srcSize:%{public}lu, destSize:%{public}lu, rate:%{public}f, time:%{public}f ms, speed:%{public}f MB/s",
+    HILOGI("END srcSize:%{public}zu, destSize:%{public}zu, rate:%{public}f, time:%{public}f ms, speed:%{public}f MB/s",
         inTotal, outTotal, (outTotal == 0) ? 0 : (inTotal * 1.0f / outTotal), compSpan.count(),
         (compSpan.count() == 0) ? 0 : inTotal * 1000.0f / MEGA_BYTE / compSpan.count());
-    SAFE_DELETES(ori);
-    SAFE_DELETES(compressBuffer);
-    fclose(fin);
-    fclose(fout);
-    HILOGI("testComp end, strFile: %{public}s, compFile: %{public}s", srcFile.c_str(), compFile.c_str());
+    return true;
 }
 
-void TarFile::DecompressFile(const std::string &compFile, const std::string &srcFile)
+bool TarFile::DecompressFile(const std::string &compFile, const std::string &srcFile)
 {
-    HILOGI("testDecomp begin, compFile: %{public}s, srcFile: %{public}s", compFile.c_str(), srcFile.c_str());
-    FILE *fin = fopen(compFile.c_str(), "rb");
-    FILE *fout = fopen(srcFile.c_str(), "wb");
-    if (fin == nullptr || fout == nullptr) {
+    HILOGI("BEGIN, compF:%{public}s, srcF:%{public}s", GetAnonyPath(compFile).c_str(), GetAnonyPath(srcFile).c_str());
+    UniqueFile fin(compFile.c_str(), "rb");
+    UniqueFile fout(srcFile.c_str(), "wb");
+    if (fin.file_ == nullptr || fout.file_ == nullptr) {
         HILOGE("open file fail!");
-        return;
+        return false;
     }
-    uint8_t* decompressBuffer= new (std::nothrow) uint8_t[BLOCK_SIZE];
-    size_t size;
-    size_t compressSize;
-    size_t decompressSize;
-    char *compressBuffer = new (std::nothrow) char[BLOCK_SIZE];
-    if (decompressBuffer == nullptr || compressBuffer == nullptr) {
+    Buffer<uint8_t> decompressBuffer(BLOCK_SIZE);
+    Buffer<char> compressBuffer(BLOCK_SIZE);
+    if (decompressBuffer.data_ == nullptr || compressBuffer.data_ == nullptr) {
         HILOGE("new buffer fail!");
-        SAFE_DELETES(decompressBuffer);
-        SAFE_DELETES(compressBuffer);
-        fclose(fin);
-        fclose(fout);
-        return;
+        return false;
     }
     size_t inTotal = 0;
     size_t outTotal = 0;
-    auto decompressSpan = std::chrono::duration<double, std::milli>(std::chrono::seconds(0));
-    while ((size = fread(&compressSize, SIZE_T_BYTE_LEN, 1, fin)) > 0) {
-        fread(&decompressSize, SIZE_T_BYTE_LEN, 1, fin);
-        if (compressSize > BLOCK_SIZE) {
-            HILOGE("compress size is too big.");
-            compressSize = BLOCK_SIZE;
+    size_t size;
+    auto decompSpan = std::chrono::duration<double, std::milli>(std::chrono::seconds(0));
+    while ((size = fread(&compressBuffer.size_, SIZE_T_BYTE_LEN, 1, fin.file_)) > 0) {
+        if (size != 1) {
+            HILOGE("read comp size fail");
+            return false;
         }
-        fread(compressBuffer, 1, compressSize, fin);
-        if (compressSize == decompressSize) {
-            fwrite(compressBuffer, 1, compressSize, fout);
+        if (compressBuffer.size_ > BLOCK_SIZE) {
+            HILOGE("compress size is too big.");
+            return false;
+        }
+        if (fread(&decompressBuffer.size_, SIZE_T_BYTE_LEN, 1, fin.file_) != 1 ||
+            fread(compressBuffer.data_, 1, compressBuffer.size_, fin.file_) != compressBuffer.size_) {
+            HILOGE("read comp buffer fail");
+            return false;
+        }
+        if (compressBuffer.size_ == decompressBuffer.size_) {
+            fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);
         } else {
             auto startTime = std::chrono::high_resolution_clock::now();
-            if (!Decompress((const uint8_t*)compressBuffer, compressSize, decompressBuffer, &decompressSize)) {
-                break;
+            if (!Decompress((const uint8_t*)compressBuffer.data_, compressBuffer.size_, decompressBuffer.data_,
+                &decompressBuffer.size_)) {
+                return false;
             }
-            decompressSpan += (std::chrono::high_resolution_clock::now() - startTime);
-            fwrite(decompressBuffer, 1, decompressSize, fout);
+            decompSpan += (std::chrono::high_resolution_clock::now() - startTime);
+            fwrite(decompressBuffer.data_, 1, decompressBuffer.size_, fout.file_);
         }
-        inTotal += compressSize;
-        outTotal += decompressSize;
+        inTotal += compressBuffer.size_;
+        outTotal += decompressBuffer.size_;
     }
-    HILOGI("srcSize:%{public}lu, destSize:%{public}lu, time:%{public}f ms, speed:%{public}f MB/s",
-        inTotal, outTotal, decompressSpan.count(),
-        (decompressSpan.count() == 0) ? 0 : outTotal * 1000.0f / MEGA_BYTE / decompressSpan.count());
-    SAFE_DELETES(compressBuffer);
-    SAFE_DELETES(decompressBuffer);
-    fclose(fin);
-    fclose(fout);
-    HILOGI("testDecomp end, compFile: %{public}s, srcFile: %{public}s", compFile.c_str(), srcFile.c_str());
+    HILOGI("srcSize:%{public}zu, destSize:%{public}zu, time:%{public}f ms, speed:%{public}f MB/s", inTotal, outTotal,
+        decompSpan.count(), (decompSpan.count() == 0) ? 0 : outTotal * 1000.0f / MEGA_BYTE / decompSpan.count());
+    return true;
 }
 
 std::string TarFile::DecompressTar(const std::string &tarPath)
@@ -816,9 +853,9 @@ std::string TarFile::DecompressTar(const std::string &tarPath)
     std::string oriTarName = fileNameWithoutExtension.string().substr(0, pos);
     std::string decompressFileName = parentPath.string() + std::filesystem::path::preferred_separator
          + oriTarName + TAR_EXTENSION;
-    HILOGI("restore decompress, originFileName:%{public}s, decompressFileName:%{public}s", tarPath.c_str(),
-        decompressFileName.c_str());
-    DecompressFile(tarPath, decompressFileName);
+    if (!DecompressFile(tarPath, decompressFileName)) {
+        return tarPath;
+    }
     return decompressFileName;
 }
 } // namespace OHOS::FileManagement::Backup

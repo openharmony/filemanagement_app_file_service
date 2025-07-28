@@ -73,7 +73,6 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "ipc:ipc_core",
     "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
-    "lz4:liblz4_shared",
     "napi:ace_napi",
     "runtime_core:ani",
   ]

@@ -75,7 +75,6 @@ ohos_shared_library("backup_extension_ability_native") {
     "ipc:ipc_core",
     "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
-    "lz4:liblz4_shared",
     "napi:ace_napi",
     "runtime_core:ani",
     "samgr:samgr_proxy",
