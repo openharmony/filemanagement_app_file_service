@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,13 +15,20 @@
 
 #include "tar_file.h"
 
+#include <chrono>
+#include <cstdio>
 #include <dirent.h>
 #include <fcntl.h>
+#include <filesystem>
 #include <grp.h>
 #include <pwd.h>
 #include <stack>
 #include <sys/types.h>
 #include <unistd.h>
+#include "lz4.h"
+#include "lz4hc.h"
+#include "brotli/encode.h"
+#include "brotli/decode.h"
 
 #include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
@@ -44,6 +51,10 @@ const uint32_t WAIT_INDEX = 100000;
 const uint32_t WAIT_TIME = 5;
 const string VERSION = "1.0";
 const string LONG_LINK_SYMBOL = "longLinkSymbol";
+const string COMPRESS_FILE_SUFFIX = "__A";
+const string TAR_EXTENSION = ".tar";
+constexpr int BROTLI_QUALITY = 3;
+constexpr int MEGA_BYTE = 1024 * 1024;
 } // namespace
 
 TarFile &TarFile::GetInstance()
@@ -449,13 +460,23 @@ bool TarFile::FillSplitTailBlocks()
     if (isReset_) {
         tarMap_.clear();
     }
-
-    tarMap_.emplace(tarFileName_, make_tuple(currentTarName_, staTar, false));
+    if (USE_COMPRESS) {
+        std::filesystem::path fullTarPath = currentTarName_; // 全量路径
+        std::filesystem::path parentPath = fullTarPath.parent_path();
+        std::filesystem::path fileNameWithoutExtension = fullTarPath.stem(); // 文件名前缀
+        std::string tarNewName = fileNameWithoutExtension.string() + COMPRESS_FILE_SUFFIX + TAR_EXTENSION;
+        string newTarPath = parentPath.string() + "/" + tarNewName;
+        HILOGI("tarFileName:%{public}s, currentTarName:%{public}s, newTarPath:%{public}s", tarFileName_.c_str(),
+            currentTarName_.c_str(), newTarPath.c_str());
+        tarMap_.emplace(tarNewName, make_tuple(newTarPath, staTar, false));
+        CompressFile(fullTarPath, newTarPath);
+    } else {
+        tarMap_.emplace(tarFileName_, make_tuple(currentTarName_, staTar, false));
+    }
 
     fclose(currentTarFile_);
     currentTarFile_ = nullptr;
     tarFileCount_++;
-
     return true;
 }
 
@@ -647,5 +668,157 @@ bool TarFile::WriteLongName(string &name, char type)
 void TarFile::SetPacketMode(bool isReset)
 {
     isReset_ = isReset;
+}
+
+bool TarFile::Compress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize)
+{
+    int ret = BrotliEncoderCompress(BROTLI_QUALITY, BROTLI_MAX_WINDOW_BITS, BROTLI_DEFAULT_MODE,
+        inputSize, inputBuffer, outputSize, outputBuffer);
+    if (ret != BROTLI_TRUE) {
+        HILOGE("compress fail, error: %{public}d", ret);
+        return false;
+    }
+    return true;
+}
+
+bool TarFile::Decompress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize)
+{
+    int ret = BrotliDecoderDecompress(inputSize, inputBuffer, outputSize, outputBuffer);
+    if (ret != BROTLI_TRUE) {
+        HILOGE("decompress fail, error: %{public}d", ret);
+        return false;
+    }
+    return true;
+}
+
+void TarFile::CompressFile(const std::string &srcFile, const std::string &compFile)
+{
+    HILOGI("testComp begin, strFile: %{public}s, compFile: %{public}s", srcFile.c_str(), compFile.c_str());
+    FILE *fin = fopen(srcFile.c_str(), "rb");
+    FILE *fout = fopen(compFile.c_str(), "wb");
+    if (fin == nullptr || fout == nullptr) {
+        HILOGE("open file fail!");
+        return;
+    }
+    char *ori = new (std::nothrow) char[BLOCK_SIZE];
+    size_t oriSize = BLOCK_SIZE;
+    size_t maxSize = LZ4_compressBound(BLOCK_SIZE);
+    size_t compressSize = maxSize;
+    uint8_t* compressBuffer = new (std::nothrow) uint8_t[maxSize];
+    if (ori == nullptr || compressBuffer == nullptr) {
+        HILOGE("new buffer fail!");
+        SAFE_DELETES(ori);
+        SAFE_DELETES(compressBuffer);
+        fclose(fin);
+        fclose(fout);
+        return;
+    }
+    size_t inTotal = 0;
+    size_t outTotal = 0;
+    auto compSpan = std::chrono::duration<double, std::milli>(std::chrono::seconds(0));
+    while ((oriSize = fread(ori, 1, BLOCK_SIZE, fin)) > 0) {
+        compressSize = maxSize;
+        auto startTime = std::chrono::high_resolution_clock::now();
+        if (!Compress((const uint8_t*)(ori), oriSize, compressBuffer, &compressSize)) {
+            break;
+        }
+        compSpan += (std::chrono::high_resolution_clock::now() - startTime);
+        if (compressSize < 0 || compressSize >= oriSize) { // 压缩后大小大于原始大小则直接存储原始内容
+            compressSize = oriSize;
+            fwrite(&oriSize, SIZE_T_BYTE_LEN, 1, fout);
+            fwrite(&oriSize, SIZE_T_BYTE_LEN, 1, fout);
+            fwrite(ori, 1, oriSize, fout);
+        } else {
+            fwrite(&compressSize, SIZE_T_BYTE_LEN, 1, fout);
+            fwrite(&oriSize, SIZE_T_BYTE_LEN, 1, fout);
+            fwrite(compressBuffer, 1, compressSize, fout);
+        }
+        inTotal += oriSize;
+        outTotal += compressSize;
+    }
+    HILOGI("srcSize:%{public}lu, destSize:%{public}lu, rate:%{public}f, time:%{public}f ms, speed:%{public}f MB/s",
+        inTotal, outTotal, (outTotal == 0) ? 0 : (inTotal * 1.0f / outTotal), compSpan.count(),
+        (compSpan.count() == 0) ? 0 : inTotal * 1000.0f / MEGA_BYTE / compSpan.count());
+    SAFE_DELETES(ori);
+    SAFE_DELETES(compressBuffer);
+    fclose(fin);
+    fclose(fout);
+    HILOGI("testComp end, strFile: %{public}s, compFile: %{public}s", srcFile.c_str(), compFile.c_str());
+}
+
+void TarFile::DecompressFile(const std::string &compFile, const std::string &srcFile)
+{
+    HILOGI("testDecomp begin, compFile: %{public}s, srcFile: %{public}s", compFile.c_str(), srcFile.c_str());
+    FILE *fin = fopen(compFile.c_str(), "rb");
+    FILE *fout = fopen(srcFile.c_str(), "wb");
+    if (fin == nullptr || fout == nullptr) {
+        HILOGE("open file fail!");
+        return;
+    }
+    uint8_t* decompressBuffer= new (std::nothrow) uint8_t[BLOCK_SIZE];
+    size_t size;
+    size_t compressSize;
+    size_t decompressSize;
+    char *compressBuffer = new (std::nothrow) char[BLOCK_SIZE];
+    if (decompressBuffer == nullptr || compressBuffer == nullptr) {
+        HILOGE("new buffer fail!");
+        SAFE_DELETES(decompressBuffer);
+        SAFE_DELETES(compressBuffer);
+        fclose(fin);
+        fclose(fout);
+        return;
+    }
+    size_t inTotal = 0;
+    size_t outTotal = 0;
+    auto decompressSpan = std::chrono::duration<double, std::milli>(std::chrono::seconds(0));
+    while ((size = fread(&compressSize, SIZE_T_BYTE_LEN, 1, fin)) > 0) {
+        fread(&decompressSize, SIZE_T_BYTE_LEN, 1, fin);
+        if (compressSize > BLOCK_SIZE) {
+            HILOGE("compress size is too big.");
+            compressSize = BLOCK_SIZE;
+        }
+        fread(compressBuffer, 1, compressSize, fin);
+        if (compressSize == decompressSize) {
+            fwrite(compressBuffer, 1, compressSize, fout);
+        } else {
+            auto startTime = std::chrono::high_resolution_clock::now();
+            if (!Decompress((const uint8_t*)compressBuffer, compressSize, decompressBuffer, &decompressSize)) {
+                break;
+            }
+            decompressSpan += (std::chrono::high_resolution_clock::now() - startTime);
+            fwrite(decompressBuffer, 1, decompressSize, fout);
+        }
+        inTotal += compressSize;
+        outTotal += decompressSize;
+    }
+    HILOGI("srcSize:%{public}lu, destSize:%{public}lu, time:%{public}f ms, speed:%{public}f MB/s",
+        inTotal, outTotal, decompressSpan.count(),
+        (decompressSpan.count() == 0) ? 0 : outTotal * 1000.0f / MEGA_BYTE / decompressSpan.count());
+    SAFE_DELETES(compressBuffer);
+    SAFE_DELETES(decompressBuffer);
+    fclose(fin);
+    fclose(fout);
+    HILOGI("testDecomp end, compFile: %{public}s, srcFile: %{public}s", compFile.c_str(), srcFile.c_str());
+}
+
+std::string TarFile::DecompressTar(const std::string &tarPath)
+{
+    if (!USE_COMPRESS) {
+        return tarPath;
+    }
+    std::filesystem::path filePath = tarPath;
+    std::filesystem::path parentPath = filePath.parent_path();
+    std::filesystem::path fileNameWithoutExtension = filePath.stem();
+    size_t pos = fileNameWithoutExtension.string().rfind(COMPRESS_FILE_SUFFIX);
+    if (pos == std::string::npos) {
+        return tarPath;
+    }
+    std::string oriTarName = fileNameWithoutExtension.string().substr(0, pos);
+    std::string decompressFileName = parentPath.string() + std::filesystem::path::preferred_separator
+         + oriTarName + TAR_EXTENSION;
+    HILOGI("restore decompress, originFileName:%{public}s, decompressFileName:%{public}s", tarPath.c_str(),
+        decompressFileName.c_str());
+    DecompressFile(tarPath, decompressFileName);
+    return decompressFileName;
 }
 } // namespace OHOS::FileManagement::Backup

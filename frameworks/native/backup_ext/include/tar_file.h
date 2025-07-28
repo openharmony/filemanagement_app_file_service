@@ -59,6 +59,8 @@ const char GNUTYPE_LONGNAME = 'L';
 const char EXTENSION_HEADER = 'x';
 const uint32_t OTHER_HEADER = 78;
 const int ERR_NO_PERMISSION = 13;
+constexpr int SIZE_T_BYTE_LEN = 8;
+constexpr bool USE_COMPRESS = false;
 } // namespace
 
 // 512 bytes
@@ -81,6 +83,15 @@ using TarHeader = struct {
     char prefix[PREFIX_LEN];
     char pad[PADDING_LEN];
 };
+
+#define SAFE_DELETES(address)   \
+{                               \
+    if ((address) != nullptr) { \
+        delete[] (address);     \
+        (address) = nullptr;      \
+    }                           \
+}                               \
+
 using TarMap = std::map<std::string, std::tuple<std::string, struct stat, bool>>;
 class TarFile {
 public:
@@ -100,6 +111,12 @@ public:
     void SetPacketMode(bool isReset);
 
     uint64_t GetTarFileSize() { return static_cast<uint64_t>(currentTarFileSize_); }
+
+    bool Compress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize);
+    bool Decompress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize);
+    void CompressFile(const std::string &srcFile, const std::string &compFile);
+    void DecompressFile(const std::string &compFile, const std::string &srcFile);
+    std::string DecompressTar(const std::string &tarPath);
 private:
     TarFile() {}
     ~TarFile() = default;

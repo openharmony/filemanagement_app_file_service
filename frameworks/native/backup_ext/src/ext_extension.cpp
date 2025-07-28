@@ -714,7 +714,7 @@ static ErrCode TarFileReady(const TarMap &tarFileInfo, sptr<IService> proxy)
     if (SUCCEEDED(ret)) {
         HILOGI("TarFileReady: AppFileReady success for %{public}s", tarName.c_str());
         // 删除文件
-        RemoveFile(tarPath);
+        RemoveFile(tarPath); // TODO
     } else {
         HILOGE("TarFileReady AppFileReady fail to be invoked for %{public}s: ret = %{public}d", tarName.c_str(), ret);
     }
@@ -1006,6 +1006,7 @@ int BackupExtExtension::DoIncrementalRestore()
                 HILOGE("Check incre tarfile path : %{public}s err, path is forbidden", GetAnonyPath(tarName).c_str());
                 return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
             }
+            tarName = TarFile::GetInstance().DecompressTar(tarName);
             unordered_map<string, struct ReportFileInfo> result;
             GetTarIncludes(tarName, result);
             if ((!extension_->SpecialVersionForCloneAndCloud()) && (!extension_->UseFullBackupOnly())) {

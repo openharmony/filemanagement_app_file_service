@@ -174,6 +174,7 @@ ohos_unittest("tar_file_test") {
     "ability_runtime:appkit_native",
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
+    "brotli:brotli_shared",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "googletest:gmock_main",
@@ -182,6 +183,7 @@ ohos_unittest("tar_file_test") {
     "ipc:ipc_core",
     "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
+    "lz4:liblz4_shared",
     "napi:ace_napi",
     "runtime_core:ani",
     "samgr:samgr_proxy",
@@ -255,6 +257,7 @@ ohos_unittest("untar_file_sup_test") {
     "ability_runtime:appkit_native",
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
+    "brotli:brotli_shared",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "googletest:gmock_main",
@@ -263,6 +266,7 @@ ohos_unittest("untar_file_sup_test") {
     "ipc:ipc_core",
     "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
+    "lz4:liblz4_shared",
     "napi:ace_napi",
     "runtime_core:ani",
     "samgr:samgr_proxy",
@@ -330,6 +334,7 @@ ohos_unittest("untar_file_test") {
     "ability_runtime:appkit_native",
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
+    "brotli:brotli_shared",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "googletest:gmock_main",
@@ -338,6 +343,7 @@ ohos_unittest("untar_file_test") {
     "ipc:ipc_core",
     "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
+    "lz4:liblz4_shared",
     "napi:ace_napi",
     "runtime_core:ani",
     "samgr:samgr_proxy",
@@ -444,9 +450,11 @@ ohos_unittest("tar_file_sub_test") {
 
   external_deps = [
     "c_utils:utils",
+    "brotli:brotli_shared",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "lz4:liblz4_shared",
   ]
 
   defines = [ "private=public" ]
@@ -479,9 +487,11 @@ ohos_unittest("installd_un_tar_file_test") {
 
   external_deps = [
     "c_utils:utils",
+    "brotli:brotli_shared",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "lz4:liblz4_shared",
   ]
 
   defines = [ "private=public" ]
