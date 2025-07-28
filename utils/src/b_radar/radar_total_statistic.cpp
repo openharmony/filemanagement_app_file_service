@@ -14,7 +14,6 @@
  */
 
 #include "b_radar/radar_total_statistic.h"
-#include "b_radar/radar_const_inner.h"
 #include "b_utils/b_time.h"
 #include "filemgmt_libhilog.h"
 #include "hisysevent.h"

@@ -18,14 +18,12 @@
 
 #include <gmock/gmock.h>
 
-#include <iremote_proxy.h>
-#include "iextension.h"
+#include "extension_proxy.h"
 
 namespace OHOS::FileManagement::Backup {
-class SvcExtensionProxyMock : public IRemoteProxy<IExtension> {
+class SvcExtensionProxyMock : public ExtensionProxy {
 public:
-    SvcExtensionProxyMock() : IRemoteProxy<IExtension>(nullptr) {};
-    virtual ~SvcExtensionProxyMock() = default;
+    SvcExtensionProxyMock() : ExtensionProxy(nullptr) {};
 public:
 MOCK_METHOD(ErrCode, GetFileHandleWithUniqueFd, (const std::string &, int32_t &, int32_t &));
 MOCK_METHOD(ErrCode, HandleClear, ());

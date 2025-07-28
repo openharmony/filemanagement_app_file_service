@@ -68,31 +68,27 @@ ohos_source_set("backup_sa_ipc") {
     "${target_gen_dir}/",
   ]
 
-  cflags_cc = [
-    "-fdata-sections",
-    "-ffunction-sections",
-    "-fno-unwind-tables",
-    "-fno-asynchronous-unwind-tables",
-    "-Os",
-    "-fvisibility=hidden",
-  ]
-
   part_name = "app_file_service"
 
   subsystem_name = "filemanagement"
 }
 
-ohos_source_set("backup_extension_stub_idl") {
+ohos_source_set("backup_sa_ipc_type") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
     debug = false
   }
-  sources = [
-    "${target_gen_dir}/extension_stub.cpp"
-  ]
+  output_values = get_target_outputs(":backup_idl")
+
+  sources = []
+
+  sources += filter_include(output_values, [ "*_type.cpp" ])
+
   public_configs = [ ":public_idl_config" ]
+
   deps = [ ":backup_idl" ]
+
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
@@ -101,88 +97,14 @@ ohos_source_set("backup_extension_stub_idl") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
-  include_dirs = [
-    ".",
-    "${target_gen_dir}/",
-  ]
-  cflags_cc = [
-    "-fdata-sections",
-    "-ffunction-sections",
-    "-fno-unwind-tables",
-    "-fno-asynchronous-unwind-tables",
-    "-Os",
-  ]
-  part_name = "app_file_service"
-  subsystem_name = "filemanagement"
-}
 
-ohos_source_set("backup_reverse_stub_idl") {
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-  sources = [
-    "${target_gen_dir}/service_reverse_stub.cpp"
-  ]
-  public_configs = [ ":public_idl_config" ]
-  deps = [ ":backup_idl" ]
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "hitrace:hitrace_meter",
-    "ipc:ipc_core",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-  ]
   include_dirs = [
     ".",
-    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${target_gen_dir}/",
   ]
-  cflags_cc = [
-    "-fdata-sections",
-    "-ffunction-sections",
-    "-fno-unwind-tables",
-    "-fno-asynchronous-unwind-tables",
-    "-Os",
-  ]
-  part_name = "app_file_service"
-  subsystem_name = "filemanagement"
-}
 
-ohos_source_set("backup_service_proxy_idl") {
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-  sources = [
-    "${target_gen_dir}/service_proxy.cpp"
-  ]
-  public_configs = [ ":public_idl_config" ]
-  deps = [ ":backup_idl" ]
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "hitrace:hitrace_meter",
-    "ipc:ipc_core",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-  ]
-  include_dirs = [
-    ".",
-    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
-    "${target_gen_dir}/",
-  ]
-  cflags_cc = [
-    "-fdata-sections",
-    "-ffunction-sections",
-    "-fno-unwind-tables",
-    "-fno-asynchronous-unwind-tables",
-    "-Os",
-  ]
   part_name = "app_file_service"
+
   subsystem_name = "filemanagement"
 }
 
