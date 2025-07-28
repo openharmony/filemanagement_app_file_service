@@ -52,7 +52,7 @@ ohos_shared_library("backup_extension_ability_native") {
   deps = [
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
-    "${path_backup}/services/backup_sa:backup_extension_stub_idl",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",
   ]
 
@@ -85,7 +85,6 @@ ohos_shared_library("backup_extension_ability_native") {
     "-fno-unwind-tables",
     "-fno-asynchronous-unwind-tables",
     "-Os",
-    "-fvisibility=hidden",
   ]
 
   use_exceptions = true
