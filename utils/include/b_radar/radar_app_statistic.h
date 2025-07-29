@@ -42,16 +42,6 @@ enum FileType : uint8_t {
     OTHER,
 };
 
-const std::unordered_map<std::string, FileType> FileTypeDef = {
-    {"txt", TXT}, {"log", TXT}, {"json", TXT}, {"xml", TXT}, {"db", TXT}, {"db-compare", TXT},
-    {"jpg", PIC}, {"jpeg", PIC}, {"png", PIC}, {"bmp", PIC}, {"gif", PIC}, {"svg", PIC}, {"webp", PIC}, {"tif", PIC},
-    {"raw", PIC},
-    {"wav", AUDIO}, {"flac", AUDIO}, {"wma", AUDIO}, {"acc", AUDIO}, {"mp3", AUDIO}, {"ogg", AUDIO}, {"opus", AUDIO},
-    {"mov", VEDIO}, {"wmv", VEDIO}, {"rm", VEDIO}, {"rmvb", VEDIO}, {"3gp", VEDIO}, {"m4v", VEDIO}, {"mkv", VEDIO},
-    {"rar", COMPRESS}, {"zip", COMPRESS}, {"7z", COMPRESS}, {"gz", COMPRESS}, {"iso", COMPRESS}, {"tar", COMPRESS},
-    {"exe", BIN}, {"doc", BIN}, {"docx", BIN}, {"xls", BIN}, {"xlsx", BIN}, {"ppt", BIN}, {"pdf", BIN}
-};
-
 constexpr uint64_t ONE_MB = 1024 * 1024;
 constexpr uint64_t TWO_MB = 2 * ONE_MB;
 constexpr uint64_t TEN_MB = 10 * ONE_MB;
