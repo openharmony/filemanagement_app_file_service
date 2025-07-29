@@ -116,7 +116,7 @@ ohos_shared_library("backup_utils") {
   deps = [
     ":backup_cxx_cppdeps",
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
-    "${path_backup}/services/backup_sa:backup_sa_ipc_type",
+    "${path_backup}/services/backup_sa:backup_idl",
   ]
 
   cflags_cc = [
