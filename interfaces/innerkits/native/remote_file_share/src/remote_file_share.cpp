@@ -744,7 +744,7 @@ static int32_t SetHmdfsUriDirInfo(struct HmdfsUriInfo &hui, Uri &uri, const std:
 }
 
 static int32_t SetDistributedfilesHmdfsUriDirInfo(const std::string &physicalPath, const std::string &uriStr,
-                                            struct HmdfsUriInfo &hui, const std::string &networkId)
+    struct HmdfsUriInfo &hui, const std::string &networkId)
 {
     hui.uriStr = uriStr + NETWORK_PARA + networkId;
     return SetFileSize(physicalPath, hui);

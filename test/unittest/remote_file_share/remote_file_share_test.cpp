@@ -1294,7 +1294,7 @@ namespace {
         HmdfsUriInfo hui;
         OHOS::Uri uri("file://com.demo.a/data/storage/el2/base/remote_share.txt");
         string physicalPath = "/data/app/el2/100/base/com.demo.a/remote_share.txt";
-        string networkId="networdid123456"
+        string networkId = "networdid123456";
 
         int32_t ret = SetDistributedfilesHmdfsUriDirInfo(physicalPath, uri.ToString(), hui, networkId);
         EXPECT_EQ(hui.uriStr, uri.ToString());
