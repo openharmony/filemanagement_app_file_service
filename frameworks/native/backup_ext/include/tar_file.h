@@ -59,9 +59,12 @@ const char GNUTYPE_LONGNAME = 'L';
 const char EXTENSION_HEADER = 'x';
 const uint32_t OTHER_HEADER = 78;
 const int ERR_NO_PERMISSION = 13;
+#ifdef SYSTEM_BIT_32
+constexpr int SIZE_T_BYTE_LEN = 4;
+#else
 constexpr int SIZE_T_BYTE_LEN = 8;
+#endif
 constexpr size_t MAX_BUFFER_SIZE = 4096;
-constexpr bool USE_COMPRESS = false;
 } // namespace
 
 // 512 bytes
@@ -89,7 +92,6 @@ using TarMap = std::map<std::string, std::tuple<std::string, struct stat, bool>>
 
 class UniqueFile {
 public:
-    UniqueFile(FILE* file);
     UniqueFile(const char* filePath, const char* mode);
     ~UniqueFile();
     FILE* file_ = nullptr;

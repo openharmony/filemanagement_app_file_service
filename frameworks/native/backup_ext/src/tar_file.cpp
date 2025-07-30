@@ -25,9 +25,6 @@
 #include <stack>
 #include <sys/types.h>
 #include <unistd.h>
-#include "brotli/encode.h"
-#include "brotli/decode.h"
-
 #include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_hiaudit/hi_audit.h"
@@ -35,6 +32,11 @@
 #include "directory_ex.h"
 #include "filemgmt_libhilog.h"
 #include "securec.h"
+
+#ifdef BROTLI_ENABLED
+#include "brotli/encode.h"
+#include "brotli/decode.h"
+#endif
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -51,17 +53,14 @@ const string VERSION = "1.0";
 const string LONG_LINK_SYMBOL = "longLinkSymbol";
 const string COMPRESS_FILE_SUFFIX = "__A";
 const string TAR_EXTENSION = ".tar";
-constexpr int BROTLI_QUALITY = 3;
 constexpr int MEGA_BYTE = 1024 * 1024;
+#ifdef BROTLI_ENABLED
+constexpr int BROTLI_QUALITY = 3;
+constexpr bool USE_COMPRESS = false; // 默认关闭
+#else
+constexpr bool USE_COMPRESS = false;
+#endif
 } // namespace
-
-UniqueFile::UniqueFile(FILE* file)
-{
-    if (file == nullptr) {
-        HILOGE("file is null");
-    }
-    file_ = file;
-}
 
 UniqueFile::UniqueFile(const char* filePath, const char* mode)
 {
@@ -506,7 +505,7 @@ bool TarFile::FillSplitTailBlocks()
     if (isReset_) {
         tarMap_.clear();
     }
-    if (USE_COMPRESS) {
+    if (defined(BROTLI_ENABLED) && USE_COMPRESS) {
         std::filesystem::path fullTarPath = currentTarName_; // 全量路径
         std::filesystem::path parentPath = fullTarPath.parent_path();
         std::filesystem::path fileNameWithoutExtension = fullTarPath.stem(); // 文件名前缀
@@ -718,27 +717,32 @@ void TarFile::SetPacketMode(bool isReset)
 
 bool TarFile::Compress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize)
 {
+#ifdef BROTLI_ENABLED
     int ret = BrotliEncoderCompress(BROTLI_QUALITY, BROTLI_MAX_WINDOW_BITS, BROTLI_DEFAULT_MODE,
         inputSize, inputBuffer, outputSize, outputBuffer);
     if (ret != BROTLI_TRUE) {
         HILOGE("compress fail, error: %{public}d", ret);
         return false;
     }
+#endif
     return true;
 }
 
 bool TarFile::Decompress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize)
 {
+#ifdef BROTLI_ENABLED
     int ret = BrotliDecoderDecompress(inputSize, inputBuffer, outputSize, outputBuffer);
     if (ret != BROTLI_TRUE) {
         HILOGE("decompress fail, error: %{public}d", ret);
         return false;
     }
+#endif
     return true;
 }
 
 bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFile)
 {
+#ifdef BROTLI_ENABLED
     HILOGI("BEGIN strF: %{public}s, compF: %{public}s", GetAnonyPath(srcFile).c_str(), GetAnonyPath(compFile).c_str());
     UniqueFile fin(srcFile.c_str(), "rb");
     UniqueFile fout(compFile.c_str(), "wb");
@@ -767,7 +771,7 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
             return false;
         }
         compSpan += (std::chrono::high_resolution_clock::now() - startTime);
-        if (compressBuffer.size_ < 0 || compressBuffer.size_ >= ori.size_) { // 压缩后大小大于原始大小则直接存储原始内容
+        if (compressBuffer.size_ >= ori.size_) { // 压缩后大小大于原始大小则直接存储原始内容
             compressBuffer.size_ = ori.size_;
             fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
             fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
@@ -783,6 +787,7 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
     HILOGI("END srcSize:%{public}zu, destSize:%{public}zu, rate:%{public}f, time:%{public}f ms, speed:%{public}f MB/s",
         inTotal, outTotal, (outTotal == 0) ? 0 : (inTotal * 1.0f / outTotal), compSpan.count(),
         (compSpan.count() == 0) ? 0 : inTotal * 1000.0f / MEGA_BYTE / compSpan.count());
+#endif
     return true;
 }
 
@@ -840,7 +845,7 @@ bool TarFile::DecompressFile(const std::string &compFile, const std::string &src
 
 std::string TarFile::DecompressTar(const std::string &tarPath)
 {
-    if (!USE_COMPRESS) {
+    if (!defined(BROTLI_ENABLED) || !USE_COMPRESS) {
         return tarPath;
     }
     std::filesystem::path filePath = tarPath;

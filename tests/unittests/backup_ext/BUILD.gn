@@ -174,7 +174,6 @@ ohos_unittest("tar_file_test") {
     "ability_runtime:appkit_native",
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
-    "brotli:brotli_shared",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "googletest:gmock_main",
@@ -189,6 +188,15 @@ ohos_unittest("tar_file_test") {
   ]
 
   defines = [ "private=public" ]
+
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+  }
+  if (system_bit == 32) {
+    defines += ["SYSTEM_BIT_32"];
+  } else {
+    defines += ["SYSTEM_BIT_64"];
+  }
 
   use_exceptions = true
 }
@@ -256,7 +264,6 @@ ohos_unittest("untar_file_sup_test") {
     "ability_runtime:appkit_native",
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
-    "brotli:brotli_shared",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "googletest:gmock_main",
@@ -271,7 +278,14 @@ ohos_unittest("untar_file_sup_test") {
   ]
 
   defines = [ "private=public" ]
-
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+  }
+  if (system_bit == 32) {
+    defines += ["SYSTEM_BIT_32"];
+  } else {
+    defines += ["SYSTEM_BIT_64"];
+  }
   use_exceptions = true
 }
 
@@ -332,7 +346,6 @@ ohos_unittest("untar_file_test") {
     "ability_runtime:appkit_native",
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
-    "brotli:brotli_shared",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "googletest:gmock_main",
@@ -347,7 +360,14 @@ ohos_unittest("untar_file_test") {
   ]
 
   defines = [ "private=public" ]
-
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+  }
+  if (system_bit == 32) {
+    defines += ["SYSTEM_BIT_32"];
+  } else {
+    defines += ["SYSTEM_BIT_64"];
+  }
   use_exceptions = true
 }
 
@@ -447,14 +467,20 @@ ohos_unittest("tar_file_sub_test") {
 
   external_deps = [
     "c_utils:utils",
-    "brotli:brotli_shared",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
   ]
 
   defines = [ "private=public" ]
-
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+  }
+  if (system_bit == 32) {
+    defines += ["SYSTEM_BIT_32"];
+  } else {
+    defines += ["SYSTEM_BIT_64"];
+  }
   use_exceptions = true
 }
 
@@ -483,14 +509,20 @@ ohos_unittest("installd_un_tar_file_test") {
 
   external_deps = [
     "c_utils:utils",
-    "brotli:brotli_shared",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
   ]
 
   defines = [ "private=public" ]
-
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+  }
+  if (system_bit == 32) {
+    defines += ["SYSTEM_BIT_32"];
+  } else {
+    defines += ["SYSTEM_BIT_64"];
+  }
   use_exceptions = true
 }
 

@@ -65,7 +65,6 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "ability_runtime:appkit_native",
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
-    "brotli:brotli_shared",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog:libhilog",
@@ -82,6 +81,15 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "LOG_DOMAIN=0xD004303",
     "private = public",
   ]
+
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+  }
+  if (system_bit == 32) {
+    defines += ["SYSTEM_BIT_32"];
+  } else {
+    defines += ["SYSTEM_BIT_64"];
+  }
 
   use_exceptions = true
 }
