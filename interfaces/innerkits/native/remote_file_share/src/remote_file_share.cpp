@@ -743,9 +743,10 @@ static int32_t SetHmdfsUriDirInfo(struct HmdfsUriInfo &hui, Uri &uri, const std:
     return SetFileSize(physicalPath, hui);
 }
 
-static int32_t SetDistributedfilesHmdfsUriDirInfo(struct HmdfsUriInfo &hui, Uri &uri, const std::string &physicalPath)
+static int32_t SetDistributedfilesHmdfsUriDirInfo(const std::string &physicalPath, const std::string &uriStr,
+    struct HmdfsUriInfo &hui, const std::string &networkId)
 {
-    hui.uriStr = uri.ToString();
+    hui.uriStr = uriStr + NETWORK_PARA + networkId;
     return SetFileSize(physicalPath, hui);
 }
 
@@ -848,7 +849,7 @@ static int32_t CheckIfNeedMount(const std::string &bundleName, const std::string
         return E_OK;
     }
     if (IsDistributedFileDir(uri) || IsCloudFileDir(uri)) {
-        (void)SetDistributedfilesHmdfsUriDirInfo(dfsUriInfo, uri, physicalPath);
+        (void)SetDistributedfilesHmdfsUriDirInfo(physicalPath, uriStr, dfsUriInfo, networkId);
         uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
         LOGI("bundleName: %{public}s, dfsUri: %{private}s", uriStr.c_str(), dfsUriInfo.uriStr.c_str());
         return E_OK;

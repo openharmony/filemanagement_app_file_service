@@ -1293,10 +1293,12 @@ namespace {
 
         HmdfsUriInfo hui;
         OHOS::Uri uri("file://com.demo.a/data/storage/el2/base/remote_share.txt");
+        OHOS::Uri uri_res("file://com.demo.a/data/storage/el2/base/remote_share.txt?networkid=networdid123456");
         string physicalPath = "/data/app/el2/100/base/com.demo.a/remote_share.txt";
+        string networkId = "networdid123456";
 
-        int32_t ret = SetDistributedfilesHmdfsUriDirInfo(hui, uri, physicalPath);
-        EXPECT_EQ(hui.uriStr, uri.ToString());
+        int32_t ret = SetDistributedfilesHmdfsUriDirInfo(physicalPath, uri.ToString(), hui, networkId);
+        EXPECT_EQ(hui.uriStr, uri_res.ToString());
         EXPECT_EQ(ret, NO_SUCH_FILE_ERROR);
 
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_SetDistributedfilesHmdfsUriDirInfo_0001";
