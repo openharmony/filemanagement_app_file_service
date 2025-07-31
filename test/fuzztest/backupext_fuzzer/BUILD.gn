@@ -86,9 +86,9 @@ ohos_fuzztest("BackupExtFuzzTest") {
     external_deps += ["brotli:brotli_shared"]
   }
   if (system_bit == 32) {
-    defines += ["SYSTEM_BIT_32"];
+    defines += ["SYSTEM_BIT_32"]
   } else {
-    defines += ["SYSTEM_BIT_64"];
+    defines += ["SYSTEM_BIT_64"]
   }
 
   use_exceptions = true

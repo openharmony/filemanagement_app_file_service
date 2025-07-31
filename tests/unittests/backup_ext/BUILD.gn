@@ -193,9 +193,9 @@ ohos_unittest("tar_file_test") {
     external_deps += ["brotli:brotli_shared"]
   }
   if (system_bit == 32) {
-    defines += ["SYSTEM_BIT_32"];
+    defines += ["SYSTEM_BIT_32"]
   } else {
-    defines += ["SYSTEM_BIT_64"];
+    defines += ["SYSTEM_BIT_64"]
   }
 
   use_exceptions = true
@@ -282,9 +282,9 @@ ohos_unittest("untar_file_sup_test") {
     external_deps += ["brotli:brotli_shared"]
   }
   if (system_bit == 32) {
-    defines += ["SYSTEM_BIT_32"];
+    defines += ["SYSTEM_BIT_32"]
   } else {
-    defines += ["SYSTEM_BIT_64"];
+    defines += ["SYSTEM_BIT_64"]
   }
   use_exceptions = true
 }
@@ -364,9 +364,9 @@ ohos_unittest("untar_file_test") {
     external_deps += ["brotli:brotli_shared"]
   }
   if (system_bit == 32) {
-    defines += ["SYSTEM_BIT_32"];
+    defines += ["SYSTEM_BIT_32"]
   } else {
-    defines += ["SYSTEM_BIT_64"];
+    defines += ["SYSTEM_BIT_64"]
   }
   use_exceptions = true
 }
@@ -477,9 +477,9 @@ ohos_unittest("tar_file_sub_test") {
     external_deps += ["brotli:brotli_shared"]
   }
   if (system_bit == 32) {
-    defines += ["SYSTEM_BIT_32"];
+    defines += ["SYSTEM_BIT_32"]
   } else {
-    defines += ["SYSTEM_BIT_64"];
+    defines += ["SYSTEM_BIT_64"]
   }
   use_exceptions = true
 }
@@ -519,9 +519,9 @@ ohos_unittest("installd_un_tar_file_test") {
     external_deps += ["brotli:brotli_shared"]
   }
   if (system_bit == 32) {
-    defines += ["SYSTEM_BIT_32"];
+    defines += ["SYSTEM_BIT_32"]
   } else {
-    defines += ["SYSTEM_BIT_64"];
+    defines += ["SYSTEM_BIT_64"]
   }
   use_exceptions = true
 }

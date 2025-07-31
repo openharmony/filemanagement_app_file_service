@@ -84,9 +84,9 @@ ohos_shared_library("backup_extension_ability_native") {
     defines += ["BROTLI_ENABLED"]
   }
   if (system_bit == 32) {
-    defines += ["SYSTEM_BIT_32"];
+    defines += ["SYSTEM_BIT_32"]
   } else {
-    defines += ["SYSTEM_BIT_64"];
+    defines += ["SYSTEM_BIT_64"]
   }
 
   cflags_cc = [

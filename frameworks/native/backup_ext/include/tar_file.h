@@ -93,6 +93,8 @@ using TarMap = std::map<std::string, std::tuple<std::string, struct stat, bool>>
 class UniqueFile {
 public:
     UniqueFile(const char* filePath, const char* mode);
+    UniqueFile(const UniqueFile&) = delete;
+    UniqueFile& operator=(const UniqueFile&) = delete;
     ~UniqueFile();
     FILE* file_ = nullptr;
 };
@@ -101,6 +103,8 @@ template <typename T>
 class Buffer {
 public:
     Buffer(size_t size);
+    Buffer(const Buffer&) = delete;
+    Buffer& operator=(const Buffer&) = delete;
     ~Buffer();
     T* data_ = nullptr;
     size_t size_ = 0;
