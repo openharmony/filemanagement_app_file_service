@@ -745,20 +745,24 @@ bool TarFile::Decompress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* 
 
 bool TarFile::WriteCompressData(Buffer<uint8_t>& compressBuffer, const Buffer<char>& ori, UniqueFile& fout)
 {
-    size_t written = 0;
     size_t sizeCount = 1;
+    char* writeData = (char *)compressBuffer.data_;
+    size_t writeDataSize = compressBuffer.size_;
     if (compressBuffer.size_ >= ori.size_) { // 压缩后大小大于原始大小则直接存储原始内容
         compressBuffer.size_ = ori.size_;
-        written += fwrite(&ori.size_, SIZE_T_BYTE_LEN, sizeCount, fout.file_);
-        written += fwrite(&ori.size_, SIZE_T_BYTE_LEN, sizeCount, fout.file_);
-        written += fwrite(ori.data_, 1, ori.size_, fout.file_);
-    } else {
-        written += fwrite(&compressBuffer.size_, SIZE_T_BYTE_LEN, sizeCount, fout.file_);
-        written += fwrite(&ori.size_, SIZE_T_BYTE_LEN, sizeCount, fout.file_);
-        written += fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);
+        writeData = ori.data_;
+        writeDataSize = ori.size_;
     }
-    if (written != compressBuffer.size_ + sizeCount + sizeCount) {
-        HILOGI("write data fail error: %{public}s", strerror(errno));
+    if (fwrite(&compressBuffer.size_, SIZE_T_BYTE_LEN, sizeCount, fout.file_) != sizeCount) {
+        HILOGI("write compress size fail error: %{public}s", strerror(errno));
+        return false;
+    }
+    if (fwrite(&ori.size_, SIZE_T_BYTE_LEN, sizeCount, fout.file_) != sizeCount) {
+        HILOGI("write ori size fail error: %{public}s", strerror(errno));
+        return false;
+    }
+    if (fwrite(writeData, 1, writeDataSize, fout.file_) != writeDataSize) {
+        HILOGI("write compress data fail error: %{public}s", strerror(errno));
         return false;
     }
     return true;
