@@ -513,8 +513,11 @@ bool TarFile::FillSplitTailBlocks()
         string newTarPath = parentPath.string() + "/" + tarNewName;
         HILOGI("tarFileName:%{public}s, currentTarName:%{public}s, newTarPath:%{public}s", tarFileName_.c_str(),
             currentTarName_.c_str(), newTarPath.c_str());
-        tarMap_.emplace(tarNewName, make_tuple(newTarPath, staTar, false));
-        CompressFile(fullTarPath, newTarPath);
+        if (!CompressFile(fullTarPath, newTarPath)) {
+            tarMap_.emplace(tarFileName_, make_tuple(currentTarName_, staTar, false));
+        } else {
+            tarMap_.emplace(tarNewName, make_tuple(newTarPath, staTar, false));
+        }
     } else {
         tarMap_.emplace(tarFileName_, make_tuple(currentTarName_, staTar, false));
     }
