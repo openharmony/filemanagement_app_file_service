@@ -771,15 +771,20 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
             return false;
         }
         compSpan += (std::chrono::high_resolution_clock::now() - startTime);
+        size_t written = 0;
         if (compressBuffer.size_ >= ori.size_) { // 压缩后大小大于原始大小则直接存储原始内容
             compressBuffer.size_ = ori.size_;
-            fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
-            fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
-            fwrite(ori.data_, 1, ori.size_, fout.file_);
+            written += fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
+            written += fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
+            written += fwrite(ori.data_, 1, ori.size_, fout.file_);
         } else {
-            fwrite(&compressBuffer.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
-            fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
-            fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);
+            written += fwrite(&compressBuffer.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
+            written += fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
+            written += fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);
+        }
+        if (written != compressBuffer.size_ + 2) {
+            HILOGI("write data fail error: %{public}s", strerror(errno));
+            return false;
         }
         inTotal += ori.size_;
         outTotal += compressBuffer.size_;
@@ -809,7 +814,9 @@ bool TarFile::DecompressFile(const std::string &compFile, const std::string &src
     size_t inTotal = 0;
     size_t outTotal = 0;
     size_t size;
+#ifdef COMPRESS_DEBUG
     auto decompSpan = std::chrono::duration<double, std::milli>(std::chrono::seconds(0));
+#endif
     while ((size = fread(&compressBuffer.size_, SIZE_T_BYTE_LEN, 1, fin.file_)) > 0) {
         if (size != 1) {
             HILOGE("read comp size fail");
@@ -824,22 +831,33 @@ bool TarFile::DecompressFile(const std::string &compFile, const std::string &src
             HILOGE("read comp buffer fail");
             return false;
         }
+        size_t written = 0;
         if (compressBuffer.size_ == decompressBuffer.size_) {
-            fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);
+            written += fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);
         } else {
+#ifdef COMPRESS_DEBUG
             auto startTime = std::chrono::high_resolution_clock::now();
+#endif
             if (!Decompress((const uint8_t*)compressBuffer.data_, compressBuffer.size_, decompressBuffer.data_,
                 &decompressBuffer.size_)) {
                 return false;
             }
+#ifdef COMPRESS_DEBUG
             decompSpan += (std::chrono::high_resolution_clock::now() - startTime);
-            fwrite(decompressBuffer.data_, 1, decompressBuffer.size_, fout.file_);
+#endif
+            written += fwrite(decompressBuffer.data_, 1, decompressBuffer.size_, fout.file_);
+        }
+        if (written != decompressBuffer.size_) {
+            HILOGI("write data fail error: %{public}s", strerror(errno));
+            return false;
         }
         inTotal += compressBuffer.size_;
         outTotal += decompressBuffer.size_;
     }
+#ifdef COMPRESS_DEBUG
     HILOGI("srcSize:%{public}zu, destSize:%{public}zu, time:%{public}f ms, speed:%{public}f MB/s", inTotal, outTotal,
         decompSpan.count(), (decompSpan.count() == 0) ? 0 : outTotal * 1000.0f / MEGA_BYTE / decompSpan.count());
+#endif
     return true;
 }
 
