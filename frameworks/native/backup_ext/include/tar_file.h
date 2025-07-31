@@ -135,6 +135,9 @@ public:
     bool DecompressFile(const std::string &compFile, const std::string &srcFile);
     std::string DecompressTar(const std::string &tarPath);
 private:
+    bool WriteCompressData(Buffer<uint8_t>& compressBuffer, const Buffer<char>& ori, UniqueFile& fout);
+    bool WriteDecompressData(const Buffer<char>& compressBuffer, Buffer<uint8_t>& decompressBuffer,
+        UniqueFile& fout, std::chrono::duration<double, std::milli>& decompSpan);
     TarFile() {}
     ~TarFile() = default;
     TarFile(const TarFile &instance) = delete;

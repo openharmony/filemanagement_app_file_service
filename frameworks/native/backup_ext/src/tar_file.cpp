@@ -53,8 +53,8 @@ const string VERSION = "1.0";
 const string LONG_LINK_SYMBOL = "longLinkSymbol";
 const string COMPRESS_FILE_SUFFIX = "__A";
 const string TAR_EXTENSION = ".tar";
-constexpr int MEGA_BYTE = 1024 * 1024;
 #ifdef BROTLI_ENABLED
+constexpr int MEGA_BYTE = 1024 * 1024;
 constexpr int BROTLI_QUALITY = 3;
 constexpr bool USE_COMPRESS = false; // 默认关闭
 #else
@@ -81,7 +81,7 @@ UniqueFile::~UniqueFile()
 }
 
 template <typename T>
-Buffer<T>:Buffer(size_t size)
+Buffer<T>::Buffer(size_t size)
 {
     if (size <= 0 || size > MAX_BUFFER_SIZE) {
         return;
@@ -505,7 +505,7 @@ bool TarFile::FillSplitTailBlocks()
     if (isReset_) {
         tarMap_.clear();
     }
-    if (defined(BROTLI_ENABLED) && USE_COMPRESS) {
+    if (USE_COMPRESS) {
         std::filesystem::path fullTarPath = currentTarName_; // 全量路径
         std::filesystem::path parentPath = fullTarPath.parent_path();
         std::filesystem::path fileNameWithoutExtension = fullTarPath.stem(); // 文件名前缀
@@ -740,6 +740,27 @@ bool TarFile::Decompress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* 
     return true;
 }
 
+bool TarFile::WriteCompressData(Buffer<uint8_t>& compressBuffer, const Buffer<char>& ori, UniqueFile& fout)
+{
+    size_t written = 0;
+    size_t sizeCount = 1;
+    if (compressBuffer.size_ >= ori.size_) { // 压缩后大小大于原始大小则直接存储原始内容
+        compressBuffer.size_ = ori.size_;
+        written += fwrite(&ori.size_, SIZE_T_BYTE_LEN, sizeCount, fout.file_);
+        written += fwrite(&ori.size_, SIZE_T_BYTE_LEN, sizeCount, fout.file_);
+        written += fwrite(ori.data_, 1, ori.size_, fout.file_);
+    } else {
+        written += fwrite(&compressBuffer.size_, SIZE_T_BYTE_LEN, sizeCount, fout.file_);
+        written += fwrite(&ori.size_, SIZE_T_BYTE_LEN, sizeCount, fout.file_);
+        written += fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);
+    }
+    if (written != compressBuffer.size_ + sizeCount + sizeCount) {
+        HILOGI("write data fail error: %{public}s", strerror(errno));
+        return false;
+    }
+    return true;
+}
+
 bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFile)
 {
 #ifdef BROTLI_ENABLED
@@ -771,19 +792,7 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
             return false;
         }
         compSpan += (std::chrono::high_resolution_clock::now() - startTime);
-        size_t written = 0;
-        if (compressBuffer.size_ >= ori.size_) { // 压缩后大小大于原始大小则直接存储原始内容
-            compressBuffer.size_ = ori.size_;
-            written += fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
-            written += fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
-            written += fwrite(ori.data_, 1, ori.size_, fout.file_);
-        } else {
-            written += fwrite(&compressBuffer.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
-            written += fwrite(&ori.size_, SIZE_T_BYTE_LEN, 1, fout.file_);
-            written += fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);
-        }
-        if (written != compressBuffer.size_ + 2) {
-            HILOGI("write data fail error: %{public}s", strerror(errno));
+        if (!WriteCompressData(compressBuffer, ori, fout)) {
             return false;
         }
         inTotal += ori.size_;
@@ -796,8 +805,31 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
     return true;
 }
 
+bool TarFile::WriteDecompressData(const Buffer<char>& compressBuffer, Buffer<uint8_t>& decompressBuffer,
+    UniqueFile& fout, std::chrono::duration<double, std::milli>& decompSpan)
+{
+    size_t written = 0;
+    if (compressBuffer.size_ == decompressBuffer.size_) {
+        written += fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);
+    } else {
+        auto startTime = std::chrono::high_resolution_clock::now();
+        if (!Decompress((const uint8_t*)compressBuffer.data_, compressBuffer.size_, decompressBuffer.data_,
+            &decompressBuffer.size_)) {
+            return false;
+        }
+        decompSpan += (std::chrono::high_resolution_clock::now() - startTime);
+        written += fwrite(decompressBuffer.data_, 1, decompressBuffer.size_, fout.file_);
+    }
+    if (written != decompressBuffer.size_) {
+        HILOGI("write data fail error: %{public}s", strerror(errno));
+        return false;
+    }
+    return true;
+}
+
 bool TarFile::DecompressFile(const std::string &compFile, const std::string &srcFile)
 {
+#ifdef BROTLI_ENABLED
     HILOGI("BEGIN, compF:%{public}s, srcF:%{public}s", GetAnonyPath(compFile).c_str(), GetAnonyPath(srcFile).c_str());
     UniqueFile fin(compFile.c_str(), "rb");
     UniqueFile fout(srcFile.c_str(), "wb");
@@ -814,9 +846,7 @@ bool TarFile::DecompressFile(const std::string &compFile, const std::string &src
     size_t inTotal = 0;
     size_t outTotal = 0;
     size_t size;
-#ifdef COMPRESS_DEBUG
     auto decompSpan = std::chrono::duration<double, std::milli>(std::chrono::seconds(0));
-#endif
     while ((size = fread(&compressBuffer.size_, SIZE_T_BYTE_LEN, 1, fin.file_)) > 0) {
         if (size != 1) {
             HILOGE("read comp size fail");
@@ -831,30 +861,12 @@ bool TarFile::DecompressFile(const std::string &compFile, const std::string &src
             HILOGE("read comp buffer fail");
             return false;
         }
-        size_t written = 0;
-        if (compressBuffer.size_ == decompressBuffer.size_) {
-            written += fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);
-        } else {
-#ifdef COMPRESS_DEBUG
-            auto startTime = std::chrono::high_resolution_clock::now();
-#endif
-            if (!Decompress((const uint8_t*)compressBuffer.data_, compressBuffer.size_, decompressBuffer.data_,
-                &decompressBuffer.size_)) {
-                return false;
-            }
-#ifdef COMPRESS_DEBUG
-            decompSpan += (std::chrono::high_resolution_clock::now() - startTime);
-#endif
-            written += fwrite(decompressBuffer.data_, 1, decompressBuffer.size_, fout.file_);
-        }
-        if (written != decompressBuffer.size_) {
-            HILOGI("write data fail error: %{public}s", strerror(errno));
+        if (!WriteDecompressData(compressBuffer, decompressBuffer, fout, decompSpan)) {
             return false;
         }
         inTotal += compressBuffer.size_;
         outTotal += decompressBuffer.size_;
     }
-#ifdef COMPRESS_DEBUG
     HILOGI("srcSize:%{public}zu, destSize:%{public}zu, time:%{public}f ms, speed:%{public}f MB/s", inTotal, outTotal,
         decompSpan.count(), (decompSpan.count() == 0) ? 0 : outTotal * 1000.0f / MEGA_BYTE / decompSpan.count());
 #endif
@@ -863,7 +875,7 @@ bool TarFile::DecompressFile(const std::string &compFile, const std::string &src
 
 std::string TarFile::DecompressTar(const std::string &tarPath)
 {
-    if (!defined(BROTLI_ENABLED) || !USE_COMPRESS) {
+    if (!USE_COMPRESS) {
         return tarPath;
     }
     std::filesystem::path filePath = tarPath;
