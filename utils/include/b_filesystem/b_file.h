@@ -20,7 +20,6 @@
 #include <string>
 
 #include "unique_fd.h"
-#include "json/json.h"
 
 #include "b_anony/b_anony.h"
 

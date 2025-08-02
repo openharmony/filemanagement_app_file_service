@@ -92,7 +92,7 @@ public:
 
     uint32_t GetConnectSpan() { return connectSpend_.GetSpan(); }
 
-    BError GetError() { return error_; }
+    BError& GetError() { return error_; }
 public:
     SvcBackupConnection(std::function<void(const std::string &&, bool)> callDied,
                         std::function<void(const std::string &&)> callConnected,
