@@ -13,17 +13,15 @@
  * limitations under the License.
  */
 
-#include "backupsaappendbundlesbackupsession_fuzzer.h"
+#include "backupsagetlocalcapabilities_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <climits>
-#include <fuzzer/FuzzedDataProvider.h>
 #include <vector>
 
 #include "message_parcel.h"
-#include "sandbox_helper.h"
 #include "service.h"
 #include "service_proxy.h"
 #include "service_reverse.h"
@@ -37,32 +35,18 @@ using namespace OHOS::FileManagement::Backup;
 namespace OHOS {
 constexpr int32_t SERVICE_ID = 5203;
 
-bool CmdAppendBundlesBackupSessionFuzzTest(const uint8_t *data, size_t size)
+bool CmdGetLocalCapabilitiesFuzzTest(const uint8_t *data, size_t size)
 {
     MessageParcel datas;
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
-    if (size > 0) {
-        vector<string> bundleNames;
-        string param(reinterpret_cast<const char*>(data), size);
-        for (size_t i = 0; i < size; i++) {
-            string name = param + to_string(i);
-            bundleNames.push_back(name);
-        }
-        datas.WriteStringVector(bundleNames);
-    }
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
+
     sptr service(new Service(SERVICE_ID));
-    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APPEND_BUNDLES_BACKUP_SESSION);
-    try {
-        service->OnRemoteRequest(code, datas, reply, option);
-    } catch (OHOS::FileManagement::Backup::BError &err) {
-        HILOGE("BackupSaFuzzTest error");
-    } catch (const std::exception& ex) {
-        HILOGE("BackupSaFuzzTest exception");
-    } catch (...) {
-        HILOGE("BackupSaFuzzTest unknown exception");
-    }
+    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_LOCAL_CAPABILITIES);
+    service->OnRemoteRequest(code, datas, reply, option);
     return true;
 }
 } // namespace OHOS
@@ -70,8 +54,9 @@ bool CmdAppendBundlesBackupSessionFuzzTest(const uint8_t *data, size_t size)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+    /* Run your code on data */
     try {
-        OHOS::CmdAppendBundlesBackupSessionFuzzTest(data, size);
+        OHOS::CmdGetLocalCapabilitiesFuzzTest(data, size);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         HILOGE("BackupSaFuzzTest error");
     } catch (...) {

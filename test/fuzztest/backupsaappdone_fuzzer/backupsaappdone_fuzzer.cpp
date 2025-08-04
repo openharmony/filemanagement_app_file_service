@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,51 +13,54 @@
  * limitations under the License.
  */
 
-#include "backupsa_fuzzer.h"
+#include "backupsaappdone_fuzzer.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <climits>
+#include <vector>
 
 #include "message_parcel.h"
 #include "service.h"
-#include "service_client.h"
+#include "service_proxy.h"
+#include "service_reverse.h"
+#include "service_stub.h"
+#include "securec.h"
+#include "system_ability.h"
+
+using namespace std;
+using namespace OHOS::FileManagement::Backup;
 
 namespace OHOS {
-using namespace OHOS::FileManagement::Backup;
-constexpr size_t U32_AT_SIZE = 4;
-constexpr uint8_t MAX_CALL_TRANSACTION = 40;
+constexpr int32_t SERVICE_ID = 5203;
 
-uint32_t GetU32Data(const char* ptr)
+bool CmdAppDoneFuzzTest(const uint8_t *data, size_t size)
 {
-    // 将第0个数字左移24位，将第1个数字左移16位，将第2个数字左移8位，第3个数字不左移
-    return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | (ptr[3]);
-}
-
-bool BackupSaFuzzTest(const uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < U32_AT_SIZE) {
-        return true;
-    }
-
-    Service* service = static_cast<Service*>(ServiceClient::GetInstance()->AsObject().GetRefPtr());
-    uint32_t code = GetU32Data(reinterpret_cast<const char*>(data));
-    if (code == 0) {
-        return true;
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
     }
     MessageParcel datas;
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
-    datas.WriteBuffer(reinterpret_cast<const char*>(data + U32_AT_SIZE), size - U32_AT_SIZE);
+    int32_t errCode = *(reinterpret_cast<const int32_t *>(data));
+    datas.WriteInt32(errCode);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
-    service->OnRemoteRequest(code % MAX_CALL_TRANSACTION, datas, reply, option);
-    service = nullptr;
+
+    sptr service(new Service(SERVICE_ID));
+    service->OnRemoteRequest(static_cast<uint32_t>(IServiceIpcCode::COMMAND_APP_DONE),
+        datas, reply, option);
     return true;
 }
 } // namespace OHOS
 
 /* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t dataSize)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+    /* Run your code on data */
     try {
-        OHOS::BackupSaFuzzTest(data, dataSize);
+        OHOS::CmdAppDoneFuzzTest(data, size);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         HILOGE("BackupSaFuzzTest error");
     } catch (...) {

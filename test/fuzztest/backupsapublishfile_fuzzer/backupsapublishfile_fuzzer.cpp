@@ -13,17 +13,15 @@
  * limitations under the License.
  */
 
-#include "backupsaappendbundlesbackupsession_fuzzer.h"
+#include "backupsapublishfile_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <climits>
-#include <fuzzer/FuzzedDataProvider.h>
 #include <vector>
 
 #include "message_parcel.h"
-#include "sandbox_helper.h"
 #include "service.h"
 #include "service_proxy.h"
 #include "service_reverse.h"
@@ -37,32 +35,26 @@ using namespace OHOS::FileManagement::Backup;
 namespace OHOS {
 constexpr int32_t SERVICE_ID = 5203;
 
-bool CmdAppendBundlesBackupSessionFuzzTest(const uint8_t *data, size_t size)
+bool CmdPublishFileFuzzTest(const uint8_t *data, size_t size)
 {
+    if (data == nullptr || size < sizeof(uint32_t)) {
+        return false;
+    }
     MessageParcel datas;
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
-    if (size > 0) {
-        vector<string> bundleNames;
-        string param(reinterpret_cast<const char*>(data), size);
-        for (size_t i = 0; i < size; i++) {
-            string name = param + to_string(i);
-            bundleNames.push_back(name);
-        }
-        datas.WriteStringVector(bundleNames);
-    }
+    uint32_t sn = *(reinterpret_cast<const uint32_t *>(data));
+    int len = (size - sizeof(uint32_t)) >> 1;
+    std::string fileName(reinterpret_cast<const char *>(data + sizeof(uint32_t)), len);
+    std::string bundleName(reinterpret_cast<const char *>(data + sizeof(uint32_t) + len), len);
+    BFileInfo fileInfo(fileName, bundleName, sn);
+    datas.WriteParcelable(&fileInfo);
+    datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
+
     sptr service(new Service(SERVICE_ID));
-    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APPEND_BUNDLES_BACKUP_SESSION);
-    try {
-        service->OnRemoteRequest(code, datas, reply, option);
-    } catch (OHOS::FileManagement::Backup::BError &err) {
-        HILOGE("BackupSaFuzzTest error");
-    } catch (const std::exception& ex) {
-        HILOGE("BackupSaFuzzTest exception");
-    } catch (...) {
-        HILOGE("BackupSaFuzzTest unknown exception");
-    }
+    service->OnRemoteRequest(static_cast<uint32_t>(IServiceIpcCode::COMMAND_PUBLISH_FILE),
+        datas, reply, option);
     return true;
 }
 } // namespace OHOS
@@ -70,8 +62,9 @@ bool CmdAppendBundlesBackupSessionFuzzTest(const uint8_t *data, size_t size)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+    /* Run your code on data */
     try {
-        OHOS::CmdAppendBundlesBackupSessionFuzzTest(data, size);
+        OHOS::CmdPublishFileFuzzTest(data, size);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         HILOGE("BackupSaFuzzTest error");
     } catch (...) {
