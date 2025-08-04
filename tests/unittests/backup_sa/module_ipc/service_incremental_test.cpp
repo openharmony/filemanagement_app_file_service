@@ -19,6 +19,7 @@
 #include "bms_adapter_mock.h"
 #include "b_json/b_json_entity_caps.h"
 #include "b_jsonutil_mock.h"
+#include "direct_ex_mock.h"
 #include "ipc_skeleton_mock.h"
 #include "sa_backup_connection_mock.h"
 #include "service_reverse_proxy_mock.h"
@@ -30,6 +31,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+using namespace OHOS::AppFileService;
 
 class BService {
 public:
@@ -513,6 +515,7 @@ public:
     static inline shared_ptr<IPCSkeletonMock> skeleton = nullptr;
     static inline sptr<ServiceReverseProxyMock> srProxy = nullptr;
     static inline shared_ptr<ServiceMock> srvMock = nullptr;
+    static inline shared_ptr<DirectoryFuncMock> directMock = nullptr;
 };
 
 void ServiceIncrementalTest::SetUpTestCase(void)
@@ -537,6 +540,8 @@ void ServiceIncrementalTest::SetUpTestCase(void)
     skeleton = make_shared<IPCSkeletonMock>();
     IPCSkeletonMock::skeleton = skeleton;
     srProxy = sptr(new ServiceReverseProxyMock());
+    directMock = make_shared<DirectoryFuncMock>();
+    DirectoryFuncMock::directoryFunc_ = directMock;
 }
 
 void ServiceIncrementalTest::TearDownTestCase()
@@ -561,6 +566,8 @@ void ServiceIncrementalTest::TearDownTestCase()
     srProxy = nullptr;
     ServiceMock::serviceMock = nullptr;
     srvMock = nullptr;
+    DirectoryFuncMock::directoryFunc_ = nullptr;
+    directMock = nullptr;
 }
 
 /**
@@ -592,12 +599,28 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetLocalCapabilitiesIncr
         fd = service->GetLocalCapabilitiesIncremental({});
         EXPECT_EQ(static_cast<int>(fd), -ENOENT);
 
-        vector<BJsonEntityCaps::BundleInfo> info;
+        vector<BJsonEntityCaps::BundleInfo> infos;
+        infos.emplace_back(BJsonEntityCaps::BundleInfo{.name = "bundleName", .appIndex = 0});
+        EXPECT_CALL(*directMock, ForceRemoveDirectoryBMS(_)).WillRepeatedly(Return(true));
         EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*bms, GetBundleInfosForIncremental(An<int32_t>(), An<const vector<BIncrementalData>&>()))
-            .WillOnce(Return(info));
+            .WillOnce(Return(infos));
+
+        BJsonUtil::BundleDetailInfo bundleInfo;
+        bundleInfo.bundleIndex = 1;
+        bundleInfo.bundleName = "bundleName";
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleInfo));
         fd = service->GetLocalCapabilitiesIncremental({});
+
+        EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*bms, GetBundleInfosForIncremental(An<int32_t>(), An<const vector<BIncrementalData>&>()))
+            .WillOnce(Return(infos));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleInfo));
+        service->isCreatingIncreaseFile_.store(2);
+        fd = service->GetLocalCapabilitiesIncremental({});
+        service->isCreatingIncreaseFile_.store(0);
         EXPECT_TRUE(static_cast<int>(fd) > 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1342,28 +1365,37 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalDone_0000,
         int32_t errCode = BError(BError::Codes::OK).GetCode();
         auto session_ = service->session_;
         service->session_ = nullptr;
+        EXPECT_CALL(*srvMock, GetUserIdDefault()).WillRepeatedly(Return(100));
+        BJsonUtil::BundleDetailInfo bundleInfo;
+        bundleInfo.bundleIndex = 0;
+        bundleInfo.bundleName = "bundleName";
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleInfo));
         auto ret = service->AppIncrementalDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
         service->session_ = session_;
 
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_))
             .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleInfo));
         ret = service->AppIncrementalDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleInfo));
         ret = service->AppIncrementalDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         service->backupExtMutexMap_.clear();
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleInfo));
         ret = service->AppIncrementalDone(BError(BError::Codes::SA_INVAL_ARG).GetCode());
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleInfo));
         ret = service->AppIncrementalDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -2095,5 +2127,79 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_RemoveExtensionMutex_000
         GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by RemoveExtensionMutex.";
     }
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_RemoveExtensionMutex_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_ClearIncrementalStatFile_0000
+ * @tc.name: SUB_ServiceIncremental_ClearIncrementalStatFile_0000
+ * @tc.desc: 测试 ClearIncrementalStatFile 分身与一般应用分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_ClearIncrementalStatFile_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_ClearIncrementalStatFile_0000";
+    try {
+        
+        int userId = BConstants::DEFAULT_USER_ID;
+        ASSERT_TRUE(service != nullptr);
+        BJsonUtil::BundleDetailInfo bundleInfo;
+        bundleInfo.bundleIndex = 1;
+        bundleInfo.bundleName = "com.example.app2backup";
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleInfo));
+        service->ClearIncrementalStatFile(userId, bundleInfo.bundleName);
+
+        bundleInfo.bundleIndex = 0;
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleInfo));
+        service->ClearIncrementalStatFile(userId, bundleInfo.bundleName);
+        EXPECT_EQ(bundleInfo.bundleIndex, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by ClearIncrementalStatFile.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_ClearIncrementalStatFile_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_ClearIncrementalStatFile_0100
+ * @tc.name: SUB_ServiceIncremental_ClearIncrementalStatFile_0100
+ * @tc.desc: 测试 ClearIncrementalStatFile 的文件删除异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_ClearIncrementalStatFile_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_ClearIncrementalStatFile_0100";
+    try {
+        
+        int userId = BConstants::DEFAULT_USER_ID;
+        ASSERT_TRUE(service != nullptr);
+        BJsonUtil::BundleDetailInfo bundleInfo;
+        bundleInfo.bundleIndex = 0;
+        bundleInfo.bundleName = "com.example.app2backup";
+        string path = BConstants::GetSaBundleBackupRootDir(userId).data() + bundleInfo.bundleName;
+        string cmdMkdir = string("mkdir -p ") + path;
+        int ret = system(cmdMkdir.c_str());
+        EXPECT_EQ(ret, 0);
+
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleInfo));
+        service->ClearIncrementalStatFile(userId, bundleInfo.bundleName);
+        
+        EXPECT_CALL(*directMock, ForceRemoveDirectoryBMS(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleInfo));
+        service->ClearIncrementalStatFile(userId, bundleInfo.bundleName);
+        EXPECT_EQ(bundleInfo.bundleIndex, 0);
+        string cmdRmdir = string("rm -r ") + path;
+        ret = system(cmdRmdir.c_str());
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by ClearIncrementalStatFile.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_ClearIncrementalStatFile_0100";
 }
 }

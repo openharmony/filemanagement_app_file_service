@@ -205,7 +205,6 @@ static bool CreateIPCInteractionFiles(int32_t userId, const string &bundleName, 
         backupSaBundleDir = BConstants::BACKUP_PATH_PREFIX + to_string(userId) + BConstants::BACKUP_PATH_SURFFIX +
             bundleDetail.bundleName + BConstants::FILE_SEPARATOR_CHAR;
     }
-    HILOGI("bundleInteraction dir is:%{public}s", backupSaBundleDir.c_str());
     if (access(backupSaBundleDir.data(), F_OK) != 0) {
         int32_t err = mkdir(backupSaBundleDir.data(), S_IRWXU | S_IRWXG);
         if (err != 0 && errno != EEXIST) {

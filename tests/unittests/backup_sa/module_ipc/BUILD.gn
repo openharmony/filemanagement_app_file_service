@@ -448,6 +448,7 @@ ohos_unittest("backup_service_incremental_test") {
     "${path_backup_mock}/module_sched/sched_scheduler_mock.cpp",
     "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
     "${path_backup_mock}/utils_mock/src/backup_para_mock.cpp",
+    "${path_backup_mock}/direct_ex_mock/direct_ex_mock.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_client.cpp",
     "service_incremental_test.cpp",
   ]
@@ -464,6 +465,7 @@ ohos_unittest("backup_service_incremental_test") {
     "${path_backup_mock}/module_external/include",
     "${path_backup_mock}/module_ipc/include",
     "${path_backup_mock}/utils_mock/include",
+    "${path_backup_mock}/direct_ex_mock",
   ]
 
   deps = [
