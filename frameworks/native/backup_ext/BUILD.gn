@@ -41,7 +41,7 @@ ohos_shared_library("backup_extension_ability_native") {
   ]
 
   defines = [
-    "LOG_DOMAIN=0xD004301",
+    "LOG_DOMAIN=0xD004303",
     "LOG_TAG=\"BackupExt\"",
   ]
 
