@@ -44,7 +44,7 @@ using namespace std;
 
 namespace {
 enum { APP = 0, LOCAL, DISTRIBUTED, DATABASE, CACHE };
-const string HMOS_HAP_CODE_PATH = "1";
+const string HAP_CODE_PATH = "1";
 const string LINUX_HAP_CODE_PATH = "2";
 const string MEDIA_LIBRARY_HAP = "com.ohos.medialibrary.medialibrarydata";
 const string EXTERNAL_FILE_HAP = "com.ohos.UserFile.ExternalFileManager";
@@ -345,7 +345,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
     for (const auto &installedBundle : installedBundles) {
-        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+        if (installedBundle.applicationInfo.codePath == HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
@@ -393,7 +393,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetFullBundleInfos(int32_t
             HILOGE("Current bundle name is invalid");
             continue;
         }
-        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+        if (installedBundle.applicationInfo.codePath == HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
@@ -432,7 +432,7 @@ string BundleMgrAdapter::GetExtName(string bundleName, int32_t userId)
         throw BError(BError::Codes::SA_BROKEN_IPC, "Failed to get bundle infos");
     }
     for (const auto &installedBundle : installedBundles) {
-        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+        if (installedBundle.applicationInfo.codePath == HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
@@ -516,7 +516,7 @@ bool BundleMgrAdapter::GetCurBundleExtenionInfo(BundleExtInfo &bundleExtInfo, sp
         bundleExtInfo.error_ = RadarError(MODULE_HAP, BError(BError::Codes::SA_BUNDLE_INFO_EMPTY));
         return false;
     }
-    if (bundleExtInfo.bundleInfo_.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+    if (bundleExtInfo.bundleInfo_.applicationInfo.codePath == HAP_CODE_PATH ||
         bundleExtInfo.bundleInfo_.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
         HILOGE("Unsupported applications, name : %{public}s", bundleExtInfo.bundleInfo_.name.data());
         bundleExtInfo.error_ = RadarError(MODULE_HAP, BError(BError::Codes::SA_FORBID_BACKUP_RESTORE));
@@ -580,7 +580,7 @@ std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForLoca
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
     for (auto const &installedBundle : installedBundles) {
-        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+        if (installedBundle.applicationInfo.codePath == HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;

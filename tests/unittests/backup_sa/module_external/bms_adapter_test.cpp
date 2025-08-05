@@ -29,7 +29,7 @@ using namespace std;
 using namespace testing;
 using namespace FileManagement::Backup;
 
-const string HMOS_HAP_CODE_PATH = "1";
+const string HAP_CODE_PATH = "1";
 const string LINUX_HAP_CODE_PATH = "2";
 const string BUNDLE_NAME = "com.example.app2backup";
 const int32_t USER_ID = 100;
@@ -137,7 +137,7 @@ HWTEST_F(BmsAdapterTest, SUB_bms_adapter_GetBundleInfosForLocalCapabilities_test
 
         AppExecFwk::BundleInfo info;
         std::vector<AppExecFwk::BundleInfo> infos;
-        info.applicationInfo.codePath = HMOS_HAP_CODE_PATH;
+        info.applicationInfo.codePath = HAP_CODE_PATH;
         infos.emplace_back(info);
         info.applicationInfo.codePath = LINUX_HAP_CODE_PATH;
         infos.emplace_back(info);
