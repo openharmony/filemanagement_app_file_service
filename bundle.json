@@ -71,7 +71,6 @@
                     "//foundation/filemanagement/app_file_service/interfaces/kits/js:fileshare",
                     "//foundation/filemanagement/app_file_service/interfaces/kits/js:fileuri",
                     "//foundation/filemanagement/app_file_service/interfaces/kits/js:backup",
-                    "//foundation/filemanagement/app_file_service/interfaces/kits/ani/file_share:fileshare_ani_package",
                     "//foundation/filemanagement/app_file_service/interfaces/kits/ani/file_uri:fileuri_ani_package",
                     "//foundation/filemanagement/app_file_service/interfaces/kits/ndk/fileuri/src:ohfileuri",
                     "//foundation/filemanagement/app_file_service/interfaces/kits/ndk/fileshare/src:ohfileshare",
