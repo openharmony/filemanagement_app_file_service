@@ -20,12 +20,30 @@ static { loadLibrary("file_fileuri_taihe.z"); }
 """)
 
 @class
-interface FileUri {
-    @get("name")
-    getName(): String;
+interface FileUriInner {
+    @get getName(): String;
 }
 
-@ctor("FileUri")
-function makeFileUri(name: String): FileUri;
+@ctor("FileUriInner")
+function makeFileUri(name: String): FileUriInner;
+
+function createFileUri(name: String): FileUriInner;
 
 function getUriFromPath(path: String): String;
+
+@!sts_inject("""
+
+export class FileUri {
+    inner: FileUriInner;
+    constructor(uri: String) {
+        this.inner = createFileUri(uri);
+    }
+    constructor(inner: FileUriInner) {
+        this.inner = inner;
+    }
+    get name(): string {
+        return this.inner.name;
+    }
+}
+
+""")
