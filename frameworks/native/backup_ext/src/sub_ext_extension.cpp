@@ -98,6 +98,7 @@ ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
             .GetCode();
     }
+    curScenario_ = BackupRestoreScenario::INCREMENTAL_BACKUP;
     AsyncTaskOnIncrementalBackup();
     return ERR_OK;
 }
@@ -1191,7 +1192,6 @@ void BackupExtExtension::AsyncTaskOnIncrementalBackup()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            ptr->curScenario_ = BackupRestoreScenario::INCREMENTAL_BACKUP;
             if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_BACKUP)) != ERR_OK) {
                 HILOGE("Call onProcess result is timeout");
                 return;
