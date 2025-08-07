@@ -325,7 +325,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         OHOS::CheckIfDirForIncludesFuzzTest(data, size);
         OHOS::GetPathWildCardFuzzTest(data, size);
         OHOS::CmdCheckOverLongPath(data, size);
-        OHOS::AppFileService::SandboxHelper::ClearBackupSandboxPathMap();
     } catch (OHOS::FileManagement::Backup::BError &err) {
         HILOGE("BackupSaFuzzTest error");
     } catch (...) {

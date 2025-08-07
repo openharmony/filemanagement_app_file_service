@@ -58,6 +58,11 @@ namespace {
     const std::string AMPERSAND = "&";
 }
 
+namespace {
+    std::unordered_map<std::string, std::string> g_sandboxPathMap;
+    std::unordered_map<std::string, std::string> g_backupSandboxPathMap;
+}
+
 struct MediaUriInfo {
     string mediaType;
     string fileId;
@@ -65,8 +70,6 @@ struct MediaUriInfo {
     string displayName;
 };
 
-std::unordered_map<std::string, std::string> SandboxHelper::sandboxPathMap_;
-std::unordered_map<std::string, std::string> SandboxHelper::backupSandboxPathMap_;
 std::mutex SandboxHelper::mapMutex_;
 void* SandboxHelper::libMediaHandle_;
 
@@ -158,7 +161,7 @@ string SandboxHelper::GetLowerDir(string &lowerPathHead, const string &userId, c
 bool SandboxHelper::GetSandboxPathMap()
 {
     lock_guard<mutex> lock(mapMutex_);
-    if (sandboxPathMap_.size() > 0) {
+    if (g_sandboxPathMap.size() > 0) {
         return true;
     }
 
@@ -178,10 +181,10 @@ bool SandboxHelper::GetSandboxPathMap()
     for (size_t i = 0; i < mountPathMap.size(); i++) {
         string srcPath = mountPathMap[i][PHYSICAL_PATH_KEY];
         string sandboxPath = mountPathMap[i][SANDBOX_PATH_KEY];
-        sandboxPathMap_[sandboxPath] = srcPath;
+        g_sandboxPathMap[sandboxPath] = srcPath;
     }
 
-    if (sandboxPathMap_.size() == 0) {
+    if (g_sandboxPathMap.size() == 0) {
         return false;
     }
 
@@ -191,7 +194,7 @@ bool SandboxHelper::GetSandboxPathMap()
 bool SandboxHelper::GetBackupSandboxPathMap()
 {
     lock_guard<mutex> lock(mapMutex_);
-    if (backupSandboxPathMap_.size() > 0) {
+    if (g_backupSandboxPathMap.size() > 0) {
         return true;
     }
 
@@ -211,10 +214,10 @@ bool SandboxHelper::GetBackupSandboxPathMap()
     for (size_t i = 0; i < mountPathMap.size(); i++) {
         string srcPath = mountPathMap[i][PHYSICAL_PATH_KEY];
         string sandboxPath = mountPathMap[i][SANDBOX_PATH_KEY];
-        backupSandboxPathMap_[sandboxPath] = srcPath;
+        g_backupSandboxPathMap[sandboxPath] = srcPath;
     }
 
-    if (backupSandboxPathMap_.size() == 0) {
+    if (g_backupSandboxPathMap.size() == 0) {
         return false;
     }
 
@@ -419,7 +422,7 @@ int32_t SandboxHelper::GetPhysicalDir(const std::string &fileUri, const std::str
 
     string lowerPathTail = "";
     string lowerPathHead = "";
-    DoGetPhysicalPath(lowerPathTail, lowerPathHead, sandboxPath, sandboxPathMap_);
+    DoGetPhysicalPath(lowerPathTail, lowerPathHead, sandboxPath, g_sandboxPathMap);
 
     if (lowerPathHead == "") {
         LOGE("lowerPathHead is invalid");
@@ -459,7 +462,7 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
 
     string lowerPathTail = "";
     string lowerPathHead = "";
-    DoGetPhysicalPath(lowerPathTail, lowerPathHead, sandboxPath, sandboxPathMap_);
+    DoGetPhysicalPath(lowerPathTail, lowerPathHead, sandboxPath, g_sandboxPathMap);
 
     if (lowerPathHead == "") {
         LOGE("lowerPathHead is invalid");
@@ -499,7 +502,7 @@ int32_t SandboxHelper::GetBackupPhysicalPath(const std::string &fileUri, const s
 
     string lowerPathTail = "";
     string lowerPathHead = "";
-    DoGetPhysicalPath(lowerPathTail, lowerPathHead, sandboxPath, backupSandboxPathMap_);
+    DoGetPhysicalPath(lowerPathTail, lowerPathHead, sandboxPath, g_backupSandboxPathMap);
 
     if (lowerPathHead == "") {
         LOGE("lowerPathHead is invalid");
@@ -551,12 +554,6 @@ bool SandboxHelper::CheckValidPath(const std::string &filePath)
     }
 
     return true;
-}
-
-void SandboxHelper::ClearBackupSandboxPathMap()
-{
-    lock_guard<mutex> lock(mapMutex_);
-    backupSandboxPathMap_.clear();
 }
 } // namespace AppFileService
 } // namespace OHOS
