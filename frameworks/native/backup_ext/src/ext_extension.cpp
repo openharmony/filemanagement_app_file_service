@@ -930,10 +930,6 @@ int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
         return ret;
     }
     HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
-    if (!isClearData_) {
-        HILOGI("configured not clear data");
-        return ERR_OK;
-    }
     if (!RemoveFile(tarName)) {
         HILOGE("Failed to delete the backup tar %{public}s", tarName.c_str());
     }
@@ -1478,10 +1474,6 @@ void BackupExtExtension::DeleteBackupIncrementalIdxFile()
 
 void BackupExtExtension::DeleteBackupIncrementalTars(const string &tarName)
 {
-    if (!isClearData_) {
-        HILOGI("configured not need clear data");
-        return;
-    }
     if (!RemoveFile(tarName)) {
         HILOGE("Failed to delete the backup tar %{private}s, err = %{public}d", tarName.c_str(), errno);
     }
