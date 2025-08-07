@@ -1067,9 +1067,11 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
             ptr->DoBackUpTask(config);
         } catch (const BError &e) {
             HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
+            ScanFileSingleton::GetInstance().SetCompeletedFlag(false);
             ptr->AppDone(e.GetCode());
         } catch (...) {
             HILOGE("Failed to restore the ext bundle");
+            ScanFileSingleton::GetInstance().SetCompeletedFlag(false);
             ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         }
         ptr->DoClear();
