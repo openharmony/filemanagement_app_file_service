@@ -560,6 +560,7 @@ ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
         VerifyCaller();
         // 异步执行解压操作
         if (extension_->AllowToBackupRestore()) {
+            curScenario_ = BackupRestoreScenario::FULL_RESTORE;
             AsyncTaskRestore(GetIdxFileData(bundleName_), GetExtManageInfo());
         }
         HILOGI("End publish file");
@@ -597,6 +598,7 @@ ErrCode BackupExtExtension::PublishIncrementalFile(const string &fileName)
             isDebug_ = true;
         }
         if (extension_->AllowToBackupRestore()) {
+            curScenario_ = BackupRestoreScenario::INCREMENTAL_RESTORE;
             if (extension_->SpecialVersionForCloneAndCloud()) {
                 HILOGI("Create task for Incremental SpecialVersion");
                 AsyncTaskIncreRestoreSpecialVersion();
@@ -629,6 +631,7 @@ ErrCode BackupExtExtension::HandleBackup(bool isClearData)
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
             .GetCode();
     }
+    curScenario_ = BackupRestoreScenario::FULL_BACKUP;
     AsyncTaskOnBackup();
     return ERR_OK;
 }
@@ -1684,7 +1687,6 @@ void BackupExtExtension::AsyncTaskRestoreForUpgrade()
                 return;
             }
             HILOGI("On restore, start ext timer end.");
-            ptr->curScenario_ = BackupRestoreScenario::FULL_RESTORE;
             if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_RESTORE)) != ERR_OK) {
                 HILOGE("Call onProcess result is timeout");
                 return;
@@ -1740,7 +1742,6 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
                 return;
             }
             HILOGI("On incrementalRestore, start ext timer end.");
-            ptr->curScenario_ = BackupRestoreScenario::INCREMENTAL_RESTORE;
             if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::INCREMENTAL_RESTORE)) != ERR_OK) {
                 HILOGE("Call onProcess result is timeout");
                 return;
@@ -1947,7 +1948,6 @@ void BackupExtExtension::AsyncTaskOnBackup()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            ptr->curScenario_ = BackupRestoreScenario::FULL_BACKUP;
             if ((ptr->StartOnProcessTaskThread(obj, BackupRestoreScenario::FULL_BACKUP)) != ERR_OK) {
                 HILOGE("Call onProcess result is timeout");
                 return;
