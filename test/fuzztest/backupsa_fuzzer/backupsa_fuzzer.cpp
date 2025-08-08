@@ -15,14 +15,25 @@
 
 #include "backupsa_fuzzer.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+
+#include <climits>
 #include "message_parcel.h"
+#include "service_stub.h"
 #include "service.h"
-#include "service_client.h"
+#include "securec.h"
+#include "system_ability.h"
+
+#include "filemgmt_libhilog.h"
+
+using namespace OHOS::FileManagement::Backup;
 
 namespace OHOS {
-using namespace OHOS::FileManagement::Backup;
 constexpr size_t U32_AT_SIZE = 4;
-constexpr uint8_t MAX_CALL_TRANSACTION = 40;
+constexpr uint8_t MAX_CALL_TRANSACTION = 24;
+constexpr int32_t SERVICE_ID = 5203;
 
 uint32_t GetU32Data(const char* ptr)
 {
@@ -36,7 +47,7 @@ bool BackupSaFuzzTest(const uint8_t *data, size_t size)
         return true;
     }
 
-    Service* service = static_cast<Service*>(ServiceClient::GetInstance()->AsObject().GetRefPtr());
+    sptr service = sptr(new Service(SERVICE_ID));
     uint32_t code = GetU32Data(reinterpret_cast<const char*>(data));
     if (code == 0) {
         return true;

@@ -670,26 +670,6 @@ bool CmdUpdateSendRateFuzzTest(sptr<Service> service, const uint8_t *data, size_
     }
     return true;
 }
-
-bool CmdGetBackupDataSizeFuzzTest(sptr<Service> service, const uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int32_t) + sizeof(int32_t)) {
-        return true;
-    }
-
-    MessageParcel msg;
-    MessageParcel reply;
-    MessageOption option;
-    uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_GET_BACKUP_DATA_SIZE);
-
-    try {
-        msg.WriteBuffer(data, size);
-        service->OnRemoteRequest(code, msg, reply, option);
-    } catch (OHOS::FileManagement::Backup::BError &err) {
-        // Only filter BError errors, Other results are not expected.
-    }
-    return true;
-}
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -728,7 +708,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         CmdGetBackupInfoFuzzTest(service, data, size);
         CmdUpdateTimerFuzzTest(service, data, size);
         CmdUpdateSendRateFuzzTest(service, data, size);
-        CmdGetBackupDataSizeFuzzTest(service, data, size);
     } catch (OHOS::FileManagement::Backup::BError &err) {
         // Only filter BError errors, Other results are not expected.
     }
