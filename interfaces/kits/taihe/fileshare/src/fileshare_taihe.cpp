@@ -79,19 +79,14 @@ static std::string GetErrorMessage(int32_t errorCode)
     switch (errorCode) {
         case ERR_DEVICE_NOT_SUPPORTED:
             return "The device doesn't support this api";
-            break;
         case ERR_EPERM:
             return "Operation not permitted";
-            break;
         case ERR_PERMISSION_ERROR:
             return "Permission verification failed";
-            break;
         case ERR_PARAMS:
             return "Parameter error";
-            break;
         default:
             return "Unknown error";
-            break;
     }
 }
 
@@ -189,7 +184,8 @@ void DeactivatePermissionSync(taihe::array_view<ohos::fileshare::fileShare::Poli
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get URI policies");
-        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PARAMS), GetErrorMessage(OHOS::FileManagement::LibN::E_PARAMS));
+        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PARAMS),
+            GetErrorMessage(OHOS::FileManagement::LibN::E_PARAMS));
         return;
     }
 
