@@ -1615,6 +1615,7 @@ void BackupExtExtension::DoBackUpTask(const string &config)
 
     ret = DoBackup(bigFileInfo, fileBackupedInfo, smallFiles, includeSize, excludeSize);
     DoBackupEnd();
+    ScanFileSingleton::GetInstance().SetCompeletedFlag(false);
     AppDone(ret);
     HILOGI("backup app done %{public}d", ret);
 }
