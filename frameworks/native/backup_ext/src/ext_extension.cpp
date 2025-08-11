@@ -1994,7 +1994,7 @@ ErrCode BackupExtExtension::HandleRestore(bool isClearData)
             return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
                 .GetCode();
         }
-
+        curScenario_ = BackupRestoreScenario::FULL_RESTORE;
         // async do restore.
         if (extension_->WasFromSpecialVersion() && extension_->RestoreDataReady()) {
             HILOGI("Restore directly when upgrading.");
