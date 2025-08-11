@@ -21,6 +21,7 @@
 #include "ohos.file.fileuri.impl.hpp"
 #include "taihe/runtime.hpp"
 #include "file_uri.h"
+#include "uri.h"
 
 namespace ANI::FileUri {
 
@@ -35,8 +36,6 @@ public:
 private:
     OHOS::Uri uri_;
 };
-
-ohos::file::fileuri::FileUriInner makeFileUri(taihe::string_view name);
 
 ohos::file::fileuri::FileUriInner createFileUri(taihe::string_view name);
 

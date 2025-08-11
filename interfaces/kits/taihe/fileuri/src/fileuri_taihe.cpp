@@ -42,11 +42,6 @@ std::string FileUriInner::getName()
     return sandboxPath.substr(posLast + 1);
 }
 
-ohos::file::fileuri::FileUriInner makeFileUri(taihe::string_view name)
-{
-    return taihe::make_holder<FileUriInner, ohos::file::fileuri::FileUriInner>(name);
-}
-
 ohos::file::fileuri::FileUriInner createFileUri(taihe::string_view name)
 {
     return taihe::make_holder<FileUriInner, ohos::file::fileuri::FileUriInner>(name);
@@ -60,6 +55,5 @@ std::string getUriFromPath(taihe::string_view path)
 }
 }  // namespace ANI::FileUri
 
-TH_EXPORT_CPP_API_makeFileUri(ANI::FileUri::makeFileUri);
 TH_EXPORT_CPP_API_createFileUri(ANI::FileUri::createFileUri);
 TH_EXPORT_CPP_API_getUriFromPath(ANI::FileUri::getUriFromPath);
