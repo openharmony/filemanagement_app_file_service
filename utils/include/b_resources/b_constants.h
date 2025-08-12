@@ -151,7 +151,7 @@ static inline std::string PATH_PUBLIC_HOME = "/storage/Users/currentUser/";
 static inline std::string PATH_APP_DATA = "appdata";
 
 // 文管bundleName
-static inline std::string BUNDLE_FILE_MANAGER = "hmos.filemanager";
+static inline std::string BUNDLE_FILE_MANAGER = ".filemanager";
 // 文管bundleNameSize
 constexpr size_t FM_LEN = 27;
 // 媒体库数据bundleName
