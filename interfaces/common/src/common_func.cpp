@@ -133,5 +133,13 @@ string CommonFunc::GetUriFromPath(const string &path)
     realPath = FILE_SCHEME_PREFIX + packageName + SandboxHelper::Encode(realPath);
     return realPath;
 }
+
+bool CommonFunc::EndsWith(const std::string &str, const std::string &suffix)
+{
+    if (suffix.length() > str.length()) {
+        return false;
+    }
+    return (str.rfind(suffix) == (str.length() - suffix.length()));
+}
 } // namespace AppFileService
 } // namespace OHOS

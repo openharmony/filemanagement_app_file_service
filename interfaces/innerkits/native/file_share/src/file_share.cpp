@@ -102,8 +102,8 @@ static void GetProviderInfo(string uriStr, FileShareInfo &info)
     Uri uri(uriStr);
     info.providerBundleName_ = uri.GetAuthority();
     info.providerSandboxPath_ = SandboxHelper::Decode(uri.GetPath());
-    if (info.providerBundleName_ == DOCS_TYPE && bundleName.size() == BConstants::FM_LEN
-        && BFile::EndsWith(info.targetBundleName_, BConstants::BUNDLE_FILE_MANAGER)) {
+    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_.size() == FM_LEN
+        && CommonFunc::EndsWith(info.targetBundleName_, BConstants::BUNDLE_FILE_MANAGER)) {
         info.providerSandboxPath_ = FILE_DEFAULT_PATH;
     }
 }
@@ -256,8 +256,8 @@ static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t fl
         return ret;
     }
 
-    if (info.providerBundleName_ == DOCS_TYPE && bundleName.size() == BConstants::FM_LEN
-        && BFile::EndsWith(info.targetBundleName_, BConstants::BUNDLE_FILE_MANAGER)) {
+    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_.size() == FM_LEN
+        && CommonFunc::EndsWith(info.targetBundleName_, BConstants::BUNDLE_FILE_MANAGER)) {
         ret = GetDocsDir(uri, info);
         if (ret != 0) {
             LOGE("Failed to get docs dir, errno: %{public}d", ret);
