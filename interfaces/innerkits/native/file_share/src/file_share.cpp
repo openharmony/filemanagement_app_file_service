@@ -58,7 +58,8 @@ const string FILE_DEFAULT_PATH = "/storage/Users/currentUser/";
 const string FILE_PATH_TAIL = "/files/Docs";
 const string FILE_PATH_HEAD = "/mnt/hmdfs/";
 const string FILE_PATH_MID = "/account/device_view/";
-const string FILE_MANAGER_BUNDLE_NAME = "hmos.filemanager";
+const string FILE_MANAGER_BUNDLE_NAME = ".filemanager";
+const int32_t FM_LEN = 27;
 }
 
 struct FileShareInfo {
@@ -101,7 +102,8 @@ static void GetProviderInfo(string uriStr, FileShareInfo &info)
     Uri uri(uriStr);
     info.providerBundleName_ = uri.GetAuthority();
     info.providerSandboxPath_ = SandboxHelper::Decode(uri.GetPath());
-    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_.find(FILE_MANAGER_BUNDLE_NAME) == 0) {
+    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_.size() == FM_LEN
+        && CommonFunc::EndsWith(info.targetBundleName_, FILE_MANAGER_BUNDLE_NAME)) {
         info.providerSandboxPath_ = FILE_DEFAULT_PATH;
     }
 }
@@ -254,7 +256,8 @@ static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t fl
         return ret;
     }
 
-    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_.find(FILE_MANAGER_BUNDLE_NAME) == 0) {
+    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_.size() == FM_LEN
+        && CommonFunc::EndsWith(info.targetBundleName_, FILE_MANAGER_BUNDLE_NAME)) {
         ret = GetDocsDir(uri, info);
         if (ret != 0) {
             LOGE("Failed to get docs dir, errno: %{public}d", ret);
