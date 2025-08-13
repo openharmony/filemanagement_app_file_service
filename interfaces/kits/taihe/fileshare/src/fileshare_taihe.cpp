@@ -52,6 +52,44 @@ const std::string FILE_NOPS = "";
 const std::string FILE_READ = "r";
 const std::string FILE_WRITE = "w";
 
+static int32_t ErrorCodeConversion(int32_t errorCode)
+{
+    int32_t errCode = ERR_UNKNOWN;
+    switch (errorCode) {
+        case static_cast<int32_t>(ERR_OK):
+            errCode = ERR_OK;
+            break;
+        case static_cast<int32_t>(ERR_PERMISSION_ERROR):
+            errCode = ERR_PERMISSION_ERROR;
+            break;
+        case static_cast<int32_t>(ERR_PARAMS):
+            errCode = ERR_PARAMS;
+            break;
+        case EPERM:
+            errCode = ERR_EPERM;
+            break;
+        default:
+            break;
+    }
+    return errCode;
+}
+
+static std::string GetErrorMessage(int32_t errorCode)
+{
+    switch (errorCode) {
+        case ERR_DEVICE_NOT_SUPPORTED:
+            return "The device doesn't support this api";
+        case ERR_EPERM:
+            return "Operation not permitted";
+        case ERR_PERMISSION_ERROR:
+            return "Permission verification failed";
+        case ERR_PARAMS:
+            return "Parameter error";
+        default:
+            return "Unknown error";
+    }
+}
+
 ohos::fileshare::fileShare::PolicyInfo MakePolicyInfo(taihe::string_view uri, int32_t operationMode)
 {
     return {uri, operationMode};
@@ -120,22 +158,24 @@ void ActivatePermissionSync(taihe::array_view<ohos::fileshare::fileShare::Policy
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get URI policies");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_PARAMS, "Failed to get URI policies");
+        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PARAMS),
+            GetErrorMessage(OHOS::FileManagement::LibN::E_PARAMS));
         return;
     }
 
     std::shared_ptr<PolicyErrorArgs> arg = std::make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("PolicyErrorArgs make make_shared failed");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR,
-                                  "PolicyErrorArgs make make_shared failed");
+        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR),
+                                  GetErrorMessage(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR));
         return;
     }
 
-    arg->errNo = OHOS::AppFileService::FilePermission::ActivatePermission(uriPolicies, arg->errorResults);
+    auto errCode = OHOS::AppFileService::FilePermission::ActivatePermission(uriPolicies, arg->errorResults);
+    arg->errNo = ErrorCodeConversion(errCode);
     if (arg->errNo) {
         LOGE("Activation failed");
-        taihe::set_business_error(arg->errNo, "Activation failed");
+        taihe::set_business_error(arg->errNo, GetErrorMessage(arg->errNo));
     }
 }
 
@@ -144,22 +184,24 @@ void DeactivatePermissionSync(taihe::array_view<ohos::fileshare::fileShare::Poli
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get URI policies");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_PARAMS, "Failed to get URI policies");
+        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PARAMS),
+            GetErrorMessage(OHOS::FileManagement::LibN::E_PARAMS));
         return;
     }
 
     std::shared_ptr<PolicyErrorArgs> arg = std::make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("PolicyErrorArgs make make_shared failed");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR,
-                                  "PolicyErrorArgs make make_shared failed");
+        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR),
+                                  GetErrorMessage(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR));
         return;
     }
 
-    arg->errNo = OHOS::AppFileService::FilePermission::DeactivatePermission(uriPolicies, arg->errorResults);
+    auto errCode = OHOS::AppFileService::FilePermission::DeactivatePermission(uriPolicies, arg->errorResults);
+    arg->errNo = ErrorCodeConversion(errCode);
     if (arg->errNo) {
         LOGE("Deactivation failed");
-        taihe::set_business_error(arg->errNo, "Deactivation failed");
+        taihe::set_business_error(arg->errNo, GetErrorMessage(arg->errNo));
         return;
     }
 }
@@ -304,8 +346,8 @@ void GrantUriPermissionSync(taihe::string_view uri, taihe::string_view bundleNam
     LOGD("fileShare::GrantUriPermission begin!");
     if (!IsSystemApp()) {
         LOGE("fileShare::GrantUriPermission is not System App!");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS,
-                                  "fileShare::GrantUriPermission is not System App!");
+        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PERMISSION_SYS),
+                                  GetErrorMessage(OHOS::FileManagement::LibN::E_PERMISSION_SYS));
         return;
     }
 
@@ -334,7 +376,7 @@ void GrantUriPermissionSync(taihe::string_view uri, taihe::string_view bundleNam
     int ret = DoGrantUriPermission(uriPermInfo);
     if (ret < 0) {
         LOGE("fileShare::GrantUriPermission DoGrantUriPermission failed with %{public}d", ret);
-        taihe::set_business_error(-ret, "fileShare::GrantUriPermission failed");
+        taihe::set_business_error(ErrorCodeConversion(-ret), GetErrorMessage(-ret));
     }
 }
 
@@ -344,16 +386,16 @@ taihe::array<bool> CheckPathPermissionSync(int32_t tokenID,
 {
     if (!IsSystemApp()) {
         LOGE("fileShare::CheckPathPermissionSync is not System App!");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS,
-            "fileShare::CheckPathPermissionSync is not System App!");
+        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PERMISSION_SYS),
+            GetErrorMessage(OHOS::FileManagement::LibN::E_PERMISSION_SYS));
         return taihe::array<bool>::make(0);
     }
 
     int32_t callerTokenId = static_cast<int32_t>(OHOS::IPCSkeleton::GetCallingTokenID());
     if (tokenID != callerTokenId) {
         if (!CheckTokenIdPermission(callerTokenId, "ohos.permission.CHECK_SANDBOX_POLICY")) {
-            taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION,
-                                      "fileShare::CheckPathPermissionSync checkPermission failed!");
+            taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PERMISSION),
+                                      GetErrorMessage(OHOS::FileManagement::LibN::E_PERMISSION));
             return taihe::array<bool>::make(0);
         }
     }
@@ -380,8 +422,7 @@ taihe::array<bool> CheckPathPermissionSync(int32_t tokenID,
         taihe::set_business_error(arg->errNo, "Activation failed.");
         return taihe::array<bool>::make(0);
     }
-    taihe::array<bool> result(taihe::copy_data_t{}, arg->resultData.begin(), arg->resultData.size());
-    return result;
+    return taihe::array<bool>(taihe::copy_data_t{}, arg->resultData.begin(), arg->resultData.size());
 }
 } // namespace
 

@@ -21,7 +21,10 @@ subsystem_name = "filemanagement"
 taihe_generated_file_path = "$taihe_file_path/out/$subsystem_name/$part_name/fileuri"
 
 copy_taihe_idl("copy_taihe") {
-  sources = [ "${app_file_service_path}/interfaces/kits/taihe/fileuri/idl/ohos.file.fileuri.taihe" ]
+  sources = [
+    "${app_file_service_path}/interfaces/kits/taihe/fileuri/idl/ohos.file.fileuri.taihe",
+    "${app_file_service_path}/interfaces/kits/taihe/fileuri/idl/ohos.fileuri.taihe"
+  ]
 }
 
 ohos_taihe("run_taihe") {
