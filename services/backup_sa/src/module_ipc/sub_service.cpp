@@ -662,6 +662,7 @@ void Service::ExtConnectDied(const string &callName)
         }
         std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
         /* Clear Timer */
+        sched_->RemoveExtConn(callName);
         session_->StopFwkTimer(callName);
         session_->StopExtTimer(callName);
         auto backUpConnection = session_->GetExtConnection(callName);

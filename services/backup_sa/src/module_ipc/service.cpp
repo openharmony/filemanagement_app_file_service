@@ -1265,6 +1265,7 @@ void Service::ExtConnectDone(string bundleName)
             clearRecorder_->FindClearBundleRecord(bundleName)) {
             session_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::CLEAN);
         } else {
+            sched_->RemoveExtConn(bundleName);
             session_->SetServiceSchedAction(bundleName, BConstants::ServiceSchedAction::RUNNING);
             if (totalStatistic_ != nullptr) {
                 session_->UpdateDfxInfo(bundleName, totalStatistic_->GetUniqId());
