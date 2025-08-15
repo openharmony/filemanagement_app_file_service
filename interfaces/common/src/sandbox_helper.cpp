@@ -537,7 +537,6 @@ bool SandboxHelper::IsValidPath(const std::string &filePath)
 bool SandboxHelper::CheckValidPath(const std::string &filePath)
 {
     if (filePath.empty() || filePath.size() >= PATH_MAX) {
-        LOGE("filePath is invalid, size = %{public}zu", filePath.size());
         return false;
     }
 

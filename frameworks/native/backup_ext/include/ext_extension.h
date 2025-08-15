@@ -384,13 +384,13 @@ private:
     void OnRestoreExFinish();
     void DoBackupStart();
     void DoBackupEnd();
+    void UpdateTarStat(uint64_t tarFileSize);
     void CalculateDataSizeTask(const string &config);
     void DoBackUpTask(const string &config);
     TarMap convertFileToBigFiles(std::map<std::string, struct stat> files);
     void PreDealExcludes(std::vector<std::string> &excludes);
     template <typename T>
     map<string, T> MatchFiles(map<string, T> files, vector<string> endExcludes);
-    void UpdateTarStat(uint64_t tarFileSize);
 
     void HandleExtDisconnect(bool isAppResultReport, ErrCode errCode);
     bool HandleGetExtOnRelease();
