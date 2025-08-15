@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -236,7 +236,7 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
             return true;
         }
     }
-    HILOGD("End, bundleName name is:%{public}s", bundleName.c_str());
+    HILOGD("End, bundleName name is:%{private}s", bundleName.c_str());
     return false;
 }
 
@@ -512,7 +512,6 @@ bool SvcSessionManager::GetSchedBundleName(string &bundleName)
 {
     unique_lock<shared_mutex> lock(lock_);
     if (extConnectNum_ >= BConstants::EXT_CONNECT_MAX_COUNT) {
-        HILOGE("Sched bundle count is too many");
         return false;
     }
 
@@ -741,7 +740,6 @@ bool SvcSessionManager::IsOnAllBundlesFinished()
 
 bool SvcSessionManager::IsOnOnStartSched()
 {
-    HILOGI("Begin");
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         HILOGE("IsOnOnStartSched error, No caller token was specified");
@@ -750,7 +748,7 @@ bool SvcSessionManager::IsOnOnStartSched()
     if (impl_.isBackupStart && impl_.backupExtNameMap.size()) {
         return true;
     }
-    HILOGI("End");
+
     return false;
 }
 
