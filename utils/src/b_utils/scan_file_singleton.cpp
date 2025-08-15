@@ -52,13 +52,13 @@ std::map<std::string, struct stat> ScanFileSingleton::GetAllBigFiles()
     return fileMap;
 }
 
-bool ScanFileSingleton::GetCompeletedFlag()
+bool ScanFileSingleton::GetCompletedFlag()
 {
     std::lock_guard<std::mutex> lock(mutexLock_);
     return isCalculateCompleted_;
 }
 
-void ScanFileSingleton::SetCompeletedFlag(bool value)
+void ScanFileSingleton::SetCompletedFlag(bool value)
 {
     std::lock_guard<std::mutex> lock(mutexLock_);
     isCalculateCompleted_ = value;
