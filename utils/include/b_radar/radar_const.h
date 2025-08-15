@@ -107,7 +107,7 @@ struct RadarError {
         error_ = TransferErrCode(code);
     }
 
-    int16_t TransferErrCode(int32_t code)
+    uint16_t TransferErrCode(int32_t code)
     {
         if (code == 0) {
             return 0;

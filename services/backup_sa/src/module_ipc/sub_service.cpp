@@ -1064,29 +1064,6 @@ UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
     }
 }
 
-void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRestoreScenario scenario, ErrCode errCode)
-{
-    if (session_ == nullptr) {
-        HILOGE("Session is empty, bundleName:%{public}s", bundleName.c_str());
-        return;
-    }
-    HILOGI("Begin");
-    try {
-        if (scenario == BackupRestoreScenario::FULL_RESTORE) {
-            session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
-        } else if (scenario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
-            session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
-        } else if (scenario == BackupRestoreScenario::FULL_BACKUP) {
-            session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
-        } else if (scenario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
-            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
-        }
-    } catch (const BError &e) {
-        HILOGE("Call onBundleFinished error, client is died");
-        return;
-    }
-}
-
 ErrCode Service::GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList)
 {
     try {

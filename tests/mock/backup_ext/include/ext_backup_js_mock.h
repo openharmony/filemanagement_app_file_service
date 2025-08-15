@@ -90,9 +90,6 @@ public:
     MOCK_METHOD(void, ExportJsContext, ());
     MOCK_METHOD(ErrCode, OnRelease, (std::function<void(ErrCode, std::string)>, int32_t));
     MOCK_METHOD((std::function<bool(napi_env env, std::vector<napi_value> &argv)>), ParseReleaseInfo, ());
-    MOCK_METHOD(ErrCode, GetBackupCompatibilityInfo, (std::function<void(ErrCode, const std::string)>, std::string));
-    MOCK_METHOD(ErrCode, GetRestoreCompatibilityInfo, (std::function<void(ErrCode, const std::string)>, std::string));
-    MOCK_METHOD((std::function<bool(napi_env env, std::vector<napi_value> &argv)>), ParseCompatibilityInfo, ());
 public:
     MOCK_METHOD(bool, GetProfileFromAbility, (const OHOS::AppExecFwk::AbilityInfo&, const std::string&,
         std::vector<std::string>&), (const));

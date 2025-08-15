@@ -485,6 +485,7 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
         .activeTime = TimeUtils::GetCurrentTime(),
     });
     if (ret == ERR_OK) {
+        HILOGE("Success to init a new restore session");
         ClearFailedBundles();
         successBundlesNum_ = 0;
         ClearBundleRadarReport();
@@ -523,6 +524,7 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
         .activeTime = TimeUtils::GetCurrentTime(),
     });
     if (ret == ERR_OK) {
+        HILOGE("Success to init a new backup session");
         ClearFailedBundles();
         successBundlesNum_ = 0;
         ClearBundleRadarReport();
@@ -977,7 +979,6 @@ ErrCode Service::ServiceResultReport(const std::string& restoreRetInfo, BackupRe
 {
     string callerName;
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    UpdateHandleCnt(errCode);
     try {
         ErrCode ret = VerifyCallerAndGetCallerName(callerName);
         if (ret != ERR_OK) {

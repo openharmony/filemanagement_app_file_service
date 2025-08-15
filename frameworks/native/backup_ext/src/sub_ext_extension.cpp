@@ -1592,7 +1592,7 @@ void BackupExtExtension::DoBackUpTask(const string &config)
 
     int ret = 0;
     TarMap fileBackupedInfo;
-    while (!ScanFileSingleton::GetInstance().GetCompeletedFlag()) {
+    while (!ScanFileSingleton::GetInstance().GetCompletedFlag()) {
         ScanFileSingleton::GetInstance().WaitForFiles();
         std::map<std::string, struct stat> incFiles = ScanFileSingleton::GetInstance().GetAllBigFiles();
         if (incFiles.empty()) {
@@ -1615,7 +1615,7 @@ void BackupExtExtension::DoBackUpTask(const string &config)
 
     ret = DoBackup(bigFileInfo, fileBackupedInfo, smallFiles, includeSize, excludeSize);
     DoBackupEnd();
-    ScanFileSingleton::GetInstance().SetCompeletedFlag(false);
+    ScanFileSingleton::GetInstance().SetCompletedFlag(false);
     AppDone(ret);
     HILOGI("backup app done %{public}d", ret);
 }

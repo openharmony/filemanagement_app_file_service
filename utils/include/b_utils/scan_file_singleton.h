@@ -33,9 +33,9 @@ public:
      
     std::map<std::string, struct stat> GetAllBigFiles();
 
-    bool GetCompeletedFlag();
+    bool GetCompletedFlag();
 
-    void SetCompeletedFlag(bool value);
+    void SetCompletedFlag(bool value);
 
     std::map<std::string, size_t> GetAllSmallFiles();
 
