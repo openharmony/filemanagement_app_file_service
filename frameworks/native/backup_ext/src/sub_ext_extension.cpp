@@ -1516,9 +1516,7 @@ ErrCode BackupExtExtension::CloudSpecialRestore(string tarName, string untarPath
     auto unPacketRes = UntarFile::GetInstance().IncrementalUnPacket(tarName, untarPath, result);
     ErrCode err = ERR_OK;
     err = std::get<FIRST_PARAM>(unPacketRes);
-    if (int tmpErr = DealIncreUnPacketResult(tarFileSize, tarName, unPacketRes); tmpErr != ERR_OK) {
-        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
-    }
+    DealIncreUnPacketResult(tarFileSize, tarName, unPacketRes);
     HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
     DeleteBackupIncrementalTars(tarName);
     return err;

@@ -18,7 +18,6 @@
 
 #include "tar_file.h"
 #include "b_json/b_report_entity.h"
-#include "b_filesystem/b_dir.h"
 
 namespace OHOS::FileManagement::Backup {
 struct FileStatInfo {
@@ -31,6 +30,7 @@ struct FileStatInfo {
 };
 
 using ErrFileInfo = std::map<std::string, std::vector<int>>;
+using EndFileInfo = std::map<std::string, off_t>;
 
 const int FIRST_PARAM = 0;
 const int SECOND_PARAM = 1;
