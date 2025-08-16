@@ -219,18 +219,6 @@ void SchedScheduler::StartExecuteBundleTask(const std::string &bundleName, BCons
         }
     } else if (action == BConstants::ServiceSchedAction::RUNNING) {
         HILOGI("Current bundle %{public}s process is running", bundleName.data());
-        unique_lock<shared_mutex> lock(lock_);
-        auto iter = find_if(bundleTimeVec_.begin(), bundleTimeVec_.end(), [&bundleName](auto &obj) {
-            auto &[bName, iTime] = obj;
-            return bName == bundleName;
-        });
-        if (iter == bundleTimeVec_.end()) {
-            throw BError(BError::Codes::SA_INVAL_ARG, "Failed to find timer");
-        }
-        auto &[bName, iTime] = *iter;
-        // unregister timer
-        extTime_.Unregister(iTime);
-        lock.unlock();
         //notify AppGallery to start restore
         if (reversePtr_ != nullptr) {
             reversePtr_->StartRunningTimer(bundleName);
