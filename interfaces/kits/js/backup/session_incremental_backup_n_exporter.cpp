@@ -295,7 +295,8 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
 static bool SetIncrementalBackupEntity(napi_env env, NFuncArg &funcArg, std::unique_ptr<IncrBackupEntity> backupEntity)
 {
     auto finalize = [](napi_env env, void *data, void *hint) {
-        std::unique_ptr<IncrBackupEntity> entity = std::unique_ptr<IncrBackupEntity>(static_cast<IncrBackupEntity *>(data));
+        std::unique_ptr<IncrBackupEntity> entity =
+            std::unique_ptr<IncrBackupEntity>(static_cast<IncrBackupEntity *>(data));
         if (entity == nullptr) {
             HILOGE("Entity is nullptr");
             return;

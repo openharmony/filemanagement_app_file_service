@@ -32,7 +32,7 @@ namespace {
 const char *INCR_BACKUP_SESSION_CLASS_NAME = "L@ohos/backup/transfer/backup/IncrementalBackupSession;";
 const char *B_INCREMENTAL_DATA_CLASS_NAME = "L@ohos/backup/transfer/backup/BIncrementalData;";
 const char *INCR_BACKUP_SESSION_CLEANER_CLASS_NAME = "L@ohos/backup/transfer/backup/IncrBackupSessionCleaner;";
-int32_t E_OK = 0;
+constexpr int32_t E_OK = 0;
 }
 
 void IncrementalBackupSession::Init(ani_env *aniEnv)
@@ -155,12 +155,12 @@ bool IncrementalBackupSession::ParseIncrDataFromAniArray(ani_env *aniEnv, ani_ar
         ani_object dataObj = static_cast<ani_object>(item);
         aniEnv->Object_InstanceOf(dataObj, incrementalDataCls, &isIncrementalData);
         if (!isIncrementalData) {
-            HILOGE("arr element is not BIncrementalData");;
+            HILOGE("arr element is not BIncrementalData");
             return false;
         }
         BIncrementalData incrData;
         if (!ParseBIncrementalData(aniEnv, dataObj, incrData)) {
-            HILOGE("BIncrementalData fail");;
+            HILOGE("BIncrementalData fail");
             return false;
         }
         result.push_back(incrData);
