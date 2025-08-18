@@ -854,7 +854,7 @@ tuple<ErrCode, uint32_t, uint32_t> BackupExtExtension::CalculateDataSize(const B
 
     // 扫描文件计算数据量
     tie(bigFileInfo, smallFiles) = GetFileInfos(includes, excludes);
-    ScanFileSingleton::GetInstance().SetCompeletedFlag(true);
+    ScanFileSingleton::GetInstance().SetCompletedFlag(true);
     appStatistic_->smallFileCount_ = smallFiles.size();
     appStatistic_->bigFileCount_ = bigFileInfo.size();
     for (const auto &item : bigFileInfo) {
@@ -1031,11 +1031,11 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
             ptr->CalculateDataSizeTask(config);
         } catch (const BError &e) {
             HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
-            ScanFileSingleton::GetInstance().SetCompeletedFlag(true);
+            ScanFileSingleton::GetInstance().SetCompletedFlag(true);
             ptr->AppDone(e.GetCode());
         } catch (...) {
             HILOGE("Failed to restore the ext bundle");
-            ScanFileSingleton::GetInstance().SetCompeletedFlag(true);
+            ScanFileSingleton::GetInstance().SetCompletedFlag(true);
             ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         }
     };
@@ -1058,11 +1058,11 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
             ptr->DoBackUpTask(config);
         } catch (const BError &e) {
             HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
-            ScanFileSingleton::GetInstance().SetCompeletedFlag(false);
+            ScanFileSingleton::GetInstance().SetCompletedFlag(false);
             ptr->AppDone(e.GetCode());
         } catch (...) {
             HILOGE("Failed to restore the ext bundle");
-            ScanFileSingleton::GetInstance().SetCompeletedFlag(false);
+            ScanFileSingleton::GetInstance().SetCompletedFlag(false);
             ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
         }
         ptr->DoClear();

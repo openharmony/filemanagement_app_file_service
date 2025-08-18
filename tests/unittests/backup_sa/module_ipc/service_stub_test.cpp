@@ -56,10 +56,8 @@ public:
     MOCK_METHOD3(ServiceResultReport, ErrCode(const string restoreRetInfo,
         BackupRestoreScenario scenario, ErrCode errCode));
     MOCK_METHOD2(GetFileHandle, ErrCode(const string &bundleName, const string &fileName));
-    MOCK_METHOD5(
-        AppendBundlesRestoreSession,
-        ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, const std::vector<std::string> &detailInfos,
-        RestoreTypeEnum restoreType, int32_t userId));
+    MOCK_METHOD5(AppendBundlesRestoreSession, ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames,
+        const std::vector<std::string> &detailInfos, RestoreTypeEnum restoreType, int32_t userId));
     MOCK_METHOD4(
         AppendBundlesRestoreSession,
         ErrCode(UniqueFd fd, const std::vector<BundleName> &bundleNames, RestoreTypeEnum restoreType, int32_t userId));

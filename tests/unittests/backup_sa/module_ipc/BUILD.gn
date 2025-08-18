@@ -61,6 +61,7 @@ ohos_unittest("module_ipc_test") {
   ]
 
   sanitize = {
+    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false
@@ -139,6 +140,7 @@ ohos_unittest("backup_service_test") {
   ]
 
   sanitize = {
+    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false
@@ -348,6 +350,7 @@ ohos_unittest("backup_service_scheduler_test") {
   ]
 
   sanitize = {
+    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
     debug = false

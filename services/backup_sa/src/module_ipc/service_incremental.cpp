@@ -348,10 +348,10 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
     }
     totalStatistic_->Report("InitIncrementalBackupSession", MODULE_INIT, errCode);
     if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
-        HILOGE("Active restore session error, Already have a session");
+        HILOGE("Active incremental backup error, Already have a session");
         return errCode;
     }
-    HILOGE("Active restore session error");
+    HILOGE("Active backup session error");
     StopAll(nullptr, true);
     return errCode;
 }
@@ -759,6 +759,7 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        HILOGE("GetIncrementalFileHandle error, session is empty");
         if (session_ == nullptr) {
             HILOGE("GetIncrementalFileHandle error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);

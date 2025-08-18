@@ -94,7 +94,7 @@ static bool ConvertPolicyErrorResult(const std::deque<OHOS::AppFileService::Poli
         }
         ret = strcpy_s((*result)[i].message, size, errorResults[i].message.c_str());
         if (ret != 0) {
-            LOGE("Copy message failed message:%{private}s, errno:%{public}d", errorResults[i].uri.c_str(), ret);
+            LOGE("Copy message failed message:%{public}s, errno:%{public}d", errorResults[i].message.c_str(), ret);
             free((*result)[i].uri);
             free((*result)[i].message);
             return false;

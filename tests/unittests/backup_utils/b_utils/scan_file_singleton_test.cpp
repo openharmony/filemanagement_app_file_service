@@ -76,28 +76,28 @@ HWTEST_F(ScanFileSingletonTest, scan_file_singleton_GetAllBigfiles_0100, testing
 
 /**
  * @brief 测试设置和获取完成标志
- * @tc.number: SUB_scan_file_singleton_SetGetCompeletedFlag_0100
- * @tc.name: scan_file_singleton_SetGetCompeletedFlag_0100
- * @tc.desc: 测试ScanFileSingleton的SetCompeletedFlag和GetCompeletedFlag方法是否能正确设置和获取完成标志
+ * @tc.number: SUB_scan_file_singleton_SetGetCompletedFlag_0100
+ * @tc.name: scan_file_singleton_SetGetCompletedFlag_0100
+ * @tc.desc: 测试ScanFileSingleton的SetCompletedFlag和GetCompletedFlag方法是否能正确设置和获取完成标志
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  */
-HWTEST_F(ScanFileSingletonTest, scan_file_singleton_SetGetCompeletedFlag_0100, testing::ext::TestSize.Level1)
+HWTEST_F(ScanFileSingletonTest, scan_file_singleton_SetGetCompletedFlag_0100, testing::ext::TestSize.Level1)
 {
     auto& instance = ScanFileSingleton::GetInstance();
-    instance.SetCompeletedFlag(true);
-    EXPECT_TRUE(instance.GetCompeletedFlag()) << "The completed flag should be true.";
+    instance.SetCompletedFlag(true);
+    EXPECT_TRUE(instance.GetCompletedFlag()) << "The completed flag should be true.";
 
-    instance.SetCompeletedFlag(false);
-    EXPECT_FALSE(instance.GetCompeletedFlag()) << "The completed flag should be false.";
+    instance.SetCompletedFlag(false);
+    EXPECT_FALSE(instance.GetCompletedFlag()) << "The completed flag should be false.";
 }
 
 /**
  * @brief 测试添加和获取小文件信息
  * @tc.number: SUB_scan_file_singleton_GetAllSmallFiles_0100
  * @tc.name: scan_file_singleton_GetAllSmallFiles_0100
- * @tc.desc: 测试ScanFileSingleton的GetAllBigfiles方法是否能正确添加和获取小文件信息
+ * @tc.desc: 测试ScanFileSingleton的GetAllSmallfiles方法是否能正确添加和获取小文件信息
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -107,10 +107,10 @@ HWTEST_F(ScanFileSingletonTest, scan_file_singleton_GetAllSmallFiles_0100, testi
     auto& instance = ScanFileSingleton::GetInstance();
 
     instance.AddSmallFile("/path/to/small_file.txt", 512);
-    auto allSmallFiels = instance.GetAllSmallFiles();
+    auto allSmallFiles = instance.GetAllSmallFiles();
 
-    EXPECT_EQ(allSmallFiels.size(), 1) << "There should be one small file in queue.";
-    EXPECT_EQ(allSmallFiels["/path/to/small_file.txt"], 512) << "The file size should be 512 bytes.";
+    EXPECT_EQ(allSmallFiles.size(), 1) << "There should be one small file in queue.";
+    EXPECT_EQ(allSmallFiles["/path/to/small_file.txt"], 512) << "The file size should be 512 bytes.";
 }
 
 /**

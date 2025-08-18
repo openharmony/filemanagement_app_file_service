@@ -888,8 +888,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtStart_0101, testing::ext::TestSize.Level1)
         BackupExtInfo extInfo {};
         auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
         auto callConnected = [](const string &&bundleName) {};
-        string bundleNameIndexInfo = "123456789";
-        extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, bundleNameIndexInfo));
+        extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, BUNDLE_NAME));
         extInfo.backUpConnection->backupProxy_ = nullptr;
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
         impl_.scenario = IServiceReverseType::Scenario::UNDEFINED;
@@ -2051,8 +2050,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0100, testing::ext::TestSize.Le
         BackupExtInfo extInfo {};
         auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
         auto callConnected = [](const string &&bundleName) {};
-        string bundleNameIndexInfo = "123456789";
-        extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, bundleNameIndexInfo));
+        extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, BUNDLE_NAME));
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
         impl_.scenario = IServiceReverseType::Scenario::RESTORE;
         EXPECT_TRUE(servicePtr_ != nullptr);
