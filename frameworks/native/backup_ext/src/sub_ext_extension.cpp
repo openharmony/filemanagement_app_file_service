@@ -152,7 +152,7 @@ void BackupExtExtension::SetClearDataFlag(bool isClearData)
 
 string BackupExtExtension::GetBundlePath()
 {
-    if (BFile::EndsWith(bundleName_, BConstants::BUNDLE_FILE_MANAGER) && bundleName_.size() == BConstants::FM_LEN) {
+    if (bundleName_ == BConstants::BUNDLE_FILE_MANAGER) {
         return string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     } else if (bundleName_ == BConstants::BUNDLE_MEDIAL_DATA) {
         return string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
