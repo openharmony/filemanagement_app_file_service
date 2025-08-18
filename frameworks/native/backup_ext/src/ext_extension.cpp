@@ -924,10 +924,6 @@ int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
         endFileInfos_.merge(fileInfos);
         errFileInfos_.merge(errInfos);
     }
-    if (BDir::CheckAndRmSoftLink(tarName) || BDir::CheckAndRmSoftLink(fileInfos)) {
-        HILOGE("File soft links are forbidden");
-        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
-    }
     if (ret != 0) {
         HILOGE("Failed to untar file = %{public}s, err = %{public}d", tarName.c_str(), ret);
         return ret;
@@ -955,25 +951,23 @@ void BackupExtExtension::GetTarIncludes(const string &tarName, unordered_map<str
     rp.GetReportInfos(infos);
 }
 
-int BackupExtExtension::DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
+void BackupExtExtension::DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
     const std::tuple<int, EndFileInfo, ErrFileInfo> &result)
 {
+    if (!isDebug_) {
+        return;
+    }
     int err = std::get<FIRST_PARAM>(result);
-    EndFileInfo tmpEndInfo = std::get<SECOND_PARAM>(result);
     if (!isRpValid_) {
         if (err != ERR_OK) {
             endFileInfos_[tarFileName] = tarFileSize;
             errFileInfos_[tarFileName] = {err};
         }
+        EndFileInfo tmpEndInfo = std::get<SECOND_PARAM>(result);
         endFileInfos_.merge(tmpEndInfo);
-    }
-    if (BDir::CheckAndRmSoftLink(tmpEndInfo)) {
-        HILOGE("File soft links are forbidden");
-        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
     }
     ErrFileInfo tmpErrInfo = std::get<THIRD_PARAM>(result);
     errFileInfos_.merge(tmpErrInfo);
-    return ERR_OK;
 }
 
 int BackupExtExtension::DoIncrementalRestore()
@@ -1001,9 +995,9 @@ int BackupExtExtension::DoIncrementalRestore()
             string tarName = path + item;
 
             // 当用户指定fullBackupOnly字段或指定版本的恢复，解压目录当前在/backup/restore
-            if (!BDir::IsFilePathValid(tarName) || BDir::CheckAndRmSoftLink(tarName)) {
+            if (!BDir::IsFilePathValid(tarName)) {
                 HILOGE("Check incre tarfile path : %{public}s err, path is forbidden", GetAnonyPath(tarName).c_str());
-                return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
+                return ERR_INVALID_VALUE;
             }
             unordered_map<string, struct ReportFileInfo> result;
             GetTarIncludes(tarName, result);
@@ -1016,9 +1010,7 @@ int BackupExtExtension::DoIncrementalRestore()
             std::tuple<int, EndFileInfo, ErrFileInfo> unPacketRes =
                 UntarFile::GetInstance().IncrementalUnPacket(tarName, path, result);
             err = std::get<FIRST_PARAM>(unPacketRes);
-            if (int tmpErr = DealIncreUnPacketResult(tarFileSize, item, unPacketRes); tmpErr != ERR_OK) {
-                return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
-            }
+            DealIncreUnPacketResult(tarFileSize, item, unPacketRes);
             HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
             DeleteBackupIncrementalTars(tarName);
         }
@@ -1096,13 +1088,6 @@ void BackupExtExtension::RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo
     if (!BDir::IsFilePathValid(fileName)) {
         HILOGE("Check big special file path : %{public}s err, path is forbidden", GetAnonyPath(fileName).c_str());
         errFileInfos_[fileName].emplace_back(DEFAULT_INVAL_VALUE);
-        if (!RemoveFile(fileName)) {
-            HILOGE("Failed to delete the backup bigFile %{public}s", GetAnonyPath(fileName).c_str());
-        }
-        return;
-    }
-    if (BDir::CheckAndRmSoftLink(fileName)) {
-        HILOGE("File soft links are forbidden");
         return;
     }
     if (chmod(fileName.c_str(), sta.st_mode) != 0) {
@@ -1141,10 +1126,6 @@ ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &
         HILOGE("Check spec tarfile hash path : %{public}s err, path is forbidden", GetAnonyPath(tarName).c_str());
         return ERR_INVALID_VALUE;
     }
-    if (BDir::CheckAndRmSoftLink(tarName)) {
-        HILOGE("File soft links are forbidden");
-        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
-    }
     if (!BDir::IsFilePathValid(untarPath)) {
         HILOGE("Check spec tarfile path : %{public}s err, path is forbidden", GetAnonyPath(untarPath).c_str());
         return ERR_INVALID_VALUE;
@@ -1155,18 +1136,18 @@ ErrCode BackupExtExtension::RestoreTarForSpecialCloneCloud(const ExtManageInfo &
     }
     auto [err, fileInfos, errInfos] = UntarFile::GetInstance().UnPacket(tarName, untarPath);
     if (isDebug_) {
+        if (err != 0) {
+            endFileInfos_[tarName] = item.sta.st_size;
+            errFileInfos_[tarName] = { err };
+        }
         endFileInfos_.merge(fileInfos);
         errFileInfos_.merge(errInfos);
     }
-    if (BDir::CheckAndRmSoftLink(fileInfos)) {
-        HILOGE("File soft links are forbidden");
-        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
-    }
-    DeleteBackupIncrementalTars(tarName);
     if (err != ERR_OK) {
         HILOGE("Failed to untar file = %{public}s, err = %{public}d", tarName.c_str(), err);
         return err;
     }
+    DeleteBackupIncrementalTars(tarName);
     return ERR_OK;
 }
 
@@ -1380,10 +1361,6 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path,
         HILOGE("Check big file path : %{public}s err, path is forbidden", GetAnonyPath(filePath).c_str());
         return;
     }
-    if (BDir::CheckAndRmSoftLink(fileName)) {
-        HILOGE("File soft links are forbidden");
-        return;
-    }
     if (isDebug_) {
         endFileInfos_[filePath] = item.sta.st_size;
     }
@@ -1396,10 +1373,7 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path,
         HILOGE("failed to move the file. err = %{public}d", errno);
         return;
     }
-    if (BDir::CheckAndRmSoftLink(filePath)) {
-        HILOGE("File soft links are forbidden");
-        return;
-    }
+
     RestoreBigFileAfter(filePath, item.sta);
 }
 
