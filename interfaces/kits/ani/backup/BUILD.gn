@@ -1,0 +1,101 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/config/components/ets_frontend/ets2abc_config.gni")
+import("//build/ohos.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
+
+ohos_shared_library("ani_session_transfer") {
+  visibility = [ ":*" ]
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    boundary_sanitize = true
+    ubsan = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  defines = [
+    "LOG_DOMAIN=0xD004306",
+    "LOG_TAG=\"BackupANI\"",
+  ]
+
+  cflags_cc = [ "-Wno-unused-function" ]
+  sources = [
+    "../../../common/src/common_func.cpp",
+    "../../../common/src/sandbox_helper.cpp",
+    "../../../common/src/json_utils.cpp",
+    "src/incr_backup_session_transfer.cpp",
+    "src/incremental_backup_session.cpp",
+    "src/ani_constructor.cpp",
+    "../utils/src/ani_utils.cpp"
+  ]
+
+  include_dirs = [
+    "include",
+    "../utils/include",
+    "../../../common/include",
+    "../../js/backup",
+    "${app_file_service_path}/interfaces/inner_api/native/backup_kit_inner/impl",
+  ]
+
+  deps = [ 
+    "${app_file_service_path}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${app_file_service_path}/interfaces/kits/js:backup",
+    "${app_file_service_path}/utils:backup_utils"
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "file_api:filemgmt_libhilog",
+    "file_api:filemgmt_libn",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "napi:ace_napi",
+    "runtime_core:ani",
+    "runtime_core:ani_helpers",
+    "samgr:samgr_proxy",
+  ]
+  use_exceptions = true
+  part_name = "app_file_service"
+  subsystem_name = "filemanagement"
+  output_extension = "so"
+}
+
+generate_static_abc("backup_transfer_abc") {
+  base_url = "./ets"
+  files = [ "./ets/@ohos.backup.transfer.ets" ]
+  dst_file = "$target_out_dir/backup_transfer.abc"
+  out_puts = [ "$target_out_dir/backup_transfer.abc" ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/backup_transfer.abc"
+}
+
+ohos_prebuilt_etc("backup_transfer_abc_etc") {
+  source = "$target_out_dir/backup_transfer.abc"
+  module_install_dir = "framework"
+  subsystem_name = "filemanagement"
+  part_name = "app_file_service"
+  deps = [ ":backup_transfer_abc" ]
+}
+
+group("backup_ani_package") {
+  deps = [
+    ":backup_transfer_abc_etc",
+    ":ani_session_transfer",
+  ]
+}

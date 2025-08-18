@@ -121,7 +121,6 @@ ohos_shared_library("fileuri") {
   use_exceptions = true
 
   relative_install_dir = "module/file"
-
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
 }
@@ -136,6 +135,7 @@ ohos_shared_library("backup") {
   }
 
   relative_install_dir = "module/file"
+  version_script = "backup_napi.versionscript"
   subsystem_name = "filemanagement"
   part_name = "app_file_service"
 
