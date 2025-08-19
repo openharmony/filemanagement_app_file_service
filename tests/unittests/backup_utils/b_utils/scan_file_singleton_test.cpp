@@ -97,7 +97,7 @@ HWTEST_F(ScanFileSingletonTest, scan_file_singleton_SetGetCompletedFlag_0100, te
  * @brief 测试添加和获取小文件信息
  * @tc.number: SUB_scan_file_singleton_GetAllSmallFiles_0100
  * @tc.name: scan_file_singleton_GetAllSmallFiles_0100
- * @tc.desc: 测试ScanFileSingleton的GetAllSmallfiles方法是否能正确添加和获取小文件信息
+ * @tc.desc: 测试ScanFileSingleton的GetAllSmallFiles方法是否能正确添加和获取小文件信息
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
