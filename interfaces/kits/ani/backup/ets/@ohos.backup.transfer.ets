@@ -30,6 +30,19 @@ export namespace backup {
         native clean(): void
     }
 
+    class BackupSessionCleaner implements Cleaner {
+        static {
+            loadLibrary("ani_session_transfer");
+        }
+        private session: long = 0
+        private callbacks: long = 0
+        constructor(session: long, callbacks: long) {
+            this.session = session;
+            this.callbacks = callbacks;
+        }
+        native clean(): void
+    }
+
     export function callback(cleaner: Cleaner): void {
         cleaner.clean();
     }
@@ -42,6 +55,35 @@ export namespace backup {
         public manifestFd: int = 0;
         public backupParameters: string = '';
         public backupPriority: int = 0;
+    }
+
+    class BackupSession {
+        public session: long = 0;
+        public callbacks: long = 0;
+        private cleaner: BackupSessionCleaner | null = null;
+        constructor(session: long, callbacks: long) {
+            this.session = session;
+            this.callbacks = callbacks;
+            this.registerCleaner();
+        }
+        registerCleaner(): void {
+            this.cleaner = new BackupSessionCleaner(this.session, this.callbacks);
+            destroyRegister.register(this, this.cleaner!, unregisterToken);
+        }
+    }
+
+    class BackupSessionTransfer {
+        static {
+            loadLibrary("ani_session_transfer");
+        }
+        private static native transferStaticSession(input: ESValue): Object;
+        private static native transferDynamicSession(input: Object): ESValue;
+        static transferStatic(input: Any): Object { // 1.1(dynamic) => 1.2(static)
+            return BackupSessionTransfer.transferStaticSession(ESValue.wrap(input));
+        }
+        static transferDynamic(input: Object): Any { // 1.2 => 1.1
+            return BackupSessionTransfer.transferDynamicSession(input);
+        }
     }
 
     class IncrementalBackupSession {

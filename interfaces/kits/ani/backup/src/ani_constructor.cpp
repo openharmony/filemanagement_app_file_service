@@ -14,8 +14,10 @@
  */
 
 #include <ani.h>
-#include "incr_backup_session_transfer.h"
+#include "backup_session.h"
+#include "backup_session_transfer.h"
 #include "incremental_backup_session.h"
+#include "incr_backup_session_transfer.h"
 
 namespace OHOS::FileManagement::Backup {
 extern "C" {
@@ -27,6 +29,8 @@ extern "C" {
         }
         IncreBackupSessionTransfer::Init(env);
         IncrementalBackupSession::Init(env);
+        BackupSession::Init(env);
+        BackupSessionTransfer::Init(env);
         *result = ANI_VERSION_1;
         return ANI_OK;
     }

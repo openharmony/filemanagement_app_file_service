@@ -36,6 +36,8 @@ ohos_shared_library("ani_session_transfer") {
     "../../../common/src/common_func.cpp",
     "../../../common/src/sandbox_helper.cpp",
     "../../../common/src/json_utils.cpp",
+    "src/backup_session_transfer.cpp",
+    "src/backup_session.cpp",
     "src/incr_backup_session_transfer.cpp",
     "src/incremental_backup_session.cpp",
     "src/ani_constructor.cpp",

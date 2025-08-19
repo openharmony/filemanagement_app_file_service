@@ -15,12 +15,21 @@
 #ifndef INTERFACES_KITS_JS_SRC_MOD_BACKUP_PROPERTIES_SESSION_BACKUP_N_EXPORTER_H
 #define INTERFACES_KITS_JS_SRC_MOD_BACKUP_PROPERTIES_SESSION_BACKUP_N_EXPORTER_H
 
+#include <memory>
+#include "b_session_backup.h"
+#include "general_callbacks.h"
 #include "n_exporter.h"
 
 namespace OHOS::FileManagement::Backup {
+struct BackupEntity {
+    unique_ptr<BSessionBackup> session;
+    shared_ptr<GeneralCallbacks> callbacks;
+};
+
 class SessionBackupNExporter final : public LibN::NExporter {
 public:
     inline static const std::string className = "SessionBackup";
+    inline static const std::string napiClassName_ = "NapiSessionBackup";
 
     bool Export() override;
     std::string GetClassName() override;
@@ -32,6 +41,9 @@ public:
     static napi_value Release(napi_env env, napi_callback_info cbinfo);
     static napi_value Cancel(napi_env env, napi_callback_info cbinfo);
     static napi_value CleanBundleTempDir(napi_env env, napi_callback_info cbinfo);
+
+    static napi_value ConstructorFromEntity(napi_env env, napi_callback_info cbinfo);
+    static napi_value CreateByEntity(napi_env env, std::unique_ptr<BackupEntity> entity);
 
     SessionBackupNExporter(napi_env env, napi_value exports);
     ~SessionBackupNExporter() override;
