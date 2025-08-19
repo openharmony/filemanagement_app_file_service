@@ -27,8 +27,6 @@ struct IncrBackupEntity {
     std::shared_ptr<GeneralCallbacks> callbacks;
 };
 
-const std::string CLASS_NAME = "IncrementalBackupSession";
-const std::string NAPI_CLASS_NAME = "NapiIncrementalBackupSession";
 class SessionIncrementalBackupNExporter final : public LibN::NExporter {
 public:
     bool Export() override;

@@ -144,7 +144,7 @@ bool IncrementalBackupSession::ParseIncrDataFromAniArray(ani_env *aniEnv, ani_ar
     for (ani_size idx = 0; idx < arrSize; idx++) {
         ani_ref item;
         if (ANI_OK != aniEnv->Array_Get(bundles, idx, &item)) {
-            HILOGE("Array_Get fail, idx=%{public}lu", idx);
+            HILOGE("Array_Get fail, idx=%{public}zu", idx);
             return false;
         }
         ani_class incrementalDataCls = AniUtils::GetAniClsByName(aniEnv, B_INCREMENTAL_DATA_CLASS_NAME);

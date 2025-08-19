@@ -32,6 +32,9 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace LibN;
 
+const std::string CLASS_NAME = "IncrementalBackupSession";
+const std::string NAPI_CLASS_NAME = "NapiIncrementalBackupSession";
+
 static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &fileInfo, UniqueFd fd,
     UniqueFd manifestFd, int sysErrno)
 {
@@ -826,7 +829,7 @@ napi_value SessionIncrementalBackupNExporter::CreateByEntity(napi_env env, IncrB
 
 string SessionIncrementalBackupNExporter::GetClassName()
 {
-    return SessionIncrementalBackupNExporter::CLASS_NAME;
+    return CLASS_NAME;
 }
 
 SessionIncrementalBackupNExporter::SessionIncrementalBackupNExporter(napi_env env, napi_value exports)

@@ -66,12 +66,12 @@ bool AniUtils::AniArrayToStrVector(ani_env* env, ani_array arr, std::vector<std:
     for (ani_size idx = 0; idx < arrSize; idx++) {
         ani_ref item;
         if (ANI_OK != env->Array_Get(arr, idx, &item)) {
-            HILOGE("Array_Get fail, idx=%{public}lu", idx);
+            HILOGE("Array_Get fail, idx=%{public}zu", idx);
             return false;
         }
         std::string str;
         if (!AniObjectToStdString(env, static_cast<ani_object>(item), str)) {
-            HILOGE("ani_ref cast to string fail, idx=%{public}lu", idx);
+            HILOGE("ani_ref cast to string fail, idx=%{public}zu", idx);
             return false;
         }
         result.push_back(str);
