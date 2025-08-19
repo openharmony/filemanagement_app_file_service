@@ -340,6 +340,7 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
                                 .callerName = GetCallerName(),
                                 .activeTime = TimeUtils::GetCurrentTime()});
     if (errCode == ERR_OK) {
+        HILOGE("Success to init a new incremental backup session");
         ClearFailedBundles();
         successBundlesNum_ = 0;
         ClearBundleRadarReport();
@@ -759,7 +760,7 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGE("GetIncrementalFileHandle error, session is empty");
+        HILOGI("Begin get incrementalFileHandle");
         if (session_ == nullptr) {
             HILOGE("GetIncrementalFileHandle error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);

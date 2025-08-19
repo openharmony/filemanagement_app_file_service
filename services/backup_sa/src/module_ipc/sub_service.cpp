@@ -902,7 +902,6 @@ void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRes
     }
 }
 
-
 std::string Service::GetCallerName()
 {
     std::string callerName;
