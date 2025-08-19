@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "incr_backup_session_transfer.h"
+#include "restore_session_transfer.h"
 
 #include <array>
 #include <bit>
@@ -23,40 +23,37 @@
 #include "interop_js/arkts_interop_js_api.h"
 #include "interop_js/arkts_esvalue.h"
 #include "filemgmt_libhilog.h"
-#include "incremental_backup_session.h"
+#include "ani_utils.h"
+#include "restore_session.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "native_engine/native_engine.h"
-#include "session_incremental_backup_n_exporter.h"
+#include "session_restore_n_exporter.h"
 
 namespace OHOS::FileManagement::Backup {
 namespace {
-const char *BACKUP_SESSION_TRANSFER_CLASS_NAME = "L@ohos/backup/transfer/backup/IncrBackupSessionTransfer;";
-const char *INCR_BACKUP_SESSION_CLASS_NAME = "L@ohos/backup/transfer/backup/IncrementalBackupSession;";
+const char *RESTORE_SESSION_TRANSFER_CLASS_NAME = "L@ohos/backup/transfer/backup/RestoreSessionTransfer;";
+const char *RESTORE_SESSION_CLASS_NAME = "L@ohos/backup/transfer/backup/RestoreSession;";
 }
 
-void IncreBackupSessionTransfer::Init(ani_env *aniEnv)
+void RestoreSessionTransfer::Init(ani_env *aniEnv)
 {
     HILOGD("Init transfer native method begin");
     if (aniEnv == nullptr) {
         HILOGE("aniEnv is null");
         return;
     }
-
-    ani_class cls = nullptr;
-    auto status = aniEnv->FindClass(BACKUP_SESSION_TRANSFER_CLASS_NAME, &cls);
-    if (status != ANI_OK) {
-        HILOGE("FindClass failed status: %{public}d", status);
+    ani_class cls = AniUtils::GetAniClsByName(aniEnv, RESTORE_SESSION_TRANSFER_CLASS_NAME);
+    if (cls == nullptr) {
         return;
     }
-
     std::array nativeFuncs = {
         ani_native_function { "transferStaticSession", nullptr,
-            reinterpret_cast<void*>(IncreBackupSessionTransfer::TransferStaticSession)},
+            reinterpret_cast<void*>(RestoreSessionTransfer::TransferStaticSession)},
         ani_native_function { "transferDynamicSession", nullptr,
-            reinterpret_cast<void*>(IncreBackupSessionTransfer::TransferDynamicSession)},
+            reinterpret_cast<void*>(RestoreSessionTransfer::TransferDynamicSession)},
     };
-    status = aniEnv->Class_BindStaticNativeMethods(cls, nativeFuncs.data(), nativeFuncs.size());
+    int32_t status = aniEnv->Class_BindStaticNativeMethods(cls, nativeFuncs.data(), nativeFuncs.size());
     if (status != ANI_OK) {
         HILOGE("Class_BindNativeMethods failed status: %{public}d", status);
         return;
@@ -64,9 +61,9 @@ void IncreBackupSessionTransfer::Init(ani_env *aniEnv)
     HILOGD("Init transfer native method end");
 }
 
-ani_object IncreBackupSessionTransfer::TransferStaticSession(ani_env *aniEnv, ani_class aniCls, ani_object input)
+ani_object RestoreSessionTransfer::TransferStaticSession(ani_env *aniEnv, ani_class aniCls, ani_object input)
 {
-    HILOGD("Transfer incrBackupSession Static begin");
+    HILOGD("Transfer RestoreSession Static begin");
     if (aniEnv == nullptr) {
         HILOGE("aniEnv is null");
         return nullptr;
@@ -82,30 +79,30 @@ ani_object IncreBackupSessionTransfer::TransferStaticSession(ani_env *aniEnv, an
         HILOGE("UnwrapResult is nullptr");
         return nullptr;
     }
-    // 1.1->1.2
-    IncrementalBackupSession* entity = reinterpret_cast<IncrementalBackupSession*>(unwrapResult);
-    ani_class cls = nullptr;
-    ani_status ret = ANI_ERROR;
-    if ((ret = aniEnv->FindClass(INCR_BACKUP_SESSION_CLASS_NAME, &cls)) != ANI_OK) {
-        HILOGE("Call FindClass failed, ret = %{public}d", ret);
+    RestoreSession* entity = reinterpret_cast<RestoreSession*>(unwrapResult);
+    ani_class cls = AniUtils::GetAniClsByName(aniEnv, RESTORE_SESSION_CLASS_NAME);
+    if (cls == nullptr) {
+        HILOGE("Call FindClass failed");
         return nullptr;
     }
     ani_method constructFunc;
+    ani_status ret = ANI_ERROR;
     if ((ret = aniEnv->Class_FindMethod(cls, "<ctor>", nullptr, &constructFunc)) != ANI_OK) {
         HILOGE("Call Class_FindMethod failed, ret = %{public}d", ret);
         return nullptr;
     }
     ani_object outObj;
-    ret = aniEnv->Object_New(cls, constructFunc, &outObj, entity->session.release(), entity->callbacks.get());
+    ret = aniEnv->Object_New(cls, constructFunc, &outObj, entity->session.release(),
+        entity->incrSession.release(), entity->callbacks.get());
     if (ret != ANI_OK) {
         HILOGE("Call Object_New failed, ret = %{public}d", ret);
         return nullptr;
     }
-    HILOGD("Transfer incrBackupSession Static end");
+    HILOGD("Transfer RestoreSession Static end");
     return outObj;
 }
 
-ani_ref IncreBackupSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_class aniCls, ani_object input)
+ani_ref RestoreSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_class aniCls, ani_object input)
 {
     HILOGD("TransferDynamicSession start");
     if (aniEnv == nullptr) {
@@ -119,14 +116,22 @@ ani_ref IncreBackupSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_
         HILOGE("get field session failed, ret:%{public}d", ret);
         return nullptr;
     }
+    ani_long incrSession {};
+    if ((ret = aniEnv->Object_GetPropertyByName_Long(input, "incrSession", &incrSession)) != ANI_OK) {
+        HILOGE("get field incrSession failed, ret:%{public}d", ret);
+        return nullptr;
+    }
     ani_long callbacks {};
     if ((ret = aniEnv->Object_GetPropertyByName_Long(input, "callbacks", &callbacks)) != ANI_OK) {
         HILOGE("get field callbacks failed, ret:%{public}d", ret);
         return nullptr;
     }
-    std::unique_ptr<IncrBackupEntity> entity = std::make_unique<IncrBackupEntity>();
-    std::unique_ptr<BIncrementalBackupSession> sessionPtr(reinterpret_cast<BIncrementalBackupSession*>(session));
-    entity->session = move(sessionPtr);
+    std::unique_ptr<RestoreEntity> entity = std::make_unique<RestoreEntity>();
+    std::unique_ptr<BSessionRestore> sessionPtr(reinterpret_cast<BSessionRestore*>(session));
+    entity->sessionWhole = move(sessionPtr);
+    std::unique_ptr<BIncrementalRestoreSession>
+        incrSessionPtr(reinterpret_cast<BIncrementalRestoreSession*>(incrSession));
+    entity->sessionSheet = move(incrSessionPtr);
     std::shared_ptr<GeneralCallbacks> callbackPtr(reinterpret_cast<GeneralCallbacks*>(callbacks));
     entity->callbacks = callbackPtr;
     napi_env jsEnv;
@@ -134,7 +139,7 @@ ani_ref IncreBackupSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_
         HILOGE("Failed to arkts_napi_scope_open");
         return nullptr;
     }
-    napi_value napiEntity = SessionIncrementalBackupNExporter::CreateByEntity(jsEnv, move(entity));
+    napi_value napiEntity = SessionRestoreNExporter::CreateByEntity(jsEnv, move(entity));
     if (napiEntity == nullptr) {
         HILOGE("Failed to create napi obj");
         return nullptr;

@@ -775,7 +775,7 @@ napi_value SessionIncrementalBackupNExporter::ConstructorFromEntity(napi_env env
     return funcArg.GetThisVar();
 }
 
-napi_value SessionIncrementalBackupNExporter::CreateByEntity(napi_env env, IncrBackupEntity* entity)
+napi_value SessionIncrementalBackupNExporter::CreateByEntity(napi_env env, std::unique_ptr<IncrBackupEntity> entity)
 {
     HILOGD("CreateByEntity begin");
     if (entity == nullptr) {
@@ -811,8 +811,10 @@ napi_value SessionIncrementalBackupNExporter::CreateByEntity(napi_env env, IncrB
         }
         entity->callbacks->RemoveCallbackRef();
     };
-    if (napi_ok != napi_create_external(env, (void *)entity, finalize, nullptr, &napiEntity)) {
+    IncrBackupEntity* entityPtr = entity.release();
+    if (napi_ok != napi_create_external(env, (void *)entityPtr, finalize, nullptr, &napiEntity)) {
         HILOGE("wrap entity prt fail");
+        delete entityPtr;
         return nullptr;
     }
     size_t argc = 1;

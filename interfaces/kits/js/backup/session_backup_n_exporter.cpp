@@ -807,8 +807,10 @@ napi_value SessionBackupNExporter::CreateByEntity(napi_env env, std::unique_ptr<
         }
         entity->callbacks->RemoveCallbackRef();
     };
-    if (napi_ok != napi_create_external(env, (void *)entity.release(), finalize, nullptr, &napiEntity)) {
+    BackupEntity* entityPtr = entity.release();
+    if (napi_ok != napi_create_external(env, (void *)entityPtr, finalize, nullptr, &napiEntity)) {
         HILOGE("wrap entity prt fail");
+        delete entityPtr;
         return nullptr;
     }
     size_t argc = 1;

@@ -41,7 +41,7 @@ public:
     static napi_value CleanBundleTempDir(napi_env env, napi_callback_info cbinfo);
 
     static napi_value ConstructorFromEntity(napi_env env, napi_callback_info cbinfo);
-    static napi_value CreateByEntity(napi_env env, IncrBackupEntity* entity);
+    static napi_value CreateByEntity(napi_env env, std::unique_ptr<IncrBackupEntity> entity);
 
     SessionIncrementalBackupNExporter(napi_env env, napi_value exports);
     ~SessionIncrementalBackupNExporter() override;
