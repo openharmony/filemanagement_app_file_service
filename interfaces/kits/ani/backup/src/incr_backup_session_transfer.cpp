@@ -148,6 +148,7 @@ ani_ref IncreBackupSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_
         return nullptr;
     }
     HILOGD("TransferDynamicSession end");
+    delete entity;
     return outObj;
 }
 }

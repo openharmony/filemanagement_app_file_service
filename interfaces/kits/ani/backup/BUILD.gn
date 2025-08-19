@@ -52,7 +52,7 @@ ohos_shared_library("ani_session_transfer") {
 
   deps = [ 
     "${app_file_service_path}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
-    "${app_file_service_path}/interfaces/kits/js:backup",
+    "${app_file_service_path}/interfaces/kits/js:backup_inner",
     "${app_file_service_path}/utils:backup_utils"
   ]
 

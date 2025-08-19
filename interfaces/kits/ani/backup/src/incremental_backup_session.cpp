@@ -85,6 +85,10 @@ void IncrementalBackupSession::Init(ani_env *aniEnv)
 
 bool IncrementalBackupSession::ParseBIncrementalData(ani_env* env, ani_object dataObj, BIncrementalData& data)
 {
+    if (env == nullptr) {
+        HILOGE("aniEnv is null");
+        return false;
+    }
     ani_ref aniBundleName {};
     int32_t status = 0;
     status = env->Object_GetFieldByName_Ref(dataObj, "bundleName", &aniBundleName);
@@ -133,6 +137,10 @@ bool IncrementalBackupSession::ParseBIncrementalData(ani_env* env, ani_object da
 bool IncrementalBackupSession::ParseIncrDataFromAniArray(ani_env *aniEnv, ani_array bundles,
     std::vector<BIncrementalData>& result)
 {
+    if (aniEnv == nullptr) {
+        HILOGE("aniEnv is null");
+        return false;
+    }
     ani_size arrSize = 0;
     if (ANI_OK != aniEnv->Array_GetLength(bundles, &arrSize)) {
         HILOGE("Array_GetLength fail");
@@ -242,7 +250,6 @@ ani_int IncrementalBackupSession::AppendBundles(ani_env *aniEnv, ani_object obje
     for (const BIncrementalData& item: bundleInfos) {
         bundleNames.push_back(item.bundleName);
     }
-    
     return entity->session->AppendBundles(bundleInfos, bundleNames);
 }
 
