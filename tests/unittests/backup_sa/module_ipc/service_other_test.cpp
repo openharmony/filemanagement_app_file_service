@@ -1244,7 +1244,7 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0100, TestSize.Level1)
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
-        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillRepeatedly(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, PublishFile(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
@@ -1316,6 +1316,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0200, TestSize.Level1)
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
         auto ret = service->AppDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
+
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
@@ -1547,7 +1548,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesClearSession_0000, TestSize.Level
         info.name = "bundleNames";
         info.appIndex = 0;
         bundleInfos.push_back(info);
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(0));
         EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillOnce(Return(bundleInfos));
         EXPECT_CALL(*session, IsOnOnStartSched()).WillOnce(Return(false));
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))

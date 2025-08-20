@@ -152,7 +152,7 @@ void BackupExtExtension::SetClearDataFlag(bool isClearData)
 
 string BackupExtExtension::GetBundlePath()
 {
-    if (BFile::EndsWith(bundleName_, BConstants::BUNDLE_FILE_MANAGER) && bundleName_.size() == BConstants::FM_LEN) {
+    if (bundleName_ == BConstants::BUNDLE_FILE_MANAGER) {
         return string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     } else if (bundleName_ == BConstants::BUNDLE_MEDIAL_DATA) {
         return string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
@@ -1516,9 +1516,7 @@ ErrCode BackupExtExtension::CloudSpecialRestore(string tarName, string untarPath
     auto unPacketRes = UntarFile::GetInstance().IncrementalUnPacket(tarName, untarPath, result);
     ErrCode err = ERR_OK;
     err = std::get<FIRST_PARAM>(unPacketRes);
-    if (int tmpErr = DealIncreUnPacketResult(tarFileSize, tarName, unPacketRes); tmpErr != ERR_OK) {
-        return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
-    }
+    DealIncreUnPacketResult(tarFileSize, tarName, unPacketRes);
     HILOGI("Application recovered successfully, package path is %{public}s", tarName.c_str());
     DeleteBackupIncrementalTars(tarName);
     return err;
@@ -1592,7 +1590,7 @@ void BackupExtExtension::DoBackUpTask(const string &config)
 
     int ret = 0;
     TarMap fileBackupedInfo;
-    while (!ScanFileSingleton::GetInstance().GetCompeletedFlag()) {
+    while (!ScanFileSingleton::GetInstance().GetCompletedFlag()) {
         ScanFileSingleton::GetInstance().WaitForFiles();
         std::map<std::string, struct stat> incFiles = ScanFileSingleton::GetInstance().GetAllBigFiles();
         if (incFiles.empty()) {
@@ -1615,7 +1613,7 @@ void BackupExtExtension::DoBackUpTask(const string &config)
 
     ret = DoBackup(bigFileInfo, fileBackupedInfo, smallFiles, includeSize, excludeSize);
     DoBackupEnd();
-    ScanFileSingleton::GetInstance().SetCompeletedFlag(false);
+    ScanFileSingleton::GetInstance().SetCompletedFlag(false);
     AppDone(ret);
     HILOGI("backup app done %{public}d", ret);
 }

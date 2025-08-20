@@ -879,6 +879,29 @@ ErrCode Service::HandleCurAppDone(ErrCode errCode, const std::string &bundleName
     return BError(BError::Codes::OK);
 }
 
+void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRestoreScenario scenario, ErrCode errCode)
+{
+    if (session_ == nullptr) {
+        HILOGE("Session is empty, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    HILOGI("Begin");
+    try {
+        if (scenario == BackupRestoreScenario::FULL_RESTORE) {
+            session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
+        } else if (scenario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
+        } else if (scenario == BackupRestoreScenario::FULL_BACKUP) {
+            session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
+        } else if (scenario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
+            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
+        }
+    } catch (const BError &e) {
+        HILOGE("Call onBundleFinished error, client is died");
+        return;
+    }
+}
+
 std::string Service::GetCallerName()
 {
     std::string callerName;
@@ -1062,29 +1085,6 @@ UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("Unexpected exception");
         return UniqueFd(-EPERM);
-    }
-}
-
-void Service::CallOnBundleEndByScenario(const std::string &bundleName, BackupRestoreScenario scenario, ErrCode errCode)
-{
-    if (session_ == nullptr) {
-        HILOGE("Session is empty, bundleName:%{public}s", bundleName.c_str());
-        return;
-    }
-    HILOGI("Begin");
-    try {
-        if (scenario == BackupRestoreScenario::FULL_RESTORE) {
-            session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, bundleName);
-        } else if (scenario == BackupRestoreScenario::INCREMENTAL_RESTORE) {
-            session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, bundleName);
-        } else if (scenario == BackupRestoreScenario::FULL_BACKUP) {
-            session_->GetServiceReverseProxy()->BackupOnBundleFinished(errCode, bundleName);
-        } else if (scenario == BackupRestoreScenario::INCREMENTAL_BACKUP) {
-            session_->GetServiceReverseProxy()->IncrementalBackupOnBundleFinished(errCode, bundleName);
-        }
-    } catch (const BError &e) {
-        HILOGE("Call onBundleFinished error, client is died");
-        return;
     }
 }
 

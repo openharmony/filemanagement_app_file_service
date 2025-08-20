@@ -2306,12 +2306,12 @@ HWTEST_F(ServiceTest, SUB_Service_GetCompatibilityInfo_0200, testing::ext::TestS
         res = service->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
         EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
-        EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::RESTORE));
         EXPECT_CALL(*svcProxy, HandleGetCompatibilityInfo(_, _, _))
             .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
         res = service->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
         EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
+        EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::RESTORE));
         EXPECT_CALL(*svcProxy, HandleGetCompatibilityInfo(_, _, _))
             .WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         res = service->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
