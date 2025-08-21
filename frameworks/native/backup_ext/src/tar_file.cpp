@@ -511,8 +511,9 @@ bool TarFile::FillSplitTailBlocks()
         std::filesystem::path fileNameWithoutExtension = fullTarPath.stem(); // 文件名前缀
         std::string tarNewName = fileNameWithoutExtension.string() + COMPRESS_FILE_SUFFIX + TAR_EXTENSION;
         string newTarPath = parentPath.string() + "/" + tarNewName;
-        HILOGI("tarFileName:%{public}s, currentTarName:%{public}s, newTarPath:%{public}s", tarFileName_.c_str(),
-            currentTarName_.c_str(), newTarPath.c_str());
+        HILOGI("tarFileName:%{public}s, currentTarName:%{public}s, newTarPath:%{public}s",
+            GetAnonyPath(tarFileName_).c_str(), GetAnonyPath(currentTarName_).c_str(),
+            GetAnonyPath(newTarPath).c_str());
         if (!CompressFile(fullTarPath, newTarPath)) {
             tarMap_.emplace(tarFileName_, make_tuple(currentTarName_, staTar, false));
         } else {
@@ -754,7 +755,7 @@ bool TarFile::WriteCompressData(Buffer<uint8_t>& compressBuffer, const Buffer<ch
         writeDataSize = ori.size_;
     }
     if (fwrite(&compressBuffer.size_, SIZE_T_BYTE_LEN, sizeCount, fout.file_) != sizeCount) {
-        HILOGI("write compress size fail error: %{public}s", strerror(errno));
+        HILOGE("write compress size fail error: %{public}s", strerror(errno));
         return false;
     }
     if (fwrite(&ori.size_, SIZE_T_BYTE_LEN, sizeCount, fout.file_) != sizeCount) {
