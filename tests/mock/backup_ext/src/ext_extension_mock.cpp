@@ -187,11 +187,6 @@ void BackupExtExtension::DoClearInner()
     BExtExtension::extExtension->DoClearInner();
 }
 
-ErrCode BackupExtExtension::CleanBundleTempDir()
-{
-    return BExtExtension::extExtension->CleanBundleTempDir();
-}
-
 void BackupExtExtension::GetTarIncludes(const string &tarName, unordered_map<string, struct ReportFileInfo> &infos)
 {
     BExtExtension::extExtension->GetTarIncludes(tarName, infos);
