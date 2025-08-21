@@ -82,6 +82,12 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "private = public",
   ]
 
+  if (system_bit == 32) {
+    defines += ["SYSTEM_BIT_32"]
+  } else {
+    defines += ["SYSTEM_BIT_64"]
+  }
+
   use_exceptions = true
 }
 ###############################################################################

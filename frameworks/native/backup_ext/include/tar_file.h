@@ -59,6 +59,12 @@ const char GNUTYPE_LONGNAME = 'L';
 const char EXTENSION_HEADER = 'x';
 const uint32_t OTHER_HEADER = 78;
 const int ERR_NO_PERMISSION = 13;
+#ifdef SYSTEM_BIT_32
+constexpr int SIZE_T_BYTE_LEN = 4;
+#else
+constexpr int SIZE_T_BYTE_LEN = 8;
+#endif
+constexpr size_t MAX_BUFFER_SIZE = 4096;
 } // namespace
 
 // 512 bytes
@@ -81,7 +87,29 @@ using TarHeader = struct {
     char prefix[PREFIX_LEN];
     char pad[PADDING_LEN];
 };
+
 using TarMap = std::map<std::string, std::tuple<std::string, struct stat, bool>>;
+
+class UniqueFile {
+public:
+    UniqueFile(const char* filePath, const char* mode);
+    UniqueFile(const UniqueFile&) = delete;
+    UniqueFile& operator=(const UniqueFile&) = delete;
+    ~UniqueFile();
+    FILE* file_ = nullptr;
+};
+
+template <typename T>
+class Buffer {
+public:
+    Buffer(size_t size);
+    Buffer(const Buffer&) = delete;
+    Buffer& operator=(const Buffer&) = delete;
+    ~Buffer();
+    T* data_ = nullptr;
+    size_t size_ = 0;
+};
+
 class TarFile {
 public:
     static TarFile &GetInstance();
@@ -100,7 +128,16 @@ public:
     void SetPacketMode(bool isReset);
 
     uint64_t GetTarFileSize() { return static_cast<uint64_t>(currentTarFileSize_); }
+
+    bool Compress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize);
+    bool Decompress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize);
+    bool CompressFile(const std::string &srcFile, const std::string &compFile);
+    bool DecompressFile(const std::string &compFile, const std::string &srcFile);
+    std::string DecompressTar(const std::string &tarPath);
 private:
+    bool WriteCompressData(Buffer<uint8_t>& compressBuffer, const Buffer<char>& ori, UniqueFile& fout);
+    bool WriteDecompressData(const Buffer<char>& compressBuffer, Buffer<uint8_t>& decompressBuffer,
+        UniqueFile& fout, std::chrono::duration<double, std::milli>& decompSpan);
     TarFile() {}
     ~TarFile() = default;
     TarFile(const TarFile &instance) = delete;

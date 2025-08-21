@@ -79,6 +79,16 @@ ohos_shared_library("backup_extension_ability_native") {
     "samgr:samgr_proxy",
   ]
 
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+    defines += ["BROTLI_ENABLED"]
+  }
+  if (system_bit == 32) {
+    defines += ["SYSTEM_BIT_32"]
+  } else {
+    defines += ["SYSTEM_BIT_64"]
+  }
+
   cflags_cc = [
     "-fdata-sections",
     "-ffunction-sections",

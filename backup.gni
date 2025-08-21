@@ -41,3 +41,16 @@ backup_mock_proxy_src = [
   "$path_backup_mock/utils_mock/src/utils_mock_global_variable.cpp",
   "$path_backup/frameworks/native/backup_kit_inner/src/b_file_info.cpp",
 ]
+
+declare_args() {
+  brotli_enabled = true
+  if (defined(global_parts_info) &&
+    (!defined(global_parts_info.thirdparty_brotli) || !global_parts_info.thirdparty_brotli)) {
+      brotli_enabled = false
+  }
+  if (current_cpu == "arm" || current_cpu == "x86") {
+    system_bit = 32
+  } else {
+    system_bit = 64
+  }
+}
