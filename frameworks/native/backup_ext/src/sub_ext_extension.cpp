@@ -1727,6 +1727,27 @@ tuple<UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalBackupFileHandle()
     return {UniqueFd(BConstants::INVALID_FD_NUM), UniqueFd(BConstants::INVALID_FD_NUM)};
 }
 
+ErrCode BackupExtExtension::CleanBundleTempDir()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("BackupExtExtension::CleanBundleTempDir begin");
+    if (extension_ == nullptr) {
+        HILOGE("Failed to CleanBundleTempDir, extension is nullptr");
+        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
+    }
+    if (extension_->GetExtensionAction() == BConstants::ExtensionAction::INVALID) {
+        return BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid").GetCode();
+    }
+    try {
+        VerifyCaller();
+        DoClearInner();
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to CleanBundleTempDir");
+        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
+    }
+}
+
 std::function<void(ErrCode, const std::string)> BackupExtExtension::OnReleaseCallback(wptr<BackupExtExtension> obj)
 {
     HILOGI("Begin get HandleOnReleaseCallback");
