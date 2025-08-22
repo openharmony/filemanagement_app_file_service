@@ -58,14 +58,14 @@ static ModuleFileUri::FileUriEntity *unwrapp(ani_env *env, ani_object object)
 static void ThrowBusinessError(ani_env *env, int errCode, std::string &&errMsg)
 {
     LOGD("Begin ThrowBusinessError.");
-    static const char *errorClsName = "L@ohos/base/BusinessError;";
+    static const char *errorClsName = "@ohos.base.BusinessError";
     ani_class cls {};
     if (ANI_OK != env->FindClass(errorClsName, &cls)) {
         LOGE("find class BusinessError %{public}s failed", errorClsName);
         return;
     }
     ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", ":V", &ctor)) {
+    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", ":", &ctor)) {
         LOGE("find method BusinessError.constructor failed");
         return;
     }
@@ -147,7 +147,7 @@ static void FileUriConstructor(ani_env *env, ani_object obj, ani_string stringOb
     }
 
     ani_method acquireObj;
-    if (ANI_OK != env->Class_FindMethod(cls, "acquireFileUriEntity", "J:V", &acquireObj)) {
+    if (ANI_OK != env->Class_FindMethod(cls, "acquireFileUriEntity", "l:", &acquireObj)) {
         LOGE("Not found method acquireFileUriEntity in class LFileUri.");
         delete holder;
         ThrowBusinessError(env, EPERM, "Method acquireFileUriEntity not found.");
@@ -193,7 +193,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_NOT_FOUND;
     }
     std::array classMethods = {
-        ani_native_function {"<ctor>", "Lstd/core/String;:V", reinterpret_cast<void *>(FileUriConstructor)},
+        ani_native_function {"<ctor>", "C{std.core.String}:", reinterpret_cast<void *>(FileUriConstructor)},
     };
     if (ANI_OK != env->Class_BindNativeMethods(fileUriClass, classMethods.data(), classMethods.size())) {
         LOGE("Cannot bind native methods to class %{public}s.", className);
@@ -201,7 +201,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     };
 
     ani_class cleanerCls;
-    if (ANI_OK != env->FindClass("L@ohos/file/fileuri/Cleaner;", &cleanerCls)) {
+    if (ANI_OK != env->FindClass("@ohos.file.fileuri.Cleaner", &cleanerCls)) {
         LOGE("Not found class @ohos/file/fileuri/Cleaner;.");
         return ANI_NOT_FOUND;
     }
