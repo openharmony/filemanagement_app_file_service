@@ -373,4 +373,11 @@ bool SvcSessionManager::GetIsRestoreEnd(const std::string &bundleName)
 {
     return false;
 }
+
+std::string SvcSessionManager::GetBackupScene(const std::string &bundleName)
+{
+    return BackupSvcSessionManager::session->GetBackupScene(bundleName);
+}
+
+void SvcSessionManager::SetBackupScene(const std::string &bundleName, const std::string &backupScene) {}
 } // namespace OHOS::FileManagement::Backup

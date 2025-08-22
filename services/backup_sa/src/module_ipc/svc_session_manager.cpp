@@ -1361,4 +1361,35 @@ bool SvcSessionManager::GetIsRestoreEnd(const std::string &bundleName)
     }
     return it->second.isRestoreEnd;
 }
+
+void SvcSessionManager::SetBackupScene(const std::string &bundleName, const std::string &backupScene)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+    it->second.backupScene = backupScene;
+    HILOGI("SetBackupScene success, bundleName = %{public}s", bundleName.c_str());
+}
+
+std::string SvcSessionManager::GetBackupScene(const std::string &bundleName)
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return "";
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return "";
+    }
+    return it->second.backupScene;
+}
 } // namespace OHOS::FileManagement::Backup

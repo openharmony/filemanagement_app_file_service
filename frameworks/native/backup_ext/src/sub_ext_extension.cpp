@@ -1003,8 +1003,9 @@ void BackupExtExtension::DoUser0Backup(const BJsonEntityExtensionConfig &usrConf
     if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
         throw BError(errno);
     }
-    vector<string> includes = usrConfig.GetIncludes();
-    vector<string> excludes = usrConfig.GetExcludes();
+    vector<string> includes = {};
+    vector<string> excludes = {};
+    GetScanDirList(includes, excludes, usrConfig);
     auto task = [obj {wptr<BackupExtExtension>(this)}, includes, excludes]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
@@ -1919,4 +1920,24 @@ ErrCode BackupExtExtension::HandleGetCompatibilityInfo(const string &extInfo, in
         return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
     }
 }
+
+void BackupExtExtension::GetScanDirList(vector<string>& includes,
+                                        vector<string>& excludes,
+                                        const BJsonEntityExtensionConfig &usrConfig)
+{
+    if (extension_ == nullptr) {
+        HILOGI("extension is nullptr.");
+        return;
+    }
+    HILOGI("extension_->backupScene_:%{public}s, optionDir:%{public}d",
+        extension_->backupScene_.c_str(), usrConfig.HasOptionDir());
+    if (extension_->backupScene_ != "" && usrConfig.HasOptionDir()) {
+        includes = usrConfig.GetOptionDir(extension_->backupScene_, BConstants::INCLUDES);
+        excludes = usrConfig.GetOptionDir(extension_->backupScene_, BConstants::EXCLUDES);
+    } else {
+        includes = usrConfig.GetIncludes();
+        excludes = usrConfig.GetExcludes();
+    }
+}
+
 } // namespace OHOS::FileManagement::Backup

@@ -189,5 +189,61 @@ bool BJsonEntityExtensionConfig::GetRequireCompatibility() const
     return obj_["requireCompatibility"].asBool();
 }
 
+string BJsonEntityExtensionConfig::GetBackupScene() const
+{
+    if (!obj_ || !obj_.isMember("backupScene") || !obj_["backupScene"].isString()) {
+        HILOGD("Failed to get field backupScene");
+        return "";
+    }
+
+    return obj_["backupScene"].asString();
+}
+
+bool BJsonEntityExtensionConfig::HasOptionDir() const
+{
+    if (!obj_ || !obj_.isMember("optionDir") || !obj_["optionDir"].isArray()) {
+        HILOGE("OptionDir is not exist");
+        return false;
+    }
+    return true;
+}
+
+vector<string> BJsonEntityExtensionConfig::GetOptionDir(const string& sceneId, const string& fileType) const
+{
+    if (!HasOptionDir()) {
+        return {};
+    }
+    for (auto &&item : obj_["optionDir"]) {
+        if (item.empty()) {
+            HILOGE("Each item of array 'optionDir' must be not empty");
+            continue;
+        }
+        if (item.isMember("sceneId") && item["sceneId"] == sceneId && item.isMember(fileType)) {
+            return GetDirList(item[fileType]);
+        }
+    }
+    return {};
+}
+
+vector<string> BJsonEntityExtensionConfig::GetDirList(Json::Value& jsonItem) const
+{
+    vector<string> dirs;
+    if (!jsonItem.isArray()) {
+        HILOGE("item must be not array");
+        return dirs;
+    }
+    for (auto &&item : jsonItem) {
+        if (!item.isString() || item.empty()) {
+            HILOGE("Each item of array must be of the type string");
+            continue;
+        }
+        dirs.emplace_back(item.asString());
+    }
+
+    if (dirs.empty()) {
+        dirs.emplace_back("");
+    }
+    return dirs;
+}
 
 } // namespace OHOS::FileManagement::Backup
