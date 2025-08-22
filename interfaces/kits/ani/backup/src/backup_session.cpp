@@ -30,7 +30,6 @@ using namespace LibN;
 
 namespace {
 const char *BACKUP_SESSION_CLEANER_CLASS_NAME = "L@ohos/backup/transfer/backup/BackupSessionCleaner;";
-constexpr int32_t E_OK = 0;
 }
 
 void BackupSession::Init(ani_env *aniEnv)

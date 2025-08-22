@@ -15,7 +15,6 @@
 #include "session_backup_n_exporter.h"
 
 #include <functional>
-#include <memory>
 
 #include "b_error/b_error.h"
 #include "b_filesystem/b_file.h"

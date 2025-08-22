@@ -53,7 +53,7 @@ void BackupSessionTransfer::Init(ani_env *aniEnv)
         ani_native_function { "transferDynamicSession", nullptr,
             reinterpret_cast<void*>(BackupSessionTransfer::TransferDynamicSession)},
     };
-    status = aniEnv->Class_BindStaticNativeMethods(cls, nativeFuncs.data(), nativeFuncs.size());
+    int32_t status = aniEnv->Class_BindStaticNativeMethods(cls, nativeFuncs.data(), nativeFuncs.size());
     if (status != ANI_OK) {
         HILOGE("Class_BindNativeMethods failed status: %{public}d", status);
         return;

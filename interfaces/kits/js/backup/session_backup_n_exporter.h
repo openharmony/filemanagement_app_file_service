@@ -22,8 +22,8 @@
 
 namespace OHOS::FileManagement::Backup {
 struct BackupEntity {
-    unique_ptr<BSessionBackup> session;
-    shared_ptr<GeneralCallbacks> callbacks;
+    std::unique_ptr<BSessionBackup> session;
+    std::shared_ptr<GeneralCallbacks> callbacks;
 };
 
 class SessionBackupNExporter final : public LibN::NExporter {

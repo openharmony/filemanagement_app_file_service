@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef BACKUP_SESSION__H
-#define BACKUP_SESSION__H
+#ifndef BACKUP_SESSION_H
+#define BACKUP_SESSION_H
 
 #include <memory>
 #include <ani.h>
@@ -41,4 +41,4 @@ public:
     static void Clean(ani_env *aniEnv, ani_object object);
 };
 } // namespace OHOS::FileManagement::Backup
-#endif // BACKUP_SESSION__H
+#endif // BACKUP_SESSION_H
