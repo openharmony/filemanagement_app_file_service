@@ -35,7 +35,6 @@ struct RestoreEntity {
 class SessionRestoreNExporter final : public LibN::NExporter {
 public:
     inline static const std::string className = "SessionRestore";
-    inline static const std::string napiClassName_ = "NapiSessionRestore";
 
     bool Export() override;
     std::string GetClassName() override;

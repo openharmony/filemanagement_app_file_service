@@ -31,6 +31,8 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace LibN;
 
+static const std::string NAPI_CLASS_NAME = "NapiSessionRestore";
+
 static void OnFileReadySheet(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &fileInfo,
     UniqueFd fd, UniqueFd manifestFd, int32_t sysErrno)
 {
@@ -944,7 +946,7 @@ napi_value SessionRestoreNExporter::ConstructorFromEntity(napi_env env, napi_cal
     }
     void* entityRawPtr = nullptr;
     if (napi_ok != napi_get_value_external(env, funcArg[NARG_POS::FIRST], &entityRawPtr)) {
-        HILOGE("parse entity raw ptr for napi_value fail");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "parse entity raw ptr fail.").GetCode()).ThrowErr(env);
         return nullptr;
     }
     RestoreEntity* entity =  reinterpret_cast<RestoreEntity*>(entityRawPtr);
@@ -955,7 +957,7 @@ napi_value SessionRestoreNExporter::ConstructorFromEntity(napi_env env, napi_cal
     std::unique_ptr<RestoreEntity> restoreEntity(entity);
     if ((restoreEntity->sessionWhole == nullptr && restoreEntity->sessionSheet == nullptr) ||
         restoreEntity->callbacks == nullptr) {
-        HILOGE("session or callback is null");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "session or callback is null.").GetCode()).ThrowErr(env);
         return nullptr;
     }
     if (!SetSessionRestoreEntity(env, funcArg, std::move(restoreEntity))) {
@@ -982,8 +984,7 @@ napi_value SessionRestoreNExporter::CreateByEntity(napi_env env, std::unique_ptr
         NVal::DeclareNapiFunction("cancel", Cancel),
         NVal::DeclareNapiFunction("cleanBundleTempDir", CleanBundleTempDir),
     };
-    auto [defRet, constroctor] = NClass::DefineClass(env, napiClassName_, ConstructorFromEntity,
-        std::move(props));
+    auto [defRet, constroctor] = NClass::DefineClass(env, NAPI_CLASS_NAME, ConstructorFromEntity, std::move(props));
     if (!defRet) {
         HILOGE("Failed to define class");
         return nullptr;

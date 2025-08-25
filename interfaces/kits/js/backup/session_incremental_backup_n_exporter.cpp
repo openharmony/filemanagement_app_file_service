@@ -790,8 +790,7 @@ napi_value SessionIncrementalBackupNExporter::CreateByEntity(napi_env env, std::
         NVal::DeclareNapiFunction("cancel", Cancel),
         NVal::DeclareNapiFunction("cleanBundleTempDir", CleanBundleTempDir),
     };
-    auto [defRet, constroctor] = NClass::DefineClass(env, NAPI_CLASS_NAME, ConstructorFromEntity,
-        std::move(props));
+    auto [defRet, constroctor] = NClass::DefineClass(env, NAPI_CLASS_NAME, ConstructorFromEntity, std::move(props));
     if (!defRet) {
         HILOGE("Failed to define class");
         return nullptr;
