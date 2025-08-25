@@ -29,7 +29,7 @@ namespace OHOS::FileManagement::Backup {
 using namespace LibN;
 
 namespace {
-const char *INCR_BACKUP_SESSION_CLASS_NAME = "L@ohos/backup/transfer/backup/IncrementalBackupSession;";
+const char *BACKUP_SESSION_CLASS_NAME = "L@ohos/backup/transfer/backup/IncrementalBackupSession;";
 const char *B_INCREMENTAL_DATA_CLASS_NAME = "L@ohos/backup/transfer/backup/BIncrementalData;";
 const char *INCR_BACKUP_SESSION_CLEANER_CLASS_NAME = "L@ohos/backup/transfer/backup/IncrBackupSessionCleaner;";
 constexpr int32_t E_OK = 0;
@@ -56,7 +56,7 @@ void IncrementalBackupSession::Init(ani_env *aniEnv)
         return;
     }
 
-    ani_class cls = AniUtils::GetAniClsByName(aniEnv, INCR_BACKUP_SESSION_CLASS_NAME);
+    ani_class cls = AniUtils::GetAniClsByName(aniEnv, BACKUP_SESSION_CLASS_NAME);
     if (cls == nullptr) {
         return;
     }
@@ -299,6 +299,10 @@ ani_int IncrementalBackupSession::CleanBundleTempDir(ani_env *aniEnv, ani_object
 
 void IncrBackupSessionCleaner::Clean(ani_env *aniEnv, ani_object object)
 {
+    if (aniEnv == nullptr) {
+        HILOGE("aniEnv is null");
+        return;
+    }
     ani_status ret = ANI_ERROR;
     ani_long session {};
     if ((ret = aniEnv->Object_GetPropertyByName_Long(object, "session", &session)) != ANI_OK) {

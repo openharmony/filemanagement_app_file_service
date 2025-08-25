@@ -764,7 +764,7 @@ napi_value SessionIncrementalBackupNExporter::ConstructorFromEntity(napi_env env
     }
     std::unique_ptr<IncrBackupEntity> backupEntity(entity);
     if (backupEntity->session == nullptr || backupEntity->callbacks == nullptr) {
-        HILOGD("session or callback is null");
+        HILOGE("session or callback is null");
         return nullptr;
     }
     if (!SetIncrementalBackupEntity(env, funcArg, std::move(backupEntity))) {
