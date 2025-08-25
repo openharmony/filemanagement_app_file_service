@@ -137,7 +137,7 @@ ani_ref IncreBackupSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_
     }
     napi_value napiEntity = SessionIncrementalBackupNExporter::CreateByEntity(jsEnv, entity);
     if (napiEntity == nullptr) {
-        HILOGD("Failed to create napi obj");
+        HILOGE("Failed to create napi obj");
         delete entity;
         return nullptr;
     }

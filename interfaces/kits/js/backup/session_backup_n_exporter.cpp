@@ -761,7 +761,7 @@ napi_value SessionBackupNExporter::ConstructorFromEntity(napi_env env, napi_call
     }
     std::unique_ptr<BackupEntity> backupEntity(entity);
     if (backupEntity->session == nullptr || backupEntity->callbacks == nullptr) {
-        HILOGD("session or callback is null");
+        HILOGE("session or callback is null");
         return nullptr;
     }
     if (!SetSessionBackupEntity(env, funcArg, std::move(backupEntity))) {

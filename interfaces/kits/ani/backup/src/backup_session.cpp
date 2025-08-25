@@ -56,6 +56,10 @@ void BackupSession::Init(ani_env *aniEnv)
 
 void BackupSessionCleaner::Clean(ani_env *aniEnv, ani_object object)
 {
+    if (aniEnv == nullptr) {
+        HILOGE("aniEnv is null");
+        return;
+    }
     ani_status ret = ANI_ERROR;
     ani_long session {};
     if ((ret = aniEnv->Object_GetPropertyByName_Long(object, "session", &session)) != ANI_OK) {
