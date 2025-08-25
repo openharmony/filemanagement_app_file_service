@@ -729,8 +729,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0101, testing::ext::TestSize.Lev
         BackupExtInfo extInfo {};
         auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
         auto callConnected = [](const string &&bundleName) {};
-        string bundleNameIndexInfo = "123456";
-        extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, bundleNameIndexInfo));
+        extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, BUNDLE_NAME));
         extInfo.schedAction = BConstants::ServiceSchedAction::RUNNING;
         impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
         EXPECT_TRUE(servicePtr_ != nullptr);
