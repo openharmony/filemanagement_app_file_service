@@ -18,6 +18,8 @@
 #include "backup_session_transfer.h"
 #include "incremental_backup_session.h"
 #include "incr_backup_session_transfer.h"
+#include "restore_session.h"
+#include "restore_session_transfer.h"
 
 namespace OHOS::FileManagement::Backup {
 extern "C" {
@@ -31,6 +33,8 @@ extern "C" {
         IncrementalBackupSession::Init(env);
         BackupSession::Init(env);
         BackupSessionTransfer::Init(env);
+        RestoreSession::Init(env);
+        RestoreSessionTransfer::Init(env);
         *result = ANI_VERSION_1;
         return ANI_OK;
     }

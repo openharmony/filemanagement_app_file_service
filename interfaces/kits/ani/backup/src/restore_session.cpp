@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "backup_session.h"
+#include "restore_session.h"
 #include <array>
 #include <string>
 #include <sys/syscall.h>
@@ -29,12 +29,12 @@ namespace OHOS::FileManagement::Backup {
 using namespace LibN;
 
 namespace {
-const char *RESTORE_SESSION_CLEANER_CLASS_NAME = "L@ohos/backup/transfer/backup/BackupSessionCleaner;";
+const char *RESTORE_SESSION_CLEANER_CLASS_NAME = "L@ohos/backup/transfer/backup/RestoreSessionCleaner;";
 }
 
-void BackupSession::Init(ani_env *aniEnv)
+void RestoreSession::Init(ani_env *aniEnv)
 {
-    HILOGD("Init BackupSession begin");
+    HILOGD("Init RestoreSession begin");
     if (aniEnv == nullptr) {
         HILOGE("aniEnv is null");
         return;
@@ -44,17 +44,17 @@ void BackupSession::Init(ani_env *aniEnv)
         return;
     }
     std::array cleanNativeFuncs = {
-        ani_native_function {"clean", ":V", reinterpret_cast<void*>(BackupSessionCleaner::Clean)},
+        ani_native_function {"clean", ":V", reinterpret_cast<void*>(RestoreSessionCleaner::Clean)},
     };
     auto status = aniEnv->Class_BindNativeMethods(clsCleaner, cleanNativeFuncs.data(), cleanNativeFuncs.size());
     if (status != ANI_OK) {
         HILOGE("Class_BindNativeMethods failed status: %{public}d", status);
         return;
     }
-    HILOGD("Init BackupSession end");
+    HILOGD("Init RestoreSession end");
 }
 
-void BackupSessionCleaner::Clean(ani_env *aniEnv, ani_object object)
+void RestoreSessionCleaner::Clean(ani_env *aniEnv, ani_object object)
 {
     if (aniEnv == nullptr) {
         HILOGE("aniEnv is null");
@@ -65,9 +65,18 @@ void BackupSessionCleaner::Clean(ani_env *aniEnv, ani_object object)
     if ((ret = aniEnv->Object_GetPropertyByName_Long(object, "session", &session)) != ANI_OK) {
         HILOGE("get field session failed, ret:%{public}d", ret);
     } else {
-        BackupSession* sessionPtr = reinterpret_cast<BackupSession*>(session);
+        BSessionRestore* sessionPtr = reinterpret_cast<BSessionRestore*>(session);
         if (sessionPtr != nullptr) {
             delete sessionPtr;
+        }
+    }
+    ani_long incrSession {};
+    if ((ret = aniEnv->Object_GetPropertyByName_Long(object, "incrSession", &incrSession)) != ANI_OK) {
+        HILOGE("get field incrSession failed, ret:%{public}d", ret);
+    } else {
+        BIncrementalRestoreSession* incrSessionPtr = reinterpret_cast<BIncrementalRestoreSession*>(incrSession);
+        if (incrSessionPtr != nullptr) {
+            delete incrSessionPtr;
         }
     }
     ani_long callbacks {};
