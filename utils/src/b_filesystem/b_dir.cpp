@@ -256,7 +256,7 @@ static void RmForceExcludePath(set<string> &expandPath)
 
 static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
 {
-    unique_ptr<glob_t, function<void(glob_t *)>> gl {new glob_t, [](glob_t *ptr) { 
+    unique_ptr<glob_t, function<void(glob_t *)>> gl {new glob_t, [](glob_t *ptr) {
         globfree(ptr);
         delete ptr;
     }};
