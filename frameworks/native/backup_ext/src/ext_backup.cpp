@@ -104,7 +104,17 @@ string ExtBackup::GetUsrConfig() const
 {
     vector<string> config;
     AppExecFwk::BundleMgrClient client;
-    BExcepUltils::BAssert(abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
+    try {
+        BExcepUltils::BAssert(abilityInfo_, BError::Codes::EXT_BROKEN_FRAMEWORK, "Invalid abilityInfo_");
+    } catch (const BError &e) {
+        return "";
+    } catch (const exception &e) {
+        HILOGE("%{public}s", e.what());
+        return "";
+    } catch (...) {
+        HILOGE("Unknown exception");
+        return "";
+    }
     const AppExecFwk::AbilityInfo &info = *abilityInfo_;
     if (!client.GetProfileFromAbility(info, "ohos.extension.backup", config)) {
         throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to invoke the GetProfileFromAbility method.");
