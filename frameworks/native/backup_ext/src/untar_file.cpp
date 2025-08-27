@@ -608,7 +608,7 @@ ErrFileInfo UntarFile::CreateDir(string &path, mode_t mode)
         path[len - 1] = '\0';
     }
     if (access(path.c_str(), F_OK) != 0) {
-        HILOGE("directory does not exist, path:%{public}s, err = %{public}d", path.c_str(), errno);
+        HILOGD("directory does not exist, path:%{public}s, err = %{public}d", path.c_str(), errno);
         if (!ForceCreateDirectoryWithMode(path, mode)) {
             HILOGE("Failed to force create directory %{public}s, err = %{public}d", path.c_str(), errno);
             errFileInfo[path].emplace_back(errno);

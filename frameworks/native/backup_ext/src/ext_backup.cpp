@@ -185,7 +185,9 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         HILOGI("oldBackupVersion_ is %{public}s", oldBackupVersion_.c_str());
     } else if (extAction_ == BConstants::ExtensionAction::BACKUP) {
         backupExtInfo_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA);
-        HILOGI("backupExtInfo_ is %{public}s", backupExtInfo_.c_str());
+        backupScene_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_SCENE_PARA);
+        HILOGI("backupExtInfo_ is %{public}s, backupScene_ is %{public}s",
+            backupExtInfo_.c_str(), backupScene_.c_str());
     }
     /* backup don't need parament. */
     return ERR_OK;

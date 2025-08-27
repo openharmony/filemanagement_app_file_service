@@ -972,6 +972,10 @@ void Service::HandleCurGroupBackupInfos(
         session_->SetBundleUserId(bundleNameIndexInfo, session_->GetSessionUserId());
         session_->SetBackupExtName(bundleNameIndexInfo, info.extensionName);
         session_->SetIsReadyLaunch(bundleNameIndexInfo);
+        std::string backupScene = "";
+        if (BJsonUtil::FindBackupSceneByName(bundleNameDetailMap, bundleNameIndexInfo, backupScene)) {
+            session_->SetBackupScene(bundleNameIndexInfo, backupScene);
+        }
     }
 }
 

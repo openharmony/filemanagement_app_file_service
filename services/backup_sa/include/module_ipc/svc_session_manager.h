@@ -75,6 +75,7 @@ struct BackupExtInfo {
     bool isInPublishFile {false};
     bool isReadyLaunch {false};
     bool isRestoreEnd {false};
+    std::string backupScene;
 };
 
 class Service;
@@ -583,6 +584,23 @@ public:
     void SetIsRestoreEnd(const std::string &bundleName);
 
     bool GetIsRestoreEnd(const std::string &bundleName);
+    
+    /**
+     * @brief Get the backupScene
+     *
+     * @param bundleName
+     * @return std::string
+     */
+    std::string GetBackupScene(const std::string &bundleName);
+    
+    /**
+     * @brief Set the backupScene
+     *
+     * @param bundleName
+     * @param backupScene
+     * @return void
+     */
+    void SetBackupScene(const std::string &bundleName, const std::string &backupScene);
     
 private:
     /**

@@ -466,6 +466,7 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     if (oldBackupVersion.empty()) {
         HILOGE("Failed to get backupVersion of old device");
     }
+    bundleDetail.backupScene = session_->GetBackupScene(bundleName);
     want.SetElementName(bundleDetail.bundleName, backupExtName);
     want.SetParam(BConstants::EXTENSION_ACTION_PARA, static_cast<int>(action));
     want.SetParam(BConstants::EXTENSION_VERSION_CODE_PARA, static_cast<long>(versionCode));
@@ -475,6 +476,7 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     want.SetParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA, bundleExtInfo);
     want.SetParam(BConstants::EXTENSION_APP_CLONE_INDEX_PARA, bundleDetail.bundleIndex);
     want.SetParam(BConstants::EXTENSION_OLD_BACKUP_VERSION_PARA, oldBackupVersion);
+    want.SetParam(BConstants::EXTENSION_BACKUP_SCENE_PARA, bundleDetail.backupScene);
 }
 
 std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &backupInfos,

@@ -102,6 +102,8 @@ public:
     virtual void HandleOnRelease(sptr<IExtension> proxy) = 0;
     virtual void SetIsRestoreEnd(const std::string &bundleName) = 0;
     virtual bool GetIsRestoreEnd(const std::string &bundleName) = 0;
+    virtual std::string GetBackupScene(const std::string &bundleName) = 0;
+    virtual void SetBackupScene(const std::string &bundleName, const std::string &backupScene) = 0;
 public:
     static inline std::shared_ptr<BackupSvcSessionManager> session = nullptr;
 };
@@ -183,6 +185,8 @@ public:
     MOCK_METHOD(void, HandleOnRelease, (sptr<IExtension>));
     MOCK_METHOD(void, SetIsRestoreEnd, (const std::string &));
     MOCK_METHOD(bool, GetIsRestoreEnd, (const std::string &));
+    MOCK_METHOD(void, SetBackupScene, (const std::string &, const std::string &));
+    MOCK_METHOD(std::string, GetBackupScene, (const std::string &));
 };
 
 } // namespace OHOS::FileManagement::Backup

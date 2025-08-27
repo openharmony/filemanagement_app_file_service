@@ -23,6 +23,7 @@ namespace OHOS::FileManagement::Backup {
 class BJsonUtil {
 public:
     typedef struct BundleDetailInfo {
+        std::string backupScene;
         std::string bundleName;
         std::string type;
         std::string detail;
@@ -200,6 +201,17 @@ public:
                            size_t listSize,
                            std::string scanning,
                            std::string &jsonStr);
+    /**
+     * @brief 通过bundlename找sceneId
+     *
+     * @param bundleNameDetailsMap 包名和当前包扩展信息解析结果的集合
+     * @param bundleName 包名
+     * @param backupScene 存储backupScene的变量
+     *
+     * @return 是否成功
+     */
+    static bool FindBackupSceneByName(std::map<std::string, std::vector<BundleDetailInfo>> &bundleNameDetailsMap,
+        std::string &bundleName, std::string &backupScene);
 };
 } // namespace OHOS::FileManagement::Backup
 

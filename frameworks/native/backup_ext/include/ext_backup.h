@@ -206,6 +206,9 @@ public:
 
     void SetBackupExtExtension(const wptr<BackupExtExtension> &extExtension);
 
+public:
+    std::string backupScene_;
+
 protected:
     std::string appVersionStr_;
     std::string restoreRetInfo_;

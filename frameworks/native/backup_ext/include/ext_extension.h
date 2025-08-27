@@ -397,6 +397,9 @@ private:
     void HandleExtOnRelease(bool isAppResultReport, ErrCode errCode);
     std::function<void(ErrCode, const std::string)> OnReleaseCallback(wptr<BackupExtExtension> obj);
     std::function<void(ErrCode, const std::string)> GetComInfoCallback(wptr<BackupExtExtension> obj);
+    void GetScanDirList(vector<string>& includes,
+                        vector<string>& excludes,
+                        const BJsonEntityExtensionConfig &usrConfig);
 private:
     pair<TarMap, map<string, size_t>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes);
     TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files);

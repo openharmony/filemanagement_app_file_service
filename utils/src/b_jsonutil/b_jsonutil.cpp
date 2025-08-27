@@ -243,11 +243,16 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<B
     }
     cJSON *clearBackupData = cJSON_GetObjectItem(root, "clearBackupData");
     if (clearBackupData == nullptr || !cJSON_IsString(clearBackupData) || (clearBackupData->valuestring == nullptr)) {
-        HILOGE("Parse json error.");
+        HILOGE("Parse clearBackupData error.");
     } else {
         std::string value = clearBackupData->valuestring;
         isClearData = value.compare("false") != 0;
         HILOGI("bundleName:%{public}s clear data falg:%{public}d", bundleDetailInfo.bundleName.c_str(), isClearData);
+    }
+    cJSON *backupScene = cJSON_GetObjectItem(root, "backupScene");
+    if (backupScene != nullptr && cJSON_IsString(backupScene) && (backupScene->valuestring != nullptr)) {
+        HILOGI("Parse backupScene success");
+        bundleDetailInfo.backupScene = backupScene->valuestring;
     }
     cJSON *infos = cJSON_GetObjectItem(root, "infos");
     if (infos == nullptr || !cJSON_IsArray(infos) || cJSON_GetArraySize(infos) == 0) {
@@ -532,5 +537,22 @@ bool BJsonUtil::WriteToStr(std::vector<BundleDataSize> &bundleDataList,
     free(jsonString);
     HILOGI("write json str ok, scanned size is %{public}zu", listSize);
     return true;
+}
+
+bool BJsonUtil::FindBackupSceneByName(std::map<std::string, std::vector<BundleDetailInfo>> &bundleNameDetailsMap,
+    std::string &bundleName, std::string &backupScene)
+{
+    auto iter = bundleNameDetailsMap.find(bundleName);
+    if (iter == bundleNameDetailsMap.end()) {
+        return false;
+    }
+    std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos = iter->second;
+    for (const auto &bundleDetailInfo : bundleDetailInfos) {
+        if (bundleDetailInfo.backupScene != "") {
+            backupScene = bundleDetailInfo.backupScene;
+            return true;
+        }
+    }
+    return false;
 }
 }

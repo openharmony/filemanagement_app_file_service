@@ -83,6 +83,33 @@ public:
      */
     bool GetRequireCompatibility() const;
 
+    /**
+     * @brief Get the backupScene object
+     *
+     * @return std::string
+     */
+    std::string GetBackupScene() const;
+
+    /**
+     * @brief Judge the optionDir key exist
+     *
+     * @return bool
+     */
+    bool HasOptionDir() const;
+
+    /**
+     * @brief Get the optionDir object
+     *
+     * @return vector<std::string>
+     */
+    vector<std::string> GetOptionDir(const std::string& sceneId, const std::string& fileType) const;
+
+    /**
+     * @brief Get the GetDirList
+     *
+     * @return vector<std::string>
+     */
+    vector<std::string> GetDirList(Json::Value& jsonItem) const;
 public:
     std::string GetJSonSource(std::string_view jsonFromRealWorld, std::any option);
 

@@ -848,10 +848,9 @@ tuple<ErrCode, uint32_t, uint32_t> BackupExtExtension::CalculateDataSize(const B
         HILOGE("mkdir failed path :%{public}s, err = %{public}d", path.c_str(), errno);
         return {errno, 0, 0};
     }
-
-    vector<string> includes = usrConfig.GetIncludes();
-    vector<string> excludes = usrConfig.GetExcludes();
-
+    vector<string> includes = {};
+    vector<string> excludes = {};
+    GetScanDirList(includes, excludes, usrConfig);
     // 扫描文件计算数据量
     tie(bigFileInfo, smallFiles) = GetFileInfos(includes, excludes);
     ScanFileSingleton::GetInstance().SetCompletedFlag(true);
