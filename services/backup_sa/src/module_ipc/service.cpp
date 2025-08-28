@@ -86,6 +86,7 @@ const std::string BACKUPSERVICE_WORK_STATUS_ON = "true";
 const std::string BACKUPSERVICE_WORK_STATUS_OFF = "false";
 const std::string BACKUP_PERMISSION = "ohos.permission.BACKUP";
 const int32_t MAX_TRY_CLEAR_DISPOSE_NUM = 3;
+const int IPC_ERROR = 29189;
 } // namespace
 
 /* Shell/Xts user id equal to 0/1, we need set default 100 */
@@ -1151,6 +1152,9 @@ void Service::StartCurBundleBackupOrRestore(const std::string &bundleName)
         }
     } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
         auto ret = proxy->HandleRestore(session_->GetClearDataFlag(bundleName));
+        if (ret == IPC_ERROR) {
+            ret = BError::BackupErrorCode::E_BTO;
+        }
         session_->GetServiceReverseProxy()->RestoreOnBundleStarted(ret, bundleName);
         GetOldDeviceBackupVersion();
         BundleBeginRadarReport(bundleName, ret, scenario);
