@@ -84,6 +84,11 @@ public:
     virtual void SetExtOnRelease(const BundleName&, bool) = 0;
     virtual void RemoveExtOnRelease(const BundleName&) = 0;
     virtual ErrCode GetCompatibilityInfo(const std::string&, const std::string&, std::string&) = 0;
+    virtual void SetBroadCastInfoMap(const std::string &bundleName,
+                                     const std::map<std::string, std::string> &broadCastInfoMap,
+                                     int userId) = 0;
+    virtual void BroadCastRestore(const std::string &bundleName, const std::string &broadCastType) = 0;
+    virtual void BroadCastSingle(const std::string &bundleName, const std::string &broadCastType) = 0;
 public:
     virtual bool UpdateToRestoreBundleMap(const string&, const string&) = 0;
 public:
@@ -145,6 +150,9 @@ public:
     MOCK_METHOD(void, SetExtOnRelease, (const BundleName&, bool));
     MOCK_METHOD(void, RemoveExtOnRelease, (const BundleName&));
     MOCK_METHOD(ErrCode, GetCompatibilityInfo, (const std::string&, const std::string&, std::string&));
+    MOCK_METHOD(void, SetBroadCastInfoMap, (const std::string &, (const std::map<std::string, std::string> &), int));
+    MOCK_METHOD(void, BroadCastRestore, (const std::string &, const std::string &));
+    MOCK_METHOD(void, BroadCastSingle, (const std::string &, const std::string &));
 public:
     MOCK_METHOD(bool, UpdateToRestoreBundleMap, (const string&, const string&));
 };
@@ -487,6 +495,21 @@ ErrCode Service::GetCompatibilityInfo(const std::string &bundleName, const std::
     std::string &compatInfo)
 {
     return BService::serviceMock->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
+}
+
+void Service::SetBroadCastInfoMap(const std::string &bundleName,
+                         const std::map<std::string, std::string> &broadCastInfoMap,
+                         int userId)
+{
+    BService::serviceMock->SetBroadCastInfoMap(bundleName, broadCastInfoMap, userId);
+}
+void Service::BroadCastRestore(const std::string &bundleName, const std::string &broadCastType)
+{
+    BService::serviceMock->BroadCastRestore(bundleName, broadCastType);
+}
+void Service::BroadCastSingle(const std::string &bundleName, const std::string &broadCastType)
+{
+    BService::serviceMock->BroadCastSingle(bundleName, broadCastType);
 }
 } // namespace OHOS::FileManagement::Backup
 

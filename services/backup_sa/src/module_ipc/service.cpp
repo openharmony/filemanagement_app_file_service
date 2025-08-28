@@ -840,27 +840,28 @@ void Service::SetCurrentSessProperties(
             session_->RemoveExtInfo(bundleNameIndexInfo);
             continue;
         }
-        session_->SetBundleRestoreType(bundleNameIndexInfo, restoreType);
-        session_->SetBundleVersionCode(bundleNameIndexInfo, restoreInfo.versionCode);
-        session_->SetBundleVersionName(bundleNameIndexInfo, restoreInfo.versionName);
-        session_->SetBundleDataSize(bundleNameIndexInfo, restoreInfo.spaceOccupied);
-        session_->SetBundleUserId(bundleNameIndexInfo, session_->GetSessionUserId());
+        SetBundleParam(restoreInfo, bundleNameIndexInfo, restoreType);
         auto iter = isClearDataFlags.find(bundleNameIndexInfo);
         if (iter != isClearDataFlags.end()) {
             session_->SetClearDataFlag(bundleNameIndexInfo, iter->second);
         }
         BJsonUtil::BundleDetailInfo broadCastInfo;
         BJsonUtil::BundleDetailInfo uniCastInfo;
-        if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, BROADCAST_TYPE, broadCastInfo)) {
-            bool notifyRet = DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(broadCastInfo);
+        std::map<std::string, std::string> broadCastInfoMap;
+        if (BJsonUtil::FindBroadCastInfoByName(bundleNameDetailMap, bundleNameIndexInfo,
+            BROADCAST_TYPE, broadCastInfoMap)) {
+            SetBroadCastInfoMap(bundleNameIndexInfo, broadCastInfoMap, session_->GetSessionUserId());
+            BroadCastRestore(bundleNameIndexInfo, BConstants::BROADCAST_RESTORE_START);
+        } else if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo,
+            BROADCAST_TYPE, broadCastInfo)) {
+            bool notifyRet = DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(
+                broadCastInfo, START_TYPE);
             HILOGI("Publish event end, notify result is:%{public}d", notifyRet);
         }
         if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {
             HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
             session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }
-        session_->SetBackupExtName(bundleNameIndexInfo, restoreInfo.extensionName);
-        session_->SetIsReadyLaunch(bundleNameIndexInfo);
     }
     HILOGI("End");
 }
@@ -1507,6 +1508,7 @@ void Service::SessionDeactive()
             return;
         }
         ErrCode ret = BError(BError::Codes::OK);
+        BroadCastRestore(BConstants::BROADCAST_RELEASE_BUNDLES, BConstants::BROADCAST_RESTORE_END);
         std::vector<std::string> bundleNameList;
         if (session_->GetScenario() == IServiceReverseType::Scenario::RESTORE &&
             session_->CleanAndCheckIfNeedWait(ret, bundleNameList)) {
@@ -1522,8 +1524,7 @@ void Service::SessionDeactive()
         if (!bundleNameList.empty()) {
             DelClearBundleRecord(bundleNameList);
         }
-        SendErrAppGalleryNotify();
-        DeleteDisConfigFile();
+        ClearRecord();
         // 结束定时器
         if (sched_ == nullptr) {
             HILOGE("Session deactive error, sched is empty");
@@ -2090,5 +2091,22 @@ void Service::SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userI
     } else {
         session_->SetSessionUserId(GetUserIdDefault());
     }
+}
+
+void Service::SetBundleParam(const BJsonEntityCaps::BundleInfo &restoreInfo, std::string &bundleNameIndexInfo,
+    RestoreTypeEnum &restoreType)
+{
+    session_->SetBundleRestoreType(bundleNameIndexInfo, restoreType);
+    session_->SetBundleVersionCode(bundleNameIndexInfo, restoreInfo.versionCode);
+    session_->SetBundleVersionName(bundleNameIndexInfo, restoreInfo.versionName);
+    session_->SetBundleDataSize(bundleNameIndexInfo, restoreInfo.spaceOccupied);
+    session_->SetBackupExtName(bundleNameIndexInfo, restoreInfo.extensionName);
+    session_->SetIsReadyLaunch(bundleNameIndexInfo);
+}
+
+void Service::ClearRecord()
+{
+    SendErrAppGalleryNotify();
+    DeleteDisConfigFile();
 }
 } // namespace OHOS::FileManagement::Backup

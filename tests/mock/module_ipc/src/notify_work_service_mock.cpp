@@ -22,8 +22,8 @@ NotifyWorkService::NotifyWorkService() {}
 
 NotifyWorkService::~NotifyWorkService() {}
 
-bool NotifyWorkService::NotifyBundleDetail(BJsonUtil::BundleDetailInfo bundleDetailInfo)
+bool NotifyWorkService::NotifyBundleDetail(BJsonUtil::BundleDetailInfo bundleDetailInfo, BroadCastType type)
 {
-    return BNotifyWorkService::notify->NotifyBundleDetail(bundleDetailInfo);
+    return BNotifyWorkService::notify->NotifyBundleDetail(bundleDetailInfo, type);
 }
 } // namespace OHOS::FileManagement::Backup

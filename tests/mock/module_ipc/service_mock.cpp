@@ -458,4 +458,12 @@ ErrCode Service::GetCompatibilityInfo(const std::string &bundleName, const std::
 }
 
 void Service::DoNoticeClientFinish(const std::string &bundleName, ErrCode errCode, bool isRestoreEnd) {}
+
+void Service::SetBroadCastInfoMap(const std::string &bundleName,
+                                  const std::map<std::string, std::string> &broadCastInfoMap,
+                                  int userId) {}
+
+void Service::BroadCastRestore(const std::string &bundleName, const std::string &broadCastType) {}
+
+void Service::BroadCastSingle(const std::string &bundleName, const std::string &broadCastType) {}
 } // namespace OHOS::FileManagement::Backup

@@ -51,6 +51,7 @@
 #include "module_external/bms_adapter.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "module_ipc/svc_restore_deps_manager.h"
+#include "module_notify/notify_work_service.h"
 #include "parameter.h"
 #include "system_ability_definition.h"
 #include "hitrace_meter.h"
@@ -1107,6 +1108,7 @@ ErrCode Service::Cancel(const std::string& bundleName, int32_t &result)
         HILOGE("Verify caller failed, bundleName:%{public}s, scenario:%{public}d", bundleName.c_str(), scenario);
         return BError(BError::BackupErrorCode::E_CANCEL_UNSTARTED_TASK);
     }
+    BroadCastRestore(bundleName, BConstants::BROADCAST_RESTORE_END);
     auto impl = session_->GetImpl();
     auto it = impl.backupExtNameMap.find(bundleName);
     if (it == impl.backupExtNameMap.end()) {

@@ -18,12 +18,12 @@
 
 #include <gmock/gmock.h>
 
-#include "notify_work_service.h"
+#include "module_notify/notify_work_service.h"
 
 namespace OHOS::FileManagement::Backup {
 class BNotifyWorkService {
 public:
-    virtual bool NotifyBundleDetail(BJsonUtil::BundleDetailInfo) = 0;
+    virtual bool NotifyBundleDetail(BJsonUtil::BundleDetailInfo, BroadCastType type) = 0;
 public:
     BNotifyWorkService() = default;
     virtual ~BNotifyWorkService() = default;
@@ -33,7 +33,7 @@ public:
 
 class NotifyWorkServiceMock : public BNotifyWorkService {
 public:
-    MOCK_METHOD(bool, NotifyBundleDetail, (BJsonUtil::BundleDetailInfo));
+    MOCK_METHOD(bool, NotifyBundleDetail, (BJsonUtil::BundleDetailInfo, BroadCastType));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_NOTIFY_WORK_SERVICE_MOCK_H

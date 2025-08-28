@@ -215,6 +215,9 @@ static inline std::string BACKUP_SCENE = "backupScene";
 static inline std::string OPTION_DIR = "optionDir";
 static inline std::string INCLUDES = "includes";
 static inline std::string EXCLUDES = "excludes";
+static inline std::string BROADCAST_RESTORE_START = "restore_start";
+static inline std::string BROADCAST_RESTORE_END = "restore_end";
+static inline std::string BROADCAST_RELEASE_BUNDLES = "release_bundles";
 static inline int DEFAULT_APPINDEX = 0;
 
 // 特殊版本信息
@@ -254,6 +257,7 @@ static inline std::string PRIORITY = "priority";
 
 // unicast
 const std::string UNICAST_TYPE = "unicast";
+const std::string BROADCAST_TYPE = "broadcast";
 
 // 雷达打点引用到的常量
 constexpr int32_t MS_1000 = 1000;

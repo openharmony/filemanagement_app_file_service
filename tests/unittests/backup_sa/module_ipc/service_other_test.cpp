@@ -1063,7 +1063,7 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0300, TestSize.Level1
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(true)).WillOnce(Return(false));
-        EXPECT_CALL(*notify, NotifyBundleDetail(_)).WillOnce(Return(true));
+        EXPECT_CALL(*notify, NotifyBundleDetail(_, _)).WillOnce(Return(true));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
             isClearDataFlags, restoreType, backupVersion);
 

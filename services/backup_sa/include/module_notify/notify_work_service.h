@@ -22,10 +22,16 @@
 #include "b_jsonutil/b_jsonutil.h"
 
 namespace OHOS::FileManagement::Backup {
+
+enum BroadCastType {
+    START_TYPE = 0,
+    END_TYPE = 1,
+};
+
 class NotifyWorkService final : public NoCopyable {
     DECLARE_DELAYED_SINGLETON(NotifyWorkService);
 public:
-    bool NotifyBundleDetail(BJsonUtil::BundleDetailInfo bundleDetailInfo);
+    bool NotifyBundleDetail(BJsonUtil::BundleDetailInfo bundleDetailInfo, BroadCastType type);
 };
 } // namespace OHOS::FileManagement::Backup
 

@@ -24,6 +24,7 @@ class BJsonUtil {
 public:
     typedef struct BundleDetailInfo {
         std::string backupScene;
+        std::string broadCastType;
         std::string bundleName;
         std::string type;
         std::string detail;
@@ -201,6 +202,7 @@ public:
                            size_t listSize,
                            std::string scanning,
                            std::string &jsonStr);
+
     /**
      * @brief 通过bundlename找sceneId
      *
@@ -212,6 +214,19 @@ public:
      */
     static bool FindBackupSceneByName(std::map<std::string, std::vector<BundleDetailInfo>> &bundleNameDetailsMap,
         std::string &bundleName, std::string &backupScene);
+    
+    /**
+     * @brief 通过bundlename找BroadCastInfo
+     *
+     * @param bundleNameDetailsMap 包名和当前包扩展信息解析结果的集合
+     * @param bundleName 包名
+     * @param jobType 业务类型broadcast或者unicast
+     * @param broadCastInfoMap 存储broadCastInfoMap的变量
+     *
+     * @return 是否成功
+     */
+    static bool FindBroadCastInfoByName(std::map<std::string, std::vector<BundleDetailInfo>> &bundleNameDetailsMap,
+        std::string &bundleName, const std::string &jobType, std::map<std::string, std::string> &broadCastInfoMap);
 };
 } // namespace OHOS::FileManagement::Backup
 
