@@ -912,6 +912,7 @@ int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
     if (!extension_->SpecialVersionForCloneAndCloud() && !extension_->UseFullBackupOnly()) {
         path = "/";
     }
+    tarName = TarFile::GetInstance().DecompressTar(tarName);
     auto [ret, fileInfos, errInfos] = UntarFile::GetInstance().UnPacket(tarName, path);
     if (isDebug_) {
         if (ret != 0) {
