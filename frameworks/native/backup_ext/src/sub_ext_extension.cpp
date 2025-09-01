@@ -296,26 +296,26 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::OnRestoreExCallbac
             HILOGE("Appdone has been executed for the current application");
             return;
         }
-        if (errCode == ERR_OK && !restoreRetInfo.empty()) {
-            auto spendTime = extensionPtr->GetOnStartTimeCost();
-            if (spendTime >= BConstants::MAX_TIME_COST) {
-                std::stringstream ss;
-                ss << R"("spendTime": )"<< spendTime << "ms";
-                AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
-                AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::OnRestoreExCallback",
-                    AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
-            }
-        }
-        extensionPtr->FinishOnProcessTask();
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
         if (errCode == ERR_OK) {
             if (restoreRetInfo.size()) {
+                auto spendTime = extensionPtr->GetOnStartTimeCost();
+                if (spendTime >= BConstants::MAX_TIME_COST) {
+                    std::stringstream ss;
+                    ss << R"("spendTime": )"<< spendTime << "ms";
+                    AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
+                    AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::OnRestoreExCallback",
+                        AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+                }
                 HILOGI("Will notify restore result report");
+                extensionPtr->FinishOnProcessTask();
                 extensionPtr->ReportAppStatistic("OnRestoreExCallback1", errCode);
                 extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::FULL_RESTORE);
             }
             return;
         }
+        HILOGE("Call extension onRestoreEx failed, errInfo = %{public}s", restoreRetInfo.c_str());
+        extensionPtr->FinishOnProcessTask();
         if (restoreRetInfo.empty()) {
             extensionPtr->AppDone(errCode);
             extensionPtr->DoClear();
@@ -363,25 +363,25 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::IncreOnRestoreExCa
             HILOGE("Appdone has been executed for the current application");
             return;
         }
-        if (errCode == ERR_OK && !restoreRetInfo.empty()) {
-            auto spendTime = extensionPtr->GetOnStartTimeCost();
-            if (spendTime >= BConstants::MAX_TIME_COST) {
-                std::stringstream ss;
-                ss << R"("spendTime": )"<< spendTime << "ms";
-                AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
-                AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreExCallback",
-                    AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
-            }
-        }
-        extensionPtr->FinishOnProcessTask();
         extensionPtr->extension_->InvokeAppExtMethod(errCode, restoreRetInfo);
         if (errCode == ERR_OK) {
             if (restoreRetInfo.size()) {
+                auto spendTime = extensionPtr->GetOnStartTimeCost();
+                if (spendTime >= BConstants::MAX_TIME_COST) {
+                    std::stringstream ss;
+                    ss << R"("spendTime": )"<< spendTime << "ms";
+                    AppRadar::Info info (extensionPtr->bundleName_, "", ss.str());
+                    AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::IncreOnRestoreExCallback",
+                        AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_ON_RESTORE, ERR_OK);
+                }
+                extensionPtr->FinishOnProcessTask();
                 extensionPtr->ReportAppStatistic("IncreOnRestoreExCallback1", errCode);
                 extensionPtr->AppResultReport(restoreRetInfo, BackupRestoreScenario::INCREMENTAL_RESTORE);
             }
             return;
         }
+        HILOGE("Call increment onRestoreEx failed, errInfo = %{public}s", restoreRetInfo.c_str());
+        extensionPtr->FinishOnProcessTask();
         if (restoreRetInfo.empty()) {
             extensionPtr->AppIncrementalDone(errCode);
             extensionPtr->DoClear();
