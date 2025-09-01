@@ -53,9 +53,10 @@ const string VERSION = "1.0";
 const string LONG_LINK_SYMBOL = "longLinkSymbol";
 const string COMPRESS_FILE_SUFFIX = "__A";
 const string TAR_EXTENSION = ".tar";
+constexpr int64_t COMPRESS_BOUND = 10 * 1024 * 1024;
 #ifdef BROTLI_ENABLED
 constexpr int MEGA_BYTE = 1024 * 1024;
-constexpr int BROTLI_QUALITY = 3;
+constexpr int BROTLI_QUALITY = 1;
 constexpr bool USE_COMPRESS = false; // 默认关闭
 #else
 constexpr bool USE_COMPRESS = false;
@@ -514,10 +515,10 @@ bool TarFile::FillSplitTailBlocks()
         HILOGI("tarFileName:%{public}s, currentTarName:%{public}s, newTarPath:%{public}s",
             GetAnonyPath(tarFileName_).c_str(), GetAnonyPath(currentTarName_).c_str(),
             GetAnonyPath(newTarPath).c_str());
-        if (!CompressFile(fullTarPath, newTarPath)) {
-            tarMap_.emplace(tarFileName_, make_tuple(currentTarName_, staTar, false));
-        } else {
+        if (staTar.st_size > COMPRESS_BOUND && CompressFile(fullTarPath, newTarPath)) {
             tarMap_.emplace(tarNewName, make_tuple(newTarPath, staTar, false));
+        } else {
+            tarMap_.emplace(tarFileName_, make_tuple(currentTarName_, staTar, false));
         }
     } else {
         tarMap_.emplace(tarFileName_, make_tuple(currentTarName_, staTar, false));
