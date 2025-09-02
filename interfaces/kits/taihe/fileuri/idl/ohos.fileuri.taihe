@@ -13,32 +13,8 @@
 * limitations under the License.
 */
 
-@!namespace("@ohos.file.fileuri", "fileUri")
+@!namespace("@ohos.file.fileuri")
 
 @!sts_inject("""
-static { loadLibrary("file_fileuri_taihe.z"); }
-""")
-
-@class
-interface FileUriInner {
-    @get getName(): String;
-}
-
-function createFileUri(name: String): FileUriInner;
-
-function getUriFromPath(path: String): String;
-
-@!sts_inject("""
-
-export class FileUri extends uri.URI{
-    inner: FileUriInner;
-    constructor(uri: String) {
-        super(uri);
-        this.inner = createFileUri(uri);
-    }
-    get name(): string {
-        return this.inner.name;
-    }
-}
-
+import uri from '@ohos.uri';
 """)

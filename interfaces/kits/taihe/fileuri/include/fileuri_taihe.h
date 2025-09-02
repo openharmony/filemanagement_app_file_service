@@ -21,14 +21,15 @@
 #include "ohos.file.fileuri.impl.hpp"
 #include "taihe/runtime.hpp"
 #include "file_uri.h"
+#include "uri.h"
 
 namespace ANI::FileUri {
 
-class FileUriImpl {
+class FileUriInner {
 public:
-    FileUriImpl() = delete;
+    FileUriInner() = delete;
 
-    FileUriImpl(taihe::string_view name);
+    FileUriInner(taihe::string_view name);
 
     std::string getName();
 
@@ -36,7 +37,7 @@ private:
     OHOS::Uri uri_;
 };
 
-ohos::file::fileuri::FileUri makeFileUri(taihe::string_view name);
+ohos::file::fileuri::FileUriInner createFileUri(taihe::string_view name);
 
 std::string getUriFromPath(taihe::string_view path);
 } // ANI::FileUri
