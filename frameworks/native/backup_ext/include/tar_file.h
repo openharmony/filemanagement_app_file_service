@@ -111,6 +111,7 @@ public:
 
 class ICompressStrategy {
 public:
+    virtual ~ICompressStrategy() {};
     size_t GetMaxCompressedSize(size_t inputSize);
     virtual bool CompressBuffer(Buffer& input, Buffer& output) = 0;
     virtual bool DecompressBuffer(Buffer& compressed, Buffer& origin) = 0;
@@ -120,7 +121,7 @@ protected:
     std::map<size_t, size_t> maxSizeCache_;
 };
 
-class BrotilCompress : public ICompressStrategy {
+class BrotliCompress : public ICompressStrategy {
 public:
     bool CompressBuffer(Buffer& input, Buffer& output) override;
     bool DecompressBuffer(Buffer& compressed, Buffer& origin) override;
@@ -171,8 +172,8 @@ public:
     bool DecompressFile(const std::string &compFile, const std::string &srcFile);
     std::string DecompressTar(const std::string &tarPath);
 private:
-    bool WriteCompressData(Buffer& compressBuffer, const Buffer& ori, UniqueFile& fout);
-    bool WriteDecompressData(const Buffer& compressBuffer, Buffer& decompressBuffer,
+    bool WriteCompressData(Buffer& compressBuffer, Buffer& ori, UniqueFile& fout);
+    bool WriteDecompressData(Buffer& compressBuffer, Buffer& decompressBuffer,
         UniqueFile& fout, std::chrono::duration<double, std::milli>& decompSpan);
     TarFile();
     ~TarFile() = default;

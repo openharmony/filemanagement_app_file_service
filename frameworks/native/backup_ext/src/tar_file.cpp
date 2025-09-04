@@ -34,14 +34,14 @@
 #include "securec.h"
 
 #ifdef BROTLI_ENABLED
-#define USE_COMPRESS true
+#define COMPRESS_ENABLED true
 #include "brotli/encode.h"
 #include "brotli/decode.h"
 #endif
 
 #ifdef LZ4_ENABLED
-#ifndef USE_COMPRESS
-#define USE_COMPRESS true
+#ifndef COMPRESS_ENABLED
+#define COMPRESS_ENABLED true
 #endif
 #include "lz4.h"
 #endif
@@ -61,7 +61,7 @@ const string VERSION = "1.0";
 const string LONG_LINK_SYMBOL = "longLinkSymbol";
 const string TAR_EXTENSION = ".tar";
 constexpr int64_t COMPRESS_BOUND = 10 * 1024 * 1024;
-#ifdef USE_COMPRESS
+#ifdef COMPRESS_ENABLED
 constexpr int MEGA_BYTE = 1024 * 1024;
 constexpr bool USE_COMPRESS = false; // 默认关闭
 #else
@@ -121,7 +121,7 @@ size_t ICompressStrategy::GetMaxCompressedSize(size_t inputSize)
     return maxSize;
 }
 
-bool BrotilCompress::CompressBuffer(Buffer& input, Buffer& output)
+bool BrotliCompress::CompressBuffer(Buffer& input, Buffer& output)
 {
 #ifdef BROTLI_ENABLED
     int ret = BrotliEncoderCompress(BROTLI_QUALITY, BROTLI_MAX_WINDOW_BITS, BROTLI_DEFAULT_MODE,
@@ -136,10 +136,10 @@ bool BrotilCompress::CompressBuffer(Buffer& input, Buffer& output)
 #endif
 }
 
-bool BrotilCompress::DecompressBuffer(Buffer& compressed, Buffer& origin)
+bool BrotliCompress::DecompressBuffer(Buffer& compressed, Buffer& origin)
 {
 #ifdef BROTLI_ENABLED
-    int ret = BrotliDecoderDecompress(compressed.size_, (const uint8_t*)compressed.data_, origin.size_,
+    int ret = BrotliDecoderDecompress(compressed.size_, (const uint8_t*)compressed.data_, &origin.size_,
         (uint8_t*)origin.data_);
     if (ret != BROTLI_TRUE) {
         HILOGE("decompress fail, error: %{public}d", ret);
@@ -151,7 +151,7 @@ bool BrotilCompress::DecompressBuffer(Buffer& compressed, Buffer& origin)
 #endif
 }
 
-size_t BrotilCompress::GetMaxCompressedSizeInner(size_t inputSize)
+size_t BrotliCompress::GetMaxCompressedSizeInner(size_t inputSize)
 {
 #ifdef BROTLI_ENABLED
     return BrotliEncoderMaxCompressedSize(inputSize);
@@ -834,7 +834,7 @@ void TarFile::SetPacketMode(bool isReset)
     isReset_ = isReset;
 }
 
-bool TarFile::WriteCompressData(Buffer& compressBuffer, const Buffer& ori, UniqueFile& fout)
+bool TarFile::WriteCompressData(Buffer& compressBuffer, Buffer& ori, UniqueFile& fout)
 {
     size_t sizeCount = 1;
     char* writeData = (char *)compressBuffer.data_;
@@ -861,7 +861,7 @@ bool TarFile::WriteCompressData(Buffer& compressBuffer, const Buffer& ori, Uniqu
 
 bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFile)
 {
-#ifdef USE_COMPRESS
+#ifdef COMPRESS_ENABLED
     HILOGI("BEGIN strF: %{public}s, compF: %{public}s", GetAnonyPath(srcFile).c_str(), GetAnonyPath(compFile).c_str());
     UniqueFile fin(srcFile.c_str(), "rb");
     UniqueFile fout(compFile.c_str(), "wb");
@@ -903,7 +903,7 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
     return true;
 }
 
-bool TarFile::WriteDecompressData(const Buffer& compressBuffer, Buffer& decompressBuffer,
+bool TarFile::WriteDecompressData(Buffer& compressBuffer, Buffer& decompressBuffer,
     UniqueFile& fout, std::chrono::duration<double, std::milli>& decompSpan)
 {
     size_t written = 0;
@@ -926,7 +926,7 @@ bool TarFile::WriteDecompressData(const Buffer& compressBuffer, Buffer& decompre
 
 bool TarFile::DecompressFile(const std::string &compFile, const std::string &srcFile)
 {
-#ifdef USE_COMPRESS
+#ifdef COMPRESS_ENABLED
     HILOGI("BEGIN, compF:%{public}s, srcF:%{public}s", GetAnonyPath(compFile).c_str(), GetAnonyPath(srcFile).c_str());
     UniqueFile fin(compFile.c_str(), "rb");
     UniqueFile fout(srcFile.c_str(), "wb");
