@@ -43,10 +43,15 @@ backup_mock_proxy_src = [
 ]
 
 declare_args() {
-  brotli_enabled = true
-  if (defined(global_parts_info) &&
-    (!defined(global_parts_info.thirdparty_brotli) || !global_parts_info.thirdparty_brotli)) {
-      brotli_enabled = false
+  brotli_enabled = false
+  if (defined(global_parts_info) && defined(global_parts_info.thirdparty_brotli) &&
+    global_parts_info.thirdparty_brotli) {
+      brotli_enabled = true
+  }
+  lz4_enabled = false
+  if (defined(global_parts_info) && defined(global_parts_info.thirdparty_lz4) &&
+    global_parts_info.thirdparty_lz4) {
+      lz4_enabled = true
   }
   if (current_cpu == "arm" || current_cpu == "x86") {
     system_bit = 32

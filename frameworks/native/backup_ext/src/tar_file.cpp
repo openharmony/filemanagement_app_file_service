@@ -34,8 +34,16 @@
 #include "securec.h"
 
 #ifdef BROTLI_ENABLED
+#define USE_COMPRESS true
 #include "brotli/encode.h"
 #include "brotli/decode.h"
+#endif
+
+#ifdef LZ4_ENABLED
+#ifndef USE_COMPRESS
+#define USE_COMPRESS true
+#endif
+#include "lz4"
 #endif
 
 namespace OHOS::FileManagement::Backup {
@@ -51,15 +59,17 @@ const uint32_t WAIT_INDEX = 100000;
 const uint32_t WAIT_TIME = 5;
 const string VERSION = "1.0";
 const string LONG_LINK_SYMBOL = "longLinkSymbol";
-const string COMPRESS_FILE_SUFFIX = "__A";
 const string TAR_EXTENSION = ".tar";
 constexpr int64_t COMPRESS_BOUND = 10 * 1024 * 1024;
-#ifdef BROTLI_ENABLED
+#ifdef USE_COMPRESS
 constexpr int MEGA_BYTE = 1024 * 1024;
-constexpr int BROTLI_QUALITY = 1;
 constexpr bool USE_COMPRESS = false; // 默认关闭
 #else
 constexpr bool USE_COMPRESS = false;
+#endif
+
+#ifdef BROTIL_ENABLED
+constexpr int BROTLI_QUALITY = 1;
 #endif
 } // namespace
 
@@ -81,13 +91,12 @@ UniqueFile::~UniqueFile()
     file_ = nullptr;
 }
 
-template <typename T>
-Buffer<T>::Buffer(size_t size)
+Buffer::Buffer(size_t size)
 {
     if (size <= 0 || size > MAX_BUFFER_SIZE) {
         return;
     }
-    data_ = new (std::nothrow) T[size];
+    data_ = new (std::nothrow) char[size];
     if (data_ == nullptr) {
         HILOGE("new fail, size=%{public}zu", size);
         return;
@@ -95,18 +104,122 @@ Buffer<T>::Buffer(size_t size)
     size_ = size;
 }
 
-template <typename T>
-Buffer<T>::~Buffer()
+Buffer::~Buffer()
 {
     if (data_ != nullptr) {
         delete[] data_;
     }
 }
 
+size_t ICompressStrategy::GetMaxCompressedSize(size_t inputSize)
+{
+    if (maxSizeCache_.count(inputSize) > 0) {
+        return maxSizeCache_[inputSize];
+    }
+    size_t maxSize = GetMaxCompressedSizeInner(inputSize);
+    maxSizeCache_[inputSize] = maxSize;
+    return maxSize;
+}
+
+bool BrotilCompress::CompressBuffer(Buffer input, Buffer &output)
+{
+#ifdef BROTLI_ENABLED
+    int ret = BrotliEncoderCompress(BROTLI_QUALITY, BROTLI_MAX_WINDOW_BITS, BROTLI_DEFAULT_MODE,
+        input.size_, (const uint8_t*)input.data_, output.size_, output.data_);
+    if (ret != BROTLI_TRUE) {
+        HILOGE("compress fail, error: %{public}d", ret);
+        return false;
+    }
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool BrotilCompress::DecompressBuffer(Buffer compressed, Buffer origin)
+{
+#ifdef BROTLI_ENABLED
+    int ret = BrotliDecoderDecompress(compressed.size_, (const uint8_t*)compressed.data_, origin.size_, origin.data_);
+    if (ret != BROTLI_TRUE) {
+        HILOGE("decompress fail, error: %{public}d", ret);
+        return false;
+    }
+    return true;
+#else
+    return false;
+#endif
+}
+
+size_t BrotilCompress::GetMaxCompressedSizeInner(size_t inputSize)
+{
+#ifdef BROTLI_ENABLED
+    return BrotliEncoderMaxCompressedSize(inputSize);
+#else
+    return 0;
+#endif
+}
+
+bool Lz4Compress::CompressBuffer(Buffer input, Buffer &output)
+{
+#ifdef LZ4_ENABLED
+    int compressedSize = LZ4_compress_default(input.data_, output.data_, input.size_,
+        GetMaxCompressedSizeInner(input.size_));
+    if (compressedSize <= 0) {
+        HILOGE("compress fail, error: %{public}d", compressedSize);
+        return false;
+    }
+    output.size_ = compressedSize;
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool Lz4Compress::DecompressBuffer(Buffer compressed, Buffer origin)
+{
+#ifdef LZ4_ENABLED
+    int decompressedSize = LZ4_decompress_safe(compressed.data_, origin.data_, compressed.size_, origin.size_);
+    if (decompressedSize <= 0) {
+        HILOGE("decompress fail, error: %{public}d", decompressedSize);
+        return false;
+    }
+    if (decompressedSize != origin.size_) {
+        HILOGE("decompress size(%{public}d) != origin size(%{public}d).", decompressedSize, origin.size_);
+        return false;
+    }
+    return true;
+#else
+    return false;
+#endif
+}
+
+size_t Lz4Compress::GetMaxCompressedSizeInner(size_t inputSize)
+{
+#ifdef LZ4_ENABLED
+    if (inputSize > LZ4_MAX_INPUT_SIZE) {
+        HILOGE("input size is over max size");
+        return 0;
+    }
+    int maxSize = LZ4_compressBound(inputSize);
+    if (maxSize <= 0) {
+        HILOGE("maxSize is invalid:%{public}d", maxSize);
+        return 0;
+    }
+    return maxSize;
+#else
+    return 0;
+#endif
+}
+
 TarFile &TarFile::GetInstance()
 {
     static TarFile instance;
     return instance;
+}
+
+TarFile::TarFile()
+{
+    compressTool_ = std::make_shared<Lz4Compress>();
 }
 
 bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, const string &pkPath, TarMap &tarMap,
@@ -510,7 +623,7 @@ bool TarFile::FillSplitTailBlocks()
         std::filesystem::path fullTarPath = currentTarName_; // 全量路径
         std::filesystem::path parentPath = fullTarPath.parent_path();
         std::filesystem::path fileNameWithoutExtension = fullTarPath.stem(); // 文件名前缀
-        std::string tarNewName = fileNameWithoutExtension.string() + COMPRESS_FILE_SUFFIX + TAR_EXTENSION;
+        std::string tarNewName = fileNameWithoutExtension.string() + compressTool_->GetFileSuffix() + TAR_EXTENSION;
         string newTarPath = parentPath.string() + "/" + tarNewName;
         HILOGI("tarFileName:%{public}s, currentTarName:%{public}s, newTarPath:%{public}s",
             GetAnonyPath(tarFileName_).c_str(), GetAnonyPath(currentTarName_).c_str(),
@@ -720,32 +833,7 @@ void TarFile::SetPacketMode(bool isReset)
     isReset_ = isReset;
 }
 
-bool TarFile::Compress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize)
-{
-#ifdef BROTLI_ENABLED
-    int ret = BrotliEncoderCompress(BROTLI_QUALITY, BROTLI_MAX_WINDOW_BITS, BROTLI_DEFAULT_MODE,
-        inputSize, inputBuffer, outputSize, outputBuffer);
-    if (ret != BROTLI_TRUE) {
-        HILOGE("compress fail, error: %{public}d", ret);
-        return false;
-    }
-#endif
-    return true;
-}
-
-bool TarFile::Decompress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize)
-{
-#ifdef BROTLI_ENABLED
-    int ret = BrotliDecoderDecompress(inputSize, inputBuffer, outputSize, outputBuffer);
-    if (ret != BROTLI_TRUE) {
-        HILOGE("decompress fail, error: %{public}d", ret);
-        return false;
-    }
-#endif
-    return true;
-}
-
-bool TarFile::WriteCompressData(Buffer<uint8_t>& compressBuffer, const Buffer<char>& ori, UniqueFile& fout)
+bool TarFile::WriteCompressData(Buffer& compressBuffer, const Buffer& ori, UniqueFile& fout)
 {
     size_t sizeCount = 1;
     char* writeData = (char *)compressBuffer.data_;
@@ -772,7 +860,7 @@ bool TarFile::WriteCompressData(Buffer<uint8_t>& compressBuffer, const Buffer<ch
 
 bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFile)
 {
-#ifdef BROTLI_ENABLED
+#ifdef USE_COMPRESS
     HILOGI("BEGIN strF: %{public}s, compF: %{public}s", GetAnonyPath(srcFile).c_str(), GetAnonyPath(compFile).c_str());
     UniqueFile fin(srcFile.c_str(), "rb");
     UniqueFile fout(compFile.c_str(), "wb");
@@ -780,14 +868,14 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
         HILOGE("open file fail!");
         return false;
     }
-    Buffer<char> ori(BLOCK_SIZE);
+    Buffer ori(BLOCK_SIZE);
     if (ori.data_ == nullptr) {
         HILOGE("new ori buffer fail!");
         return false;
     }
-    size_t maxSize = BrotliEncoderMaxCompressedSize(BLOCK_SIZE);
-    Buffer<uint8_t> compressBuffer(maxSize);
-    if (compressBuffer.data_ == nullptr) {
+    size_t maxSize = compressTool_->GetMaxCompressedSize(BLOCK_SIZE);
+    Buffer compressBuffer(maxSize);
+    if (maxSize == 0 || compressBuffer.data_ == nullptr) {
         HILOGE("new compress buffer fail!");
         return false;
     }
@@ -797,7 +885,7 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
     while ((ori.size_ = fread(ori.data_, 1, BLOCK_SIZE, fin.file_)) > 0) {
         compressBuffer.size_ = maxSize;
         auto startTime = std::chrono::high_resolution_clock::now();
-        if (!Compress((const uint8_t*)(ori.data_), ori.size_, compressBuffer.data_, &compressBuffer.size_)) {
+        if (!compressTool_->CompressBuffer(ori, compressBuffer)) {
             return false;
         }
         compSpan += (std::chrono::high_resolution_clock::now() - startTime);
@@ -814,7 +902,7 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
     return true;
 }
 
-bool TarFile::WriteDecompressData(const Buffer<char>& compressBuffer, Buffer<uint8_t>& decompressBuffer,
+bool TarFile::WriteDecompressData(const Buffer& compressBuffer, Buffer& decompressBuffer,
     UniqueFile& fout, std::chrono::duration<double, std::milli>& decompSpan)
 {
     size_t written = 0;
@@ -822,8 +910,7 @@ bool TarFile::WriteDecompressData(const Buffer<char>& compressBuffer, Buffer<uin
         written += fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);
     } else {
         auto startTime = std::chrono::high_resolution_clock::now();
-        if (!Decompress((const uint8_t*)compressBuffer.data_, compressBuffer.size_, decompressBuffer.data_,
-            &decompressBuffer.size_)) {
+        if (!compressTool_->DecompressBuffer(compressBuffer, decompressBuffer)) {
             return false;
         }
         decompSpan += (std::chrono::high_resolution_clock::now() - startTime);
@@ -838,7 +925,7 @@ bool TarFile::WriteDecompressData(const Buffer<char>& compressBuffer, Buffer<uin
 
 bool TarFile::DecompressFile(const std::string &compFile, const std::string &srcFile)
 {
-#ifdef BROTLI_ENABLED
+#ifdef USE_COMPRESS
     HILOGI("BEGIN, compF:%{public}s, srcF:%{public}s", GetAnonyPath(compFile).c_str(), GetAnonyPath(srcFile).c_str());
     UniqueFile fin(compFile.c_str(), "rb");
     UniqueFile fout(srcFile.c_str(), "wb");
@@ -846,8 +933,8 @@ bool TarFile::DecompressFile(const std::string &compFile, const std::string &src
         HILOGE("open file fail!");
         return false;
     }
-    Buffer<uint8_t> decompressBuffer(BLOCK_SIZE);
-    Buffer<char> compressBuffer(BLOCK_SIZE);
+    Buffer decompressBuffer(BLOCK_SIZE);
+    Buffer compressBuffer(BLOCK_SIZE);
     if (decompressBuffer.data_ == nullptr || compressBuffer.data_ == nullptr) {
         HILOGE("new buffer fail!");
         return false;
@@ -890,7 +977,7 @@ std::string TarFile::DecompressTar(const std::string &tarPath)
     std::filesystem::path filePath = tarPath;
     std::filesystem::path parentPath = filePath.parent_path();
     std::filesystem::path fileNameWithoutExtension = filePath.stem();
-    size_t pos = fileNameWithoutExtension.string().rfind(COMPRESS_FILE_SUFFIX);
+    size_t pos = fileNameWithoutExtension.string().rfind(compressTool_->GetFileSuffix());
     if (pos == std::string::npos) {
         return tarPath;
     }
