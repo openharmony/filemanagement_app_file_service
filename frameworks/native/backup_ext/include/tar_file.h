@@ -112,39 +112,39 @@ public:
 class ICompressStrategy {
 public:
     size_t GetMaxCompressedSize(size_t inputSize);
-    virtual bool CompressBuffer(Buffer input, Buffer &output) = 0;
-    virtual bool DecompressBuffer(Buffer compressed, Buffer origin) = 0;
+    virtual bool CompressBuffer(Buffer& input, Buffer& output) = 0;
+    virtual bool DecompressBuffer(Buffer& compressed, Buffer& origin) = 0;
     virtual std::string GetFileSuffix() = 0;
 protected:
     virtual size_t GetMaxCompressedSizeInner(size_t inputSize) = 0;
     std::map<size_t, size_t> maxSizeCache_;
-}
+};
 
 class BrotilCompress : public ICompressStrategy {
 public:
-    bool CompressBuffer(Buffer input, Buffer &output) override;
-    bool DecompressBuffer(Buffer compressed, Buffer origin) override;
+    bool CompressBuffer(Buffer& input, Buffer& output) override;
+    bool DecompressBuffer(Buffer& compressed, Buffer& origin) override;
     std::string GetFileSuffix() override
     {
         return COMPRESS_FILE_SUFFIX;
     }
 protected:
     size_t GetMaxCompressedSizeInner(size_t inputSize) override;
-    const string COMPRESS_FILE_SUFFIX = "__BRO";
-}
+    const std::string COMPRESS_FILE_SUFFIX = "__BRO";
+};
 
 class Lz4Compress : public ICompressStrategy {
 public:
-    bool CompressBuffer(Buffer input, Buffer &output) override;
-    bool DecompressBuffer(Buffer compressed, Buffer origin) override;
+    bool CompressBuffer(Buffer& input, Buffer& output) override;
+    bool DecompressBuffer(Buffer& compressed, Buffer& origin) override;
     std::string GetFileSuffix() override
     {
         return COMPRESS_FILE_SUFFIX;
     }
 protected:
     size_t GetMaxCompressedSizeInner(size_t inputSize) override;
-    const string COMPRESS_FILE_SUFFIX = "__LZ4";
-}
+    const std::string COMPRESS_FILE_SUFFIX = "__LZ4";
+};
 
 class TarFile {
 public:

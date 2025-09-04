@@ -43,7 +43,7 @@
 #ifndef USE_COMPRESS
 #define USE_COMPRESS true
 #endif
-#include "lz4"
+#include "lz4.h"
 #endif
 
 namespace OHOS::FileManagement::Backup {
@@ -68,7 +68,7 @@ constexpr bool USE_COMPRESS = false; // 默认关闭
 constexpr bool USE_COMPRESS = false;
 #endif
 
-#ifdef BROTIL_ENABLED
+#ifdef BROTLI_ENABLED
 constexpr int BROTLI_QUALITY = 1;
 #endif
 } // namespace
@@ -121,11 +121,11 @@ size_t ICompressStrategy::GetMaxCompressedSize(size_t inputSize)
     return maxSize;
 }
 
-bool BrotilCompress::CompressBuffer(Buffer input, Buffer &output)
+bool BrotilCompress::CompressBuffer(Buffer& input, Buffer& output)
 {
 #ifdef BROTLI_ENABLED
     int ret = BrotliEncoderCompress(BROTLI_QUALITY, BROTLI_MAX_WINDOW_BITS, BROTLI_DEFAULT_MODE,
-        input.size_, (const uint8_t*)input.data_, output.size_, output.data_);
+        input.size_, (const uint8_t*)input.data_, &output.size_, (uint8_t*)output.data_);
     if (ret != BROTLI_TRUE) {
         HILOGE("compress fail, error: %{public}d", ret);
         return false;
@@ -136,10 +136,11 @@ bool BrotilCompress::CompressBuffer(Buffer input, Buffer &output)
 #endif
 }
 
-bool BrotilCompress::DecompressBuffer(Buffer compressed, Buffer origin)
+bool BrotilCompress::DecompressBuffer(Buffer& compressed, Buffer& origin)
 {
 #ifdef BROTLI_ENABLED
-    int ret = BrotliDecoderDecompress(compressed.size_, (const uint8_t*)compressed.data_, origin.size_, origin.data_);
+    int ret = BrotliDecoderDecompress(compressed.size_, (const uint8_t*)compressed.data_, origin.size_,
+        (uint8_t*)origin.data_);
     if (ret != BROTLI_TRUE) {
         HILOGE("decompress fail, error: %{public}d", ret);
         return false;
@@ -159,7 +160,7 @@ size_t BrotilCompress::GetMaxCompressedSizeInner(size_t inputSize)
 #endif
 }
 
-bool Lz4Compress::CompressBuffer(Buffer input, Buffer &output)
+bool Lz4Compress::CompressBuffer(Buffer& input, Buffer& output)
 {
 #ifdef LZ4_ENABLED
     int compressedSize = LZ4_compress_default(input.data_, output.data_, input.size_,
@@ -175,7 +176,7 @@ bool Lz4Compress::CompressBuffer(Buffer input, Buffer &output)
 #endif
 }
 
-bool Lz4Compress::DecompressBuffer(Buffer compressed, Buffer origin)
+bool Lz4Compress::DecompressBuffer(Buffer& compressed, Buffer& origin)
 {
 #ifdef LZ4_ENABLED
     int decompressedSize = LZ4_decompress_safe(compressed.data_, origin.data_, compressed.size_, origin.size_);
@@ -183,8 +184,8 @@ bool Lz4Compress::DecompressBuffer(Buffer compressed, Buffer origin)
         HILOGE("decompress fail, error: %{public}d", decompressedSize);
         return false;
     }
-    if (decompressedSize != origin.size_) {
-        HILOGE("decompress size(%{public}d) != origin size(%{public}d).", decompressedSize, origin.size_);
+    if ((size_t)decompressedSize != origin.size_) {
+        HILOGE("decompress size(%{public}d) != origin size(%{public}zu).", decompressedSize, origin.size_);
         return false;
     }
     return true;
