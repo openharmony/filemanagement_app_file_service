@@ -1399,7 +1399,12 @@ ErrCode Service::TryToConnectExt(const std::string& bundleName, sptr<SvcBackupCo
     auto callDied = GetBackupInfoConnectDied(wptr(this), bundleName);
     extConnection->SetCallback(callConnected);
     extConnection->SetCallDied(callDied);
-    AAFwk::Want want = CreateConnectWant(bundleName);
+    AAFwk::Want want;
+    try {
+        want = CreateConnectWant(bundleName);
+    } catch (const BError &e) {
+        return e.GetCode();
+    }
     ErrCode err = extConnection->ConnectBackupExtAbility(want, GetUserIdDefault(), false);
     if (err != BError(BError::Codes::OK)) {
         HILOGE("ConnectBackupExtAbility failed, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), err);
