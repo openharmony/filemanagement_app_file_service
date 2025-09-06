@@ -94,6 +94,7 @@ UniqueFile::~UniqueFile()
 Buffer::Buffer(size_t size)
 {
     if (size <= 0 || size > MAX_BUFFER_SIZE) {
+        HILOGE("size invalid:%{public}zu", size);
         return;
     }
     data_ = new (std::nothrow) char[size];
