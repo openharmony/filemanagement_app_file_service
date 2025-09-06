@@ -15,11 +15,17 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <memory>
 
 #include "b_error/b_error.h"
+#include "compress_strategy_mock.h"
 #include "file_ex.h"
 #include "tar_file.h"
 #include "test_manager.h"
+
+#if defined(BROTLI_ENABLED) || defined(LZ4_ENABLED)
+#define COMPRESS_ENABLED true
+#endif
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -29,8 +35,13 @@ class TarFileTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase();
-    void SetUp() override {};
+    void SetUp() override
+    {
+        compressMock_ = std::make_shared<CompressMock>();
+    }
     void TearDown() override {};
+protected:
+    std::shared_ptr<CompressMock> compressMock_ = nullptr;
 };
 
 void TarFileTest::SetUpTestCase()
@@ -369,5 +380,71 @@ HWTEST_F(TarFileTest, SUB_Tar_File_Packet_0700, testing::ext::TestSize.Level1)
         GTEST_LOG_(INFO) << "TarFileTest-an exception occurred by TarFile.";
     }
     GTEST_LOG_(INFO) << "TarFileTest-end SUB_Tar_File_Packet_0700";
+}
+
+
+HWTEST_F(TarFileTest, WRITE_COMPRESS_DATA_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileTest-begin WRITE_COMPRESS_DATA_TEST_001";
+    UniqueFile fout("/tmp/test.txt", "wb");
+    GTEST_LOG_(INFO) << "Test1. compressed bigger";
+    Buffer origin(10);
+    Buffer compress1(20);
+    bool rs = TarFile::GetInstance().WriteCompressData(compress1, origin, fout);
+    EXPECT_FALSE(rs);
+
+    GTEST_LOG_(INFO) << "Test2. compressed smaller";
+    Buffer compress2(9);
+    rs = TarFile::GetInstance().WriteCompressData(compress2, origin, fout);
+    EXPECT_FALSE(rs);
+    GTEST_LOG_(INFO) << "TarFileTest-end WRITE_COMPRESS_DATA_TEST_001";
+}
+
+
+HWTEST_F(TarFileTest, WRITE_DECOMPRESS_DATA_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileTest-begin WRITE_DECOMPRESS_DATA_TEST_001";
+    TarFile::GetInstance().compressTool_ = compressMock_;
+    EXPECT_CALL(*compressMock_, DecompressBuffer(_, _)).WillOnce(Return(true))
+            .WillOnce(Return(false));
+    UniqueFile fout("/tmp/test.txt", "wb");
+    auto decompSpan = std::chrono::duration<double, std::milli>(std::chrono::seconds(0));
+    GTEST_LOG_(INFO) << "Test1. compressed equal origin";
+    Buffer origin(10);
+    Buffer compress1(10);
+    bool rs = TarFile::GetInstance().WriteDecompressData(compress1, origin, fout, decompSpan);
+    EXPECT_FALSE(rs);
+
+    GTEST_LOG_(INFO) << "Test2. compressed smaller , decompress success";
+    Buffer compress2(8);
+    rs = TarFile::GetInstance().WriteDecompressData(compress2, origin, fout, decompSpan);
+    EXPECT_FALSE(rs);
+    GTEST_LOG_(INFO) << "Test3. compressed smaller , decompress fail";
+    rs = TarFile::GetInstance().WriteDecompressData(compress2, origin, fout, decompSpan);
+    EXPECT_FALSE(rs);
+    GTEST_LOG_(INFO) << "TarFileTest-end WRITE_DECOMPRESS_DATA_TEST_001";
+}
+
+HWTEST_F(TarFileTest, COMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileTest-begin COMPRESS_FILE_TEST_001";
+    std::string srcFile = "/tmp/in.txt";
+    std::string compressFile = "/tmp/out.txt";
+#ifdef COMPRESS_ENABLED
+    TarFile::GetInstance().compressTool_ = compressMock_;
+    EXPECT_CALL(*compressMock_, GetMaxCompressedSize(_)).WillOnce(Return(0)).WillRepeatedly(Return(10));
+    EXPECT_CALL(*compressMock_, CompressBuffer(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    GTEST_LOG_(INFO) << "Test1. compressed file";
+    bool rs = TarFile::GetInstance().CompressFile(srcFile, compressFile);
+    EXPECT_FALSE(rs);
+
+    GTEST_LOG_(INFO) << "Test2. compressed file2";
+    Buffer compress2(8);
+    rs = TarFile::GetInstance().WriteDecompressData(compress2, origin, fout, decompSpan);
+    EXPECT_FALSE(rs);
+#else
+    EXPECT_TRUE(TarFile::GetInstance().CompressFile(srcFile, compressFile));
+#endif
+    GTEST_LOG_(INFO) << "TarFileTest-end COMPRESS_FILE_TEST_001";
 }
 } // namespace OHOS::FileManagement::Backup

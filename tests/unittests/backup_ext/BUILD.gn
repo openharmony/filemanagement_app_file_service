@@ -150,6 +150,7 @@ ohos_unittest("tar_file_test") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/utils/include",
+    "${path_backup}/tests/mock/backup_ext/include",
   ]
   include_dirs += backup_mock_utils_include
 
@@ -188,6 +189,14 @@ ohos_unittest("tar_file_test") {
   ]
 
   defines = [ "private=public" ]
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+    defines += ["BROTLI_ENABLED"]
+  }
+  if (lz4_enabled) {
+    external_deps += ["lz4:liblz4_static"]
+    defines += ["LZ4_ENABLED"]
+  }
   if (system_bit == 32) {
     defines += ["SYSTEM_BIT_32"]
   } else {
@@ -274,6 +283,14 @@ ohos_unittest("untar_file_sup_test") {
   ]
 
   defines = [ "private=public" ]
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+    defines += ["BROTLI_ENABLED"]
+  }
+  if (lz4_enabled) {
+    external_deps += ["lz4:liblz4_static"]
+    defines += ["LZ4_ENABLED"]
+  }
   if (system_bit == 32) {
     defines += ["SYSTEM_BIT_32"]
   } else {
@@ -353,6 +370,14 @@ ohos_unittest("untar_file_test") {
   ]
 
   defines = [ "private=public" ]
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+    defines += ["BROTLI_ENABLED"]
+  }
+  if (lz4_enabled) {
+    external_deps += ["lz4:liblz4_static"]
+    defines += ["LZ4_ENABLED"]
+  }
   if (system_bit == 32) {
     defines += ["SYSTEM_BIT_32"]
   } else {
@@ -463,6 +488,14 @@ ohos_unittest("tar_file_sub_test") {
   ]
 
   defines = [ "private=public" ]
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+    defines += ["BROTLI_ENABLED"]
+  }
+  if (lz4_enabled) {
+    external_deps += ["lz4:liblz4_static"]
+    defines += ["LZ4_ENABLED"]
+  }
   if (system_bit == 32) {
     defines += ["SYSTEM_BIT_32"]
   } else {
@@ -502,6 +535,14 @@ ohos_unittest("installd_un_tar_file_test") {
   ]
 
   defines = [ "private=public" ]
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+    defines += ["BROTLI_ENABLED"]
+  }
+  if (lz4_enabled) {
+    external_deps += ["lz4:liblz4_static"]
+    defines += ["LZ4_ENABLED"]
+  }
   if (system_bit == 32) {
     defines += ["SYSTEM_BIT_32"]
   } else {

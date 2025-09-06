@@ -166,8 +166,6 @@ public:
 
     uint64_t GetTarFileSize() { return static_cast<uint64_t>(currentTarFileSize_); }
 
-    bool Compress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize);
-    bool Decompress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize);
     bool CompressFile(const std::string &srcFile, const std::string &compFile);
     bool DecompressFile(const std::string &compFile, const std::string &srcFile);
     std::string DecompressTar(const std::string &tarPath);
