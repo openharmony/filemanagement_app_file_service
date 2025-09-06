@@ -284,11 +284,12 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_WriteFileContent_0100, testing::ext::TestS
     GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_WriteFileContent_0100";
 }
 
-HWTEST_F(TarFileTest, WRITE_COMPRESS_DATA_TEST_001, testing::ext::TestSize.Level1)
+HWTEST_F(TarFileSubTest, WRITE_COMPRESS_DATA_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TarFileTest-begin WRITE_COMPRESS_DATA_TEST_001";
     int n = 0;
     EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr)).WillOnce(Return(reinterpret_cast<FILE*>(&n)));
+    EXPECT_CALL(*funcMock, fclose(_)).WillRepeatedly(Return(0));
     UniqueFile fout("/tmp/test.txt", "wb");
     UniqueFile fout2("/tmp/test.txt", "wb");
 
@@ -299,15 +300,11 @@ HWTEST_F(TarFileTest, WRITE_COMPRESS_DATA_TEST_001, testing::ext::TestSize.Level
     EXPECT_FALSE(rs);
 
     GTEST_LOG_(INFO) << "Test2. compressed bigger, write fail";
-    Buffer origin(10);
-    Buffer compress1(20);
     EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0));
     rs = TarFile::GetInstance().WriteCompressData(compress1, origin, fout2);
     EXPECT_FALSE(rs);
 
     GTEST_LOG_(INFO) << "Test3. compressed bigger, write success";
-    Buffer origin(10);
-    Buffer compress1(20);
     size_t sizeCount = 1;
     EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(sizeCount)).WillOnce(Return(sizeCount))
         .WillOnce(Return(10));
@@ -324,11 +321,12 @@ HWTEST_F(TarFileTest, WRITE_COMPRESS_DATA_TEST_001, testing::ext::TestSize.Level
 }
 
 
-HWTEST_F(TarFileTest, WRITE_DECOMPRESS_DATA_TEST_001, testing::ext::TestSize.Level1)
+HWTEST_F(TarFileSubTest, WRITE_DECOMPRESS_DATA_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TarFileTest-begin WRITE_DECOMPRESS_DATA_TEST_001";
     int n = 0;
     EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr)).WillOnce(Return(reinterpret_cast<FILE*>(&n)));
+    EXPECT_CALL(*funcMock, fclose(_)).WillRepeatedly(Return(0));
     UniqueFile fout("/tmp/test.txt", "wb");
     UniqueFile fout2("/tmp/test.txt", "wb");
     auto decompSpan = std::chrono::duration<double, std::milli>(std::chrono::seconds(0));
@@ -352,7 +350,7 @@ HWTEST_F(TarFileTest, WRITE_DECOMPRESS_DATA_TEST_001, testing::ext::TestSize.Lev
     GTEST_LOG_(INFO) << "Test4. compressed smaller , decompress success";
     TarFile::GetInstance().compressTool_ = compressMock_;
     EXPECT_CALL(*compressMock_, DecompressBuffer(_, _)).WillOnce(Return(true)).WillOnce(Return(false));
-    EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillRepeatedly(Return(8));
+    EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillRepeatedly(Return(10));
     Buffer compress2(8);
     rs = TarFile::GetInstance().WriteDecompressData(compress2, origin, fout2, decompSpan);
     EXPECT_TRUE(rs);
@@ -363,7 +361,7 @@ HWTEST_F(TarFileTest, WRITE_DECOMPRESS_DATA_TEST_001, testing::ext::TestSize.Lev
     GTEST_LOG_(INFO) << "TarFileTest-end WRITE_DECOMPRESS_DATA_TEST_001";
 }
 
-HWTEST_F(TarFileTest, COMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1)
+HWTEST_F(TarFileSubTest, COMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TarFileTest-begin COMPRESS_FILE_TEST_001";
     std::string srcFile = "/tmp/in.txt";
@@ -371,8 +369,9 @@ HWTEST_F(TarFileTest, COMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1)
 #ifdef COMPRESS_ENABLED
     TarFile::GetInstance().compressTool_ = compressMock_;
     int n = 0;
-    EXPECT_CALL(*funcMock, fopen(_, _))..WillOnce(Return(nullptr)).WillOnce(Return(nullptr))
-        .WillOnce(Return(reinterpret_cast<FILE*>(&n)));
+    EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr)).WillOnce(Return(nullptr))
+        .WillRepeatedly(Return(reinterpret_cast<FILE*>(&n)));
+    EXPECT_CALL(*funcMock, fclose(_)).WillRepeatedly(Return(0));
     GTEST_LOG_(INFO) << "Test1. file null";
     bool rs = TarFile::GetInstance().CompressFile(srcFile, compressFile);
     EXPECT_FALSE(rs);
@@ -404,5 +403,57 @@ HWTEST_F(TarFileTest, COMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1)
     EXPECT_TRUE(TarFile::GetInstance().CompressFile(srcFile, compressFile));
 #endif
     GTEST_LOG_(INFO) << "TarFileTest-end COMPRESS_FILE_TEST_001";
+}
+
+HWTEST_F(TarFileSubTest, DECOMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileTest-begin DECOMPRESS_FILE_TEST_001";
+    std::string srcFile = "/tmp/in.txt";
+    std::string compressFile = "/tmp/out.txt";
+#ifdef COMPRESS_ENABLED
+    TarFile::GetInstance().compressTool_ = compressMock_;
+    int n = 0;
+    EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr)).WillOnce(Return(nullptr))
+        .WillRepeatedly(Return(reinterpret_cast<FILE*>(&n)));
+    EXPECT_CALL(*funcMock, fclose(_)).WillRepeatedly(Return(0));
+    GTEST_LOG_(INFO) << "Test1. file null";
+    bool rs = TarFile::GetInstance().DecompressFile(compressFile, srcFile);
+    EXPECT_FALSE(rs);
+
+    GTEST_LOG_(INFO) << "Test2. fread fail";
+    EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(0));
+    rs = TarFile::GetInstance().DecompressFile(compressFile, srcFile);
+    EXPECT_FALSE(rs);
+
+    GTEST_LOG_(INFO) << "Test3. fread size wrong";
+    EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(2));
+    rs = TarFile::GetInstance().DecompressFile(compressFile, srcFile);
+    EXPECT_FALSE(rs);
+
+    GTEST_LOG_(INFO) << "Test4. fread fail2";
+    size_t sizeCount = 1;
+    EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(sizeCount)).WillOnce(Return(0));
+    rs = TarFile::GetInstance().DecompressFile(compressFile, srcFile);
+    EXPECT_FALSE(rs);
+
+    GTEST_LOG_(INFO) << "Test5. decompress fail";
+    size_t sizeCount = 1;
+    EXPECT_CALL(*compressMock_, DecompressBuffer(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(sizeCount)).WillOnce(Return(sizeCount))
+        .WillOnce(Return(BLOCK_SIZE));
+    EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(BLOCK_SIZE));
+    rs = TarFile::GetInstance().DecompressFile(compressFile, srcFile);
+    EXPECT_FALSE(rs);
+
+    GTEST_LOG_(INFO) << "Test5. decompress success";
+    EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(sizeCount)).WillOnce(Return(sizeCount))
+        .WillOnce(Return(BLOCK_SIZE));
+    EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(BLOCK_SIZE));
+    rs = TarFile::GetInstance().DecompressFile(compressFile, srcFile);
+    EXPECT_TRUE(rs);
+#else
+    EXPECT_TRUE(TarFile::GetInstance().DecompressFile(compressFile, srcFile));
+#endif
+    GTEST_LOG_(INFO) << "TarFileTest-end DECOMPRESS_FILE_TEST_001";
 }
 } // namespace OHOS::FileManagement::Backup

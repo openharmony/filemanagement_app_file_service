@@ -150,7 +150,6 @@ ohos_unittest("tar_file_test") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/frameworks/native/backup_kit_inner/include",
     "${path_backup}/utils/include",
-    "${path_backup}/tests/mock/backup_ext/include",
   ]
   include_dirs += backup_mock_utils_include
 
@@ -472,6 +471,7 @@ ohos_unittest("tar_file_sub_test") {
     "${path_backup}/tests/mock/library_func_mock",
     "${path_backup}/utils/include",
     "${path_backup}/utils/include/b_hilog",
+    "${path_backup}/tests/mock/backup_ext/include",
   ]
 
   cflags = [ "--coverage" ]
