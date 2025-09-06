@@ -376,12 +376,13 @@ HWTEST_F(TarFileSubTest, COMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1)
     bool rs = TarFile::GetInstance().CompressFile(srcFile, compressFile);
     EXPECT_FALSE(rs);
 
-    EXPECT_CALL(*compressMock_, GetMaxCompressedSizeInner(_)).WillOnce(Return(0)).WillRepeatedly(Return(BLOCK_SIZE));
+    EXPECT_CALL(*compressMock_, GetMaxCompressedSizeInner(_)).WillOnce(Return(0));
     GTEST_LOG_(INFO) << "Test2. get max size fail";
     rs = TarFile::GetInstance().CompressFile(srcFile, compressFile);
     EXPECT_FALSE(rs);
 
     GTEST_LOG_(INFO) << "Test3. fread fail";
+    compressMock_->maxSizeCache_[BLOCK_SIZE] = BLOCK_SIZE;
     EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(0));
     rs = TarFile::GetInstance().CompressFile(srcFile, compressFile);
     EXPECT_FALSE(rs);
@@ -437,8 +438,7 @@ HWTEST_F(TarFileSubTest, DECOMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1
     EXPECT_FALSE(rs);
 
     GTEST_LOG_(INFO) << "Test5. decompress fail";
-    size_t sizeCount = 1;
-    EXPECT_CALL(*compressMock_, DecompressBuffer(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*compressMock_, DecompressBuffer(_, _)).WillOnce(Return(false)).WillOnce(Return(true));
     EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(sizeCount)).WillOnce(Return(sizeCount))
         .WillOnce(Return(BLOCK_SIZE));
     EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(BLOCK_SIZE));

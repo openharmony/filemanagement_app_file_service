@@ -901,6 +901,10 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
         inTotal += ori.size_;
         outTotal += compressBuffer.size_;
     }
+    if (outTotal == 0) {
+        HILOGE("read fail");
+        return false;
+    }
     HILOGI("END srcSize:%{public}zu, destSize:%{public}zu, rate:%{public}f, time:%{public}f ms, speed:%{public}f MB/s",
         inTotal, outTotal, (outTotal == 0) ? 0 : (inTotal * 1.0f / outTotal), compSpan.count(),
         (compSpan.count() == 0) ? 0 : inTotal * 1000.0f / MEGA_BYTE / compSpan.count());
@@ -972,6 +976,10 @@ bool TarFile::DecompressFile(const std::string &compFile, const std::string &src
         }
         inTotal += compressBuffer.size_;
         outTotal += decompressBuffer.size_;
+    }
+    if (outTotal == 0) {
+        HILOGE("read fail");
+        return false;
     }
     HILOGI("srcSize:%{public}zu, destSize:%{public}zu, time:%{public}f ms, speed:%{public}f MB/s", inTotal, outTotal,
         decompSpan.count(), (decompSpan.count() == 0) ? 0 : outTotal * 1000.0f / MEGA_BYTE / decompSpan.count());

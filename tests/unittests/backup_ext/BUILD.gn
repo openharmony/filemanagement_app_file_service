@@ -487,7 +487,10 @@ ohos_unittest("tar_file_sub_test") {
     "hilog:libhilog",
   ]
 
-  defines = [ "private=public" ]
+  defines = [
+    "private=public",
+    "protected=public"
+  ]
   if (brotli_enabled) {
     external_deps += ["brotli:brotli_shared"]
     defines += ["BROTLI_ENABLED"]
