@@ -836,6 +836,10 @@ void TarFile::SetPacketMode(bool isReset)
 
 bool TarFile::WriteCompressData(Buffer& compressBuffer, Buffer& ori, UniqueFile& fout)
 {
+    if (compressBuffer.data_ == nullptr || ori.data_ == nullptr || fout.file_ == nullptr) {
+        HILOGE("param invalid");
+        return false;
+    }
     size_t sizeCount = 1;
     char* writeData = (char *)compressBuffer.data_;
     size_t writeDataSize = compressBuffer.size_;
@@ -906,6 +910,10 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
 bool TarFile::WriteDecompressData(Buffer& compressBuffer, Buffer& decompressBuffer,
     UniqueFile& fout, std::chrono::duration<double, std::milli>& decompSpan)
 {
+    if (compressBuffer.data_ == nullptr || decompressBuffer.data_ == nullptr || fout.file_ == nullptr) {
+        HILOGE("param invalid");
+        return false;
+    }
     size_t written = 0;
     if (compressBuffer.size_ == decompressBuffer.size_) {
         written += fwrite(compressBuffer.data_, 1, compressBuffer.size_, fout.file_);

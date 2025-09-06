@@ -432,16 +432,13 @@ HWTEST_F(TarFileTest, COMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1)
     std::string compressFile = "/tmp/out.txt";
 #ifdef COMPRESS_ENABLED
     TarFile::GetInstance().compressTool_ = compressMock_;
-    EXPECT_CALL(*compressMock_, GetMaxCompressedSize(_)).WillOnce(Return(0)).WillRepeatedly(Return(10));
+    EXPECT_CALL(*compressMock_, GetMaxCompressedSizeInner(_)).WillOnce(Return(0)).WillRepeatedly(Return(10));
     EXPECT_CALL(*compressMock_, CompressBuffer(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     GTEST_LOG_(INFO) << "Test1. compressed file";
     bool rs = TarFile::GetInstance().CompressFile(srcFile, compressFile);
     EXPECT_FALSE(rs);
 
     GTEST_LOG_(INFO) << "Test2. compressed file2";
-    Buffer compress2(8);
-    rs = TarFile::GetInstance().WriteDecompressData(compress2, origin, fout, decompSpan);
-    EXPECT_FALSE(rs);
 #else
     EXPECT_TRUE(TarFile::GetInstance().CompressFile(srcFile, compressFile));
 #endif

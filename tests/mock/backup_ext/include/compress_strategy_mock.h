@@ -26,7 +26,6 @@ public:
     MOCK_METHOD(bool, CompressBuffer, (Buffer& input, Buffer& output));
     MOCK_METHOD(bool, DecompressBuffer, (Buffer& compressed, Buffer& origin));
     MOCK_METHOD(std::string, GetFileSuffix, ());
-protected:
     MOCK_METHOD(size_t, GetMaxCompressedSizeInner, (size_t inputSize));
 };
 } // namespace OHOS::FileManagement::Backup
