@@ -35,7 +35,6 @@
 #include "securec.h"
 #include "tar_file.h"
 
-#include "compress_strategy_mock.h"
 #include "library_func_define.h"
 #include "tar_file.cpp"
 #include "library_func_undef.h"
@@ -48,6 +47,14 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
 using namespace OHOS::AppFileService;
+
+class CompressMock : public ICompressStrategy {
+public:
+    MOCK_METHOD(bool, CompressBuffer, (Buffer& input, Buffer& output));
+    MOCK_METHOD(bool, DecompressBuffer, (Buffer& compressed, Buffer& origin));
+    MOCK_METHOD(std::string, GetFileSuffix, ());
+    MOCK_METHOD(size_t, GetMaxCompressedSizeInner, (size_t inputSize));
+};
 
 class TarFileSubTest : public testing::Test {
 public:
