@@ -64,8 +64,11 @@ public:
         TarFile::GetInstance().compressTool_ = nullptr;
         if (testFilePtr_ != nullptr) {
             fclose(testFilePtr_);
+            testFilePtr_ = nullptr;
         }
-        remove("test.txt");
+        if (remove("test.txt")  != 0) {
+            GTEST_LOG_(ERROR) << "remove test.txt fail";
+        }
     }
     static inline shared_ptr<LibraryFuncMock> funcMock = nullptr;
     std::shared_ptr<CompressMock> compressMock_ = nullptr;
@@ -447,7 +450,7 @@ HWTEST_F(TarFileSubTest, DECOMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1
     rs = TarFile::GetInstance().DecompressFile(compressFile, srcFile);
     EXPECT_FALSE(rs);
 
-    GTEST_LOG_(INFO) << "Test5. decompress success";
+    GTEST_LOG_(INFO) << "Test6. decompress success";
     EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(sizeCount)).WillOnce(Return(sizeCount))
         .WillOnce(Return(BLOCK_SIZE)).WillOnce(Return(0));
     EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(BLOCK_SIZE));
