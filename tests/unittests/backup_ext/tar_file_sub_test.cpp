@@ -57,14 +57,19 @@ public:
     {
         compressMock_ = std::make_shared<CompressMock>();
         TarFile::GetInstance().compressTool_ = compressMock_;
+        testFilePtr_ = fopen("test.txt", "w");
     }
     void TearDown() override
     {
         TarFile::GetInstance().compressTool_ = nullptr;
+        if (testFilePtr_ != nullptr) {
+            fclose(testFilePtr_);
+        }
+        remove("test.txt");
     }
     static inline shared_ptr<LibraryFuncMock> funcMock = nullptr;
     std::shared_ptr<CompressMock> compressMock_ = nullptr;
-    File* testFilePtr_ = nullptr;
+    FILE* testFilePtr_ = nullptr;
 };
 
 void TarFileSubTest::SetUpTestCase()
@@ -72,7 +77,6 @@ void TarFileSubTest::SetUpTestCase()
     GTEST_LOG_(INFO) << "SetUpTestCase enter";
     funcMock = make_shared<LibraryFuncMock>();
     LibraryFuncMock::libraryFunc_ = funcMock;
-    testFilePtr_ = fopen("test.txt", "w");
 }
 
 void TarFileSubTest::TearDownTestCase()
@@ -80,10 +84,6 @@ void TarFileSubTest::TearDownTestCase()
     GTEST_LOG_(INFO) << "TearDownTestCase enter";
     LibraryFuncMock::libraryFunc_ = nullptr;
     funcMock = nullptr;
-    if (testFilePtr_ != nullptr) {
-        fclose(testFilePtr_);
-    }
-    remove("test.txt");
 }
 
 /**
