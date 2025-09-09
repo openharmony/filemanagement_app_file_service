@@ -304,6 +304,14 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_WriteFileContent_0100, testing::ext::TestS
     GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_WriteFileContent_0100";
 }
 
+/**
+ * @tc.number: WRITE_COMPRESS_DATA_TEST_001
+ * @tc.name: WRITE_COMPRESS_DATA_TEST_001
+ * @tc.desc: 测试 WriteCompressData 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
 HWTEST_F(TarFileSubTest, WRITE_COMPRESS_DATA_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TarFileTest-begin WRITE_COMPRESS_DATA_TEST_001";
@@ -339,7 +347,14 @@ HWTEST_F(TarFileSubTest, WRITE_COMPRESS_DATA_TEST_001, testing::ext::TestSize.Le
     GTEST_LOG_(INFO) << "TarFileTest-end WRITE_COMPRESS_DATA_TEST_001";
 }
 
-
+/**
+ * @tc.number: WRITE_DECOMPRESS_DATA_TEST_001
+ * @tc.name: WRITE_DECOMPRESS_DATA_TEST_001
+ * @tc.desc: 测试 WriteDecompressData 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
 HWTEST_F(TarFileSubTest, WRITE_DECOMPRESS_DATA_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TarFileTest-begin WRITE_DECOMPRESS_DATA_TEST_001";
@@ -378,6 +393,14 @@ HWTEST_F(TarFileSubTest, WRITE_DECOMPRESS_DATA_TEST_001, testing::ext::TestSize.
     GTEST_LOG_(INFO) << "TarFileTest-end WRITE_DECOMPRESS_DATA_TEST_001";
 }
 
+/**
+ * @tc.number: COMPRESS_FILE_TEST_001
+ * @tc.name: COMPRESS_FILE_TEST_001
+ * @tc.desc: 测试 CompressFile 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
 HWTEST_F(TarFileSubTest, COMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TarFileTest-begin COMPRESS_FILE_TEST_001";
@@ -421,6 +444,14 @@ HWTEST_F(TarFileSubTest, COMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "TarFileTest-end COMPRESS_FILE_TEST_001";
 }
 
+/**
+ * @tc.number: DECOMPRESS_FILE_TEST_001
+ * @tc.name: DECOMPRESS_FILE_TEST_001
+ * @tc.desc: 测试 DecompressFile 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
 HWTEST_F(TarFileSubTest, DECOMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TarFileTest-begin DECOMPRESS_FILE_TEST_001";
