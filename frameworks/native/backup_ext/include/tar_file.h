@@ -99,15 +99,52 @@ public:
     FILE* file_ = nullptr;
 };
 
-template <typename T>
 class Buffer {
 public:
     Buffer(size_t size);
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;
     ~Buffer();
-    T* data_ = nullptr;
+    char* data_ = nullptr;
     size_t size_ = 0;
+};
+
+class ICompressStrategy {
+public:
+    virtual ~ICompressStrategy() {};
+    size_t GetMaxCompressedSize(size_t inputSize);
+    virtual bool CompressBuffer(Buffer& input, Buffer& output) = 0;
+    virtual bool DecompressBuffer(Buffer& compressed, Buffer& origin) = 0;
+    virtual std::string GetFileSuffix() = 0;
+protected:
+    virtual size_t GetMaxCompressedSizeInner(size_t inputSize) = 0;
+    std::map<size_t, size_t> maxSizeCache_;
+};
+
+class BrotliCompress : public ICompressStrategy {
+public:
+    bool CompressBuffer(Buffer& input, Buffer& output) override;
+    bool DecompressBuffer(Buffer& compressed, Buffer& origin) override;
+    std::string GetFileSuffix() override
+    {
+        return COMPRESS_FILE_SUFFIX;
+    }
+protected:
+    size_t GetMaxCompressedSizeInner(size_t inputSize) override;
+    const std::string COMPRESS_FILE_SUFFIX = "__BRO";
+};
+
+class Lz4Compress : public ICompressStrategy {
+public:
+    bool CompressBuffer(Buffer& input, Buffer& output) override;
+    bool DecompressBuffer(Buffer& compressed, Buffer& origin) override;
+    std::string GetFileSuffix() override
+    {
+        return COMPRESS_FILE_SUFFIX;
+    }
+protected:
+    size_t GetMaxCompressedSizeInner(size_t inputSize) override;
+    const std::string COMPRESS_FILE_SUFFIX = "__LZ4";
 };
 
 class TarFile {
@@ -129,16 +166,14 @@ public:
 
     uint64_t GetTarFileSize() { return static_cast<uint64_t>(currentTarFileSize_); }
 
-    bool Compress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize);
-    bool Decompress(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, size_t* outputSize);
     bool CompressFile(const std::string &srcFile, const std::string &compFile);
     bool DecompressFile(const std::string &compFile, const std::string &srcFile);
     std::string DecompressTar(const std::string &tarPath);
 private:
-    bool WriteCompressData(Buffer<uint8_t>& compressBuffer, const Buffer<char>& ori, UniqueFile& fout);
-    bool WriteDecompressData(const Buffer<char>& compressBuffer, Buffer<uint8_t>& decompressBuffer,
+    bool WriteCompressData(Buffer& compressBuffer, Buffer& ori, UniqueFile& fout);
+    bool WriteDecompressData(Buffer& compressBuffer, Buffer& decompressBuffer,
         UniqueFile& fout, std::chrono::duration<double, std::milli>& decompSpan);
-    TarFile() {}
+    TarFile();
     ~TarFile() = default;
     TarFile(const TarFile &instance) = delete;
     TarFile &operator=(const TarFile &instance) = delete;
@@ -276,6 +311,8 @@ private:
     std::string currentFileName_ {};
 
     bool isReset_ = false;
+
+    std::shared_ptr<ICompressStrategy> compressTool_;
 };
 } // namespace OHOS::FileManagement::Backup
 

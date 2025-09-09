@@ -83,6 +83,10 @@ ohos_shared_library("backup_extension_ability_native") {
     external_deps += ["brotli:brotli_shared"]
     defines += ["BROTLI_ENABLED"]
   }
+  if (lz4_enabled) {
+    external_deps += ["lz4:liblz4_static"]
+    defines += ["LZ4_ENABLED"]
+  }
   if (system_bit == 32) {
     defines += ["SYSTEM_BIT_32"]
   } else {
