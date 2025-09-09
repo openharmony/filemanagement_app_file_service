@@ -794,6 +794,7 @@ private:
     std::shared_mutex statMapMutex_;
     std::map<std::string, std::shared_ptr<RadarAppStatistic>> saStatisticMap_;
     std::map<BundleName, std::atomic<bool>> backupExtOnReleaseMap_;
+    std::shared_mutex extOnReleaseLock_;
 public:
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
     std::map<BundleName, BundleTaskInfo> failedBundles_;
