@@ -713,12 +713,6 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
         HILOGI("Service AppIncrementalDone start, callerName is %{public}s, errCode is: %{public}d",
             callerName.c_str(), errCode);
         if (session_->OnBundleFileReady(callerName) || errCode != BError(BError::Codes::OK)) {
-            std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
-            if (mutexPtr == nullptr) {
-                HILOGE("extension mutex ptr is nullptr, bundleName:%{public}s", callerName.c_str());
-                return BError(BError::Codes::SA_INVAL_ARG);
-            }
-            std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
             SetExtOnRelease(callerName, true);
             return BError(BError::Codes::OK);
         }

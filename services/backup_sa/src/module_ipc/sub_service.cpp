@@ -384,12 +384,6 @@ ErrCode Service::AppDone(ErrCode errCode)
         }
         HILOGI("Begin, callerName is: %{public}s, errCode: %{public}d", callerName.c_str(), errCode);
         if (session_->OnBundleFileReady(callerName) || errCode != BError(BError::Codes::OK)) {
-            std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
-            if (mutexPtr == nullptr) {
-                HILOGE("extension mutex ptr is nullptr, bundleName:%{public}s", callerName.c_str());
-                return BError(BError::Codes::SA_INVAL_ARG);
-            }
-            std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
             SetExtOnRelease(callerName, true);
             return BError(BError::Codes::OK);
         }
@@ -1494,6 +1488,7 @@ ErrCode Service::HandleExtDisconnect(BackupRestoreScenario scenario, bool isAppR
 
 ErrCode Service::GetExtOnRelease(bool &isExtOnRelease)
 {
+    std::shared_lock<std::shared_mutex> lock(extOnReleaseLock_);
     std::string bundleName;
     auto ret = VerifyCallerAndGetCallerName(bundleName);
     if (ret != ERR_OK) {
@@ -1514,6 +1509,7 @@ ErrCode Service::GetExtOnRelease(bool &isExtOnRelease)
 
 void Service::SetExtOnRelease(const BundleName &bundleName, bool isOnRelease)
 {
+    std::unique_lock<std::shared_mutex> lock(extOnReleaseLock_);
     HILOGI("Set bundleName:%{public}s isOnRelease:%{public}d", bundleName.c_str(), isOnRelease);
     auto it = backupExtOnReleaseMap_.find(bundleName);
     if (it == backupExtOnReleaseMap_.end()) {
@@ -1525,6 +1521,7 @@ void Service::SetExtOnRelease(const BundleName &bundleName, bool isOnRelease)
 
 void Service::RemoveExtOnRelease(const BundleName &bundleName)
 {
+    std::unique_lock<std::shared_mutex> lock(extOnReleaseLock_);
     auto it = backupExtOnReleaseMap_.find(bundleName);
     if (it == backupExtOnReleaseMap_.end()) {
         HILOGI("BackupExtOnReleaseMap not contain %{public}s", bundleName.c_str());
