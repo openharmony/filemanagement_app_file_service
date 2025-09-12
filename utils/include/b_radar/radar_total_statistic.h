@@ -25,10 +25,10 @@ namespace OHOS::FileManagement::Backup {
 
 class RadarTotalStatistic {
 public:
-    std::atomic<uint32_t> succBundleCount_ = 0;
-    std::atomic<uint32_t> failBundleCount_ = 0;
-    Duration getBundleInfoSpend_ = {0, 0};
+    uint32_t succBundleCount_ = 0;
+    uint32_t failBundleCount_ = 0;
     Duration totalSpendTime_ = {0, 0};
+    int innerErr_ = 0;
 
     RadarTotalStatistic(BizScene bizScene, std::string caller, Mode mode = Mode::FULL);
     RadarTotalStatistic(const RadarTotalStatistic &) = delete;
@@ -48,9 +48,6 @@ private:
     std::string hostPkg_ = "";
     Mode mode_ = Mode::FULL;
     int64_t uniqId_ = 0;
-    std::mutex lastCntMutex_;
-    uint32_t lastSuccCnt_ = 0;
-    uint32_t lastFailCnt_ = 0;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_RADAR_TOTAL_STATISTIC_H

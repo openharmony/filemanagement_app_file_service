@@ -758,23 +758,13 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
     }
 }
 
-void Service::TotalStatReport(ErrCode errCode)
-{
-    if (totalStatistic_ == nullptr) {
-        HILOGE("totalStat is null");
-        return;
-    }
-    totalStatistic_->totalSpendTime_.End();
-    totalStatistic_->Report("OnAllBundlesFinished", errCode);
-}
-
 void Service::OnAllBundlesFinished(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("called begin.");
     if (session_->IsOnAllBundlesFinished()) {
         IServiceReverseType::Scenario scenario = session_->GetScenario();
-        TotalStatReport(errCode);
+        TotalStatEnd(errCode);
         if (isInRelease_.load() && (scenario == IServiceReverseType::Scenario::RESTORE)) {
             HILOGI("Will destory session info");
             SessionDeactive();
@@ -942,11 +932,11 @@ ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remot
 ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::RESTORE, GetCallerName());
+    Duration totalSpend;
+    totalSpend.Start();
     ErrCode ret = VerifyCaller();
     if (ret != ERR_OK) {
         HILOGE("Init restore session failed, verify caller failed");
-        totalStatistic_->Report("InitRestoreSession", MODULE_INIT, ret);
         return ret;
     }
     ret = session_->Active({
@@ -958,13 +948,13 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::st
         .activeTime = TimeUtils::GetCurrentTime(),
     });
     if (ret == ERR_OK) {
+        TotalStatStart(BizScene::RESTORE, GetCallerName(), totalSpend.startMilli_);
         ClearFailedBundles();
         successBundlesNum_ = 0;
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;
     }
-    totalStatistic_->Report("InitRestoreSession", MODULE_INIT, ret);
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),
@@ -990,11 +980,11 @@ ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote
 ErrCode Service::InitBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::BACKUP, GetCallerName());
+    Duration totalSpend;
+    totalSpend.Start();
     ErrCode ret = VerifyCaller();
     if (ret != ERR_OK) {
         HILOGE("Init full backup session fail, verify caller failed");
-        totalStatistic_->Report("InitBackupSessionWithErrMsg", MODULE_INIT, ret);
         return ret;
     }
     int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
@@ -1009,13 +999,13 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse>& remote, std::str
         .activeTime = TimeUtils::GetCurrentTime(),
     });
     if (ret == ERR_OK) {
+        TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_, Mode::INCREMENTAL);
         ClearFailedBundles();
         successBundlesNum_ = 0;
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;
     }
-    totalStatistic_->Report("InitBackupSessionWithErrMsg", MODULE_INIT, ret);
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),
@@ -1607,6 +1597,48 @@ void Service::DoNoticeClientFinish(const std::string &bundleName, ErrCode errCod
 {
     if (!isRestoreEnd) {
         NoticeClientFinish(bundleName, errCode);
+    }
+}
+
+void Service::TotalStatStart(BizScene bizScene, std::string caller, uint64_t startTime, Mode mode)
+{
+    std::unique_lock<std::shared_mutex> lock(totalStatMutex_);
+    totalStatistic_ = std::make_shared<RadarTotalStatistic>(bizScene, caller, mode);
+    totalStatistic_->totalSpendTime_.startMilli_ = startTime;
+}
+
+void Service::TotalStatEnd(ErrCode errCode)
+{
+    std::unique_lock<std::shared_mutex> lock(totalStatMutex_);
+    if (totalStatistic_ != nullptr) {
+        totalStatistic_->totalSpendTime_.End();
+        if (errCode != ERROR_OK) {
+            totalStatistic_->innerErr_ = errCode;
+        }
+    }
+}
+
+void Service::UpdateHandleCnt(ErrCode errCode)
+{
+    std::unique_lock<std::shared_mutex> lock(totalStatMutex_);
+    if (totalStatistic_ != nullptr) {
+        if (errCode == ERROR_OK) {
+            totalStatistic_->succBundleCount_++;
+        } else {
+            totalStatistic_->failBundleCount_++;
+        }
+    }
+}
+
+void Service::TotalStatReport()
+{
+    std::shared_lock<std::shared_mutex> lock(totalStatMutex_);
+    if (totalStatistic_ == nullptr) {
+        HILOGE("totalStat is null");
+        return;
+    }
+    if (totalStatistic_->succBundleCount_ > 0 || totalStatistic_->failBundleCount_ > 0) {
+        totalStatistic_->Report("OnAllBundlesFinished", totalStatistic_->innerErr_);
     }
 }
 }

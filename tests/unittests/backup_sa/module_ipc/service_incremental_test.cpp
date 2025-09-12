@@ -488,6 +488,36 @@ ErrCode Service::GetCompatibilityInfo(const std::string &bundleName, const std::
 {
     return BService::serviceMock->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
 }
+
+void Service::TotalStatStart(BizScene bizScene, std::string caller, uint64_t startTime, Mode mode)
+{
+    std::unique_lock<std::shared_mutex> lock(totalStatMutex_);
+    totalStatistic_ = std::make_shared<RadarTotalStatistic>(bizScene, caller, mode);
+    totalStatistic_->totalSpendTime_.startMilli_ = startTime;
+}
+
+void Service::TotalStatEnd(ErrCode errCode)
+{
+    std::unique_lock<std::shared_mutex> lock(totalStatMutex_);
+    if (totalStatistic_ != nullptr) {
+        totalStatistic_->totalSpendTime_.End();
+        if (errCode != ERROR_OK) {
+            totalStatistic_->innerErr_ = errCode;
+        }
+    }
+}
+
+void Service::UpdateHandleCnt(ErrCode errCode)
+{
+    std::unique_lock<std::shared_mutex> lock(totalStatMutex_);
+    if (totalStatistic_ != nullptr) {
+        if (errCode == ERROR_OK) {
+            totalStatistic_->succBundleCount_++;
+        } else {
+            totalStatistic_->failBundleCount_++;
+        }
+    }
+}
 } // namespace OHOS::FileManagement::Backup
 
 namespace OHOS::FileManagement::Backup {

@@ -402,11 +402,6 @@ private:
     void ClearSessionAndSchedInfo(const std::string &bundleName);
 
     /**
-     * @brief 上报总体统计打点
-     */
-    void TotalStatReport(ErrCode errCode);
-
-    /**
      * @brief 整个备份恢复流程结束
      *
      * @param errCode 错误码
@@ -724,37 +719,10 @@ private:
     void ClearIncrementalStatFile(int32_t userId, const string &bundleName);
     BJsonCachedEntity<BJsonEntityCaps> CreateJsonEntity(UniqueFd &fd,
         vector<BJsonEntityCaps::BundleInfo> &bundleInfos, const std::vector<BIncrementalData> &bundleNames);
-    void TotalStart()
-    {
-        if (totalStatistic_ != nullptr) {
-            totalStatistic_->totalSpendTime_.Start();
-        }
-    }
-
-    void GetBundleInfoStart()
-    {
-        if (totalStatistic_ != nullptr) {
-            totalStatistic_->getBundleInfoSpend_.Start();
-        }
-    }
-
-    void GetBundleInfoEnd()
-    {
-        if (totalStatistic_ != nullptr) {
-            totalStatistic_->getBundleInfoSpend_.End();
-        }
-    }
-
-    void UpdateHandleCnt(ErrCode errCode)
-    {
-        if (totalStatistic_ != nullptr) {
-            if (errCode == ERR_OK) {
-                totalStatistic_->succBundleCount_.fetch_add(1);
-            } else {
-                totalStatistic_->failBundleCount_.fetch_add(1);
-            }
-        }
-    }
+    void TotalStatStart(BizScene bizScene, std::string caller, uint64_t startTime, Mode mode = Mode::FULL);
+    void TotalStatEnd(ErrCode errCode);
+    void UpdateHandleCnt(ErrCode errCode);
+    void TotalStatReport();
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -790,6 +758,7 @@ private:
     std::condition_variable getDataSizeCon_;
     std::atomic<bool> isScannedEnd_ {false};
     std::atomic<bool> onScanning_ {false};
+    std::shared_mutex totalStatMutex_;
     std::shared_ptr<RadarTotalStatistic> totalStatistic_ = nullptr;
     std::shared_mutex statMapMutex_;
     std::map<std::string, std::shared_ptr<RadarAppStatistic>> saStatisticMap_;
