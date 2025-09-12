@@ -2073,6 +2073,8 @@ ErrCode BackupExtExtension::IncrementalTarFileReady(const TarMap &bigFileInfo,
     } else {
         HILOGE("IncrementalTarFileReady interface fails to be invoked: %{public}d", ret);
     }
+    close(fd);
+    close(manifestFd);
     return ret;
 }
 

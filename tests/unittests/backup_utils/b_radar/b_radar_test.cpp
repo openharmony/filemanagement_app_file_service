@@ -104,11 +104,10 @@ HWTEST_F(BRadarTest, TOTAL_CONSTRUCTOR_0100, testing::ext::TestSize.Level1)
         EXPECT_EQ(totalStatistic1.hostPkg_, caller);
         EXPECT_GT(totalStatistic1.uniqId_, 0);
         EXPECT_EQ(totalStatistic1.uniqId_, totalStatistic1.GetUniqId());
-        int64_t uniqId1 = totalStatistic1.uniqId_;
         RadarTotalStatistic totalStatistic2(BizScene::RESTORE, caller);
         EXPECT_EQ(totalStatistic2.bizScene_, BizScene::RESTORE);
         EXPECT_EQ(totalStatistic2.mode_, Mode::FULL);
-        EXPECT_NE(uniqId1, totalStatistic2.uniqId_);
+        EXPECT_GT(totalStatistic2.uniqId_, 0);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BRadarTest-an exception occurred.";

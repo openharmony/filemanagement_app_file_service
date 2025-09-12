@@ -384,12 +384,6 @@ ErrCode Service::AppDone(ErrCode errCode)
         }
         HILOGI("Begin, callerName is: %{public}s, errCode: %{public}d", callerName.c_str(), errCode);
         if (session_->OnBundleFileReady(callerName) || errCode != BError(BError::Codes::OK)) {
-            std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
-            if (mutexPtr == nullptr) {
-                HILOGE("extension mutex ptr is nullptr, bundleName:%{public}s", callerName.c_str());
-                return BError(BError::Codes::SA_INVAL_ARG);
-            }
-            std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
             SetExtOnRelease(callerName, true);
             return BError(BError::Codes::OK);
         }
@@ -764,23 +758,13 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
     }
 }
 
-void Service::TotalStatReport(ErrCode errCode)
-{
-    if (totalStatistic_ == nullptr) {
-        HILOGE("totalStat is null");
-        return;
-    }
-    totalStatistic_->totalSpendTime_.End();
-    totalStatistic_->Report("OnAllBundlesFinished", errCode);
-}
-
 void Service::OnAllBundlesFinished(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("called begin.");
     if (session_->IsOnAllBundlesFinished()) {
         IServiceReverseType::Scenario scenario = session_->GetScenario();
-        TotalStatReport(errCode);
+        TotalStatEnd(errCode);
         if (isInRelease_.load() && (scenario == IServiceReverseType::Scenario::RESTORE)) {
             HILOGI("Will destory session info");
             SessionDeactive();
@@ -948,11 +932,11 @@ ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remot
 ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::RESTORE, GetCallerName());
+    Duration totalSpend;
+    totalSpend.Start();
     ErrCode ret = VerifyCaller();
     if (ret != ERR_OK) {
         HILOGE("Init restore session failed, verify caller failed");
-        totalStatistic_->Report("InitRestoreSession", MODULE_INIT, ret);
         return ret;
     }
     ret = session_->Active({
@@ -964,13 +948,13 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::st
         .activeTime = TimeUtils::GetCurrentTime(),
     });
     if (ret == ERR_OK) {
+        TotalStatStart(BizScene::RESTORE, GetCallerName(), totalSpend.startMilli_);
         ClearFailedBundles();
         successBundlesNum_ = 0;
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;
     }
-    totalStatistic_->Report("InitRestoreSession", MODULE_INIT, ret);
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),
@@ -996,11 +980,11 @@ ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote
 ErrCode Service::InitBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::BACKUP, GetCallerName());
+    Duration totalSpend;
+    totalSpend.Start();
     ErrCode ret = VerifyCaller();
     if (ret != ERR_OK) {
         HILOGE("Init full backup session fail, verify caller failed");
-        totalStatistic_->Report("InitBackupSessionWithErrMsg", MODULE_INIT, ret);
         return ret;
     }
     int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
@@ -1015,13 +999,13 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse>& remote, std::str
         .activeTime = TimeUtils::GetCurrentTime(),
     });
     if (ret == ERR_OK) {
+        TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_, Mode::INCREMENTAL);
         ClearFailedBundles();
         successBundlesNum_ = 0;
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;
     }
-    totalStatistic_->Report("InitBackupSessionWithErrMsg", MODULE_INIT, ret);
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),
@@ -1399,7 +1383,12 @@ ErrCode Service::TryToConnectExt(const std::string& bundleName, sptr<SvcBackupCo
     auto callDied = GetBackupInfoConnectDied(wptr(this), bundleName);
     extConnection->SetCallback(callConnected);
     extConnection->SetCallDied(callDied);
-    AAFwk::Want want = CreateConnectWant(bundleName);
+    AAFwk::Want want;
+    try {
+        want = CreateConnectWant(bundleName);
+    } catch (const BError &e) {
+        return e.GetCode();
+    }
     ErrCode err = extConnection->ConnectBackupExtAbility(want, GetUserIdDefault(), false);
     if (err != BError(BError::Codes::OK)) {
         HILOGE("ConnectBackupExtAbility failed, bundleName:%{public}s, ret:%{public}d", bundleName.c_str(), err);
@@ -1495,6 +1484,7 @@ ErrCode Service::HandleExtDisconnect(BackupRestoreScenario scenario, bool isAppR
 
 ErrCode Service::GetExtOnRelease(bool &isExtOnRelease)
 {
+    std::shared_lock<std::shared_mutex> lock(extOnReleaseLock_);
     std::string bundleName;
     auto ret = VerifyCallerAndGetCallerName(bundleName);
     if (ret != ERR_OK) {
@@ -1515,6 +1505,7 @@ ErrCode Service::GetExtOnRelease(bool &isExtOnRelease)
 
 void Service::SetExtOnRelease(const BundleName &bundleName, bool isOnRelease)
 {
+    std::unique_lock<std::shared_mutex> lock(extOnReleaseLock_);
     HILOGI("Set bundleName:%{public}s isOnRelease:%{public}d", bundleName.c_str(), isOnRelease);
     auto it = backupExtOnReleaseMap_.find(bundleName);
     if (it == backupExtOnReleaseMap_.end()) {
@@ -1526,6 +1517,7 @@ void Service::SetExtOnRelease(const BundleName &bundleName, bool isOnRelease)
 
 void Service::RemoveExtOnRelease(const BundleName &bundleName)
 {
+    std::unique_lock<std::shared_mutex> lock(extOnReleaseLock_);
     auto it = backupExtOnReleaseMap_.find(bundleName);
     if (it == backupExtOnReleaseMap_.end()) {
         HILOGI("BackupExtOnReleaseMap not contain %{public}s", bundleName.c_str());
@@ -1663,6 +1655,48 @@ void Service::BroadCastSingle(const std::string &bundleName, const std::string &
         }
         HILOGI("Publish event end, notify result is:%{public}d, broadCastType:%{public}s",
             notifyRet, broadCastType.c_str());
+    }
+}
+
+void Service::TotalStatStart(BizScene bizScene, std::string caller, uint64_t startTime, Mode mode)
+{
+    std::unique_lock<std::shared_mutex> lock(totalStatMutex_);
+    totalStatistic_ = std::make_shared<RadarTotalStatistic>(bizScene, caller, mode);
+    totalStatistic_->totalSpendTime_.startMilli_ = startTime;
+}
+
+void Service::TotalStatEnd(ErrCode errCode)
+{
+    std::unique_lock<std::shared_mutex> lock(totalStatMutex_);
+    if (totalStatistic_ != nullptr) {
+        totalStatistic_->totalSpendTime_.End();
+        if (errCode != ERROR_OK) {
+            totalStatistic_->innerErr_ = errCode;
+        }
+    }
+}
+
+void Service::UpdateHandleCnt(ErrCode errCode)
+{
+    std::unique_lock<std::shared_mutex> lock(totalStatMutex_);
+    if (totalStatistic_ != nullptr) {
+        if (errCode == ERROR_OK) {
+            totalStatistic_->succBundleCount_++;
+        } else {
+            totalStatistic_->failBundleCount_++;
+        }
+    }
+}
+
+void Service::TotalStatReport()
+{
+    std::shared_lock<std::shared_mutex> lock(totalStatMutex_);
+    if (totalStatistic_ == nullptr) {
+        HILOGE("totalStat is null");
+        return;
+    }
+    if (totalStatistic_->succBundleCount_ > 0 || totalStatistic_->failBundleCount_ > 0) {
+        totalStatistic_->Report("OnAllBundlesFinished", totalStatistic_->innerErr_);
     }
 }
 }

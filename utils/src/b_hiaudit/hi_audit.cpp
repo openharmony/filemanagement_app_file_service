@@ -74,7 +74,7 @@ void HiAudit::Init()
     }
     std::string logFilePath = hiAuditConfig_.logPath + hiAuditConfig_.logName + "_audit.csv";
     writeFd_ =
-        open(logFilePath.c_str(), O_CREAT | O_APPEND | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+        open(logFilePath.c_str(), O_CREAT | O_APPEND | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (writeFd_ < 0) {
         HILOGE("Init, open error, logFilePath is:%{public}s, errno:%{public}d", logFilePath.c_str(), errno);
     }
@@ -143,7 +143,7 @@ void HiAudit::GetWriteFilePath()
     }
     std::string logFilePath = hiAuditConfig_.logPath + hiAuditConfig_.logName + "_audit.csv";
     writeFd_ =
-        open(logFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+        open(logFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (writeFd_ < 0) {
         HILOGE("GetWriteFilePath, Open fd error, errno:%{public}d", errno);
     }

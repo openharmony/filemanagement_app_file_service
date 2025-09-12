@@ -322,11 +322,11 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
 ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remote)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::BACKUP, GetCallerName(), Mode::INCREMENTAL);
+    Duration totalSpend;
+    totalSpend.Start();
     ErrCode errCode = VerifyCaller();
     if (errCode != ERR_OK) {
         HILOGE("Init incremental backup session fail, Verify caller failed, errCode:%{public}d", errCode);
-        totalStatistic_->Report("InitIncrementalBackupSession", MODULE_INIT, errCode);
         return errCode;
     }
     if (session_ == nullptr) {
@@ -342,13 +342,13 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
                                 .activeTime = TimeUtils::GetCurrentTime()});
     if (errCode == ERR_OK) {
         HILOGE("Success to init a new incremental backup session");
+        TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_, Mode::INCREMENTAL);
         ClearFailedBundles();
         successBundlesNum_ = 0;
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return errCode;
     }
-    totalStatistic_->Report("InitIncrementalBackupSession", MODULE_INIT, errCode);
     if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         HILOGE("Active incremental backup error, Already have a session");
         return errCode;
@@ -371,11 +371,11 @@ ErrCode Service::InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceRever
 ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    totalStatistic_ = std::make_shared<RadarTotalStatistic>(BizScene::BACKUP, GetCallerName(), Mode::INCREMENTAL);
+    Duration totalSpend;
+    totalSpend.Start();
     ErrCode errCode = VerifyCaller();
     if (errCode != ERR_OK) {
         HILOGE("Init incremental backup session fail, Verify caller failed, errCode:%{public}d", errCode);
-        totalStatistic_->Report("InitIncrementalBackupSessionWithErrMsg", MODULE_INIT, errCode);
         return errCode;
     }
     if (session_ == nullptr) {
@@ -390,13 +390,13 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
                                 .callerName = GetCallerName(),
                                 .activeTime = TimeUtils::GetCurrentTime()});
     if (errCode == ERR_OK) {
+        TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_, Mode::INCREMENTAL);
         ClearFailedBundles();
         successBundlesNum_ = 0;
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return errCode;
     }
-    totalStatistic_->Report("InitIncrementalBackupSessionWithErrMsg", MODULE_INIT, errCode);
     if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),
@@ -421,7 +421,6 @@ vector<string> Service::GetBundleNameByDetails(const std::vector<BIncrementalDat
 ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    TotalStart();
     vector<string> bundleNames;
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
@@ -437,10 +436,8 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
             session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return ret;
         }
-        GetBundleInfoStart();
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundlesToBackup,
             session_->GetSessionUserId());
-        GetBundleInfoEnd();
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
         AppendBundles(supportBackupNames);
         SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
@@ -471,7 +468,6 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
     const std::vector<std::string> &infos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    TotalStart();
     vector<string> bundleNames;
     try {
         if (session_ == nullptr || isOccupyingSession_.load()) {
@@ -492,10 +488,8 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, infos, bundleNamesOnly,
             session_->GetSessionUserId(), isClearDataFlags);
-        GetBundleInfoStart();
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundlesToBackup,
             session_->GetSessionUserId());
-        GetBundleInfoEnd();
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
         AppendBundles(supportBackupNames);
         SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
@@ -734,12 +728,6 @@ ErrCode Service::AppIncrementalDone(ErrCode errCode)
             callerName.c_str(), errCode);
         ClearIncrementalStatFile(GetUserIdDefault(), callerName);
         if (session_->OnBundleFileReady(callerName) || errCode != BError(BError::Codes::OK)) {
-            std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
-            if (mutexPtr == nullptr) {
-                HILOGE("extension mutex ptr is nullptr, bundleName:%{public}s", callerName.c_str());
-                return BError(BError::Codes::SA_INVAL_ARG);
-            }
-            std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
             SetExtOnRelease(callerName, true);
             return BError(BError::Codes::OK);
         }
