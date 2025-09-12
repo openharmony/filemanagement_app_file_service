@@ -1542,7 +1542,6 @@ void Service::SessionDeactive()
         }
     } catch (...) {
         HILOGE("Unexpected exception");
-        return;
     }
 }
 
