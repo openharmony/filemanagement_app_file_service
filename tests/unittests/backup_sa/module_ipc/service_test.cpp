@@ -2573,26 +2573,80 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReady_0104, testing::ext::TestSize.Leve
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppFileReady_0104";
 }
 
-HWTEST_F(ServiceTest, Service_Total_Start, testing::ext::TestSize.Level1)
+/**
+ * @tc.number: Service_Total_Start_Test
+ * @tc.name: Service_Total_Start_Test
+ * @tc.desc: 测试 TotalStatStart 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceTest, Service_Total_Start_Test, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ServiceTest-begin Service_Total_Start";
-    servicePtr_->totalStatistic_ = nullptr;
-    servicePtr_->TotalStart();
-    servicePtr_->totalStatistic_ = totalStat_;
-    servicePtr_->TotalStart();
-    EXPECT_GT(totalStat_->totalSpendTime_.startMilli_, 0);
-    GTEST_LOG_(INFO) << "ServiceTest-end Service_Total_Start";
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_Total_Start_Test";
+    servicePtr_->TotalStatStart(BizScene::BACKUP, BUNDLE_NAME, 1);
+    EXPECT_GT(servicePtr_->totalStatistic_->totalSpendTime_.startMilli_, 0);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_Total_Start_Test";
 }
 
-HWTEST_F(ServiceTest, Service_Total_Stat_Report, testing::ext::TestSize.Level1)
+/**
+ * @tc.number: Service_Total_Stat_Report_Test
+ * @tc.name: Service_Total_Stat_Report_Test
+ * @tc.desc: 测试 TotalStatReport 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceTest, Service_Total_Stat_Report_Test, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ServiceTest-begin Service_Total_Stat_Report";
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_Total_Stat_Report_Test";
     servicePtr_->totalStatistic_ = nullptr;
-    servicePtr_->TotalStatReport(ERR_OK);
+    servicePtr_->TotalStatReport();
     servicePtr_->totalStatistic_ = totalStat_;
-    servicePtr_->TotalStatReport(ERR_OK);
-    EXPECT_GT(totalStat_->totalSpendTime_.endMilli_, 0);
-    GTEST_LOG_(INFO) << "ServiceTest-end Service_Total_Stat_Report";
+    servicePtr_->TotalStatReport();
+    EXPECT_GT(totalStat_->uniqId_, 0);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_Total_Stat_Report_Test";
 }
 
+/**
+ * @tc.number: Service_Total_Stat_End_Test
+ * @tc.name: Service_Total_Stat_End_Test
+ * @tc.desc: 测试 TotalStatEnd 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceTest, Service_Total_Stat_End_Test, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_Total_Stat_End_Test";
+    servicePtr_->totalStatistic_ = nullptr;
+    servicePtr_->TotalStatEnd(0);
+    servicePtr_->totalStatistic_ = totalStat_;
+    servicePtr_->TotalStatEnd(0);
+    EXPECT_EQ(totalStat_->innerErr_, 0);
+    servicePtr_->TotalStatEnd(1);
+    EXPECT_EQ(totalStat_->innerErr_, 1);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_Total_Stat_End_Test";
+}
+
+/**
+ * @tc.number: Service_Update_Handle_Count_Test
+ * @tc.name: Service_Update_Handle_Count_Test
+ * @tc.desc: 测试 UpdateHandleCnt 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceTest, Service_Update_Handle_Count_Test, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_Update_Handle_Count_Test";
+    servicePtr_->totalStatistic_ = nullptr;
+    servicePtr_->UpdateHandleCnt(0);
+    servicePtr_->totalStatistic_ = totalStat_;
+    servicePtr_->UpdateHandleCnt(0);
+    EXPECT_EQ(totalStat_->succBundleCount_, 1);
+    servicePtr_->UpdateHandleCnt(1);
+    EXPECT_EQ(totalStat_->failBundleCount_, 1);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_Update_Handle_Count_Test";
+}
 } // namespace OHOS::FileManagement::Backup
