@@ -2094,6 +2094,7 @@ void Service::SetBundleParam(const BJsonEntityCaps::BundleInfo &restoreInfo, std
     session_->SetBundleVersionCode(bundleNameIndexInfo, restoreInfo.versionCode);
     session_->SetBundleVersionName(bundleNameIndexInfo, restoreInfo.versionName);
     session_->SetBundleDataSize(bundleNameIndexInfo, restoreInfo.spaceOccupied);
+    session_->SetBundleUserId(bundleNameIndexInfo, session_->GetSessionUserId());
     session_->SetBackupExtName(bundleNameIndexInfo, restoreInfo.extensionName);
     session_->SetIsReadyLaunch(bundleNameIndexInfo);
 }
