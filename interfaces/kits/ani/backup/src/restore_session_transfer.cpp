@@ -32,8 +32,8 @@
 
 namespace OHOS::FileManagement::Backup {
 namespace {
-const char *RESTORE_SESSION_TRANSFER_CLASS_NAME = "L@ohos/backup/transfer/backup/RestoreSessionTransfer;";
-const char *RESTORE_SESSION_CLASS_NAME = "L@ohos/backup/transfer/backup/RestoreSession;";
+const char *RESTORE_SESSION_TRANSFER_CLASS_NAME = "@ohos.backup.transfer.backup.RestoreSessionTransfer";
+const char *RESTORE_SESSION_CLASS_NAME = "@ohos.backup.transfer.backup.RestoreSession";
 }
 
 void RestoreSessionTransfer::Init(ani_env *aniEnv)

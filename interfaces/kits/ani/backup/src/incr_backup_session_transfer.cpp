@@ -31,8 +31,8 @@
 
 namespace OHOS::FileManagement::Backup {
 namespace {
-const char *BACKUP_SESSION_TRANSFER_CLASS_NAME = "L@ohos/backup/transfer/backup/IncrBackupSessionTransfer;";
-const char *INCR_BACKUP_SESSION_CLASS_NAME = "L@ohos/backup/transfer/backup/IncrementalBackupSession;";
+const char *BACKUP_SESSION_TRANSFER_CLASS_NAME = "@ohos.backup.transfer.backup.IncrBackupSessionTransfer";
+const char *INCR_BACKUP_SESSION_CLASS_NAME = "@ohos.backup.transfer.backup.IncrementalBackupSession";
 }
 
 void IncreBackupSessionTransfer::Init(ani_env *aniEnv)

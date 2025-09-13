@@ -29,9 +29,9 @@ namespace OHOS::FileManagement::Backup {
 using namespace LibN;
 
 namespace {
-const char *BACKUP_SESSION_CLASS_NAME = "L@ohos/backup/transfer/backup/IncrementalBackupSession;";
-const char *B_INCREMENTAL_DATA_CLASS_NAME = "L@ohos/backup/transfer/backup/BIncrementalData;";
-const char *INCR_BACKUP_SESSION_CLEANER_CLASS_NAME = "L@ohos/backup/transfer/backup/IncrBackupSessionCleaner;";
+const char *BACKUP_SESSION_CLASS_NAME = "@ohos.backup.transfer.backup/IncrementalBackupSession;";
+const char *B_INCREMENTAL_DATA_CLASS_NAME = "@ohos.backup.transfer.backup.BIncrementalData";
+const char *INCR_BACKUP_SESSION_CLEANER_CLASS_NAME = "@ohos.backup.transfer.backup.IncrBackupSessionCleaner";
 constexpr int32_t E_OK = 0;
 }
 
@@ -48,7 +48,7 @@ void IncrementalBackupSession::Init(ani_env *aniEnv)
         return;
     }
     std::array cleanNativeFuncs = {
-        ani_native_function {"clean", ":V", reinterpret_cast<void*>(IncrBackupSessionCleaner::Clean)},
+        ani_native_function {"clean", ":", reinterpret_cast<void*>(IncrBackupSessionCleaner::Clean)},
     };
     auto status = aniEnv->Class_BindNativeMethods(clsCleaner, cleanNativeFuncs.data(), cleanNativeFuncs.size());
     if (status != ANI_OK) {
