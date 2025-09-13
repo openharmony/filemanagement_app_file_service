@@ -45,6 +45,11 @@ struct BundleTaskInfo {
     std::string reportTime;
     ErrCode errCode;
 };
+
+struct BundleBroadCastInfo {
+    std::map<std::string, std::string> broadCastInfoMap = {};
+    int userId = 0;
+};
 const int INVALID_FD = -1;
 constexpr const int32_t CONNECT_WAIT_TIME_S = 15;
 
@@ -719,6 +724,15 @@ private:
     void ClearIncrementalStatFile(int32_t userId, const string &bundleName);
     BJsonCachedEntity<BJsonEntityCaps> CreateJsonEntity(UniqueFd &fd,
         vector<BJsonEntityCaps::BundleInfo> &bundleInfos, const std::vector<BIncrementalData> &bundleNames);
+    void SetBundleParam(const BJsonEntityCaps::BundleInfo &restoreInfo, std::string &bundleNameIndexInfo,
+        RestoreTypeEnum &restoreType);
+    void ClearRecord();
+    void SetBroadCastInfoMap(const std::string &bundleName,
+                             const std::map<std::string, std::string> &broadCastInfoMap,
+                             int userId);
+    void BroadCastRestore(const std::string &bundleName, const std::string &broadCastType);
+    void BroadCastSingle(const std::string &bundleName, const std::string &broadCastType);
+
     void TotalStatStart(BizScene bizScene, std::string caller, uint64_t startTime, Mode mode = Mode::FULL);
     void TotalStatEnd(ErrCode errCode);
     void UpdateHandleCnt(ErrCode errCode);
@@ -763,6 +777,7 @@ private:
     std::shared_mutex statMapMutex_;
     std::map<std::string, std::shared_ptr<RadarAppStatistic>> saStatisticMap_;
     std::map<BundleName, std::atomic<bool>> backupExtOnReleaseMap_;
+    std::map<std::string, BundleBroadCastInfo> bundleBroadCastInfoMap_;
     std::shared_mutex extOnReleaseLock_;
 public:
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;

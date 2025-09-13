@@ -28,7 +28,7 @@ namespace OHOS::FileManagement::Backup {
 NotifyWorkService::NotifyWorkService() {}
 NotifyWorkService::~NotifyWorkService() {}
 
-bool NotifyWorkService::NotifyBundleDetail(BJsonUtil::BundleDetailInfo bundleDetailInfo)
+bool NotifyWorkService::NotifyBundleDetail(BJsonUtil::BundleDetailInfo bundleDetailInfo, BroadCastType type)
 {
     AAFwk::Want want;
     std::string bundleName = bundleDetailInfo.bundleName;
@@ -40,7 +40,11 @@ bool NotifyWorkService::NotifyBundleDetail(BJsonUtil::BundleDetailInfo bundleDet
     want.SetParam("userId", bundleDetailInfo.userId);
     want.SetParam("index", bundleDetailInfo.bundleIndex);
     want.SetParam("detail", bundleDetail);
-    want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_RESTORE_START);
+    if (type == END_TYPE) {
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_RESTORE_END);
+    } else {
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_RESTORE_START);
+    }
     EventFwk::CommonEventData commonData {want};
     HILOGI("End publish event, bundleName is: %{public}s", bundleName.c_str());
     return EventFwk::CommonEventManager::PublishCommonEvent(commonData);

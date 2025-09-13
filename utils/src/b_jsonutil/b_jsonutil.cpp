@@ -221,6 +221,13 @@ static void InsertBundleDetailInfo(cJSON *infos, int infosCount,
         }
         char *detailInfos = cJSON_Print(details);
         bundleDetailInfo.detail = std::string(detailInfos);
+        if (bundleDetailInfo.type.compare(BConstants::BROADCAST_TYPE) == 0) {
+            cJSON *broadCastType = cJSON_GetObjectItem(infoItem, "broadcastType");
+            if (broadCastType != nullptr && cJSON_IsString(broadCastType) && (broadCastType->valuestring != nullptr)) {
+                HILOGI("Parse broadCastType success");
+                bundleDetailInfo.broadCastType = broadCastType->valuestring;
+            }
+        }
         bundleDetails.emplace_back(bundleDetailInfo);
         cJSON_free(detailInfos);
     }
@@ -554,5 +561,24 @@ bool BJsonUtil::FindBackupSceneByName(std::map<std::string, std::vector<BundleDe
         }
     }
     return false;
+}
+
+bool BJsonUtil::FindBroadCastInfoByName(std::map<std::string, std::vector<BundleDetailInfo>> &bundleNameDetailsMap,
+    std::string &bundleName, const std::string &jobType, std::map<std::string, std::string> &broadCastInfoMap)
+{
+    auto iter = bundleNameDetailsMap.find(bundleName);
+    if (iter == bundleNameDetailsMap.end()) {
+        return false;
+    }
+    std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos = iter->second;
+    for (const auto &bundleDetailInfo : bundleDetailInfos) {
+        if (bundleDetailInfo.type == jobType && bundleDetailInfo.broadCastType != "") {
+            broadCastInfoMap[bundleDetailInfo.broadCastType] = bundleDetailInfo.detail;
+        }
+    }
+    if (broadCastInfoMap.empty()) {
+        return false;
+    }
+    return true;
 }
 }

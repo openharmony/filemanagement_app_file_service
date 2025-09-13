@@ -1600,6 +1600,63 @@ void Service::DoNoticeClientFinish(const std::string &bundleName, ErrCode errCod
     }
 }
 
+void Service::SetBroadCastInfoMap(const std::string &bundleName,
+                                  const std::map<std::string, std::string> &broadCastInfoMap,
+                                  int userId)
+{
+    if (bundleName == "") {
+        HILOGE("bundleName empty!");
+        return;
+    }
+    bundleBroadCastInfoMap_[bundleName].broadCastInfoMap = broadCastInfoMap;
+    bundleBroadCastInfoMap_[bundleName].userId = userId;
+    return;
+}
+
+void Service::BroadCastRestore(const std::string &bundleName, const std::string &broadCastType)
+{
+    if (bundleBroadCastInfoMap_.empty()) {
+        HILOGD("bundleBroadCastInfoMap_ empty, BroadCastRestore fail");
+        return;
+    }
+    if (bundleName == BConstants::BROADCAST_RELEASE_BUNDLES &&
+        session_->GetScenario() == IServiceReverseType::Scenario::RESTORE) {
+        for (const auto &item : bundleBroadCastInfoMap_) {
+            BroadCastSingle(item.first, broadCastType);
+        }
+        return;
+    }
+    if (bundleBroadCastInfoMap_.count(bundleName) == 0) {
+        HILOGE("%{public}s not found in bundleBroadCastInfoMap_", bundleName.c_str());
+        return;
+    }
+    BroadCastSingle(bundleName, broadCastType);
+    return;
+}
+
+void Service::BroadCastSingle(const std::string &bundleName, const std::string &broadCastType)
+{
+    std::map<std::string, std::string> broadCastInfoMap;
+    broadCastInfoMap = bundleBroadCastInfoMap_[bundleName].broadCastInfoMap;
+    if (broadCastInfoMap.count(broadCastType) && session_->GetScenario() == IServiceReverseType::Scenario::RESTORE) {
+        // 分身应用
+        BJsonUtil::BundleDetailInfo broadCastInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
+        broadCastInfo.userId = bundleBroadCastInfoMap_[bundleName].userId;
+        broadCastInfo.bundleIndex = broadCastInfo.bundleIndex;
+        broadCastInfo.detail = broadCastInfoMap[broadCastType];
+        bool notifyRet;
+        if (broadCastType == BConstants::BROADCAST_RESTORE_START) {
+            notifyRet = DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(
+                broadCastInfo, START_TYPE);
+        } else {
+            notifyRet = DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(
+                broadCastInfo, END_TYPE);
+        }
+        HILOGI("Publish event end, notify result is:%{public}d, broadCastType:%{public}s",
+            notifyRet, broadCastType.c_str());
+    }
+}
+
 void Service::TotalStatStart(BizScene bizScene, std::string caller, uint64_t startTime, Mode mode)
 {
     std::unique_lock<std::shared_mutex> lock(totalStatMutex_);
