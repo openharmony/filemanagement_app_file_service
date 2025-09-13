@@ -498,8 +498,8 @@ ErrCode Service::GetCompatibilityInfo(const std::string &bundleName, const std::
 }
 
 void Service::SetBroadCastInfoMap(const std::string &bundleName,
-                         const std::map<std::string, std::string> &broadCastInfoMap,
-                         int userId)
+                                  const std::map<std::string, std::string> &broadCastInfoMap,
+                                  int userId)
 {
     BService::serviceMock->SetBroadCastInfoMap(bundleName, broadCastInfoMap, userId);
 }
