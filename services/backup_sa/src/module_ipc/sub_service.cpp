@@ -1621,7 +1621,7 @@ void Service::BroadCastRestore(const std::string &bundleName, const std::string 
     }
     if (bundleName == BConstants::BROADCAST_RELEASE_BUNDLES &&
         session_->GetScenario() == IServiceReverseType::Scenario::RESTORE) {
-        for (auto item : bundleBroadCastInfoMap_) {
+        for (const auto &item : bundleBroadCastInfoMap_) {
             BroadCastSingle(item.first, broadCastType);
         }
         return;
@@ -1641,7 +1641,6 @@ void Service::BroadCastSingle(const std::string &bundleName, const std::string &
     if (broadCastInfoMap.count(broadCastType) && session_->GetScenario() == IServiceReverseType::Scenario::RESTORE) {
         // 分身应用
         BJsonUtil::BundleDetailInfo broadCastInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
-        broadCastInfo.bundleName = broadCastInfo.bundleName;
         broadCastInfo.userId = bundleBroadCastInfoMap_[bundleName].userId;
         broadCastInfo.bundleIndex = broadCastInfo.bundleIndex;
         broadCastInfo.detail = broadCastInfoMap[broadCastType];
