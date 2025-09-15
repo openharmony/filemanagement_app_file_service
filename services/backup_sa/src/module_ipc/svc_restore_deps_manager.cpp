@@ -138,11 +138,13 @@ void SvcRestoreDepsManager::AddRestoredBundles(const string &bundleName)
 
 vector<BJsonEntityCaps::BundleInfo> SvcRestoreDepsManager::GetAllBundles() const
 {
+    shared_lock<shared_mutex> lock(lock_);
     return allBundles_;
 }
 
 bool SvcRestoreDepsManager::IsAllBundlesRestored() const
 {
+    shared_lock<shared_mutex> lock(lock_);
     return toRestoreBundleMap_.empty();
 }
 
