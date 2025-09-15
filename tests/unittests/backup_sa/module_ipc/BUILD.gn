@@ -46,6 +46,7 @@ ohos_unittest("module_ipc_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:ability_manager",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
@@ -121,6 +122,7 @@ ohos_unittest("backup_service_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:ability_manager",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
@@ -278,6 +280,7 @@ ohos_unittest("backup_service_session_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:ability_manager",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -404,6 +407,7 @@ ohos_unittest("backup_restore_deps_manager_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:ability_manager",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
@@ -479,6 +483,7 @@ ohos_unittest("backup_service_incremental_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:ability_manager",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
@@ -561,6 +566,7 @@ ohos_unittest("backup_service_other_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:ability_manager",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
