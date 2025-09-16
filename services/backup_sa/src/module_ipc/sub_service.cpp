@@ -155,13 +155,13 @@ bool Service::IsReportFileReadyFail(const std::string &bundleName)
     auto it = fileReadyRadarMap_.find(bundleName);
     if (it != fileReadyRadarMap_.end()) {
         it->second++;
+        if (it->second > MAX_FILE_READY_REPORT_TIME) {
+            HILOGI("FileReady radar report more than %{public}d times, bundleName = %{public}s",
+                MAX_FILE_READY_REPORT_TIME, bundleName.c_str());
+            return false;
+        }
     } else {
         fileReadyRadarMap_[bundleName] = 1;
-    }
-    if (it->second > MAX_FILE_READY_REPORT_TIME) {
-        HILOGI("FileReady radar report more than %{public}d times, bundleName = %{public}s",
-            MAX_FILE_READY_REPORT_TIME, bundleName.c_str());
-        return false;
     }
     return true;
 }

@@ -1602,11 +1602,15 @@ void BackupExtExtension::AsyncTaskIncreRestoreSpecialVersion()
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         try {
-            if (ptr != nullptr && ptr->isDebug_) {
+            if (ptr == nullptr) {
+                HILOGE("extension is null");
+                return;
+            }
+            if (ptr->isDebug_) {
                 ptr->CheckTmpDirFileInfos(true);
             }
             int ret = ptr->RestoreFilesForSpecialCloneCloud();
-            if (ptr != nullptr && ptr->isDebug_) {
+            if (ptr->isDebug_) {
                 ptr->CheckRestoreFileInfos();
             }
             if (ret == ERR_OK) {

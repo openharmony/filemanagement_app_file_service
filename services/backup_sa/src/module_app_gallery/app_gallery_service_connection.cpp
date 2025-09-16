@@ -29,6 +29,7 @@ void AppGalleryConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &e
 {
     std::string uri = element.GetURI();
     HILOGI("OnAbilityConnectDone, uri = %{public}s", uri.c_str());
+    std::lock_guard<std::mutex> autoLock(appRemoteObjLock_);
     appRemoteObj_ = remoteObject;
     conditionVal_.notify_one();
 }
