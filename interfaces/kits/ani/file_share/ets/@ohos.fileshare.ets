@@ -19,7 +19,7 @@ import type wantConstant from '@ohos.app.ability.wantConstant';
 import hilog from '@ohos.hilog'
 
 export namespace fileShare {
-  loadLibrary("fileshare_ani")
+  loadLibraryWithPermissionCheck("fileshare_ani", "@ohos.fileshare")
 
   export enum OperationMode {
       READ_MODE = 0b1,

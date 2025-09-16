@@ -55,7 +55,7 @@ class FinalizationAgent<T extends Object> {
 let finalizer = new FinalizationRegistry<Cleaner>(Cleaner.callback)
 
 export default namespace fileUri {
-    loadLibrary("fileuri_ani")
+    loadLibraryWithPermissionCheck("fileuri_ani", "@ohos.file.fileuri")
 
     export class FileUri {
         native constructor(uriOrPath: string);
