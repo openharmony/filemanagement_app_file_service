@@ -912,6 +912,7 @@ int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
     if (!extension_->SpecialVersionForCloneAndCloud() && !extension_->UseFullBackupOnly()) {
         path = "/";
     }
+    tarName = TarFile::GetInstance().DecompressTar(tarName);
     auto [ret, fileInfos, errInfos] = UntarFile::GetInstance().UnPacket(tarName, path);
     if (isDebug_) {
         if (ret != 0) {
@@ -1006,6 +1007,7 @@ int BackupExtExtension::DoIncrementalRestore()
                 HILOGE("Check incre tarfile path : %{public}s err, path is forbidden", GetAnonyPath(tarName).c_str());
                 return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
             }
+            tarName = TarFile::GetInstance().DecompressTar(tarName);
             unordered_map<string, struct ReportFileInfo> result;
             GetTarIncludes(tarName, result);
             if ((!extension_->SpecialVersionForCloneAndCloud()) && (!extension_->UseFullBackupOnly())) {

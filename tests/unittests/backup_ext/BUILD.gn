@@ -188,6 +188,14 @@ ohos_unittest("tar_file_test") {
   ]
 
   defines = [ "private=public" ]
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+    defines += ["BROTLI_ENABLED"]
+  }
+  if (lz4_enabled) {
+    external_deps += ["lz4:liblz4_static"]
+    defines += ["LZ4_ENABLED"]
+  }
 
   use_exceptions = true
 }
@@ -269,7 +277,14 @@ ohos_unittest("untar_file_sup_test") {
   ]
 
   defines = [ "private=public" ]
-
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+    defines += ["BROTLI_ENABLED"]
+  }
+  if (lz4_enabled) {
+    external_deps += ["lz4:liblz4_static"]
+    defines += ["LZ4_ENABLED"]
+  }
   use_exceptions = true
 }
 
@@ -344,6 +359,14 @@ ohos_unittest("untar_file_test") {
   ]
 
   defines = [ "private=public" ]
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+    defines += ["BROTLI_ENABLED"]
+  }
+  if (lz4_enabled) {
+    external_deps += ["lz4:liblz4_static"]
+    defines += ["LZ4_ENABLED"]
+  }
 
   use_exceptions = true
 }
@@ -449,7 +472,18 @@ ohos_unittest("tar_file_sub_test") {
     "hilog:libhilog",
   ]
 
-  defines = [ "private=public" ]
+  defines = [
+    "private=public",
+    "protected=public"
+  ]
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+    defines += ["BROTLI_ENABLED"]
+  }
+  if (lz4_enabled) {
+    external_deps += ["lz4:liblz4_static"]
+    defines += ["LZ4_ENABLED"]
+  }
 
   use_exceptions = true
 }
@@ -485,6 +519,14 @@ ohos_unittest("installd_un_tar_file_test") {
   ]
 
   defines = [ "private=public" ]
+  if (brotli_enabled) {
+    external_deps += ["brotli:brotli_shared"]
+    defines += ["BROTLI_ENABLED"]
+  }
+  if (lz4_enabled) {
+    external_deps += ["lz4:liblz4_static"]
+    defines += ["LZ4_ENABLED"]
+  }
 
   use_exceptions = true
 }
