@@ -63,6 +63,10 @@ const string LONG_LINK_SYMBOL = "longLinkSymbol";
 const string TAR_EXTENSION = ".tar";
 constexpr int64_t COMPRESS_BOUND = 10 * 1024 * 1024;
 const string INVALID_PATH = "";
+#if !defined(BROTLI_ENABLED) || !defined(LZ4_ENABLED)
+constexpr int32_t ERR_DISABLED = -99;
+#endif
+
 #ifdef COMPRESS_ENABLED
 constexpr int MEGA_BYTE = 1024 * 1024;
 constexpr bool USE_COMPRESS = false; // 默认关闭
@@ -70,7 +74,6 @@ constexpr int32_t ERR_INPUT_INVALID = -1;
 constexpr int32_t ERR_MAX_SIZE_INVALID = -2;
 #else
 constexpr bool USE_COMPRESS = false;
-constexpr int32_t ERR_DISABLED = -99;
 #endif
 
 #ifdef BROTLI_ENABLED
