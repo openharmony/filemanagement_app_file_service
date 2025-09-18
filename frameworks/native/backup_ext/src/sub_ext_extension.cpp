@@ -1884,4 +1884,25 @@ void BackupExtExtension::HandleExtOnRelease()
     StartOnReleaseTimeOutTimer(ptr);
     CallJsOnReleaseTask(ptr, scenario, true);
 }
+
+ErrCode BackupExtExtension::CleanBundleTempDir()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("BackupExtExtension::CleanBundleTempDir begin");
+    if (extension_ == nullptr) {
+        HILOGE("Failed to CleanBundleTempDir, extension is nullptr");
+        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
+    }
+    if (extension_->GetExtensionAction() == BConstants::ExtensionAction::INVALID) {
+        return BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid").GetCode();
+    }
+    try {
+        VerifyCaller();
+        DoClearInner();
+        return ERR_OK;
+    } catch (...) {
+        HILOGE("Failed to CleanBundleTempDir");
+        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
+    }
+}
 } // namespace OHOS::FileManagement::Backup

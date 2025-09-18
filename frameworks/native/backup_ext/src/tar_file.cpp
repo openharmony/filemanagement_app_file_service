@@ -906,12 +906,8 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
         return false;
     }
     int32_t maxSize = compressTool_->GetMaxCompressedSize(ori.size_);
-    if (maxSize <= 0) {
-        HILOGE("maxSize invalid: %{public}d!", maxSize);
-        return false;
-    }
     Buffer compressBuffer(static_cast<uint32_t>(maxSize));
-    if (compressBuffer.data_ == nullptr) {
+    if (compressBuffer.data_ == nullptr || maxSize <= 0) {
         HILOGE("new compress buffer fail!");
         return false;
     }
@@ -936,7 +932,7 @@ bool TarFile::CompressFile(const std::string &srcFile, const std::string &compFi
         return false;
     }
     HILOGD("END srcSize:%{public}" PRIu64 ", destSize:%{public}" PRIu64 ", ratio:%{public}f, time:%{public}f ms, "
-        "speed:%{public}f MB/s", inTotal, outTotal, (outTotal == 0) ? 0 : (inTotal * 1.0f / outTotal), compSpan.count(),
+        "speed:%{public}f MB/s", inTotal, outTotal, inTotal * 1.0f / outTotal, compSpan.count(),
         (compSpan.count() == 0) ? 0 : inTotal * 1000.0f / MEGA_BYTE / compSpan.count());
     return true;
 #else
