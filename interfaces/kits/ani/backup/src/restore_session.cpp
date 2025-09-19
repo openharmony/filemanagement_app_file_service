@@ -29,7 +29,7 @@ namespace OHOS::FileManagement::Backup {
 using namespace LibN;
 
 namespace {
-const char *RESTORE_SESSION_CLEANER_CLASS_NAME = "L@ohos/backup/transfer/backup/RestoreSessionCleaner;";
+const char *RESTORE_SESSION_CLEANER_CLASS_NAME = "@ohos.backup.transfer.backup.RestoreSessionCleaner";
 }
 
 void RestoreSession::Init(ani_env *aniEnv)
@@ -44,7 +44,7 @@ void RestoreSession::Init(ani_env *aniEnv)
         return;
     }
     std::array cleanNativeFuncs = {
-        ani_native_function {"clean", ":V", reinterpret_cast<void*>(RestoreSessionCleaner::Clean)},
+        ani_native_function {"clean", ":", reinterpret_cast<void*>(RestoreSessionCleaner::Clean)},
     };
     auto status = aniEnv->Class_BindNativeMethods(clsCleaner, cleanNativeFuncs.data(), cleanNativeFuncs.size());
     if (status != ANI_OK) {
