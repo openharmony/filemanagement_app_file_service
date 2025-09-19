@@ -62,6 +62,9 @@ const uint32_t OTHER_HEADER = 78;
 const int ERR_NO_PERMISSION = 13;
 constexpr size_t SIZE_BYTE_LEN = sizeof(uint32_t);
 constexpr size_t MAX_BUFFER_SIZE = 4096;
+constexpr int32_t ERR_INPUT_INVALID = -1;
+constexpr int32_t ERR_MAX_SIZE_INVALID = -2;
+constexpr int32_t ERR_DISABLED = -99;
 } // namespace
 
 // 512 bytes
