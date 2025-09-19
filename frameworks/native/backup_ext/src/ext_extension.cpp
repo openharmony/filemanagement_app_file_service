@@ -912,6 +912,7 @@ int BackupExtExtension::DoRestore(const string &fileName, const off_t fileSize)
     if (!extension_->SpecialVersionForCloneAndCloud() && !extension_->UseFullBackupOnly()) {
         path = "/";
     }
+    tarName = TarFile::GetInstance().DecompressTar(tarName);
     auto [ret, fileInfos, errInfos] = UntarFile::GetInstance().UnPacket(tarName, path);
     if (isDebug_) {
         if (ret != 0) {
@@ -1006,6 +1007,7 @@ int BackupExtExtension::DoIncrementalRestore()
                 HILOGE("Check incre tarfile path : %{public}s err, path is forbidden", GetAnonyPath(tarName).c_str());
                 return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE).GetCode();
             }
+            tarName = TarFile::GetInstance().DecompressTar(tarName);
             unordered_map<string, struct ReportFileInfo> result;
             GetTarIncludes(tarName, result);
             if ((!extension_->SpecialVersionForCloneAndCloud()) && (!extension_->UseFullBackupOnly())) {
@@ -2200,26 +2202,5 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
     close(fdval);
     close(manifestFdval);
     return ret;
-}
-
-ErrCode BackupExtExtension::CleanBundleTempDir()
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("BackupExtExtension::CleanBundleTempDir begin");
-    if (extension_ == nullptr) {
-        HILOGE("Failed to CleanBundleTempDir, extension is nullptr");
-        return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();
-    }
-    if (extension_->GetExtensionAction() == BConstants::ExtensionAction::INVALID) {
-        return BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid").GetCode();
-    }
-    try {
-        VerifyCaller();
-        DoClearInner();
-        return ERR_OK;
-    } catch (...) {
-        HILOGE("Failed to CleanBundleTempDir");
-        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
-    }
 }
 } // namespace OHOS::FileManagement::Backup
