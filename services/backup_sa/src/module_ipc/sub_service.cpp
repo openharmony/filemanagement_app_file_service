@@ -1092,9 +1092,6 @@ ErrCode Service::GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrem
         const int userId = GetUserIdDefault();
         BundleMgrAdapter::CreatBackupEnv(bundleNameList, userId);
         CyclicSendScannedInfo(isPreciseScan, bundleNameList);
-        for (const auto &bundleIncrementalData : bundleNameList) {
-            ClearIncrementalStatFile(userId, bundleIncrementalData.bundleName);
-        }
         return BError(BError::Codes::OK);
     } catch (...) {
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -1132,6 +1129,9 @@ void Service::CyclicSendScannedInfo(bool isPreciseScan, vector<BIncrementalData>
             ptr->SendScannedInfo(ptr->scannedInfo_, session);
         }
         ptr->isScannedEnd_.store(false);
+        for (const auto &bundleIncrementalData : bundleNameList) {
+            ptr->ClearIncrementalStatFile(ptr->GetUserIdDefault(), bundleIncrementalData.bundleName);
+        }
         session->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     };
 
