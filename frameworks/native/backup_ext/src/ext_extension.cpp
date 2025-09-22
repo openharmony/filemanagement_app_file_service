@@ -850,7 +850,8 @@ tuple<ErrCode, uint32_t, uint32_t> BackupExtExtension::CalculateDataSize(const B
     }
     vector<string> includes = {};
     vector<string> excludes = {};
-    GetScanDirList(includes, excludes, usrConfig);
+    GetScanDirList(includes, BConstants::INCLUDES, usrConfig);
+    GetScanDirList(excludes, BConstants::EXCLUDES, usrConfig);
     // 扫描文件计算数据量
     tie(bigFileInfo, smallFiles) = GetFileInfos(includes, excludes);
     ScanFileSingleton::GetInstance().SetCompletedFlag(true);

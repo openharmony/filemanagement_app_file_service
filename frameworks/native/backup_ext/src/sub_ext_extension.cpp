@@ -1005,7 +1005,8 @@ void BackupExtExtension::DoUser0Backup(const BJsonEntityExtensionConfig &usrConf
     }
     vector<string> includes = {};
     vector<string> excludes = {};
-    GetScanDirList(includes, excludes, usrConfig);
+    GetScanDirList(includes, BConstants::INCLUDES, usrConfig);
+    GetScanDirList(excludes, BConstants::EXCLUDES, usrConfig);
     auto task = [obj {wptr<BackupExtExtension>(this)}, includes, excludes]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
@@ -1585,8 +1586,8 @@ void BackupExtExtension::DoBackUpTask(const string &config)
 {
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
     auto cache = cachedEntity.Structuralize();
-    vector<string> excludes = cache.GetExcludes();
-    vector<string> endExcludes = excludes;
+    vector<string> endExcludes = {};
+    GetScanDirList(endExcludes, BConstants::EXCLUDES, cache);
     PreDealExcludes(endExcludes);
 
     int ret = 0;
@@ -1942,8 +1943,7 @@ ErrCode BackupExtExtension::HandleGetCompatibilityInfo(const string &extInfo, in
     }
 }
 
-void BackupExtExtension::GetScanDirList(vector<string>& includes,
-                                        vector<string>& excludes,
+void BackupExtExtension::GetScanDirList(vector<string>& pathInclude, string type,
                                         const BJsonEntityExtensionConfig &usrConfig)
 {
     if (extension_ == nullptr) {
@@ -1953,11 +1953,11 @@ void BackupExtExtension::GetScanDirList(vector<string>& includes,
     HILOGI("extension_->backupScene_:%{public}s, optionDir:%{public}d",
         extension_->backupScene_.c_str(), usrConfig.HasOptionDir());
     if (extension_->backupScene_ != "" && usrConfig.HasOptionDir()) {
-        includes = usrConfig.GetOptionDir(extension_->backupScene_, BConstants::INCLUDES);
-        excludes = usrConfig.GetOptionDir(extension_->backupScene_, BConstants::EXCLUDES);
+        pathInclude = usrConfig.GetOptionDir(extension_->backupScene_, type);
+    } else if (type == BConstants::INCLUDES) {
+        pathInclude = usrConfig.GetIncludes();
     } else {
-        includes = usrConfig.GetIncludes();
-        excludes = usrConfig.GetExcludes();
+        pathInclude = usrConfig.GetExcludes();
     }
 }
 
