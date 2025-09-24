@@ -394,7 +394,17 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_OnRestoreExCallback_Test_0100, t
         restoreCallBack(errCode, restoreRetInfo);
         extExtension->isExecAppDone_.store(false);
         EXPECT_EQ(restoreRetInfo, "err");
-        
+
+        extExtension->isExecAppDone_.store(false);
+        restoreRetInfo = "";
+        restoreCallBack = extExtension->OnRestoreExCallback(extExtension);
+        restoreCallBack(errCode, restoreRetInfo);
+        EXPECT_EQ(restoreRetInfo, "");
+
+        restoreRetInfo = "err";
+        restoreCallBack = extExtension->OnRestoreExCallback(extExtension);
+        restoreCallBack(errCode, restoreRetInfo);
+        EXPECT_EQ(restoreRetInfo, "err");
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
