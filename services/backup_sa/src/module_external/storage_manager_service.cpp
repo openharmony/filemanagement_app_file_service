@@ -110,12 +110,14 @@ int32_t StorageManagerService::GetMediaStorageStats(StorageManager::StorageStats
     auto queryResultSet = dataShareHelper->Query(uri, predicates, columns);
     if (queryResultSet == nullptr) {
         HILOGE("queryResultSet is null!");
+        dataShareHelper->Release();
         return E_QUERY;
     }
     auto count = 0;
     auto ret = queryResultSet->GetRowCount(count);
     if ((ret != E_OK) || (count < 0)) {
         HILOGE("get row count from rdb failed");
+        dataShareHelper->Release();
         return E_GETROWCOUNT;
     }
     GetMediaTypeAndSize(queryResultSet, storageStats);
