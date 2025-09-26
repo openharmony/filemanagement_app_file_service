@@ -2201,5 +2201,78 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetSessionActiveTime_0100,
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetSessionActiveTime_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_sa_session_SetBackupScene_0100
+ * @tc.name: SUB_backup_sa_session_SetBackupScene_0100
+ * @tc.desc: 测试 SetSessionUserId
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetBackupScene_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_backup_sa_session_SetBackupScene_0100";
+    try {
+        std::string backupScene = "";
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->SetBackupScene(BUNDLE_NAME, backupScene);
+        EXPECT_TRUE(backupScene == "");
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->SetBackupScene(BUNDLE_NAME, backupScene);
+        EXPECT_TRUE(backupScene == "");
+
+        BackupExtInfo info;
+        backupScene = "backupScene";
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
+        sessionManagerPtr_->SetBackupScene(BUNDLE_NAME, backupScene);
+        std::string backupSceneTest = sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME].backupScene;
+        EXPECT_TRUE(backupScene == backupSceneTest);
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetBackupScene.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_backup_sa_session_SetBackupScene_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetBackupScene_0200
+ * @tc.name: SUB_backup_sa_session_GetBackupScene_0200
+ * @tc.desc: 测试 SetSessionUserId
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupScene_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_backup_sa_session_GetBackupScene_0200";
+    try {
+        std::string backupScene = "";
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        backupScene = sessionManagerPtr_->GetBackupScene(BUNDLE_NAME);
+        EXPECT_TRUE(backupScene == "");
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        backupScene = sessionManagerPtr_->GetBackupScene(BUNDLE_NAME);
+        EXPECT_TRUE(backupScene == "");
+
+        BackupExtInfo info;
+        info.backupScene = "backupScene";
+        sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = info;
+        backupScene = sessionManagerPtr_->GetBackupScene(BUNDLE_NAME);
+        EXPECT_TRUE(backupScene == info.backupScene);
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetBackupScene.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_backup_sa_session_GetBackupScene_0200";
+}
 #include "svc_session_manager_ex_test.cpp"
 } // namespace OHOS::FileManagement::Backup

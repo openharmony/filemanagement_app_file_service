@@ -26,6 +26,7 @@
 
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
+#include "b_json/b_json_entity_extension_config.h"
 #include "ext_backup_mock.h"
 #include "ext_extension_mock.h"
 #include "tar_file.h"
@@ -1320,5 +1321,46 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_IncOnBackupExCallback_Test_0100,
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_IncOnBackupExCallback_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_GetScanDirList_Test_0100
+ * @tc.name: Ext_Extension_Sub_GetScanDirList_Test_0100
+ * @tc.desc: 测试GetScanDirList
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_GetScanDirList_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_GetScanDirList_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        extension->backupScene_ = "test1";
+        vector<string> includes = {};
+        string usrConfig = "{\"allowToBackupRestore\":false}";
+
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(usrConfig);
+        extExtension->extension_ = nullptr;
+        extExtension->GetScanDirList(includes, BConstants::INCLUDES, cachedEntity1.Structuralize());
+        extExtension->extension_ = extension;
+        EXPECT_TRUE(includes.empty());
+
+        usrConfig = "{\"includes\":[\"test/\"]}";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity2(usrConfig);
+        extExtension->GetScanDirList(includes, BConstants::INCLUDES, cachedEntity2.Structuralize());
+        EXPECT_FALSE(includes.empty());
+
+        usrConfig = "{\"optionDir\":[{\"includes\":[\"test/\"], \"sceneId\":\"test\"}]}";
+        extension->backupScene_ = "test";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity3(usrConfig);
+        extExtension->GetScanDirList(includes, BConstants::INCLUDES, cachedEntity3.Structuralize());
+        EXPECT_FALSE(includes.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_GetScanDirList_Test_0100";
 }
 }

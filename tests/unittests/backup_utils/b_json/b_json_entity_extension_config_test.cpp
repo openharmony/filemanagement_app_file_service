@@ -1080,4 +1080,138 @@ HWTEST_F(BJsonEntityExtensionConfigTest, backup_b_json_entity_extension_config_3
     }
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end backup_b_json_entity_extension_config_3800";
 }
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_3900
+ * @tc.name: backup_b_json_entity_extension_config_3900
+ * @tc.desc: 测试GetBackupScene接口能否返回正确参数
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, backup_b_json_entity_extension_config_3900, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin backup_b_json_entity_extension_config_3900";
+    try {
+        string_view sv1 = R"({"":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+        auto cache1 = cachedEntity1.Structuralize();
+        EXPECT_TRUE(cache1.GetBackupScene() == "");
+
+        string_view sv2 = R"({"backupScene":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity2(sv2);
+        auto cache2 = cachedEntity2.Structuralize();
+        EXPECT_TRUE(cache2.GetBackupScene() == "");
+
+        string_view sv3 = R"({"backupScene":"123"})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity3(sv3);
+        auto cache3 = cachedEntity3.Structuralize();
+        EXPECT_TRUE(cache3.GetBackupScene() == "123");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetBackupScene.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end backup_b_json_entity_extension_config_3900";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_4000
+ * @tc.name: backup_b_json_entity_extension_config_4000
+ * @tc.desc: 测试HasOptionDir接口能否返回正确参数
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, backup_b_json_entity_extension_config_4000, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin backup_b_json_entity_extension_config_4000";
+    try {
+        string_view sv1 = R"({"":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+        auto cache1 = cachedEntity1.Structuralize();
+        EXPECT_FALSE(cache1.HasOptionDir());
+
+        string_view sv2 = R"({"optionDir":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity2(sv2);
+        auto cache2 = cachedEntity2.Structuralize();
+        EXPECT_FALSE(cache2.HasOptionDir());
+
+        string_view sv3 = R"({"optionDir":["test"]})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity3(sv3);
+        auto cache3 = cachedEntity3.Structuralize();
+        EXPECT_TRUE(cache3.HasOptionDir());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by HasOptionDir.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end backup_b_json_entity_extension_config_4000";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_4100
+ * @tc.name: backup_b_json_entity_extension_config_4100
+ * @tc.desc: 测试GetOptionDir接口能否返回正确参数
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, backup_b_json_entity_extension_config_4100, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin backup_b_json_entity_extension_config_4100";
+    try {
+        string_view sv1 = R"({"":true})";
+        string sceneId = "test";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+        auto cache1 = cachedEntity1.Structuralize();
+        EXPECT_TRUE(cache1.GetOptionDir(sceneId, "includes").empty());
+
+        string_view sv2 = R"({"optionDir":true})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity2(sv2);
+        auto cache2 = cachedEntity2.Structuralize();
+        EXPECT_TRUE(cache2.GetOptionDir(sceneId, "includes").empty());
+
+        string_view sv3 = R"({"optionDir":[{"includes":["test"], "sceneId":"test"}]})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity3(sv3);
+        auto cache3 = cachedEntity3.Structuralize();
+        EXPECT_FALSE(cache3.GetOptionDir(sceneId, "includes").empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetOptionDir.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end backup_b_json_entity_extension_config_4100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_json_entity_extension_config_4200
+ * @tc.name: backup_b_json_entity_extension_config_4200
+ * @tc.desc: 测试GetDirList接口能否返回正确参数
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, backup_b_json_entity_extension_config_4200, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin backup_b_json_entity_extension_config_4200";
+    try {
+        Json::Value jv;
+        int value = 0;
+        jv.append(value);
+        string_view sv1 = R"({test})";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+        auto cache1 = cachedEntity1.Structuralize();
+        vector<string> dir;
+        EXPECT_TRUE(cache1.GetDirList(jv)[0] == "");
+
+        jv.append("test");
+        EXPECT_TRUE(cache1.GetDirList(jv)[0] == "test");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetDirList.";
+    }
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end backup_b_json_entity_extension_config_4200";
+}
 } // namespace OHOS::FileManagement::Backup
