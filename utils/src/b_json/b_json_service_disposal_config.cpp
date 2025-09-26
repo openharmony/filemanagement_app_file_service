@@ -64,13 +64,13 @@ BJsonDisposalConfig::BJsonDisposalConfig()
     ofstream outFile(filePath);
     if (!outFile.is_open()) {
         HILOGE("open json failed");
-        free(newStr);
+        cJSON_free(newStr);
         cJSON_Delete(jsonObjectDis);
         return;
     }
     outFile << newStr;
     outFile.close();
-    free(newStr);
+    cJSON_free(newStr);
     cJSON_Delete(jsonObjectDis);
     HILOGI("Creat filePath ok :%{public}s", filePath.c_str());
 }
