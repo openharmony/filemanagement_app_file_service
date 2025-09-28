@@ -15,18 +15,15 @@
 #include "session_incremental_backup_n_exporter.h"
 
 #include <functional>
-#include <memory>
 
 #include "b_error/b_error.h"
 #include "b_filesystem/b_file.h"
-#include "b_incremental_backup_session.h"
 #include "b_incremental_data.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
 #include "backup_kit_inner.h"
 #include "directory_ex.h"
 #include "filemgmt_libhilog.h"
-#include "general_callbacks.h"
 #include "incremental_backup_data.h"
 #include "parse_inc_info_from_js.h"
 #include "service_proxy.h"
@@ -35,10 +32,8 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace LibN;
 
-struct BackupEntity {
-    unique_ptr<BIncrementalBackupSession> session;
-    shared_ptr<GeneralCallbacks> callbacks;
-};
+const std::string CLASS_NAME = "IncrementalBackupSession";
+const std::string NAPI_CLASS_NAME = "NapiIncrementalBackupSession";
 
 static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &fileInfo, UniqueFd fd,
     UniqueFd manifestFd, int sysErrno)
@@ -300,10 +295,11 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
     callbacks->onProcess.CallJsMethod(cbCompl);
 }
 
-static bool SetIncrementalBackupEntity(napi_env env, NFuncArg &funcArg, std::unique_ptr<BackupEntity> backupEntity)
+static bool SetIncrementalBackupEntity(napi_env env, NFuncArg &funcArg, std::unique_ptr<IncrBackupEntity> backupEntity)
 {
     auto finalize = [](napi_env env, void *data, void *hint) {
-        std::unique_ptr<BackupEntity> entity = std::unique_ptr<BackupEntity>(static_cast<BackupEntity *>(data));
+        std::unique_ptr<IncrBackupEntity> entity =
+            std::unique_ptr<IncrBackupEntity>(static_cast<IncrBackupEntity *>(data));
         if (entity == nullptr) {
             HILOGE("Entity is nullptr");
             return;
@@ -315,7 +311,7 @@ static bool SetIncrementalBackupEntity(napi_env env, NFuncArg &funcArg, std::uni
         entity->callbacks->RemoveCallbackRef();
     };
     if (napi_wrap(env, funcArg.GetThisVar(), backupEntity.release(), finalize, nullptr, nullptr) != napi_ok) {
-        HILOGE("Failed to set BackupEntity entity.");
+        HILOGE("Failed to set IncrBackupEntity entity.");
         return false;
     }
     return true;
@@ -367,7 +363,7 @@ napi_value SessionIncrementalBackupNExporter::Constructor(napi_env env, napi_cal
         return nullptr;
     }
     NVal ptr(env, funcArg.GetThisVar());
-    auto backupEntity = std::make_unique<BackupEntity>();
+    auto backupEntity = std::make_unique<IncrBackupEntity>();
     backupEntity->callbacks = make_shared<GeneralCallbacks>(env, ptr, callbacks);
     ErrCode errCode;
     std::string errMsg;
@@ -389,7 +385,7 @@ napi_value SessionIncrementalBackupNExporter::Constructor(napi_env env, napi_cal
         return nullptr;
     }
     if (!SetIncrementalBackupEntity(env, funcArg, std::move(backupEntity))) {
-        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to set BackupEntity entity.").GetCode()).ThrowErr(env);
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to set IncrBackupEntity entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
     HILOGD("called SessionIncrementalBackup::Constructor end");
@@ -415,7 +411,7 @@ napi_value SessionIncrementalBackupNExporter::GetLocalCapabilities(napi_env env,
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-    auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
+    auto backupEntity = NClass::GetEntityOf<IncrBackupEntity>(env, funcArg.GetThisVar());
     if (!(backupEntity && backupEntity->session)) {
         HILOGE("Failed to get backupSession entity.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get backupSession entity.").GetCode()).ThrowErr(env);
@@ -435,7 +431,7 @@ napi_value SessionIncrementalBackupNExporter::GetLocalCapabilities(napi_env env,
         return {obj};
     };
     NVal thisVar(env, funcArg.GetThisVar());
-    return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+    return NAsyncWorkPromise(env, thisVar).Schedule(CLASS_NAME, cbExec, cbCompl).val_;
 }
 
 napi_value SessionIncrementalBackupNExporter::GetBackupDataSize(napi_env env, napi_callback_info cbinfo)
@@ -458,7 +454,7 @@ napi_value SessionIncrementalBackupNExporter::GetBackupDataSize(napi_env env, na
         HILOGE("VerifyAndParseParams failed");
         return nullptr;
     }
-    auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
+    auto backupEntity = NClass::GetEntityOf<IncrBackupEntity>(env, funcArg.GetThisVar());
     if (!(backupEntity && backupEntity->session)) {
         HILOGE("Failed to get backupSession entity.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get backupSession entity.").GetCode()).ThrowErr(env);
@@ -480,7 +476,7 @@ napi_value SessionIncrementalBackupNExporter::GetBackupDataSize(napi_env env, na
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
     NVal thisVar(env, funcArg.GetThisVar());
-    return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+    return NAsyncWorkPromise(env, thisVar).Schedule(CLASS_NAME, cbExec, cbCompl).val_;
 }
 
 static bool VerifyParamSuccess(NFuncArg &funcArg, std::vector<BIncrementalData> &backupBundles,
@@ -536,7 +532,7 @@ napi_value SessionIncrementalBackupNExporter::AppendBundles(napi_env env, napi_c
         HILOGE("VerifyParamSuccess fail");
         return nullptr;
     }
-    auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
+    auto backupEntity = NClass::GetEntityOf<IncrBackupEntity>(env, funcArg.GetThisVar());
     if (!(backupEntity && backupEntity->session)) {
         HILOGE("Failed to get backupSession entity.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get backupSession entity.").GetCode()).ThrowErr(env);
@@ -557,12 +553,12 @@ napi_value SessionIncrementalBackupNExporter::AppendBundles(napi_env env, napi_c
     };
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == NARG_CNT::ONE) {
-        return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+        return NAsyncWorkPromise(env, thisVar).Schedule(CLASS_NAME, cbExec, cbCompl).val_;
     } else if (!bundleInfos.empty()) {
-        return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+        return NAsyncWorkPromise(env, thisVar).Schedule(CLASS_NAME, cbExec, cbCompl).val_;
     } else {
         NVal cb(env, funcArg[NARG_POS::SECOND]);
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(className, cbExec, cbCompl).val_;
+        return NAsyncWorkCallback(env, thisVar, cb).Schedule(CLASS_NAME, cbExec, cbCompl).val_;
     }
 }
 
@@ -586,7 +582,7 @@ napi_value SessionIncrementalBackupNExporter::Release(napi_env env, napi_callbac
         return nullptr;
     }
 
-    auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
+    auto backupEntity = NClass::GetEntityOf<IncrBackupEntity>(env, funcArg.GetThisVar());
     if (!(backupEntity && backupEntity->session)) {
         HILOGE("Failed to get backupSession entity.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get backupSession entity.").GetCode()).ThrowErr(env);
@@ -606,7 +602,7 @@ napi_value SessionIncrementalBackupNExporter::Release(napi_env env, napi_callbac
     HILOGD("Called SessionIncrementalBackup::Release end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
-    return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+    return NAsyncWorkPromise(env, thisVar).Schedule(CLASS_NAME, cbExec, cbCompl).val_;
 }
 
 napi_value SessionIncrementalBackupNExporter::Cancel(napi_env env, napi_callback_info info)
@@ -637,7 +633,7 @@ napi_value SessionIncrementalBackupNExporter::Cancel(napi_env env, napi_callback
     }
     std::string bundleName = bundle.get();
 
-    auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
+    auto backupEntity = NClass::GetEntityOf<IncrBackupEntity>(env, funcArg.GetThisVar());
     if (!(backupEntity && backupEntity->session)) {
         HILOGE("Failed to get backupSession entity.");
         return nullptr;
@@ -657,7 +653,7 @@ napi_value SessionIncrementalBackupNExporter::Cancel(napi_env env, napi_callback
 static NContextCBExec CleanBundleTempDirCBExec(napi_env env, const NFuncArg &funcArg,
                                                std::unique_ptr<char[]> bundleName)
 {
-    auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
+    auto backupEntity = NClass::GetEntityOf<IncrBackupEntity>(env, funcArg.GetThisVar());
     if (!(backupEntity && (backupEntity->session))) {
         HILOGE("Failed to get BackupSession entity.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get BackupSession entity.").GetCode()).ThrowErr(env);
@@ -708,7 +704,7 @@ napi_value SessionIncrementalBackupNExporter::CleanBundleTempDir(napi_env env, n
     };
 
     NVal thisVar(env, funcArg.GetThisVar());
-    return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+    return NAsyncWorkPromise(env, thisVar).Schedule(CLASS_NAME, cbExec, cbCompl).val_;
 }
 
 bool SessionIncrementalBackupNExporter::Export()
@@ -723,13 +719,13 @@ bool SessionIncrementalBackupNExporter::Export()
         NVal::DeclareNapiFunction("cleanBundleTempDir", CleanBundleTempDir),
     };
 
-    auto [succ, classValue] = NClass::DefineClass(exports_.env_, className, Constructor, std::move(props));
+    auto [succ, classValue] = NClass::DefineClass(exports_.env_, CLASS_NAME, Constructor, std::move(props));
     if (!succ) {
         HILOGE("Failed to define class");
         NError(EIO).ThrowErr(exports_.env_);
         return false;
     }
-    succ = NClass::SaveClass(exports_.env_, className, classValue);
+    succ = NClass::SaveClass(exports_.env_, CLASS_NAME, classValue);
     if (!succ) {
         HILOGE("Failed to save class");
         NError(EIO).ThrowErr(exports_.env_);
@@ -737,12 +733,104 @@ bool SessionIncrementalBackupNExporter::Export()
     }
 
     HILOGD("called SessionIncrementalBackupNExporter::Export end");
-    return exports_.AddProp(className, classValue);
+    return exports_.AddProp(CLASS_NAME, classValue);
+}
+
+napi_value SessionIncrementalBackupNExporter::ConstructorFromEntity(napi_env env, napi_callback_info cbinfo)
+{
+    HILOGD("called ConstructorFromEntity begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+    NFuncArg funcArg(env, cbinfo);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    void* entityRawPtr = nullptr;
+    if (napi_ok != napi_get_value_external(env, funcArg[NARG_POS::FIRST], &entityRawPtr)) {
+        HILOGE("parse entity raw ptr for napi_value fail");
+        return nullptr;
+    }
+    IncrBackupEntity* entity =  reinterpret_cast<IncrBackupEntity*>(entityRawPtr);
+    if (entity == nullptr) {
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not session pointer.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    std::unique_ptr<IncrBackupEntity> backupEntity(entity);
+    if (backupEntity->session == nullptr || backupEntity->callbacks == nullptr) {
+        HILOGE("session or callback is null");
+        return nullptr;
+    }
+    if (!SetIncrementalBackupEntity(env, funcArg, std::move(backupEntity))) {
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to set IncrBackupEntity entity.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    HILOGD("called ConstructorFromEntity end");
+    return funcArg.GetThisVar();
+}
+
+napi_value SessionIncrementalBackupNExporter::CreateByEntity(napi_env env, std::unique_ptr<IncrBackupEntity> entity)
+{
+    HILOGD("CreateByEntity begin");
+    if (entity == nullptr) {
+        HILOGE("entity is null");
+        return nullptr;
+    }
+    vector<napi_property_descriptor> props = {
+        NVal::DeclareNapiFunction("getLocalCapabilities", GetLocalCapabilities),
+        NVal::DeclareNapiFunction("getBackupDataSize", GetBackupDataSize),
+        NVal::DeclareNapiFunction("appendBundles", AppendBundles),
+        NVal::DeclareNapiFunction("release", Release),
+        NVal::DeclareNapiFunction("cancel", Cancel),
+        NVal::DeclareNapiFunction("cleanBundleTempDir", CleanBundleTempDir),
+    };
+    auto [defRet, constroctor] = NClass::DefineClass(env, NAPI_CLASS_NAME, ConstructorFromEntity, std::move(props));
+    if (!defRet) {
+        HILOGE("Failed to define class");
+        return nullptr;
+    }
+    napi_value instance;
+    napi_value napiEntity;
+    auto finalize = [](napi_env env, void *data, void *hint) {
+        std::unique_ptr<IncrBackupEntity> entity =
+            std::unique_ptr<IncrBackupEntity>(static_cast<IncrBackupEntity *>(data));
+        if (entity == nullptr) {
+            HILOGE("Entity is nullptr");
+            return;
+        }
+        if (entity->callbacks == nullptr) {
+            HILOGE("Callbacks is nullptr");
+            return;
+        }
+        entity->callbacks->RemoveCallbackRef();
+    };
+    IncrBackupEntity* entityPtr = entity.release();
+    if (napi_ok != napi_create_external(env, (void *)entityPtr, finalize, nullptr, &napiEntity)) {
+        HILOGE("wrap entity prt fail");
+        delete entityPtr;
+        return nullptr;
+    }
+    size_t argc = 1;
+    napi_value args[1] = { napiEntity };
+    
+    napi_status napiStatus = napi_new_instance(env, constroctor, argc, args, &instance);
+    if (napi_status::napi_ok != napiStatus) {
+        HILOGE("Failed to napi_new_instance, status=%{public}d", napiStatus);
+        return nullptr;
+    }
+    HILOGD("CreateByEntity end");
+    return instance;
 }
 
 string SessionIncrementalBackupNExporter::GetClassName()
 {
-    return SessionIncrementalBackupNExporter::className;
+    return CLASS_NAME;
 }
 
 SessionIncrementalBackupNExporter::SessionIncrementalBackupNExporter(napi_env env, napi_value exports)

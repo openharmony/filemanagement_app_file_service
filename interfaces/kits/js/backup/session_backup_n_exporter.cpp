@@ -15,28 +15,20 @@
 #include "session_backup_n_exporter.h"
 
 #include <functional>
-#include <memory>
 
 #include "b_error/b_error.h"
 #include "b_filesystem/b_file.h"
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
-#include "b_session_backup.h"
 #include "backup_kit_inner.h"
 #include "directory_ex.h"
 #include "filemgmt_libhilog.h"
-#include "general_callbacks.h"
 #include "parse_inc_info_from_js.h"
 #include "service_proxy.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace LibN;
-
-struct BackupEntity {
-    unique_ptr<BSessionBackup> session;
-    shared_ptr<GeneralCallbacks> callbacks;
-};
 
 static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &fileInfo, UniqueFd fd, int sysErrno)
 {
@@ -739,6 +731,98 @@ bool SessionBackupNExporter::Export()
 
     HILOGD("called SessionBackupNExporter::Export end");
     return exports_.AddProp(className, classValue);
+}
+
+napi_value SessionBackupNExporter::ConstructorFromEntity(napi_env env, napi_callback_info cbinfo)
+{
+    HILOGD("called ConstructorFromEntity begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+    NFuncArg funcArg(env, cbinfo);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    void* entityRawPtr = nullptr;
+    if (napi_ok != napi_get_value_external(env, funcArg[NARG_POS::FIRST], &entityRawPtr)) {
+        HILOGE("parse entity raw ptr for napi_value fail");
+        return nullptr;
+    }
+    BackupEntity* entity =  reinterpret_cast<BackupEntity*>(entityRawPtr);
+    if (entity == nullptr) {
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not session pointer.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    std::unique_ptr<BackupEntity> backupEntity(entity);
+    if (backupEntity->session == nullptr || backupEntity->callbacks == nullptr) {
+        HILOGE("session or callback is null");
+        return nullptr;
+    }
+    if (!SetSessionBackupEntity(env, funcArg, std::move(backupEntity))) {
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to set IncrBackupEntity entity.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    HILOGD("called ConstructorFromEntity end");
+    return funcArg.GetThisVar();
+}
+
+napi_value SessionBackupNExporter::CreateByEntity(napi_env env, std::unique_ptr<BackupEntity> entity)
+{
+    HILOGD("CreateByEntity begin");
+    if (entity == nullptr) {
+        HILOGE("entity is null");
+        return nullptr;
+    }
+    vector<napi_property_descriptor> props = {
+        NVal::DeclareNapiFunction("getLocalCapabilities", GetLocalCapabilities),
+        NVal::DeclareNapiFunction("getBackupDataSize", GetBackupDataSize),
+        NVal::DeclareNapiFunction("appendBundles", AppendBundles),
+        NVal::DeclareNapiFunction("release", Release),
+        NVal::DeclareNapiFunction("cancel", Cancel),
+        NVal::DeclareNapiFunction("cleanBundleTempDir", CleanBundleTempDir),
+    };
+    auto [defRet, constroctor] = NClass::DefineClass(env, napiClassName_, ConstructorFromEntity,
+        std::move(props));
+    if (!defRet) {
+        HILOGE("Failed to define class");
+        return nullptr;
+    }
+    napi_value instance;
+    napi_value napiEntity;
+    auto finalize = [](napi_env env, void *data, void *hint) {
+        std::unique_ptr<BackupEntity> entity(static_cast<BackupEntity *>(data));
+        if (entity == nullptr) {
+            HILOGE("Entity is nullptr");
+            return;
+        }
+        if (entity->callbacks == nullptr) {
+            HILOGE("Callbacks is nullptr");
+            return;
+        }
+        entity->callbacks->RemoveCallbackRef();
+    };
+    BackupEntity* entityPtr = entity.release();
+    if (napi_ok != napi_create_external(env, (void *)entityPtr, finalize, nullptr, &napiEntity)) {
+        HILOGE("wrap entity prt fail");
+        delete entityPtr;
+        return nullptr;
+    }
+    size_t argc = 1;
+    napi_value args[1] = { napiEntity };
+    
+    napi_status napiStatus = napi_new_instance(env, constroctor, argc, args, &instance);
+    if (napi_status::napi_ok != napiStatus) {
+        HILOGE("Failed to napi_new_instance, status=%{public}d", napiStatus);
+        return nullptr;
+    }
+    HILOGD("CreateByEntity end");
+    return instance;
 }
 
 string SessionBackupNExporter::GetClassName()
