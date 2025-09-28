@@ -147,7 +147,7 @@ static bool AddUnicastInfo(std::string &bundleInfo)
     }
     bundleInfo = string(jsonStr);
     cJSON_Delete(root);
-    free(jsonStr);
+    cJSON_free(jsonStr);
     return true;
 }
 
