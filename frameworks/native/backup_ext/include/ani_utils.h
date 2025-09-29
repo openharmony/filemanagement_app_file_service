@@ -229,7 +229,7 @@ inline bool UnionAccessor::TryConvert<bool>(bool &value)
     }
 
     ani_boolean aniValue;
-    auto ret = env_->Object_CallMethodByName_Boolean(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Boolean(obj_, "toBoolean", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
@@ -245,7 +245,7 @@ inline bool UnionAccessor::TryConvert<int>(int &value)
     }
 
     ani_int aniValue;
-    auto ret = env_->Object_CallMethodByName_Int(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Int(obj_, "toInt", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
@@ -261,7 +261,7 @@ inline bool UnionAccessor::TryConvert<double>(double &value)
     }
 
     ani_double aniValue;
-    auto ret = env_->Object_CallMethodByName_Double(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Double(obj_, "toDouble", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
