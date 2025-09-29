@@ -147,7 +147,7 @@ static bool AddUnicastInfo(std::string &bundleInfo)
     }
     bundleInfo = string(jsonStr);
     cJSON_Delete(root);
-    free(jsonStr);
+    cJSON_free(jsonStr);
     return true;
 }
 
@@ -450,7 +450,7 @@ bool BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
     }
     detailInfo = string(jsonStr);
     cJSON_Delete(infos);
-    free(jsonStr);
+    cJSON_free(jsonStr);
     return true;
 }
 
@@ -541,7 +541,7 @@ bool BJsonUtil::WriteToStr(std::vector<BundleDataSize> &bundleDataList,
     }
     jsonStr = string(jsonString);
     cJSON_Delete(root);
-    free(jsonString);
+    cJSON_free(jsonString);
     HILOGI("write json str ok, scanned size is %{public}zu", listSize);
     return true;
 }

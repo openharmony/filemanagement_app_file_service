@@ -64,13 +64,13 @@ BJsonDisposalConfig::BJsonDisposalConfig()
     ofstream outFile(filePath);
     if (!outFile.is_open()) {
         HILOGE("open json failed");
-        free(newStr);
+        cJSON_free(newStr);
         cJSON_Delete(jsonObjectDis);
         return;
     }
     outFile << newStr;
     outFile.close();
-    free(newStr);
+    cJSON_free(newStr);
     cJSON_Delete(jsonObjectDis);
     HILOGI("Creat filePath ok :%{public}s", filePath.c_str());
 }
@@ -116,14 +116,14 @@ bool BJsonDisposalConfig::AppendIntoDisposalConfigFile(const string& bundleName)
     ofstream outFile(filePath);
     if (!outFile.is_open()) {
         HILOGE("open json failed");
-        free(newStr);
+        cJSON_free(newStr);
         cJSON_Delete(jsonObjectDis);
         return false;
     }
     outFile << newStr;
     outFile.close();
 
-    free(newStr);
+    cJSON_free(newStr);
     cJSON_Delete(jsonObjectDis);
     return true;
 }
@@ -170,14 +170,14 @@ bool BJsonDisposalConfig::DeleteFromDisposalConfigFile(const string& bundleName)
     ofstream output(filePath);
     if (!output.is_open()) {
         HILOGE("open json failed");
-        free(newStr);
+        cJSON_free(newStr);
         cJSON_Delete(jsonObjectDis);
         return false;
     }
     output << newStr;
     output.close();
 
-    free(newStr);
+    cJSON_free(newStr);
     cJSON_Delete(jsonObjectDis);
     return true;
 }
