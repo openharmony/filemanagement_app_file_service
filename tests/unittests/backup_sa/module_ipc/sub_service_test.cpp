@@ -1509,6 +1509,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetLocalCapabilitiesForBundleInfos_0000, TestS
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
         EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_EQ(-EPERM, service->GetLocalCapabilitiesForBundleInfos());
     } catch (...) {
@@ -1548,6 +1549,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetBackupDataSize_0000, TestSize.Level1)
         EXPECT_CALL(*token, VerifyAccessToken(_, _))
             .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_DENIED));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
+            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         ret = service->GetBackupDataSize(isPreciseScan, bundleNameList);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
@@ -2350,4 +2352,108 @@ HWTEST_F(ServiceTest, SUB_Service_DoNoticeClientFinish_0000, testing::ext::TestS
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by DoNoticeClientFinish.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DoNoticeClientFinish_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_BroadCastRestore_0000
+ * @tc.name: SUB_Service_BroadCastRestore_0000
+ * @tc.desc: 测试 BroadCastRestore 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_BroadCastRestore_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_BroadCastRestore_0000";
+    try {
+        service->bundleBroadCastInfoMap_ = {};
+        std::string bundleName1 = "com.ohos.test";
+        std::string bundleName2 = "com.ohos.test2";
+        service->BroadCastRestore(bundleName1, BConstants::BROADCAST_RESTORE_END);
+        EXPECT_TRUE(true);
+
+        std::map<std::string, std::string> broadCastInfoMap;
+        broadCastInfoMap[bundleName1] = bundleName1;
+        service->bundleBroadCastInfoMap_[bundleName1].broadCastInfoMap = broadCastInfoMap;
+        service->bundleBroadCastInfoMap_[bundleName1].userId = 0;
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
+        service->BroadCastRestore(BConstants::BROADCAST_RELEASE_BUNDLES, BConstants::BROADCAST_RESTORE_END);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
+        service->BroadCastRestore(bundleName2, BConstants::BROADCAST_RESTORE_END);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
+        service->BroadCastRestore(bundleName1, BConstants::BROADCAST_RESTORE_END);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by BroadCastRestore.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_BroadCastRestore_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_SetBroadCastInfoMap_0000
+ * @tc.name: SUB_Service_SetBroadCastInfoMap_0000
+ * @tc.desc: 测试 SetBroadCastInfoMap 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_SetBroadCastInfoMap_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_SetBroadCastInfoMap_0000";
+    try {
+        std::string bundleName1 = "com.ohos.test";
+        service->SetBroadCastInfoMap("", {}, 0);
+        EXPECT_TRUE(true);
+
+        std::map<std::string, std::string> broadCastInfoMap;
+        broadCastInfoMap[bundleName1] = bundleName1;
+        service->SetBroadCastInfoMap(bundleName1, broadCastInfoMap, 0);
+        EXPECT_EQ(service->bundleBroadCastInfoMap_[bundleName1].broadCastInfoMap[bundleName1],
+            bundleName1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetBroadCastInfoMap.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_SetBroadCastInfoMap_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_BroadCastSingle_0000
+ * @tc.name: SUB_Service_BroadCastSingle_0000
+ * @tc.desc: 测试 BroadCastSingle 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_BroadCastSingle_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_BroadCastSingle_0000";
+    try {
+        std::string bundleName1 = "com.ohos.test";
+        std::map<std::string, std::string> broadCastInfoMap;
+        broadCastInfoMap[bundleName1] = BConstants::BROADCAST_RESTORE_START;
+        service->SetBroadCastInfoMap(bundleName1, broadCastInfoMap, 0);
+        service->BroadCastSingle(bundleName1, "1");
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
+        service->BroadCastSingle(bundleName1, BConstants::BROADCAST_RESTORE_START);
+        service->bundleBroadCastInfoMap_ = {};
+        EXPECT_TRUE(true);
+
+        service->BroadCastSingle(bundleName1, BConstants::BROADCAST_RESTORE_END);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by BroadCastSingle.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_BroadCastSingle_0000";
 }

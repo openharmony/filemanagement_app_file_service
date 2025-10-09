@@ -627,4 +627,158 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0200, testing::ext::Tes
     }
     GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildExtensionErrInfo_0200";
 }
+
+/**
+ * @tc.number: b_jsonutil_FindBackupSceneByName_0100
+ * @tc.name: b_jsonutil_FindBackupSceneByName_0100
+ * @tc.desc: Test function of FindBackupSceneByName interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_FindBackupSceneByName_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin FindBackupSceneByName_0100";
+    try {
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailsMap;
+        std::string bundleName = "bundle1";
+        std::string backupScene = "";
+
+        bool result = BJsonUtil::FindBackupSceneByName(bundleNameDetailsMap, bundleName, backupScene);
+        EXPECT_EQ(false, result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end FindBackupSceneByName_0100";
+}
+
+/**
+ * @tc.number: b_jsonutil_FindBackupSceneByName_0200
+ * @tc.name: b_jsonutil_FindBackupSceneByName_0200
+ * @tc.desc: Test function of FindBackupSceneByName interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_FindBackupSceneByName_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin FindBackupSceneByName_0200";
+    try {
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailsMap;
+        std::string bundleName = "bundle1";
+        std::string backupScene = "";
+        BJsonUtil::BundleDetailInfo detailInfo;
+        detailInfo.bundleName = bundleName;
+        detailInfo.backupScene = "backupScene";
+        bundleNameDetailsMap[bundleName] = {detailInfo};
+
+        bool result = BJsonUtil::FindBackupSceneByName(bundleNameDetailsMap, bundleName, backupScene);
+        EXPECT_EQ(true, result);
+        EXPECT_EQ(detailInfo.backupScene, backupScene);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end FindBackupSceneByName_0200";
+}
+
+/**
+ * @tc.number: b_jsonutil_FindBackupSceneByName_0300
+ * @tc.name: b_jsonutil_FindBackupSceneByName_0300
+ * @tc.desc: Test function of FindBackupSceneByName interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_FindBackupSceneByName_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin FindBackupSceneByName_0300";
+    try {
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailsMap;
+        std::string bundleName = "bundle1";
+        BJsonUtil::BundleDetailInfo detailInfo;
+        detailInfo.bundleName = bundleName;
+        detailInfo.backupScene = "";
+        std::string backupScene = "";
+        bundleNameDetailsMap[bundleName] = {detailInfo};
+
+        bool result = BJsonUtil::FindBackupSceneByName(bundleNameDetailsMap, bundleName, backupScene);
+        EXPECT_EQ(false, result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end FindBackupSceneByName_0300";
+}
+
+/**
+ * @tc.number: b_jsonutil_FindBroadCastInfoByName_0100
+ * @tc.name: b_jsonutil_FindBroadCastInfoByName_0100
+ * @tc.desc: Test function of FindBroadCastInfoByName interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_FindBroadCastInfoByName_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin FindBroadCastInfoByName_0100";
+    try {
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailsMap;
+        std::map<std::string, std::string> broadCastInfoMap;
+        std::string bundleName = "bundle1";
+        std::string backupScene = "";
+
+        bool result = BJsonUtil::FindBroadCastInfoByName(bundleNameDetailsMap, bundleName,
+            "type", broadCastInfoMap);
+        EXPECT_EQ(false, result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end FindBroadCastInfoByName_0100";
+}
+
+/**
+ * @tc.number: b_jsonutil_FindBroadCastInfoByName_0200
+ * @tc.name: b_jsonutil_FindBroadCastInfoByName_0200
+ * @tc.desc: Test function of FindBroadCastInfoByName interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_FindBroadCastInfoByName_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin FindBroadCastInfoByName_0200";
+    try {
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailsMap;
+        std::map<std::string, std::string> broadCastInfoMap;
+        std::string bundleName = "bundle1";
+        std::string broadCastType = "123";
+        std::string type = "testType";
+        BJsonUtil::BundleDetailInfo detailInfo;
+        bundleNameDetailsMap[bundleName] = {detailInfo};
+
+        bool result = BJsonUtil::FindBroadCastInfoByName(bundleNameDetailsMap, bundleName,
+            "type", broadCastInfoMap);
+        EXPECT_EQ(false, result);
+        
+        detailInfo.bundleName = bundleName;
+        detailInfo.type = type;
+        detailInfo.broadCastType = broadCastType;
+        bundleNameDetailsMap[bundleName] = {detailInfo};
+        result = BJsonUtil::FindBroadCastInfoByName(bundleNameDetailsMap, bundleName,
+            type, broadCastInfoMap);
+        EXPECT_EQ(true, result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end FindBroadCastInfoByName_0200";
+}
 } // namespace OHOS::FileManagement::Backup
