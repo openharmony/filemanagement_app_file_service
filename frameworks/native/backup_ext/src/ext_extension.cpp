@@ -1808,7 +1808,7 @@ void BackupExtExtension::ReportAppStatistic(const std::string &func, ErrCode err
 {
     if (curScenario_ == BackupRestoreScenario::FULL_BACKUP ||
         curScenario_ == BackupRestoreScenario::INCREMENTAL_BACKUP) {
-        appStatistic_->ReportBackup(func, errCode);
+        appStatistic_->ReportBackup(func, RadarError(MODULE_BACKUP, errCode).GenCode());
     } else {
         appStatistic_->untarSpend_ = static_cast<uint32_t>(radarRestoreInfo_.tarFileSpendTime);
         appStatistic_->bigFileSpend_ = static_cast<uint32_t>(radarRestoreInfo_.bigFileSpendTime);
@@ -1817,7 +1817,7 @@ void BackupExtExtension::ReportAppStatistic(const std::string &func, ErrCode err
         appStatistic_->tarFileCount_ = radarRestoreInfo_.tarFileNum;
         appStatistic_->bigFileSize_ = radarRestoreInfo_.bigFileSize;
         appStatistic_->tarFileSize_ = radarRestoreInfo_.tarFileSize;
-        appStatistic_->ReportRestore(func, errCode);
+        appStatistic_->ReportRestore(func, RadarError(MODULE_RESTORE, errCode).GenCode());
     }
 }
 
