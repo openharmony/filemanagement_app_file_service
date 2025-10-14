@@ -71,11 +71,11 @@ HWTEST_F(BRadarTest, RadarErrorCode_0100, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "BRadarTest-begin RadarErrorCode_0100";
     try {
         RadarError err(BError{BError::Codes::EXT_INVAL_ARG});
-        EXPECT_EQ(err.error_, 13920);
+        EXPECT_EQ(err.error_, static_cast<uint16_t>(BError::Codes::EXT_INVAL_ARG));
         EXPECT_EQ(err.GenCode(), static_cast<int32_t>(((SUB_SYSTEM_ID & MASK_SYS) << MOVE_BIT_SYS)
-            | ((MODULE_UNKNOWN & MASK_MODULE) << MOVE_BIT_MODULE) | (13920 & MASK_ERROR)));
+            | ((MODULE_UNKNOWN & MASK_MODULE) << MOVE_BIT_MODULE) | (err.error_ & MASK_ERROR)));
         err.UpdateByBError(BError(139000020));
-        EXPECT_EQ(err.error_, 13942);
+        EXPECT_EQ(err.error_, 13920);
         RadarError err2(MODULE_ABILITY_MGR_SVC, BError(BError::Codes::OK));
         EXPECT_EQ(err2.GenCode(), 0);
         EXPECT_EQ(err2.moduleId_, MODULE_ABILITY_MGR_SVC);
@@ -86,6 +86,7 @@ HWTEST_F(BRadarTest, RadarErrorCode_0100, testing::ext::TestSize.Level1)
         EXPECT_EQ(0, err4.TransferErrCode(0));
         EXPECT_EQ(1, err4.TransferErrCode(-1));
         EXPECT_EQ(30099, err4.TransferErrCode(300000099));
+        EXPECT_EQ(20000, err4.TransferErrCode(20000));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BRadarTest-an exception occurred.";

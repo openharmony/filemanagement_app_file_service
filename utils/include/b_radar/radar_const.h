@@ -100,9 +100,10 @@ struct RadarError {
         return static_cast<int32_t>(((SUB_SYSTEM_ID & MASK_SYS) << MOVE_BIT_SYS)
             | ((moduleId_ & MASK_MODULE) << MOVE_BIT_MODULE) | (error_ & MASK_ERROR));
     }
+
     void UpdateByBError(BError errCode)
     {
-        int32_t code = errCode.GetCode();
+        int32_t code = static_cast<int32_t>(errCode.GetRawCode());
         errMsg_ = errCode.ToString();
         error_ = TransferErrCode(code);
     }
@@ -114,6 +115,9 @@ struct RadarError {
         }
         if (code < 0) {
             code = -code;
+        }
+        if (code < TRANSFER_BOUND) {
+            return static_cast<uint16_t>(code);
         }
         int32_t errBase = code / DIVIDE_BASE;
         while (errBase > TRANSFER_BOUND) {
