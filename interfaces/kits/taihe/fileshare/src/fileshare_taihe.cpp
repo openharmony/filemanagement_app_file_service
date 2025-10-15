@@ -112,7 +112,7 @@ static int32_t GetUriPoliciesArg(taihe::array_view<ohos::fileshare::fileShare::P
     for (uint32_t i = 0; i < count; i++) {
         OHOS::AppFileService::UriPolicyInfo uriPolicy;
         uriPolicy.uri = policies[i].uri;
-        uriPolicy.mode = policies[i].operationMode;
+        uriPolicy.mode = static_cast<uint32_t>(policies[i].operationMode);
         if (uriPolicy.uri == FILE_NOPS) {
             LOGE("URI is empty");
             return OHOS::FileManagement::LibN::E_PARAMS;
@@ -138,7 +138,7 @@ static int32_t GetPathPoliciesArg(taihe::array_view<ohos::fileshare::fileShare::
     for (uint32_t i = 0; i < count; i++) {
         OHOS::AppFileService::PathPolicyInfo pathPolicie;
         pathPolicie.path = policies[i].path;
-        pathPolicie.mode = policies[i].operationMode;
+        pathPolicie.mode = static_cast<uint32_t>(policies[i].operationMode);
         if (pathPolicie.path == FILE_NOPS) {
             LOGE("path is empty");
             return OHOS::FileManagement::LibN::E_PARAMS;
@@ -370,7 +370,7 @@ void GrantUriPermissionSync(taihe::string_view uri, taihe::string_view bundleNam
     UriPermissionInfo uriPermInfo;
     uriPermInfo.uri = uri;
     uriPermInfo.bundleName = bundleName;
-    uriPermInfo.flag = result;
+    uriPermInfo.flag = static_cast<unsigned int>(result);
     uriPermInfo.mode = GetModeFromFlag((int32_t)result);
 
     int ret = DoGrantUriPermission(uriPermInfo);

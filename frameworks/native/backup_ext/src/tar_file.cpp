@@ -75,6 +75,10 @@ constexpr int BROTLI_QUALITY = 1;
 
 UniqueFile::UniqueFile(const char* filePath, const char* mode)
 {
+    if (filePath == nullptr) {
+        return;
+    }
+
     file_ = fopen(filePath, mode);
     if (file_ == nullptr) {
         HILOGE("open file fail err: %{public}s", strerror(errno));
@@ -170,7 +174,7 @@ bool Lz4Compress::CompressBuffer(Buffer& input, Buffer& output)
         HILOGE("compress fail, error: %{public}d", compressedSize);
         return false;
     }
-    output.size_ = compressedSize;
+    output.size_ = static_cast<size_t>(compressedSize);
     return true;
 #else
     return false;
