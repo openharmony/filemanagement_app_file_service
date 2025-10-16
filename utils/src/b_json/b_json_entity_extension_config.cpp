@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,6 @@
 #include "b_filesystem/b_file.h"
 #include "b_ohos/startup/backup_para.h"
 #include "b_resources/b_constants.h"
-#include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -246,4 +245,47 @@ vector<string> BJsonEntityExtensionConfig::GetDirList(Json::Value& jsonItem) con
     return dirs;
 }
 
+std::unordered_map<std::string, std::string> BJsonEntityExtensionConfig::GetCompatibleDirMapping() const
+{
+    if (!HasArray(BConstants::COMPATIBLE_DIR_MAPPING)) {
+        return {};
+    }
+    std::unordered_map<std::string, std::string> mapping;
+    for (auto &&item : obj_[BConstants::COMPATIBLE_DIR_MAPPING]) {
+        if (!item.isObject()) {
+            HILOGE("item is not object");
+            continue;
+        }
+        if (item.empty()) {
+            HILOGE("Each item of array 'compatDirMapping' must be not empty");
+            continue;
+        }
+        if (!item.isMember(BConstants::BACKUP_DIR) || !item[BConstants::BACKUP_DIR].isString()
+            || item[BConstants::BACKUP_DIR].empty()) {
+            HILOGE("item's backupDir is invalid");
+            continue;
+        }
+        if (!item.isMember(BConstants::RESTORE_DIR) || !item[BConstants::RESTORE_DIR].isString()
+            || item[BConstants::RESTORE_DIR].empty()) {
+            HILOGE("item's restoreDir is invalid");
+            continue;
+        }
+        std::string restoreDir = item[BConstants::RESTORE_DIR].asString();
+        std::string backupDir = item[BConstants::BACKUP_DIR].asString();
+        if (restoreDir.find(BConstants::BACKUP_RESTORE_DIR_SEPARATOR) != std::string::npos) {
+            HILOGE("config compatDirMapping.restoreDir contain separator!");
+            continue;
+        }
+        if (backupDir.find(BConstants::BACKUP_RESTORE_DIR_SEPARATOR) != std::string::npos) {
+            HILOGE("config compatDirMapping.backupDir contain separator!");
+            continue;
+        }
+        mapping.emplace(restoreDir, backupDir);
+        if (mapping.size() > BConstants::MAX_COMPAT_DIR_COUNT) {
+            HILOGE("compat dir mapping size is too big!");
+            return {};
+        }
+    }
+    return mapping;
+}
 } // namespace OHOS::FileManagement::Backup

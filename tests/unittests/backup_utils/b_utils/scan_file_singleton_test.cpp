@@ -52,45 +52,22 @@ HWTEST_F(ScanFileSingletonTest, scan_file_singleton_GetInstance_0100, testing::e
 }
 
 /**
- * @brief 测试获取所有大文件
- * @tc.number: SUB_scan_file_singleton_GetAllBigfiles_0100
- * @tc.name: scan_file_singleton_GetAllBigfiles_0100
- * @tc.desc: 测试ScanFileSingleton的GetAllBigfiles方法是否能正确获取所有文件信息
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- */
-HWTEST_F(ScanFileSingletonTest, scan_file_singleton_GetAllBigfiles_0100, testing::ext::TestSize.Level1)
-{
-    auto& instance = ScanFileSingleton::GetInstance();
-    struct stat fileStat = {};
-    // 假设文件大小为2048字节
-    fileStat.st_size = 2048;
-    instance.AddBigFile("/path/to/another_file", fileStat);
-
-    auto allBigFiles = instance.GetAllBigFiles();
-
-    EXPECT_EQ(allBigFiles.size(), 1) << "There should be one big file in queue.";
-    EXPECT_EQ(allBigFiles["/path/to/another_file"].st_size, 2048) << "the file size should be 2048 bytes.";
-}
-
-/**
  * @brief 测试设置和获取完成标志
- * @tc.number: SUB_scan_file_singleton_SetGetCompletedFlag_0100
- * @tc.name: scan_file_singleton_SetGetCompletedFlag_0100
+ * @tc.number: SUB_scan_file_singleton_IsProcessCompleted_0100
+ * @tc.name: scan_file_singleton_IsProcessCompleted_0100
  * @tc.desc: 测试ScanFileSingleton的SetCompletedFlag和GetCompletedFlag方法是否能正确设置和获取完成标志
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  */
-HWTEST_F(ScanFileSingletonTest, scan_file_singleton_SetGetCompletedFlag_0100, testing::ext::TestSize.Level1)
+HWTEST_F(ScanFileSingletonTest, scan_file_singleton_IsProcessCompleted_0100, testing::ext::TestSize.Level1)
 {
     auto& instance = ScanFileSingleton::GetInstance();
     instance.SetCompletedFlag(true);
-    EXPECT_TRUE(instance.GetCompletedFlag()) << "The completed flag should be true.";
+    EXPECT_TRUE(instance.IsProcessCompleted()) << "The completed flag should be true.";
 
     instance.SetCompletedFlag(false);
-    EXPECT_FALSE(instance.GetCompletedFlag()) << "The completed flag should be false.";
+    EXPECT_FALSE(instance.IsProcessCompleted()) << "The completed flag should be false.";
 }
 
 /**
@@ -110,40 +87,8 @@ HWTEST_F(ScanFileSingletonTest, scan_file_singleton_GetAllSmallFiles_0100, testi
     auto allSmallFiles = instance.GetAllSmallFiles();
 
     EXPECT_EQ(allSmallFiles.size(), 1) << "There should be one small file in queue.";
-    EXPECT_EQ(allSmallFiles["/path/to/small_file.txt"], 512) << "The file size should be 512 bytes.";
-}
-
-/**
- * @brief 测试设置和获取includeSize
- * @tc.number: SUB_scan_file_singleton_SetGetIncludeSize_0100
- * @tc.name: scan_file_singleton_SetGetIncludeSize_0100
- * @tc.desc: 测试ScanFileSingleton的SetIncludeSize和GetIncludeSize方法是否能正确设置和获取includeSize
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- */
-HWTEST_F(ScanFileSingletonTest, scan_file_singleton_SetGetIncludeSize_0100, testing::ext::TestSize.Level1)
-{
-    auto& instance = ScanFileSingleton::GetInstance();
-
-    instance.SetIncludeSize(100);
-    EXPECT_EQ(instance.GetIncludeSize(), 100) << "The include size should be 100.";
-}
-
-/**
- * @brief 测试设置和获取excludeSize
- * @tc.number: SUB_scan_file_singleton_SetGetExcludeSize_0100
- * @tc.name: scan_file_singleton_SetGetExcludeSize_0100
- * @tc.desc: 测试ScanFileSingleton的SetExcludeSize和GetExcludeSize方法是否能正确设置和获取excludeSize
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- */
-HWTEST_F(ScanFileSingletonTest, scan_file_singleton_SetGetExcludeSize_0100, testing::ext::TestSize.Level1)
-{
-    auto& instance = ScanFileSingleton::GetInstance();
-
-    instance.SetExcludeSize(100);
-    EXPECT_EQ(instance.GetExcludeSize(), 100) << "The exclude size should be 100.";
+    auto item = allSmallFiles[0];
+    EXPECT_EQ(item->filePath_, "/path/to/small_file.txt") << "The file path should be /path/to/small_file.txt.";
+    EXPECT_EQ(item->fileSize_, 512) << "The file size should be 512 bytes.";
 }
 } // namespace OHOS::FileManagement::Backup

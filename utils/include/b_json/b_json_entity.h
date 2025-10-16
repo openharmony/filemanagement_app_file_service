@@ -20,6 +20,7 @@
 #include <string>
 #include <string_view>
 
+#include "filemgmt_libhilog.h"
 #include "json/json.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -37,7 +38,28 @@ public:
         return std::string(jsonFromRealWorld);
     }
 
-public:
+    /**
+     * @brief Judge the key exist and isArray
+     *
+     * @return bool
+     */
+    bool HasArray(const std::string& key) const
+    {
+        if (obj_.isNull()) {
+            HILOGE("Uninitialized JSon Object reference");
+            return false;
+        }
+        if (!obj_.isMember(key)) {
+            HILOGE("'%{public}s' field not found", key.c_str());
+            return false;
+        }
+        if (!obj_[key].isArray()) {
+            HILOGE("'%{public}s' field must be an array", key.c_str());
+            return false;
+        }
+        return true;
+    }
+
     /**
      * @brief 构造方法，具备T(Json::Value&, std::any)能力的构造函数
      *

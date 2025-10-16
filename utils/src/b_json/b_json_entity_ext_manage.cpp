@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -166,6 +166,21 @@ void BJsonEntityExtManage::SetExtManage(const map<string, tuple<string, struct s
         value["isUserTar"] = isBeforeTar && CheckUserTar(path, sta);
         value["isBigFile"] = !CheckOwnPackTar(path) && CheckBigFile(sta);
 
+        obj_.append(value);
+    }
+}
+
+void BJsonEntityExtManage::SetExtManage(const std::vector<std::shared_ptr<IFileInfo>>& allFiles) const
+{
+    obj_.clear();
+    for (const auto& item : allFiles) {
+        Json::Value value;
+        value["fileName"] = item->filename_;
+        std::string restorePath = item->GetRestorePath();
+        value["information"]["path"] = restorePath.empty() ? item->filePath_ : restorePath;
+        value["information"]["stat"] = Stat2JsonValue(item->sta_);
+        value["isUserTar"] = item->isBigFile_ && CheckUserTar(item->filePath_, item->sta_);
+        value["isBigFile"] = item->isBigFile_;
         obj_.append(value);
     }
 }

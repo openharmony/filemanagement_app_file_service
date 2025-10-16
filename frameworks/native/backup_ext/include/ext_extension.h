@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <unordered_set>
 
 #include <sys/stat.h>
 
@@ -115,14 +116,6 @@ private:
      */
     int DoBackup(TarMap &bigFileInfo, TarMap &bigFileInfoBackuped, map<string, size_t> &smallFiles,
                  uint32_t includesNum, uint32_t excludesNum);
-
-    /**
-     * @brief backup
-     *
-     * @param bigFileInfo bigfiles to be backup
-     * @param backupedFileSize backuped file size
-     */
-    int DoBackupBigFiles(TarMap &bigFileInfo, uint32_t backupedFileSize);
 
     /**
      * @brief restore
@@ -232,11 +225,12 @@ private:
     int DoIncrementalBackupTask(UniqueFd incrementalFd, UniqueFd manifestFd);
     ErrCode IncrementalBigFileReady(TarMap &pkgInfo, const vector<struct ReportFileInfo> &bigInfos,
         sptr<IService> proxy);
-    ErrCode BigFileReady(TarMap &bigFileInfo, sptr<IService> proxy, int backupedFileSize);
     void WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
     void RefreshTimeInfo(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
     void IncrementalPacket(const vector<struct ReportFileInfo> &infos, TarMap &tar, sptr<IService> proxy);
-    void DoPacket(const map<string, size_t> &srcFiles, TarMap &tar, sptr<IService> proxy);
+    void DoPacket();
+    void DoPacketOnce(const std::vector<std::shared_ptr<ISmallFileInfo>>& packFiles, const string& path,
+        std::function<void(std::string, int)> reportCb, uint64_t& totalTarSpend);
     void CheckTmpDirFileInfos(bool isSpecialVersion = false);
     std::map<std::string, off_t> GetIdxFileInfos(bool isSpecialVersion = false);
     tuple<bool, vector<string>> CheckRestoreFileInfos();
@@ -282,8 +276,7 @@ private:
      * @param bigFileInfo bigFileInfo
      * @param smallFiles smallFiles info
      */
-    tuple<ErrCode, uint32_t, uint32_t> CalculateDataSize(const BJsonEntityExtensionConfig &usrConfig,
-        int64_t &totalSize, TarMap &bigFileInfo, map<string, size_t> &smallFiles);
+    ErrCode CalculateDataSize(const BJsonEntityExtensionConfig &usrConfig, int64_t &totalSize);
 
     /**
      * @brief get increCallbackEx for execute onRestore with string param
@@ -387,25 +380,24 @@ private:
     void DoBackupEnd();
     void UpdateTarStat(uint64_t tarFileSize);
     void CalculateDataSizeTask(const string &config);
-    void DoBackUpTask(const string &config);
-    TarMap convertFileToBigFiles(std::map<std::string, struct stat> files);
-    void PreDealExcludes(std::vector<std::string> &excludes);
-    template <typename T>
-    map<string, T> MatchFiles(map<string, T> files, vector<string> endExcludes);
+    void AsyncDoBackup();
+    void DoBackUpTask();
 
     void HandleExtDisconnect(bool isAppResultReport, ErrCode errCode);
     bool HandleGetExtOnRelease();
     void HandleExtOnRelease(bool isAppResultReport, ErrCode errCode);
     std::function<void(ErrCode, const std::string)> OnReleaseCallback(wptr<BackupExtExtension> obj);
     std::function<void(ErrCode, const std::string)> GetComInfoCallback(wptr<BackupExtExtension> obj);
-    void GetScanDirList(vector<string>& pathInclude, string type,
-                        const BJsonEntityExtensionConfig &usrConfig);
+    void GetScanDirList(vector<string>& pathInclude, string type, const BJsonEntityExtensionConfig &usrConfig);
+    // 1.返回兼容性路径列表 2.从原路径列表中剔除兼容性路径
+    set<string> DivideIncludesByCompatInfo(vector<string>& pathInclude,
+        const BJsonEntityExtensionConfig &usrConfig);
 private:
-    pair<TarMap, map<string, size_t>> GetFileInfos(const vector<string> &includes, const vector<string> &excludes);
     TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files);
     void UpdateFileStat(std::string filePath, uint64_t fileSize);
     void ReportAppStatistic(const std::string &func, ErrCode errCode);
-    ErrCode IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy);
+    ErrCode IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>>& allFiles);
+    ErrCode ReportAppFileReady(const string& filename, const string& filePath, bool needDelete = false);
 
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
@@ -461,6 +453,7 @@ private:
     std::condition_variable getCompatibilityInfoCon_ {};
     std::atomic<bool> stopGetComInfo_ {false};
     std::string compatibilityInfo_ {};
+    std::unordered_set<std::string> compatibleDirs_; // 无条件竞争风险, 多处调用存在先后顺序不会并非
 };
 } // namespace OHOS::FileManagement::Backup
 

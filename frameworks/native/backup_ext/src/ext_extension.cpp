@@ -53,6 +53,7 @@
 #include "b_hiaudit/hi_audit.h"
 #include "b_utils/b_time.h"
 #include "b_utils/scan_file_singleton.h"
+#include "b_utils/string_utils.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
 #include "installd_un_tar_file.h"
@@ -91,26 +92,6 @@ static void RecordDoRestoreRes(const std::string &bundleName, const std::string 
     AppRadar::Info info (bundleName, "", ss.str());
     AppRadar::GetInstance().RecordRestoreFuncRes(info, func, AppRadar::GetInstance().GetUserId(),
         BizStageRestore::BIZ_STAGE_DO_RESTORE, err);
-}
-
-static void RecordDoBackupRes(const std::string &bundleName, const ErrCode errCode, AppRadar::DoBackupInfo &backupInfo)
-{
-    uint32_t inExcludeNum = backupInfo.includeNum + backupInfo.excludeNum;
-    if (inExcludeNum >= BConstants::MAX_INEXCLUDE_SIZE) {
-        AppRadar::Info infoInExclude(bundleName, "", string("\"total inExclude\":").append(to_string(inExcludeNum)));
-        AppRadar::GetInstance().RecordBackupFuncRes(infoInExclude, "BackupExtExtension::DoBackup",
-            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, ERR_OK);
-    }
-    if (errCode == ERR_OK && backupInfo.cost >= BConstants::MAX_TIME_COST) {
-        std::stringstream ss;
-        ss << R"("spendTime": )" << backupInfo.cost << "ms, ";
-        ss << R"("totalFilesNum": )" << backupInfo.allFileNum << ", ";
-        ss << R"("smallFilesNum": )" << backupInfo.smallFileNum << ", ";
-        ss << R"("bigFilesNum": )" << backupInfo.allFileNum - backupInfo.tarFileNum;
-        AppRadar::Info info(bundleName, "", ss.str());
-        AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::DoBackup",
-            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DO_BACKUP, errCode);
-    }
 }
 
 static string GetIndexFileRestorePath(const string &bundleName)
@@ -457,7 +438,7 @@ ErrCode BackupExtExtension::HandleClear()
     }
 }
 
-ErrCode BackupExtExtension::IndexFileReady(const TarMap &pkgInfo, sptr<IService> proxy)
+ErrCode BackupExtExtension::IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>>& allFiles)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     UniqueFd fd(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
@@ -467,7 +448,7 @@ ErrCode BackupExtExtension::IndexFileReady(const TarMap &pkgInfo, sptr<IService>
     }
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
-    cache.SetExtManage(pkgInfo);
+    cache.SetExtManage(allFiles);
     cachedEntity.Persist();
     close(cachedEntity.GetFd().Release());
     int32_t err = 0;
@@ -475,21 +456,7 @@ ErrCode BackupExtExtension::IndexFileReady(const TarMap &pkgInfo, sptr<IService>
     if (err != 0) {
         HILOGE("get index size fail err:%{public}d", err);
     }
-    int fdval = open(INDEX_FILE_BACKUP.data(), O_RDONLY);
-    ErrCode ret = fdval < 0 ?
-            proxy->AppFileReadyWithoutFd(string(BConstants::EXT_BACKUP_MANAGE), ERR_OK) :
-            proxy->AppFileReady(string(BConstants::EXT_BACKUP_MANAGE), fdval, ERR_OK);
-    if (SUCCEEDED(ret)) {
-        HILOGI("The application is packaged successfully");
-    } else {
-        HILOGI(
-            "The application is packaged successfully but the AppFileReady interface fails to be invoked: "
-            "%{public}d",
-            ret);
-        close(fdval);
-    }
-    HILOGI("End notify Appfile Ready");
-    return ret;
+    return ReportAppFileReady(string(BConstants::EXT_BACKUP_MANAGE), INDEX_FILE_BACKUP.data());
 }
 
 void BackupExtExtension::ClearNoPermissionFiles(TarMap &pkgInfo, vector<std::string> &noPermissionFiles)
@@ -505,43 +472,31 @@ void BackupExtExtension::ClearNoPermissionFiles(TarMap &pkgInfo, vector<std::str
     }
 }
 
-ErrCode BackupExtExtension::BigFileReady(TarMap &bigFileInfo, sptr<IService> proxy, int backupedFileSize)
+ErrCode BackupExtExtension::ReportAppFileReady(const string& filename, const string& filePath, bool needDelete)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("BigFileReady Begin: bigFileInfo file size is: %{public}zu, backupedFileSize is %{public}d",
-           bigFileInfo.size(), backupedFileSize);
-    ErrCode ret {ERR_OK};
-    auto startTime = std::chrono::system_clock::now();
-    int fdNum = backupedFileSize;
-    vector<string> noPermissionFiles;
-    for (auto &item : bigFileInfo) {
-        WaitToSendFd(startTime, fdNum);
-        int32_t errCode = ERR_OK;
-        string filePath = std::get<0>(item.second);
-        int fdval = open(filePath.data(), O_RDONLY);
-        if (fdval < 0) {
-            HILOGE("open file failed, file name is %{public}s, err = %{public}d", GetAnonyString(filePath).c_str(),
-                errno);
-            errCode = errno;
-            if (errCode == ERR_NO_PERMISSION) {
-                noPermissionFiles.emplace_back(item.first.c_str());
-                continue;
-            }
+    int32_t errCode = ERR_OK;
+    int fdval = open(filePath.data(), O_RDONLY);
+    if (fdval < 0) {
+        errCode = errno;
+        HILOGE("open file failed, filename: %{public}s, err: %{public}d", GetAnonyString(filePath).c_str(), errCode);
+        if (errCode == ERR_NO_PERMISSION) {
+            HILOGW("noPermissionFile, don't need to backup, path: %{public}s", GetAnonyString(filePath).c_str());
+            return errCode;
         }
-        ret = fdval < 0 ? proxy->AppFileReadyWithoutFd(item.first, errCode) :
-                          proxy->AppFileReady(item.first, fdval, errCode);
-        if (SUCCEEDED(ret)) {
-            HILOGI("The application is packaged successfully, package name is %{public}s", item.first.c_str());
-        } else {
-            HILOGW("Current file execute app file ready interface failed, ret is:%{public}d", ret);
-        }
-        close(fdval);
-        fdNum++;
-        RefreshTimeInfo(startTime, fdNum);
     }
-    ClearNoPermissionFiles(bigFileInfo, noPermissionFiles);
-    HILOGI("BigFileReady End, fdNum is %{public}d", fdNum);
-    return ret;
+    auto proxy = ServiceClient::GetInstance();
+    int reportRs = fdval < 0 ? proxy->AppFileReadyWithoutFd(filename, errCode) :
+        proxy->AppFileReady(filename, fdval, errCode);
+    if (SUCCEEDED(reportRs)) {
+        HILOGI("Report app file ready success, filename: %{public}s", filename.c_str());
+        if (needDelete) {
+            RemoveFile(filePath);
+        }
+    } else {
+        HILOGW("Report app file ready failed, ret: %{public}d, filename: %{public}s", reportRs, filename.c_str());
+    }
+    close(fdval);
+    return reportRs;
 }
 
 ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
@@ -653,78 +608,6 @@ static bool IsUserTar(const string &tarFile, const std::vector<ExtManageInfo> &e
     return false;
 }
 
-pair<TarMap, map<string, size_t>> BackupExtExtension::GetFileInfos(const vector<string> &includes,
-    const vector<string> &excludes)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    appStatistic_->scanFileSpend_.Start();
-    auto [errCode, files, smallFiles] = BDir::GetBigFiles(includes, excludes);
-    appStatistic_->scanFileSpend_.End();
-    if (errCode != 0) {
-        return {};
-    }
-
-    auto getStringHash = [](const TarMap &m, const string &str) -> string {
-        ostringstream strHex;
-        strHex << hex;
-
-        hash<string> strHash;
-        size_t szHash = strHash(str);
-        strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
-        string name = strHex.str();
-        for (int i = 0; m.find(name) != m.end(); ++i, strHex.str("")) {
-            szHash = strHash(str + to_string(i));
-            strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
-            name = strHex.str();
-        }
-
-        return name;
-    };
-
-    TarMap bigFiles;
-    for (const auto &item : files) {
-        int64_t hashStart = TimeUtils::GetTimeUS();
-        string md5Name = getStringHash(bigFiles, item.first);
-        UpdateFileStat(item.first, item.second.st_size);
-        appStatistic_->hashSpendUS_ += TimeUtils::GetSpendUS(hashStart);
-        if (!md5Name.empty()) {
-            bigFiles.emplace(md5Name, make_tuple(item.first, item.second, true));
-        }
-    }
-    return {bigFiles, smallFiles};
-}
-
-/**
- * 全量tar包回传
- */
-static ErrCode TarFileReady(const TarMap &tarFileInfo, sptr<IService> proxy)
-{
-    if (tarFileInfo.empty()) {
-        HILOGI("TarFileReady: No tar file found");
-        return ERR_OK;
-    }
-    string tarName = tarFileInfo.begin()->first;
-    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
-    string tarPath = path + tarName;
-    int32_t errCode = ERR_OK;
-    int fdval = open(tarPath.data(), O_RDONLY);
-    if (fdval < 0) {
-        HILOGE("TarFileReady open file failed, file name is %{public}s, err = %{public}d", tarName.c_str(), errno);
-        errCode = errno;
-    }
-    int ret = fdval < 0 ? proxy->AppFileReadyWithoutFd(tarName, errCode) :
-              proxy->AppFileReady(tarName, fdval, errCode);
-    if (SUCCEEDED(ret)) {
-        HILOGI("TarFileReady: AppFileReady success for %{public}s", tarName.c_str());
-        // 删除文件
-        RemoveFile(tarPath);
-    } else {
-        HILOGE("TarFileReady AppFileReady fail to be invoked for %{public}s: ret = %{public}d", tarName.c_str(), ret);
-    }
-    close(fdval);
-    return ret;
-}
-
 std::function<void(std::string, int)> BackupExtExtension::ReportErrFileByProc(wptr<BackupExtExtension> obj,
     BackupRestoreScenario scenario)
 {
@@ -741,136 +624,87 @@ std::function<void(std::string, int)> BackupExtExtension::ReportErrFileByProc(wp
     };
 }
 
-void BackupExtExtension::DoPacket(const map<string, size_t> &srcFiles, TarMap &tar, sptr<IService> proxy)
+void BackupExtExtension::DoPacketOnce(const std::vector<std::shared_ptr<ISmallFileInfo>>& packFiles, const string& path,
+    std::function<void(std::string, int)> reportCb, uint64_t& totalTarSpend)
 {
-    HILOGI("DoPacket begin, infos count: %{public}zu", srcFiles.size());
-    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
+    TarMap tarMap {};
+    int64_t tarStartUs = TimeUtils::GetTimeUS();
+    bool packetRs = TarFile::GetInstance().Packet(packFiles, "part", path, tarMap, reportCb);
+    totalTarSpend += TimeUtils::GetSpendUS(tarStartUs);
+    if (!packetRs) {
+        HILOGE("Packet fail!");
+        return;
+    }
+    if (tarMap.size() != 1) {
+        HILOGE("size is invalid, size=%{public}zu", tarMap.size());
+        return;
+    }
+    appStatistic_->tarFileSize_ += TarFile::GetInstance().GetTarFileSize();
+    appStatistic_->tarFileCount_++;
+    auto item = tarMap.begin();
+    auto [filePath, sta, isBigFile] = item->second;
+    ScanFileSingleton::GetInstance().AddTarFile(item->first, filePath, sta);
+}
+
+void BackupExtExtension::DoPacket()
+{
+    int64_t start = TimeUtils::GetTimeMS();
+    string tarPath = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
     uint64_t totalSize = 0;
     uint32_t fileCount = 0;
-    vector<string> packFiles;
+    vector<shared_ptr<ISmallFileInfo>> packFiles;
     TarFile::GetInstance().SetPacketMode(true); // 设置下打包模式
-    auto startTime = std::chrono::system_clock::now();
-    int fdNum = 0;
     auto reportCb = ReportErrFileByProc(wptr<BackupExtExtension> {this}, curScenario_);
     uint64_t totalTarUs = 0;
-    for (const auto &small : srcFiles) {
-        totalSize += small.second;
+    auto allSmallFile = ScanFileSingleton::GetInstance().GetAllSmallFiles();
+    appStatistic_->smallFileCount_ = allSmallFile.size();
+    HILOGI("DoPacket begin, small file count: %{public}zu", allSmallFile.size());
+    for (const auto &smallFile : allSmallFile) {
+        totalSize += smallFile->fileSize_;
         fileCount += 1;
-        packFiles.emplace_back(small.first);
+        packFiles.emplace_back(smallFile);
         if (totalSize >= BConstants::DEFAULT_SLICE_SIZE || fileCount >= BConstants::MAX_FILE_COUNT) {
-            TarMap tarMap {};
-            int64_t tarStartUs = TimeUtils::GetTimeUS();
-            TarFile::GetInstance().Packet(packFiles, "part", path, tarMap, reportCb);
-            totalTarUs += TimeUtils::GetSpendUS(tarStartUs);
-            appStatistic_->tarFileSize_ += TarFile::GetInstance().GetTarFileSize();
-            appStatistic_->tarFileCount_++;
-            tar.insert(tarMap.begin(), tarMap.end());
-            // 执行tar包回传功能
-            WaitToSendFd(startTime, fdNum);
-            TarFileReady(tarMap, proxy);
+            DoPacketOnce(packFiles, tarPath, reportCb, totalTarUs);
             totalSize = 0;
             fileCount = 0;
             packFiles.clear();
-            fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
-            RefreshTimeInfo(startTime, fdNum);
         }
     }
     if (fileCount > 0) {
-        // 打包回传
-        TarMap tarMap {};
-        int64_t tarStartUs = TimeUtils::GetTimeUS();
-        TarFile::GetInstance().Packet(packFiles, "part", path, tarMap, reportCb);
-        totalTarUs += TimeUtils::GetSpendUS(tarStartUs);
-        appStatistic_->tarFileSize_ += TarFile::GetInstance().GetTarFileSize();
-        appStatistic_->tarFileCount_++;
-        TarFileReady(tarMap, proxy);
-        fdNum = 1;
-        WaitToSendFd(startTime, fdNum);
-        tar.insert(tarMap.begin(), tarMap.end());
-        packFiles.clear();
-        RefreshTimeInfo(startTime, fdNum);
+        DoPacketOnce(packFiles, tarPath, reportCb, totalTarUs);
     }
     appStatistic_->tarSpend_ = static_cast<uint32_t>(totalTarUs / MS_TO_US);
+    uint32_t packetSpend = TimeUtils::GetSpendMS(start);
+    HILOGI("lytest...TarSpend: %{public}u ms, packetSpend:%{public}u", appStatistic_->tarSpend_, packetSpend);
 }
 
-int BackupExtExtension::DoBackup(TarMap &bigFileInfo, TarMap &fileBackupedInfo, map<string, size_t> &smallFiles,
-    uint32_t includesNum, uint32_t excludesNum)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("bigFileInfo size: %{public}zu, fileBackupedInfo size %{public}zu, smallFiles size: %{public}zu",
-           bigFileInfo.size(), fileBackupedInfo.size(), smallFiles.size());
-    auto start = std::chrono::system_clock::now();
-    if (extension_ == nullptr) {
-        HILOGE("Failed to do backup, extension is nullptr");
-        throw BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr");
-    }
-    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
-        return EPERM;
-    }
-
-    auto proxy = ServiceClient::GetInstance();
-    if (proxy == nullptr) {
-        throw BError(BError::Codes::EXT_BROKEN_BACKUP_SA, std::generic_category().message(errno));
-    }
-
-    // 回传大文件
-    HILOGI("Will notify BigFileReady");
-    auto res = BigFileReady(bigFileInfo, proxy, fileBackupedInfo.size());
-
-    HILOGI("Start packet Tar files");
-    // 分片打包， 回传tar包
-    TarMap tarMap {};
-    DoPacket(smallFiles, tarMap, proxy);
-    bigFileInfo.insert(tarMap.begin(), tarMap.end());
-    fileBackupedInfo.insert(bigFileInfo.begin(), bigFileInfo.end());
-    HILOGI("Do backup, DoPacket end");
-
-    HILOGI("Will notify IndexFileReady");
-    if (auto ret = IndexFileReady(fileBackupedInfo, proxy); ret) {
-        return ret;
-    }
-
-    HILOGI("HandleBackup finish, ret = %{public}d", res);
-    auto end = std::chrono::system_clock::now();
-    auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    AppRadar::DoBackupInfo doBackupInfo = {cost, fileBackupedInfo.size(), smallFiles.size(), tarMap.size(),
-                                           includesNum, excludesNum};
-    RecordDoBackupRes(bundleName_, res, doBackupInfo);
-    return res;
-}
-
-tuple<ErrCode, uint32_t, uint32_t> BackupExtExtension::CalculateDataSize(const BJsonEntityExtensionConfig &usrConfig,
-    int64_t &totalSize, TarMap &bigFileInfo, map<string, size_t> &smallFiles)
+ErrCode BackupExtExtension::CalculateDataSize(const BJsonEntityExtensionConfig &usrConfig, int64_t &totalSize)
 {
     HILOGI("Start scanning files and calculate datasize");
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
     if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
         HILOGE("mkdir failed path :%{public}s, err = %{public}d", path.c_str(), errno);
-        return {errno, 0, 0};
+        return BError::GetCodeByErrno(errno);
     }
     vector<string> includes = {};
     vector<string> excludes = {};
     GetScanDirList(includes, BConstants::INCLUDES, usrConfig);
     GetScanDirList(excludes, BConstants::EXCLUDES, usrConfig);
+    auto compatibleIncludes = DivideIncludesByCompatInfo(includes, usrConfig);
+    set<string> expandIncludes = BDir::ExpandPathWildcard(includes, true);
+    BDir::PreDealExcludes(excludes);
     // 扫描文件计算数据量
-    tie(bigFileInfo, smallFiles) = GetFileInfos(includes, excludes);
-    ScanFileSingleton::GetInstance().SetCompletedFlag(true);
-    appStatistic_->smallFileCount_ = smallFiles.size();
-    appStatistic_->bigFileCount_ = bigFileInfo.size();
-    for (const auto &item : bigFileInfo) {
-        int64_t fileSize = static_cast<int64_t>(std::get<1>(item.second).st_size);
-        HILOGD("bigfile size = %{public}" PRId64 "", fileSize);
-        totalSize += fileSize;
+    appStatistic_->scanFileSpend_.Start();
+    auto [errCode, bigFileSize, smallFileSize] = BDir::ScanAllDirs(expandIncludes, compatibleIncludes, excludes);
+    appStatistic_->scanFileSpend_.End();
+    if (errCode != 0) {
+        HILOGE("scan dirs fail, err=%{public}d", errCode);
     }
-    appStatistic_->bigFileSize_ = static_cast<uint64_t>(totalSize);
-    HILOGI("bigfile size = %{public}" PRId64 "", totalSize);
-    for (const auto &item : smallFiles) {
-        UpdateFileStat(item.first, item.second);
-        totalSize += static_cast<int64_t>(item.second);
-    }
-    appStatistic_->smallFileSize_ = static_cast<uint64_t>(totalSize - appStatistic_->bigFileSize_);
-    HILOGI("scanning end, Datasize = %{public}" PRId64 "", totalSize);
-    return {ERR_OK, static_cast<uint32_t>(includes.size()), static_cast<uint32_t>(excludes.size())};
+    appStatistic_->bigFileSize_ = static_cast<uint64_t>(bigFileSize);
+    appStatistic_->smallFileSize_ = static_cast<uint64_t>(smallFileSize);
+    totalSize = bigFileSize + smallFileSize;
+    HILOGI("Scan end, size=%{public}" PRId64 ", spend=%{public}u", totalSize, appStatistic_->scanFileSpend_.GetSpan());
+    return errCode;
 }
 
 bool BackupExtExtension::RefreshDataSize(int64_t totalSize)
@@ -1029,6 +863,8 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         try {
             ptr->CalculateDataSizeTask(config);
+            ptr->DoPacket(); // 关注点：大文件的传输如果速度较慢，会导致tar包挤压，手机空间会有所增加
+            ScanFileSingleton::GetInstance().SetCompletedFlag(true);
         } catch (const BError &e) {
             HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
             ScanFileSingleton::GetInstance().SetCompletedFlag(true);
@@ -1040,41 +876,14 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
         }
     };
 
-    // REM: 这里异步化了，需要做并发控制
-    // 在往线程池中投入任务之前将需要的数据拷贝副本到参数中，保证不发生读写竞争，
-    // 由于拷贝参数时尚运行在主线程中，故在参数拷贝过程中是线程安全的。
-    threadPool_.AddTask([task]() {
+    threadPool_.AddTask([task]() { // REM: 这里异步化了，需要做并发控制
         try {
             task();
         } catch (...) {
             HILOGE("Failed to add task to thread pool");
         }
     });
-
-    auto dobackupTask = [obj {wptr<BackupExtExtension>(this)}, config]() {
-        auto ptr = obj.promote();
-        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
-        try {
-            ptr->DoBackUpTask(config);
-        } catch (const BError &e) {
-            HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
-            ScanFileSingleton::GetInstance().SetCompletedFlag(false);
-            ptr->AppDone(e.GetCode());
-        } catch (...) {
-            HILOGE("Failed to restore the ext bundle");
-            ScanFileSingleton::GetInstance().SetCompletedFlag(false);
-            ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
-        }
-        ptr->DoClear();
-    };
-
-    doBackupPool_.AddTask([dobackupTask]() {
-        try {
-            dobackupTask();
-        } catch (...) {
-            HILOGE("Failed to add task to thread pool");
-        }
-    });
+    AsyncDoBackup(); // 单独起线程处理准备好的大文件/tar包，通知给上游工具应用
 }
 
 void BackupExtExtension::RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo &item)

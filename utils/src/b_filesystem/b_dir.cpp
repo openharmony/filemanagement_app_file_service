@@ -16,6 +16,7 @@
 #include "b_filesystem/b_dir.h"
 
 #include <algorithm>
+#include <cinttypes>
 #include <dirent.h>
 #include <fnmatch.h>
 #include <functional>
@@ -24,6 +25,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <stack>
 #include <tuple>
 #include <vector>
 
@@ -31,6 +33,7 @@
 #include "b_error/b_error.h"
 #include "b_filesystem/b_file_hash.h"
 #include "b_resources/b_constants.h"
+#include "b_utils/string_utils.h"
 #include "directory_ex.h"
 #include "errors.h"
 #include "filemgmt_libhilog.h"
@@ -63,34 +66,6 @@ static bool IsEmptyDirectory(const string &path)
     return isEmpty;
 }
 
-static void InsertSmallFiles(std::map<string, size_t> &smallFiles, std::string fileName, size_t size)
-{
-    ScanFileSingleton::GetInstance().AddSmallFile(fileName, size);
-    smallFiles.emplace(make_pair(fileName, size));
-}
-
-static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetFile(const string &path, off_t size = -1)
-{
-    map<string, struct stat> files;
-    map<string, size_t> smallFiles;
-    struct stat sta = {};
-    if (stat(path.data(), &sta) == -1) {
-        HILOGE("File not exist, errno:%{public}d, fileName:%{private}s.", errno, path.c_str());
-        return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
-    }
-    if (path == "/") {
-        return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
-    }
-    if (sta.st_size <= size) {
-        smallFiles.emplace(make_pair(path, sta.st_size));
-        InsertSmallFiles(smallFiles, path, sta.st_size);
-    } else {
-        ScanFileSingleton::GetInstance().AddBigFile(path, sta);
-        files.try_emplace(path, sta);
-    }
-    return {BError(BError::Codes::OK).GetCode(), files, smallFiles};
-}
-
 static uint32_t CheckOverLongPath(const string &path)
 {
     uint32_t len = path.length();
@@ -105,65 +80,177 @@ static uint32_t CheckOverLongPath(const string &path)
     return len;
 }
 
-static tuple<ErrCode, map<string, struct stat>, map<string, size_t>> GetDirFilesDetail(const string &path,
-                                                                                       bool recursion,
-                                                                                       off_t size = -1)
+static void ProcessFile(const std::string& backupPath, const std::string& restorePath, off_t sizeBoundary,
+    int64_t& bigFileSize, int64_t& smallFileSize)
 {
-    map<string, struct stat> files;
-    map<string, size_t> smallFiles;
-
-    if (IsEmptyDirectory(path)) {
-        string newPath = path;
-        if (path.at(path.size()-1) != BConstants::FILE_SEPARATOR_CHAR) {
-            newPath += BConstants::FILE_SEPARATOR_CHAR;
-        }
-        InsertSmallFiles(smallFiles, newPath, 0);
-        return {ERR_OK, files, smallFiles};
+    struct stat sta = {};
+    if (CheckOverLongPath(backupPath) >= PATH_MAX_LEN || stat(backupPath.data(), &sta) == -1) {
+        return;
     }
-
-    unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(path.c_str()), closedir};
-    if (!dir) {
-        HILOGE("Invalid directory path: %{private}s", path.c_str());
-        return GetFile(path, size);
+    if (sta.st_size <= sizeBoundary) {
+        ScanFileSingleton::GetInstance().AddSmallFile(backupPath, sta.st_size, restorePath);
+        smallFileSize += sta.st_size;
+    } else {
+        ScanFileSingleton::GetInstance().AddBigFile(backupPath, sta, restorePath);
+        bigFileSize += sta.st_size;
     }
-    struct dirent *ptr = nullptr;
-    while (!!(ptr = readdir(dir.get()))) {
-        // current dir OR parent dir
-        if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
-            continue;
-        } else if (ptr->d_type == DT_REG) {
-            struct stat sta = {};
-            string fileName = IncludeTrailingPathDelimiter(path) + string(ptr->d_name);
-            if (CheckOverLongPath(fileName) >= PATH_MAX_LEN || stat(fileName.data(), &sta) == -1) {
-                continue;
-            }
-            if (sta.st_size <= size) {
-                InsertSmallFiles(smallFiles, fileName, sta.st_size);
-                continue;
-            }
-            ScanFileSingleton::GetInstance().AddBigFile(fileName, sta);
-            files.try_emplace(fileName, sta);
-            continue;
-        } else if (ptr->d_type != DT_DIR) {
-            HILOGE("Not support file type");
-            continue;
-        }
-        // DT_DIR type
-        if (!recursion) {
-            continue;
-        }
-        auto [errCode, subFiles, subSmallFiles] =
-            GetDirFilesDetail(IncludeTrailingPathDelimiter(path) + string(ptr->d_name), recursion, size);
-        if (errCode != 0) {
-            return {errCode, files, smallFiles};
-        }
-        files.merge(subFiles);
-        smallFiles.insert(subSmallFiles.begin(), subSmallFiles.end());
-    }
-    return {ERR_OK, files, smallFiles};
 }
 
-static void PreDealExcludes(std::vector<std::string> &excludes)
+static tuple<ErrCode, int64_t, int64_t> ProcessSingleFile(const string &backupPath, const string& restorePath,
+    off_t sizeBoundary = -1)
+{
+    if (backupPath == "/") {
+        return {ERR_OK, 0, 0};
+    }
+    int64_t bigFileSize = 0;
+    int64_t smallFileSize = 0;
+    ProcessFile(backupPath, restorePath, sizeBoundary, bigFileSize, smallFileSize);
+    return {ERR_OK, bigFileSize, smallFileSize};
+}
+
+tuple<ErrCode, int64_t, int64_t> DirScanner::ScanDir(const string &backupPath, const vector<string> &excludes,
+    off_t size)
+{
+    HILOGI("lytest...scan dir, path: %{public}s", backupPath.c_str());
+    if (!filesystem::is_directory(backupPath)) {
+        HILOGE("Invalid directory path: %{private}s", backupPath.c_str());
+        return ProcessSingleFile(backupPath, "", size);
+    }
+    int64_t bigFileSize = 0;
+    int64_t smallFileSize = 0;
+    stack<string> dirStack;
+    dirStack.push(backupPath);
+    while (!dirStack.empty()) {
+        auto currentPath = dirStack.top();
+        dirStack.pop();
+        if (BDir::IsDirsMatch(excludes, currentPath)) {
+            continue;
+        }
+        if (IsEmptyDirectory(currentPath)) {
+            ScanFileSingleton::GetInstance().AddSmallFile(StringUtils::PathAddDelimiter(currentPath), 0);
+            continue;
+        }
+        unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(currentPath.c_str()), closedir};
+        struct dirent *ptr = nullptr;
+        while (!!(ptr = readdir(dir.get()))) {
+            if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
+                continue;
+            }
+            std::string filePath = StringUtils::PathAddDelimiter(currentPath) + string(ptr->d_name);
+            if (ptr->d_type == DT_REG) {
+                ProcessFile(filePath, "", size, bigFileSize, smallFileSize);
+            } else if (ptr->d_type == DT_DIR) {
+                dirStack.push(filePath);
+            } else {
+                HILOGE("Not support file type");
+            }
+        }
+    }
+    return {ERR_OK, bigFileSize, smallFileSize};
+}
+
+tuple<ErrCode, int64_t, int64_t> CompatibleDirScanner::ScanDir(const string &path, const vector<string> &excludes,
+    off_t size)
+{
+    auto [backupPath, restorePath] = StringUtils::ParseMappingDir(path);
+    HILOGI("lytest...scan dir, path: %{public}s, restore:%{public}s", backupPath.c_str(), restorePath.c_str());
+
+    if (!filesystem::is_directory(backupPath)) {
+        HILOGE("Invalid directory path: %{private}s", path.c_str());
+        return ProcessSingleFile(backupPath, restorePath, size);
+    }
+    int64_t bigFileSize = 0;
+    int64_t smallFileSize = 0;
+    stack<pair<string, string>> dirStack;
+    dirStack.push({backupPath, restorePath});
+    while (!dirStack.empty()) {
+        auto [currentPath, currentRestorePath] = dirStack.top();
+        dirStack.pop();
+        if (BDir::IsDirsMatch(excludes, currentPath)) {
+            continue;
+        }
+        if (IsEmptyDirectory(currentPath)) {
+            ScanFileSingleton::GetInstance()
+                .AddSmallFile(StringUtils::PathAddDelimiter(currentPath), 0, currentRestorePath);
+            continue;
+        }
+        unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(currentPath.c_str()), closedir};
+        struct dirent *ptr = nullptr;
+        while (!!(ptr = readdir(dir.get()))) {
+            if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
+                continue;
+            }
+            std::string subBackupPath = StringUtils::PathAddDelimiter(currentPath) + string(ptr->d_name);
+            std::string subRestorePath = StringUtils::PathAddDelimiter(currentRestorePath) + string(ptr->d_name);
+            if (ptr->d_type == DT_REG) {
+                ProcessFile(subBackupPath, subRestorePath, size, bigFileSize, smallFileSize);
+            } else if (ptr->d_type == DT_DIR) {
+                dirStack.push({subBackupPath, subRestorePath});
+            } else {
+                HILOGE("Not support file type");
+            }
+        }
+    }
+    return {ERR_OK, bigFileSize, smallFileSize};
+}
+
+tuple<ErrCode, int64_t, int64_t> IDirScanner::ScanAllDirs(const std::set<std::string> &includes,
+    const std::vector<std::string> &excludes)
+{
+    int64_t totalBigFileSize = 0;
+    int64_t totalSmallFileSize = 0;
+    int64_t start = TimeUtils::GetTimeMS();
+    ErrCode finalErrCode = ERR_OK;
+    for (const auto &item : includes) {
+        HILOGI("lytest...ScanDir, path = %{public}s", item.c_str());
+        auto [errCode, bigFileSize, smallFileSize] = ScanDir(item, excludes, BConstants::BIG_FILE_BOUNDARY);
+        if (errCode == 0) {
+            HILOGI("big files: %{public}" PRId64 "; small files: %{public}" PRId64 "", bigFileSize, smallFileSize);
+            totalBigFileSize += bigFileSize ;
+            totalSmallFileSize += smallFileSize;
+        } else {
+            HILOGE("scan dir fail, err=%{public}d, path=%{public}s", errCode, GetAnonyPath(item).c_str());
+            finalErrCode = static_cast<int>(BError::Codes::EXT_SCAN_DIR_FAIL);
+        }
+    }
+    int64_t spendMilli = TimeUtils::GetSpendMS(start);
+    HILOGI("lytest... scan spend: %{public}" PRId64 ", bigfile: %{public}" PRId64 ", smallFile: %{public}" PRId64 "",
+        spendMilli, totalBigFileSize, totalSmallFileSize);
+    return {finalErrCode, totalBigFileSize, totalSmallFileSize};
+}
+
+std::tuple<ErrCode, int64_t, int64_t> BDir::ScanAllDirs(const std::set<std::string> &includes,
+    const std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes)
+{
+    HILOGI("lytest...scan all dirs inlcude:%{public}zu, compatIncludes:%{public}zu, excludes:%{public}zu",
+        includes.size(), compatIncludes.size(), excludes.size());
+    ErrCode errCode = ERR_OK;
+    int64_t bigFileSize = 0;
+    int64_t smallFileSize = 0;
+    if (!includes.empty()) {
+        DirScanner scanner;
+        tie(errCode, bigFileSize, smallFileSize) = scanner.ScanAllDirs(includes, excludes);
+    }
+    if (errCode != ERR_OK) {
+        HILOGE("scan normal dirs fail, err=%{public}d", errCode);
+    }
+    if (!compatIncludes.empty()) {
+        CompatibleDirScanner compatScanner;
+        auto [compatErrCode, compatBigFileSize, compatSmallFileSize]
+            = compatScanner.ScanAllDirs(compatIncludes, excludes);
+        if (compatErrCode != ERR_OK) {
+            HILOGE("scan compat dirs fail, err=%{public}d", compatErrCode);
+        }
+        bigFileSize += compatBigFileSize;
+        smallFileSize += compatSmallFileSize;
+        if (errCode == ERR_OK && compatErrCode != ERR_OK) {
+            errCode = compatErrCode;
+        }
+    }
+    return {errCode, bigFileSize, smallFileSize};
+}
+
+void BDir::PreDealExcludes(std::vector<std::string> &excludes)
 {
     size_t lenEx = excludes.size();
     int j = 0;
@@ -257,7 +344,7 @@ static void RmForceExcludePath(set<string> &expandPath)
     }
 }
 
-static set<string> ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
+set<string> BDir::ExpandPathWildcard(const vector<string> &vec, bool onlyPath)
 {
     unique_ptr<glob_t, function<void(glob_t *)>> gl {new glob_t, [](glob_t *ptr) {
         globfree(ptr);
@@ -313,46 +400,6 @@ bool BDir::CheckAndCreateDirectory(const string &filePath)
         }
     }
     return true;
-}
-
-tuple<ErrCode, map<string, struct stat>, map<string, size_t>> BDir::GetBigFiles(const vector<string> &includes,
-    const vector<string> &excludes)
-{
-    set<string> inc = ExpandPathWildcard(includes, true);
-    map<string, struct stat> incFiles;
-    map<string, size_t> incSmallFiles;
-    for (const auto &item : inc) {
-        HILOGW("GetBigFiles, path = %{public}s", item.c_str());
-        auto [errCode, files, smallFiles] = GetDirFilesDetail(item, true, BConstants::BIG_FILE_BOUNDARY);
-        if (errCode == 0) {
-            HILOGW("big files: %{public}zu; small files: %{public}zu", files.size(), smallFiles.size());
-            incFiles.merge(move(files));
-            incSmallFiles.merge(move(smallFiles));
-        }
-    }
-    if (excludes.empty()) {
-        return {ERR_OK, move(incFiles), move(incSmallFiles)};
-    }
-
-    vector<string> endExcludes = excludes;
-    PreDealExcludes(endExcludes);
-
-    map<string, size_t> resSmallFiles;
-    for (const auto &item : incSmallFiles) {
-        if (!IsDirsMatch(endExcludes, item.first)) {
-            resSmallFiles.emplace(item);
-        }
-    }
-
-    map<string, struct stat> bigFiles;
-    for (const auto &item : incFiles) {
-        if (!IsDirsMatch(endExcludes, item.first)) {
-            bigFiles.emplace(item);
-        }
-    }
-    HILOGW("total number of big files is %{public}zu", bigFiles.size());
-    HILOGW("total number of small files is %{public}zu", resSmallFiles.size());
-    return {ERR_OK, move(bigFiles), move(resSmallFiles)};
 }
 
 void BDir::GetUser0FileStat(vector<string> bigFile,
