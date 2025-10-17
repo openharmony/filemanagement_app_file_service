@@ -75,7 +75,9 @@ constexpr int BROTLI_QUALITY = 1;
 
 UniqueFile::UniqueFile(const char* filePath, const char* mode)
 {
-    if (filePath == nullptr) {
+    char rpath[PATH_MAX] = {0};
+    if (realpath(filePath, rpath) == nullptr) {
+        HILOGE("check filePath err: %{public}s", strerror(errno));
         return;
     }
 
