@@ -180,7 +180,7 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    ErrCode HandleGetCompatibilityInfo(const std::string &extInfo, int32_t scenario,
+    ErrCode HandleGetCompatibilityInfo(const std::string &extInfo, int32_t scenario, bool isExist,
         std::string &compatibilityInfo) override
     {
         return BError(BError::Codes::OK);

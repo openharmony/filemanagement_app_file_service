@@ -99,7 +99,7 @@ ErrCode ExtensionProxy::HandleOnRelease(int32_t scenario)
     return 0;
 }
 
-ErrCode ExtensionProxy::HandleGetCompatibilityInfo(const std::string &extInfo, int32_t scenario,
+ErrCode ExtensionProxy::HandleGetCompatibilityInfo(const std::string &extInfo, int32_t scenario, bool isExist,
     std::string &compatibilityInfo)
 {
     return 0;

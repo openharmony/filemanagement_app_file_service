@@ -1906,12 +1906,15 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::GetComInfoCa
     };
 }
 
-ErrCode BackupExtExtension::HandleGetCompatibilityInfo(const string &extInfo, int32_t scenario,
+ErrCode BackupExtExtension::HandleGetCompatibilityInfo(const string &extInfo, int32_t scenario, bool isExist,
     string &compatibilityInfo)
 {
     try {
         HILOGI("Begin, scenario: %{public}d, extInfo size: %{public}zu", scenario, extInfo.size());
         VerifyCaller();
+        if (!isExist) {
+            SetClearDataFlag(isExist);
+        }
         auto ptr = wptr<BackupExtExtension>(this);
         auto callback = GetComInfoCallback(ptr);
         ErrCode ret = ERR_OK;

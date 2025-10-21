@@ -1589,7 +1589,8 @@ ErrCode Service::GetCompatibilityInfo(const std::string &bundleName, const std::
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    err = proxy->HandleGetCompatibilityInfo(extInfo, static_cast<int32_t>(session_->GetScenario()), compatInfo);
+    err = proxy->HandleGetCompatibilityInfo(extInfo, static_cast<int32_t>(session_->GetScenario()),
+        session_->GetIsExisted(bundleName), compatInfo);
     if (err != BError(BError::Codes::OK)) {
         HILOGE("HandleGetCompatibilityInfo failed");
     }

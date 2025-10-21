@@ -403,3 +403,40 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetIsRestoreEnd_0100, test
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetIsRestoreEnd_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetIsExisted_0100
+ * @tc.name: SUB_backup_sa_session_GetIsExisted_0100
+ * @tc.desc: 测试 GetIsExisted
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetIsExisted_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetIsExisted_0100";
+    try {
+        std::string bundleName = "com.test.bundleName";
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        auto ret = sessionManagerPtr_->GetIsExisted(bundleName);
+        EXPECT_TRUE(ret);
+        
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        ret = sessionManagerPtr_->GetIsExisted(bundleName);
+        EXPECT_FALSE(ret);
+        
+        BackupExtInfo backupInfo {};
+        backupInfo.isRestoreEnd = true;
+        sessionManagerPtr_->impl_.backupExtNameMap[bundleName] = backupInfo;
+        EXPECT_NE(sessionManagerPtr_->impl_.backupExtNameMap.find(bundleName),
+            sessionManagerPtr_->impl_.backupExtNameMap.end());
+        ret = sessionManagerPtr_->GetIsExisted(bundleName);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetIsExisted.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetIsExisted_0100";
+}

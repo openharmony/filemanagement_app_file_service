@@ -31,6 +31,6 @@ interface OHOS.FileManagement.Backup.IExtension{
     [ipccode 14] void UpdateDfxInfo([in] long uniqId, [in] unsigned int extConnectSpend, [in] String bundleName);
     [ipccode 15] void CleanBundleTempDir();
     [ipccode 16] void HandleOnRelease([in] int scenario);
-    [ipccode 17] void HandleGetCompatibilityInfo([in] String extInfo, [in] int scenario,
+    [ipccode 17] void HandleGetCompatibilityInfo([in] String extInfo, [in] int scenario, [in] boolean isExist,
                                                  [out] String compatibilityInfo);
 }

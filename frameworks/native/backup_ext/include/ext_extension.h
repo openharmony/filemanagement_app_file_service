@@ -65,7 +65,8 @@ public:
     ErrCode UpdateDfxInfo(int64_t uniqId, uint32_t extConnectSpend, const std::string &bundleName) override;
     ErrCode CleanBundleTempDir() override;
     ErrCode HandleOnRelease(int32_t scenario) override;
-    ErrCode HandleGetCompatibilityInfo(const string &extInfo, int32_t scenario, string &compatibilityInfo) override;
+    ErrCode HandleGetCompatibilityInfo(const string &extInfo, int32_t scenario, bool isExist,
+        string &compatibilityInfo) override;
 
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
