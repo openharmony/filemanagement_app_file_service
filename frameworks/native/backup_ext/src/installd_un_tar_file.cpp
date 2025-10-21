@@ -288,7 +288,7 @@ bool UnTarFile::IsValidTarBlock(const TarHeader *tarHeader)
         return true;
     }
 
-    LOGE("Invalid tar format.");
+    LOGD("Invalid tar format.");
     return false;
 }
 
