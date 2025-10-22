@@ -532,7 +532,8 @@ bool UnTarFile::IsProcessTarEnd(char *buff, int &ret)
     }
 
     // two empty continuous block indicate end of file
-    if (IsEmptyBlock(buff)) {
+    TarHeader *tarHeader = (TarHeader *)buff;
+    if (IsEmptyBlock(buff) && tarHeader->typeflag != TarUtil::GNUTYPE_LONGNAME) {
         char tailBuff[BLOCK_SIZE] = {0};
         size_t tailRead = 0;
         tailRead = fread(tailBuff, 1, BLOCK_SIZE, FilePtr);
@@ -543,7 +544,6 @@ bool UnTarFile::IsProcessTarEnd(char *buff, int &ret)
     }
 
     // check header
-    TarHeader *tarHeader = (TarHeader *)buff;
     if (!IsValidTarBlock(tarHeader)) {
         LOGE("isSplit cur size %{public}jd, tarSize %{public}jd", ftello(FilePtr), tarSize);
 
