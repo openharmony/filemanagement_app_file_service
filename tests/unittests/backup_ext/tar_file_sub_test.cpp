@@ -315,6 +315,8 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_WriteFileContent_0100, testing::ext::TestS
 HWTEST_F(TarFileSubTest, WRITE_COMPRESS_DATA_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TarFileTest-begin WRITE_COMPRESS_DATA_TEST_001";
+    char c = '\0';
+    EXPECT_CALL(*funcMock, realpath(_, _)).WillRepeatedly(Return(&c));
     EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr)).WillOnce(Return(testFilePtr_));
     EXPECT_CALL(*funcMock, fclose(_)).WillRepeatedly(Return(0));
     UniqueFile fout("/tmp/test1.txt", "wb");
@@ -358,6 +360,8 @@ HWTEST_F(TarFileSubTest, WRITE_COMPRESS_DATA_TEST_001, testing::ext::TestSize.Le
 HWTEST_F(TarFileSubTest, WRITE_DECOMPRESS_DATA_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TarFileTest-begin WRITE_DECOMPRESS_DATA_TEST_001";
+    char c = '\0';
+    EXPECT_CALL(*funcMock, realpath(_, _)).WillRepeatedly(Return(&c));
     EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr)).WillOnce(Return(testFilePtr_));
     EXPECT_CALL(*funcMock, fclose(_)).WillRepeatedly(Return(0));
     UniqueFile fout("/tmp/test1.txt", "wb");
@@ -407,6 +411,8 @@ HWTEST_F(TarFileSubTest, COMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1)
     std::string srcFile = "/tmp/in.txt";
     std::string compressFile = "/tmp/out.txt";
 #ifdef COMPRESS_ENABLED
+    char c = '\0';
+    EXPECT_CALL(*funcMock, realpath(_, _)).WillRepeatedly(Return(&c));
     EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr)).WillOnce(Return(nullptr));
     EXPECT_CALL(*funcMock, fclose(_)).WillRepeatedly(Return(0));
     GTEST_LOG_(INFO) << "Test1. file null";
@@ -458,6 +464,8 @@ HWTEST_F(TarFileSubTest, DECOMPRESS_FILE_TEST_001, testing::ext::TestSize.Level1
     std::string srcFile = "/tmp/in.txt";
     std::string compressFile = "/tmp/out.txt";
 #ifdef COMPRESS_ENABLED
+    char c = '\0';
+    EXPECT_CALL(*funcMock, realpath(_, _)).WillRepeatedly(Return(&c));
     EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr)).WillOnce(Return(nullptr))
         .WillRepeatedly(Return(testFilePtr_));
     EXPECT_CALL(*funcMock, fclose(_)).WillRepeatedly(Return(0));
